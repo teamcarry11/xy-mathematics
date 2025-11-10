@@ -6,7 +6,7 @@ const usage =
     \\
     \\Usage:
     \\  grain conduct brew [--assume-yes]
-    \\  grain conduct link
+    \\  grain conduct link [--manifest=path.json]
     \\  grain conduct edit
     \\  grain conduct make
     \\  grain conduct help
@@ -46,7 +46,19 @@ pub fn main() !void {
         }
         try run_brew(assume_yes);
     } else if (std.mem.eql(u8, subcommand, "link")) {
-        try run_link(allocator);
+        var manifest_path: ?[]const u8 = null;
+        while (args.next()) |flag| {
+            if (std.mem.startsWith(u8, flag, "--manifest=")) {
+                manifest_path = flag["--manifest=".len..];
+            } else {
+                try std.io.getStdErr().writer().print(
+                    "unknown flag: {s}\n",
+                    .{flag},
+                );
+                return error.UnknownFlag;
+            }
+        }
+        try run_link(allocator, manifest_path);
     } else if (std.mem.eql(u8, subcommand, "edit")) {
         try run_edit();
     } else if (std.mem.eql(u8, subcommand, "make")) {
@@ -82,12 +94,23 @@ fn run_brew(assume_yes: bool) !void {
     try spawn_and_log(.{ "brew", "upgrade", "--cask" });
 }
 
-fn run_link(allocator: std.mem.Allocator) !void {
+fn run_link(
+    allocator: std.mem.Allocator,
+    manifest_path: ?[]const u8,
+) !void {
     var store = try GrainStore.init(allocator, "@kae3g");
     defer store.deinit();
 
     const platforms = [_][]const u8{ "codeberg", "github", "gitab" };
     try store.ensure_platforms(&platforms);
+
+    if (manifest_path) |path| {
+        try store.sync_manifest(allocator, path);
+        try std.io.getStdOut().writer().print(
+            "synced manifest entries from {s}\n",
+            .{path},
+        );
+    }
 
     try std.io.getStdOut().writeAll("grainstore platforms ensured.\n");
 }
@@ -131,3 +154,4 @@ fn spawn_process(argv: []const []const u8) !u8 {
     try process.spawn();
     return try process.wait();
 }
+

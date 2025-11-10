@@ -27,12 +27,14 @@ We reimagine Matklad’s `config` tool in Zig as **Grain Conductor** —
 invoked via `grain conduct …`, offering both scripted and interactive
 flows. First wave:
 
-| Command          | Behavior                                                         |
-| ---------------- | ---------------------------------------------------------------- |
-| `conduct brew`   | Run Brewfile sync (`brew bundle --cleanup --file=Brewfile`) and upgrade casks. |
-| `conduct link`   | Symlink home dotfiles from `vendor/grain-foundations` into place, respecting macOS path quirks. |
-| `conduct edit`   | Open the Grain workspace in Cursor (or fallback editor) for interactive configuration. |
-| `conduct make`   | Build/install helper tools (future `grain conduct` subcommands). |
+| Command                            | Behavior                                                         |
+| ---------------------------------- | ---------------------------------------------------------------- |
+| `conduct brew`                     | Run Brewfile sync (`brew bundle --cleanup --file=Brewfile`) and upgrade casks. |
+| `conduct brew --assume-yes`        | Non-interactive mode for CI or scripted bootstrap.               |
+| `conduct link`                     | Symlink home dotfiles from `vendor/grain-foundations` into place. |
+| `conduct link --manifest=path`     | Read JSON and scaffold `grainstore/{platform}/{org}/{repo}` directories. |
+| `conduct edit`                     | Open the Grain workspace in Cursor (or fallback editor).         |
+| `conduct make`                     | Build/install helper tools (future `grain conduct` subcommands). |
 
 Interactive mode prompts (with yes/no guards); non-interactive mode uses
 flags for CI or scripted bootstrap. Errors bubble with TigerStyle

@@ -31,6 +31,12 @@
 - Reuse River’s focus on runtime configuration and per-tag workspace logic for our “veganic
   workstation” metaphor.
 
+## Next Actions
+- Draft a minimal compositor loop using Mach/Metal that can host one Grain terminal pane.
+- Prototype a `riverctl`-style Zig API for Moonglow keybindings (focus swap, layout cycle).
+- Spike a GUI pane showing Nostr feed slices using the current `[N]ZigTweet` structures.
+- Identify security boundaries for sandboxing (entitlements, process separation) before Metal work.
+
 [^river-overview]: River project overview and build requirements, including dynamic tiling focus and
                    Zig 0.15 toolchain updates, in *River README* (Codeberg, 2025-08-30)  
                    <https://codeberg.org/river/river>

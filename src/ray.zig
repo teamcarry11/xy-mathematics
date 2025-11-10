@@ -205,12 +205,12 @@ fn validate(env: RayEnvelope) void {
 pub const TimestampDB = struct {
     pub const entries = [_]Timestamp{
         Timestamp.init(
-            \\holocene_vedic_calendar--12025-11-09--2311--pst--
+            \\holocene_vedic_calendar--12025-11-10--1007--pst--
             \\tropical_zodiac_sidereal_sanskrit_nakshatra_astrology_
-            \\ascendant-leo_15_degrees_out_of_thirty--
+            \\ascendant-sagi-23_degrees_out_of_thirty--
             \\moon_lunar_mansion_sanskrit_nakshatra_sutra_vic_dicara-
-            \\punarvasu--whole_sign_diurnal_nocturnal_solar_house_system-
-            \\4th_house--github_kae3g_xy
+            \\pushya--whole_sign_diurnal_nocturnal_solar_house_system-
+            \\12th_house----github_kae3g_xy
         ,
             TimestampGrammar.init("HoloceneVedicComposite", "--", 8, true),
         ),

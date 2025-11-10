@@ -8,6 +8,56 @@ pub const PromptEntry = struct {
 };
 
 pub const PROMPTS = [_]PromptEntry{
+    .{ .id = 44, .timestamp = null, .content =
+        \\let's also update our prompts.md and unify it with our prompts 
+        from old and older prototypes so we have one descending ledger 
+        array tracing to the very first origin prompt of this 
+        conversation
+        \\
+        \\
+        \\thank you Cursor 
+    },
+    .{ .id = 43, .timestamp = null, .content = "implement the next move" 
+    },
+    .{ .id = 42, .timestamp = null, .content =
+        "test our ray_160 pipeline then continue"
+    },
+    .{ .id = 41, .timestamp = null, .content = "go for it" },
+    .{ .id = 40, .timestamp = null, .content = "sounds good" },
+    .{ .id = 39, .timestamp = null, .content = "attack!" },
+    .{ .id = 38, .timestamp = null, .content = "Glow I choose you!" },
+    .{ .id = 37, .timestamp = null, .content =
+        \\write a 001_more_newer doc with a new Ray plan ,
+        unifying with 
+        the existing Ray 
+    },
+    .{ .id = 36, .timestamp = null, .content =
+        \\we may have `grain conduct` commands with a CLI both 
+        interactive
+        and non-interactive modes like our other grain modules 
+    },
+    .{ .id = 35, .timestamp = null, .content = "sounds great" },
+    .{ .id = 34, .timestamp = null, .content =
+        "come up with an abstraction name for it"
+    },
+    .{ .id = 33, .timestamp = null, .content =
+        \\https://github.com/matklad/config/blob/master/tools/config/src/
+        main.rs 
+        \\
+        \\
+        \\^ implement this in Zig using Tiger Style with Grain properties 
+    },
+    .{ .id = 32, .timestamp = null, .content =
+        "https://blog.xoria.org/macos-tips/"
+    },
+    .{ .id = 31, .timestamp = null, .content =
+        "https://matthiasportzel.com/brewfile/"
+    },
+    .{ .id = 30, .timestamp = null, .content =
+        \\https://www.youtube.com/playlist?list=PLroeMKm7JPmkzjp7GVG_JkvA
+        XnZbpUuKL
+        \\ also use this Matklad article for guidance 
+    },
     .{ .id = 29, .timestamp = null, .content =
         \\implement zig equivalent of nixos-rebuild rollback so we forget 
         earthbending then relearn it
@@ -274,6 +324,12 @@ pub const PROMPTS = [_]PromptEntry{
 pub const PROMPT_COUNT = PROMPTS.len;
 pub const latest = PROMPTS[0];
 ```
+
+
+
+
+
+
 
 
 

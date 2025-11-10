@@ -29,6 +29,9 @@ Matklad-style data-driven tests keep refactors fearless. I wrap prose to
 - **Grain Conductor CLI** — I’m mapping Matklad’s `config` tool into a
   Zig “grain conduct” command suite with interactive and non-interactive
   modes for brew sync, linking, and future tasks.
+- **Static Grainstore Manifest** — Instead of JSON, we rely on compiled
+  Zig arrays (re-castable over the wire) to scaffold
+  `grainstore/{platform}/{org}/{repo}`.
 
 ## Workflow Loop
 1. **Draft in Docs** — add plan items to `docs/ray.md`, wrap with
@@ -49,6 +52,8 @@ Matklad-style data-driven tests keep refactors fearless. I wrap prose to
   doc wrapping all ship via `zig build` targets.
 - Capture a Brewfile under version control so fresh machines get the
   exact Homebrew + CLI stack via `brew bundle` with explicit comments.
+- Expand static manifest arrays as we learn more about the repos we want
+  to mirror; plan serialization for network casting later.
 - Prototype `grain conduct` commands (e.g. `conduct brew`, `conduct link`,
   `conduct edit`) so interactive prompts and scripted modes both follow
   TigerStyle expectations.

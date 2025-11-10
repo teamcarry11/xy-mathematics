@@ -3,14 +3,10 @@ const foundations = @import("grain-foundations");
 
 const GrainDevName = foundations.GrainDevName;
 
-const ManifestEntry = struct {
+pub const ManifestEntry = struct {
     platform: []const u8,
     org: []const u8,
     repo: []const u8,
-};
-
-const Manifest = struct {
-    entries: []ManifestEntry,
 };
 
 pub const GrainStore = struct {
@@ -69,35 +65,18 @@ pub const GrainStore = struct {
         );
     }
 
-    pub fn sync_manifest(
+    pub fn sync_manifest_entries(
         self: GrainStore,
-        allocator: std.mem.Allocator,
-        manifest_path: []const u8,
+        entries: []const ManifestEntry,
     ) !void {
         const cwd = std.fs.cwd();
-        var file = try cwd.openFile(manifest_path, .{});
-        defer file.close();
-
-        const contents =
-            try file.readToEndAlloc(allocator, std.math.maxInt(usize));
-        defer allocator.free(contents);
-
-        var parsed = try std.json.parseFromSlice(
-            Manifest,
-            allocator,
-            contents,
-            .{ .duplicate_strings = true },
-        );
-        defer parsed.deinit();
-
-        const manifest = parsed.value;
-        for (manifest.entries) |entry| {
+        for (entries) |entry| {
             const dir = try self.repo_path(
                 entry.platform,
                 entry.org,
                 entry.repo,
             );
-            defer allocator.free(dir);
+            defer self.allocator.free(dir);
             try cwd.makePath(dir);
         }
     }

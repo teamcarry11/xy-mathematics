@@ -98,6 +98,11 @@ fn run_link(
     allocator: std.mem.Allocator,
     manifest_path: ?[]const u8,
 ) !void {
+    const manifest_entries = [_]GrainStore.ManifestEntry{
+        .{ .platform = "github", .org = "tigerbeetle", .repo = "tigerbeetle" },
+        .{ .platform = "codeberg", .org = "river", .repo = "river" },
+    };
+
     var store = try GrainStore.init(allocator, "@kae3g");
     defer store.deinit();
 
@@ -105,12 +110,13 @@ fn run_link(
     try store.ensure_platforms(&platforms);
 
     if (manifest_path) |path| {
-        try store.sync_manifest(allocator, path);
         try std.io.getStdOut().writer().print(
-            "synced manifest entries from {s}\n",
+            "manifest flag ignored in static build: {s}\n",
             .{path},
         );
     }
+
+    try store.sync_manifest_entries(&manifest_entries);
 
     try std.io.getStdOut().writeAll("grainstore platforms ensured.\n");
 }
@@ -155,3 +161,6 @@ fn spawn_process(argv: []const []const u8) !u8 {
     return try process.wait();
 }
 
+fn file_exists(path: []const u8) bool {
+    return std.fs.cwd().access(path, .{}) catch false;
+}

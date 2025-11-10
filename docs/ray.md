@@ -86,10 +86,9 @@ to acknowledge the ache, upbeat enough to guide with grace.
 14. **Grainstore Mirrors**
     - Adapt grainmirror’s layout for `grainstore/{platform}/{org}/
     {repo}`
-    under `xy/grainstore`.
-    - Decide which legacy ideas (Rust/Steel tooling) we retire while we 
-    stay
-    all-in on Zig.
+      under `xy/grainstore`.
+    - Populate static Zig manifest entries (later castable over the wire)
+      instead of relying on JSON manifests.
 15. **Grain Conductor CLI**
     - Implement `zig build conduct` to expose `grain conduct brew|link|
       edit|make`.
@@ -200,6 +199,7 @@ Each step depends on the previous one’s output; progressing in order
 guarantees that later artifacts (tweet threads, Tahoe configs,
 repo packaging) inherit the stabilized grammar and deterministic tooling 
 choices.
+
 
 
 

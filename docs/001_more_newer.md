@@ -31,8 +31,8 @@ flows. First wave:
 | ---------------------------------- | ---------------------------------------------------------------- |
 | `conduct brew`                     | Run Brewfile sync (`brew bundle --cleanup --file=Brewfile`) and upgrade casks. |
 | `conduct brew --assume-yes`        | Non-interactive mode for CI or scripted bootstrap.               |
-| `conduct link`                     | Symlink home dotfiles from `vendor/grain-foundations` into place. |
-| `conduct link --manifest=path`     | Read JSON and scaffold `grainstore/{platform}/{org}/{repo}` directories. |
+| `conduct link`                     | Symlink home dotfiles from `vendor/grain-foundations` into place and provision static GrainStore entries. |
+| `conduct link --manifest=path`     | Flag accepted for future network re-casting, currently ignored.  |
 | `conduct edit`                     | Open the Grain workspace in Cursor (or fallback editor).         |
 | `conduct make`                     | Build/install helper tools (future `grain conduct` subcommands). |
 
@@ -51,8 +51,8 @@ assertions.
    - Add `Brewfile` listing CLI tools (Homebrew, git, gh, Cursor, Zig).
    - Document usage in onboarding section.
 4. **Grainstore Sync Prototype**
-   - Extend `GrainStore` to accept manifest input.
-   - Mirror code into `grainstore/{platform}/{org}/{repo}`.
+   - Extend `GrainStore` with static manifest entries (compiled arrays).
+   - Mirror code into `grainstore/{platform}/{org}/{repo}`; plan network casting later.
 5. **GUI / Nostr Roadmap**
    - Begin mapping River-inspired compositor tasks into actionable
      prototypes (`docs/gui_research.md` → issues/tasks).
@@ -64,7 +64,7 @@ assertions.
 | `zig build wrap-docs` | Enforce 73-column docs with `grainwrap`.      |
 | `zig build validate`  | Grainvalidate snake_case + function length.   |
 | `zig build thread`    | Generate `docs/ray_160.md`.                   |
-| `zig build conduct`   | (Upcoming) Build/run Grain Conductor CLI.     |
+| `zig build conduct`   | Build/run Grain Conductor CLI (static manifest). |
 
 ## Shared Timeline
 We continue to treat `docs/ray.md` as the canonical plan.  

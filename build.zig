@@ -92,6 +92,18 @@ pub fn build(b: *std.Build) void {
     const run_validate = b.addRunArtifact(validate_src_exe);
     validate_step.dependOn(&run_validate.step);
 
+    const conductor_exe = b.addExecutable(.{
+        .name = "grain_conductor",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tools/grain_conductor.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    const conduct_step = b.step("conduct", "Run Grain Conductor command suite");
+    const run_conductor = b.addRunArtifact(conductor_exe);
+    conduct_step.dependOn(&run_conductor.step);
+
     const ray_tests = b.addTest(.{
         .root_module = b.createModule(.{
             .root_source_file = b.path("src/ray.zig"),

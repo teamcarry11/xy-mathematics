@@ -56,6 +56,9 @@ to acknowledge the ache, upbeat enough to guide with grace.
       Homebrew, `git`, and GitHub CLI (`brew install git gh`),
       then install
       Cursor.
+    - Track dependencies in `Brewfile`; run `brew bundle install --
+    cleanup
+      --file=Brewfile` so every machine converges on the same toolset.
 9. **Poetry & Waterbending**
    - Sprinkle ASCII art of bending motions in comments.
    - Quote Helen Atthowe’s *The Ecological Farm* and gentle lines from 
@@ -87,6 +90,11 @@ to acknowledge the ache, upbeat enough to guide with grace.
     - Decide which legacy ideas (Rust/Steel tooling) we retire while we 
     stay
     all-in on Zig.
+15. **Grain Conductor CLI**
+    - Implement `zig build conduct` to expose `grain conduct brew|link|
+      edit|make`.
+    - Support interactive prompts with `--assume-yes` flags for scripted
+      usage.
 
 ## Immediate TODO
 - [x] Rehydrate source snippets from archives.
@@ -192,6 +200,10 @@ Each step depends on the previous one’s output; progressing in order
 guarantees that later artifacts (tweet threads, Tahoe configs,
 repo packaging) inherit the stabilized grammar and deterministic tooling 
 choices.
+
+
+
+
 
 
 

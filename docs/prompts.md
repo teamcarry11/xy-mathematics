@@ -8,11 +8,29 @@ pub const PromptEntry = struct {
 };
 
 pub const PROMPTS = [_]PromptEntry{
+    .{ .id = 68, .timestamp = null, .content =
+        \\infuse into the Ray and Plan a design for the Zig monolith 
+        kernel to best support the safety and performance and developer 
+        experience of the Zig standard library and compiler 
+    },
+    .{ .id = 67, .timestamp = null, .content =
+        \\okay let's keep working on the code.  let's come up with a plan 
+        for our RISC-V compatible Zig monolith kernel to be run in QEMU 
+        on a remote Ubuntu 24.04 LTS VPN accessed from our macOS Tahoe 
+        machine ,  and infuse this idea into our existing Ray which 
+        should mirror our Plan 
+    },
     .{ .id = 66, .timestamp = null, .content =
-        \\sounds good, can you copy in our /Users/bhagavan851c05a/Downloads/cursor_set_agent_name_and_check_mic.md file in that way and push to main with your suggestion ?  update our prompts.md too please with our latest history, run tests to confirm descending 
+        \\sounds good, can you copy in our /Users/bhagavan851c05a/
+        Downloads/cursor_set_agent_name_and_check_mic.md file in that way 
+        and push to main with your suggestion ?  update our prompts.md 
+        too please with our latest history, run tests to confirm 
+        descending 
     },
     .{ .id = 65, .timestamp = null, .content =
-        \\how about we just have a folder also for our raw cursor export output files , what path name do you suggest to keep our repo organized 
+        \\how about we just have a folder also for our raw cursor export 
+        output files , what path name do you suggest to keep our repo 
+        organized 
     },
     .{ .id = 64, .timestamp = null, .content =
         \\we need unit tests and refactoring of our outputs.md pipeline 
@@ -491,6 +509,8 @@ pub const PROMPTS = [_]PromptEntry{
 pub const PROMPT_COUNT = PROMPTS.len;
 pub const latest = PROMPTS[0];
 ```
+
+
 
 
 

@@ -173,6 +173,29 @@ our
       original 12-part arc rests in `prototype_old/docs/design/` for
       archeology.
 
+19. **RISC-V Kernel Airlift**
+    - Mirror `docs/plan.md` §12: remote Ubuntu 24.04 host,
+      and rsync scripts that keep `xy/` synced to `~/grain-rv64/`.
+    - `zig build kernel-rv64` emits a static `riscv64-freestanding`
+      monolith via `kernel/link.ld` and drops the image at
+      `out/kernel/grain-rv64.bin`.
+    - QEMU harness (`scripts/qemu_rv64.sh`) boots the binary headless
+      with serial + telnet monitor; `scripts/riscv_gdb.sh` attaches
+      `gdb-multiarch` for postmortem replay.
+    - Syscall table lives in `kernel/syscall_table.zig`, shaped so Zig
+      stdlib calls (`std.fs`, `std.time`, `std.os`) map cleanly onto
+      bounded kernel services with explicit errno handoffs.
+    - Safety lattice toggles guard pages, deterministic allocators, and
+      structured crash reporters so developers read kernel panics as
+      easily as Zig stack traces.
+    - `kernel/devx/abi.zig` codifies startup glue so the compiler’s
+      freestanding runtime can share `_start`, panic handlers, and dbg
+      writers without drift.
+    - `grain conduct make kernel-rv64` (build + rsync) and
+      `grain conduct run kernel-rv64` (SSH + QEMU) enforce TigerStyle
+      command determinism while Ray logs each boot trace under
+      `logs/kernel/`.
+
 [^readonly]: [Matklad, "Readonly Characters Are a Big Deal"](https://
 matklad.github.io/2025/11/10/readonly-characters.html)
 [^vibe-terminal]: [Matklad, "Vibe Coding Terminal Editor"](https://
@@ -183,6 +206,8 @@ www.instagram.com/vegan_tiger/)
 riverwm/river)
 [^jepsen-tb]: [Jepsen, "TigerBeetle 0.16.11"](https://jepsen.io/analyses/
 tigerbeetle-0.16.11)
+
+
 
 
 

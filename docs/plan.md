@@ -51,3 +51,33 @@
 - Update `docs/ray.md`, `docs/doc.md`, and `docs/outputs.md` after each
   milestone.
 - Log prompts in `docs/prompts.md` with descending IDs.
+
+## 12. RISC-V Monolith Kernel Expedition
+- Provision an Ubuntu 24.04 LTS build host reachable through the VPN.
+- Install toolchain: `sudo apt install qemu-system-misc gdb-multiarch`
+  and mirror Zig 0.15.2 into `/opt/zig` for reproducible builds.
+- Create `scripts/vpn_rsync.sh` to sync `xy/` → remote `~/grain-rv64/`
+  with deterministic excludes (`zig-cache`, build artifacts).
+- Introduce `build.zig` target `zig build kernel-rv64` compiling
+  `src/kernel/main.zig` for `riscv64-freestanding` with static allocs.
+- Add linker script `kernel/link.ld` and QEMU-ready flat binary output
+  under `out/kernel/grain-rv64.bin`.
+- Layer in `kernel/syscall_table.zig` so the Grain kernel exposes
+  Zig stdlib-friendly syscalls (I/O, timers, virtual memory probes) with
+  explicit errno contracts and bounded buffers.
+- Embed a “safety lattice”: compile-time feature flags for guard pages,
+  deterministic allocator selection (std.heap.page_allocator shim), and
+  structured crash dumps routed into `logs/kernel/`.
+- Add `kernel/devx/abi.zig` documenting calling conventions so the Zig
+  compiler’s freestanding runtime can reuse the same startup scaffolding
+  (`_start`, panic handlers, dbg I/O) without forks.
+- Author `scripts/qemu_rv64.sh` to boot the binary with:
+  `qemu-system-riscv64 -machine virt -cpu rv64 -m 512M \
+   -nographic -bios default -kernel out/kernel/grain-rv64.bin \
+   -serial mon:stdio -monitor telnet:127.0.0.1:5555,server,nowait`.
+- Use `scripts/riscv_gdb.sh` to attach `gdb-multiarch` via
+  `target remote :1234` for stepping through Zig symbols.
+- Expose orchestrated commands via `grain conduct make kernel-rv64`
+  (build + rsync) and `grain conduct run kernel-rv64` (SSH + QEMU).
+- Log boot traces and crash dumps back into `logs/kernel/` for Ray
+  journaling.

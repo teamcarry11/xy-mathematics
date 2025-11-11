@@ -8,13 +8,13 @@
 - Extended `grain conduct` with `make kernel-rv64`, `run kernel-rv64`,
   and `report kernel-rv64`; runs capture logs under `logs/kernel/`.
 
-## 2. Tooling Prep (Waiting for VPS)
-- Draft `scripts/vpn_rsync.sh` to push `xy/` → remote `~/grain-rv64/`
-  with deterministic excludes once the droplet unlocks.
-- Script `scripts/riscv_gdb.sh` for `gdb-multiarch` attach (`target
-  remote :1234`) and document usage in `docs/boot/notes.md`.
-- Add `grain conduct run kernel-rv64 --gdb` wrapper once the remote
-  listener is available (stub locally until the VPS approves).
+## 2. Tooling Prep (done, awaiting VPS)
+- `scripts/vpn_rsync.sh` stages repo syncs to `~/grain-rv64/` while
+  skipping `.git/`, `zig-out/`, `logs/kernel/`, and `prototypes/`.
+- `scripts/riscv_gdb.sh` primes `gdb-multiarch` to attach with
+  `target remote :1234`; instructions captured in `docs/boot/notes.md`.
+- `grain conduct run kernel-rv64 --gdb` toggles the helper locally and
+  reminds us to attach once the droplet exposes the port.
 
 ## 3. Kernel Spine
 - Enrich `_start` with a fake trap handler and panic logger that prints

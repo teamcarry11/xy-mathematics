@@ -8,6 +8,9 @@ pub const PromptEntry = struct {
 };
 
 pub const PROMPTS = [_]PromptEntry{
+    .{ .id = 86, .timestamp = null, .content =
+        \\implement 
+    },
     .{ .id = 85, .timestamp = null, .content =
         \\next step 
     },
@@ -602,6 +605,8 @@ Can you write a message for me to submit to Digital Ocean here ?
 pub const PROMPT_COUNT = PROMPTS.len;
 pub const latest = PROMPTS[0];
 ```
+
+
 
 
 

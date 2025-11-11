@@ -31,14 +31,15 @@ our
    - Extended `grain conduct` with `make kernel-rv64`, `run kernel-rv64`,
      and `report kernel-rv64`; runs now stream to stdout and archive logs
      under `logs/kernel/`.
-2. **Waiting-for-VPS Toolkit**
-   - Draft `scripts/vpn_rsync.sh` for syncing `xy/` → remote
-     `~/grain-rv64/` with deterministic excludes as soon as approval
-     lands.
-    - Script `scripts/riscv_gdb.sh` so `gdb-multiarch` attaches to a
-      remote QEMU stub; document the recipe in `docs/boot/notes.md`.
-    - Plan a `grain conduct run kernel-rv64 --gdb` flag that toggles the
-      helper once the droplet is reachable.
+2. **Waiting-for-VPS Toolkit (done)**
+   - `scripts/vpn_rsync.sh` syncs `xy/` → `~/grain-rv64/
+   ` with deterministic
+     excludes ready for the droplet.
+   - `scripts/riscv_gdb.sh` launches `gdb-multiarch` with the kernel 
+   image
+     and `target remote :1234`; notes live in `docs/boot/notes.md`.
+   - `grain conduct run kernel-rv64 --gdb` now toggles the helper locally
+     and reminds us to attach once the VPS exposes the port.
 3. **Kernel Spine**
    - Flesh `_start` with a trap handler, panic logger, and syscall-table
      wiring so QEMU logs show structure even before the VPS boots.
@@ -149,6 +150,8 @@ V Mainboard](https://frame.work/products/deep-computing-risc-v-mainboard)
 [^framework-blog]: [Framework Blog: RISC-V Mainboard for Framework Laptop 
 13](https://frame.work/blog/risc-v-mainboard-for-framework-laptop-13-is-
 now-available)
+
+
 
 
 

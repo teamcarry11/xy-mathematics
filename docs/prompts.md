@@ -8,6 +8,12 @@ pub const PromptEntry = struct {
 };
 
 pub const PROMPTS = [_]PromptEntry{
+    .{ .id = 66, .timestamp = null, .content =
+        \\sounds good, can you copy in our /Users/bhagavan851c05a/Downloads/cursor_set_agent_name_and_check_mic.md file in that way and push to main with your suggestion ?  update our prompts.md too please with our latest history, run tests to confirm descending 
+    },
+    .{ .id = 65, .timestamp = null, .content =
+        \\how about we just have a folder also for our raw cursor export output files , what path name do you suggest to keep our repo organized 
+    },
     .{ .id = 64, .timestamp = null, .content =
         \\we need unit tests and refactoring of our outputs.md pipeline 
         showing that the array is
@@ -485,6 +491,7 @@ pub const PROMPTS = [_]PromptEntry{
 pub const PROMPT_COUNT = PROMPTS.len;
 pub const latest = PROMPTS[0];
 ```
+
 
 
 

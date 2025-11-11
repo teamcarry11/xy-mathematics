@@ -26,8 +26,12 @@ fn collectIds(allocator: std.mem.Allocator) !std.ArrayListUnmanaged(u64) {
     const marker = ".id =";
     while (it.next()) |line| {
         if (std.mem.indexOf(u8, line, marker)) |pos| {
-            const raw = std.mem.trim(u8, line[pos + marker.len ..], " \t,.{}\\");
-            const digits = digitSlice(raw) orelse continue;
+            var idx = pos + marker.len;
+            while (idx < line.len and !std.ascii.isDigit(line[idx])) idx += 1;
+            const start = idx;
+            while (idx < line.len and std.ascii.isDigit(line[idx])) idx += 1;
+            if (idx == start) continue;
+            const digits = line[start..idx];
             const id = try std.fmt.parseInt(u64, digits, 10);
             try list.append(allocator, id);
         }

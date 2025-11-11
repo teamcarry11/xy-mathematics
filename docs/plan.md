@@ -1,12 +1,12 @@
 # Grain Aurora GUI Plan — TigerStyle Execution
 
-## 1. Pre-VPS Launchpad
-- Scaffold `src/kernel/main.zig`, `src/kernel/syscall_table.zig`,
+## 1. Pre-VPS Launchpad ✅
+- Scaffolded `src/kernel/main.zig`, `src/kernel/syscall_table.zig`,
   `src/kernel/devx/abi.zig`, `kernel/link.ld`, and `scripts/qemu_rv64.sh`
-  so `zig build kernel-rv64` builds locally.
-- Document bootloader findings in `docs/boot/notes.md`.
-- Add `grain conduct make kernel-rv64` / `run kernel-rv64` (remote step
-  can be stubbed until the droplet is active).
+  so `zig build kernel-rv64` now emits `zig-out/bin/grain-rv64`.
+- Logged bootloader assumptions in `docs/boot/notes.md`.
+- Extended `grain conduct` with `make kernel-rv64`, `run kernel-rv64`,
+  and `report kernel-rv64`; runs capture logs under `logs/kernel/`.
 
 ## 2. RISC-V Kernel Airlift
 - Stand up the Ubuntu 24.04 VPS, sync via `scripts/vpn_rsync.sh`, and

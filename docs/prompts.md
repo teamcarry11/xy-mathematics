@@ -8,6 +8,21 @@ pub const PromptEntry = struct {
 };
 
 pub const PROMPTS = [_]PromptEntry{
+    .{ .id = 85, .timestamp = null, .content =
+        \\next step 
+    },
+    .{ .id = 84, .timestamp = null, .content =
+        \\implement the next step 
+    },
+    .{ .id = 83, .timestamp = null, .content =
+        \\implement the plan and populate our cursor to-do's 
+    },
+    .{ .id = 82, .timestamp = null, .content =
+        \\let them match 
+    },
+    .{ .id = 81, .timestamp = null, .content =
+        \\let's move them into one `prototypes` folder 
+    },
     .{ .id = 80, .timestamp = null, .content =
         \\begin that
     },
@@ -587,6 +602,8 @@ Can you write a message for me to submit to Digital Ocean here ?
 pub const PROMPT_COUNT = PROMPTS.len;
 pub const latest = PROMPTS[0];
 ```
+
+
 
 
 

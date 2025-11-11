@@ -22,14 +22,15 @@ our
   [^vegan-tiger].
 
 ## Ray Mission Ladder (Deterministic & Kind)
-1. **Pre-VPS Launchpad**
-   - Scaffold `src/kernel/` (`main.zig`, `syscall_table.zig`,
+1. **Pre-VPS Launchpad (done)**
+   - Scaffolded `src/kernel/` (`main.zig`, `syscall_table.zig`,
      `devx/abi.zig`), `kernel/link.ld`, and `scripts/qemu_rv64.sh` so
-     `zig build kernel-rv64` already compiles.
-   - Journal bootloader research in `docs/boot/notes.md`, tracking the
+     `zig build kernel-rv64` emits `zig-out/bin/grain-rv64`.
+   - Journaled bootloader research in `docs/boot/notes.md`, tracking the
      OpenSBI ➝ U-Boot baseline and our Zig/Rust payload ambitions.
-   - Extend `grain conduct` with `make kernel-rv64` / `run kernel-rv64`
-     (stub remote exec until the droplet is live).
+   - Extended `grain conduct` with `make kernel-rv64`, `run kernel-rv64`,
+     and `report kernel-rv64`; runs now stream to stdout and archive logs
+     under `logs/kernel/`.
 2. **RISC-V Kernel Airlift**
    - Mirror `docs/plan.md` §12: remote Ubuntu 24.04 host, rsync scripts,
      and deterministic build steps targeting `out/kernel/grain-rv64.bin`.
@@ -45,8 +46,8 @@ our
 3. **Kernel Lab Notebook**
    - Route boot traces into `logs/kernel/`, archive crash dumps, and
      annotate recovery lessons in `docs/boot/notes.md`.
-   - Script `grain conduct report kernel-rv64` to summarize latest boots
-     for Ray acceptance.
+   - `grain conduct report kernel-rv64` surfaces the latest boot log for
+     Ray acceptance.
 4. **Grain Conductor & Pottery**
    - `zig build conduct` drives `grain conduct brew|link|manifest|edit|
      make|ai|contracts|mmt|cdn` with TigerStyle determinism.
@@ -135,6 +136,8 @@ V Mainboard](https://frame.work/products/deep-computing-risc-v-mainboard)
 [^framework-blog]: [Framework Blog: RISC-V Mainboard for Framework Laptop 
 13](https://frame.work/blog/risc-v-mainboard-for-framework-laptop-13-is-
 now-available)
+
+
 
 
 

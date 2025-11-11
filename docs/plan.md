@@ -81,3 +81,13 @@
   (build + rsync) and `grain conduct run kernel-rv64` (SSH + QEMU).
 - Log boot traces and crash dumps back into `logs/kernel/` for Ray
   journaling.
+- Track firmware landscape: baseline boot chain = OpenSBI ➝ U-Boot on
+  StarFive/SiFive boards, with coreboot + EDK2 efforts underway for
+  Framework / DC-ROMA RISC-V mainboards so GRUB-or EFI payloads stay
+  viable [^dcroma][^framework-mainboard][^framework-blog].
+- Reserve `docs/boot/` for bootloader experiments (Zig SBI payloads,
+  Rust handoffs) once the vendor firmware exposes stable hooks.
+
+[^dcroma]: [DeepComputing DC-ROMA RISC-V Mainboard](https://deepcomputing.io/product/dc-roma-risc-v-mainboard/)
+[^framework-mainboard]: [Framework Marketplace – DeepComputing RISC-V Mainboard](https://frame.work/products/deep-computing-risc-v-mainboard)
+[^framework-blog]: [Framework Blog: RISC-V Mainboard for Framework Laptop 13](https://frame.work/blog/risc-v-mainboard-for-framework-laptop-13-is-now-available)

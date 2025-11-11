@@ -195,6 +195,10 @@ our
       `grain conduct run kernel-rv64` (SSH + QEMU) enforce TigerStyle
       command determinism while Ray logs each boot trace under
       `logs/kernel/`.
+    - Boot chain assumptions: OpenSBI ➝ U-Boot today, with coreboot +
+      EDK2 ports emerging for JH7110/Framework-class boards; keep
+      GRUB-compatible images handy while we prototype Zig SBI payloads
+      in `docs/boot/` [^dcroma][^framework-mainboard][^framework-blog].
 
 [^readonly]: [Matklad, "Readonly Characters Are a Big Deal"](https://
 matklad.github.io/2025/11/10/readonly-characters.html)
@@ -206,6 +210,14 @@ www.instagram.com/vegan_tiger/)
 riverwm/river)
 [^jepsen-tb]: [Jepsen, "TigerBeetle 0.16.11"](https://jepsen.io/analyses/
 tigerbeetle-0.16.11)
+[^dcroma]: [DeepComputing DC-ROMA RISC-V Mainboard](https://
+deepcomputing.io/product/dc-roma-risc-v-mainboard/)
+[^framework-mainboard]: [Framework Marketplace – DeepComputing RISC-
+V Mainboard](https://frame.work/products/deep-computing-risc-v-mainboard)
+[^framework-blog]: [Framework Blog: RISC-V Mainboard for Framework Laptop 
+13](https://frame.work/blog/risc-v-mainboard-for-framework-laptop-13-is-
+now-available)
+
 
 
 

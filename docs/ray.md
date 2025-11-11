@@ -67,7 +67,20 @@ our
      make|ai|contracts|mmt|cdn` with TigerStyle determinism.
    - Pottery abstractions schedule CDN kilns, ledger mints, and AI
      copilots while staying within static allocation vows.
-7. **Grain Social Terminal**
+7. **Tahoe Sandbox**
+   - Evolve `src/tahoe_window.zig` into a River-inspired compositor with
+     Moonglow keymaps and explicit memory boundaries.
+8. **GUI & Compositor Study**
+   - Keep surveying Mach engine, zgui, Zig-gamedev, River philosophy, and
+     Hammerspoon/QEMU parallels (`docs/gui_research.md`).
+9. **Grain Aurora UI**
+   - `src/grain_aurora.zig`, `src/grain_route.zig`, and
+     `src/grain_orchestrator.zig` deliver deterministic rendering,
+     routing, and agent orchestration; roadmap tracked in `docs/plan.md`.
+   - Deterministic recovery: single-copy rebuild flow (GrainLoom +
+     Graindaemon + contracts) and bounded retries per Jepsen guidance
+     [^jepsen-tb].
+10. **Grain Social Terminal**
    - Typed Zig arrays represent social data; fuzz 11 random `npub`s per
      run to stress Nostr relays.
    - TigerBank flows (`docs/nostr_mmt_tigerbank.md`,
@@ -76,19 +89,6 @@ our
    - DM interface (`src/dm.zig`) handles X25519 + ChaCha20-Poly1305
      envelopes; GrainLoop, Graindaemon, GrainBuffer, and GrainLoom stitch
      UDP events, supervision, and sticky read-only panes.
-8. **Tahoe Sandbox**
-   - Evolve `src/tahoe_window.zig` into a River-inspired compositor with
-     Moonglow keymaps and explicit memory boundaries.
-9. **GUI & Compositor Study**
-   - Keep surveying Mach engine, zgui, Zig-gamedev, River philosophy, and
-     Hammerspoon/QEMU parallels (`docs/gui_research.md`).
-10. **Grain Aurora UI**
-   - `src/grain_aurora.zig`, `src/grain_route.zig`, and
-     `src/grain_orchestrator.zig` deliver deterministic rendering,
-     routing, and agent orchestration; roadmap tracked in `docs/plan.md`.
-   - Deterministic recovery: single-copy rebuild flow (GrainLoom +
-     Graindaemon + contracts) and bounded retries per Jepsen guidance
-     [^jepsen-tb].
 11. **Onboarding & Care**
    - Guard passwords (`this-password-im-typing-Now-9`), cover Cursor
      Ultra, GitHub/Gmail/iCloud onboarding, 2FA, and Ghostty setup.

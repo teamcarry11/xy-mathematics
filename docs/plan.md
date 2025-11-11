@@ -43,25 +43,25 @@
 - Model Grain Pottery scheduling for CDN kilns, ledger mints, and AI
   copilots with static allocation guarantees.
 
-## 5. Grain Social Terminal
+## 5. Tahoe Sandbox
+- Grow `src/tahoe_window.zig` into a River-inspired compositor with
+  Moonglow keymaps and explicit allocation bounds.
+
+## 6. GUI & Compositor Study
+- Keep researching Mach engine, zgui, Zig-gamedev, River philosophy, and
+  Hammerspoon/QEMU parallels; log updates in `docs/gui_research.md`.
+
+## 7. Grain Aurora UI
+- Advance `src/grain_aurora.zig`, `src/grain_route.zig`, and
+  `src/grain_orchestrator.zig`; maintain roadmap in `docs/plan.md`.
+- Script deterministic recovery + bounded retries (Jepsen lessons).
+
+## 8. Grain Social Terminal
 - Keep social data typed in Zig, fuzz 11 `npub`s per run, and deepen
   TigerBank/TigerCDN tooling (`grain conduct mmt|cdn`).
 - Share settlement encoders in `src/contracts.zig`; store secrets via
   `src/grainvault.zig`.
 - Maintain DM flows, GrainLoop, Graindaemon, GrainBuffer, and GrainLoom.
-
-## 6. Tahoe Sandbox
-- Grow `src/tahoe_window.zig` into a River-inspired compositor with
-  Moonglow keymaps and explicit allocation bounds.
-
-## 7. GUI & Compositor Study
-- Keep researching Mach engine, zgui, Zig-gamedev, River philosophy, and
-  Hammerspoon/QEMU parallels; log updates in `docs/gui_research.md`.
-
-## 8. Grain Aurora UI
-- Advance `src/grain_aurora.zig`, `src/grain_route.zig`, and
-  `src/grain_orchestrator.zig`; maintain roadmap in `docs/plan.md`.
-- Script deterministic recovery + bounded retries (Jepsen lessons).
 
 ## 9. Onboarding & Care
 - Maintain onboarding scripts (Cursor Ultra, GitHub/Gmail/iCloud, 2FA,

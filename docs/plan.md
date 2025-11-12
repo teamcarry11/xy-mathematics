@@ -1,28 +1,61 @@
 # Grain Aurora GUI Plan — TigerStyle Execution
 
-## 1. Wire Cocoa Bridge (macOS Priority)
-- Implement actual NSApplication/NSWindow/NSView calls in
-  `src/platform/macos/window.zig`.
-- Replace stubbed `show()` and `present()` with real Cocoa window creation.
-- Minimal Cocoa shim: Aurora owns RGBA buffer, Cocoa hosts the view.
-- Native macOS window chrome: traffic lights, menu bar, proper window lifecycle.
+**Current Status**: Window rendering complete ✅. Focus: Interactive macOS Tahoe GUI foundation.
 
-## 2. River-Inspired Compositor (macOS Priority)
-- Evolve `src/tahoe_window.zig` into River-style window tiling.
-- Implement Moonglow keybindings for window management workflows.
-- Multiple panes/views with deterministic layout algorithms.
+## macOS Tahoe GUI Foundation (Current Priority) 🎯
 
-## 3. Aurora UI Enhancements (macOS Priority)
-- Complete Flux Darkroom color filter integration.
-- Native macOS menu bar with `View ▸ Flux` toggle.
-- Menu bar: `Aurora | File | Edit | Selection | View | Go | Run | Terminal | Window | Help`.
+### 1. Input Handling 🔥 **IMMEDIATE PRIORITY**
+- Mouse events: clicks, movement, drag operations
+- Keyboard events: key presses, modifiers (Cmd, Option, Shift, Control)
+- Window focus events: `windowDidBecomeKey:`, `windowDidResignKey:`
+- Event routing: forward Cocoa events to Aurora's event system
+- Files: `src/platform/macos_tahoe/window.zig` (add event handlers), `src/tahoe_window.zig` (event processing)
 
-## 4. Event Loop Integration (macOS Priority)
-- macOS event handling (keyboard, mouse, window events).
-- Main run loop integration with Cocoa event system.
-- Deterministic event processing with TigerStyle safety.
+### 2. Animation/Update Loop 🔥 **HIGH PRIORITY**
+- Timer-based update loop: `NSTimer` or `CADisplayLink` for smooth updates
+- Continuous redraw: call `tick()` on timer interval (60fps target)
+- Window resize handling: update buffer or scale rendering on resize
+- Event-driven updates: redraw on input events, window changes
+- Files: `src/tahoe_app.zig`, `src/tahoe_window.zig`, `src/platform/macos_tahoe/window.zig`
+
+### 3. Window Resizing 🔥 **HIGH PRIORITY**
+- Implement `windowDidResize:` delegate method
+- Handle dynamic buffer resizing or fixed-size scaling
+- Recreate CGImage/NSImage on window size changes
+- Maintain aspect ratio or allow free resizing
+- Files: `src/platform/macos_tahoe/window.zig` (delegate implementation)
+
+### 4. Text Rendering Integration ⭐ **MEDIUM PRIORITY**
+- Integrate existing `TextRenderer` into `tahoe_window.zig`
+- Render text to RGBA buffer: fonts, basic layout, word wrapping
+- Text input handling: keyboard → text buffer → render
+- Cursor rendering: show text cursor position
+- Files: `src/tahoe_window.zig`, `src/aurora_text_renderer.zig`
+
+### 5. NSApplication Delegate ⭐ **MEDIUM PRIORITY**
+- Implement `NSApplicationDelegate` protocol methods
+- Handle `applicationShouldTerminate:` for clean shutdown
+- Window delegate: `windowWillClose:`, `windowDidResize:`, etc.
+- Menu bar integration: File, Edit, View menus
+- Files: `src/platform/macos_tahoe/window.zig` (new delegate class), `src/tahoe_app.zig`
+
+### 6. River Compositor Foundation ⭐ **MEDIUM PRIORITY**
+- Multi-pane layout system: split windows horizontally/vertically
+- Window tiling logic: deterministic layout algorithms
+- Moonglow keybindings: `Cmd+Shift+H` (horizontal split), `Cmd+Shift+V` (vertical split)
+- Workspace support: multiple workspaces with window groups
+- Files: `src/tahoe_window.zig` (compositor logic), `src/platform/macos_tahoe/window.zig` (multi-window support)
 
 ## Completed Work ✅
+
+### macOS Tahoe Window Rendering ✅ **COMPLETE**
+- Rewrote `window.zig` from scratch to fix parser errors
+- Fixed NSImage creation: use NSBitmapImageRep + NSImage instead of non-existent `imageWithCGImage:size:`
+- Fixed struct return handling: added `objc_msgSend_returns_NSRect` for methods returning NSRect by value
+- Switched to NSImageView: replaced manual drawing with `NSImageView.setImage:` for reliable rendering
+- Window successfully displays 1024x768 RGBA buffer (dark blue-gray background with white rectangle)
+- All compilation errors resolved, application runs successfully
+- Files: `src/platform/macos_tahoe/window.zig`, `src/platform/macos_tahoe/objc_wrapper.c`, `src/platform/macos_tahoe/cocoa_bridge.zig`
 
 ### Cocoa Bridge Implementation ✅
 - Implemented actual NSApplication, NSWindow, NSView calls

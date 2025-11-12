@@ -22,9 +22,55 @@ our Tahoe aesthetic, reminding us to keep ethical fashion signal in view
 
 **Vision**: Grain Aurora as a Zig-first IDE with Matklad-inspired LSP architecture, combining Cursor-style agentic coding with native macOS performance and River compositor workflows.
 
-### Phase 1: Core IDE Foundation (Current Priority)
+### Phase 1: macOS Tahoe GUI Foundation (Current Priority) 🎯
 
-1. **Zig Language Server Protocol (LSP) Implementation** ⭐ **NEW PRIORITY**
+**Status**: Window rendering complete ✅. Next: Interactive input handling.
+
+1. **Input Handling (macOS Tahoe)** 🔥 **IMMEDIATE PRIORITY**
+   - Mouse events: clicks, movement, drag operations
+   - Keyboard events: key presses, modifiers (Cmd, Option, Shift, Control)
+   - Window focus events: `windowDidBecomeKey:`, `windowDidResignKey:`
+   - Event routing: forward Cocoa events to Aurora's event system
+   - Files: `src/platform/macos_tahoe/window.zig` (add event handlers), `src/tahoe_window.zig` (event processing)
+
+2. **Animation/Update Loop (macOS Tahoe)** 🔥 **HIGH PRIORITY**
+   - Timer-based update loop: `NSTimer` or `CADisplayLink` for smooth updates
+   - Continuous redraw: call `tick()` on timer interval (60fps target)
+   - Window resize handling: update buffer or scale rendering on resize
+   - Event-driven updates: redraw on input events, window changes
+   - Files: `src/tahoe_app.zig`, `src/tahoe_window.zig`, `src/platform/macos_tahoe/window.zig`
+
+3. **Window Resizing (macOS Tahoe)** 🔥 **HIGH PRIORITY**
+   - Implement `windowDidResize:` delegate method
+   - Handle dynamic buffer resizing or fixed-size scaling
+   - Recreate CGImage/NSImage on window size changes
+   - Maintain aspect ratio or allow free resizing
+   - Files: `src/platform/macos_tahoe/window.zig` (delegate implementation)
+
+4. **Text Rendering Integration (macOS Tahoe)** ⭐ **MEDIUM PRIORITY**
+   - Integrate existing `TextRenderer` into `tahoe_window.zig`
+   - Render text to RGBA buffer: fonts, basic layout, word wrapping
+   - Text input handling: keyboard → text buffer → render
+   - Cursor rendering: show text cursor position
+   - Files: `src/tahoe_window.zig`, `src/aurora_text_renderer.zig`
+
+5. **NSApplication Delegate (macOS Tahoe)** ⭐ **MEDIUM PRIORITY**
+   - Implement `NSApplicationDelegate` protocol methods
+   - Handle `applicationShouldTerminate:` for clean shutdown
+   - Window delegate: `windowWillClose:`, `windowDidResize:`, etc.
+   - Menu bar integration: File, Edit, View menus
+   - Files: `src/platform/macos_tahoe/window.zig` (new delegate class), `src/tahoe_app.zig`
+
+6. **River Compositor Foundation (macOS Tahoe)** ⭐ **MEDIUM PRIORITY**
+   - Multi-pane layout system: split windows horizontally/vertically
+   - Window tiling logic: deterministic layout algorithms
+   - Moonglow keybindings: `Cmd+Shift+H` (horizontal split), `Cmd+Shift+V` (vertical split)
+   - Workspace support: multiple workspaces with window groups
+   - Files: `src/tahoe_window.zig` (compositor logic), `src/platform/macos_tahoe/window.zig` (multi-window support)
+
+### Phase 2: Core IDE Foundation
+
+7. **Zig Language Server Protocol (LSP) Implementation** ⭐ **FUTURE PRIORITY**
    - Build snapshot-based LSP server using Matklad's cancellation-aware model
    - Start with rock-solid data model: source code store that evolves over time
    - Implement incremental analysis: only re-analyze what changed
@@ -32,21 +78,14 @@ our Tahoe aesthetic, reminding us to keep ethical fashion signal in view
    - Reference: [Matklad's Zig LSP architecture](https://matklad.github.io/2023/05/06/zig-language-server-and-cancellation.html)
    - Files: `src/aurora_lsp/` (new module)
 
-2. **Event Loop & Window Lifecycle (macOS Priority)** ✅ **IN PROGRESS**
-   - Implement NSApplication delegate for proper event handling
-   - Window delegate methods for window lifecycle events
-   - Keyboard/mouse event handling with Cocoa event system
-   - Keep app running: proper delegate prevents immediate termination
-   - Files: `src/platform/macos/window.zig`, `src/tahoe_app.zig`
-
-3. **Text Editor Core**
+8. **Text Editor Core**
    - Multi-file editor with tab support
    - Syntax highlighting for Zig (semantic + lexical)
    - Cursor management: single cursor, multi-cursor support
    - Selection handling: word, line, block selection
    - Files: `src/aurora_editor/` (extend existing)
 
-4. **Code Completion & Semantic Features**
+9. **Code Completion & Semantic Features**
    - LSP-based code completion (`textDocument/completion`)
    - Go to definition (`textDocument/definition`)
    - Find all references (`textDocument/references`)
@@ -54,9 +93,9 @@ our Tahoe aesthetic, reminding us to keep ethical fashion signal in view
    - Inlay hints: parameter names, types, comptime values
    - Files: `src/aurora_lsp/`, `src/aurora_editor/`
 
-### Phase 2: Agentic Coding Integration
+### Phase 3: Agentic Coding Integration
 
-5. **Cursor CLI / Claude Code Integration**
+10. **Cursor CLI / Claude Code Integration**
    - Cursor CLI integration for AI-assisted coding
    - Claude Code API integration (alternative to Cursor)
    - Agent chat pane: similar to Cursor's Composer mode
@@ -64,22 +103,16 @@ our Tahoe aesthetic, reminding us to keep ethical fashion signal in view
    - Accept/reject workflow (`Cmd+Enter` / `Esc`)
    - Files: `src/aurora_agent/` (new module), `src/grainvault/` (API keys)
 
-6. **Zig-Specific Agent Prompts**
+11. **Zig-Specific Agent Prompts**
    - Comptime-aware code generation
    - Error union handling suggestions
    - TigerStyle compliance checks
    - Memory safety analysis suggestions
    - Files: `src/aurora_agent/prompts.zig`
 
-### Phase 3: Advanced IDE Features
+### Phase 4: Advanced IDE Features
 
-7. **River-Inspired Compositor (macOS Priority)**
-   - Evolve `src/tahoe_window.zig` into River-style window tiling
-   - Implement Moonglow keybindings for window management workflows
-   - Multiple panes/views with deterministic layout algorithms
-   - Workspace support: switch between project workspaces
-
-8. **Terminal Integration (Vibe Coding)**
+12. **Terminal Integration (Vibe Coding)**
    - Integrated terminal: blur line between editor and terminal
    - Split panes: like tmux, but integrated
    - Command history: `Cmd+Up` to scroll
@@ -87,13 +120,13 @@ our Tahoe aesthetic, reminding us to keep ethical fashion signal in view
    - Build output linking: errors link back to source
    - Reference: [Matklad's Vibe Coding](https://matklad.github.io/2025/08/31/vibe-coding-terminal-editor.html)
 
-9. **Aurora UI Enhancements**
+13. **Aurora UI Enhancements**
    - Complete Flux Darkroom color filter integration
    - Native macOS menu bar with `View ▸ Flux` toggle
    - Menu bar: `Aurora | File | Edit | Selection | View | Go | Run | Terminal | Window | Help`
    - Theme support: Dark/Light/One Dark Pro
 
-10. **Missing IDE Features** (Matklad-inspired)
+14. **Missing IDE Features** (Matklad-inspired)
     - Read-only characters: show immutable vs mutable state
     - Extend selection: semantic-aware selection expansion
     - Code actions/assists: 💡 lightbulb for quick fixes

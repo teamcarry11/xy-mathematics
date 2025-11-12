@@ -56,8 +56,9 @@ zig build tahoe
 
 You should see a window with:
 - Native macOS chrome (traffic lights, menu bar)
-- Dark theme (One Dark Pro inspired)
-- Welcome message: "Grain Aurora"
+- Dark blue-gray background with white rectangle (Tahoe aesthetic)
+- Window title: "Grain Aurora"
+- **Note**: Currently displays static content. Interactive features (mouse/keyboard) coming next!
 
 ## Your First Zig Project
 

@@ -2,8 +2,16 @@ const std = @import("std");
 
 pub const Mode = enum { none, darkroom };
 
-pub fn apply(mode: Mode, pixels: []u8) void {
-    if (mode == .none) return;
+pub const FluxState = struct {
+    mode: Mode = .none,
+
+    pub fn toggle(self: *FluxState, mode: Mode) void {
+        self.mode = mode;
+    }
+};
+
+pub fn apply(state: FluxState, pixels: []u8) void {
+    if (state.mode == .none) return;
     if (pixels.len % 4 != 0) return;
 
     var i: usize = 0;
@@ -12,7 +20,7 @@ pub fn apply(mode: Mode, pixels: []u8) void {
         const g = pixels[i + 1];
         const b = pixels[i + 2];
 
-        switch (mode) {
+        switch (state.mode) {
             .none => {},
             .darkroom => {
                 const new_r = std.math.clamp(@as(i32, r) + 20, 0, 255);
@@ -24,9 +32,14 @@ pub fn apply(mode: Mode, pixels: []u8) void {
     }
 }
 
-test "darkroom filter dims blue/green" {
+test "darkroom filter toggles" {
+    var state = FluxState{};
     var buf = [_]u8{ 200, 180, 160, 255 };
-    apply(.darkroom, &buf);
+    apply(state, &buf);
+    try std.testing.expectEqual(@as(u8, 200), buf[0]);
+
+    state.toggle(.darkroom);
+    apply(state, &buf);
     try std.testing.expect(buf[0] > buf[1]);
     try std.testing.expect(buf[1] < 40);
     try std.testing.expect(buf[2] < 25);

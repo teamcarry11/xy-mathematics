@@ -25,7 +25,7 @@ We keep the `[2 | 1 | 1]` envelope intact while growing new limbs.
   cues so the Grain terminal keeps a covetable ethical fashion pulse
   [^vegan-tiger].
 - **TahoeSandbox Stub** — `src/tahoe_window.zig` now holds a placeholder
-  Mach/Metal host ready for the GUI spike.
+  Mach/Metal/Cocoa host ready for the GUI spike while kernel/QEMU work is paused.
 - **TigerBank Spec** — `docs/nostr_mmt_tigerbank.md` defines the Nostr +
   TigerBeetle + MMT payment flow with Alpenglow-style consensus.
   `tigerbank_client.zig` now drives stub submissions from the CLI.
@@ -101,7 +101,8 @@ assertions.
 5. **GUI / Nostr Roadmap**
    - Begin mapping River-inspired compositor tasks into actionable
      prototypes (`docs/gui_research.md` → issues/tasks). First stub lives
-     in `src/tahoe_window.zig`.
+     in `src/tahoe_window.zig`, now targeting macOS Cocoa traffic lights while
+     QEMU work is on hold.
    - Align the new `grain conduct mmt` stub with TigerBank ledger logic.
      Stub client currently prints deterministic logs per endpoint; replace
      with real IO during the next pass.

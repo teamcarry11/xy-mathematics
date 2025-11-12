@@ -89,7 +89,7 @@ Matklad-style data-driven tests keep refactors fearless. I wrap prose to
   to mirror; plan serialization for network casting later.
 - Translate Vegan Tiger moodboards into shader and UI color studies
   before we prototype the Tahoe compositor.
-- Flesh out the new `TahoeSandbox` stub (`src/tahoe_window.zig`) into a real Mach/Metal window.
+- Flesh out the new `TahoeSandbox` stub (`src/tahoe_window.zig`) into a real Mach/Metal window with a Cocoa shim while kernel/QEMU work is paused.
 - Shape the TigerBank Nostr + TigerBeetle payment protocol (`docs/nostr_mmt_tigerbank.md`)
   and fold its CLI stubs into `grain conduct`, now driven by `tigerbank_client.zig`.
 - Finalize CDN bundle automation via `grain conduct cdn` with static buffer
@@ -98,6 +98,7 @@ Matklad-style data-driven tests keep refactors fearless. I wrap prose to
   Ghostty tabs with GrainVault-fed keys.
 - Hook Matklad fuzzers across `contracts.zig`, `grain_lattice.zig`, and the
   CLI to keep the enveloped codecs honest.
+- Resume QEMU/kernel automation once Framework 13 RISC-V hardware or VPS is online; for now treat the MacBook Air / Framework 16 as Aurora playgrounds.
 - Prototype `grain conduct` commands (e.g. `conduct brew`, `conduct link`,
   `conduct edit`) so interactive prompts and scripted modes both follow
   TigerStyle expectations.

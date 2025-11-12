@@ -1,7 +1,7 @@
 const std = @import("std");
 const GrainBuffer = @import("grain_buffer.zig").GrainBuffer;
 const AuroraFilter = @import("aurora_filter.zig");
-const AuroraCocoa = @import("aurora_cocoa.zig");
+const MacWindow = @import("platform/macos/window.zig");
 
 /// GrainAurora — component-first TigerStyle UI stitching engine.
 // ~<~ Glow Airbend: keep renders light.
@@ -140,14 +140,12 @@ pub fn demo() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
 
-    var app = try AuroraCocoa.App.init(gpa.allocator(), .{
-        .title = "Aurora Sandbox",
-        .menu = &.{ .{ .title = "Aurora" }, .{ .title = "File" }, .{ .title = "View ▸ Flux ▸ Darkroom" } },
-    });
-    defer app.deinit();
-    try app.present();
+    var window = MacWindow.Window.init("Aurora Sandbox");
+    try window.show();
 
     var pixels = [_]u8{ 180, 160, 150, 255, 200, 120, 100, 255 };
-    AuroraFilter.apply(.darkroom, &pixels);
+    var state = AuroraFilter.FluxState{};
+    state.toggle(.darkroom);
+    AuroraFilter.apply(state, &pixels);
     std.debug.print("Applied darkroom filter to {d} pixels\\n", .{pixels.len / 4});
 }

@@ -28,7 +28,8 @@ our Tahoe aesthetic, reminding us to keep ethical fashion signal in view
 
 0. **RISC-V Kernel Virtualization Layer (macOS Tahoe)** 🔥 **HIGH PRIORITY** 🎯 **NEW** ✅ **CORE COMPLETE**
    - **Vision**: Run Zig monolith kernel in virtualized RISC-V environment within macOS Tahoe IDE
-   - **Kernel Name**: **Aurora Kernel** 🌅 (recommended) - "The dawn of RISC-V kernels" (30-year vision, non-POSIX, modern design)
+   - **Kernel Name**: **Basin Kernel** 🏞️ (recommended) - "The foundation that holds everything" (Lake Tahoe basin metaphor, perfect Tahoe connection, 30-year vision, non-POSIX, modern design)
+     - **Alternative**: Aurora Kernel 🌅 (matches IDE branding) or Tiger Kernel 🐅 (matches Tiger Style)
    - **Why**: Enable kernel development and testing without physical RISC-V hardware or external QEMU
    - **RISC-V-First Development Strategy**: 
      - **Primary Goal**: Develop RISC-V-targeted Zig code in macOS Tahoe VM, deploy to Framework 13 DeepComputing RISC-V mainboard with confidence

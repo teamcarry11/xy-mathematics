@@ -59,6 +59,17 @@
 
 ### Category 4: Nature / Mountain Themed (Tahoe Aesthetic)
 
+#### **Basin Kernel** 🏞️ ⭐ **NEW SUGGESTION**
+- **Pros**: 
+  - Perfect Tahoe connection (Lake Tahoe basin)
+  - Geological metaphor: foundation, containment, collection
+  - Distinctive, memorable, not generic
+  - Suggests gathering resources, stability, depth
+  - Works beautifully: "Grain Aurora IDE" + "Basin Kernel" = cohesive mountain/lake theme
+- **Cons**: Might be less immediately obvious than "Aurora" or "Tiger"
+- **Tagline**: "Basin: The foundation that holds everything" or "Basin: Deep RISC-V foundations"
+- **Rationale**: Lake Tahoe basin is a geological foundation that holds water—perfect metaphor for kernel as foundation holding the system
+
 #### **Summit Kernel** ⛰️
 - **Pros**: Mountain metaphor (peak performance), matches Tahoe aesthetic
 - **Cons**: Generic, many "Summit" projects
@@ -115,7 +126,19 @@
 
 ## Top Recommendations
 
-### 1. **Aurora Kernel** 🌅 (Top Choice)
+### 1. **Basin Kernel** 🏞️ ⭐ **STRONG CONTENDER** (User Suggestion)
+- **Rationale**: 
+  - Perfect Tahoe connection (Lake Tahoe basin) - matches macOS Tahoe IDE perfectly
+  - Geological metaphor: foundation, containment, collection (kernel holds the system)
+  - Distinctive, memorable, not generic
+  - Suggests gathering resources, stability, depth
+  - Works beautifully: "Grain Aurora IDE" + "Basin Kernel" = cohesive mountain/lake theme
+  - Lake Tahoe basin is geological foundation - perfect metaphor for kernel as foundation
+- **Full Name**: "Basin Kernel" or "Basin"
+- **Tagline**: "Basin: The foundation that holds everything" or "Basin: Deep RISC-V foundations"
+- **Why It Works**: Basin = foundation that contains and supports everything above it (perfect kernel metaphor)
+
+### 2. **Aurora Kernel** 🌅 (Top Choice - IDE Branding)
 - **Rationale**: 
   - Matches Grain Aurora IDE branding
   - Beautiful metaphor (dawn = new beginning, 30-year vision)
@@ -124,7 +147,7 @@
 - **Full Name**: "Aurora Kernel" or "Aurora"
 - **Tagline**: "Aurora: The dawn of RISC-V kernels"
 
-### 2. **Tiger Kernel** 🐅 (Strong Alternative)
+### 3. **Tiger Kernel** 🐅 (Strong Alternative)
 - **Rationale**:
   - Matches Tiger Style branding
   - Powerful, direct
@@ -132,7 +155,7 @@
 - **Full Name**: "Tiger Kernel" or "Tiger"
 - **Tagline**: "Tiger: RISC-V native, Zig-powered"
 
-### 3. **Ridge Kernel** 🏔️ (Tahoe Aesthetic)
+### 4. **Ridge Kernel** 🏔️ (Tahoe Aesthetic)
 - **Rationale**:
   - Matches Tahoe mountain aesthetic
   - Suggests stability and elevation
@@ -140,7 +163,7 @@
 - **Full Name**: "Ridge Kernel" or "Ridge"
 - **Tagline**: "Ridge: Elevated RISC-V design"
 
-### 4. **Keystone** 🔑 (Unique)
+### 5. **Keystone** 🔑 (Unique)
 - **Rationale**:
   - Architectural metaphor (essential piece)
   - Distinctive, memorable
@@ -148,7 +171,7 @@
 - **Full Name**: "Keystone Kernel" or "Keystone"
 - **Tagline**: "Keystone: The essential RISC-V kernel"
 
-### 5. **Granite Kernel** 🪨 (Solid Foundation)
+### 6. **Granite Kernel** 🪨 (Solid Foundation)
 - **Rationale**:
   - Rock-solid metaphor
   - Matches mountain theme
@@ -158,7 +181,17 @@
 
 ## Recommendation
 
-**Primary Choice**: **Aurora Kernel** 🌅
+**Primary Choice**: **Basin Kernel** 🏞️ ⭐ **NEW TOP RECOMMENDATION**
+
+**Rationale**:
+1. **Perfect Tahoe Connection**: Lake Tahoe basin = direct connection to macOS Tahoe IDE
+2. **Metaphor**: Basin = geological foundation that holds water → kernel = foundation that holds the system
+3. **Distinctive**: Not generic, memorable, unique in kernel space
+4. **Cohesive Theme**: "Grain Aurora IDE" + "Basin Kernel" = mountain/lake aesthetic
+5. **Stability**: Basin suggests depth, containment, solid foundation (perfect for 30-year vision)
+6. **Memorable**: Short, punchy, easy to say and remember
+
+**Alternative**: **Aurora Kernel** 🌅 (if Basin feels too geological/less technical)
 
 **Rationale**:
 1. **Brand Consistency**: Matches Grain Aurora IDE perfectly
@@ -167,7 +200,7 @@
 4. **Marketing**: "Grain Aurora IDE" + "Aurora Kernel" = cohesive brand
 5. **Future-Proof**: Works for next 30 years, not tied to current trends
 
-**Alternative**: **Tiger Kernel** 🐅 (if Aurora feels too IDE-focused)
+**Alternative 2**: **Tiger Kernel** 🐅 (if both feel too abstract)
 
 **Rationale**:
 1. **Tiger Style**: Matches existing Tiger Style branding

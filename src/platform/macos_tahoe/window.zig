@@ -101,7 +101,7 @@ pub const Window = struct {
         std.debug.assert(self.rgba_buffer.len % 4 == 0);
         const expected_buffer_size = @as(usize, self.width) * @as(usize, self.height) * 4;
         std.debug.assert(self.rgba_buffer.len == expected_buffer_size);
-
+        
         // Release Cocoa objects: single pointers, explicit cleanup.
         // Why: Explicit cleanup prevents memory leaks, validates pointers before release.
         if (self.ns_image_view) |imageView| {
@@ -134,7 +134,7 @@ pub const Window = struct {
             cocoa.objc_msgSendVoid0(@ptrCast(window), closeSel);
             cocoa.objc_msgSendVoid0(@ptrCast(window), releaseSel);
         }
-
+        
         self.* = undefined;
     }
 
@@ -157,7 +157,7 @@ pub const Window = struct {
         std.debug.assert(sharedApp_opt != null);
         const sharedApp: *c.objc_object = @ptrCast(@alignCast(sharedApp_opt.?));
         std.debug.assert(@intFromPtr(sharedApp) != 0);
-
+        
         // Create NSWindow.
         const NSWindowClass = c.objc_getClass("NSWindow");
         std.debug.assert(NSWindowClass != null);
@@ -167,7 +167,7 @@ pub const Window = struct {
         std.debug.assert(window_opt != null);
         const window: *c.objc_object = @ptrCast(@alignCast(window_opt.?));
         std.debug.assert(@intFromPtr(window) != 0);
-
+        
         // Create content rect.
         const contentRect = cocoa.NSRect{
             .origin = .{
@@ -190,7 +190,7 @@ pub const Window = struct {
         std.debug.assert(nsWindow_opt != null);
         const nsWindow: *c.objc_object = @ptrCast(@alignCast(nsWindow_opt.?));
         std.debug.assert(@intFromPtr(nsWindow) != 0);
-
+        
         // Set window title.
         const setTitleSel = c.sel_getUid("setTitle:");
         std.debug.assert(setTitleSel != null);

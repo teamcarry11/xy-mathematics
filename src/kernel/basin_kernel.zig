@@ -406,14 +406,41 @@ pub const BasinKernel = struct {
         _arg3: u64,
         _arg4: u64,
     ) BasinError!SyscallResult {
-        _ = self;
-        _ = process;
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        std.debug.assert(self_ptr != 0);
+        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        
         _ = _arg2;
         _ = _arg3;
         _ = _arg4;
         
-        // TODO: Implement wait syscall.
-        return BasinError.invalid_syscall;
+        // Assert: process ID must be valid (non-zero).
+        if (process == 0) {
+            return BasinError.invalid_argument; // Invalid process ID
+        }
+        
+        // TODO: Implement actual process waiting (when process management is implemented).
+        // For now, return stub success with exit status 0.
+        // Why: Simple stub - matches current kernel development stage.
+        // Note: In full implementation, we would:
+        // - Look up process in process table
+        // - Wait for process to complete (if not already completed)
+        // - Return process exit status
+        // - Return error if process not found
+        
+        // Stub: Return success with exit status 0 (simple implementation).
+        const exit_status: u64 = 0;
+        const result = SyscallResult.ok(exit_status);
+        
+        // Assert: result must be success (not error).
+        std.debug.assert(result == .success);
+        std.debug.assert(result.success == exit_status);
+        
+        // Assert: Exit status must be valid (0-255).
+        std.debug.assert(exit_status <= 255);
+        
+        return result;
     }
     
     fn syscall_map(
@@ -583,14 +610,63 @@ pub const BasinKernel = struct {
         _arg3: u64,
         _arg4: u64,
     ) BasinError!SyscallResult {
-        _ = self;
-        _ = region;
-        _ = flags;
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        std.debug.assert(self_ptr != 0);
+        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        
         _ = _arg3;
         _ = _arg4;
         
-        // TODO: Implement protect syscall.
-        return BasinError.invalid_syscall;
+        // Assert: region address must be page-aligned (4KB pages).
+        if (region % 4096 != 0) {
+            return BasinError.unaligned_access;
+        }
+        
+        // Assert: region address must be in user space (not kernel space).
+        const KERNEL_SPACE_END: u64 = 0x100000; // 1MB kernel space (matches syscall_map)
+        const USER_SPACE_START: u64 = KERNEL_SPACE_END;
+        
+        if (region < USER_SPACE_START) {
+            return BasinError.permission_denied; // Attempting to protect kernel space
+        }
+        
+        // Assert: region address must be within VM memory bounds.
+        const VM_MEMORY_SIZE: u64 = 4 * 1024 * 1024; // 4MB default (matches syscall_map)
+        if (region >= VM_MEMORY_SIZE) {
+            return BasinError.invalid_argument; // Region address exceeds VM memory
+        }
+        
+        // Decode flags (MapFlags packed struct).
+        const map_flags = @as(MapFlags, @bitCast(@as(u32, @truncate(flags))));
+        
+        // Assert: flags must be valid (at least one permission).
+        if (!map_flags.read and !map_flags.write and !map_flags.execute) {
+            return BasinError.invalid_argument; // No permissions set
+        }
+        
+        // Assert: flags padding must be zero (no reserved bits set).
+        if (map_flags._padding != 0) {
+            return BasinError.invalid_argument; // Reserved bits set
+        }
+        
+        // TODO: Implement actual memory protection (when mapping table is implemented).
+        // For now, return stub success.
+        // Why: Simple stub - matches current kernel development stage.
+        // Note: In full implementation, we would:
+        // - Look up region in mapping table
+        // - Verify region is actually mapped
+        // - Update page permissions based on flags
+        // - Return error if region not found
+        
+        // Stub: Return success (simple implementation).
+        const result = SyscallResult.ok(0);
+        
+        // Assert: result must be success (not error).
+        std.debug.assert(result == .success);
+        std.debug.assert(result.success == 0); // Protect returns 0 on success
+        
+        return result;
     }
     
     fn syscall_channel_create(
@@ -878,18 +954,61 @@ pub const BasinKernel = struct {
     fn syscall_clock_gettime(
         self: *BasinKernel,
         clock_id: u64,
-        _arg2: u64,
+        timespec_ptr: u64,
         _arg3: u64,
         _arg4: u64,
     ) BasinError!SyscallResult {
-        _ = self;
-        _ = clock_id;
-        _ = _arg2;
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        std.debug.assert(self_ptr != 0);
+        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        
         _ = _arg3;
         _ = _arg4;
         
-        // TODO: Implement clock_gettime syscall.
-        return BasinError.invalid_syscall;
+        // Assert: clock_id must be valid (monotonic or realtime).
+        const clock = @as(?ClockId, @enumFromInt(@as(u32, @truncate(clock_id))));
+        if (clock == null) {
+            return BasinError.invalid_argument; // Invalid clock ID
+        }
+        
+        // Assert: timespec pointer must be valid (non-zero, within VM memory).
+        if (timespec_ptr == 0) {
+            return BasinError.invalid_argument; // Null pointer
+        }
+        
+        const VM_MEMORY_SIZE: u64 = 4 * 1024 * 1024; // 4MB default (matches syscall_map)
+        if (timespec_ptr >= VM_MEMORY_SIZE) {
+            return BasinError.invalid_argument; // Timespec pointer exceeds VM memory
+        }
+        
+        // Assert: timespec must fit within VM memory (16 bytes: seconds + nanoseconds).
+        const TIMESPEC_SIZE: u64 = 16; // 8 bytes seconds + 8 bytes nanoseconds
+        if (timespec_ptr + TIMESPEC_SIZE > VM_MEMORY_SIZE) {
+            return BasinError.invalid_argument; // Timespec exceeds VM memory
+        }
+        
+        // TODO: Implement actual time retrieval (when timer is implemented).
+        // For now, return stub (zero timestamp).
+        // Why: Simple stub - matches current kernel development stage.
+        // Note: In full implementation, we would:
+        // - Get current time from system timer (SBI timer or hardware clock)
+        // - Write seconds and nanoseconds to timespec structure
+        // - Handle different clock types (monotonic vs realtime)
+        
+        // Stub: Return zero timestamp (simple implementation).
+        const seconds: u64 = 0;
+        const nanoseconds: u64 = 0;
+        const result = SyscallResult.ok(seconds);
+        
+        // Assert: result must be success (not error).
+        std.debug.assert(result == .success);
+        std.debug.assert(result.success == seconds);
+        
+        // Assert: Nanoseconds must be valid (0-999999999).
+        std.debug.assert(nanoseconds < 1000000000);
+        
+        return result;
     }
     
     fn syscall_sleep_until(

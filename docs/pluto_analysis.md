@@ -170,10 +170,12 @@
 
 ### Critical (Clone First)
 
-**1. `leecannon/zig-sbi`** ⭐ **HIGHEST PRIORITY**
-- **Why**: RISC-V SBI wrapper - directly applicable to our boot code
+**1. `CascadeOS/zig-sbi`** ⭐ **HIGHEST PRIORITY** ⚠️ **UPDATED**
+- **Why**: RISC-V SBI wrapper - directly applicable to our VM and boot code
+- **Note**: CascadeOS maintains zig-sbi (more active than leecannon/zig-sbi)
 - **Learning**: How to use RISC-V SBI (Supervisor Binary Interface)
-- **Action**: Study for RISC-V boot implementation
+- **Action**: Integrate into VM for platform services (console, timer, reset)
+- **Integration**: Add SBI support to VM ECALL handler
 
 **2. `a1393323447/zcore-os`** ⭐ **HIGH PRIORITY**
 - **Why**: Proven RISC-V OS design (rCore-OS translated to Zig)
@@ -220,9 +222,10 @@
 
 1. **Clone Critical Repos:**
    ```bash
-   mkdir -p ~/github/{ZystemOS,leecannon,a1393323447,eastonman,kivikakk,Andy-Python-Programmer}
+   mkdir -p ~/github/{ZystemOS,CascadeOS,a1393323447,eastonman,kivikakk,Andy-Python-Programmer}
    cd ~/github/ZystemOS && git clone https://github.com/ZystemOS/pluto.git
-   cd ~/github/leecannon && git clone https://github.com/leecannon/zig-sbi.git
+   cd ~/github/CascadeOS && git clone https://github.com/CascadeOS/zig-sbi.git
+   cd ~/github/CascadeOS && git clone https://github.com/CascadeOS/CascadeOS.git
    cd ~/github/a1393323447 && git clone https://github.com/a1393323447/zcore-os.git
    cd ~/github/eastonman && git clone https://github.com/eastonman/zesty-core.git
    cd ~/github/kivikakk && git clone https://github.com/kivikakk/daintree.git
@@ -230,11 +233,12 @@
    ```
 
 2. **Study Priority Order:**
-   - **First**: `zig-sbi` (RISC-V SBI wrapper - boot code)
-   - **Second**: `zcore-os` (Proven RISC-V OS structure)
-   - **Third**: `pluto` (Zig kernel patterns, component organization)
-   - **Fourth**: `zesty-core` (RISC-V Zig patterns)
-   - **Fifth**: `daintree` (RISC-V bootloader + kernel)
+   - **First**: `CascadeOS/zig-sbi` (RISC-V SBI wrapper - integrate into VM)
+   - **Second**: `CascadeOS/CascadeOS` (RISC-V64 OS implementation, planned)
+   - **Third**: `zcore-os` (Proven RISC-V OS structure)
+   - **Fourth**: `pluto` (Zig kernel patterns, component organization)
+   - **Fifth**: `zesty-core` (RISC-V Zig patterns)
+   - **Sixth**: `daintree` (RISC-V bootloader + kernel)
 
 3. **Document Learnings:**
    - Create analysis docs for each repo (like `aero_analysis.md`)

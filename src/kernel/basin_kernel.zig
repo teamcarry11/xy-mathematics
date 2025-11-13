@@ -303,8 +303,11 @@ pub const BasinKernel = struct {
         _ = _arg3;
         _ = _arg4;
         
-        // TODO: Implement yield syscall.
-        return BasinError.invalid_syscall;
+        // Yield syscall: voluntary CPU yield (cooperative scheduling hint).
+        // Why: Simple implementation - return success immediately.
+        // Note: VM scheduler (if implemented) can use this hint for context switching.
+        // For now, just return success (no-op).
+        return SyscallResult.ok(0);
     }
     
     fn syscallWait(

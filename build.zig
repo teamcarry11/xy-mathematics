@@ -119,6 +119,7 @@ pub fn build(b: *std.Build) void {
             .optimize = optimize,
             .imports = &.{
                 .{ .name = "kernel_vm", .module = kernel_vm_module },
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
             },
         }),
     });

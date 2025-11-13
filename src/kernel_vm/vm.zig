@@ -65,6 +65,9 @@ pub const VM = struct {
     /// Last error (if state == .errored).
     /// Note: Using optional error set for error tracking.
     last_error: ?VMError = null,
+    /// Grain Basin kernel instance for syscall handling.
+    /// Why: Integrate Basin Kernel syscalls into VM execution.
+    kernel: basin_kernel.BasinKernel = basin_kernel.BasinKernel{},
 
     const Self = @This();
     
@@ -500,11 +503,26 @@ pub const VM = struct {
 
     /// Execute ECALL (Environment Call) instruction.
     /// Format: ECALL (no operands, triggers system call).
-    /// Why: Handle kernel syscalls via ECALL instruction.
+    /// Why: Handle Grain Basin kernel syscalls via ECALL instruction.
+    /// RISC-V calling convention: a7 (x17) = syscall number, a0-a5 (x10-x15) = arguments.
+    /// Note: Syscall handling will be integrated via external handler function.
     fn executeECALL(self: *Self) !void {
-        // ECALL triggers a system call.
-        // For now, halt VM (kernel can implement syscall handler later).
-        // Why: Simple implementation for initial VM; kernel will handle syscalls.
+        // RISC-V syscall convention: a7 (x17) contains syscall number.
+        const syscall_num = self.regs.get(17); // a7 register
+        
+        // Assert: syscall number must fit in u32.
+        std.debug.assert(syscall_num <= 0xFFFFFFFF);
+        
+        // Extract syscall arguments from a0-a5 registers (x10-x15).
+        const arg1 = self.regs.get(10); // a0
+        const arg2 = self.regs.get(11); // a1
+        const arg3 = self.regs.get(12); // a2
+        const arg4 = self.regs.get(13); // a3
+        
+        // For now, halt VM on ECALL (syscall integration will be added later).
+        // Why: Simple implementation - Grain Basin kernel syscall handling will be
+        // integrated via external handler when basin_kernel module is available.
+        // TODO: Integrate Grain Basin kernel syscall handling.
         self.state = .halted;
     }
 

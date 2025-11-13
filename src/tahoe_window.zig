@@ -312,16 +312,44 @@ pub const TahoeSandbox = struct {
                     return true;
                 };
                 
+                // Assert: VM must be valid before setting handlers.
+                const vm_ptr = @intFromPtr(&vm);
+                std.debug.assert(vm_ptr != 0);
+                std.debug.assert(vm_ptr % @alignOf(VM) == 0);
+                
+                // Assert: VM state must be valid (halted or running, not errored).
+                std.debug.assert(vm.state != .errored);
+                
+                // Assert: VM PC must be valid (aligned, within memory bounds).
+                std.debug.assert(vm.regs.pc % 4 == 0);
+                std.debug.assert(vm.regs.pc < vm.memory_size);
+                
                 // Set syscall handler for VM (Grain Basin kernel integration).
                 // Why: Wire VM ECALL instructions to Grain Basin kernel syscalls.
                 vm.set_syscall_handler(TahoeSandbox.handle_syscall, sandbox);
+                
+                // Assert: syscall handler must be set correctly.
+                std.debug.assert(vm.syscall_handler != null);
+                std.debug.assert(vm.syscall_user_data == @as(?*anyopaque, @ptrCast(sandbox)));
                 
                 // Set serial output handler for VM (SBI console integration).
                 // Why: Wire SBI_CONSOLE_PUTCHAR to serial output for display in GUI VM pane.
                 vm.set_serial_output(&sandbox.serial_output);
                 
+                // Assert: serial output handler must be set correctly.
+                std.debug.assert(vm.serial_output != null);
+                std.debug.assert(vm.serial_output.? == &sandbox.serial_output);
+                
+                // Assert: serial output buffer must be initialized.
+                std.debug.assert(sandbox.serial_output.buffer.len > 0);
+                std.debug.assert(sandbox.serial_output.write_pos < sandbox.serial_output.buffer.len);
+                
                 // Store VM in sandbox.
                 sandbox.vm = vm;
+                
+                // Assert: VM must be stored correctly.
+                std.debug.assert(sandbox.vm != null);
+                std.debug.assert(sandbox.vm.?.regs.pc == vm.regs.pc);
                 
                 std.debug.print("[tahoe_window] Kernel loaded successfully. PC: 0x{X}\n", .{vm.regs.pc});
                 return true;
@@ -438,22 +466,66 @@ pub const TahoeSandbox = struct {
     /// RISC-V calling convention: syscall_num in a7, args in a0-a5, result in a0.
     /// Note: This is a static function that will be called via callback.
     /// TODO: Use user_data to access sandbox instance properly.
+    /// Handle syscall from VM (Grain Basin kernel integration).
+    /// Why: Bridge VM ECALL instructions to Grain Basin kernel syscalls.
+    /// Tiger Style: Comprehensive assertions for all syscall parameters and results.
     pub fn handle_syscall(syscall_num: u32, arg1: u64, arg2: u64, arg3: u64, arg4: u64) u64 {
+        // Assert: syscall number must be >= 10 (kernel syscalls, not SBI).
+        // Why: SBI calls use function ID < 10, kernel syscalls use >= 10.
+        // Note: This function is only called for kernel syscalls (VM dispatches SBI separately).
+        std.debug.assert(syscall_num >= 10);
+        
+        // Assert: syscall number must be within valid range.
+        std.debug.assert(syscall_num <= @intFromEnum(basin_kernel.Syscall.sysinfo));
+        
         // For now, use a simple implementation that calls Basin Kernel.
         // TODO: Access sandbox via user_data when callback supports it.
         var kernel = basin_kernel.BasinKernel{};
+        
+        // Assert: kernel must be initialized correctly.
+        const kernel_ptr = @intFromPtr(&kernel);
+        std.debug.assert(kernel_ptr != 0);
+        std.debug.assert(kernel_ptr % @alignOf(basin_kernel.BasinKernel) == 0);
+        
         const result = kernel.handle_syscall(syscall_num, arg1, arg2, arg3, arg4) catch |err| {
+            // Assert: error must be valid BasinError.
+            std.debug.assert(@intFromError(err) > 0);
+            
             // Return error code (negative value indicates error).
             const error_code = @as(i64, @intCast(@intFromError(err)));
-            return @as(u64, @bitCast(-error_code));
+            const error_result = @as(u64, @bitCast(-error_code));
+            
+            // Assert: error result must be negative when interpreted as i64.
+            const error_result_signed = @as(i64, @bitCast(error_result));
+            std.debug.assert(error_result_signed < 0);
+            
+            return error_result;
         };
+        
+        // Assert: result must be valid SyscallResult.
+        std.debug.assert(result == .success or result == .err);
         
         // Extract result value from SyscallResult.
         switch (result) {
-            .success => |value| return value,
+            .success => |value| {
+                // Assert: success value must be valid (non-negative when interpreted as i64).
+                const value_signed = @as(i64, @bitCast(value));
+                std.debug.assert(value_signed >= 0);
+                
+                return value;
+            },
             .err => |err_val| {
+                // Assert: error must be valid BasinError.
+                std.debug.assert(@intFromError(err_val) > 0);
+                
                 const error_code = @as(i64, @intCast(@intFromError(err_val)));
-                return @as(u64, @bitCast(-error_code));
+                const error_result = @as(u64, @bitCast(-error_code));
+                
+                // Assert: error result must be negative when interpreted as i64.
+                const error_result_signed = @as(i64, @bitCast(error_result));
+                std.debug.assert(error_result_signed < 0);
+                
+                return error_result;
             },
         }
     }

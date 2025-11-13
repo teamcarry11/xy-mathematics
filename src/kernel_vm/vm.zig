@@ -515,12 +515,22 @@ pub const VM = struct {
     /// Why: Handle SBI calls (platform services) and Grain Basin kernel syscalls.
     /// RISC-V calling convention: a7 (x17) = syscall/EID number, a0-a5 (x10-x15) = arguments.
     /// SBI vs Kernel: Function ID < 10 → SBI (platform), >= 10 → kernel syscall.
+    /// Tiger Style: Comprehensive assertions for ECALL dispatch, arguments, and state transitions.
     fn execute_ecall(self: *Self) !void {
+        // Assert: VM must be in valid state (running or halted, not errored).
+        std.debug.assert(self.state != .errored);
+        
+        // Assert: VM must be running (ECALL only valid when running).
+        std.debug.assert(self.state == .running);
+        
         // RISC-V syscall convention: a7 (x17) contains syscall/EID number.
         const syscall_num = self.regs.get(17); // a7 register
         
         // Assert: syscall number must fit in u32.
         std.debug.assert(syscall_num <= 0xFFFFFFFF);
+        
+        // Assert: syscall number must be within reasonable range (0-50).
+        std.debug.assert(syscall_num <= 50);
         
         // Extract syscall arguments from a0-a5 registers (x10-x15).
         const arg1 = self.regs.get(10); // a0
@@ -531,11 +541,26 @@ pub const VM = struct {
         // Dispatch: SBI calls (function ID < 10) vs kernel syscalls (>= 10).
         // Why: SBI handles platform services (timer, console, reset), kernel handles kernel services.
         if (syscall_num < 10) {
+            // Assert: SBI call must have function ID < 10.
+            std.debug.assert(syscall_num < 10);
+            
             // SBI call: Handle platform services.
             self.handle_sbi_call(@as(u32, @truncate(syscall_num)), arg1, arg2, arg3, arg4);
+            
+            // Assert: VM state must remain valid after SBI call (unless shutdown).
+            if (syscall_num != @intFromEnum(sbi.EID.LEGACY_SHUTDOWN)) {
+                std.debug.assert(self.state != .errored);
+            }
         } else {
+            // Assert: Kernel syscall must have function ID >= 10.
+            std.debug.assert(syscall_num >= 10);
+            
             // Kernel syscall: Handle via callback if available.
             if (self.syscall_handler) |handler| {
+                // Assert: handler pointer must be valid.
+                const handler_ptr = @intFromPtr(handler);
+                std.debug.assert(handler_ptr != 0);
+                
                 // Call syscall handler and get result.
                 const result = handler(
                     @as(u32, @truncate(syscall_num)),
@@ -545,31 +570,65 @@ pub const VM = struct {
                     arg4,
                 );
                 
+                // Assert: result must be valid (can be error code if negative when interpreted as i64).
+                // Note: Error codes are negative, success values are non-negative.
+                
                 // Store result in a0 (x10) register (RISC-V convention).
                 self.regs.set(10, result);
                 
+                // Assert: a0 register must be set correctly.
+                std.debug.assert(self.regs.get(10) == result);
+                
                 // Special case: exit syscall (syscall number 2) halts VM.
                 // Note: This is kernel syscall 2, not SBI function ID 2.
+                // Note: Kernel syscall 2 is exit, which should halt VM.
                 if (syscall_num == 2) {
+                    // Assert: exit syscall must halt VM.
+                    std.debug.assert(syscall_num == 2);
                     self.state = .halted;
+                    
+                    // Assert: VM state must be halted after exit syscall.
+                    std.debug.assert(self.state == .halted);
+                } else {
+                    // Assert: Non-exit syscalls should not halt VM.
+                    std.debug.assert(self.state == .running);
                 }
             } else {
+                // Assert: No handler should only happen if handler not set.
+                std.debug.assert(self.syscall_handler == null);
+                
                 // No handler: halt VM (simple behavior).
                 self.state = .halted;
+                
+                // Assert: VM state must be halted when no handler.
+                std.debug.assert(self.state == .halted);
             }
+        }
+        
+        // Assert: VM state must remain valid after ECALL (unless shutdown/exit).
+        if (syscall_num != @intFromEnum(sbi.EID.LEGACY_SHUTDOWN) and syscall_num != 2) {
+            std.debug.assert(self.state != .errored);
         }
     }
     
     /// Handle SBI (Supervisor Binary Interface) call.
     /// Why: Implement platform services (timer, console, reset) for RISC-V SBI.
     /// SBI Legacy Functions: 0x0=SET_TIMER, 0x1=CONSOLE_PUTCHAR, 0x2=CONSOLE_GETCHAR, 0x8=SHUTDOWN.
+    /// Tiger Style: Comprehensive assertions for all SBI call parameters and state transitions.
     fn handle_sbi_call(self: *Self, eid: u32, arg1: u64, arg2: u64, arg3: u64, arg4: u64) void {
         // Mark unused parameters for future SBI functions.
         _ = arg2;
         _ = arg3;
         _ = arg4;
+        
+        // Assert: VM must be in valid state (running or halted, not errored).
+        std.debug.assert(self.state != .errored);
+        
         // Assert: EID must be valid SBI legacy function ID (< 10).
         std.debug.assert(eid < 10);
+        
+        // Assert: EID must match known SBI legacy function IDs.
+        std.debug.assert(eid <= @intFromEnum(sbi.EID.LEGACY_SHUTDOWN));
         
         // Dispatch based on SBI Extension ID (EID).
         // Why: Different SBI functions have different calling conventions.
@@ -580,19 +639,37 @@ pub const VM = struct {
                 // Assert: character must fit in u8.
                 std.debug.assert(arg1 <= 0xFF);
                 
-                // Write character to serial output if available.
+                // Assert: serial_output pointer must be valid if set.
                 if (self.serial_output) |serial| {
+                    // Assert: serial pointer must be non-null and aligned.
+                    const serial_ptr = @intFromPtr(serial);
+                    std.debug.assert(serial_ptr != 0);
+                    std.debug.assert(serial_ptr % @alignOf(@TypeOf(serial.*)) == 0);
+                    
+                    // Write character to serial output.
                     serial.writeByte(@as(u8, @truncate(arg1)));
+                    
+                    // Assert: serial output write position must be valid after write.
+                    std.debug.assert(serial.write_pos < serial.buffer.len);
                 }
                 
                 // SBI CONSOLE_PUTCHAR returns 0 (success) in a0.
                 self.regs.set(10, 0);
+                
+                // Assert: a0 register must be set to 0 (success).
+                std.debug.assert(self.regs.get(10) == 0);
             },
             // LEGACY_SHUTDOWN (0x8): System shutdown.
             // Calling convention: no arguments, no return value.
             @intFromEnum(sbi.EID.LEGACY_SHUTDOWN) => {
+                // Assert: VM state must be valid before shutdown.
+                std.debug.assert(self.state != .errored);
+                
                 // Halt VM on shutdown.
                 self.state = .halted;
+                
+                // Assert: VM state must be halted after shutdown.
+                std.debug.assert(self.state == .halted);
                 
                 // SBI SHUTDOWN doesn't return.
                 self.regs.set(10, 0);
@@ -600,17 +677,50 @@ pub const VM = struct {
             // Other SBI functions: Not implemented yet.
             // TODO: Implement SET_TIMER, CONSOLE_GETCHAR, etc.
             else => {
+                // Assert: Unknown SBI function must return error code.
+                std.debug.assert(eid != @intFromEnum(sbi.EID.LEGACY_CONSOLE_PUTCHAR));
+                std.debug.assert(eid != @intFromEnum(sbi.EID.LEGACY_SHUTDOWN));
+                
                 // Unknown SBI function: Return error code.
                 // SBI error codes: -1 = Failed, -2 = NotSupported.
-                self.regs.set(10, @as(u64, @bitCast(@as(i64, -2)))); // NotSupported
+                const error_code: i64 = -2; // NotSupported
+                self.regs.set(10, @as(u64, @bitCast(error_code)));
+                
+                // Assert: a0 register must contain error code.
+                const result = @as(i64, @bitCast(self.regs.get(10)));
+                std.debug.assert(result == error_code);
             },
+        }
+        
+        // Assert: VM state must remain valid after SBI call (unless shutdown).
+        if (eid != @intFromEnum(sbi.EID.LEGACY_SHUTDOWN)) {
+            std.debug.assert(self.state != .errored);
         }
     }
     
     /// Set serial output handler for SBI console.
     /// Why: Allow external serial output handling (e.g., GUI display).
+    /// Tiger Style: Validate serial pointer, ensure proper initialization.
     pub fn set_serial_output(self: *Self, serial: ?*SerialOutput) void {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        std.debug.assert(self_ptr != 0);
+        std.debug.assert(self_ptr % @alignOf(Self) == 0);
+        
+        // Assert: serial pointer must be valid if provided.
+        if (serial) |s| {
+            const serial_ptr = @intFromPtr(s);
+            std.debug.assert(serial_ptr != 0);
+            std.debug.assert(serial_ptr % @alignOf(SerialOutput) == 0);
+            
+            // Assert: serial buffer must be initialized (non-null).
+            std.debug.assert(s.buffer.len > 0);
+        }
+        
         self.serial_output = serial;
+        
+        // Assert: serial_output must be set correctly.
+        std.debug.assert(self.serial_output == serial);
     }
     
     /// Set syscall handler callback.

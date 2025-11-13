@@ -23,18 +23,49 @@ pub const SerialOutput = struct {
     const Self = @This();
 
     /// Write byte to serial output.
-    /// Why: Handle kernel serial writes (e.g., printf output).
+    /// Why: Handle kernel serial writes (e.g., printf output via SBI_CONSOLE_PUTCHAR).
+    /// Tiger Style: Comprehensive assertions for buffer management and circular buffer wrapping.
     pub fn writeByte(self: *Self, byte: u8) void {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        std.debug.assert(self_ptr != 0);
+        std.debug.assert(self_ptr % @alignOf(Self) == 0);
+        
+        // Assert: buffer must be initialized (non-empty).
+        std.debug.assert(self.buffer.len == SERIAL_BUFFER_SIZE);
+        std.debug.assert(self.buffer.len > 0);
+        
         // Assert: write position must be within buffer bounds.
         std.debug.assert(self.write_pos < SERIAL_BUFFER_SIZE);
+        
+        // Assert: total_written must be valid (non-negative, can wrap).
+        // Note: total_written can wrap (usize overflow), but that's OK for counting.
+        
+        // Store old write position for validation.
+        const old_write_pos = self.write_pos;
+        const old_total_written = self.total_written;
         
         // Write byte to buffer (circular buffer).
         self.buffer[self.write_pos] = byte;
         self.write_pos = (self.write_pos + 1) % SERIAL_BUFFER_SIZE;
         self.total_written += 1;
         
+        // Assert: byte must be written correctly.
+        std.debug.assert(self.buffer[old_write_pos] == byte);
+        
         // Assert: write position must wrap correctly.
         std.debug.assert(self.write_pos < SERIAL_BUFFER_SIZE);
+        
+        // Assert: write position must advance (or wrap).
+        if (old_write_pos < SERIAL_BUFFER_SIZE - 1) {
+            std.debug.assert(self.write_pos == old_write_pos + 1);
+        } else {
+            // Wrapped: write_pos should be 0.
+            std.debug.assert(self.write_pos == 0);
+        }
+        
+        // Assert: total_written must increment.
+        std.debug.assert(self.total_written == old_total_written + 1);
     }
 
     /// Write string to serial output.

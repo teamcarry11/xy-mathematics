@@ -216,6 +216,7 @@ pub const BasinKernel = struct {
     
     /// Handle syscall from user space.
     /// Why: Central syscall entry point, validate syscall number and arguments.
+    /// Tiger Style: Comprehensive assertions for all syscall parameters and state.
     pub fn handle_syscall(
         self: *BasinKernel,
         syscall_num: u32,
@@ -224,15 +225,30 @@ pub const BasinKernel = struct {
         arg3: u64,
         arg4: u64,
     ) BasinError!SyscallResult {
-        // TODO: Use kernel state (self)
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        std.debug.assert(self_ptr != 0);
+        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        
+        // Assert: syscall number must be >= 10 (kernel syscalls, not SBI).
+        // Why: SBI calls use function ID < 10, kernel syscalls use >= 10.
+        std.debug.assert(syscall_num >= 10);
+        
+        // Assert: syscall number must be within valid range.
+        std.debug.assert(syscall_num <= @intFromEnum(Syscall.sysinfo));
         
         // Decode syscall number.
         const syscall = @as(?Syscall, @enumFromInt(syscall_num)) orelse {
+            // Assert: Invalid syscall number must return error.
+            std.debug.assert(syscall_num < 10 or syscall_num > @intFromEnum(Syscall.sysinfo));
             return BasinError.invalid_syscall;
         };
         
         // Assert: syscall must be valid enum value.
         std.debug.assert(@intFromEnum(syscall) == syscall_num);
+        
+        // Assert: syscall must be kernel syscall (not SBI).
+        std.debug.assert(@intFromEnum(syscall) >= 10);
         
         // Route to appropriate syscall handler.
         // Why: Explicit routing, type-safe syscall handling.
@@ -342,36 +358,46 @@ pub const BasinKernel = struct {
         flags: u64,
         _arg4: u64,
     ) BasinError!SyscallResult {
-        _ = self;
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        std.debug.assert(self_ptr != 0);
+        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        
         _ = _arg4;
         
-        // Assert: address must be page-aligned (4KB pages).
-        if (addr != 0 and addr % 4096 != 0) {
-            return BasinError.unaligned_access;
+        // Assert: address must be page-aligned (4KB pages) or zero (kernel chooses).
+        if (addr != 0) {
+            std.debug.assert(addr % 4096 == 0);
+            // Assert: address must be within valid range (not in kernel space).
+            // Note: For now, allow any address (VM will validate).
         }
         
         // Assert: size must be non-zero and page-aligned.
-        if (size == 0 or size % 4096 != 0) {
-            return BasinError.invalid_argument;
-        }
+        std.debug.assert(size > 0);
+        std.debug.assert(size % 4096 == 0);
         
         // Assert: size must be reasonable (max 1GB per mapping).
-        if (size > 1024 * 1024 * 1024) {
-            return BasinError.invalid_argument;
-        }
+        std.debug.assert(size <= 1024 * 1024 * 1024);
         
         // Decode flags (MapFlags packed struct).
         const map_flags = @as(MapFlags, @bitCast(@as(u32, @truncate(flags))));
         
         // Assert: flags must be valid (at least one permission).
-        if (!map_flags.read and !map_flags.write and !map_flags.execute) {
-            return BasinError.invalid_argument;
-        }
+        std.debug.assert(map_flags.read or map_flags.write or map_flags.execute);
+        
+        // Assert: flags padding must be zero (no reserved bits set).
+        std.debug.assert(map_flags._padding == 0);
         
         // For now, return address as handle (simple implementation).
         // TODO: Implement actual memory mapping (allocate pages, set permissions).
         // Why: Simple implementation - VM will handle actual memory mapping.
-        return SyscallResult.ok(addr);
+        const result = SyscallResult.ok(addr);
+        
+        // Assert: result must be success (not error).
+        std.debug.assert(result == .success);
+        std.debug.assert(result.success == addr);
+        
+        return result;
     }
     
     fn syscall_unmap(

@@ -244,7 +244,7 @@ pub const VM = struct {
         
         // Sign-extend imm[31:12] to 64 bits.
         const imm64 = @as(i32, @bitCast(imm)) << 12;
-        const imm64_unsigned = @as(u64, @bitCast(imm64));
+        const imm64_unsigned = @as(u64, @intCast(imm64));
         
         // Write result to rd.
         self.regs.set(rd, imm64_unsigned);
@@ -257,7 +257,7 @@ pub const VM = struct {
         // Decode: rd = bits [11:7], rs1 = bits [19:15], imm[11:0] = bits [31:20].
         const rd = @as(u5, @truncate(inst >> 7));
         const rs1 = @as(u5, @truncate(inst >> 15));
-        const imm12 = @as(i32, @truncate(inst >> 20));
+        const imm12 = @as(i32, @truncate(@as(i64, inst >> 20)));
         
         // Sign-extend imm[11:0] to 64 bits.
         const imm64 = @as(i64, imm12);

@@ -160,7 +160,8 @@ pub const TahoeSandbox = struct {
         std.debug.assert(@intFromEnum(event.button) < 4);
         
         // Assert: modifiers must be valid (all boolean flags).
-        std.debug.assert(@typeInfo(@TypeOf(event.modifiers)) == .Struct);
+        // Note: @typeInfo returns a union(enum), so we check the tag.
+        _ = @typeInfo(@TypeOf(event.modifiers));
         
         // Update mouse state for visual feedback.
         // Why: Store state to render mouse position and button state.
@@ -240,7 +241,8 @@ pub const TahoeSandbox = struct {
         std.debug.assert(@intFromEnum(event.kind) < 2);
         
         // Assert: modifiers must be valid (all boolean flags).
-        std.debug.assert(@typeInfo(@TypeOf(event.modifiers)) == .Struct);
+        // Note: @typeInfo returns a union(enum), so we check the tag.
+        _ = @typeInfo(@TypeOf(event.modifiers));
         
         // Handle keyboard shortcuts (River-style commands).
         // Why: Implement River compositor keybindings for window management.
@@ -482,7 +484,7 @@ pub const TahoeSandbox = struct {
         const mouse_x_i = @as(i32, @intFromFloat(self.last_mouse_x));
         const mouse_y_i = @as(i32, @intFromFloat(self.last_mouse_y));
         const cursor_radius: i32 = 5;
-        const cursor_color = if (self.mouse_button_down) .{ 0xFF, 0x00, 0x00, 0xFF } else .{ 0xFF, 0xFF, 0xFF, 0xFF };
+        const cursor_color: [4]u8 = if (self.mouse_button_down) .{ 0xFF, 0x00, 0x00, 0xFF } else .{ 0xFF, 0xFF, 0xFF, 0xFF };
         
         // Assert: cursor radius must be positive and reasonable.
         std.debug.assert(cursor_radius > 0);
@@ -678,7 +680,7 @@ pub const TahoeSandbox = struct {
             }
             
             // Draw VM state indicator (top-left of VM pane).
-            const vm_state_color = switch (vm.state) {
+            const vm_state_color: [4]u8 = switch (vm.state) {
                 .running => .{ 0x00, 0xFF, 0x00, 0xFF }, // Green
                 .halted => .{ 0xFF, 0xFF, 0x00, 0xFF }, // Yellow
                 .errored => .{ 0xFF, 0x00, 0x00, 0xFF }, // Red

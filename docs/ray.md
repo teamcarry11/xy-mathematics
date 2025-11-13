@@ -57,6 +57,7 @@ our Tahoe aesthetic, reminding us to keep ethical fashion signal in view
      - ✅ Tiger Style: Comprehensive assertions, explicit type safety, "why" comments, function length limits
    - **Core Syscalls** (Phase 1 - Ready for Implementation): `spawn`, `exit`, `yield`, `map`, `unmap`, `open`, `read`, `write`, `close`
    - **Future Syscalls** (Phase 2): `channel_create`, `channel_send`, `channel_recv`, `wait`, `sleep_until`, `protect`, `clock_gettime`, `sysinfo`
+   - **SBI vs Kernel Syscalls**: SBI handles platform services (timer, console, reset) via ECALL function ID < 10, kernel syscalls handle kernel services (process, memory, I/O) via ECALL function ID >= 10
    - **Core VM Implementation** ✅ **COMPLETE**:
      - ✅ Pure Zig RISC-V64 emulator (`src/kernel_vm/vm.zig`): Register file (32 GP registers + PC), 4MB static memory, instruction decoding (LUI, ADDI, LW, SW, BEQ, ECALL)
      - ✅ ELF kernel loader (`src/kernel_vm/loader.zig`): RISC-V64 ELF parsing, program header loading, kernel image loading

@@ -1,6 +1,17 @@
 # Grain Changelog — Descending Order (Newest First)
 
-## 12025-11-13--1315-pst
+## 12025-11-12--1756-pst
+- **macOS Tahoe Window Resizing: Fixed Buffer Dimension Assertions**
+  - Fixed crash when releasing mouse button after window resize
+  - **Root cause**: Assertions in `impl.zig` and `tahoe_window.zig` were checking buffer size against dynamic window dimensions (`window.width * window.height * 4`), but buffer is fixed at 1024x768
+  - **Fixed `impl.zig`**: Changed assertion to check against fixed buffer size (`1024 * 768 * 4`) instead of `window.width * window.height * 4`
+  - **Fixed `tahoe_window.zig`**: Replaced all uses of `window_width`/`window_height` (from `self.platform.width()`/`height()`) with fixed `buffer_width` (1024) and `buffer_height` (768) constants
+  - Updated drawing code to use buffer dimensions for pixel offsets (buffer is always 1024x768)
+  - Window dimensions (`window.width`/`height`) can now change independently during resize
+  - NSImageView automatically scales the fixed 1024x768 buffer to fit the window size
+  - **Result:** Window resizing works smoothly without crashes. Buffer remains static while window scales rendering automatically.
+
+## 12025-11-12--1315-pst
 - **macOS Tahoe Window Rendering: Complete Implementation**
   - Successfully implemented and fixed macOS Tahoe window rendering. The application now displays content correctly in a native macOS window.
   - **Rewrote `window.zig` from scratch** to resolve persistent parser errors that were blocking compilation

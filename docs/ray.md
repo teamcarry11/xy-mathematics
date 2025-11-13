@@ -28,12 +28,22 @@ our Tahoe aesthetic, reminding us to keep ethical fashion signal in view
 
 0. **RISC-V Kernel Virtualization Layer (macOS Tahoe)** 🔥 **HIGH PRIORITY** 🎯 **NEW** ✅ **CORE COMPLETE**
    - **Vision**: Run Zig monolith kernel in virtualized RISC-V environment within macOS Tahoe IDE
+   - **Kernel Name**: **Aurora Kernel** 🌅 (recommended) - "The dawn of RISC-V kernels" (30-year vision, non-POSIX, modern design)
    - **Why**: Enable kernel development and testing without physical RISC-V hardware or external QEMU
    - **RISC-V-First Development Strategy**: 
      - **Primary Goal**: Develop RISC-V-targeted Zig code in macOS Tahoe VM, deploy to Framework 13 DeepComputing RISC-V mainboard with confidence
      - **VM-Hardware Parity**: Pure Zig emulator matches Framework 13 RISC-V mainboard behavior (RISC-V64 ISA, memory model, register semantics)
      - **Development Workflow**: Write RISC-V Zig code → Test in macOS Tahoe VM → Deploy to Framework 13 RISC-V hardware (no code changes needed)
      - **Compatibility Guarantee**: VM instruction semantics, memory layout, and register behavior match real RISC-V hardware exactly
+   - **Kernel Design Philosophy**:
+     - **Minimal Syscall Surface**: Essential operations only (spawn, exit, map, unmap, open, read, write, close, channels)
+     - **Non-POSIX**: Deliberately avoid POSIX legacy (no fork/clone, signals, complex file descriptors)
+     - **Type-Safe**: Leverage Zig's comptime, error unions, strongly-typed handles (not integer FDs)
+     - **Modern Design**: Inspired by seL4 (minimal), Theseus OS (type-safe), Fuchsia (capability-based)
+     - **30-Year Vision**: Design for next 30 years, not backward compatibility
+     - **Tiger Style**: Maximum safety, explicit operations, comprehensive assertions
+   - **Core Syscalls** (Phase 1): `spawn`, `exit`, `yield`, `map`, `unmap`, `open`, `read`, `write`, `close`
+   - **Future Syscalls** (Phase 2): `channel_create`, `channel_send`, `channel_recv`, `wait`, `sleep_until`, `protect`, `clock_gettime`, `sysinfo`
    - **Core VM Implementation** ✅ **COMPLETE**:
      - ✅ Pure Zig RISC-V64 emulator (`src/kernel_vm/vm.zig`): Register file (32 GP registers + PC), 4MB static memory, instruction decoding (LUI, ADDI, ECALL)
      - ✅ ELF kernel loader (`src/kernel_vm/loader.zig`): RISC-V64 ELF parsing, program header loading, kernel image loading

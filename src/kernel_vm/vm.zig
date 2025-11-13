@@ -511,10 +511,12 @@ pub const VM = struct {
         std.debug.assert(syscall_num <= 0xFFFFFFFF);
         
         // Extract syscall arguments from a0-a5 registers (x10-x15).
-        const arg1 = self.regs.get(10); // a0
-        const arg2 = self.regs.get(11); // a1
-        const arg3 = self.regs.get(12); // a2
-        const arg4 = self.regs.get(13); // a3
+        // Why: Prepare for future Grain Basin kernel syscall integration.
+        // Note: Currently unused, but extracted for future use.
+        _ = self.regs.get(10); // a0
+        _ = self.regs.get(11); // a1
+        _ = self.regs.get(12); // a2
+        _ = self.regs.get(13); // a3
         
         // For now, halt VM on ECALL (syscall integration will be added later).
         // Why: Simple implementation - Grain Basin kernel syscall handling will be

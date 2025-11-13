@@ -676,14 +676,38 @@ pub const BasinKernel = struct {
         _arg3: u64,
         _arg4: u64,
     ) BasinError!SyscallResult {
-        _ = self;
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        std.debug.assert(self_ptr != 0);
+        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        
         _ = _arg1;
         _ = _arg2;
         _ = _arg3;
         _ = _arg4;
         
-        // TODO: Implement channel_create syscall.
-        return BasinError.invalid_syscall;
+        // TODO: Implement actual channel creation (when IPC is implemented).
+        // For now, return stub channel ID.
+        // Why: Simple stub - matches current kernel development stage.
+        // Note: In full implementation, we would:
+        // - Create channel structure (message queue, synchronization)
+        // - Allocate channel ID
+        // - Add channel to channel table
+        // - Return Channel ID (not raw integer) for type safety
+        // - Handle channel capacity/limits
+        
+        // Stub: Return channel ID 1 (simple implementation).
+        const channel_id: u64 = 1;
+        const result = SyscallResult.ok(channel_id);
+        
+        // Assert: result must be success (not error).
+        std.debug.assert(result == .success);
+        std.debug.assert(result.success == channel_id);
+        
+        // Assert: Channel ID must be non-zero (valid channel ID).
+        std.debug.assert(channel_id != 0);
+        
+        return result;
     }
     
     fn syscall_channel_send(
@@ -693,14 +717,59 @@ pub const BasinKernel = struct {
         data_len: u64,
         _arg4: u64,
     ) BasinError!SyscallResult {
-        _ = self;
-        _ = channel;
-        _ = data_ptr;
-        _ = data_len;
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        std.debug.assert(self_ptr != 0);
+        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        
         _ = _arg4;
         
-        // TODO: Implement channel_send syscall.
-        return BasinError.invalid_syscall;
+        // Assert: channel ID must be valid (non-zero).
+        if (channel == 0) {
+            return BasinError.invalid_argument; // Invalid channel ID
+        }
+        
+        // Assert: data pointer must be valid (non-zero, within VM memory).
+        if (data_ptr == 0) {
+            return BasinError.invalid_argument; // Null pointer
+        }
+        
+        const VM_MEMORY_SIZE: u64 = 4 * 1024 * 1024; // 4MB default (matches syscall_map)
+        if (data_ptr >= VM_MEMORY_SIZE) {
+            return BasinError.invalid_argument; // Data pointer exceeds VM memory
+        }
+        
+        // Assert: data length must be reasonable (max 64KB per message).
+        if (data_len == 0) {
+            return BasinError.invalid_argument; // Zero-length data
+        }
+        if (data_len > 64 * 1024) {
+            return BasinError.invalid_argument; // Data too large (> 64KB)
+        }
+        
+        // Assert: data must fit within VM memory.
+        if (data_ptr + data_len > VM_MEMORY_SIZE) {
+            return BasinError.invalid_argument; // Data exceeds VM memory
+        }
+        
+        // TODO: Implement actual channel send (when IPC is implemented).
+        // For now, return stub success.
+        // Why: Simple stub - matches current kernel development stage.
+        // Note: In full implementation, we would:
+        // - Look up channel in channel table
+        // - Verify channel exists and is open
+        // - Copy data to channel message queue
+        // - Wake up waiting receivers (if any)
+        // - Return error if channel full or not found
+        
+        // Stub: Return success (simple implementation).
+        const result = SyscallResult.ok(0);
+        
+        // Assert: result must be success (not error).
+        std.debug.assert(result == .success);
+        std.debug.assert(result.success == 0); // Channel_send returns 0 on success
+        
+        return result;
     }
     
     fn syscall_channel_recv(
@@ -710,14 +779,61 @@ pub const BasinKernel = struct {
         buffer_len: u64,
         _arg4: u64,
     ) BasinError!SyscallResult {
-        _ = self;
-        _ = channel;
-        _ = buffer_ptr;
-        _ = buffer_len;
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        std.debug.assert(self_ptr != 0);
+        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        
         _ = _arg4;
         
-        // TODO: Implement channel_recv syscall.
-        return BasinError.invalid_syscall;
+        // Assert: channel ID must be valid (non-zero).
+        if (channel == 0) {
+            return BasinError.invalid_argument; // Invalid channel ID
+        }
+        
+        // Assert: buffer pointer must be valid (non-zero, within VM memory).
+        if (buffer_ptr == 0) {
+            return BasinError.invalid_argument; // Null pointer
+        }
+        
+        const VM_MEMORY_SIZE: u64 = 4 * 1024 * 1024; // 4MB default (matches syscall_map)
+        if (buffer_ptr >= VM_MEMORY_SIZE) {
+            return BasinError.invalid_argument; // Buffer pointer exceeds VM memory
+        }
+        
+        // Assert: buffer length must be reasonable (max 64KB per message).
+        if (buffer_len == 0) {
+            return BasinError.invalid_argument; // Zero-length buffer
+        }
+        if (buffer_len > 64 * 1024) {
+            return BasinError.invalid_argument; // Buffer too large (> 64KB)
+        }
+        
+        // Assert: buffer must fit within VM memory.
+        if (buffer_ptr + buffer_len > VM_MEMORY_SIZE) {
+            return BasinError.invalid_argument; // Buffer exceeds VM memory
+        }
+        
+        // TODO: Implement actual channel receive (when IPC is implemented).
+        // For now, return stub (0 bytes received).
+        // Why: Simple stub - matches current kernel development stage.
+        // Note: In full implementation, we would:
+        // - Look up channel in channel table
+        // - Verify channel exists and is open
+        // - Wait for message (if channel empty)
+        // - Copy message from channel to buffer
+        // - Return bytes received count
+        // - Return error if channel not found
+        
+        // Stub: Return 0 bytes received (simple implementation).
+        const bytes_received: u64 = 0;
+        const result = SyscallResult.ok(bytes_received);
+        
+        // Assert: result must be success (not error).
+        std.debug.assert(result == .success);
+        std.debug.assert(result.success == bytes_received);
+        
+        return result;
     }
     
     fn syscall_open(
@@ -1018,14 +1134,40 @@ pub const BasinKernel = struct {
         _arg3: u64,
         _arg4: u64,
     ) BasinError!SyscallResult {
-        _ = self;
-        _ = timestamp;
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        std.debug.assert(self_ptr != 0);
+        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        
         _ = _arg2;
         _ = _arg3;
         _ = _arg4;
         
-        // TODO: Implement sleep_until syscall.
-        return BasinError.invalid_syscall;
+        // Assert: timestamp must be valid (non-zero, reasonable value).
+        // Note: Timestamp is nanoseconds since epoch (or boot, depending on clock type).
+        // For now, accept any non-zero value (validation depends on clock implementation).
+        if (timestamp == 0) {
+            return BasinError.invalid_argument; // Zero timestamp (invalid)
+        }
+        
+        // TODO: Implement actual sleep until timestamp (when timer is implemented).
+        // For now, return stub success (immediate return).
+        // Why: Simple stub - matches current kernel development stage.
+        // Note: In full implementation, we would:
+        // - Get current time from system timer
+        // - Calculate sleep duration (timestamp - current_time)
+        // - Sleep until timestamp is reached
+        // - Return error if timestamp is in the past
+        // - Handle timer interrupts/wakeups
+        
+        // Stub: Return success immediately (simple implementation).
+        const result = SyscallResult.ok(0);
+        
+        // Assert: result must be success (not error).
+        std.debug.assert(result == .success);
+        std.debug.assert(result.success == 0); // Sleep_until returns 0 on success
+        
+        return result;
     }
     
     fn syscall_sysinfo(

@@ -131,8 +131,12 @@ our Tahoe aesthetic, reminding us to keep ethical fashion signal in view
          - ✅ `wait`: Validate process ID, return stub exit status (0)
          - ✅ `clock_gettime`: Validate clock_id, timespec_ptr, return stub zero timestamp
          - ✅ `sysinfo`: Validate info_ptr, return stub success
+         - ✅ `sleep_until`: Validate timestamp, return stub success
+         - ✅ `channel_create`: Return stub channel ID (1)
+         - ✅ `channel_send`: Validate channel ID, data pointer/length, return stub success
+         - ✅ `channel_recv`: Validate channel ID, buffer pointer/length, return stub bytes_received=0
          - ✅ Comprehensive assertions (Tiger Style)
-         - ✅ **Phase 2 Progress: 4/8 syscalls implemented!**
+         - ✅ **Phase 2 Complete: 8/8 syscalls implemented!**
          - Location: `src/kernel/basin_kernel.zig` → syscall functions
        - **Future Phases**: Memory management foundation (mapping table), File system foundation (handle table), Channel operations (IPC), Debug interface
      - **Single-Threaded Architecture**: ✅ All layers single-threaded, no locks, deterministic

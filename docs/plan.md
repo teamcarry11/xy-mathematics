@@ -6,6 +6,8 @@
 
 ### 0. RISC-V Kernel Virtualization Layer 🔥 **HIGH PRIORITY** 🎯 **NEW** ✅ **CORE COMPLETE**
 - **Vision**: Run Zig monolith kernel in virtualized RISC-V environment within macOS Tahoe IDE
+- **Kernel Name**: **Grain Basin kernel** 🏞️ - "The foundation that holds everything"
+- **Homebrew Bundle**: `grainbasin` (Brew package name)
 - **Why**: Enable kernel development and testing without physical RISC-V hardware or external QEMU
 - **RISC-V-First Development Strategy**:
   - **Primary Goal**: Develop RISC-V-targeted Zig code in macOS Tahoe VM, deploy to Framework 13 DeepComputing RISC-V mainboard with confidence
@@ -18,11 +20,18 @@
   - ✅ Serial output (`src/kernel_vm/serial.zig`): 64KB circular buffer for kernel printf/debug output
   - ✅ Test suite (`src/kernel_vm/test.zig`): Comprehensive tests passing (VM init, register file, memory, instruction fetch, serial)
   - ✅ Build integration: `zig build kernel-vm-test` command
-- **Next Steps**:
-  - GUI Integration: VM pane in River compositor, terminal-like output rendering, control panel
-  - Expanded ISA Support: Add more RISC-V instructions (load/store, branches, arithmetic)
-  - Kernel Execution Loop: Continuous VM stepping, hot reload on kernel save
-  - Debug Interface: GDB stub, register viewer, memory inspector
+- **Grain Basin kernel Foundation** ✅ **COMPLETE**:
+  - ✅ Kernel name: Grain Basin kernel 🏞️ - "The foundation that holds everything"
+  - ✅ Homebrew bundle: `grainbasin` (Brew package name)
+  - ✅ Syscall interface (`src/kernel/basin_kernel.zig`): All 17 core syscalls defined
+  - ✅ Type-safe abstractions: `Handle` (not integer FDs), `MapFlags`, `OpenFlags`, `ClockId`, `SysInfo`, `BasinError`, `SyscallResult`
+  - ✅ Build integration: `basin_kernel_module` added to `build.zig`
+- **Next Steps** (Implementation Priority):
+  - **Grain Basin kernel Syscall Implementation**: Implement syscall handlers incrementally (start with `exit`, `yield`, `map`)
+  - **VM-Syscall Integration**: Wire Grain Basin kernel syscalls into RISC-V VM (handle ECALL → Basin syscall)
+  - **Serial Output Rendering**: Display kernel printf output in GUI VM pane (terminal-like output)
+  - **Expanded ISA Support**: Add more RISC-V instructions (ADD, SUB, SLT, etc.)
+  - **Debug Interface**: Register viewer, memory inspector, GDB stub (future)
 - **Tiger Style Requirements**:
   - Static allocation for VM state structures where possible ✅
   - Comprehensive assertions for memory access, instruction decoding ✅

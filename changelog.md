@@ -1,8 +1,9 @@
 # Grain Changelog — Descending Order (Newest First)
 
 ## 12025-11-13--0101-pst
-- **Basin Kernel: Official Kernel Name and Initial Syscall Interface**
-  - **Kernel Name**: Basin Kernel 🏞️ - "The foundation that holds everything" (Lake Tahoe basin metaphor, perfect Tahoe connection)
+- **Grain Basin kernel: Official Kernel Name and Initial Syscall Interface**
+  - **Kernel Name**: Grain Basin kernel 🏞️ - "The foundation that holds everything" (Lake Tahoe basin metaphor, perfect Tahoe connection)
+  - **Homebrew Bundle**: `grainbasin` (Brew package name)
   - **Initial Module**: Created `src/kernel/basin_kernel.zig` with complete syscall interface definitions
   - **Syscall Enumeration**: All 17 core syscalls defined (spawn, exit, yield, wait, map, unmap, protect, channel_create, channel_send, channel_recv, open, read, write, close, clock_gettime, sleep_until, sysinfo)
   - **Type-Safe Abstractions**: 

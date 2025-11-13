@@ -181,15 +181,17 @@
 
 ## Recommendation
 
-**Primary Choice**: **Basin Kernel** 🏞️ ⭐ **NEW TOP RECOMMENDATION**
+**Primary Choice**: **Grain Basin kernel** 🏞️ ⭐ **OFFICIAL NAME**
 
 **Rationale**:
 1. **Perfect Tahoe Connection**: Lake Tahoe basin = direct connection to macOS Tahoe IDE
-2. **Metaphor**: Basin = geological foundation that holds water → kernel = foundation that holds the system
-3. **Distinctive**: Not generic, memorable, unique in kernel space
-4. **Cohesive Theme**: "Grain Aurora IDE" + "Basin Kernel" = mountain/lake aesthetic
-5. **Stability**: Basin suggests depth, containment, solid foundation (perfect for 30-year vision)
-6. **Memorable**: Short, punchy, easy to say and remember
+2. **Grain Branding**: Ties into Grain ecosystem (Grain Aurora IDE, Grain Basin kernel)
+3. **Homebrew Bundle**: `grainbasin` - clean, memorable Brew package name
+4. **Metaphor**: Basin = geological foundation that holds water → kernel = foundation that holds the system
+5. **Distinctive**: Not generic, memorable, unique in kernel space
+6. **Cohesive Theme**: "Grain Aurora IDE" + "Grain Basin kernel" = cohesive Grain ecosystem
+7. **Stability**: Basin suggests depth, containment, solid foundation (perfect for 30-year vision)
+8. **Memorable**: Short, punchy, easy to say and remember
 
 **Alternative**: **Aurora Kernel** 🌅 (if Basin feels too geological/less technical)
 

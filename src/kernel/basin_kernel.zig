@@ -1,7 +1,9 @@
-//! Basin Kernel — The foundation that holds everything
+//! Grain Basin kernel — The foundation that holds everything
 //!
-//! Basin Kernel is a Zig monolith kernel for RISC-V64, designed for the next 30 years.
+//! Grain Basin kernel is a Zig monolith kernel for RISC-V64, designed for the next 30 years.
 //! Non-POSIX, type-safe, minimal syscall surface, Tiger Style safety.
+//!
+//! **Homebrew Bundle**: `grainbasin`
 //!
 //! **Vision**: Modern kernel design inspired by seL4 (minimal), Theseus OS (type-safe),
 //! and Fuchsia (capability-based), but built in pure Zig for RISC-V.

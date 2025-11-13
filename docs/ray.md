@@ -28,8 +28,9 @@ our Tahoe aesthetic, reminding us to keep ethical fashion signal in view
 
 0. **RISC-V Kernel Virtualization Layer (macOS Tahoe)** 🔥 **HIGH PRIORITY** 🎯 **NEW** ✅ **CORE COMPLETE**
    - **Vision**: Run Zig monolith kernel in virtualized RISC-V environment within macOS Tahoe IDE
-   - **Kernel Name**: **Basin Kernel** 🏞️ (recommended) - "The foundation that holds everything" (Lake Tahoe basin metaphor, perfect Tahoe connection, 30-year vision, non-POSIX, modern design)
-     - **Alternative**: Aurora Kernel 🌅 (matches IDE branding) or Tiger Kernel 🐅 (matches Tiger Style)
+   - **Kernel Name**: **Grain Basin kernel** 🏞️ (official) - "The foundation that holds everything" (Lake Tahoe basin metaphor, perfect Tahoe connection, 30-year vision, non-POSIX, modern design)
+     - **Homebrew Bundle**: `grainbasin` (Brew package name)
+     - **Rationale**: Ties into Grain branding, allows clean Homebrew package name
    - **Why**: Enable kernel development and testing without physical RISC-V hardware or external QEMU
    - **RISC-V-First Development Strategy**: 
      - **Primary Goal**: Develop RISC-V-targeted Zig code in macOS Tahoe VM, deploy to Framework 13 DeepComputing RISC-V mainboard with confidence
@@ -43,7 +44,15 @@ our Tahoe aesthetic, reminding us to keep ethical fashion signal in view
      - **Modern Design**: Inspired by seL4 (minimal), Theseus OS (type-safe), Fuchsia (capability-based)
      - **30-Year Vision**: Design for next 30 years, not backward compatibility
      - **Tiger Style**: Maximum safety, explicit operations, comprehensive assertions
-   - **Core Syscalls** (Phase 1): `spawn`, `exit`, `yield`, `map`, `unmap`, `open`, `read`, `write`, `close`
+   - **Grain Basin kernel Foundation** ✅ **COMPLETE**:
+     - ✅ Kernel name: Grain Basin kernel 🏞️ - "The foundation that holds everything"
+     - ✅ Homebrew bundle: `grainbasin` (Brew package name)
+     - ✅ Syscall interface (`src/kernel/basin_kernel.zig`): All 17 core syscalls defined
+     - ✅ Type-safe abstractions: `Handle` (not integer FDs), `MapFlags`, `OpenFlags`, `ClockId`, `SysInfo`, `BasinError`, `SyscallResult`
+     - ✅ Syscall enumeration: spawn, exit, yield, wait, map, unmap, protect, channel_create, channel_send, channel_recv, open, read, write, close, clock_gettime, sleep_until, sysinfo
+     - ✅ Build integration: `basin_kernel_module` added to `build.zig`
+     - ✅ Tiger Style: Comprehensive assertions, explicit type safety, "why" comments, function length limits
+   - **Core Syscalls** (Phase 1 - Ready for Implementation): `spawn`, `exit`, `yield`, `map`, `unmap`, `open`, `read`, `write`, `close`
    - **Future Syscalls** (Phase 2): `channel_create`, `channel_send`, `channel_recv`, `wait`, `sleep_until`, `protect`, `clock_gettime`, `sysinfo`
    - **Core VM Implementation** ✅ **COMPLETE**:
      - ✅ Pure Zig RISC-V64 emulator (`src/kernel_vm/vm.zig`): Register file (32 GP registers + PC), 4MB static memory, instruction decoding (LUI, ADDI, ECALL)
@@ -51,11 +60,12 @@ our Tahoe aesthetic, reminding us to keep ethical fashion signal in view
      - ✅ Serial output (`src/kernel_vm/serial.zig`): 64KB circular buffer for kernel printf/debug output
      - ✅ Test suite (`src/kernel_vm/test.zig`): Comprehensive tests passing (VM init, register file, memory, instruction fetch, serial)
      - ✅ Build integration: `zig build kernel-vm-test` command
-   - **Next Steps**:
-     - GUI Integration: VM pane in River compositor, terminal-like output rendering, control panel
-     - Expanded ISA Support: Add more RISC-V instructions (load/store, branches, arithmetic)
-     - Kernel Execution Loop: Continuous VM stepping, hot reload on kernel save
-     - Debug Interface: GDB stub, register viewer, memory inspector
+   - **Next Steps** (Implementation Priority):
+     - **Basin Kernel Syscall Implementation**: Implement syscall handlers incrementally (start with `exit`, `yield`, `map`)
+     - **VM-Syscall Integration**: Wire Basin Kernel syscalls into RISC-V VM (handle ECALL → Basin syscall)
+     - **Serial Output Rendering**: Display kernel printf output in GUI VM pane (terminal-like output)
+     - **Expanded ISA Support**: Add more RISC-V instructions (ADD, SUB, SLT, etc.)
+     - **Debug Interface**: Register viewer, memory inspector, GDB stub (future)
    - **Tiger Style Requirements**:
      - Static allocation for VM state structures where possible ✅
      - Comprehensive assertions for memory access, instruction decoding ✅

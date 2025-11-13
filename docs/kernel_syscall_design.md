@@ -1,8 +1,10 @@
-# Zig Monolith Kernel: Core Syscall Design for RISC-V
+# Grain Basin kernel: Core Syscall Design for RISC-V
 
-**Date**: 2025-11-12  
+**Date**: 2025-11-13  
 **Operator**: Glow G2 (Stoic Aquarian cadence)  
 **Target**: Framework 13 DeepComputing RISC-V Mainboard  
+**Kernel Name**: Grain Basin kernel 🏞️ - "The foundation that holds everything"  
+**Homebrew Bundle**: `grainbasin`  
 **Philosophy**: Modern, minimal, non-POSIX, Tiger Style safety
 
 ## Design Principles

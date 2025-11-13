@@ -307,17 +307,17 @@ pub const TahoeSandbox = struct {
                 std.debug.assert(elf_data.len > 0);
                 
                 // Load kernel into VM.
-                const vm = loadKernel(sandbox.allocator, elf_data) catch |err| {
+                var vm = loadKernel(sandbox.allocator, elf_data) catch |err| {
                     std.debug.print("[tahoe_window] Failed to load kernel: {s}\n", .{@errorName(err)});
                     return true;
                 };
                 
-                // Store VM in sandbox.
-                sandbox.vm = vm;
-                
                 // Set syscall handler for VM (Grain Basin kernel integration).
                 // Why: Wire VM ECALL instructions to Grain Basin kernel syscalls.
                 vm.set_syscall_handler(TahoeSandbox.handle_syscall, sandbox);
+                
+                // Store VM in sandbox.
+                sandbox.vm = vm;
                 
                 std.debug.print("[tahoe_window] Kernel loaded successfully. PC: 0x{X}\n", .{vm.regs.pc});
                 return true;

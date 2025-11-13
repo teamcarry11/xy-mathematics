@@ -54,7 +54,7 @@ fn mainImpl() !void {
     
     // Start animation loop: 60fps continuous updates.
     std.debug.print("[tahoe] Starting animation loop (60fps)...\n", .{});
-    sandbox.startAnimationLoop();
+    sandbox.start_animation_loop();
     std.debug.print("[tahoe] Animation loop started.\n", .{});
 
     var stdout_buffer: [256]u8 = undefined;

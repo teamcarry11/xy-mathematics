@@ -126,11 +126,14 @@ our Tahoe aesthetic, reminding us to keep ethical fashion signal in view
          - ✅ Tests: Test 12-14 added for SLL/SRL/SRA
          - ✅ **ISA Expanded: 15 total instructions!** (LUI, ADDI, ADD, SUB, SLT, OR, AND, XOR, SLL, SRL, SRA, LW, SW, BEQ, ECALL)
          - Location: `src/kernel_vm/vm.zig` → instruction dispatch + execute functions
-       - **Priority 6: Implement Phase 2 Syscalls (Simpler Ones)** 🔥 **NEXT**:
-         - Syscalls: `protect`, `wait`, `clock_gettime`, `sysinfo` (stubs for now)
-         - Purpose: Expand kernel functionality, foundation for time/scheduling/process management
+       - **Priority 6: Implement Phase 2 Syscalls (Simpler Ones)** ✅ **COMPLETE**:
+         - ✅ `protect`: Validate region address (page-aligned, user space), flags, return stub success
+         - ✅ `wait`: Validate process ID, return stub exit status (0)
+         - ✅ `clock_gettime`: Validate clock_id, timespec_ptr, return stub zero timestamp
+         - ✅ `sysinfo`: Validate info_ptr, return stub success
+         - ✅ Comprehensive assertions (Tiger Style)
+         - ✅ **Phase 2 Progress: 4/8 syscalls implemented!**
          - Location: `src/kernel/basin_kernel.zig` → syscall functions
-         - Tiger Style: Comprehensive assertions, explicit validation, error handling
        - **Future Phases**: Memory management foundation (mapping table), File system foundation (handle table), Channel operations (IPC), Debug interface
      - **Single-Threaded Architecture**: ✅ All layers single-threaded, no locks, deterministic
      - **Safety-First Patterns**: ✅ Comprehensive assertions, type-safe interfaces, explicit error handling, static allocation

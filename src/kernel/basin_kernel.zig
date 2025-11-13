@@ -1035,14 +1035,52 @@ pub const BasinKernel = struct {
         _arg3: u64,
         _arg4: u64,
     ) BasinError!SyscallResult {
-        _ = self;
-        _ = info_ptr;
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        std.debug.assert(self_ptr != 0);
+        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        
         _ = _arg2;
         _ = _arg3;
         _ = _arg4;
         
-        // TODO: Implement sysinfo syscall.
-        return BasinError.invalid_syscall;
+        // Assert: info pointer must be valid (non-zero, within VM memory).
+        if (info_ptr == 0) {
+            return BasinError.invalid_argument; // Null pointer
+        }
+        
+        const VM_MEMORY_SIZE: u64 = 4 * 1024 * 1024; // 4MB default (matches syscall_map)
+        if (info_ptr >= VM_MEMORY_SIZE) {
+            return BasinError.invalid_argument; // Info pointer exceeds VM memory
+        }
+        
+        // Assert: SysInfo structure must fit within VM memory.
+        // SysInfo size: total_memory (8) + available_memory (8) + cpu_cores (4) + 
+        //               uptime_ns (8) + load_avg_1min (4) = 32 bytes
+        const SYSINFO_SIZE: u64 = 32;
+        if (info_ptr + SYSINFO_SIZE > VM_MEMORY_SIZE) {
+            return BasinError.invalid_argument; // SysInfo exceeds VM memory
+        }
+        
+        // TODO: Implement actual system information retrieval (when system stats are tracked).
+        // For now, return stub (basic info).
+        // Why: Simple stub - matches current kernel development stage.
+        // Note: In full implementation, we would:
+        // - Get total/available memory from memory allocator
+        // - Get CPU core count from hardware/SBI
+        // - Get uptime from system timer
+        // - Calculate load average from process scheduler
+        // - Write SysInfo structure to info_ptr
+        
+        // Stub: Return success (simple implementation).
+        // Note: Actual SysInfo structure would be written to info_ptr in full implementation.
+        const result = SyscallResult.ok(0);
+        
+        // Assert: result must be success (not error).
+        std.debug.assert(result == .success);
+        std.debug.assert(result.success == 0); // Sysinfo returns 0 on success
+        
+        return result;
     }
 };
 

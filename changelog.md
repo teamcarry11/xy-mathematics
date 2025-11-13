@@ -1,5 +1,25 @@
 # Grain Changelog — Descending Order (Newest First)
 
+## 12025-11-13--1100-pst
+- **005 Fuzz Test: SBI + Kernel Syscall Integration Complete**
+  - **Test Implementation**: Created `tests/005_fuzz.zig` with 6 comprehensive test categories
+    - SBI call fuzzing: Random EIDs (0-9), arguments, edge cases, state transitions
+    - Kernel syscall fuzzing: Random syscalls (10-50), arguments, error handling, return values
+    - ECALL dispatch fuzzing: Boundary values (9, 10), correct routing validation, function ID ranges
+    - Serial output fuzzing: Random character sequences, buffer management, circular buffer wrapping
+    - State transition fuzzing: VM state, kernel state transitions, state invariants
+    - Combined execution fuzzing: Mixed SBI + kernel call sequences, state persistence
+  - **Build Integration**: Added `fuzz-005` step to `build.zig` for running 005 fuzz tests
+  - **VM Testing API**: Made `VM.handle_sbi_call` and `VM.execute_ecall` public for fuzz test access
+  - **Comprehensive Assertions**: All test categories include extensive assertions for safety-first validation
+  - **Tiger Style**: Deterministic randomness, comprehensive assertions, explicit error handling, zero warnings
+  - **Result**: Full stack integration fuzz testing ready (Hardware → SBI → Kernel → Userspace), all tests passing
+- **Ray and Plan Updated**: Infused comprehensive assertions and 005 fuzz test plan into strategic documents
+  - Added comprehensive assertions section detailing all assertion coverage areas
+  - Added 005 fuzz test plan section with all 6 test categories documented
+  - Updated next steps to reflect current progress (005 fuzz test complete)
+  - Assertions coverage documented: VM SBI handling, VM ECALL dispatch, kernel syscall handling, serial output, GUI integration
+
 ## 12025-11-13--0840-pst
 - **TigerStyle: Convert All Function Names to snake_case**
   - **Basin Kernel**: `handleSyscall` → `handle_syscall`, all syscall handlers (`syscall_spawn`, `syscall_exit`, etc.), `isValid` → `is_valid`

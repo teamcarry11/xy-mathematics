@@ -173,10 +173,11 @@
 ## References & Inspiration
 
 ### Modern Kernel Designs
-- **seL4**: Minimal syscall surface (4 syscalls), formal verification
-- **Theseus OS (Rust)**: Type-safe kernel, capability-based, non-POSIX
-- **Fuchsia (Zircon)**: Capability-based, modern syscall design
-- **Redox OS**: Microkernel (too slow, but good IPC ideas)
+- **Linux (Monolithic)**: High performance, proven scalability, but complex and legacy-heavy
+- **Theseus OS (Rust)**: Type-safe monolithic kernel, capability-based, non-POSIX, excellent safety
+- **Fuchsia (Zircon)**: Capability-based monolithic kernel, modern syscall design, good performance
+- **seL4**: Microkernel with formal verification (excellent safety, but IPC overhead limits performance)
+- **Redox OS**: Microkernel (good safety ideas, but IPC overhead makes it slower than monolithic)
 
 ### Zig-Specific Considerations
 - **comptime**: Use for syscall validation, type checking
@@ -190,10 +191,88 @@
 - **Performance**: Explicit control, no hidden allocations
 - **Developer Experience**: Clear error messages, deterministic behavior
 
+## Kernel Architecture: Monolithic vs Microkernel
+
+### Decision: **Monolithic Kernel** (Grain Basin kernel)
+
+**Why Monolithic:**
+- **Performance**: Direct function calls, no IPC overhead, optimal for high-throughput workloads
+- **Tiger Style Priority**: Performance is a core requirement (alongside safety)
+- **Real-World Evidence**: Linux, FreeBSD, DragonFly BSD all use monolithic design for performance
+- **Theseus OS Model**: Type-safe monolithic kernel proves safety + performance is achievable
+
+**Why NOT Microkernel:**
+- **Performance Cost**: IPC overhead (context switches, message passing) adds latency
+- **seL4 Reality**: Formally verified but slower than Linux for real workloads
+- **Redox Reality**: Good safety ideas but performance suffers from microkernel architecture
+- **Tiger Style**: "10-year project in 3.5 years" requires performance, not academic purity
+
+**Safety in Monolithic Kernel:**
+- **Zig Type Safety**: Leverage Zig's type system, comptime checks, explicit memory management
+- **Theseus OS Approach**: Type-safe kernel in Rust proves monolithic can be safe
+- **Comprehensive Assertions**: Tiger Style assertions catch bugs at development time
+- **Minimal Attack Surface**: Small syscall surface reduces vulnerability exposure
+- **Capability-Based Design**: Use capabilities for fine-grained permissions (future)
+
+### Modern I/O Design: io_uring-Inspired Async I/O
+
+**Linux io_uring Principles:**
+- **Submission/Completion Queues**: Separate queues for requests and completions
+- **Zero-Copy**: Direct memory access, minimize copies
+- **Batch Operations**: Submit multiple I/O operations atomically
+- **Polling Mode**: Optional polling for ultra-low latency (bypass interrupts)
+
+**Grain Basin Kernel Equivalent:**
+- **Async I/O Syscalls**: `io_submit(queue: Handle, ops: []IOOp) usize`, `io_complete(queue: Handle, results: []IOResult) usize`
+- **Queue-Based Design**: User-space queues, kernel processes asynchronously
+- **Zero-Copy**: Direct memory mapping for I/O buffers
+- **Batch Operations**: Submit multiple I/O operations in one syscall
+- **Tiger Style**: Type-safe I/O operations, explicit error handling
+
+### Linux Kernel Interfaces Worth Keeping
+
+**Good Interfaces (Adapt for Grain Basin):**
+1. **Memory Mapping**: `mmap` concept (but typed handles, not FDs)
+2. **Event Notification**: `epoll`/`io_uring` async I/O model
+3. **Process Management**: Process groups, namespaces (simplified)
+4. **File System**: VFS abstraction (but type-safe, not POSIX paths)
+5. **Scheduling**: CFS-like fair scheduler (but simpler, deterministic)
+
+**Interfaces to Avoid (POSIX Legacy):**
+1. **File Descriptors**: Use typed handles instead
+2. **String Paths**: Use typed path handles or capability-based access
+3. **Signal System**: Use channels/IPC instead
+4. **fork/clone**: Use explicit `spawn` instead
+5. **ioctl**: Use typed syscalls instead
+
+### 30-Year Vision: Adapting Linux Concepts
+
+**What to Keep:**
+- **Monolithic Architecture**: Proven performance, scalable
+- **Async I/O Model**: io_uring-style queues for high-performance I/O
+- **Memory Management**: Virtual memory, page tables, but simplified
+- **Process Model**: Processes + threads, but explicit and type-safe
+
+**What to Modernize:**
+- **Type Safety**: Zig's type system replaces C's weak typing
+- **Explicit Errors**: Error unions instead of errno
+- **Capability-Based Security**: Fine-grained permissions, not user/group
+- **Non-POSIX**: Clean slate, no legacy compatibility burden
+- **RISC-V Native**: Design for RISC-V64, not x86 legacy
+
+**What to Add:**
+- **Deterministic Scheduling**: Predictable behavior for real-time systems
+- **Explicit Resource Management**: No hidden allocations, explicit cleanup
+- **Comptime Validation**: Zig comptime for syscall validation
+- **Formal Verification**: Where possible, prove correctness (selective, not full seL4)
+
 ## Notes
 
+- **Monolithic Kernel**: Chosen for performance (Tiger Style priority)
+- **Type-Safe Monolithic**: Theseus OS proves safety + performance is achievable
 - **Non-POSIX**: Deliberately avoid POSIX compatibility layer
 - **RISC-V Native**: Design for RISC-V64, not x86 legacy
 - **30-Year Vision**: Design for next 30 years, not backward compatibility
 - **Tiger Style**: Maximum safety, explicit operations, comprehensive assertions
+- **Performance First**: High-performance async I/O (io_uring-inspired), zero-copy, batching
 

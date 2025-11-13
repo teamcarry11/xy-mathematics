@@ -1,5 +1,16 @@
 # Grain Changelog — Descending Order (Newest First)
 
+## 12025-11-13--0840-pst
+- **TigerStyle: Convert All Function Names to snake_case**
+  - **Basin Kernel**: `handleSyscall` → `handle_syscall`, all syscall handlers (`syscall_spawn`, `syscall_exit`, etc.), `isValid` → `is_valid`
+  - **VM**: `fetchInstruction` → `fetch_instruction`, `executeLUI` → `execute_lui`, `executeADDI` → `execute_addi`, `executeLW` → `execute_lw`, `executeSW` → `execute_sw`, `executeBEQ` → `execute_beq`, `executeECALL` → `execute_ecall`, `setSyscallHandler` → `set_syscall_handler`
+  - **Tahoe Window**: `handleMouseEvent` → `handle_mouse_event`, `handleKeyboardEvent` → `handle_keyboard_event`, `handleFocusEvent` → `handle_focus_event`, `handleSyscall` → `handle_syscall`, `toggleFlux` → `toggle_flux`, `startAnimationLoop` → `start_animation_loop`, `stopAnimationLoop` → `stop_animation_loop`
+  - **Serial Output**: `getOutput` → `get_output`
+  - **Tahoe App**: Updated to use `start_animation_loop`
+  - **Build**: All compilation errors fixed, zero warnings, build succeeds
+  - **TigerStyle Compliance**: Consistent snake_case naming throughout codebase, all function calls updated
+  - **Result**: Complete TigerStyle snake_case conversion, ready for continued development
+
 ## 12025-11-13--0101-pst
 - **Grain Basin kernel: Official Kernel Name and Initial Syscall Interface**
   - **Kernel Name**: Grain Basin kernel 🏞️ - "The foundation that holds everything" (Lake Tahoe basin metaphor, perfect Tahoe connection)

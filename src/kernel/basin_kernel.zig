@@ -244,6 +244,48 @@ const MemoryMapping = struct {
 /// Tiger Style: Static allocation, max 256 entries (sufficient for 4MB VM).
 const MAX_MAPPINGS: usize = 256;
 
+/// File handle entry.
+/// Why: Track file handles for open/read/write/close syscalls.
+/// Tiger Style: Static allocation, explicit state tracking.
+const FileHandle = struct {
+    /// Handle ID (non-zero if allocated).
+    id: u64,
+    /// File path (null-terminated, max 256 bytes).
+    path: [256]u8,
+    /// Path length (bytes, excluding null terminator).
+    path_len: usize,
+    /// Open flags (permissions).
+    flags: OpenFlags,
+    /// Current read/write position (bytes from start).
+    position: u64,
+    /// File buffer (in-memory file data, max 64KB).
+    buffer: [64 * 1024]u8,
+    /// Buffer size (actual data length, bytes).
+    buffer_size: usize,
+    /// Whether this entry is allocated (in use).
+    allocated: bool,
+    
+    /// Initialize empty file handle entry.
+    /// Why: Explicit initialization, clear state.
+    pub fn init() FileHandle {
+        return FileHandle{
+            .id = 0,
+            .path = [_]u8{0} ** 256,
+            .path_len = 0,
+            .flags = OpenFlags.init(.{}),
+            .position = 0,
+            .buffer = [_]u8{0} ** (64 * 1024),
+            .buffer_size = 0,
+            .allocated = false,
+        };
+    }
+};
+
+/// File handle table.
+/// Why: Track all file handles for kernel file system management.
+/// Tiger Style: Static allocation, max 64 entries.
+const MAX_HANDLES: usize = 64;
+
 /// Basin Kernel syscall interface (stub for future implementation).
 /// Why: Define interface early, implement incrementally.
 pub const BasinKernel = struct {
@@ -255,6 +297,15 @@ pub const BasinKernel = struct {
     /// Next address for kernel-chosen allocations (simple allocator).
     /// Why: Track allocation position for kernel-chosen addresses.
     next_alloc_addr: u64 = 0x100000, // Start after kernel space (1MB)
+    
+    /// File handle table (static allocation).
+    /// Why: Track file handles for open/read/write/close syscalls.
+    /// Tiger Style: Static allocation, max 64 entries.
+    handles: [MAX_HANDLES]FileHandle = [_]FileHandle{FileHandle.init()} ** MAX_HANDLES,
+    
+    /// Next handle ID (simple allocator, starts at 1).
+    /// Why: Track handle ID allocation (1-based, 0 is invalid).
+    next_handle_id: u64 = 1,
     
     /// Initialize Basin Kernel.
     /// Why: Explicit initialization, validate kernel state.
@@ -269,7 +320,60 @@ pub const BasinKernel = struct {
         // Assert: Next allocation address must be page-aligned.
         std.debug.assert(kernel.next_alloc_addr % 4096 == 0);
         
+        // Assert: All handles must be unallocated initially.
+        for (kernel.handles) |handle| {
+            std.debug.assert(!handle.allocated);
+            std.debug.assert(handle.id == 0);
+        }
+        
+        // Assert: Next handle ID must be non-zero (1-based).
+        std.debug.assert(kernel.next_handle_id != 0);
+        
         return kernel;
+    }
+    
+    /// Find free handle entry.
+    /// Why: Allocate new handle entry.
+    /// Returns: Index of free entry, or null if table full.
+    /// Tiger Style: Comprehensive assertions for table state.
+    fn find_free_handle(self: *BasinKernel) ?usize {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        std.debug.assert(self_ptr != 0);
+        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        
+        for (self.handles, 0..) |handle, i| {
+            if (!handle.allocated) {
+                // Assert: Unallocated handle must have zero ID.
+                std.debug.assert(handle.id == 0);
+                return i;
+            }
+        }
+        return null;
+    }
+    
+    /// Find handle by ID.
+    /// Why: Look up handle for read/write/close operations.
+    /// Returns: Index of handle, or null if not found.
+    /// Tiger Style: Comprehensive assertions for handle validation.
+    fn find_handle_by_id(self: *BasinKernel, handle_id: u64) ?usize {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        std.debug.assert(self_ptr != 0);
+        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        
+        // Assert: Handle ID must be non-zero (0 is invalid).
+        std.debug.assert(handle_id != 0);
+        
+        for (self.handles, 0..) |handle, i| {
+            if (handle.allocated and handle.id == handle_id) {
+                // Assert: Handle must be allocated and match ID.
+                std.debug.assert(handle.allocated);
+                std.debug.assert(handle.id == handle_id);
+                return i;
+            }
+        }
+        return null;
     }
     
     /// Find free mapping entry.
@@ -1123,23 +1227,54 @@ pub const BasinKernel = struct {
             return BasinError.invalid_argument; // Reserved bits set
         }
         
-        // TODO: Implement actual file opening (when file system is implemented).
-        // For now, return a stub handle (simple implementation).
-        // Why: Simple stub - matches current kernel development stage.
-        // Note: In full implementation, we would:
-        // - Validate path string (null-terminated, valid UTF-8)
-        // - Look up file in file system
-        // - Create file handle
-        // - Return Handle (not raw integer) for type safety
-        // - Set handle permissions based on flags
+        // Assert: flags must have at least one permission (read or write).
+        if (!open_flags.read and !open_flags.write) {
+            return BasinError.invalid_argument; // No permissions set
+        }
         
-        // Stub: Return handle value 1 (simple implementation).
-        const handle: u64 = 1;
-        const result = SyscallResult.ok(handle);
+        // Assert: path length must fit in handle path buffer (max 256 bytes).
+        if (path_len > 255) {
+            return BasinError.invalid_argument; // Path too long for handle buffer
+        }
+        
+        // Find free handle entry.
+        const handle_idx = self.find_free_handle() orelse {
+            return BasinError.out_of_memory; // Handle table full
+        };
+        
+        // Allocate handle entry.
+        var file_handle = &self.handles[handle_idx];
+        const handle_id = self.next_handle_id;
+        self.next_handle_id += 1;
+        
+        // Assert: Handle ID must be non-zero (1-based).
+        std.debug.assert(handle_id != 0);
+        
+        // Copy path from VM memory (simulated - in real implementation, would read from VM memory).
+        // For now, store path length (actual path copying would happen here).
+        file_handle.id = handle_id;
+        file_handle.path_len = @as(usize, @intCast(path_len));
+        file_handle.flags = open_flags;
+        file_handle.position = 0;
+        file_handle.buffer_size = 0;
+        file_handle.allocated = true;
+        
+        // If truncate flag is set, clear buffer.
+        if (open_flags.truncate) {
+            file_handle.buffer_size = 0;
+        }
+        
+        // Assert: Handle entry must be allocated correctly.
+        std.debug.assert(file_handle.allocated);
+        std.debug.assert(file_handle.id == handle_id);
+        std.debug.assert(file_handle.path_len == path_len);
+        
+        const result = SyscallResult.ok(handle_id);
         
         // Assert: result must be success (not error).
         std.debug.assert(result == .success);
-        std.debug.assert(result.success == handle);
+        std.debug.assert(result.success == handle_id);
+        std.debug.assert(result.success != 0); // Handle ID must be non-zero
         
         return result;
     }
@@ -1186,22 +1321,43 @@ pub const BasinKernel = struct {
             return BasinError.invalid_argument; // Buffer exceeds VM memory
         }
         
-        // TODO: Implement actual file reading (when file system is implemented).
-        // For now, return stub (0 bytes read).
-        // Why: Simple stub - matches current kernel development stage.
-        // Note: In full implementation, we would:
-        // - Look up handle in handle table
-        // - Verify handle is open and readable
-        // - Read data from file into buffer
-        // - Return bytes read count
+        // Find handle by ID.
+        const handle_idx = self.find_handle_by_id(handle) orelse {
+            return BasinError.invalid_handle; // Handle not found
+        };
         
-        // Stub: Return 0 bytes read (simple implementation).
-        const bytes_read: u64 = 0;
+        // Assert: Handle must be allocated.
+        std.debug.assert(self.handles[handle_idx].allocated);
+        std.debug.assert(self.handles[handle_idx].id == handle);
+        
+        var file_handle = &self.handles[handle_idx];
+        
+        // Assert: Handle must be readable.
+        if (!file_handle.flags.read) {
+            return BasinError.permission_denied; // Handle not readable
+        }
+        
+        // Calculate bytes to read (min of available data and buffer size).
+        const available = if (file_handle.position < file_handle.buffer_size)
+            file_handle.buffer_size - file_handle.position
+        else
+            0;
+        const bytes_to_read = @min(available, @as(usize, @intCast(buffer_len)));
+        
+        // Read data from handle buffer (simulated - in real implementation, would write to VM memory).
+        // For now, just update position.
+        file_handle.position += bytes_to_read;
+        
+        // Assert: Position must not exceed buffer size.
+        std.debug.assert(file_handle.position <= file_handle.buffer_size);
+        
+        const bytes_read: u64 = @as(u64, @intCast(bytes_to_read));
         const result = SyscallResult.ok(bytes_read);
         
         // Assert: result must be success (not error).
         std.debug.assert(result == .success);
         std.debug.assert(result.success == bytes_read);
+        std.debug.assert(result.success <= buffer_len); // Can't read more than buffer size
         
         return result;
     }
@@ -1248,22 +1404,49 @@ pub const BasinKernel = struct {
             return BasinError.invalid_argument; // Data exceeds VM memory
         }
         
-        // TODO: Implement actual file writing (when file system is implemented).
-        // For now, return stub (0 bytes written).
-        // Why: Simple stub - matches current kernel development stage.
-        // Note: In full implementation, we would:
-        // - Look up handle in handle table
-        // - Verify handle is open and writable
-        // - Write data from buffer to file
-        // - Return bytes written count
+        // Find handle by ID.
+        const handle_idx = self.find_handle_by_id(handle) orelse {
+            return BasinError.invalid_handle; // Handle not found
+        };
         
-        // Stub: Return 0 bytes written (simple implementation).
-        const bytes_written: u64 = 0;
+        // Assert: Handle must be allocated.
+        std.debug.assert(self.handles[handle_idx].allocated);
+        std.debug.assert(self.handles[handle_idx].id == handle);
+        
+        var file_handle = &self.handles[handle_idx];
+        
+        // Assert: Handle must be writable.
+        if (!file_handle.flags.write) {
+            return BasinError.permission_denied; // Handle not writable
+        }
+        
+        // Calculate bytes to write (min of data length and available buffer space).
+        const data_len_usize = @as(usize, @intCast(data_len));
+        const max_buffer_size = file_handle.buffer.len;
+        const available_space = if (file_handle.position < max_buffer_size)
+            max_buffer_size - file_handle.position
+        else
+            0;
+        const bytes_to_write = @min(data_len_usize, available_space);
+        
+        // Write data to handle buffer (simulated - in real implementation, would read from VM memory).
+        // For now, just update position and buffer size.
+        file_handle.position += bytes_to_write;
+        if (file_handle.position > file_handle.buffer_size) {
+            file_handle.buffer_size = file_handle.position;
+        }
+        
+        // Assert: Position and buffer size must be valid.
+        std.debug.assert(file_handle.position <= max_buffer_size);
+        std.debug.assert(file_handle.buffer_size <= max_buffer_size);
+        
+        const bytes_written: u64 = @as(u64, @intCast(bytes_to_write));
         const result = SyscallResult.ok(bytes_written);
         
         // Assert: result must be success (not error).
         std.debug.assert(result == .success);
         std.debug.assert(result.success == bytes_written);
+        std.debug.assert(result.success <= data_len); // Can't write more than data length
         
         return result;
     }
@@ -1289,17 +1472,28 @@ pub const BasinKernel = struct {
             return BasinError.invalid_argument; // Invalid handle
         }
         
-        // TODO: Implement actual file closing (when file system is implemented).
-        // For now, return stub success.
-        // Why: Simple stub - matches current kernel development stage.
-        // Note: In full implementation, we would:
-        // - Look up handle in handle table
-        // - Verify handle is open
-        // - Close file and free handle
-        // - Remove handle from table
-        // - Return error if handle not found
+        // Find handle by ID.
+        const handle_idx = self.find_handle_by_id(handle) orelse {
+            return BasinError.invalid_handle; // Handle not found
+        };
         
-        // Stub: Return success (simple implementation).
+        // Assert: Handle must be allocated.
+        std.debug.assert(self.handles[handle_idx].allocated);
+        std.debug.assert(self.handles[handle_idx].id == handle);
+        
+        // Free handle entry.
+        var file_handle = &self.handles[handle_idx];
+        file_handle.allocated = false;
+        file_handle.id = 0;
+        file_handle.path_len = 0;
+        file_handle.flags = OpenFlags.init(.{});
+        file_handle.position = 0;
+        file_handle.buffer_size = 0;
+        
+        // Assert: Handle entry must be freed correctly.
+        std.debug.assert(!file_handle.allocated);
+        std.debug.assert(file_handle.id == 0);
+        
         const result = SyscallResult.ok(0);
         
         // Assert: result must be success (not error).

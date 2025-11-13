@@ -148,12 +148,18 @@ our Tahoe aesthetic, reminding us to keep ethical fashion signal in view
            - ✅ Comprehensive assertions (Tiger Style)
            - ✅ Zero compiler warnings, all tests passing
            - Location: `src/kernel/basin_kernel.zig` → `MemoryMapping` struct, `mappings` table
-         - **Phase 4: File System Foundation** 🔥 **HIGH PRIORITY**:
-           - Implement handle table (static array, max 64 entries)
-           - Update open/read/write/close syscalls to use actual table
-           - In-memory file system (no disk yet)
-           - Track file handles (path, flags, position, buffer)
-           - Location: `src/kernel/basin_kernel.zig` → add file system structures
+         - **Phase 4: File System Foundation** 🔥 **IN PROGRESS** 🎯 **CURRENT PRIORITY**:
+           - **Implementation Plan**:
+             - Handle table structure (static array, max 64 entries)
+             - Each entry: handle ID, file path, flags, position, buffer
+             - Update `open` syscall: Allocate handle, store path/flags, return handle ID
+             - Update `read` syscall: Look up handle, read from buffer, update position
+             - Update `write` syscall: Look up handle, write to buffer, update position
+             - Update `close` syscall: Look up handle, free entry
+             - In-memory file system (no disk yet)
+             - Tiger Style: Static allocation, comprehensive assertions
+           - **Why Next**: Foundation for I/O operations, needed for kernel/user communication
+           - **Location**: `src/kernel/basin_kernel.zig` → add file system structures
          - **Phase 5: Process Management Foundation** 🔥 **MEDIUM PRIORITY**:
            - Implement process table (static array, max 16 entries)
            - Update spawn/wait syscalls to use actual table

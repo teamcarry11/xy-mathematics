@@ -1,5 +1,23 @@
 # Grain Changelog — Descending Order (Newest First)
 
+## 12025-11-13--0101-pst
+- **Basin Kernel: Official Kernel Name and Initial Syscall Interface**
+  - **Kernel Name**: Basin Kernel 🏞️ - "The foundation that holds everything" (Lake Tahoe basin metaphor, perfect Tahoe connection)
+  - **Initial Module**: Created `src/kernel/basin_kernel.zig` with complete syscall interface definitions
+  - **Syscall Enumeration**: All 17 core syscalls defined (spawn, exit, yield, wait, map, unmap, protect, channel_create, channel_send, channel_recv, open, read, write, close, clock_gettime, sleep_until, sysinfo)
+  - **Type-Safe Abstractions**: 
+    - `Handle` type (not integer FDs) for type-safe resource management
+    - `MapFlags`, `OpenFlags` packed structs (explicit flags, no magic numbers)
+    - `ClockId` enum (monotonic, realtime)
+    - `SysInfo` struct (strongly-typed system information)
+    - `BasinError` error union (explicit errors, no POSIX errno)
+    - `SyscallResult` union (success/error wrapper)
+  - **Syscall Handler Stubs**: All 17 syscall handlers defined with TODO placeholders for future implementation
+  - **Build Integration**: Added `basin_kernel_module` to `build.zig`
+  - **Tiger Style**: Comprehensive assertions, explicit type safety, "why" comments, function length limits
+  - **Design Philosophy**: Minimal syscall surface, non-POSIX, type-safe, RISC-V native, 30-year vision
+  - **Result**: Basin Kernel foundation established, ready for incremental syscall implementation
+
 ## 12025-11-12--1955-pst
 - **Expanded RISC-V ISA Support: LW, SW, BEQ Instructions**
   - Added LW (Load Word): Load 32-bit word from memory with sign-extension to 64 bits

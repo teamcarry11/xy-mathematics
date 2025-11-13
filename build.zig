@@ -96,6 +96,13 @@ pub fn build(b: *std.Build) void {
     const kernel_step = b.step("kernel-rv64", "Build Grain RISC-V kernel image");
     kernel_step.dependOn(&kernel_install.step);
 
+    // Basin Kernel module (syscall interface and kernel structures).
+    const basin_kernel_module = b.addModule("basin_kernel", .{
+        .root_source_file = b.path("src/kernel/basin_kernel.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
     // RISC-V VM module for kernel virtualization.
     const kernel_vm_module = b.addModule("kernel_vm", .{
         .root_source_file = b.path("src/kernel_vm/kernel_vm.zig"),

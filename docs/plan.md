@@ -1,6 +1,6 @@
 # Grain Aurora GUI Plan — TigerStyle Execution
 
-**Current Status**: Window rendering complete ✅. Focus: Interactive macOS Tahoe GUI foundation.
+**Current Status**: Window rendering complete ✅, VM-GUI integration complete ✅, VM-syscall integration complete ✅. Focus: RISC-V SBI integration (CascadeOS/zig-sbi).
 
 ## macOS Tahoe GUI Foundation (Current Priority) 🎯
 
@@ -32,8 +32,11 @@
   - ✅ Kernel name: Grain Basin kernel 🏞️ - "The foundation that holds everything"
   - ✅ Homebrew bundle: `grainbasin` (Brew package name)
   - ✅ Syscall interface (`src/kernel/basin_kernel.zig`): All 17 core syscalls defined
+  - ✅ Architecture: Type-safe monolithic kernel (performance priority, not microkernel)
   - ✅ Type-safe abstractions: `Handle` (not integer FDs), `MapFlags`, `OpenFlags`, `ClockId`, `SysInfo`, `BasinError`, `SyscallResult`
+  - ✅ VM-Syscall Integration: ECALL wired to Grain Basin kernel syscalls ✅ **COMPLETE**
   - ✅ Build integration: `basin_kernel_module` added to `build.zig`
+  - ✅ Tiger Style: All function names converted to snake_case ✅ **COMPLETE**
 - **RISC-V SBI Integration** 🔥 **CRITICAL PRIORITY** 🎯 **NEW**:
   - **CascadeOS/zig-sbi**: Zig wrapper for RISC-V SBI (Supervisor Binary Interface)
   - **SBI Purpose**: Platform runtime services (timer, console, reset, IPI) - different from kernel syscalls
@@ -48,6 +51,7 @@
   - **SBI Console**: Replace serial output with SBI_CONSOLE_PUTCHAR, display in GUI VM pane
   - **Grain Basin kernel Syscall Implementation**: Implement syscall handlers incrementally (start with `exit`, `yield`, `map`)
   - **VM-Syscall Integration**: Wire Grain Basin kernel syscalls into RISC-V VM (handle ECALL → Basin syscall) ✅ **COMPLETE**
+  - **SBI vs Kernel Syscalls**: SBI handles platform services (timer, console, reset) via ECALL function ID < 10, kernel syscalls handle kernel services (process, memory, I/O) via ECALL function ID >= 10
   - **Expanded ISA Support**: Add more RISC-V instructions (ADD, SUB, SLT, etc.)
   - **Debug Interface**: Register viewer, memory inspector, GDB stub (future)
 - **Tiger Style Requirements**:

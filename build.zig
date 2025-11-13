@@ -439,6 +439,19 @@ pub fn build(b: *std.Build) void {
     const run_outputs_tests = b.addRunArtifact(outputs_tests);
     test_step.dependOn(&run_outputs_tests.step);
 
+    const fuzz_004_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/004_fuzz.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "kernel_vm", .module = kernel_vm_module },
+            },
+        }),
+    });
+    const fuzz_004_step = b.step("fuzz-004", "Run 004 fuzz tests for RISC-V VM");
+    fuzz_004_step.dependOn(&fuzz_004_tests.step);
+
     const fuzz_003_tests = b.addTest(.{
         .root_module = b.createModule(.{
             .root_source_file = b.path("tests/003_fuzz.zig"),

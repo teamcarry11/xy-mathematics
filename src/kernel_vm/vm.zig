@@ -235,6 +235,44 @@ pub const VM = struct {
                     return VMError.invalid_instruction;
                 }
             },
+            // R-type instructions (ADD, SUB, SLT): OP opcode.
+            0b0110011 => {
+                // R-type instructions use funct3 and funct7 to distinguish operations.
+                const funct3 = @as(u3, @truncate(inst >> 12));
+                const funct7 = @as(u7, @truncate(inst >> 25));
+                
+                // Dispatch based on funct3 and funct7.
+                if (funct3 == 0b000) {
+                    // ADD or SUB (funct3 = 0b000).
+                    if (funct7 == 0b0000000) {
+                        // ADD: rd = rs1 + rs2.
+                        try self.execute_add(inst);
+                    } else if (funct7 == 0b0100000) {
+                        // SUB: rd = rs1 - rs2.
+                        try self.execute_sub(inst);
+                    } else {
+                        // Unsupported R-type instruction variant.
+                        self.state = .errored;
+                        self.last_error = VMError.invalid_instruction;
+                        return VMError.invalid_instruction;
+                    }
+                } else if (funct3 == 0b010) {
+                    // SLT (Set Less Than): rd = (rs1 < rs2) ? 1 : 0.
+                    if (funct7 == 0b0000000) {
+                        try self.execute_slt(inst);
+                    } else {
+                        // Unsupported R-type instruction variant.
+                        self.state = .errored;
+                        self.last_error = VMError.invalid_instruction;
+                        return VMError.invalid_instruction;
+                    }
+                } else {
+                    // Unsupported R-type instruction variant.
+                    self.state = .errored;
+                    self.last_error = VMError.invalid_instruction;
+                    return VMError.invalid_instruction;
+                }
+            },
             // Load instructions (LW): I-type instruction.
             0b0000011 => {
                 const funct3 = @as(u3, @truncate(inst >> 12));
@@ -346,6 +384,110 @@ pub const VM = struct {
         
         // Write result to rd.
         self.regs.set(rd, result);
+    }
+
+    /// Execute ADD (Add) instruction.
+    /// Format: ADD rd, rs1, rs2
+    /// Encoding: funct7 | rs2 | rs1 | 000 | rd | 0110011
+    /// Why: Register-register addition for kernel arithmetic operations.
+    /// Tiger Style: Comprehensive assertions for register indices and result validation.
+    fn execute_add(self: *Self, inst: u32) !void {
+        // Decode: rd = bits [11:7], rs1 = bits [19:15], rs2 = bits [24:20].
+        const rd = @as(u5, @truncate(inst >> 7));
+        const rs1 = @as(u5, @truncate(inst >> 15));
+        const rs2 = @as(u5, @truncate(inst >> 20));
+        
+        // Assert: registers must be valid (0-31).
+        std.debug.assert(rd < 32);
+        std.debug.assert(rs1 < 32);
+        std.debug.assert(rs2 < 32);
+        
+        // Read source register values.
+        const rs1_value = self.regs.get(rs1);
+        const rs2_value = self.regs.get(rs2);
+        
+        // Add: rd = rs1 + rs2 (wrapping addition).
+        // Why: RISC-V uses wrapping arithmetic (no overflow exceptions).
+        const result = rs1_value +% rs2_value;
+        
+        // Write result to rd.
+        self.regs.set(rd, result);
+        
+        // Assert: result must be written correctly (unless x0).
+        if (rd != 0) {
+            std.debug.assert(self.regs.get(rd) == result);
+        }
+    }
+
+    /// Execute SUB (Subtract) instruction.
+    /// Format: SUB rd, rs1, rs2
+    /// Encoding: funct7 | rs2 | rs1 | 000 | rd | 0110011
+    /// Why: Register-register subtraction for kernel arithmetic operations.
+    /// Tiger Style: Comprehensive assertions for register indices and result validation.
+    fn execute_sub(self: *Self, inst: u32) !void {
+        // Decode: rd = bits [11:7], rs1 = bits [19:15], rs2 = bits [24:20].
+        const rd = @as(u5, @truncate(inst >> 7));
+        const rs1 = @as(u5, @truncate(inst >> 15));
+        const rs2 = @as(u5, @truncate(inst >> 20));
+        
+        // Assert: registers must be valid (0-31).
+        std.debug.assert(rd < 32);
+        std.debug.assert(rs1 < 32);
+        std.debug.assert(rs2 < 32);
+        
+        // Read source register values.
+        const rs1_value = self.regs.get(rs1);
+        const rs2_value = self.regs.get(rs2);
+        
+        // Subtract: rd = rs1 - rs2 (wrapping subtraction).
+        // Why: RISC-V uses wrapping arithmetic (no underflow exceptions).
+        const result = rs1_value -% rs2_value;
+        
+        // Write result to rd.
+        self.regs.set(rd, result);
+        
+        // Assert: result must be written correctly (unless x0).
+        if (rd != 0) {
+            std.debug.assert(self.regs.get(rd) == result);
+        }
+    }
+
+    /// Execute SLT (Set Less Than) instruction.
+    /// Format: SLT rd, rs1, rs2
+    /// Encoding: funct7 | rs2 | rs1 | 010 | rd | 0110011
+    /// Why: Signed comparison for kernel control flow and conditionals.
+    /// Tiger Style: Comprehensive assertions for register indices and comparison result.
+    fn execute_slt(self: *Self, inst: u32) !void {
+        // Decode: rd = bits [11:7], rs1 = bits [19:15], rs2 = bits [24:20].
+        const rd = @as(u5, @truncate(inst >> 7));
+        const rs1 = @as(u5, @truncate(inst >> 15));
+        const rs2 = @as(u5, @truncate(inst >> 20));
+        
+        // Assert: registers must be valid (0-31).
+        std.debug.assert(rd < 32);
+        std.debug.assert(rs1 < 32);
+        std.debug.assert(rs2 < 32);
+        
+        // Read source register values (as signed 64-bit integers).
+        const rs1_value = self.regs.get(rs1);
+        const rs2_value = self.regs.get(rs2);
+        
+        // Compare: rd = (rs1 < rs2) ? 1 : 0 (signed comparison).
+        // Why: SLT performs signed comparison (treats values as two's complement).
+        const rs1_signed = @as(i64, @bitCast(rs1_value));
+        const rs2_signed = @as(i64, @bitCast(rs2_value));
+        const result: u64 = if (rs1_signed < rs2_signed) 1 else 0;
+        
+        // Write result to rd.
+        self.regs.set(rd, result);
+        
+        // Assert: result must be 0 or 1 (boolean comparison result).
+        std.debug.assert(result == 0 or result == 1);
+        
+        // Assert: result must be written correctly (unless x0).
+        if (rd != 0) {
+            std.debug.assert(self.regs.get(rd) == result);
+        }
     }
 
     /// Execute LW (Load Word) instruction.

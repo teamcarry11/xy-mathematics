@@ -363,39 +363,93 @@ pub const BasinKernel = struct {
         std.debug.assert(self_ptr != 0);
         std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
         
+        _ = self;
         _ = _arg4;
         
-        // Assert: address must be page-aligned (4KB pages) or zero (kernel chooses).
-        if (addr != 0) {
-            std.debug.assert(addr % 4096 == 0);
-            // Assert: address must be within valid range (not in kernel space).
-            // Note: For now, allow any address (VM will validate).
+        // Assert: size must be non-zero and page-aligned.
+        if (size == 0) {
+            return BasinError.invalid_argument;
+        }
+        if (size % 4096 != 0) {
+            return BasinError.unaligned_access;
         }
         
-        // Assert: size must be non-zero and page-aligned.
-        std.debug.assert(size > 0);
-        std.debug.assert(size % 4096 == 0);
-        
-        // Assert: size must be reasonable (max 1GB per mapping).
-        std.debug.assert(size <= 1024 * 1024 * 1024);
+        // Assert: size must be reasonable (max 1GB per mapping, fits in VM memory).
+        const VM_MEMORY_SIZE: u64 = 4 * 1024 * 1024; // 4MB VM memory
+        if (size > 1024 * 1024 * 1024) {
+            return BasinError.invalid_argument; // Too large (> 1GB)
+        }
+        if (size > VM_MEMORY_SIZE) {
+            return BasinError.out_of_memory; // Larger than VM memory
+        }
         
         // Decode flags (MapFlags packed struct).
         const map_flags = @as(MapFlags, @bitCast(@as(u32, @truncate(flags))));
         
         // Assert: flags must be valid (at least one permission).
-        std.debug.assert(map_flags.read or map_flags.write or map_flags.execute);
+        if (!map_flags.read and !map_flags.write and !map_flags.execute) {
+            return BasinError.invalid_argument; // No permissions set
+        }
         
         // Assert: flags padding must be zero (no reserved bits set).
-        std.debug.assert(map_flags._padding == 0);
+        if (map_flags._padding != 0) {
+            return BasinError.invalid_argument; // Reserved bits set
+        }
+        
+        // Determine mapping address.
+        var mapping_addr: u64 = addr;
+        
+        // If addr is zero, kernel chooses address (simple allocator: start from user space).
+        // Why: Simple implementation - allocate from user space region.
+        const KERNEL_SPACE_END: u64 = 0x100000; // 1MB kernel space (typical)
+        const USER_SPACE_START: u64 = KERNEL_SPACE_END; // User space starts after kernel
+        
+        if (mapping_addr == 0) {
+            // Kernel chooses: allocate from user space.
+            mapping_addr = USER_SPACE_START;
+            
+            // Assert: Kernel-chosen address must be page-aligned.
+            std.debug.assert(mapping_addr % 4096 == 0);
+        } else {
+            // User-provided address: validate alignment and range.
+            if (mapping_addr % 4096 != 0) {
+                return BasinError.unaligned_access;
+            }
+            
+            // Assert: Address must be in user space (not kernel space).
+            if (mapping_addr < USER_SPACE_START) {
+                return BasinError.permission_denied; // Attempting to map in kernel space
+            }
+        }
+        
+        // Assert: Mapping must fit within VM memory.
+        if (mapping_addr + size > VM_MEMORY_SIZE) {
+            return BasinError.out_of_memory; // Mapping exceeds VM memory
+        }
+        
+        // Assert: Mapping must not overlap kernel space.
+        if (mapping_addr < KERNEL_SPACE_END) {
+            return BasinError.permission_denied; // Overlaps kernel space
+        }
         
         // For now, return address as handle (simple implementation).
-        // TODO: Implement actual memory mapping (allocate pages, set permissions).
-        // Why: Simple implementation - VM will handle actual memory mapping.
-        const result = SyscallResult.ok(addr);
+        // TODO: Implement actual memory mapping (allocate pages, set permissions, track mappings).
+        // Why: Simple implementation - VM will handle actual memory access.
+        // Note: In full implementation, we would:
+        // - Allocate pages from a page allocator
+        // - Set page permissions based on flags
+        // - Track mappings in a data structure
+        // - Return a Handle (not raw address) for type safety
+        const result = SyscallResult.ok(mapping_addr);
         
         // Assert: result must be success (not error).
         std.debug.assert(result == .success);
-        std.debug.assert(result.success == addr);
+        std.debug.assert(result.success == mapping_addr);
+        
+        // Assert: Returned address must be valid.
+        std.debug.assert(result.success >= USER_SPACE_START);
+        std.debug.assert(result.success + size <= VM_MEMORY_SIZE);
+        std.debug.assert(result.success % 4096 == 0);
         
         return result;
     }

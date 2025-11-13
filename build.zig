@@ -366,6 +366,7 @@ pub fn build(b: *std.Build) void {
             .optimize = optimize,
             .imports = &.{
                 .{ .name = "kernel_vm", .module = kernel_vm_module },
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
             },
             // Tiger Style: Zig is strict by default - all safety checks enabled.
             // No need for additional flags - Zig catches all errors at compile time.

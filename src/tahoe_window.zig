@@ -317,7 +317,7 @@ pub const TahoeSandbox = struct {
                 
                 // Set syscall handler for VM (Grain Basin kernel integration).
                 // Why: Wire VM ECALL instructions to Grain Basin kernel syscalls.
-                vm.setSyscallHandler(handleSyscall, sandbox);
+                vm.setSyscallHandler(TahoeSandbox.handleSyscall, sandbox);
                 
                 std.debug.print("[tahoe_window] Kernel loaded successfully. PC: 0x{X}\n", .{vm.regs.pc});
                 return true;

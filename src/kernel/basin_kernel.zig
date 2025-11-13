@@ -259,10 +259,10 @@ pub const BasinKernel = struct {
     /// Initialize Basin Kernel.
     /// Why: Explicit initialization, validate kernel state.
     pub fn init() BasinKernel {
-        var kernel = BasinKernel{};
+        const kernel = BasinKernel{};
         
         // Assert: All mappings must be unallocated initially.
-        for (kernel.mappings) |*mapping| {
+        for (kernel.mappings) |mapping| {
             std.debug.assert(!mapping.allocated);
         }
         
@@ -275,36 +275,139 @@ pub const BasinKernel = struct {
     /// Find free mapping entry.
     /// Why: Allocate new mapping entry.
     /// Returns: Index of free entry, or null if table full.
+    /// Tiger Style: Comprehensive assertions for table state.
     fn find_free_mapping(self: *BasinKernel) ?usize {
-        for (self.mappings, 0..) |*mapping, i| {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        std.debug.assert(self_ptr != 0);
+        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        
+        var found_index: ?usize = null;
+        var free_count: usize = 0;
+        
+        for (self.mappings, 0..) |mapping, i| {
             if (!mapping.allocated) {
-                return i;
+                free_count += 1;
+                if (found_index == null) {
+                    found_index = i;
+                }
+                
+                // Assert: Unallocated mapping must have zero address and size.
+                std.debug.assert(mapping.address == 0);
+                std.debug.assert(mapping.size == 0);
+            } else {
+                // Assert: Allocated mapping must have valid address and size.
+                std.debug.assert(mapping.address >= 0x100000); // User space start
+                std.debug.assert(mapping.address % 4096 == 0); // Page-aligned
+                std.debug.assert(mapping.size >= 4096); // At least 1 page
+                std.debug.assert(mapping.size % 4096 == 0); // Page-aligned
             }
         }
-        return null;
+        
+        // Assert: Free count must be <= MAX_MAPPINGS.
+        std.debug.assert(free_count <= MAX_MAPPINGS);
+        
+        return found_index;
     }
     
     /// Find mapping by address.
     /// Why: Look up mapping for unmap/protect operations.
     /// Returns: Index of mapping, or null if not found.
+    /// Tiger Style: Comprehensive assertions for address validation.
     fn find_mapping_by_address(self: *BasinKernel, addr: u64) ?usize {
-        for (self.mappings, 0..) |*mapping, i| {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        std.debug.assert(self_ptr != 0);
+        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        
+        // Assert: Address must be page-aligned.
+        std.debug.assert(addr % 4096 == 0);
+        
+        var found_index: ?usize = null;
+        var match_count: usize = 0;
+        
+        for (self.mappings, 0..) |mapping, i| {
             if (mapping.allocated and mapping.address == addr) {
-                return i;
+                match_count += 1;
+                if (found_index == null) {
+                    found_index = i;
+                }
+                
+                // Assert: Matching mapping must have valid state.
+                std.debug.assert(mapping.address == addr);
+                std.debug.assert(mapping.size >= 4096);
+                std.debug.assert(mapping.size % 4096 == 0);
             }
         }
-        return null;
+        
+        // Assert: Address must be unique (no duplicate mappings).
+        std.debug.assert(match_count <= 1);
+        
+        return found_index;
     }
     
     /// Check if address range overlaps with any existing mapping.
     /// Why: Validate no overlapping mappings.
+    /// Tiger Style: Comprehensive assertions for overlap detection.
     fn check_overlap(self: *BasinKernel, addr: u64, size: u64) bool {
-        for (self.mappings) |*mapping| {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        std.debug.assert(self_ptr != 0);
+        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        
+        // Assert: Address and size must be valid.
+        std.debug.assert(addr % 4096 == 0); // Page-aligned
+        std.debug.assert(size >= 4096); // At least 1 page
+        std.debug.assert(size % 4096 == 0); // Page-aligned
+        
+        var overlap_count: usize = 0;
+        
+        for (self.mappings) |mapping| {
             if (mapping.overlaps(addr, size)) {
-                return true;
+                overlap_count += 1;
+                
+                // Assert: Overlapping mapping must be allocated.
+                std.debug.assert(mapping.allocated);
+                
+                // Assert: Overlap condition must be true.
+                const does_overlap = (mapping.address < addr + size) and (addr < mapping.address + mapping.size);
+                std.debug.assert(does_overlap);
             }
         }
-        return false;
+        
+        // Assert: Overlap count must be consistent (0 or 1, no duplicates).
+        std.debug.assert(overlap_count <= 1);
+        
+        return overlap_count > 0;
+    }
+    
+    /// Count allocated mappings (for testing and validation).
+    /// Why: Validate mapping table state consistency.
+    /// Tiger Style: Comprehensive assertions for state validation.
+    pub fn count_allocated_mappings(self: *BasinKernel) usize {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        std.debug.assert(self_ptr != 0);
+        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        
+        var count: usize = 0;
+        
+        for (self.mappings) |mapping| {
+            if (mapping.allocated) {
+                count += 1;
+                
+                // Assert: Allocated mapping must have valid state.
+                std.debug.assert(mapping.address >= 0x100000); // User space start
+                std.debug.assert(mapping.address % 4096 == 0); // Page-aligned
+                std.debug.assert(mapping.size >= 4096); // At least 1 page
+                std.debug.assert(mapping.size % 4096 == 0); // Page-aligned
+            }
+        }
+        
+        // Assert: Count must be <= MAX_MAPPINGS.
+        std.debug.assert(count <= MAX_MAPPINGS);
+        
+        return count;
     }
     
     /// Handle syscall from user space.

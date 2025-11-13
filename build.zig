@@ -488,6 +488,20 @@ pub fn build(b: *std.Build) void {
     const fuzz_005_step = b.step("fuzz-005", "Run 005 fuzz tests for SBI + kernel syscall integration");
     fuzz_005_step.dependOn(&fuzz_005_tests.step);
 
+    const fuzz_006_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/006_fuzz.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+            },
+        }),
+    });
+    const fuzz_006_run = b.addRunArtifact(fuzz_006_tests);
+    const fuzz_006_step = b.step("fuzz-006", "Run 006 fuzz tests for memory management foundation");
+    fuzz_006_step.dependOn(&fuzz_006_run.step);
+
     const fuzz_003_tests = b.addTest(.{
         .root_module = b.createModule(.{
             .root_source_file = b.path("tests/003_fuzz.zig"),

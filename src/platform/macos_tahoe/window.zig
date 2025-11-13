@@ -188,7 +188,25 @@ pub const Window = struct {
         const title_nsstring: *c.objc_object = @ptrCast(@alignCast(title_nsstring_opt.?));
         cocoa.objc_msgSendVoid1(@ptrCast(nsWindow), setTitleSel, title_nsstring);
 
-        // Create NSImageView (specialized view for displaying images).
+        // Create TahoeView (custom view that handles mouse/keyboard events).
+        // Why: TahoeView accepts first responder and routes events to Zig.
+        const window_ptr = @intFromPtr(self);
+        std.debug.assert(window_ptr != 0);
+        const tahoeView_opt = createTahoeView(window_ptr);
+        std.debug.assert(tahoeView_opt != null);
+        const tahoeView: *c.objc_object = @ptrCast(@alignCast(tahoeView_opt.?));
+        std.debug.assert(@intFromPtr(tahoeView) != 0);
+        
+        // Initialize TahoeView with frame.
+        const initWithFrameSel = c.sel_getUid("initWithFrame:");
+        std.debug.assert(initWithFrameSel != null);
+        const initTahoeView_opt = cocoa.objc_msgSend1(@ptrCast(tahoeView), initWithFrameSel, contentRect);
+        std.debug.assert(initTahoeView_opt != null);
+        const initTahoeView: *c.objc_object = @ptrCast(@alignCast(initTahoeView_opt.?));
+        std.debug.assert(@intFromPtr(initTahoeView) != 0);
+        
+        // Create NSImageView as subview (for rendering images).
+        // Why: NSImageView handles image scaling; TahoeView handles events.
         const NSImageViewClass = c.objc_getClass("NSImageView");
         std.debug.assert(NSImageViewClass != null);
         const imageView_opt = cocoa.objc_msgSend0(@ptrCast(NSImageViewClass), allocSel);
@@ -202,17 +220,19 @@ pub const Window = struct {
         const nsImageView: *c.objc_object = @ptrCast(@alignCast(nsImageView_opt.?));
         std.debug.assert(@intFromPtr(nsImageView) != 0);
         
-        // Note: NSImageView will use default scaling (proportional scaling).
-        // We can configure this later if needed.
+        // Add NSImageView as subview of TahoeView.
+        const addSubviewSel = c.sel_getUid("addSubview:");
+        std.debug.assert(addSubviewSel != null);
+        cocoa.objc_msgSendVoid1(@ptrCast(initTahoeView), addSubviewSel, nsImageView);
         
-        // Set image view as content view.
+        // Set TahoeView as content view (handles events).
         const setContentViewSel = c.sel_getUid("setContentView:");
         std.debug.assert(setContentViewSel != null);
-        cocoa.objc_msgSendVoid1(@ptrCast(nsWindow), setContentViewSel, nsImageView);
+        cocoa.objc_msgSendVoid1(@ptrCast(nsWindow), setContentViewSel, initTahoeView);
         
-        // Store pointers (store imageView as ns_view since it's still an NSView).
+        // Store pointers: TahoeView is content view, NSImageView is subview.
         self.ns_window = nsWindow;
-        self.ns_view = nsImageView;
+        self.ns_view = initTahoeView; // TahoeView (event handling)
         self.ns_app = sharedApp;
         
         // Setup window delegate for resize events.
@@ -249,17 +269,37 @@ pub const Window = struct {
             std.debug.panic("Window.present: self pointer is suspiciously small: 0x{x}", .{self_ptr});
         }
         
-        // Assert precondition: view must be initialized.
+        // Assert precondition: TahoeView must be initialized.
         std.debug.assert(self.ns_view != null);
-        const view = self.ns_view.?;
-        const view_ptr = @intFromPtr(view);
-        std.debug.assert(view_ptr != 0);
-        if (view_ptr < 0x1000) {
-            std.debug.panic("Window.present: view pointer is suspiciously small: 0x{x}", .{view_ptr});
+        const tahoeView = self.ns_view.?;
+        const tahoeView_ptr = @intFromPtr(tahoeView);
+        std.debug.assert(tahoeView_ptr != 0);
+        if (tahoeView_ptr < 0x1000) {
+            std.debug.panic("Window.present: tahoeView pointer is suspiciously small: 0x{x}", .{tahoeView_ptr});
         }
-        if (view_ptr % 8 != 0) {
-            std.debug.panic("Window.present: view pointer is not aligned: 0x{x}", .{view_ptr});
+        if (tahoeView_ptr % 8 != 0) {
+            std.debug.panic("Window.present: tahoeView pointer is not aligned: 0x{x}", .{tahoeView_ptr});
         }
+        
+        // Find NSImageView subview (for rendering).
+        // Why: NSImageView is a subview of TahoeView; we need to set image on it.
+        // Pattern: Get subviews array, then get first element (NSImageView).
+        const subviewsSel = c.sel_getUid("subviews");
+        std.debug.assert(subviewsSel != null);
+        const subviews_opt = cocoa.objc_msgSend0(@ptrCast(tahoeView), subviewsSel);
+        std.debug.assert(subviews_opt != null);
+        const subviews: *c.objc_object = @ptrCast(@alignCast(subviews_opt.?));
+        
+        // Get first subview (NSImageView) using objectAtIndex:.
+        // Why: NSArray returns id from objectAtIndex:, which we can cast directly.
+        const objectAtIndexSel = c.sel_getUid("objectAtIndex:");
+        std.debug.assert(objectAtIndexSel != null);
+        // Note: objectAtIndex: takes NSUInteger (unsigned long).
+        const imageView_opt = cocoa.objc_msgSend1Uint(@ptrCast(subviews), objectAtIndexSel, 0);
+        std.debug.assert(imageView_opt != null);
+        const imageView: *c.objc_object = @ptrCast(@alignCast(imageView_opt.?));
+        const imageView_ptr = @intFromPtr(imageView);
+        std.debug.assert(imageView_ptr != 0);
         
         // Assert precondition: buffer must be valid.
         std.debug.assert(self.rgba_buffer.len > 0);
@@ -270,7 +310,7 @@ pub const Window = struct {
         std.debug.assert(self.width > 0);
         std.debug.assert(self.height > 0);
         
-        std.debug.print("[window] Presenting buffer to view at: 0x{x}, buffer size: {d} bytes (window: {}x{}, buffer: {}x{})\n", .{ view_ptr, self.rgba_buffer.len, self.width, self.height, BUFFER_WIDTH, BUFFER_HEIGHT });
+        std.debug.print("[window] Presenting buffer to view at: 0x{x}, buffer size: {d} bytes (window: {}x{}, buffer: {}x{})\n", .{ imageView_ptr, self.rgba_buffer.len, self.width, self.height, BUFFER_WIDTH, BUFFER_HEIGHT });
         
         // Create CGImage from RGBA buffer.
         // Buffer is always 1024x768 (static), window size may differ.
@@ -286,8 +326,8 @@ pub const Window = struct {
         
         // Create NSImage from CGImage.
         std.debug.print("[window] Creating NSImage from CGImage (using C wrapper)...\n", .{});
-        const width_f64 = @as(f64, @floatFromInt(self.width));
-        const height_f64 = @as(f64, @floatFromInt(self.height));
+        const width_f64 = @as(f64, @floatFromInt(BUFFER_WIDTH));
+        const height_f64 = @as(f64, @floatFromInt(BUFFER_HEIGHT));
         std.debug.assert(width_f64 > 0.0);
         std.debug.assert(height_f64 > 0.0);
         
@@ -307,15 +347,15 @@ pub const Window = struct {
         }
         std.debug.print("[window] Created NSImage at: 0x{x}\n", .{nsImage_ptr});
         
-        // Set image on NSImageView (much simpler than drawing manually).
+        // Set image on NSImageView subview.
         const setImageSel = c.sel_getUid("setImage:");
         std.debug.assert(setImageSel != null);
-        cocoa.objc_msgSendVoid1(@ptrCast(view), setImageSel, nsImage);
+        cocoa.objc_msgSendVoid1(@ptrCast(imageView), setImageSel, nsImage);
         
         // Mark view as needing display.
         const setNeedsDisplaySel = c.sel_getUid("setNeedsDisplay:");
         std.debug.assert(setNeedsDisplaySel != null);
-        cocoa.objc_msgSendVoidBool(@ptrCast(view), setNeedsDisplaySel, true);
+        cocoa.objc_msgSendVoidBool(@ptrCast(tahoeView), setNeedsDisplaySel, true);
         
         std.debug.print("[window] Set NSImage on NSImageView.\n", .{});
     }
@@ -555,6 +595,7 @@ pub const Window = struct {
 // C helper functions for delegate creation and timer setup.
 extern fn createWindowDelegate(window_ptr: usize) ?*c.objc_object;
 extern fn createAnimationTimer(window_ptr: usize, interval: f64) ?*c.objc_object;
+extern fn createTahoeView(window_ptr: usize) ?*c.objc_object;
 
 // Event routing functions: called from C delegates, route to Zig event handler.
 // These are exported as C functions so Objective-C can call them.

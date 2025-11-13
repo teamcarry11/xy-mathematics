@@ -4,12 +4,17 @@
 
 ## macOS Tahoe GUI Foundation (Current Priority) 🎯
 
-### 1. Input Handling 🔥 **IMMEDIATE PRIORITY**
-- Mouse events: clicks, movement, drag operations
-- Keyboard events: key presses, modifiers (Cmd, Option, Shift, Control)
-- Window focus events: `windowDidBecomeKey:`, `windowDidResignKey:`
-- Event routing: forward Cocoa events to Aurora's event system
-- Files: `src/platform/macos_tahoe/window.zig` (add event handlers), `src/tahoe_window.zig` (event processing)
+### 1. Input Handling 🔥 **IMMEDIATE PRIORITY** ✅ **COMPLETE**
+- ✅ Created `TahoeView` class dynamically (extends NSView, handles events)
+- ✅ Mouse events: `mouseDown:`, `mouseUp:`, `mouseDragged:`, `mouseMoved:` implemented
+- ✅ Keyboard events: `keyDown:`, `keyUp:` implemented with key code, character, modifiers
+- ✅ Window focus events: `windowDidBecomeKey:`, `windowDidResignKey:` implemented
+- ✅ Event routing: Cocoa → C routing functions → Zig event handlers
+- ✅ Tiger Style: Comprehensive assertions, pointer validation, bounds checking
+- ✅ Static allocation: Minimal dynamic allocation, static class names
+- ✅ View hierarchy: TahoeView (events) → NSImageView (rendering)
+- ✅ Code quality: Comments explain "why", functions <70 lines, <100 columns (grainwrap/grainvalidate)
+- Files: `src/platform/macos_tahoe/window.zig`, `src/platform/macos_tahoe/objc_wrapper.c`, `src/platform/events.zig`
 
 ### 2. Animation/Update Loop 🔥 **HIGH PRIORITY** ✅ **COMPLETE**
 - ✅ Platform VTable: `startAnimationLoop`, `stopAnimationLoop` methods added
@@ -53,7 +58,36 @@
 - Workspace support: multiple workspaces with window groups
 - Files: `src/tahoe_window.zig` (compositor logic), `src/platform/macos_tahoe/window.zig` (multi-window support)
 
+## Tiger Style Code Quality Standards 🐅
+
+**Enforcement**: All code must follow Tiger Style principles:
+- **Comments**: Explain "why" not "what" (Tiger Style principle)
+- **Assertions**: Comprehensive pointer validation, bounds checking, enum validation
+- **Static Allocation**: Prefer static allocation over dynamic (maximal static allocation)
+- **Function Length**: <70 lines per function (grainvalidate requirement)
+- **Column Width**: <100 columns per line (Tiger Style, grainwrap for docs at 73)
+- **Memory Safety**: Explicit pointer validation, alignment checks, suspicious address detection
+- **Determinism**: Single-threaded, deterministic behavior, no hidden state
+
+**Validation Tools**:
+- `grainwrap`: Enforces 73-column limit for documentation
+- `grainvalidate`: Enforces function length limits and naming conventions
+- Manual review: Assertion coverage, static allocation usage, comment quality
+
 ## Completed Work ✅
+
+### macOS Tahoe Input Handling ✅ **COMPLETE**
+- Created `TahoeView` class dynamically using Objective-C runtime API (extends NSView)
+- Implemented mouse event methods: `mouseDown:`, `mouseUp:`, `mouseDragged:`, `mouseMoved:`
+- Implemented keyboard event methods: `keyDown:`, `keyUp:` with key code, character, modifiers
+- Implemented `acceptsFirstResponder` method (returns YES for keyboard events)
+- Added window delegate methods: `windowDidBecomeKey:`, `windowDidResignKey:`
+- Event routing: Cocoa events → C routing functions → Zig event handlers
+- Tiger Style: Comprehensive assertions, pointer validation, bounds checking
+- Static allocation: Minimal dynamic allocation, static class names, associated objects
+- View hierarchy: TahoeView (content view, handles events) → NSImageView (subview, renders images)
+- Code quality: Comments explain "why" not "what", functions <70 lines, <100 columns
+- Files: `src/platform/macos_tahoe/window.zig`, `src/platform/macos_tahoe/objc_wrapper.c`, `src/platform/events.zig`
 
 ### macOS Tahoe Window Resizing ✅ **COMPLETE**
 - Implemented `windowDidResize:` delegate method via `TahoeWindowDelegate` class (created dynamically using Objective-C runtime API)

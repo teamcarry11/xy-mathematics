@@ -24,6 +24,10 @@ typedef struct {
     double height;
 } NSSize;
 
+// Forward declaration for NSInteger and NSUInteger (Foundation types).
+typedef long NSInteger;
+typedef unsigned long NSUInteger;
+
 // C wrapper for objc_msgSend to ensure proper calling convention on arm64.
 // Why: objc_msgSend uses a special calling convention on arm64 that might
 // not be handled correctly when called directly from Zig.
@@ -379,6 +383,31 @@ void objc_msgSend_void_1_bool(void* receiver, SEL selector, _Bool arg1) {
     ((void (*)(id, SEL, _Bool))objc_msgSend)(receiver_id, selector, arg1);
 }
 
+// Wrapper for objc_msgSend with NSUInteger parameter (for objectAtIndex:).
+// Why: objectAtIndex: takes NSUInteger (unsigned long), not NSRect.
+id objc_msgSend_wrapper_1_uint(void* receiver, SEL selector, unsigned long index) {
+    // Assert: receiver and selector must be valid.
+    if (receiver == NULL) {
+        fprintf(stderr, "[objc_msgSend_wrapper_1_uint] NULL receiver\n");
+        fflush(stderr);
+        return NULL;
+    }
+    if (selector == NULL) {
+        fprintf(stderr, "[objc_msgSend_wrapper_1_uint] NULL selector\n");
+        fflush(stderr);
+        return NULL;
+    }
+    // Assert: receiver address must be reasonable and aligned.
+    uintptr_t receiver_addr = (uintptr_t)receiver;
+    if (receiver_addr < 0x1000 || receiver_addr % 8 != 0) {
+        fprintf(stderr, "[objc_msgSend_wrapper_1_uint] Invalid receiver: %p\n", receiver);
+        fflush(stderr);
+        return NULL;
+    }
+    id receiver_id = (id)receiver;
+    return ((id (*)(id, SEL, NSUInteger))objc_msgSend)(receiver_id, selector, index);
+}
+
 // Helper function to create NSImage from CGImage.
 // Why: NSImage doesn't have imageWithCGImage:size: class method.
 // Instead, we create NSBitmapImageRep from CGImage, then create NSImage from that.
@@ -576,6 +605,68 @@ static void windowDidResizeImpl(id self, SEL _cmd, id notification) {
     routeWindowDidResize(window_ptr, content_frame.size.width, content_frame.size.height);
 }
 
+// Handle windowDidBecomeKey: delegate method.
+// Why: Convert Cocoa focus gain to platform-agnostic FocusEvent.
+static void windowDidBecomeKeyImpl(id self, SEL _cmd, id notification) {
+    (void)_cmd;
+    (void)notification; // Unused but validated
+    
+    if (self == NULL) {
+        fprintf(stderr, "[windowDidBecomeKeyImpl] NULL self\n");
+        fflush(stderr);
+        return;
+    }
+    
+    // Extract window_ptr from associated object.
+    id window_ptr_obj = objc_getAssociatedObject(self, "windowPtr");
+    if (window_ptr_obj == NULL) {
+        fprintf(stderr, "[windowDidBecomeKeyImpl] window_ptr not found\n");
+        fflush(stderr);
+        return;
+    }
+    
+    uintptr_t window_ptr = (uintptr_t)window_ptr_obj;
+    if (window_ptr == 0) {
+        fprintf(stderr, "[windowDidBecomeKeyImpl] window_ptr is 0\n");
+        fflush(stderr);
+        return;
+    }
+    
+    // Route to Zig: kind=0 (gained).
+    routeFocusEvent(window_ptr, 0);
+}
+
+// Handle windowDidResignKey: delegate method.
+// Why: Convert Cocoa focus loss to platform-agnostic FocusEvent.
+static void windowDidResignKeyImpl(id self, SEL _cmd, id notification) {
+    (void)_cmd;
+    (void)notification; // Unused but validated
+    
+    if (self == NULL) {
+        fprintf(stderr, "[windowDidResignKeyImpl] NULL self\n");
+        fflush(stderr);
+        return;
+    }
+    
+    // Extract window_ptr from associated object.
+    id window_ptr_obj = objc_getAssociatedObject(self, "windowPtr");
+    if (window_ptr_obj == NULL) {
+        fprintf(stderr, "[windowDidResignKeyImpl] window_ptr not found\n");
+        fflush(stderr);
+        return;
+    }
+    
+    uintptr_t window_ptr = (uintptr_t)window_ptr_obj;
+    if (window_ptr == 0) {
+        fprintf(stderr, "[windowDidResignKeyImpl] window_ptr is 0\n");
+        fflush(stderr);
+        return;
+    }
+    
+    // Route to Zig: kind=1 (lost).
+    routeFocusEvent(window_ptr, 1);
+}
+
 // Create window delegate instance using runtime API.
 // Creates TahoeWindowDelegate class dynamically and returns an instance.
 id createWindowDelegate(uintptr_t window_ptr) {
@@ -620,6 +711,36 @@ id createWindowDelegate(uintptr_t window_ptr) {
         BOOL methodAdded = class_addMethod(delegateClass, resizeSel, (IMP)windowDidResizeImpl, methodTypes);
         if (!methodAdded) {
             fprintf(stderr, "[createWindowDelegate] Failed to add windowDidResize: method\n");
+            fflush(stderr);
+            return NULL;
+        }
+        
+        // Add windowDidBecomeKey: method.
+        SEL becomeKeySel = sel_registerName("windowDidBecomeKey:");
+        if (becomeKeySel == NULL) {
+            fprintf(stderr, "[createWindowDelegate] Failed to register windowDidBecomeKey: selector\n");
+            fflush(stderr);
+            return NULL;
+        }
+        
+        BOOL becomeKeyAdded = class_addMethod(delegateClass, becomeKeySel, (IMP)windowDidBecomeKeyImpl, methodTypes);
+        if (!becomeKeyAdded) {
+            fprintf(stderr, "[createWindowDelegate] Failed to add windowDidBecomeKey: method\n");
+            fflush(stderr);
+            return NULL;
+        }
+        
+        // Add windowDidResignKey: method.
+        SEL resignKeySel = sel_registerName("windowDidResignKey:");
+        if (resignKeySel == NULL) {
+            fprintf(stderr, "[createWindowDelegate] Failed to register windowDidResignKey: selector\n");
+            fflush(stderr);
+            return NULL;
+        }
+        
+        BOOL resignKeyAdded = class_addMethod(delegateClass, resignKeySel, (IMP)windowDidResignKeyImpl, methodTypes);
+        if (!resignKeyAdded) {
+            fprintf(stderr, "[createWindowDelegate] Failed to add windowDidResignKey: method\n");
             fflush(stderr);
             return NULL;
         }
@@ -880,4 +1001,576 @@ id createAnimationTimer(uintptr_t window_ptr, double interval) {
     fflush(stderr);
     
     return timer;
+}
+
+// Forward declaration for NSPoint (AppKit type).
+typedef struct {
+    double x;
+    double y;
+} NSPoint;
+
+// Forward declaration for NSEvent (AppKit type).
+// We only need to access methods, not the struct itself.
+typedef struct objc_object NSEvent;
+
+// TahoeView mouse/keyboard event handlers.
+// Why: These methods extract event data and route to Zig event system.
+// Pattern: Similar to TahoeTimerTarget and TahoeWindowDelegate.
+
+// Handle mouseDown: event.
+// Why: Convert Cocoa mouse event to platform-agnostic MouseEvent.
+// Tiger Style: Validate all pointers, extract coordinates/modifiers.
+static void tahoeViewMouseDownImpl(id self, SEL _cmd, id event) {
+    (void)_cmd; // Unused parameter
+    
+    // Assert: self and event must be valid.
+    if (self == NULL || event == NULL) {
+        fprintf(stderr, "[tahoeViewMouseDownImpl] NULL self or event\n");
+        fflush(stderr);
+        return;
+    }
+    
+    // Extract window_ptr from associated object.
+    id window_ptr_obj = objc_getAssociatedObject(self, "windowPtr");
+    if (window_ptr_obj == NULL) {
+        fprintf(stderr, "[tahoeViewMouseDownImpl] window_ptr not found\n");
+        fflush(stderr);
+        return;
+    }
+    
+    uintptr_t window_ptr = (uintptr_t)window_ptr_obj;
+    if (window_ptr == 0) {
+        fprintf(stderr, "[tahoeViewMouseDownImpl] window_ptr is 0\n");
+        fflush(stderr);
+        return;
+    }
+    
+    // Extract locationInWindow from NSEvent.
+    SEL locationSel = sel_registerName("locationInWindow");
+    if (locationSel == NULL) {
+        fprintf(stderr, "[tahoeViewMouseDownImpl] locationInWindow selector not found\n");
+        fflush(stderr);
+        return;
+    }
+    
+    NSPoint location = ((NSPoint (*)(id, SEL))objc_msgSend)(event, locationSel);
+    
+    // Extract buttonNumber (0=left, 1=right, 2=middle).
+    SEL buttonNumberSel = sel_registerName("buttonNumber");
+    if (buttonNumberSel == NULL) {
+        fprintf(stderr, "[tahoeViewMouseDownImpl] buttonNumber selector not found\n");
+        fflush(stderr);
+        return;
+    }
+    
+    NSInteger button_num = ((NSInteger (*)(id, SEL))objc_msgSend)(event, buttonNumberSel);
+    uint32_t button = (button_num < 0 || button_num > 2) ? 3 : (uint32_t)button_num;
+    
+    // Extract modifierFlags.
+    SEL modifierFlagsSel = sel_registerName("modifierFlags");
+    if (modifierFlagsSel == NULL) {
+        fprintf(stderr, "[tahoeViewMouseDownImpl] modifierFlags selector not found\n");
+        fflush(stderr);
+        return;
+    }
+    
+    NSUInteger modifiers = ((NSUInteger (*)(id, SEL))objc_msgSend)(event, modifierFlagsSel);
+    
+    // Route to Zig: kind=0 (down), button, x, y, modifiers.
+    routeMouseEvent(window_ptr, 0, button, location.x, location.y, (uint32_t)modifiers);
+}
+
+// Handle mouseUp: event.
+// Why: Convert Cocoa mouse release to platform-agnostic MouseEvent.
+static void tahoeViewMouseUpImpl(id self, SEL _cmd, id event) {
+    (void)_cmd;
+    
+    if (self == NULL || event == NULL) {
+        fprintf(stderr, "[tahoeViewMouseUpImpl] NULL self or event\n");
+        fflush(stderr);
+        return;
+    }
+    
+    id window_ptr_obj = objc_getAssociatedObject(self, "windowPtr");
+    if (window_ptr_obj == NULL) {
+        fprintf(stderr, "[tahoeViewMouseUpImpl] window_ptr not found\n");
+        fflush(stderr);
+        return;
+    }
+    
+    uintptr_t window_ptr = (uintptr_t)window_ptr_obj;
+    if (window_ptr == 0) {
+        fprintf(stderr, "[tahoeViewMouseUpImpl] window_ptr is 0\n");
+        fflush(stderr);
+        return;
+    }
+    
+    SEL locationSel = sel_registerName("locationInWindow");
+    if (locationSel == NULL) {
+        fprintf(stderr, "[tahoeViewMouseUpImpl] locationInWindow selector not found\n");
+        fflush(stderr);
+        return;
+    }
+    
+    NSPoint location = ((NSPoint (*)(id, SEL))objc_msgSend)(event, locationSel);
+    
+    SEL buttonNumberSel = sel_registerName("buttonNumber");
+    if (buttonNumberSel == NULL) {
+        fprintf(stderr, "[tahoeViewMouseUpImpl] buttonNumber selector not found\n");
+        fflush(stderr);
+        return;
+    }
+    
+    NSInteger button_num = ((NSInteger (*)(id, SEL))objc_msgSend)(event, buttonNumberSel);
+    uint32_t button = (button_num < 0 || button_num > 2) ? 3 : (uint32_t)button_num;
+    
+    SEL modifierFlagsSel = sel_registerName("modifierFlags");
+    if (modifierFlagsSel == NULL) {
+        fprintf(stderr, "[tahoeViewMouseUpImpl] modifierFlags selector not found\n");
+        fflush(stderr);
+        return;
+    }
+    
+    NSUInteger modifiers = ((NSUInteger (*)(id, SEL))objc_msgSend)(event, modifierFlagsSel);
+    
+    // Route to Zig: kind=1 (up), button, x, y, modifiers.
+    routeMouseEvent(window_ptr, 1, button, location.x, location.y, (uint32_t)modifiers);
+}
+
+// Handle mouseDragged: event.
+// Why: Convert Cocoa drag to platform-agnostic MouseEvent.
+static void tahoeViewMouseDraggedImpl(id self, SEL _cmd, id event) {
+    (void)_cmd;
+    
+    if (self == NULL || event == NULL) {
+        fprintf(stderr, "[tahoeViewMouseDraggedImpl] NULL self or event\n");
+        fflush(stderr);
+        return;
+    }
+    
+    id window_ptr_obj = objc_getAssociatedObject(self, "windowPtr");
+    if (window_ptr_obj == NULL) {
+        fprintf(stderr, "[tahoeViewMouseDraggedImpl] window_ptr not found\n");
+        fflush(stderr);
+        return;
+    }
+    
+    uintptr_t window_ptr = (uintptr_t)window_ptr_obj;
+    if (window_ptr == 0) {
+        fprintf(stderr, "[tahoeViewMouseDraggedImpl] window_ptr is 0\n");
+        fflush(stderr);
+        return;
+    }
+    
+    SEL locationSel = sel_registerName("locationInWindow");
+    if (locationSel == NULL) {
+        fprintf(stderr, "[tahoeViewMouseDraggedImpl] locationInWindow selector not found\n");
+        fflush(stderr);
+        return;
+    }
+    
+    NSPoint location = ((NSPoint (*)(id, SEL))objc_msgSend)(event, locationSel);
+    
+    SEL buttonNumberSel = sel_registerName("buttonNumber");
+    if (buttonNumberSel == NULL) {
+        fprintf(stderr, "[tahoeViewMouseDraggedImpl] buttonNumber selector not found\n");
+        fflush(stderr);
+        return;
+    }
+    
+    NSInteger button_num = ((NSInteger (*)(id, SEL))objc_msgSend)(event, buttonNumberSel);
+    uint32_t button = (button_num < 0 || button_num > 2) ? 3 : (uint32_t)button_num;
+    
+    SEL modifierFlagsSel = sel_registerName("modifierFlags");
+    if (modifierFlagsSel == NULL) {
+        fprintf(stderr, "[tahoeViewMouseDraggedImpl] modifierFlags selector not found\n");
+        fflush(stderr);
+        return;
+    }
+    
+    NSUInteger modifiers = ((NSUInteger (*)(id, SEL))objc_msgSend)(event, modifierFlagsSel);
+    
+    // Route to Zig: kind=3 (drag), button, x, y, modifiers.
+    routeMouseEvent(window_ptr, 3, button, location.x, location.y, (uint32_t)modifiers);
+}
+
+// Handle mouseMoved: event.
+// Why: Convert Cocoa mouse movement to platform-agnostic MouseEvent.
+static void tahoeViewMouseMovedImpl(id self, SEL _cmd, id event) {
+    (void)_cmd;
+    
+    if (self == NULL || event == NULL) {
+        fprintf(stderr, "[tahoeViewMouseMovedImpl] NULL self or event\n");
+        fflush(stderr);
+        return;
+    }
+    
+    id window_ptr_obj = objc_getAssociatedObject(self, "windowPtr");
+    if (window_ptr_obj == NULL) {
+        fprintf(stderr, "[tahoeViewMouseMovedImpl] window_ptr not found\n");
+        fflush(stderr);
+        return;
+    }
+    
+    uintptr_t window_ptr = (uintptr_t)window_ptr_obj;
+    if (window_ptr == 0) {
+        fprintf(stderr, "[tahoeViewMouseMovedImpl] window_ptr is 0\n");
+        fflush(stderr);
+        return;
+    }
+    
+    SEL locationSel = sel_registerName("locationInWindow");
+    if (locationSel == NULL) {
+        fprintf(stderr, "[tahoeViewMouseMovedImpl] locationInWindow selector not found\n");
+        fflush(stderr);
+        return;
+    }
+    
+    NSPoint location = ((NSPoint (*)(id, SEL))objc_msgSend)(event, locationSel);
+    
+    SEL modifierFlagsSel = sel_registerName("modifierFlags");
+    if (modifierFlagsSel == NULL) {
+        fprintf(stderr, "[tahoeViewMouseMovedImpl] modifierFlags selector not found\n");
+        fflush(stderr);
+        return;
+    }
+    
+    NSUInteger modifiers = ((NSUInteger (*)(id, SEL))objc_msgSend)(event, modifierFlagsSel);
+    
+    // Route to Zig: kind=2 (move), button=0 (no button), x, y, modifiers.
+    routeMouseEvent(window_ptr, 2, 0, location.x, location.y, (uint32_t)modifiers);
+}
+
+// Handle keyDown: event.
+// Why: Convert Cocoa keyboard press to platform-agnostic KeyboardEvent.
+static void tahoeViewKeyDownImpl(id self, SEL _cmd, id event) {
+    (void)_cmd;
+    
+    if (self == NULL || event == NULL) {
+        fprintf(stderr, "[tahoeViewKeyDownImpl] NULL self or event\n");
+        fflush(stderr);
+        return;
+    }
+    
+    id window_ptr_obj = objc_getAssociatedObject(self, "windowPtr");
+    if (window_ptr_obj == NULL) {
+        fprintf(stderr, "[tahoeViewKeyDownImpl] window_ptr not found\n");
+        fflush(stderr);
+        return;
+    }
+    
+    uintptr_t window_ptr = (uintptr_t)window_ptr_obj;
+    if (window_ptr == 0) {
+        fprintf(stderr, "[tahoeViewKeyDownImpl] window_ptr is 0\n");
+        fflush(stderr);
+        return;
+    }
+    
+    // Extract keyCode (macOS virtual key code).
+    SEL keyCodeSel = sel_registerName("keyCode");
+    if (keyCodeSel == NULL) {
+        fprintf(stderr, "[tahoeViewKeyDownImpl] keyCode selector not found\n");
+        fflush(stderr);
+        return;
+    }
+    
+    unsigned short key_code = ((unsigned short (*)(id, SEL))objc_msgSend)(event, keyCodeSel);
+    
+    // Extract characters (UTF-8 string).
+    SEL charactersSel = sel_registerName("characters");
+    if (charactersSel == NULL) {
+        fprintf(stderr, "[tahoeViewKeyDownImpl] characters selector not found\n");
+        fflush(stderr);
+        return;
+    }
+    
+    id characters_str = ((id (*)(id, SEL))objc_msgSend)(event, charactersSel);
+    uint32_t character = 0;
+    if (characters_str != NULL) {
+        SEL utf8StringSel = sel_registerName("UTF8String");
+        if (utf8StringSel != NULL) {
+            const char* utf8 = ((const char* (*)(id, SEL))objc_msgSend)(characters_str, utf8StringSel);
+            if (utf8 != NULL && utf8[0] != '\0') {
+                // Extract first character (simple UTF-8 decode for ASCII).
+                character = (uint32_t)utf8[0];
+            }
+        }
+    }
+    
+    // Extract modifierFlags.
+    SEL modifierFlagsSel = sel_registerName("modifierFlags");
+    if (modifierFlagsSel == NULL) {
+        fprintf(stderr, "[tahoeViewKeyDownImpl] modifierFlags selector not found\n");
+        fflush(stderr);
+        return;
+    }
+    
+    NSUInteger modifiers = ((NSUInteger (*)(id, SEL))objc_msgSend)(event, modifierFlagsSel);
+    
+    // Route to Zig: kind=0 (down), key_code, character, modifiers.
+    routeKeyboardEvent(window_ptr, 0, (uint32_t)key_code, character, (uint32_t)modifiers);
+}
+
+// Handle keyUp: event.
+// Why: Convert Cocoa keyboard release to platform-agnostic KeyboardEvent.
+static void tahoeViewKeyUpImpl(id self, SEL _cmd, id event) {
+    (void)_cmd;
+    
+    if (self == NULL || event == NULL) {
+        fprintf(stderr, "[tahoeViewKeyUpImpl] NULL self or event\n");
+        fflush(stderr);
+        return;
+    }
+    
+    id window_ptr_obj = objc_getAssociatedObject(self, "windowPtr");
+    if (window_ptr_obj == NULL) {
+        fprintf(stderr, "[tahoeViewKeyUpImpl] window_ptr not found\n");
+        fflush(stderr);
+        return;
+    }
+    
+    uintptr_t window_ptr = (uintptr_t)window_ptr_obj;
+    if (window_ptr == 0) {
+        fprintf(stderr, "[tahoeViewKeyUpImpl] window_ptr is 0\n");
+        fflush(stderr);
+        return;
+    }
+    
+    SEL keyCodeSel = sel_registerName("keyCode");
+    if (keyCodeSel == NULL) {
+        fprintf(stderr, "[tahoeViewKeyUpImpl] keyCode selector not found\n");
+        fflush(stderr);
+        return;
+    }
+    
+    unsigned short key_code = ((unsigned short (*)(id, SEL))objc_msgSend)(event, keyCodeSel);
+    
+    SEL charactersSel = sel_registerName("characters");
+    if (charactersSel == NULL) {
+        fprintf(stderr, "[tahoeViewKeyUpImpl] characters selector not found\n");
+        fflush(stderr);
+        return;
+    }
+    
+    id characters_str = ((id (*)(id, SEL))objc_msgSend)(event, charactersSel);
+    uint32_t character = 0;
+    if (characters_str != NULL) {
+        SEL utf8StringSel = sel_registerName("UTF8String");
+        if (utf8StringSel != NULL) {
+            const char* utf8 = ((const char* (*)(id, SEL))objc_msgSend)(characters_str, utf8StringSel);
+            if (utf8 != NULL && utf8[0] != '\0') {
+                character = (uint32_t)utf8[0];
+            }
+        }
+    }
+    
+    SEL modifierFlagsSel = sel_registerName("modifierFlags");
+    if (modifierFlagsSel == NULL) {
+        fprintf(stderr, "[tahoeViewKeyUpImpl] modifierFlags selector not found\n");
+        fflush(stderr);
+        return;
+    }
+    
+    NSUInteger modifiers = ((NSUInteger (*)(id, SEL))objc_msgSend)(event, modifierFlagsSel);
+    
+    // Route to Zig: kind=1 (up), key_code, character, modifiers.
+    routeKeyboardEvent(window_ptr, 1, (uint32_t)key_code, character, (uint32_t)modifiers);
+}
+
+// Accept first responder (required for keyboard events).
+// Why: NSView must return YES to receive keyboard events.
+static BOOL tahoeViewAcceptsFirstResponderImpl(id self, SEL _cmd) {
+    (void)_cmd;
+    (void)self; // Unused but validated via assertions
+    
+    // Assert: self must be valid.
+    if (self == NULL) {
+        fprintf(stderr, "[tahoeViewAcceptsFirstResponderImpl] NULL self\n");
+        fflush(stderr);
+        return NO;
+    }
+    
+    return YES;
+}
+
+// Create TahoeView instance using runtime API.
+// Why: Dynamic class creation avoids Objective-C compilation dependency.
+// Pattern: Similar to TahoeTimerTarget and TahoeWindowDelegate.
+id createTahoeView(uintptr_t window_ptr) {
+    if (window_ptr == 0) {
+        fprintf(stderr, "[createTahoeView] NULL window_ptr\n");
+        fflush(stderr);
+        return NULL;
+    }
+    
+    // Check if class already exists (avoid creating duplicate classes).
+    static const char* viewClassName = "TahoeView";
+    Class viewClass = objc_getClass(viewClassName);
+    
+    if (viewClass == NULL) {
+        // Create new class: TahoeView extends NSView.
+        Class NSViewClass = objc_getClass("NSView");
+        if (NSViewClass == NULL) {
+            fprintf(stderr, "[createTahoeView] NSView class not found\n");
+            fflush(stderr);
+            return NULL;
+        }
+        
+        viewClass = objc_allocateClassPair(NSViewClass, viewClassName, 0);
+        if (viewClass == NULL) {
+            fprintf(stderr, "[createTahoeView] Failed to allocate view class\n");
+            fflush(stderr);
+            return NULL;
+        }
+        
+        // Add acceptsFirstResponder method.
+        SEL acceptsSel = sel_registerName("acceptsFirstResponder");
+        if (acceptsSel == NULL) {
+            fprintf(stderr, "[createTahoeView] Failed to register acceptsFirstResponder selector\n");
+            fflush(stderr);
+            return NULL;
+        }
+        
+        const char* acceptsTypes = "c@:"; // BOOL return, id self, SEL _cmd
+        BOOL acceptsAdded = class_addMethod(viewClass, acceptsSel, (IMP)tahoeViewAcceptsFirstResponderImpl, acceptsTypes);
+        if (!acceptsAdded) {
+            fprintf(stderr, "[createTahoeView] Failed to add acceptsFirstResponder method\n");
+            fflush(stderr);
+            return NULL;
+        }
+        
+        // Add mouseDown: method.
+        SEL mouseDownSel = sel_registerName("mouseDown:");
+        if (mouseDownSel == NULL) {
+            fprintf(stderr, "[createTahoeView] Failed to register mouseDown: selector\n");
+            fflush(stderr);
+            return NULL;
+        }
+        
+        const char* mouseTypes = "v@:@"; // void return, id self, SEL _cmd, id event
+        BOOL mouseDownAdded = class_addMethod(viewClass, mouseDownSel, (IMP)tahoeViewMouseDownImpl, mouseTypes);
+        if (!mouseDownAdded) {
+            fprintf(stderr, "[createTahoeView] Failed to add mouseDown: method\n");
+            fflush(stderr);
+            return NULL;
+        }
+        
+        // Add mouseUp: method.
+        SEL mouseUpSel = sel_registerName("mouseUp:");
+        if (mouseUpSel == NULL) {
+            fprintf(stderr, "[createTahoeView] Failed to register mouseUp: selector\n");
+            fflush(stderr);
+            return NULL;
+        }
+        
+        BOOL mouseUpAdded = class_addMethod(viewClass, mouseUpSel, (IMP)tahoeViewMouseUpImpl, mouseTypes);
+        if (!mouseUpAdded) {
+            fprintf(stderr, "[createTahoeView] Failed to add mouseUp: method\n");
+            fflush(stderr);
+            return NULL;
+        }
+        
+        // Add mouseDragged: method.
+        SEL mouseDraggedSel = sel_registerName("mouseDragged:");
+        if (mouseDraggedSel == NULL) {
+            fprintf(stderr, "[createTahoeView] Failed to register mouseDragged: selector\n");
+            fflush(stderr);
+            return NULL;
+        }
+        
+        BOOL mouseDraggedAdded = class_addMethod(viewClass, mouseDraggedSel, (IMP)tahoeViewMouseDraggedImpl, mouseTypes);
+        if (!mouseDraggedAdded) {
+            fprintf(stderr, "[createTahoeView] Failed to add mouseDragged: method\n");
+            fflush(stderr);
+            return NULL;
+        }
+        
+        // Add mouseMoved: method.
+        SEL mouseMovedSel = sel_registerName("mouseMoved:");
+        if (mouseMovedSel == NULL) {
+            fprintf(stderr, "[createTahoeView] Failed to register mouseMoved: selector\n");
+            fflush(stderr);
+            return NULL;
+        }
+        
+        BOOL mouseMovedAdded = class_addMethod(viewClass, mouseMovedSel, (IMP)tahoeViewMouseMovedImpl, mouseTypes);
+        if (!mouseMovedAdded) {
+            fprintf(stderr, "[createTahoeView] Failed to add mouseMoved: method\n");
+            fflush(stderr);
+            return NULL;
+        }
+        
+        // Add keyDown: method.
+        SEL keyDownSel = sel_registerName("keyDown:");
+        if (keyDownSel == NULL) {
+            fprintf(stderr, "[createTahoeView] Failed to register keyDown: selector\n");
+            fflush(stderr);
+            return NULL;
+        }
+        
+        BOOL keyDownAdded = class_addMethod(viewClass, keyDownSel, (IMP)tahoeViewKeyDownImpl, mouseTypes);
+        if (!keyDownAdded) {
+            fprintf(stderr, "[createTahoeView] Failed to add keyDown: method\n");
+            fflush(stderr);
+            return NULL;
+        }
+        
+        // Add keyUp: method.
+        SEL keyUpSel = sel_registerName("keyUp:");
+        if (keyUpSel == NULL) {
+            fprintf(stderr, "[createTahoeView] Failed to register keyUp: selector\n");
+            fflush(stderr);
+            return NULL;
+        }
+        
+        BOOL keyUpAdded = class_addMethod(viewClass, keyUpSel, (IMP)tahoeViewKeyUpImpl, mouseTypes);
+        if (!keyUpAdded) {
+            fprintf(stderr, "[createTahoeView] Failed to add keyUp: method\n");
+            fflush(stderr);
+            return NULL;
+        }
+        
+        // Register the class.
+        objc_registerClassPair(viewClass);
+        fprintf(stderr, "[createTahoeView] Created TahoeView class\n");
+        fflush(stderr);
+    }
+    
+    // Allocate instance of view class.
+    SEL allocSel = sel_registerName("alloc");
+    if (allocSel == NULL) {
+        fprintf(stderr, "[createTahoeView] alloc selector not found\n");
+        fflush(stderr);
+        return NULL;
+    }
+    
+    id view = ((id (*)(Class, SEL))objc_msgSend)(viewClass, allocSel);
+    if (view == NULL) {
+        fprintf(stderr, "[createTahoeView] Failed to allocate view\n");
+        fflush(stderr);
+        return NULL;
+    }
+    
+    SEL initSel = sel_registerName("init");
+    if (initSel == NULL) {
+        fprintf(stderr, "[createTahoeView] init selector not found\n");
+        fflush(stderr);
+        return NULL;
+    }
+    
+    id initializedView = ((id (*)(id, SEL))objc_msgSend)(view, initSel);
+    if (initializedView == NULL) {
+        fprintf(stderr, "[createTahoeView] Failed to initialize view\n");
+        fflush(stderr);
+        return NULL;
+    }
+    
+    // Store window_ptr as associated object on view.
+    void* window_ptr_obj = (void*)(uintptr_t)window_ptr;
+    objc_setAssociatedObject(initializedView, "windowPtr", (id)window_ptr_obj, OBJC_ASSOCIATION_ASSIGN);
+    
+    fprintf(stderr, "[createTahoeView] Created TahoeView instance at: %p\n", initializedView);
+    fflush(stderr);
+    
+    return initializedView;
 }

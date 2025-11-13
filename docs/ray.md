@@ -26,12 +26,18 @@ our Tahoe aesthetic, reminding us to keep ethical fashion signal in view
 
 **Status**: Window rendering complete ✅. Next: Interactive input handling.
 
-1. **Input Handling (macOS Tahoe)** 🔥 **IMMEDIATE PRIORITY**
-   - Mouse events: clicks, movement, drag operations
-   - Keyboard events: key presses, modifiers (Cmd, Option, Shift, Control)
-   - Window focus events: `windowDidBecomeKey:`, `windowDidResignKey:`
-   - Event routing: forward Cocoa events to Aurora's event system
-   - Files: `src/platform/macos_tahoe/window.zig` (add event handlers), `src/tahoe_window.zig` (event processing)
+1. **Input Handling (macOS Tahoe)** 🔥 **IMMEDIATE PRIORITY** ✅ **COMPLETE**
+   - ✅ Created `TahoeView` class dynamically using Objective-C runtime API (extends NSView)
+   - ✅ Implemented mouse event methods: `mouseDown:`, `mouseUp:`, `mouseDragged:`, `mouseMoved:`
+   - ✅ Implemented keyboard event methods: `keyDown:`, `keyUp:`
+   - ✅ Implemented `acceptsFirstResponder` method (returns YES for keyboard events)
+   - ✅ Added window delegate methods: `windowDidBecomeKey:`, `windowDidResignKey:`
+   - ✅ Event routing: Cocoa events → C routing functions → Zig event handlers
+   - ✅ Tiger Style: Comprehensive assertions, pointer validation, bounds checking
+   - ✅ Static allocation: Minimal dynamic allocation, static class names, associated objects
+   - ✅ View hierarchy: TahoeView (content view, handles events) → NSImageView (subview, renders images)
+   - ✅ Code quality: Comments explain "why" not "what", functions <70 lines, <100 columns
+   - Files: `src/platform/macos_tahoe/window.zig`, `src/platform/macos_tahoe/objc_wrapper.c`, `src/platform/events.zig`
 
 2. **Animation/Update Loop (macOS Tahoe)** 🔥 **HIGH PRIORITY** ✅ **COMPLETE**
    - ✅ Platform VTable: `startAnimationLoop`, `stopAnimationLoop` methods added

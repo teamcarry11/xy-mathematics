@@ -24,6 +24,7 @@ extern fn objc_msgSend_wrapper(receiver: *const anyopaque, selector: c.SEL) ?*c.
 extern fn objc_msgSend_wrapper_string(receiver: *const anyopaque, selector: c.SEL, utf8_string: [*c]const u8) ?*c.objc_object;
 extern fn objc_msgSend_wrapper_rect(receiver: *const anyopaque, selector: c.SEL, rect: *const anyopaque) ?*c.objc_object;
 extern fn objc_msgSend_wrapper_4(receiver: *const anyopaque, selector: c.SEL, rect: *const anyopaque, arg2: usize, arg3: usize, arg4: bool) ?*c.objc_object;
+extern fn objc_msgSend_wrapper_1_uint(receiver: *const anyopaque, selector: c.SEL, index: c_ulong) ?*c.objc_object;
 extern fn objc_msgSend_void_1(receiver: *const anyopaque, selector: c.SEL, arg1: *const anyopaque) void;
 extern fn objc_msgSend_void_0(receiver: *const anyopaque, selector: c.SEL) void;
 extern fn objc_msgSend_void_1_bool(receiver: *const anyopaque, selector: c.SEL, arg1: bool) void;
@@ -98,6 +99,12 @@ pub fn objc_msgSend0(receiver: *const anyopaque, sel: c.SEL) ?*c.objc_object {
 pub fn objc_msgSend1(receiver: *const anyopaque, sel: c.SEL, arg1: NSRect) ?*c.objc_object {
     // Pass NSRect by reference to match C wrapper signature (void* rect).
     return objc_msgSend_wrapper_rect(receiver, sel, @ptrCast(&arg1));
+}
+
+/// Typed objc_msgSend wrapper: 1 argument (NSUInteger).
+/// Why: For methods like objectAtIndex: that take unsigned long index.
+pub fn objc_msgSend1Uint(receiver: *const anyopaque, sel: c.SEL, index: c_ulong) ?*c.objc_object {
+    return objc_msgSend_wrapper_1_uint(receiver, sel, index);
 }
 
 /// Typed objc_msgSend wrapper: 4 arguments (initWithContentRect).

@@ -20,7 +20,7 @@ our Tahoe aesthetic, reminding us to keep ethical fashion signal in view
 
 ## Ray Mission Ladder (Deterministic & Kind)
 
-**Vision**: Grain Aurora as a Zig-first IDE with Matklad-inspired LSP architecture, combining Cursor-style agentic coding with native macOS performance and River compositor workflows.
+**Vision**: Grain Aurora as a Zig-first IDE with Matklad-inspired LSP architecture, combining Cursor-style agentic coding with native macOS performance and River compositor workflows. **RISC-V-First Development**: Develop RISC-V-targeted Zig kernel code in macOS Tahoe VM, deploy to Framework 13 DeepComputing RISC-V mainboard with confidence—VM matches hardware behavior exactly.
 
 ### Phase 1: macOS Tahoe GUI Foundation (Current Priority) 🎯
 

@@ -50,18 +50,30 @@ pub const RegisterFile = struct {
     }
 };
 
+/// VM memory configuration.
+/// Why: Centralized memory size configuration for RAM-aware development.
+/// Note: Development machine (MacBook Air M2): 24GB RAM
+///       Target hardware (Framework 13 RISC-V): 8GB RAM
+///       Default: 4MB (safe for both, sufficient for early kernel development)
+///       Max recommended: 64MB (works on both machines, allows larger kernel testing)
+pub const VM_MEMORY_SIZE: usize = 4 * 1024 * 1024; // 4MB default
+
 /// RISC-V64 virtual machine state.
 /// Why: Encapsulate all VM state for deterministic execution.
 pub const VM = struct {
     /// Register file (32 GP registers + PC).
     regs: RegisterFile = .{},
-    /// Physical memory (4MB static allocation).
+    /// Physical memory (static allocation, size configured by VM_MEMORY_SIZE).
     /// Why: Static allocation eliminates allocator dependency.
     /// Note: RISC-V64 typically uses 48-bit physical addresses, but we
-    /// use 4MB for kernel development (sufficient for early boot).
-    memory: [4 * 1024 * 1024]u8 = [_]u8{0} ** (4 * 1024 * 1024),
+    /// use configurable size for kernel development (default 4MB, sufficient for early boot).
+    /// RAM considerations:
+    /// - Development: 24GB available (MacBook Air M2)
+    /// - Target: 8GB available (Framework 13 RISC-V)
+    /// - 4MB default is conservative and safe for both machines.
+    memory: [VM_MEMORY_SIZE]u8 = [_]u8{0} ** VM_MEMORY_SIZE,
     /// Memory size in bytes.
-    memory_size: usize = 4 * 1024 * 1024,
+    memory_size: usize = VM_MEMORY_SIZE,
     /// VM execution state (running, halted, error).
     state: VMState = .halted,
     /// Last error (if state == .errored).
@@ -103,12 +115,12 @@ pub const VM = struct {
         std.debug.assert(load_address % 4 == 0);
         
         // Assert: kernel image must fit in memory.
-        std.debug.assert(load_address + kernel_image.len <= 4 * 1024 * 1024);
+        std.debug.assert(load_address + kernel_image.len <= VM_MEMORY_SIZE);
         
         var vm = Self{
             .regs = .{},
-            .memory = [_]u8{0} ** (4 * 1024 * 1024),
-            .memory_size = 4 * 1024 * 1024,
+            .memory = [_]u8{0} ** VM_MEMORY_SIZE,
+            .memory_size = VM_MEMORY_SIZE,
             .state = .halted,
             .last_error = null,
         };

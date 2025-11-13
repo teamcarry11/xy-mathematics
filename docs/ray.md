@@ -32,6 +32,11 @@ our Tahoe aesthetic, reminding us to keep ethical fashion signal in view
      - **Homebrew Bundle**: `grainbasin` (Brew package name)
      - **Rationale**: Ties into Grain branding, allows clean Homebrew package name
    - **Why**: Enable kernel development and testing without physical RISC-V hardware or external QEMU
+   - **RAM-Aware Configuration**: VM memory size configurable (default 4MB, max recommended 64MB)
+     - **Development**: MacBook Air M2 (24GB RAM) - plenty of headroom
+     - **Target**: Framework 13 RISC-V (8GB RAM) - conservative defaults
+     - **Rationale**: 4MB safe for both machines, sufficient for early kernel development
+     - **Reference**: `docs/vm_memory_config.md` for detailed RAM considerations
    - **RISC-V-First Development Strategy**: 
      - **Primary Goal**: Develop RISC-V-targeted Zig code in macOS Tahoe VM, deploy to Framework 13 DeepComputing RISC-V mainboard with confidence
      - **VM-Hardware Parity**: Pure Zig emulator matches Framework 13 RISC-V mainboard behavior (RISC-V64 ISA, memory model, register semantics)

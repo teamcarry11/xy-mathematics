@@ -374,7 +374,10 @@ pub const BasinKernel = struct {
         }
         
         // Assert: size must be reasonable (max 1GB per mapping, fits in VM memory).
-        const VM_MEMORY_SIZE: u64 = 4 * 1024 * 1024; // 4MB VM memory
+        // VM memory size (matches VM_MEMORY_SIZE from kernel_vm).
+        // Why: Consistent memory limits across VM and kernel syscall validation.
+        // Note: Default 4MB, configurable via VM_MEMORY_SIZE constant.
+        const VM_MEMORY_SIZE: u64 = 4 * 1024 * 1024; // 4MB default (safe for 8GB target)
         if (size > 1024 * 1024 * 1024) {
             return BasinError.invalid_argument; // Too large (> 1GB)
         }

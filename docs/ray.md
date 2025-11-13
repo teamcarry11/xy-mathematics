@@ -92,11 +92,16 @@ our Tahoe aesthetic, reminding us to keep ethical fashion signal in view
      - **Single-Threaded Safety**: SBI layer is single-threaded, no locks, deterministic execution
      - **Reference**: See `docs/cascadeos_analysis.md`, `docs/credits.md` for comprehensive SBI analysis
    - **Next Steps** (Implementation Priority):
-     - **005 Fuzz Test**: Implement SBI + kernel syscall integration fuzz test (in progress)
-     - **Basin Kernel Syscall Implementation**: Implement syscall handlers incrementally (start with `exit`, `yield`, `map`)
-     - **Expanded ISA Support**: Add more RISC-V instructions (ADD, SUB, SLT, etc.)
-     - **Single-Threaded Architecture**: Ensure all layers (Hardware → SBI → Kernel → Userspace) are single-threaded, no locks, deterministic
-     - **Safety-First Patterns**: Comprehensive assertions ✅, type-safe interfaces ✅, explicit error handling ✅, static allocation ✅
+     - **005 Fuzz Test** ✅ **COMPLETE**: SBI + kernel syscall integration fuzz test implemented and passing
+     - **Basin Kernel Syscall Implementation** 🔥 **IN PROGRESS**: 
+       - ✅ `exit`, `yield`, `map` implemented
+       - 🔄 Next: `unmap`, `open`, `read`, `write`, `close` (Phase 1 core syscalls)
+     - **Expanded ISA Support** 🔥 **IN PROGRESS**:
+       - ✅ ADD, SUB, SLT implemented (9 total: LUI, ADDI, ADD, SUB, SLT, LW, SW, BEQ, ECALL)
+       - 🔄 Next: OR, AND, XOR, SLL, SRL, SRA (bitwise and shift operations)
+     - **Single-Threaded Architecture**: ✅ All layers single-threaded, no locks, deterministic
+     - **Safety-First Patterns**: ✅ Comprehensive assertions, type-safe interfaces, explicit error handling, static allocation
+     - **RAM-Aware Configuration**: ✅ VM memory configurable (4MB default, 64MB max), documented
      - **Debug Interface**: Register viewer, memory inspector, GDB stub (future)
    - **Tiger Style Requirements**:
      - Static allocation for VM state structures where possible ✅

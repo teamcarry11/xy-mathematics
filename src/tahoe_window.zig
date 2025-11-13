@@ -8,6 +8,7 @@ const kernel_vm = @import("kernel_vm");
 const VM = kernel_vm.VM;
 const SerialOutput = kernel_vm.SerialOutput;
 const loadKernel = kernel_vm.loadKernel;
+const basin_kernel = @import("basin_kernel");
 
 /// TahoeSandbox hosts a River-inspired compositor with Moonglow keybindings,
 /// blending Vegan Tiger aesthetics with Grain terminal panes.
@@ -36,6 +37,9 @@ pub const TahoeSandbox = struct {
     /// Serial output buffer (for kernel printf/debug output).
     /// Why: Capture kernel serial output for display in VM pane.
     serial_output: SerialOutput = .{},
+    /// Grain Basin kernel instance (for syscall handling).
+    /// Why: Handle syscalls from VM via Grain Basin kernel.
+    basin_kernel_instance: basin_kernel.BasinKernel = basin_kernel.BasinKernel{},
 
     pub fn init(allocator: std.mem.Allocator, title: []const u8) !TahoeSandbox {
         // Assert arguments: title must not be empty and within bounds.
@@ -310,6 +314,11 @@ pub const TahoeSandbox = struct {
                 
                 // Store VM in sandbox.
                 sandbox.vm = vm;
+                
+                // Set syscall handler for VM (Grain Basin kernel integration).
+                // Why: Wire VM ECALL instructions to Grain Basin kernel syscalls.
+                vm.setSyscallHandler(handleSyscall, sandbox);
+                
                 std.debug.print("[tahoe_window] Kernel loaded successfully. PC: 0x{X}\n", .{vm.regs.pc});
                 return true;
             }

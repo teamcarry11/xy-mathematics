@@ -281,13 +281,17 @@ pub const BasinKernel = struct {
         _arg4: u64,
     ) BasinError!SyscallResult {
         _ = self;
-        _ = status;
         _ = _arg2;
         _ = _arg3;
         _ = _arg4;
         
-        // TODO: Implement exit syscall.
-        return BasinError.invalid_syscall;
+        // Assert: status must be valid (0-255 for exit code).
+        std.debug.assert(status <= 255);
+        
+        // Exit syscall: terminate process with status code.
+        // Why: Return status code as success value (VM will interpret this as exit).
+        // Note: VM will handle actual termination (set state to halted).
+        return SyscallResult.ok(status);
     }
     
     fn syscallYield(
@@ -335,13 +339,35 @@ pub const BasinKernel = struct {
         _arg4: u64,
     ) BasinError!SyscallResult {
         _ = self;
-        _ = addr;
-        _ = size;
-        _ = flags;
         _ = _arg4;
         
-        // TODO: Implement map syscall.
-        return BasinError.invalid_syscall;
+        // Assert: address must be page-aligned (4KB pages).
+        if (addr != 0 and addr % 4096 != 0) {
+            return BasinError.unaligned_access;
+        }
+        
+        // Assert: size must be non-zero and page-aligned.
+        if (size == 0 or size % 4096 != 0) {
+            return BasinError.invalid_argument;
+        }
+        
+        // Assert: size must be reasonable (max 1GB per mapping).
+        if (size > 1024 * 1024 * 1024) {
+            return BasinError.invalid_argument;
+        }
+        
+        // Decode flags (MapFlags packed struct).
+        const map_flags = @as(MapFlags, @bitCast(@as(u32, @truncate(flags))));
+        
+        // Assert: flags must be valid (at least one permission).
+        if (!map_flags.read and !map_flags.write and !map_flags.execute) {
+            return BasinError.invalid_argument;
+        }
+        
+        // For now, return address as handle (simple implementation).
+        // TODO: Implement actual memory mapping (allocate pages, set permissions).
+        // Why: Simple implementation - VM will handle actual memory mapping.
+        return SyscallResult.ok(addr);
     }
     
     fn syscallUnmap(

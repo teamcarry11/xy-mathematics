@@ -29,15 +29,25 @@
 
 ### The Monolithic Kernel Solution
 
-**Theseus OS (Rust) Proof:**
-- **Type-Safe Monolithic**: Proves safety + performance is achievable
-- **Rust Type System**: Catches bugs at compile time
-- **No IPC Overhead**: Direct function calls, optimal performance
+**Theseus OS (Rust) Clarification:**
+- **Architecture**: Single Address Space (SAS) and Single Privilege Level (SPL) OS
+- **NOT Traditional Monolithic**: Different architectural approach (all components in same address space)
+- **Type-Safe**: Rust type system catches bugs at compile time
 - **Safety Through Types**: Type system provides safety guarantees
+- **Note**: Theseus proves type safety works, but uses SAS/SPL architecture, not traditional monolithic
+
+**Aero OS (Rust) - Monolithic Example:**
+- **Architecture**: True monolithic kernel, Linux-inspired
+- **Status**: Active (last update 7 months ago), runs real applications (Alacritty, Git, GTK+, Xorg, DOOM)
+- **Target**: x86_64 only (no RISC-V support)
+- **Approach**: Source-level Linux compatibility, modern Rust implementation
+- **Limitation**: Doesn't target RISC-V (our Framework 13 goal)
 
 **Grain Basin Kernel Approach:**
 - **Zig Type Safety**: Leverage Zig's type system, comptime checks, explicit memory management
-- **Monolithic Architecture**: Direct function calls, no IPC overhead
+- **Monolithic Architecture**: Direct function calls, no IPC overhead (like Aero, Linux)
+- **RISC-V Native**: Targets RISC-V64 (Framework 13 goal) - differentiator from Aero
+- **Non-POSIX**: Clean slate design, not Linux compatibility layer
 - **Comprehensive Assertions**: Tiger Style assertions catch bugs at development time
 - **Minimal Attack Surface**: Small syscall surface reduces vulnerability exposure
 

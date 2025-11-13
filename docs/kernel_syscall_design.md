@@ -174,7 +174,8 @@
 
 ### Modern Kernel Designs
 - **Linux (Monolithic)**: High performance, proven scalability, but complex and legacy-heavy
-- **Theseus OS (Rust)**: Type-safe monolithic kernel, capability-based, non-POSIX, excellent safety
+- **Aero OS (Rust)**: Monolithic kernel, Linux-inspired, runs real applications (Alacritty, Git, GTK+, Xorg, DOOM), but x86_64 only (no RISC-V)
+- **Theseus OS (Rust)**: Single Address Space (SAS) and Single Privilege Level (SPL) OS, type-safe, non-POSIX, excellent safety (NOT traditional monolithic)
 - **Fuchsia (Zircon)**: Capability-based monolithic kernel, modern syscall design, good performance
 - **seL4**: Microkernel with formal verification (excellent safety, but IPC overhead limits performance)
 - **Redox OS**: Microkernel (good safety ideas, but IPC overhead makes it slower than monolithic)
@@ -199,7 +200,8 @@
 - **Performance**: Direct function calls, no IPC overhead, optimal for high-throughput workloads
 - **Tiger Style Priority**: Performance is a core requirement (alongside safety)
 - **Real-World Evidence**: Linux, FreeBSD, DragonFly BSD all use monolithic design for performance
-- **Theseus OS Model**: Type-safe monolithic kernel proves safety + performance is achievable
+- **Aero OS Model**: Monolithic Rust kernel proves modern type-safe monolithic kernels work (runs real apps)
+- **RISC-V Targeting**: Aero doesn't target RISC-V; Grain Basin kernel fills this gap
 
 **Why NOT Microkernel:**
 - **Performance Cost**: IPC overhead (context switches, message passing) adds latency
@@ -209,10 +211,11 @@
 
 **Safety in Monolithic Kernel:**
 - **Zig Type Safety**: Leverage Zig's type system, comptime checks, explicit memory management
-- **Theseus OS Approach**: Type-safe kernel in Rust proves monolithic can be safe
+- **Aero OS Approach**: Monolithic Rust kernel proves modern type-safe monolithic kernels work
 - **Comprehensive Assertions**: Tiger Style assertions catch bugs at development time
 - **Minimal Attack Surface**: Small syscall surface reduces vulnerability exposure
 - **Capability-Based Design**: Use capabilities for fine-grained permissions (future)
+- **RISC-V Native**: Design for RISC-V64 from ground up (not ported from x86)
 
 ### Modern I/O Design: io_uring-Inspired Async I/O
 

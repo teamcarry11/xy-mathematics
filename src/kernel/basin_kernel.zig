@@ -5,8 +5,12 @@
 //!
 //! **Homebrew Bundle**: `grainbasin`
 //!
-//! **Vision**: Modern kernel design inspired by seL4 (minimal), Theseus OS (type-safe),
+//! **Vision**: Modern kernel design inspired by seL4 (minimal), Aero OS (monolithic),
 //! and Fuchsia (capability-based), but built in pure Zig for RISC-V.
+//!
+//! **Note**: Theseus OS uses SAS/SPL architecture (not traditional monolithic).
+//! Aero OS proves monolithic kernels work (runs real apps), but targets x86_64 only.
+//! Grain Basin kernel fills the gap: RISC-V native, non-POSIX, minimal syscall surface.
 //!
 //! **Target**: Framework 13 DeepComputing RISC-V Mainboard
 //! **Development**: macOS Tahoe IDE with RISC-V VM for testing

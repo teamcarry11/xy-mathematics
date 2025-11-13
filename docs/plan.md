@@ -14,13 +14,20 @@
   - **VM-Hardware Parity**: Pure Zig emulator matches Framework 13 RISC-V mainboard behavior (RISC-V64 ISA, memory model, register semantics)
   - **Development Workflow**: Write RISC-V Zig code → Test in macOS Tahoe VM → Deploy to Framework 13 RISC-V hardware (no code changes needed)
   - **Compatibility Guarantee**: VM instruction semantics, memory layout, and register behavior match real RISC-V hardware exactly
+- **RAM-Aware Configuration** ✅ **COMPLETE**:
+  - ✅ VM memory size configurable via `VM_MEMORY_SIZE` constant (default 4MB, max recommended 64MB)
+  - ✅ Development machine: MacBook Air M2 (24GB RAM) - plenty of headroom
+  - ✅ Target hardware: Framework 13 RISC-V (8GB RAM) - conservative defaults
+  - ✅ Rationale: 4MB safe for both machines, sufficient for early kernel development
+  - ✅ Documentation: `docs/vm_memory_config.md` with detailed RAM considerations
+  - ✅ Tiger Style: Explicit memory configuration, conservative defaults, RAM-aware design
 - **Core VM Implementation** ✅ **COMPLETE**:
-  - ✅ Pure Zig RISC-V64 emulator (`src/kernel_vm/vm.zig`): Register file (32 GP registers + PC), 4MB static memory, instruction decoding (LUI, ADDI, LW, SW, BEQ, ECALL)
+  - ✅ Pure Zig RISC-V64 emulator (`src/kernel_vm/vm.zig`): Register file (32 GP registers + PC), configurable static memory (default 4MB), instruction decoding (LUI, ADDI, ADD, SUB, SLT, LW, SW, BEQ, ECALL)
   - ✅ ELF kernel loader (`src/kernel_vm/loader.zig`): RISC-V64 ELF parsing, program header loading, kernel image loading
-  - ✅ Serial output (`src/kernel_vm/serial.zig`): 64KB circular buffer for kernel printf/debug output (will be replaced with SBI console)
+  - ✅ Serial output (`src/kernel_vm/serial.zig`): 64KB circular buffer for kernel printf/debug output (routes to SBI console)
   - ✅ VM-Syscall Integration: ECALL wired to Grain Basin kernel syscalls via callback handler ✅ **COMPLETE**
   - ✅ GUI Integration: VM pane rendering, kernel loading (Cmd+L), VM execution (Cmd+K), serial output display ✅ **COMPLETE**
-  - ✅ Test suite (`src/kernel_vm/test.zig`): Comprehensive tests passing (VM init, register file, memory, instruction fetch, serial)
+  - ✅ Test suite (`src/kernel_vm/test.zig`): Comprehensive tests passing (VM init, register file, memory, instruction fetch, serial, ADD, SUB, SLT)
   - ✅ Build integration: `zig build kernel-vm-test` command
 - **External Reference Repos** (Study, Don't Copy):
   - **CascadeOS/zig-sbi**: RISC-V SBI wrapper (CRITICAL - integrate into VM)

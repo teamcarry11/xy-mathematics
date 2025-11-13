@@ -564,6 +564,10 @@ pub const VM = struct {
     /// Why: Implement platform services (timer, console, reset) for RISC-V SBI.
     /// SBI Legacy Functions: 0x0=SET_TIMER, 0x1=CONSOLE_PUTCHAR, 0x2=CONSOLE_GETCHAR, 0x8=SHUTDOWN.
     fn handle_sbi_call(self: *Self, eid: u32, arg1: u64, arg2: u64, arg3: u64, arg4: u64) void {
+        // Mark unused parameters for future SBI functions.
+        _ = arg2;
+        _ = arg3;
+        _ = arg4;
         // Assert: EID must be valid SBI legacy function ID (< 10).
         std.debug.assert(eid < 10);
         

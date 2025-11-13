@@ -203,6 +203,66 @@ pub fn main() !void {
     std.debug.assert(xor_result == 0b0110); // x1 = 0b1010 ^ 0b1100 = 0b0110 (6 decimal)
     std.debug.print("[kernel_vm_test] ✓ XOR instruction works\n", .{});
 
+    // Test 12: SLL instruction (shift left logical).
+    std.debug.print("[kernel_vm_test] Test 12: SLL instruction\n", .{});
+    // SLL x1, x2, x3: x1 = x2 << x3
+    // Encoding: funct7(0) | rs2(3) | rs1(2) | 001 | rd(1) | 0110011
+    // = 0x003110B3
+    // Little-endian bytes: [0xB3, 0x10, 0x31, 0x00]
+    // Add ECALL after to halt VM (0x00000073)
+    const sll_kernel = [_]u8{ 0xB3, 0x10, 0x31, 0x00, 0x73, 0x00, 0x00, 0x00 };
+    @memset(&vm.memory, 0);
+    @memcpy(vm.memory[0x1000..][0..sll_kernel.len], &sll_kernel);
+    vm.regs.pc = 0x1000;
+    vm.state = .halted;
+    vm.regs.set(2, 0b1010); // x2 = 0b1010 (10 decimal)
+    vm.regs.set(3, 2); // x3 = 2 (shift by 2)
+    vm.start();
+    try vm.step();
+    const sll_result = vm.regs.get(1);
+    std.debug.assert(sll_result == 0b101000); // x1 = 0b1010 << 2 = 0b101000 (40 decimal)
+    std.debug.print("[kernel_vm_test] ✓ SLL instruction works\n", .{});
+
+    // Test 13: SRL instruction (shift right logical).
+    std.debug.print("[kernel_vm_test] Test 13: SRL instruction\n", .{});
+    // SRL x1, x2, x3: x1 = x2 >> x3
+    // Encoding: funct7(0) | rs2(3) | rs1(2) | 101 | rd(1) | 0110011
+    // = 0x003150B3
+    // Little-endian bytes: [0xB3, 0x50, 0x31, 0x00]
+    // Add ECALL after to halt VM (0x00000073)
+    const srl_kernel = [_]u8{ 0xB3, 0x50, 0x31, 0x00, 0x73, 0x00, 0x00, 0x00 };
+    @memset(&vm.memory, 0);
+    @memcpy(vm.memory[0x1000..][0..srl_kernel.len], &srl_kernel);
+    vm.regs.pc = 0x1000;
+    vm.state = .halted;
+    vm.regs.set(2, 0b101000); // x2 = 0b101000 (40 decimal)
+    vm.regs.set(3, 2); // x3 = 2 (shift by 2)
+    vm.start();
+    try vm.step();
+    const srl_result = vm.regs.get(1);
+    std.debug.assert(srl_result == 0b1010); // x1 = 0b101000 >> 2 = 0b1010 (10 decimal)
+    std.debug.print("[kernel_vm_test] ✓ SRL instruction works\n", .{});
+
+    // Test 14: SRA instruction (shift right arithmetic).
+    std.debug.print("[kernel_vm_test] Test 14: SRA instruction\n", .{});
+    // SRA x1, x2, x3: x1 = x2 >> x3 (sign-extended)
+    // Encoding: funct7(0x20) | rs2(3) | rs1(2) | 101 | rd(1) | 0110011
+    // = 0x403150B3
+    // Little-endian bytes: [0xB3, 0x50, 0x31, 0x40]
+    // Add ECALL after to halt VM (0x00000073)
+    const sra_kernel = [_]u8{ 0xB3, 0x50, 0x31, 0x40, 0x73, 0x00, 0x00, 0x00 };
+    @memset(&vm.memory, 0);
+    @memcpy(vm.memory[0x1000..][0..sra_kernel.len], &sra_kernel);
+    vm.regs.pc = 0x1000;
+    vm.state = .halted;
+    vm.regs.set(2, @as(u64, @bitCast(@as(i64, -40)))); // x2 = -40 (signed, 0xFFFFFFD8)
+    vm.regs.set(3, 2); // x3 = 2 (shift by 2)
+    vm.start();
+    try vm.step();
+    const sra_result = vm.regs.get(1);
+    std.debug.assert(sra_result == @as(u64, @bitCast(@as(i64, -10)))); // x1 = -40 >> 2 = -10 (sign-extended)
+    std.debug.print("[kernel_vm_test] ✓ SRA instruction works\n", .{});
+
     std.debug.print("[kernel_vm_test] All tests passed!\n", .{});
 }
 

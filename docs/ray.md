@@ -112,17 +112,20 @@ our Tahoe aesthetic, reminding us to keep ethical fashion signal in view
        - ✅ Comprehensive assertions (Tiger Style)
        - Location: `src/kernel/basin_kernel.zig` → syscall functions
      - **Next Phase: Complete Phase 1 & Expand Foundation** 🔥 **IN PROGRESS**:
-       - **Priority 4: Complete Phase 1 - Implement `spawn` Syscall** 🔥 **IN PROGRESS**:
-         - Purpose: Complete Phase 1 core syscalls (last one: 8/9 complete)
-         - Requirements: Validate executable pointer/length, entry point, return process ID (stub)
+       - **Priority 4: Complete Phase 1 - Implement `spawn` Syscall** ✅ **COMPLETE**:
+         - ✅ Validate executable pointer/length (ELF header size minimum)
+         - ✅ Validate args pointer/length (can be zero for no args)
+         - ✅ Return stub process ID (1)
+         - ✅ Comprehensive assertions (Tiger Style)
+         - ✅ **Phase 1 Complete: 9/9 core syscalls implemented!**
          - Location: `src/kernel/basin_kernel.zig` → `syscall_spawn`
-         - Tiger Style: Comprehensive assertions, explicit validation, error handling
-       - **Priority 5: Expand ISA - Shift Operations** 🔥 **NEXT**:
-         - Instructions: SLL (Shift Left Logical), SRL (Shift Right Logical), SRA (Shift Right Arithmetic)
-         - Purpose: Bit manipulation (complements OR/AND/XOR)
-         - After: 15 total instructions (currently 12)
+       - **Priority 5: Expand ISA - Shift Operations** ✅ **COMPLETE**:
+         - ✅ SLL instruction (funct3=0b001): execute_sll function + dispatch + test
+         - ✅ SRL instruction (funct3=0b101, funct7=0b0000000): execute_srl function + dispatch + test
+         - ✅ SRA instruction (funct3=0b101, funct7=0b0100000): execute_sra function + dispatch + test
+         - ✅ Tests: Test 12-14 added for SLL/SRL/SRA
+         - ✅ **ISA Expanded: 15 total instructions!** (LUI, ADDI, ADD, SUB, SLT, OR, AND, XOR, SLL, SRL, SRA, LW, SW, BEQ, ECALL)
          - Location: `src/kernel_vm/vm.zig` → instruction dispatch + execute functions
-         - Tests: Add Test 12-14 for SLL/SRL/SRA
        - **Priority 6: Implement Phase 2 Syscalls (Simpler Ones)** 🔥 **NEXT**:
          - Syscalls: `protect`, `wait`, `clock_gettime`, `sysinfo` (stubs for now)
          - Purpose: Expand kernel functionality, foundation for time/scheduling/process management

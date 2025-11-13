@@ -311,6 +311,30 @@ pub const VM = struct {
                         self.last_error = VMError.invalid_instruction;
                         return VMError.invalid_instruction;
                     }
+                } else if (funct3 == 0b001) {
+                    // SLL (Shift Left Logical): rd = rs1 << (rs2 & 0x3F).
+                    if (funct7 == 0b0000000) {
+                        try self.execute_sll(inst);
+                    } else {
+                        // Unsupported R-type instruction variant.
+                        self.state = .errored;
+                        self.last_error = VMError.invalid_instruction;
+                        return VMError.invalid_instruction;
+                    }
+                } else if (funct3 == 0b101) {
+                    // SRL or SRA (Shift Right Logical/Arithmetic).
+                    if (funct7 == 0b0000000) {
+                        // SRL (Shift Right Logical): rd = rs1 >> (rs2 & 0x3F).
+                        try self.execute_srl(inst);
+                    } else if (funct7 == 0b0100000) {
+                        // SRA (Shift Right Arithmetic): rd = rs1 >> (rs2 & 0x3F) (sign-extended).
+                        try self.execute_sra(inst);
+                    } else {
+                        // Unsupported R-type instruction variant.
+                        self.state = .errored;
+                        self.last_error = VMError.invalid_instruction;
+                        return VMError.invalid_instruction;
+                    }
                 } else {
                     // Unsupported R-type instruction variant.
                     self.state = .errored;
@@ -625,6 +649,112 @@ pub const VM = struct {
         // XOR: rd = rs1 ^ rs2 (bitwise XOR).
         // Why: Bitwise XOR operation for kernel bit manipulation.
         const result = rs1_value ^ rs2_value;
+        
+        // Write result to rd.
+        self.regs.set(rd, result);
+        
+        // Assert: result must be written correctly (unless x0).
+        if (rd != 0) {
+            std.debug.assert(self.regs.get(rd) == result);
+        }
+    }
+
+    /// Execute SLL (Shift Left Logical) instruction.
+    /// Format: SLL rd, rs1, rs2
+    /// Encoding: funct7 | rs2 | rs1 | 001 | rd | 0110011
+    /// Why: Logical left shift for kernel bit manipulation operations.
+    /// Tiger Style: Comprehensive assertions for register indices and result validation.
+    fn execute_sll(self: *Self, inst: u32) !void {
+        // Decode: rd = bits [11:7], rs1 = bits [19:15], rs2 = bits [24:20].
+        const rd = @as(u5, @truncate(inst >> 7));
+        const rs1 = @as(u5, @truncate(inst >> 15));
+        const rs2 = @as(u5, @truncate(inst >> 20));
+        
+        // Assert: registers must be valid (0-31).
+        std.debug.assert(rd < 32);
+        std.debug.assert(rs1 < 32);
+        std.debug.assert(rs2 < 32);
+        
+        // Read source register values.
+        const rs1_value = self.regs.get(rs1);
+        const rs2_value = self.regs.get(rs2);
+        
+        // SLL: rd = rs1 << (rs2 & 0x3F) (logical left shift, shift amount masked to 6 bits).
+        // Why: RISC-V shift amount is masked to 6 bits (0-63) for 64-bit values.
+        const shift_amount = @as(u6, @truncate(rs2_value & 0x3F));
+        const result = rs1_value << shift_amount;
+        
+        // Write result to rd.
+        self.regs.set(rd, result);
+        
+        // Assert: result must be written correctly (unless x0).
+        if (rd != 0) {
+            std.debug.assert(self.regs.get(rd) == result);
+        }
+    }
+
+    /// Execute SRL (Shift Right Logical) instruction.
+    /// Format: SRL rd, rs1, rs2
+    /// Encoding: funct7 | rs2 | rs1 | 101 | rd | 0110011
+    /// Why: Logical right shift for kernel bit manipulation operations.
+    /// Tiger Style: Comprehensive assertions for register indices and result validation.
+    fn execute_srl(self: *Self, inst: u32) !void {
+        // Decode: rd = bits [11:7], rs1 = bits [19:15], rs2 = bits [24:20].
+        const rd = @as(u5, @truncate(inst >> 7));
+        const rs1 = @as(u5, @truncate(inst >> 15));
+        const rs2 = @as(u5, @truncate(inst >> 20));
+        
+        // Assert: registers must be valid (0-31).
+        std.debug.assert(rd < 32);
+        std.debug.assert(rs1 < 32);
+        std.debug.assert(rs2 < 32);
+        
+        // Read source register values.
+        const rs1_value = self.regs.get(rs1);
+        const rs2_value = self.regs.get(rs2);
+        
+        // SRL: rd = rs1 >> (rs2 & 0x3F) (logical right shift, shift amount masked to 6 bits).
+        // Why: RISC-V shift amount is masked to 6 bits (0-63) for 64-bit values.
+        // Logical shift: fills with zeros (unsigned shift).
+        const shift_amount = @as(u6, @truncate(rs2_value & 0x3F));
+        const result = rs1_value >> shift_amount;
+        
+        // Write result to rd.
+        self.regs.set(rd, result);
+        
+        // Assert: result must be written correctly (unless x0).
+        if (rd != 0) {
+            std.debug.assert(self.regs.get(rd) == result);
+        }
+    }
+
+    /// Execute SRA (Shift Right Arithmetic) instruction.
+    /// Format: SRA rd, rs1, rs2
+    /// Encoding: funct7(0x20) | rs2 | rs1 | 101 | rd | 0110011
+    /// Why: Arithmetic right shift for kernel bit manipulation operations (sign-extended).
+    /// Tiger Style: Comprehensive assertions for register indices and result validation.
+    fn execute_sra(self: *Self, inst: u32) !void {
+        // Decode: rd = bits [11:7], rs1 = bits [19:15], rs2 = bits [24:20].
+        const rd = @as(u5, @truncate(inst >> 7));
+        const rs1 = @as(u5, @truncate(inst >> 15));
+        const rs2 = @as(u5, @truncate(inst >> 20));
+        
+        // Assert: registers must be valid (0-31).
+        std.debug.assert(rd < 32);
+        std.debug.assert(rs1 < 32);
+        std.debug.assert(rs2 < 32);
+        
+        // Read source register values.
+        const rs1_value = self.regs.get(rs1);
+        const rs2_value = self.regs.get(rs2);
+        
+        // SRA: rd = rs1 >> (rs2 & 0x3F) (arithmetic right shift, shift amount masked to 6 bits).
+        // Why: RISC-V shift amount is masked to 6 bits (0-63) for 64-bit values.
+        // Arithmetic shift: sign-extends (treats value as signed, fills with sign bit).
+        const shift_amount = @as(u6, @truncate(rs2_value & 0x3F));
+        const rs1_signed = @as(i64, @bitCast(rs1_value));
+        const result_signed = rs1_signed >> @as(u6, @intCast(shift_amount));
+        const result = @as(u64, @bitCast(result_signed));
         
         // Write result to rd.
         self.regs.set(rd, result);

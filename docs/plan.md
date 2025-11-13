@@ -15,21 +15,39 @@
   - **Development Workflow**: Write RISC-V Zig code → Test in macOS Tahoe VM → Deploy to Framework 13 RISC-V hardware (no code changes needed)
   - **Compatibility Guarantee**: VM instruction semantics, memory layout, and register behavior match real RISC-V hardware exactly
 - **Core VM Implementation** ✅ **COMPLETE**:
-  - ✅ Pure Zig RISC-V64 emulator (`src/kernel_vm/vm.zig`): Register file (32 GP registers + PC), 4MB static memory, instruction decoding (LUI, ADDI, ECALL)
+  - ✅ Pure Zig RISC-V64 emulator (`src/kernel_vm/vm.zig`): Register file (32 GP registers + PC), 4MB static memory, instruction decoding (LUI, ADDI, LW, SW, BEQ, ECALL)
   - ✅ ELF kernel loader (`src/kernel_vm/loader.zig`): RISC-V64 ELF parsing, program header loading, kernel image loading
-  - ✅ Serial output (`src/kernel_vm/serial.zig`): 64KB circular buffer for kernel printf/debug output
+  - ✅ Serial output (`src/kernel_vm/serial.zig`): 64KB circular buffer for kernel printf/debug output (will be replaced with SBI console)
+  - ✅ VM-Syscall Integration: ECALL wired to Grain Basin kernel syscalls via callback handler ✅ **COMPLETE**
+  - ✅ GUI Integration: VM pane rendering, kernel loading (Cmd+L), VM execution (Cmd+K), serial output display ✅ **COMPLETE**
   - ✅ Test suite (`src/kernel_vm/test.zig`): Comprehensive tests passing (VM init, register file, memory, instruction fetch, serial)
   - ✅ Build integration: `zig build kernel-vm-test` command
+- **External Reference Repos** (Study, Don't Copy):
+  - **CascadeOS/zig-sbi**: RISC-V SBI wrapper (CRITICAL - integrate into VM)
+  - **CascadeOS/CascadeOS**: General-purpose Zig OS (RISC-V64 planned) - study RISC-V patterns
+  - **ZystemOS/pluto**: Component-based Zig kernel (x86) - study Zig patterns
+  - **Clone Location**: `~/github/{username}/{repo}/` (external to xy workspace)
+  - **Reference**: See `docs/cascadeos_analysis.md`, `docs/pluto_analysis.md`, `docs/aero_analysis.md`
 - **Grain Basin kernel Foundation** ✅ **COMPLETE**:
   - ✅ Kernel name: Grain Basin kernel 🏞️ - "The foundation that holds everything"
   - ✅ Homebrew bundle: `grainbasin` (Brew package name)
   - ✅ Syscall interface (`src/kernel/basin_kernel.zig`): All 17 core syscalls defined
   - ✅ Type-safe abstractions: `Handle` (not integer FDs), `MapFlags`, `OpenFlags`, `ClockId`, `SysInfo`, `BasinError`, `SyscallResult`
   - ✅ Build integration: `basin_kernel_module` added to `build.zig`
+- **RISC-V SBI Integration** 🔥 **CRITICAL PRIORITY** 🎯 **NEW**:
+  - **CascadeOS/zig-sbi**: Zig wrapper for RISC-V SBI (Supervisor Binary Interface)
+  - **SBI Purpose**: Platform runtime services (timer, console, reset, IPI) - different from kernel syscalls
+  - **Integration Steps**:
+    1. Add CascadeOS/zig-sbi dependency to `build.zig.zon`
+    2. Integrate SBI calls into VM ECALL handler (function ID < 10 → SBI, >= 10 → kernel)
+    3. Replace serial output with SBI_CONSOLE_PUTCHAR (standard RISC-V approach)
+    4. Add SBI timer support (SBI_SET_TIMER for kernel timers)
+  - **Reference**: See `docs/cascadeos_analysis.md` for comprehensive SBI analysis
 - **Next Steps** (Implementation Priority):
+  - **SBI Integration**: Add CascadeOS/zig-sbi dependency, integrate SBI calls into VM ECALL handler
+  - **SBI Console**: Replace serial output with SBI_CONSOLE_PUTCHAR, display in GUI VM pane
   - **Grain Basin kernel Syscall Implementation**: Implement syscall handlers incrementally (start with `exit`, `yield`, `map`)
-  - **VM-Syscall Integration**: Wire Grain Basin kernel syscalls into RISC-V VM (handle ECALL → Basin syscall)
-  - **Serial Output Rendering**: Display kernel printf output in GUI VM pane (terminal-like output)
+  - **VM-Syscall Integration**: Wire Grain Basin kernel syscalls into RISC-V VM (handle ECALL → Basin syscall) ✅ **COMPLETE**
   - **Expanded ISA Support**: Add more RISC-V instructions (ADD, SUB, SLT, etc.)
   - **Debug Interface**: Register viewer, memory inspector, GDB stub (future)
 - **Tiger Style Requirements**:
@@ -37,8 +55,10 @@
   - Comprehensive assertions for memory access, instruction decoding ✅
   - Deterministic execution: Same kernel state → same output ✅
   - No hidden state: All VM state explicitly tracked ✅
-- Files: `src/kernel_vm/` (core complete), `src/tahoe_window.zig` (VM pane integration pending), `src/platform/macos_tahoe/` (VM rendering pending)
+- Files: `src/kernel_vm/` (core complete), `src/kernel/basin_kernel.zig` (syscall interface complete), `src/tahoe_window.zig` (VM pane integration complete)
 - Hardware Target: Framework 13 DeepComputing RISC-V Mainboard (RISC-V64, matches VM behavior)
+- Development Environment: macOS Tahoe IDE with RISC-V VM (matches hardware behavior exactly)
+- SBI Integration: Use CascadeOS/zig-sbi for platform services (timer, console, reset) - standard RISC-V approach
 
 ### 1. Input Handling 🔥 **IMMEDIATE PRIORITY** ✅ **COMPLETE**
 - ✅ Created `TahoeView` class dynamically (extends NSView, handles events)

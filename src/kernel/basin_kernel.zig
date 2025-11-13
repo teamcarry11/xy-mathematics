@@ -283,14 +283,79 @@ pub const BasinKernel = struct {
         args_len: u64,
         _arg4: u64,
     ) BasinError!SyscallResult {
-        _ = self;
-        _ = executable;
-        _ = args_ptr;
-        _ = args_len;
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        std.debug.assert(self_ptr != 0);
+        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        
         _ = _arg4;
         
-        // TODO: Implement spawn syscall.
-        return BasinError.invalid_syscall;
+        // Assert: executable pointer must be valid (non-zero, within VM memory).
+        if (executable == 0) {
+            return BasinError.invalid_argument; // Null pointer
+        }
+        
+        const VM_MEMORY_SIZE: u64 = 4 * 1024 * 1024; // 4MB default (matches syscall_map)
+        if (executable >= VM_MEMORY_SIZE) {
+            return BasinError.invalid_argument; // Executable pointer exceeds VM memory
+        }
+        
+        // Assert: executable must be at least ELF header size (64 bytes for ELF64).
+        // Why: Minimum size for valid ELF executable header.
+        const MIN_ELF_SIZE: u64 = 64;
+        if (executable + MIN_ELF_SIZE > VM_MEMORY_SIZE) {
+            return BasinError.invalid_argument; // Executable doesn't fit in VM memory
+        }
+        
+        // Assert: args pointer must be valid (can be zero for no args, or valid pointer).
+        if (args_ptr != 0) {
+            if (args_ptr >= VM_MEMORY_SIZE) {
+                return BasinError.invalid_argument; // Args pointer exceeds VM memory
+            }
+            
+            // Assert: args length must be reasonable (max 64KB).
+            if (args_len == 0) {
+                return BasinError.invalid_argument; // Zero-length args with non-zero pointer
+            }
+            if (args_len > 64 * 1024) {
+                return BasinError.invalid_argument; // Args too large (> 64KB)
+            }
+            
+            // Assert: args must fit within VM memory.
+            if (args_ptr + args_len > VM_MEMORY_SIZE) {
+                return BasinError.invalid_argument; // Args exceed VM memory
+            }
+        } else {
+            // Args pointer is zero: args_len must also be zero.
+            if (args_len != 0) {
+                return BasinError.invalid_argument; // Non-zero args_len with null pointer
+            }
+        }
+        
+        // TODO: Implement actual process creation (when process management is implemented).
+        // For now, return a stub process ID (simple implementation).
+        // Why: Simple stub - matches current kernel development stage.
+        // Note: In full implementation, we would:
+        // - Parse ELF executable header
+        // - Load executable into memory
+        // - Create process structure
+        // - Set up process memory space
+        // - Initialize process registers (PC = entry point)
+        // - Add process to process table
+        // - Return Process ID (not raw integer) for type safety
+        
+        // Stub: Return process ID 1 (simple implementation).
+        const process_id: u64 = 1;
+        const result = SyscallResult.ok(process_id);
+        
+        // Assert: result must be success (not error).
+        std.debug.assert(result == .success);
+        std.debug.assert(result.success == process_id);
+        
+        // Assert: Process ID must be non-zero (valid process ID).
+        std.debug.assert(process_id != 0);
+        
+        return result;
     }
     
     fn syscall_exit(

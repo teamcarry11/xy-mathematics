@@ -80,6 +80,24 @@
     - ✅ `close`: Validate handle, return stub success
     - ✅ Comprehensive assertions (Tiger Style)
     - Location: `src/kernel/basin_kernel.zig` → syscall functions
+  - **Next Phase: Complete Phase 1 & Expand Foundation** 🔥 **IN PROGRESS**:
+    - **Priority 4: Complete Phase 1 - Implement `spawn` Syscall** 🔥 **IN PROGRESS**:
+      - Purpose: Complete Phase 1 core syscalls (last one: 8/9 complete)
+      - Requirements: Validate executable pointer/length, entry point, return process ID (stub)
+      - Location: `src/kernel/basin_kernel.zig` → `syscall_spawn`
+      - Tiger Style: Comprehensive assertions, explicit validation, error handling
+    - **Priority 5: Expand ISA - Shift Operations** 🔥 **NEXT**:
+      - Instructions: SLL (Shift Left Logical), SRL (Shift Right Logical), SRA (Shift Right Arithmetic)
+      - Purpose: Bit manipulation (complements OR/AND/XOR)
+      - After: 15 total instructions (currently 12)
+      - Location: `src/kernel_vm/vm.zig` → instruction dispatch + execute functions
+      - Tests: Add Test 12-14 for SLL/SRL/SRA
+    - **Priority 6: Implement Phase 2 Syscalls (Simpler Ones)** 🔥 **NEXT**:
+      - Syscalls: `protect`, `wait`, `clock_gettime`, `sysinfo` (stubs for now)
+      - Purpose: Expand kernel functionality, foundation for time/scheduling/process management
+      - Location: `src/kernel/basin_kernel.zig` → syscall functions
+      - Tiger Style: Comprehensive assertions, explicit validation, error handling
+    - **Future Phases**: Memory management foundation (mapping table), File system foundation (handle table), Channel operations (IPC), Debug interface
   - **Single-Threaded Architecture**: ✅ All layers single-threaded, no locks, deterministic
   - **Safety-First Patterns**: ✅ Comprehensive assertions, type-safe interfaces, explicit error handling, static allocation
   - **RAM-Aware Configuration**: ✅ VM memory configurable (4MB default, 64MB max), documented

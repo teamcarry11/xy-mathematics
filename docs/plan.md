@@ -107,7 +107,35 @@
       - ✅ Comprehensive assertions (Tiger Style)
       - ✅ **Phase 2 Complete: 8/8 syscalls implemented!**
       - Location: `src/kernel/basin_kernel.zig` → syscall functions
-    - **Future Phases**: Memory management foundation (mapping table), File system foundation (handle table), Channel operations (IPC), Debug interface
+    - **Next Phase: Foundation Implementation** 🔥 **READY TO START**:
+      - **Phase 3: Memory Management Foundation** 🔥 **HIGH PRIORITY**:
+        - Implement mapping table (static array, max 256 entries)
+        - Update map/unmap/protect syscalls to use actual table
+        - Track memory mappings (address, size, flags)
+        - Validate no overlaps, proper allocation/deallocation
+        - Location: `src/kernel/basin_kernel.zig` → add mapping table structure
+      - **Phase 4: File System Foundation** 🔥 **HIGH PRIORITY**:
+        - Implement handle table (static array, max 64 entries)
+        - Update open/read/write/close syscalls to use actual table
+        - In-memory file system (no disk yet)
+        - Track file handles (path, flags, position, buffer)
+        - Location: `src/kernel/basin_kernel.zig` → add file system structures
+      - **Phase 5: Process Management Foundation** 🔥 **MEDIUM PRIORITY**:
+        - Implement process table (static array, max 16 entries)
+        - Update spawn/wait syscalls to use actual table
+        - Track processes (ID, executable, entry point, state, exit status)
+        - Location: `src/kernel/basin_kernel.zig` → add process table structure
+      - **Phase 6: IPC Foundation** 🔥 **MEDIUM PRIORITY**:
+        - Implement channel table (static array, max 32 entries)
+        - Update channel_create/send/recv syscalls to use actual table
+        - Message queues (circular buffers)
+        - Location: `src/kernel/basin_kernel.zig` → add channel table structure
+      - **Phase 7: Timer Integration** 🔥 **MEDIUM PRIORITY**:
+        - Integrate SBI timer for time operations
+        - Update clock_gettime/sleep_until syscalls to use timer
+        - Track system time (nanoseconds since boot)
+        - Location: `src/kernel/basin_kernel.zig` → add timer state
+      - **Reference**: `docs/next_implementation_phases.md` for detailed phase plans
   - **Single-Threaded Architecture**: ✅ All layers single-threaded, no locks, deterministic
   - **Safety-First Patterns**: ✅ Comprehensive assertions, type-safe interfaces, explicit error handling, static allocation
   - **RAM-Aware Configuration**: ✅ VM memory configurable (4MB default, 64MB max), documented

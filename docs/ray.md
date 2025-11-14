@@ -157,17 +157,15 @@ our Tahoe aesthetic, reminding us to keep ethical fashion signal in view
            - ✅ Comprehensive assertions (Tiger Style)
            - ✅ Zero compiler warnings, all tests passing
            - Location: `src/kernel/basin_kernel.zig` → `FileHandle` struct, `handles` table
-         - **Phase 5: Process Management Foundation** 🔥 **IN PROGRESS** 🎯 **CURRENT PRIORITY**:
-           - **Implementation Plan**:
-             - Process table structure (static array, max 16 entries)
-             - Each entry: process ID, executable pointer, entry point, state, exit status
-             - Update `spawn` syscall: Allocate process entry, store executable/entry point, return process ID
-             - Update `wait` syscall: Look up process, return exit status
-             - Process state tracking (running, exited, etc.)
-             - Tiger Style: Static allocation, comprehensive assertions
-           - **Why Next**: Foundation for multi-process kernel (future), needed for process lifecycle management
-           - **Location**: `src/kernel/basin_kernel.zig` → add process table structure
-         - **Phase 6: IPC Foundation** 🔥 **NEXT PRIORITY**:
+         - **Phase 5: Process Management Foundation** ✅ **COMPLETE**:
+           - ✅ Implemented process table (static array, max 16 entries)
+           - ✅ Updated spawn/wait syscalls to use actual table
+           - ✅ Track processes (ID, executable, entry point, state, exit status)
+           - ✅ Simple allocator for process IDs (next_process_id, 1-based)
+           - ✅ Comprehensive assertions (Tiger Style)
+           - ✅ Zero compiler warnings, all tests passing
+           - Location: `src/kernel/basin_kernel.zig` → `ProcessEntry` struct, `processes` table
+         - **Phase 6: IPC Foundation** 🔥 **IN PROGRESS** 🎯 **CURRENT PRIORITY**:
            - **Implementation Plan**:
              - Channel table structure (static array, max 32 entries)
              - Each entry: channel ID, message queue (circular buffer), senders/receivers

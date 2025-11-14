@@ -1,5 +1,32 @@
 # Grain Changelog — Descending Order (Newest First)
 
+## 12025-11-13--1836-pst
+- **Phase 7 Complete: Timer Integration** ✅ **ALL FOUNDATION PHASES COMPLETE** 🎉
+  - **Timer State Tracking**: Implemented `system_time_ns` field in `BasinKernel` to track system time (nanoseconds since boot)
+  - **syscall_clock_gettime**: Updated to use timer state, converts nanoseconds to seconds/nanoseconds
+  - **syscall_sleep_until**: Updated to use timer state, validates timestamp (must be in future), updates system time
+  - **Comprehensive Assertions**: All timer operations validated with Tiger Style assertions
+  - **Tiger Style**: Static allocation, explicit time tracking, zero compiler warnings
+  - **Test Results**: All tests passing ✅
+  - **Result**: Complete timer integration foundation ready for SBI timer hardware integration (future)
+- **Foundation Phases Complete Summary** 🎉:
+  - **Phase 3: Memory Management Foundation** ✅ COMPLETE
+    - Memory mapping table (256 entries), map/unmap/protect syscalls with actual table operations
+  - **Phase 4: File System Foundation** ✅ COMPLETE
+    - Handle table (64 entries), open/read/write/close syscalls with actual table operations
+  - **Phase 5: Process Management Foundation** ✅ COMPLETE
+    - Process table (16 entries), spawn/wait syscalls with actual table operations
+  - **Phase 6: IPC Foundation** ✅ COMPLETE
+    - Channel table (32 entries), channel_create/send/recv syscalls with message queues
+  - **Phase 7: Timer Integration** ✅ COMPLETE
+    - Timer state tracking, clock_gettime/sleep_until syscalls with actual time operations
+  - **Total**: All 17 syscalls implemented with actual table-based operations
+  - **Total**: All 5 foundation phases complete (Phase 3-7)
+  - **Total**: 15 RISC-V instructions implemented
+  - **Total**: 4 static tables (mappings, handles, processes, channels)
+  - **Total**: Comprehensive assertions throughout, zero compiler warnings
+  - **Status**: Kernel foundation complete, ready for further development and testing
+
 ## 12025-11-13--1552-pst
 - **006 Fuzz Test: Memory Management Foundation Complete** ✅
   - **Test Implementation**: Created `tests/006_fuzz.zig` with 7 comprehensive test categories

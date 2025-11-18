@@ -599,7 +599,8 @@ pub const TahoeSandbox = struct {
         const bytes_written = result.success;
         
         // If handle is 1 (stdout), capture output to stdout buffer.
-        if (handle == 1 and sandbox.vm) |vm| {
+        if (handle == 1) {
+            if (sandbox.vm) |vm| {
             // Read data from VM memory.
             const data_len_u32 = @as(u32, @intCast(data_len));
             const available_space = sandbox.stdout_buffer.len - sandbox.stdout_pos;
@@ -616,6 +617,7 @@ pub const TahoeSandbox = struct {
                 
                 // Assert: stdout_pos must be within bounds.
                 std.debug.assert(sandbox.stdout_pos <= sandbox.stdout_buffer.len);
+            }
             }
         }
         

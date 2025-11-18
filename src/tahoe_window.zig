@@ -754,7 +754,8 @@ pub const TahoeSandbox = struct {
         
         // Verify buffer was written by checking pixels.
         const test_pixel_offset = (debug_rect_y * buffer_width + debug_rect_x) * 4;
-        const bg_pixel_offset = (100 * buffer_width + 100) * 4; // Background pixel
+        // Check background pixel outside of any rectangles (at 300,300).
+        const bg_pixel_offset = (300 * buffer_width + 300) * 4; // Background pixel (outside rectangles)
         if (test_pixel_offset + 3 < buffer.len and bg_pixel_offset + 3 < buffer.len) {
             std.debug.print("[tahoe_window] Red rect pixel at ({d},{d}): R={d}, G={d}, B={d}, A={d}\n", .{
                 debug_rect_x,
@@ -764,7 +765,7 @@ pub const TahoeSandbox = struct {
                 buffer[test_pixel_offset + 2],
                 buffer[test_pixel_offset + 3],
             });
-            std.debug.print("[tahoe_window] Background pixel at (100,100): R={d}, G={d}, B={d}, A={d}\n", .{
+            std.debug.print("[tahoe_window] Background pixel at (300,300): R={d}, G={d}, B={d}, A={d}\n", .{
                 buffer[bg_pixel_offset + 0],
                 buffer[bg_pixel_offset + 1],
                 buffer[bg_pixel_offset + 2],

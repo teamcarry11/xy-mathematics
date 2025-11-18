@@ -308,10 +308,17 @@ pub const TahoeSandbox = struct {
                 
                 // Load kernel into VM.
                 // Note: VM must be allocated on heap (4MB struct).
-                var vm = try sandbox.allocator.create(VM);
+                var vm = sandbox.allocator.create(VM) catch |err| {
+                    std.debug.print("[tahoe_window] Failed to allocate VM: {s}\n", .{@errorName(err)});
+                    return true;
+                };
                 errdefer sandbox.allocator.destroy(vm);
                 
-                try loadKernel(vm, sandbox.allocator, elf_data);
+                loadKernel(vm, sandbox.allocator, elf_data) catch |err| {
+                    std.debug.print("[tahoe_window] Failed to load kernel: {s}\n", .{@errorName(err)});
+                    sandbox.allocator.destroy(vm);
+                    return true;
+                };
                 
                 // Assert: VM must be valid before setting handlers.
                 const vm_ptr = @intFromPtr(&vm);

@@ -358,7 +358,7 @@ pub const TahoeSandbox = struct {
                 
                 // Assert: VM must be stored correctly.
                 std.debug.assert(sandbox.vm != null);
-                std.debug.assert(sandbox.vm.?.regs.pc == vm.regs.pc);
+                std.debug.assert(sandbox.vm.?.regs.pc == vm.*.regs.pc);
                 
                 std.debug.print("[tahoe_window] Kernel loaded successfully. PC: 0x{X}\n", .{vm.regs.pc});
                 return true;

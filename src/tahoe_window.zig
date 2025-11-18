@@ -709,6 +709,27 @@ pub const TahoeSandbox = struct {
             }
         }
         
+        // Debug: Draw a bright red rectangle in top-left corner to verify rendering works.
+        // Why: Verify that the buffer is being drawn and presented correctly.
+        const debug_rect_x: u32 = 10;
+        const debug_rect_y: u32 = 10;
+        const debug_rect_w: u32 = 100;
+        const debug_rect_h: u32 = 50;
+        var debug_y: u32 = debug_rect_y;
+        while (debug_y < debug_rect_y + debug_rect_h and debug_y < buffer_height) : (debug_y += 1) {
+            var debug_x: u32 = debug_rect_x;
+            while (debug_x < debug_rect_x + debug_rect_w and debug_x < buffer_width) : (debug_x += 1) {
+                const pixel_offset = (debug_y * buffer_width + debug_x) * 4;
+                if (pixel_offset + 3 < buffer.len) {
+                    // Bright red rectangle for visibility test.
+                    buffer[pixel_offset + 0] = 0xFF; // R
+                    buffer[pixel_offset + 1] = 0x00; // G
+                    buffer[pixel_offset + 2] = 0x00; // B
+                    buffer[pixel_offset + 3] = 0xFF; // A
+                }
+            }
+        }
+        
         // Draw interactive UI elements for visual feedback.
         // Why: Show mouse position, typed text, focus state, and buttons.
         

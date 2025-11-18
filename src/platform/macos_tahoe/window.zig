@@ -419,6 +419,7 @@ pub const Window = struct {
     
     /// Create CGImage from RGBA buffer.
     /// Note: Buffer is always 1024x768 (static allocation).
+    /// Note: Converts RGBA to BGRA format for Core Graphics compatibility.
     fn createCGImageFromBuffer(buffer: []const u8) !*anyopaque {
         const width = BUFFER_WIDTH;
         const height = BUFFER_HEIGHT;
@@ -433,29 +434,40 @@ pub const Window = struct {
         
         std.debug.print("[window] Creating CGImage: {d}x{d}, buffer: {d} bytes\n", .{ width, height, buffer.len });
         
+        // Convert RGBA buffer to BGRA format for Core Graphics.
+        // Why: Core Graphics on macOS expects BGRA format for optimal performance.
+        // We'll create a temporary buffer and convert, then use that for CGImage.
+        var bgra_buffer = try std.heap.page_allocator.alloc(u8, buffer.len);
+        defer std.heap.page_allocator.free(bgra_buffer);
+        
+        var i: usize = 0;
+        while (i < buffer.len) : (i += 4) {
+            // Convert [R, G, B, A] to [B, G, R, A]
+            bgra_buffer[i + 0] = buffer[i + 2]; // B
+            bgra_buffer[i + 1] = buffer[i + 1]; // G
+            bgra_buffer[i + 2] = buffer[i + 0]; // R
+            bgra_buffer[i + 3] = buffer[i + 3]; // A
+        }
+        
         // Create CGColorSpace for RGB.
         const rgb_color_space = cg.CGColorSpaceCreateDeviceRGB();
         std.debug.assert(rgb_color_space != null);
         defer cg.CGColorSpaceRelease(rgb_color_space);
         
-        // Create CGDataProvider from buffer.
+        // Create CGDataProvider from BGRA buffer.
         const data_provider = cg.CGDataProviderCreateWithData(
             null,
-            buffer.ptr,
-            buffer.len,
+            bgra_buffer.ptr,
+            bgra_buffer.len,
             null,
         );
         std.debug.assert(data_provider != null);
         defer cg.CGDataProviderRelease(data_provider);
         
-        // Create CGImage.
-        // Note: Our buffer is RGBA format: [R, G, B, A] per pixel, non-premultiplied.
-        // On little-endian systems, when we write [R, G, B, A] as bytes, the 32-bit word is 0xAABBGGRR.
-        // But Core Graphics might expect 0xRRGGBBAA format.
-        // Try using kCGBitmapByteOrderDefault (0) which should use native byte order.
-        // Or we might need BGRA format instead.
-        // Let's try without explicit byte order first.
-        const bitmap_info: u32 = cg.kCGImageAlphaLast;
+        // Create CGImage with BGRA format.
+        // kCGImageAlphaLast means alpha is in the last byte.
+        // On little-endian, BGRA bytes [B, G, R, A] form word 0xAARRGGBB.
+        const bitmap_info: u32 = cg.kCGImageAlphaLast | cg.kCGBitmapByteOrder32Little;
         const cg_image = cg.CGImageCreate(
             width,
             height,

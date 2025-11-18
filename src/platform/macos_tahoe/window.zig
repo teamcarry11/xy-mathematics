@@ -449,6 +449,9 @@ pub const Window = struct {
         defer cg.CGDataProviderRelease(data_provider);
         
         // Create CGImage.
+        // Note: On little-endian (ARM64/x86_64), kCGBitmapByteOrder32Little means RGBA byte order.
+        // kCGImageAlphaPremultipliedLast means alpha is in the last byte and premultiplied.
+        // However, we're writing non-premultiplied RGBA, so we should use kCGImageAlphaLast.
         const cg_image = cg.CGImageCreate(
             width,
             height,
@@ -456,7 +459,7 @@ pub const Window = struct {
             32,
             width * 4,
             rgb_color_space,
-            cg.kCGImageAlphaPremultipliedLast | cg.kCGBitmapByteOrder32Big,
+            cg.kCGImageAlphaLast | cg.kCGBitmapByteOrder32Little,
             data_provider,
             null,
             false,

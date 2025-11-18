@@ -830,7 +830,7 @@ pub const TahoeSandbox = struct {
             }
             
             // Draw VM state indicator (top-left of VM pane).
-            const vm_state_color: [4]u8 = switch (vm.state) {
+            const vm_state_color: [4]u8 = switch (vm.*.state) {
                 .running => .{ 0x00, 0xFF, 0x00, 0xFF }, // Green
                 .halted => .{ 0xFF, 0xFF, 0x00, 0xFF }, // Yellow
                 .errored => .{ 0xFF, 0x00, 0x00, 0xFF }, // Red

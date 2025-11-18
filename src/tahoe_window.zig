@@ -914,6 +914,55 @@ pub const TahoeSandbox = struct {
                 }
             }
             
+            // Draw stdout output (captured from userspace programs).
+            // Why: Display RISC-V logo and other program output in VM pane.
+            const stdout_text_x: u32 = vm_pane_x + 10;
+            const stdout_text_y: u32 = vm_pane_y + 25;
+            const stdout_text = self.stdout_buffer[0..self.stdout_pos];
+            
+            // Render stdout text (simple monospace ASCII rendering).
+            // Note: Each character is 8x12 pixels, max 70 chars per line, max 10 lines.
+            var line: u32 = 0;
+            var col: u32 = 0;
+            var char_idx: u32 = 0;
+            while (char_idx < stdout_text.len and line < 10) : (char_idx += 1) {
+                const ch = stdout_text[char_idx];
+                
+                if (ch == '\n' or col >= 70) {
+                    line += 1;
+                    col = 0;
+                    if (ch == '\n') continue;
+                }
+                
+                if (line < 10 and col < 70) {
+                    // Draw character (simple 8x8 pixel grid).
+                    const char_x = stdout_text_x + col * 8;
+                    const char_y = stdout_text_y + line * 12;
+                    
+                    // Draw character pixels (simple pattern for ASCII).
+                    var cy: u32 = 0;
+                    while (cy < 8 and char_y + cy < vm_pane_y + vm_pane_height) : (cy += 1) {
+                        var cx: u32 = 0;
+                        while (cx < 8 and char_x + cx < vm_pane_x + vm_pane_width) : (cx += 1) {
+                            const pixel_offset = ((char_y + cy) * buffer_width + (char_x + cx)) * 4;
+                            if (pixel_offset + 3 < buffer.len) {
+                                // Simple pattern: draw character as white pixels.
+                                // For now, just draw a simple pattern based on character code.
+                                const should_draw = (ch >= 32 and ch <= 126) and ((ch % 2) == (cx % 2));
+                                if (should_draw) {
+                                    buffer[pixel_offset + 0] = 0xFF; // R
+                                    buffer[pixel_offset + 1] = 0xFF; // G
+                                    buffer[pixel_offset + 2] = 0xFF; // B
+                                    buffer[pixel_offset + 3] = 0xFF; // A
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                col += 1;
+            }
+            
             // Draw VM state indicator (top-left of VM pane).
             const vm_state_color: [4]u8 = switch (vm.*.state) {
                 .running => .{ 0x00, 0xFF, 0x00, 0xFF }, // Green

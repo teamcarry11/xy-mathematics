@@ -3,7 +3,7 @@ const GrainBuffer = @import("grain_buffer.zig").GrainBuffer;
 const AuroraFilter = @import("aurora_filter.zig");
 const MacWindow = @import("platform/macos_tahoe/window.zig");
 
-/// GrainAurora — component-first TigerStyle UI stitching engine.
+/// GrainAurora — component-first GrainStyle UI stitching engine.
 // ~<~ Glow Airbend: keep renders light.
 // ~~~~ Glow Waterbend: streams of components stay deterministic.
 pub const GrainAurora = struct {

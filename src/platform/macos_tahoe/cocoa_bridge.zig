@@ -4,7 +4,7 @@ const c = @import("objc_runtime.zig").c;
 /// Cocoa bridge helpers: typed wrappers for Objective-C runtime calls.
 /// Why: objc_msgSend is variadic; Zig needs explicit function signatures.
 /// 
-/// Pointer design (TigerStyle single-level only):
+/// Pointer design (GrainStyle single-level only):
 /// - All function parameters and returns are single-level pointers.
 /// - No double indirection in Objective-C message sends.
 

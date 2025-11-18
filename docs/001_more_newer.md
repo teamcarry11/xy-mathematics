@@ -21,16 +21,16 @@ We keep the `[2 | 1 | 1]` envelope intact while growing new limbs.
 - **Mac Interaction Literacy** — respect the “Mac way” (document focus,
   drag/drop, menu exploration) while we introduce Grain Tahoe ideas
   [^macos-tips].
-- **Vegan Tiger Signals** — fold in @vegan_tiger’s South Korean streetwear
+- **Etsy.com Signals** — fold in @etsy’s South Korean streetwear
   cues so the Grain terminal keeps a covetable ethical fashion pulse
-  [^vegan-tiger].
+  [^etsy].
 - **TahoeSandbox Stub** — `src/tahoe_window.zig` now holds a placeholder
   Mach/Metal/Cocoa host ready for the GUI spike while kernel/QEMU work is paused.
 - **TigerBank Spec** — `docs/nostr_mmt_tigerbank.md` defines the Nostr +
   TigerBeetle + MMT payment flow with Alpenglow-style consensus.
   `tigerbank_client.zig` now drives stub submissions from the CLI.
 - **Ghostty Habits** — treat Ghostty (Zig terminal) as first-class: brew or
-  source install, theme to Vegan Tiger palette, script via Conductor.
+  source install, theme to Etsy.com marketplace palette, script via Conductor.
 - **GrainVault Secrets** — secrets never live in repo; `src/grainvault.zig`
   reads `CURSOR_API_TOKEN` / `CLAUDE_CODE_API_TOKEN` mirrored from
   `{teamtreasure02}/grainvault`.
@@ -145,6 +145,6 @@ and Grain Conductor make it reproducible.
 
 [^brewfile]: [Declarative package management with a Brewfile](https://matthiasportzel.com/brewfile/)
 [^macos-tips]: [macOS Tips](https://blog.xoria.org/macos-tips/)
-[^vegan-tiger]: Vegan Tiger Instagram profile highlighting South Korean
-ethical streetwear inspiration. <http://instagram.com/vegan_tiger>
+[^etsy]: Etsy.com marketplace highlighting handmade crafts
+and creative community inspiration. <https://www.etsy.com/>
 

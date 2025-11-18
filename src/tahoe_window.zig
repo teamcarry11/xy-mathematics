@@ -11,7 +11,7 @@ const loadKernel = kernel_vm.loadKernel;
 const basin_kernel = @import("basin_kernel");
 
 /// TahoeSandbox hosts a River-inspired compositor with Moonglow keybindings,
-/// blending Vegan Tiger aesthetics with Grain terminal panes.
+/// blending Etsy.com marketplace aesthetics with Grain terminal panes.
 /// ~<~ Glow Waterbend: compositor streams stay deterministic.
 pub const TahoeSandbox = struct {
     allocator: std.mem.Allocator,
@@ -77,7 +77,7 @@ pub const TahoeSandbox = struct {
         std.debug.assert(sandbox.has_focus == false);
         std.debug.assert(sandbox.vm == null);
         
-        // Set up event handler (Tiger Style: validate all function pointers).
+        // Set up event handler (Grain Style: validate all function pointers).
         const event_handler = events.EventHandler{
             .user_data = &sandbox,
             .onMouse = handle_mouse_event,
@@ -133,7 +133,7 @@ pub const TahoeSandbox = struct {
     }
     
     /// Handle mouse events: log and process.
-    /// Tiger Style: validate user_data pointer, validate event fields.
+    /// Grain Style: validate user_data pointer, validate event fields.
     fn handle_mouse_event(user_data: *anyopaque, event: events.MouseEvent) bool {
         // Assert: user_data pointer must be valid (non-zero, aligned).
         const user_data_ptr = @intFromPtr(user_data);
@@ -152,7 +152,7 @@ pub const TahoeSandbox = struct {
         const sandbox_ptr = @intFromPtr(sandbox);
         std.debug.assert(sandbox_ptr == user_data_ptr);
         
-        // Assert: sandbox must have valid platform (Tiger Style invariant).
+        // Assert: sandbox must have valid platform (Grain Style invariant).
         _ = sandbox.platform.vtable;
         _ = sandbox.platform.impl;
         
@@ -160,7 +160,7 @@ pub const TahoeSandbox = struct {
         std.debug.assert(event.x >= -10000.0 and event.x <= 10000.0);
         std.debug.assert(event.y >= -10000.0 and event.y <= 10000.0);
         
-        // Assert: event enum values must be valid (Tiger Style enum validation).
+        // Assert: event enum values must be valid (Grain Style enum validation).
         std.debug.assert(@intFromEnum(event.kind) < 4);
         std.debug.assert(@intFromEnum(event.button) < 4);
         
@@ -208,7 +208,7 @@ pub const TahoeSandbox = struct {
     }
     
     /// Handle keyboard events: log and process.
-    /// Tiger Style: validate user_data pointer, validate event fields.
+    /// Grain Style: validate user_data pointer, validate event fields.
     fn handle_keyboard_event(user_data: *anyopaque, event: events.KeyboardEvent) bool {
         // Assert: user_data pointer must be valid (non-zero, aligned).
         const user_data_ptr = @intFromPtr(user_data);
@@ -227,7 +227,7 @@ pub const TahoeSandbox = struct {
         const sandbox_ptr = @intFromPtr(sandbox);
         std.debug.assert(sandbox_ptr == user_data_ptr);
         
-        // Assert: sandbox must have valid platform (Tiger Style invariant).
+        // Assert: sandbox must have valid platform (Grain Style invariant).
         _ = sandbox.platform.vtable;
         _ = sandbox.platform.impl;
         
@@ -242,7 +242,7 @@ pub const TahoeSandbox = struct {
             std.debug.assert(c != 0xFFFE and c != 0xFFFF); // No non-characters
         }
         
-        // Assert: event enum value must be valid (Tiger Style enum validation).
+        // Assert: event enum value must be valid (Grain Style enum validation).
         std.debug.assert(@intFromEnum(event.kind) < 2);
         
         // Assert: modifiers must be valid (all boolean flags).
@@ -412,7 +412,7 @@ pub const TahoeSandbox = struct {
     }
     
     /// Handle focus events: log window focus changes.
-    /// Tiger Style: validate user_data pointer, validate event fields.
+    /// Grain Style: validate user_data pointer, validate event fields.
     fn handle_focus_event(user_data: *anyopaque, event: events.FocusEvent) bool {
         // Assert: user_data pointer must be valid (non-zero, aligned).
         const user_data_ptr = @intFromPtr(user_data);
@@ -431,14 +431,14 @@ pub const TahoeSandbox = struct {
         const sandbox_ptr = @intFromPtr(sandbox);
         std.debug.assert(sandbox_ptr == user_data_ptr);
         
-        // Assert: sandbox must have valid platform (Tiger Style invariant).
+        // Assert: sandbox must have valid platform (Grain Style invariant).
         _ = sandbox.platform.vtable;
         _ = sandbox.platform.impl;
         
         // Assert: event enum value must be valid.
         std.debug.assert(@intFromEnum(event.kind) < 2);
         
-        // Assert: event enum value must be valid (Tiger Style enum validation).
+        // Assert: event enum value must be valid (Grain Style enum validation).
         std.debug.assert(@intFromEnum(event.kind) < 2);
         
         // Update focus state for visual feedback.
@@ -468,7 +468,7 @@ pub const TahoeSandbox = struct {
     /// TODO: Use user_data to access sandbox instance properly.
     /// Handle syscall from VM (Grain Basin kernel integration).
     /// Why: Bridge VM ECALL instructions to Grain Basin kernel syscalls.
-    /// Tiger Style: Comprehensive assertions for all syscall parameters and results.
+    /// Grain Style: Comprehensive assertions for all syscall parameters and results.
     pub fn handle_syscall(syscall_num: u32, arg1: u64, arg2: u64, arg3: u64, arg4: u64) u64 {
         // Assert: syscall number must be >= 10 (kernel syscalls, not SBI).
         // Why: SBI calls use function ID < 10, kernel syscalls use >= 10.
@@ -570,7 +570,7 @@ pub const TahoeSandbox = struct {
         const buffer_width: u32 = 1024;
         const buffer_height: u32 = 768;
         
-        // Tiger Style: Draw something visible to the buffer!
+        // Grain Style: Draw something visible to the buffer!
         // Fill with a nice dark blue-gray background (Tahoe aesthetic).
         const bg_color: u32 = 0xFF1E1E2E; // Dark blue-gray (RGBA)
         @memset(buffer, @as(u8, @truncate(bg_color)));
@@ -866,7 +866,7 @@ pub const TahoeSandbox = struct {
     }
     
     /// Start animation loop: sets up timer to call tick() continuously at 60fps.
-    /// Tiger Style: validate platform pointers, ensure callback is properly set up.
+    /// Grain Style: validate platform pointers, ensure callback is properly set up.
     pub fn start_animation_loop(self: *TahoeSandbox) void {
         // Assert: platform must be initialized.
         _ = self.platform.vtable;
@@ -908,7 +908,7 @@ pub const TahoeSandbox = struct {
     }
     
     /// Stop animation loop: stops timer.
-    /// Tiger Style: validate platform pointers.
+    /// Grain Style: validate platform pointers.
     pub fn stop_animation_loop(self: *TahoeSandbox) void {
         // Assert: platform must be initialized.
         _ = self.platform.vtable;

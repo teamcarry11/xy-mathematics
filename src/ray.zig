@@ -6,7 +6,7 @@ const SimpleRng = @import("simple_rng.zig").SimpleRng;
 //  _  (   )  _
 // ( )  `-'  ( )
 //  `~  ~~~~  ~`
-// Breezes carry the Tahoe lodge plans without drifting from TigerStyle bounds.
+// Breezes carry the Tahoe lodge plans without drifting from GrainStyle bounds.
 //
 // Waterbending loop (station switch to the Avatar train).
 // ~ ~  ~~~   ~~~  ~
@@ -14,7 +14,7 @@ const SimpleRng = @import("simple_rng.zig").SimpleRng;
 // ~~~   ~  ~~~  ~
 // Keep flow steady, no floods, only gentle irrigation of Grain.
 //
-// Earthbending stance: firm TigerStyle footing, every struct a stone.
+// Earthbending stance: firm GrainStyle footing, every struct a stone.
 //  /\    /\    /\
 // /__\__/__\__/__\
 // Grounded allocations prevent landslides in the monorepo terrain.
@@ -157,25 +157,27 @@ pub const RayEnvelope = struct {
         };
 
         const expedition = DataModule{
-            .title = "Grain Expedition Data",
+            .title = "Grain Basin Userspace Expedition",
             .body =
-            \\Grain blossoms as a twilight terminal: Cursor Ultra, Zig LSP, Grok, and social
-            \\streams share one steady window.
-            \\Inside rests a River-inspired compositor with Moonglow keymaps and per-user Grain
-            \\gardens managed via Tahoe dotfiles.
-            \\Nostr `npub`s act as bright addresses and Matklad-style tests sweep for drift like
-            \\gentle tidewater.
+            \\Grain Basin kernel: RISC-V64 monolithic kernel foundation complete (40-60% userspace ready).
+            \\VM infrastructure: Pure Zig emulator with instruction execution, ECALL handling, SBI support.
+            \\Kernel syscalls: All 17 syscalls implemented (spawn, exit, map, unmap, open, read, write, close, channels, timers).
+            \\Testing: Comprehensive fuzz tests (006-009) passing, GrainStyle assertions throughout.
+            \\Next phase: VM-kernel integration layer → Expanded RISC-V instruction set (loads/stores/jumps) → Userspace ELF loader → Hello World in 2-3 weeks.
+            \\Goal: Run Zig-compiled RISC-V64 programs in VM to verify correctness before Framework 13 deployment.
             ,
             .timestamp = canonical_timestamp,
         };
 
         const audit = MetadataModule{
-            .title = "Audit And True Goals",
+            .title = "Userspace Readiness Goals",
             .body =
-            \\Audit: Jepsen-style deterministic sims covering clock skew, disk turbulence, and
-            \\friendly-but-strict quorum shifts.
-            \\Goals: disciplined `xy` monorepo, ethical Grain infrastructure, reproducible docs,
-            \\and Tahoe-ready launch poise.
+            \\Current status: Kernel foundation complete, VM infrastructure ready, syscalls tested.
+            \\Critical path: VM-kernel integration → RISC-V instruction expansion → Userspace ELF loading → Process spawn implementation.
+            \\MVP target: Hello World Zig program running in VM (2-3 weeks).
+            \\Full userspace: Real Zig programs with stdlib (6-8 weeks).
+            \\Vision: RISC-V-first development—write Zig code, test in macOS VM, deploy to Framework 13 with confidence.
+            \\GrainStyle: Safety-first, single-threaded efficiency, comprehensive assertions, explicit types.
             ,
             .timestamp = canonical_timestamp,
         };

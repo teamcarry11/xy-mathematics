@@ -1,7 +1,7 @@
 const std = @import("std");
 
 /// Serial output buffer for kernel printf/debug output.
-/// Tiger Style: Static allocation, deterministic output.
+/// Grain Style: Static allocation, deterministic output.
 /// ~<~ Glow Waterbend: Serial output flows deterministically.
 
 /// Serial output buffer (64KB static allocation).
@@ -24,7 +24,7 @@ pub const SerialOutput = struct {
 
     /// Write byte to serial output.
     /// Why: Handle kernel serial writes (e.g., printf output via SBI_CONSOLE_PUTCHAR).
-    /// Tiger Style: Comprehensive assertions for buffer management and circular buffer wrapping.
+    /// Grain Style: Comprehensive assertions for buffer management and circular buffer wrapping.
     pub fn writeByte(self: *Self, byte: u8) void {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);

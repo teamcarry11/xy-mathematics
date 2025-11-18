@@ -10,7 +10,7 @@ extern fn createNSImageFromCGImage(cgImage: *anyopaque, width: f64, height: f64)
 /// Thin Cocoa bridge: Aurora owns the RGBA buffer; Cocoa just hosts the view.
 /// ~<~ Glow Airbend: explicit allocations prevent dynamic Cocoa leaks into Zig runtime.
 /// 
-/// Pointer design (TigerStyle single-level only):
+/// Pointer design (GrainStyle single-level only):
 /// - `ns_window: ?*c.objc_object`: Single pointer to NSWindow (nullable for cleanup).
 /// - `ns_view: ?*c.objc_object`: Single pointer to NSView (nullable for cleanup).
 /// - `ns_app: ?*c.objc_object`: Single pointer to NSApplication shared instance (nullable for cleanup).
@@ -574,7 +574,7 @@ pub const Window = struct {
     }
     
     /// Start animation loop: creates NSTimer that calls tick callback at 60fps.
-    /// Tiger Style: validate all pointers, ensure timer is properly scheduled.
+    /// Grain Style: validate all pointers, ensure timer is properly scheduled.
     pub fn startAnimationLoop(self: *Self, tick_callback: *const fn (*anyopaque) void, user_data: *anyopaque) void {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);
@@ -617,7 +617,7 @@ pub const Window = struct {
     }
     
     /// Stop animation loop: invalidates timer.
-    /// Tiger Style: validate pointers, ensure cleanup.
+    /// Grain Style: validate pointers, ensure cleanup.
     pub fn stopAnimationLoop(self: *Self) void {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);
@@ -649,7 +649,7 @@ extern fn createTahoeView(window_ptr: usize) ?*c.objc_object;
 // Event routing functions: called from C delegates, route to Zig event handler.
 // These are exported as C functions so Objective-C can call them.
 /// Route mouse event from Cocoa to Zig event handler.
-/// Tiger Style: comprehensive pointer validation, bounds checking, enum validation.
+/// Grain Style: comprehensive pointer validation, bounds checking, enum validation.
 fn routeMouseEventImpl(window_ptr: usize, kind: u32, button: u32, x: f64, y: f64, modifiers: u32) void {
     // Assert: window pointer must be valid (non-zero, aligned, reasonable).
     std.debug.assert(window_ptr != 0);
@@ -671,7 +671,7 @@ fn routeMouseEventImpl(window_ptr: usize, kind: u32, button: u32, x: f64, y: f64
     const window_ptr_value = @intFromPtr(window);
     std.debug.assert(window_ptr_value == window_ptr);
     
-    // Assert: window must have valid buffer (Tiger Style invariant).
+    // Assert: window must have valid buffer (Grain Style invariant).
     std.debug.assert(window.rgba_buffer.len > 0);
     std.debug.assert(window.rgba_buffer.len % 4 == 0);
     std.debug.assert(window.width > 0);
@@ -687,7 +687,7 @@ fn routeMouseEventImpl(window_ptr: usize, kind: u32, button: u32, x: f64, y: f64
         std.debug.panic("routeMouseEventImpl: handler pointer is suspiciously small: 0x{x}", .{handler_ptr});
     }
     
-    // Convert button enum (Tiger Style: validate enum values).
+    // Convert button enum (Grain Style: validate enum values).
     const mouse_button = switch (button) {
         0 => events.MouseButton.left,
         1 => events.MouseButton.right,
@@ -695,7 +695,7 @@ fn routeMouseEventImpl(window_ptr: usize, kind: u32, button: u32, x: f64, y: f64
         else => events.MouseButton.other, // Accept any other value as "other"
     };
     
-    // Convert kind enum (Tiger Style: validate enum values, reject invalid).
+    // Convert kind enum (Grain Style: validate enum values, reject invalid).
     const mouse_kind = switch (kind) {
         0 => events.MouseEvent.MouseEventKind.down,
         1 => events.MouseEvent.MouseEventKind.up,
@@ -706,7 +706,7 @@ fn routeMouseEventImpl(window_ptr: usize, kind: u32, button: u32, x: f64, y: f64
         },
     };
     
-    // Create event (Tiger Style: validate all fields).
+    // Create event (Grain Style: validate all fields).
     const mouse_event = events.MouseEvent{
         .kind = mouse_kind,
         .button = mouse_button,
@@ -719,7 +719,7 @@ fn routeMouseEventImpl(window_ptr: usize, kind: u32, button: u32, x: f64, y: f64
     std.debug.assert(@intFromEnum(mouse_event.kind) < 4);
     std.debug.assert(@intFromEnum(mouse_event.button) < 4);
     
-    // Call handler (Tiger Style: validate handler function pointer).
+    // Call handler (Grain Style: validate handler function pointer).
     const handler_fn_ptr = @intFromPtr(handler.onMouse);
     std.debug.assert(handler_fn_ptr != 0);
     if (handler_fn_ptr < 0x1000) {
@@ -730,7 +730,7 @@ fn routeMouseEventImpl(window_ptr: usize, kind: u32, button: u32, x: f64, y: f64
 }
 
 /// Route keyboard event from Cocoa to Zig event handler.
-/// Tiger Style: comprehensive pointer validation, bounds checking, enum validation.
+/// Grain Style: comprehensive pointer validation, bounds checking, enum validation.
 fn routeKeyboardEventImpl(window_ptr: usize, kind: u32, key_code: u32, character: u32, modifiers: u32) void {
     // Assert: window pointer must be valid (non-zero, aligned, reasonable).
     std.debug.assert(window_ptr != 0);
@@ -757,7 +757,7 @@ fn routeKeyboardEventImpl(window_ptr: usize, kind: u32, key_code: u32, character
     const window_ptr_value = @intFromPtr(window);
     std.debug.assert(window_ptr_value == window_ptr);
     
-    // Assert: window must have valid buffer (Tiger Style invariant).
+    // Assert: window must have valid buffer (Grain Style invariant).
     std.debug.assert(window.rgba_buffer.len > 0);
     std.debug.assert(window.rgba_buffer.len % 4 == 0);
     std.debug.assert(window.width > 0);
@@ -773,7 +773,7 @@ fn routeKeyboardEventImpl(window_ptr: usize, kind: u32, key_code: u32, character
         std.debug.panic("routeKeyboardEventImpl: handler pointer is suspiciously small: 0x{x}", .{handler_ptr});
     }
     
-    // Convert kind enum (Tiger Style: validate enum values, reject invalid).
+    // Convert kind enum (Grain Style: validate enum values, reject invalid).
     const keyboard_kind = switch (kind) {
         0 => events.KeyboardEvent.KeyboardEventKind.down,
         1 => events.KeyboardEvent.KeyboardEventKind.up,
@@ -782,7 +782,7 @@ fn routeKeyboardEventImpl(window_ptr: usize, kind: u32, key_code: u32, character
         },
     };
     
-    // Create event (Tiger Style: validate all fields).
+    // Create event (Grain Style: validate all fields).
     const keyboard_event = events.KeyboardEvent{
         .kind = keyboard_kind,
         .key_code = key_code,
@@ -793,7 +793,7 @@ fn routeKeyboardEventImpl(window_ptr: usize, kind: u32, key_code: u32, character
     // Assert: event must be valid.
     std.debug.assert(@intFromEnum(keyboard_event.kind) < 2);
     
-    // Call handler (Tiger Style: validate handler function pointer).
+    // Call handler (Grain Style: validate handler function pointer).
     const handler_fn_ptr = @intFromPtr(handler.onKeyboard);
     std.debug.assert(handler_fn_ptr != 0);
     if (handler_fn_ptr < 0x1000) {
@@ -804,7 +804,7 @@ fn routeKeyboardEventImpl(window_ptr: usize, kind: u32, key_code: u32, character
 }
 
 /// Route focus event from Cocoa to Zig event handler.
-/// Tiger Style: comprehensive pointer validation, enum validation.
+/// Grain Style: comprehensive pointer validation, enum validation.
 fn routeFocusEventImpl(window_ptr: usize, kind: u32) void {
     // Assert: window pointer must be valid (non-zero, aligned, reasonable).
     std.debug.assert(window_ptr != 0);
@@ -822,7 +822,7 @@ fn routeFocusEventImpl(window_ptr: usize, kind: u32) void {
     const window_ptr_value = @intFromPtr(window);
     std.debug.assert(window_ptr_value == window_ptr);
     
-    // Assert: window must have valid buffer (Tiger Style invariant).
+    // Assert: window must have valid buffer (Grain Style invariant).
     std.debug.assert(window.rgba_buffer.len > 0);
     std.debug.assert(window.rgba_buffer.len % 4 == 0);
     std.debug.assert(window.width > 0);
@@ -838,7 +838,7 @@ fn routeFocusEventImpl(window_ptr: usize, kind: u32) void {
         std.debug.panic("routeFocusEventImpl: handler pointer is suspiciously small: 0x{x}", .{handler_ptr});
     }
     
-    // Convert kind enum (Tiger Style: validate enum values, reject invalid).
+    // Convert kind enum (Grain Style: validate enum values, reject invalid).
     const focus_kind = switch (kind) {
         0 => events.FocusEvent.FocusEventKind.gained,
         1 => events.FocusEvent.FocusEventKind.lost,
@@ -847,7 +847,7 @@ fn routeFocusEventImpl(window_ptr: usize, kind: u32) void {
         },
     };
     
-    // Create event (Tiger Style: validate all fields).
+    // Create event (Grain Style: validate all fields).
     const focus_event = events.FocusEvent{
         .kind = focus_kind,
     };
@@ -855,7 +855,7 @@ fn routeFocusEventImpl(window_ptr: usize, kind: u32) void {
     // Assert: event must be valid.
     std.debug.assert(@intFromEnum(focus_event.kind) < 2);
     
-    // Call handler (Tiger Style: validate handler function pointer).
+    // Call handler (Grain Style: validate handler function pointer).
     const handler_fn_ptr = @intFromPtr(handler.onFocus);
     std.debug.assert(handler_fn_ptr != 0);
     if (handler_fn_ptr < 0x1000) {
@@ -879,7 +879,7 @@ export fn routeFocusEvent(window_ptr: usize, kind: u32) void {
 }
 
 /// Route tick callback from timer to Zig tick function.
-/// Tiger Style: validate window pointer, ensure callback is valid.
+/// Grain Style: validate window pointer, ensure callback is valid.
 fn routeTickCallbackImpl(window_ptr: usize) void {
     // Assert: window pointer must be valid (non-zero, aligned, reasonable).
     std.debug.assert(window_ptr != 0);
@@ -897,7 +897,7 @@ fn routeTickCallbackImpl(window_ptr: usize) void {
     const window_ptr_value = @intFromPtr(window);
     std.debug.assert(window_ptr_value == window_ptr);
     
-    // Assert: window must have valid buffer (Tiger Style invariant).
+    // Assert: window must have valid buffer (Grain Style invariant).
     std.debug.assert(window.rgba_buffer.len > 0);
     std.debug.assert(window.rgba_buffer.len % 4 == 0);
     std.debug.assert(window.width > 0);
@@ -931,7 +931,7 @@ export fn routeTickCallback(window_ptr: usize) void {
 }
 
 /// Route window resize event from Cocoa to Zig.
-/// Tiger Style: validate window pointer, ensure dimensions are reasonable.
+/// Grain Style: validate window pointer, ensure dimensions are reasonable.
 fn routeWindowDidResizeImpl(window_ptr: usize, new_width: f64, new_height: f64) void {
     // Assert: window pointer must be valid (non-zero, aligned, reasonable).
     std.debug.assert(window_ptr != 0);
@@ -955,7 +955,7 @@ fn routeWindowDidResizeImpl(window_ptr: usize, new_width: f64, new_height: f64) 
     const window_ptr_value = @intFromPtr(window);
     std.debug.assert(window_ptr_value == window_ptr);
     
-    // Assert: window must have valid buffer (Tiger Style invariant).
+    // Assert: window must have valid buffer (Grain Style invariant).
     std.debug.assert(window.rgba_buffer.len > 0);
     std.debug.assert(window.rgba_buffer.len % 4 == 0);
     const expected_buffer_size = BUFFER_WIDTH * BUFFER_HEIGHT * 4;

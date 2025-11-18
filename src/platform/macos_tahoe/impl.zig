@@ -20,7 +20,7 @@ pub const vtable = Platform.VTable{
 
 /// Initialize macOS platform window: returns single pointer to type-erased window.
 /// 
-/// Pointer design (TigerStyle single-level only):
+/// Pointer design (GrainStyle single-level only):
 /// - `allocator.create(Window)` returns `*Window`: single pointer.
 /// - Return type `*anyopaque`: single pointer to type-erased window.
 /// - Cast from `*Window` to `*anyopaque` is single-level; no double indirection.
@@ -41,7 +41,7 @@ fn init(allocator: std.mem.Allocator, title: []const u8) !*anyopaque {
 
 /// Deinitialize macOS platform window: single pointer to type-erased window.
 /// 
-/// Pointer design (TigerStyle single-level only):
+/// Pointer design (GrainStyle single-level only):
 /// - `impl: *anyopaque`: single pointer to type-erased window.
 /// - `@ptrCast(@alignCast(impl))`: casts single pointer to `*Window`.
 /// - Cast is single-level; no double indirection. Both pointers are same level.

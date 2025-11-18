@@ -4,7 +4,7 @@ const events = @import("platform/events.zig");
 /// Platform abstraction: windowing and rendering interface.
 /// ~<~ Glow Earthbend: platform code isolated; core Aurora stays portable.
 /// 
-/// Pointer design (TigerStyle single-level only):
+/// Pointer design (GrainStyle single-level only):
 /// - `vtable: *const VTable`: Single pointer to immutable vtable struct.
 ///   Why: VTable is compile-time constant per platform; pointer avoids copying.
 /// - `impl: *anyopaque`: Single pointer to type-erased platform window.
@@ -19,7 +19,7 @@ pub const Platform = struct {
 
     /// VTable: function pointers for platform dispatch (single-level only).
     /// 
-    /// Pointer design (TigerStyle):
+    /// Pointer design (GrainStyle):
     /// - Function pointers (`*const fn(...)`) are single-level: pointer to
     ///   function, not pointer to pointer. Functions are immutable constants.
     /// - `impl: *anyopaque` parameters: single pointer to type-erased window.
@@ -53,7 +53,7 @@ pub const Platform = struct {
 
     /// Initialize platform: returns Platform struct with single-level pointers.
     /// 
-    /// Pointer flow (TigerStyle single-level only):
+    /// Pointer flow (GrainStyle single-level only):
     /// - `getPlatformVTable()` returns `*const VTable`: single pointer to vtable.
     /// - `vtable.init()` returns `*anyopaque`: single pointer to type-erased window.
     /// - Platform struct stores both as single-level pointers. No double indirection.
@@ -260,7 +260,7 @@ test "macos platform abstraction boundary fuzz" {
 }
 
 // macOS error path coverage: validates error handling for invalid inputs.
-// Why: Ensures error paths follow TigerStyle safety guarantees.
+// Why: Ensures error paths follow GrainStyle safety guarantees.
 test "macos platform error paths" {
     // Only run on macOS targets.
     if (@import("builtin").os.tag != .macos) return;

@@ -2,7 +2,7 @@ const std = @import("std");
 
 const Address = std.net.Address;
 
-/// GrainLoop: TigerStyle UDP event loop inspired by TigerBeetle's io_uring
+/// GrainLoop: GrainStyle UDP event loop inspired by TigerBeetle's io_uring
 /// design but adapted for cross-platform musl-friendly builds.
 /// It favors static allocation, deterministic dispatch, and no hidden threads.
 // ~( )~  Glow Airbend: packets hover, latency stays calm.

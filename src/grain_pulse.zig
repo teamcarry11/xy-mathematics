@@ -1,6 +1,6 @@
 const std = @import("std");
 
-/// GrainPulse: libuv-style loop tuned for TigerStyle stacks.
+/// GrainPulse: libuv-style loop tuned for GrainStyle stacks.
 /// Glow G2 Airbend:
 ///   ~~~\  )
 ///      |\/

@@ -57,7 +57,7 @@ pub const ModifierKeys = struct {
     control: bool = false,
     
     /// Convert Cocoa modifier flags to ModifierKeys struct.
-    /// Tiger Style: validate input, ensure deterministic conversion.
+    /// Grain Style: validate input, ensure deterministic conversion.
     pub fn fromCocoaFlags(flags: u32) ModifierKeys {
         // Assert: flags must be reasonable (not suspiciously large).
         // NSEventModifierFlagCommand = 1 << 20

@@ -294,8 +294,8 @@ Can you write a message for me to submit to Digital Ocean here ?
     },
     .{ .id = 45, .timestamp = null, .content =
         \\continue AND infuse everywhere and our ray and ray_160 
-        http://instagram.com/vegan_tiger  `@vegan_tiger` South Korea 
-        advertising ,  search the web for Vegan Tiger south korea fashion 
+        https://www.etsy.com/  `Etsy.com` handmade marketplace 
+        advertising ,  search the web for Etsy.com handmade crafts marketplace 
         designer streetwear coveted 
     },
     .{ .id = 44, .timestamp = null, .content =

@@ -3,7 +3,7 @@
 // Inspired by CascadeOS/zig-sbi (MIT licensed) - see credits in docs
 
 /// RISC-V SBI (Supervisor Binary Interface) wrapper.
-/// Tiger Style: Minimal, type-safe, comprehensive assertions.
+/// Grain Style: Minimal, type-safe, comprehensive assertions.
 /// Why: Platform runtime services (timer, console, reset) for RISC-V kernels.
 /// Credits: Inspired by CascadeOS/zig-sbi (MIT licensed).
 

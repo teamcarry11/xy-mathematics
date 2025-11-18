@@ -15,7 +15,7 @@ pub const vtable = Platform.VTable{
 
 /// NullWindow: headless window implementation for unsupported platforms.
 /// 
-/// Pointer design (TigerStyle single-level only):
+/// Pointer design (GrainStyle single-level only):
 /// - `rgba_buffer: []u8`: slice (pointer + length), not pointer to pointer.
 /// - Methods take `self: *NullWindow`: single pointer to struct. No double indirection.
 pub const NullWindow = struct {
@@ -102,7 +102,7 @@ pub const NullWindow = struct {
 
 /// Initialize null platform window: returns single pointer to type-erased window.
 /// 
-/// Pointer design (TigerStyle single-level only):
+/// Pointer design (GrainStyle single-level only):
 /// - `allocator.create(NullWindow)` returns `*NullWindow`: single pointer.
 /// - Return type `*anyopaque`: single pointer to type-erased window.
 /// - Cast from `*NullWindow` to `*anyopaque` is single-level; no double indirection.
@@ -122,7 +122,7 @@ fn init(allocator: std.mem.Allocator, title: []const u8) !*anyopaque {
 
 /// Deinitialize null platform window: single pointer to type-erased window.
 /// 
-/// Pointer design (TigerStyle single-level only):
+/// Pointer design (GrainStyle single-level only):
 /// - `impl: *anyopaque`: single pointer to type-erased window.
 /// - `@ptrCast(@alignCast(impl))`: casts single pointer to `*NullWindow`.
 /// - Cast is single-level; no double indirection. Both pointers are same level.

@@ -15,7 +15,7 @@ pub const vtable = Platform.VTable{
 
 /// RiscvWindow: framebuffer-based window for RISC-V kernel mode.
 /// 
-/// Pointer design (TigerStyle single-level only):
+/// Pointer design (GrainStyle single-level only):
 /// - `rgba_buffer: []u8`: slice (pointer + length), not pointer to pointer.
 /// - Methods take `self: *RiscvWindow`: single pointer to struct. No double indirection.
 pub const RiscvWindow = struct {
@@ -88,7 +88,7 @@ pub const RiscvWindow = struct {
 
 /// Initialize RISC-V platform window: returns single pointer to type-erased window.
 /// 
-/// Pointer design (TigerStyle single-level only):
+/// Pointer design (GrainStyle single-level only):
 /// - `allocator.create(RiscvWindow)` returns `*RiscvWindow`: single pointer.
 /// - Return type `*anyopaque`: single pointer to type-erased window.
 /// - Cast from `*RiscvWindow` to `*anyopaque` is single-level; no double indirection.
@@ -108,7 +108,7 @@ fn init(allocator: std.mem.Allocator, title: []const u8) !*anyopaque {
 
 /// Deinitialize RISC-V platform window: single pointer to type-erased window.
 /// 
-/// Pointer design (TigerStyle single-level only):
+/// Pointer design (GrainStyle single-level only):
 /// - `impl: *anyopaque`: single pointer to type-erased window.
 /// - `@ptrCast(@alignCast(impl))`: casts single pointer to `*RiscvWindow`.
 /// - Cast is single-level; no double indirection. Both pointers are same level.

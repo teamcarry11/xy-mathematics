@@ -1,7 +1,7 @@
 /// Shared Objective-C runtime C import for macOS platform.
 /// Why: Ensures type compatibility across cocoa_bridge.zig and window.zig.
 /// 
-/// Pointer design (TigerStyle single-level only):
+/// Pointer design (GrainStyle single-level only):
 /// - All Objective-C runtime types use single-level pointers.
 /// Note: We don't include Foundation.h here because it requires Objective-C syntax.
 /// The Objective-C runtime functions work without it, and Foundation framework

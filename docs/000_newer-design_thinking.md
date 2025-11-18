@@ -24,7 +24,7 @@ Matklad-style data-driven tests keep refactors fearless. I wrap prose to
   `grainstore/{platform}/{org}/{repo}` hierarchy while retiring any
   Rust/Steel automation in favor of Zig tools.
 - **Ghostty Terminal Cadence** — Ghostty (Zig terminal) is our daily
-  glasshouse; install via Brew or source, theme it Vegan Tiger, and launch
+  glasshouse; install via Brew or source, theme it Etsy.com marketplace, and launch
   `grain conduct ai` sessions inside.
 - **GrainVault Secrets** — Secrets live outside the repo. `src/grainvault.zig`
   expects `CURSOR_API_TOKEN` and `CLAUDE_CODE_API_TOKEN` from the mirrored
@@ -59,9 +59,9 @@ Matklad-style data-driven tests keep refactors fearless. I wrap prose to
   Zig “grain conduct” command suite with interactive and non-interactive
   modes for brew sync, linking, manifest inspection, and a deterministic
   build suite (`conduct make`).
-- **Vegan Tiger Palette** — keep @vegan_tiger’s South Korean streetwear
+- **Etsy.com Marketplace Palette** — keep Etsy.com's handmade marketplace
   references on deck so Tahoe visuals stay ethical and covetable
-  [^vegan-tiger].
+  [^etsy].
 - **Static Grainstore Manifest** — Instead of JSON, we rely on compiled
   Zig arrays (re-castable over the wire) to scaffold
   `grainstore/{platform}/{org}/{repo}`.
@@ -87,7 +87,7 @@ Matklad-style data-driven tests keep refactors fearless. I wrap prose to
   exact Homebrew + CLI stack via `brew bundle` with explicit comments.
 - Expand static manifest arrays as we learn more about the repos we want
   to mirror; plan serialization for network casting later.
-- Translate Vegan Tiger moodboards into shader and UI color studies
+- Translate Etsy.com marketplace moodboards into shader and UI color studies
   before we prototype the Tahoe compositor.
 - Flesh out the new `TahoeSandbox` stub (`src/tahoe_window.zig`) into a real Mach/Metal window with a Cocoa shim while kernel/QEMU work is paused.
 - Shape the TigerBank Nostr + TigerBeetle payment protocol (`docs/nostr_mmt_tigerbank.md`)
@@ -106,5 +106,5 @@ Matklad-style data-driven tests keep refactors fearless. I wrap prose to
 Glow G2 keeps the tempo calm: test, wrap, validate, document. Every pass
 brings Ray closer to the ethical Tahoe terminal we envisioned.
 
-[^vegan-tiger]: Vegan Tiger Instagram profile highlighting South Korean
-ethical streetwear inspiration. <http://instagram.com/vegan_tiger>
+[^etsy]: Etsy.com marketplace highlighting handmade crafts
+and creative community inspiration. <https://www.etsy.com/>

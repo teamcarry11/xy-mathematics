@@ -5,13 +5,15 @@ const loadKernel = kernel_vm.loadKernel;
 const SerialOutput = kernel_vm.SerialOutput;
 
 /// Test RISC-V VM functionality.
-/// Tiger Style: Comprehensive test coverage, deterministic behavior.
+/// Grain Style: Comprehensive test coverage, deterministic behavior.
 pub fn main() !void {
     std.debug.print("[kernel_vm_test] Testing RISC-V VM...\n", .{});
 
     // Test 1: VM initialization.
     std.debug.print("[kernel_vm_test] Test 1: VM initialization\n", .{});
-    var vm = VM.init(&[_]u8{0x13, 0x00, 0x00, 0x00}, 0x1000); // NOP instruction.
+    // GrainStyle: Use in-place initialization to avoid stack overflow.
+    var vm: VM = undefined;
+    VM.init(&vm, &[_]u8{0x13, 0x00, 0x00, 0x00}, 0x1000); // NOP instruction.
     std.debug.assert(vm.regs.pc == 0x1000);
     std.debug.assert(vm.state == .halted);
     std.debug.print("[kernel_vm_test] ✓ VM initialized correctly\n", .{});

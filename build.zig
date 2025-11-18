@@ -104,7 +104,7 @@ pub fn build(b: *std.Build) void {
     });
 
     // RISC-V SBI module (platform runtime services).
-    // Why: Our own Tiger Style SBI wrapper (inspired by CascadeOS/zig-sbi, MIT licensed).
+    // Why: Our own Grain Style SBI wrapper (inspired by CascadeOS/zig-sbi, MIT licensed).
     const sbi_module = b.addModule("sbi", .{
         .root_source_file = b.path("src/kernel_vm/sbi.zig"),
         .target = target,
@@ -118,6 +118,7 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
         .imports = &.{
             .{ .name = "sbi", .module = sbi_module },
+            .{ .name = "basin_kernel", .module = basin_kernel_module },
         },
     });
 
@@ -366,7 +367,7 @@ pub fn build(b: *std.Build) void {
     run_extract.addArg("--help");
     extract_step.dependOn(&run_extract.step);
 
-    // Tiger Style: Print build progress for visibility.
+    // Grain Style: Print build progress for visibility.
     std.debug.print("[build] Creating tahoe executable...\n", .{});
     
     const tahoe_app = b.addExecutable(.{
@@ -380,7 +381,7 @@ pub fn build(b: *std.Build) void {
                 .{ .name = "basin_kernel", .module = basin_kernel_module },
                 .{ .name = "sbi", .module = sbi_module },
             },
-            // Tiger Style: Zig is strict by default - all safety checks enabled.
+            // Grain Style: Zig is strict by default - all safety checks enabled.
             // No need for additional flags - Zig catches all errors at compile time.
         }),
     });
@@ -501,6 +502,372 @@ pub fn build(b: *std.Build) void {
     const fuzz_006_run = b.addRunArtifact(fuzz_006_tests);
     const fuzz_006_step = b.step("fuzz-006", "Run 006 fuzz tests for memory management foundation");
     fuzz_006_step.dependOn(&fuzz_006_run.step);
+
+    const fuzz_007_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/007_fuzz.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+            },
+        }),
+    });
+    const fuzz_007_run = b.addRunArtifact(fuzz_007_tests);
+    const fuzz_007_step = b.step("fuzz-007", "Run 007 fuzz tests for file system foundation");
+    fuzz_007_step.dependOn(&fuzz_007_run.step);
+
+    const fuzz_006_simple_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/006_simple_at_commit.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+            },
+        }),
+    });
+    const fuzz_006_simple_run = b.addRunArtifact(fuzz_006_simple_tests);
+    const fuzz_006_simple_step = b.step("fuzz-006-simple", "Run simple 006 test at commit 0d618a3");
+    fuzz_006_simple_step.dependOn(&fuzz_006_simple_run.step);
+
+    const integration_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/011_integration_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "kernel_vm", .module = kernel_vm_module },
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+            },
+        }),
+    });
+    const integration_run = b.addRunArtifact(integration_tests);
+    const integration_step = b.step("integration-test", "Run integration tests for VM-kernel layer");
+    integration_step.dependOn(&integration_run.step);
+
+    // RISC-V64 userspace target (for compiling userspace programs).
+    const userspace_target = std.Target.Query{
+        .cpu_arch = .riscv64,
+        .os_tag = .freestanding,
+        .abi = .none,
+    };
+    const userspace_resolved = b.resolveTargetQuery(userspace_target);
+
+    // Userspace stdlib module (for userspace programs - must use userspace target).
+    const userspace_stdlib_module = b.addModule("userspace_stdlib", .{
+        .root_source_file = b.path("src/userspace/stdlib.zig"),
+        .target = userspace_resolved,
+        .optimize = optimize,
+    });
+
+    // Userspace args module (for argument parsing in utilities).
+    const userspace_args_module = b.addModule("userspace_args", .{
+        .root_source_file = b.path("src/userspace/utils/args.zig"),
+        .target = userspace_resolved,
+        .optimize = optimize,
+    });
+
+    // Hello World userspace executable (RISC-V64).
+    const hello_world_exe = b.addExecutable(.{
+        .name = "hello_world",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("examples/hello_world.zig"),
+            .target = userspace_resolved,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "userspace_stdlib", .module = userspace_stdlib_module },
+            },
+        }),
+    });
+    hello_world_exe.setLinkerScript(b.path("linker_scripts/userspace.ld"));
+    const hello_world_install = b.addInstallArtifact(hello_world_exe, .{});
+    const hello_world_step = b.step("hello-world", "Build Hello World userspace program for RISC-V64");
+    hello_world_step.dependOn(&hello_world_install.step);
+
+    const hello_world_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/012_hello_world_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "kernel_vm", .module = kernel_vm_module },
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+            },
+        }),
+    });
+    const hello_world_tests_run = b.addRunArtifact(hello_world_tests);
+    const hello_world_tests_step = b.step("hello-world-test", "Test Hello World program in VM");
+    hello_world_tests_step.dependOn(&hello_world_tests_run.step);
+    // Make hello-world-test depend on hello-world being built first.
+    hello_world_tests_step.dependOn(&hello_world_install.step);
+
+    // Build-essential utilities: cat
+    const cat_exe = b.addExecutable(.{
+        .name = "cat",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/userspace/utils/core/cat.zig"),
+            .target = userspace_resolved,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "userspace_stdlib", .module = userspace_stdlib_module },
+                .{ .name = "userspace_args", .module = userspace_args_module },
+            },
+        }),
+    });
+    cat_exe.setLinkerScript(b.path("linker_scripts/userspace.ld"));
+    const cat_install = b.addInstallArtifact(cat_exe, .{});
+    const cat_step = b.step("cat", "Build cat utility for RISC-V64");
+    cat_step.dependOn(&cat_install.step);
+
+    // Build-essential utilities: echo
+    const echo_exe = b.addExecutable(.{
+        .name = "echo",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/userspace/utils/core/echo.zig"),
+            .target = userspace_resolved,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "userspace_stdlib", .module = userspace_stdlib_module },
+                .{ .name = "userspace_args", .module = userspace_args_module },
+            },
+        }),
+    });
+    echo_exe.setLinkerScript(b.path("linker_scripts/userspace.ld"));
+    const echo_install = b.addInstallArtifact(echo_exe, .{});
+    const echo_step = b.step("echo", "Build echo utility for RISC-V64");
+    echo_step.dependOn(&echo_install.step);
+
+    // Build-essential utilities: ls
+    const ls_exe = b.addExecutable(.{
+        .name = "ls",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/userspace/utils/core/ls.zig"),
+            .target = userspace_resolved,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "userspace_stdlib", .module = userspace_stdlib_module },
+            },
+        }),
+    });
+    ls_exe.setLinkerScript(b.path("linker_scripts/userspace.ld"));
+    const ls_install = b.addInstallArtifact(ls_exe, .{});
+    const ls_step = b.step("ls", "Build ls utility for RISC-V64");
+    ls_step.dependOn(&ls_install.step);
+
+    // Build-essential utilities: mkdir
+    const mkdir_exe = b.addExecutable(.{
+        .name = "mkdir",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/userspace/utils/core/mkdir.zig"),
+            .target = userspace_resolved,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "userspace_stdlib", .module = userspace_stdlib_module },
+                .{ .name = "userspace_args", .module = userspace_args_module },
+            },
+        }),
+    });
+    mkdir_exe.setLinkerScript(b.path("linker_scripts/userspace.ld"));
+    const mkdir_install = b.addInstallArtifact(mkdir_exe, .{});
+    const mkdir_step = b.step("mkdir", "Build mkdir utility for RISC-V64");
+    mkdir_step.dependOn(&mkdir_install.step);
+
+    // Build-essential utilities: rm
+    const rm_exe = b.addExecutable(.{
+        .name = "rm",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/userspace/utils/core/rm.zig"),
+            .target = userspace_resolved,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "userspace_stdlib", .module = userspace_stdlib_module },
+                .{ .name = "userspace_args", .module = userspace_args_module },
+            },
+        }),
+    });
+    rm_exe.setLinkerScript(b.path("linker_scripts/userspace.ld"));
+    const rm_install = b.addInstallArtifact(rm_exe, .{});
+    const rm_step = b.step("rm", "Build rm utility for RISC-V64");
+    rm_step.dependOn(&rm_install.step);
+
+    // Build-essential utilities: cp
+    const cp_exe = b.addExecutable(.{
+        .name = "cp",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/userspace/utils/core/cp.zig"),
+            .target = userspace_resolved,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "userspace_stdlib", .module = userspace_stdlib_module },
+                .{ .name = "userspace_args", .module = userspace_args_module },
+            },
+        }),
+    });
+    cp_exe.setLinkerScript(b.path("linker_scripts/userspace.ld"));
+    const cp_install = b.addInstallArtifact(cp_exe, .{});
+    const cp_step = b.step("cp", "Build cp utility for RISC-V64");
+    cp_step.dependOn(&cp_install.step);
+
+    // Build-essential utilities: mv
+    const mv_exe = b.addExecutable(.{
+        .name = "mv",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/userspace/utils/core/mv.zig"),
+            .target = userspace_resolved,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "userspace_stdlib", .module = userspace_stdlib_module },
+                .{ .name = "userspace_args", .module = userspace_args_module },
+            },
+        }),
+    });
+    mv_exe.setLinkerScript(b.path("linker_scripts/userspace.ld"));
+    const mv_install = b.addInstallArtifact(mv_exe, .{});
+    const mv_step = b.step("mv", "Build mv utility for RISC-V64");
+    mv_step.dependOn(&mv_install.step);
+
+    // Build-essential utilities: grep
+    const grep_exe = b.addExecutable(.{
+        .name = "grep",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/userspace/utils/text/grep.zig"),
+            .target = userspace_resolved,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "userspace_stdlib", .module = userspace_stdlib_module },
+            },
+        }),
+    });
+    grep_exe.setLinkerScript(b.path("linker_scripts/userspace.ld"));
+    const grep_install = b.addInstallArtifact(grep_exe, .{});
+    const grep_step = b.step("grep", "Build grep utility for RISC-V64");
+    grep_step.dependOn(&grep_install.step);
+
+    // Build-essential utilities: sed
+    const sed_exe = b.addExecutable(.{
+        .name = "sed",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/userspace/utils/text/sed.zig"),
+            .target = userspace_resolved,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "userspace_stdlib", .module = userspace_stdlib_module },
+                .{ .name = "userspace_args", .module = userspace_args_module },
+            },
+        }),
+    });
+    sed_exe.setLinkerScript(b.path("linker_scripts/userspace.ld"));
+    const sed_install = b.addInstallArtifact(sed_exe, .{});
+    const sed_step = b.step("sed", "Build sed utility for RISC-V64");
+    sed_step.dependOn(&sed_install.step);
+
+    // Build-essential utilities: awk
+    const awk_exe = b.addExecutable(.{
+        .name = "awk",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/userspace/utils/text/awk.zig"),
+            .target = userspace_resolved,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "userspace_stdlib", .module = userspace_stdlib_module },
+                .{ .name = "userspace_args", .module = userspace_args_module },
+            },
+        }),
+    });
+    awk_exe.setLinkerScript(b.path("linker_scripts/userspace.ld"));
+    const awk_install = b.addInstallArtifact(awk_exe, .{});
+    const awk_step = b.step("awk", "Build awk utility for RISC-V64");
+    awk_step.dependOn(&awk_install.step);
+
+    // Build-essential utilities: cc (C compiler wrapper)
+    const cc_exe = b.addExecutable(.{
+        .name = "cc",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/userspace/build-tools/cc.zig"),
+            .target = userspace_resolved,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "userspace_stdlib", .module = userspace_stdlib_module },
+                .{ .name = "userspace_args", .module = userspace_args_module },
+            },
+        }),
+    });
+    cc_exe.setLinkerScript(b.path("linker_scripts/userspace.ld"));
+    const cc_install = b.addInstallArtifact(cc_exe, .{});
+    const cc_step = b.step("cc", "Build cc utility for RISC-V64");
+    cc_step.dependOn(&cc_install.step);
+
+    // Build-essential utilities: ld (linker wrapper)
+    const ld_exe = b.addExecutable(.{
+        .name = "ld",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/userspace/build-tools/ld.zig"),
+            .target = userspace_resolved,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "userspace_stdlib", .module = userspace_stdlib_module },
+                .{ .name = "userspace_args", .module = userspace_args_module },
+            },
+        }),
+    });
+    ld_exe.setLinkerScript(b.path("linker_scripts/userspace.ld"));
+    const ld_install = b.addInstallArtifact(ld_exe, .{});
+    const ld_step = b.step("ld", "Build ld utility for RISC-V64");
+    ld_step.dependOn(&ld_install.step);
+
+    // Build-essential utilities: ar (archive utility)
+    const ar_exe = b.addExecutable(.{
+        .name = "ar",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/userspace/build-tools/ar.zig"),
+            .target = userspace_resolved,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "userspace_stdlib", .module = userspace_stdlib_module },
+                .{ .name = "userspace_args", .module = userspace_args_module },
+            },
+        }),
+    });
+    ar_exe.setLinkerScript(b.path("linker_scripts/userspace.ld"));
+    const ar_install = b.addInstallArtifact(ar_exe, .{});
+    const ar_step = b.step("ar", "Build ar utility for RISC-V64");
+    ar_step.dependOn(&ar_install.step);
+
+    // Build-essential utilities: make (build automation)
+    const make_exe = b.addExecutable(.{
+        .name = "make",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/userspace/build-tools/make.zig"),
+            .target = userspace_resolved,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "userspace_stdlib", .module = userspace_stdlib_module },
+                .{ .name = "userspace_args", .module = userspace_args_module },
+            },
+        }),
+    });
+    make_exe.setLinkerScript(b.path("linker_scripts/userspace.ld"));
+    const make_install = b.addInstallArtifact(make_exe, .{});
+    const make_step = b.step("make", "Build make utility for RISC-V64");
+    make_step.dependOn(&make_install.step);
+
+    // Build-essential utilities: build all
+    const build_essential_step = b.step("build-essential", "Build all build-essential utilities");
+    build_essential_step.dependOn(&cat_install.step);
+    build_essential_step.dependOn(&echo_install.step);
+    build_essential_step.dependOn(&ls_install.step);
+    build_essential_step.dependOn(&mkdir_install.step);
+    build_essential_step.dependOn(&rm_install.step);
+    build_essential_step.dependOn(&cp_install.step);
+    build_essential_step.dependOn(&mv_install.step);
+    build_essential_step.dependOn(&grep_install.step);
+    build_essential_step.dependOn(&sed_install.step);
+    build_essential_step.dependOn(&awk_install.step);
+    build_essential_step.dependOn(&cc_install.step);
+    build_essential_step.dependOn(&ld_install.step);
+    build_essential_step.dependOn(&ar_install.step);
+    build_essential_step.dependOn(&make_install.step);
 
     const fuzz_003_tests = b.addTest(.{
         .root_module = b.createModule(.{

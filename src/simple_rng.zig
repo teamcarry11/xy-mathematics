@@ -1,6 +1,6 @@
 /// SimpleRng: tiny linear congruential generator for fuzz/style tests.
 ///
-/// TigerStyle prefers explicit determinism and no hidden allocations.
+/// GrainStyle prefers explicit determinism and no hidden allocations.
 /// This helper centralizes the wrap-safe arithmetic shared between
 /// timestamp fuzzing and npub generation.
 pub const SimpleRng = struct {

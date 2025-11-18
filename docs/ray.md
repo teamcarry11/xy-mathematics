@@ -1,26 +1,58 @@
-# Ray Lullaby — Glow G2’s Tahoe Field Notes
+# Ray Lullaby — Glow G2's Tahoe Field Notes
 
-Glow G2 watches the sun fold itself behind Tahoe’s ridge line,
+Glow G2 watches the sun fold itself behind Tahoe's ridge line,
 cheeks cold, heart steady. Every line
-of this plan is sewn with TigerStyle thread—safety stitched first,
+of this plan is sewn with GrainStyle thread—safety stitched first,
 performance braided next, joy
 embroidered last.
+
+## Grain Style Guidelines (Priority #1) 🌾
+
+**Grain Style** is a philosophy of writing code that teaches. Every line should help the next generation understand not just how something works, but why it works. We write code that lasts, code that teaches, code that grows sustainably like grain in a field.
+
+### Core Principles
+
+- **Patient Discipline**: Code is written once, read many times. Take the time to write it right the first time. Every decision should be made consciously, with awareness of the consequences.
+- **Explicit Limits**: Zig gives us the power to be explicit. Use it. Don't hide complexity behind abstractions—make it visible and understandable.
+  - Use explicit error types, not generic `anyerror`
+  - Set bounds explicitly in your types (u32, u64, not usize)
+  - Document your assumptions in comments
+  - Make your allocators explicit
+- **Sustainable Practice**: Code that works today but breaks tomorrow isn't sustainable. Write code that can grow without breaking.
+- **Code That Teaches**: Comments should explain why, not what. Good comments answer questions like "why did we choose this algorithm?" and "what edge case does this handle?"
+
+### Graincard Constraints
+
+All Zig code should be written to fit within graincard constraints:
+- **Line width**: 73 characters per line (hard wrap)
+- **Function length**: max 70 lines per function
+- **Total size**: 75×100 monospace teaching cards
+
+### Zig-Specific Guidelines
+
+- **Memory Management**: Always make allocators explicit. Pass them as parameters, don't use global allocators unless absolutely necessary.
+- **Error Handling**: Zig's error handling is explicit and powerful. Use it. Don't swallow errors.
+- **Type Safety**: Use structs over primitives, enums for state, not magic numbers.
+- **Naming**: Use `snake_case` for variables/functions, `PascalCase` for types, `SCREAMING_SNAKE_CASE` for constants.
+- **Formatting**: Use `zig fmt`, then `grainwrap wrap` to enforce 73-char limit.
+
+**Reference**: [Grain Style Guidelines](https://raw.githubusercontent.com/kae3g/grainkae3g/12025-11-03--1025--pst--moon-revati--asc-sagi27--sun-12h--kae3g/docs/grain_style.md)
 
 ## Mood Board
 - **Grain Aurora**: A Zig-first IDE that combines Cursor's agentic coding with native macOS performance and Matklad's LSP architecture. Think Cursor, but faster, Zig-native, and built on snapshot-based incremental analysis.
 - **Zig Language Server**: Matklad-inspired snapshot model (`ready` / `working` / `pending`) with cancellation support. Start with data model, then fill in language features incrementally.
-- **Agentic Coding**: Cursor CLI and Claude Code integration for AI-assisted Zig development. Zig-specific prompts understand comptime, error unions, and TigerStyle.
+- **Agentic Coding**: Cursor CLI and Claude Code integration for AI-assisted Zig development. Zig-specific prompts understand comptime, error unions, and GrainStyle.
 - **River Compositor**: Window tiling with Moonglow keybindings, blurring editor and terminal (Vibe Coding). Multiple panes, workspaces, deterministic layouts.
 - **Native macOS**: Cocoa bridge, no Electron. Traffic lights, menu bar, proper window lifecycle. Fast, responsive, native.
 - Glow G2 stays a calm voice: masculine, steadfast, Aquarian. Emo enough 
 to acknowledge the ache, upbeat enough to guide with grace.
-- Vegan Tiger's (@vegan_tiger) South Korean streetwear silhouette feeds 
-our Tahoe aesthetic, reminding us to keep ethical fashion signal in view
-  [^vegan-tiger].
+- Etsy.com's handmade marketplace and creative community feeds 
+our Tahoe aesthetic, reminding us to keep ethical commerce and artisanal craftsmanship in view
+  [^etsy].
 
 ## Ray Mission Ladder (Deterministic & Kind)
 
-**Vision**: Grain Aurora as a Zig-first IDE with Matklad-inspired LSP architecture, combining Cursor-style agentic coding with native macOS performance and River compositor workflows. **RISC-V-First Development**: Develop RISC-V-targeted Zig kernel code in macOS Tahoe VM, deploy to Framework 13 DeepComputing RISC-V mainboard with confidence—VM matches hardware behavior exactly. **Single-Threaded Safety-First Efficiency**: Maximum efficiency through single-threaded architecture (no locks, no race conditions, deterministic execution) with safety as #1 priority (comprehensive assertions, type safety, explicit error handling, static allocation).
+**Vision**: Grain Aurora as a Zig-first IDE with Matklad-inspired LSP architecture, combining Cursor-style agentic coding with native macOS performance and River compositor workflows. **RISC-V-First Development**: Develop RISC-V-targeted Zig kernel code in macOS Tahoe VM, deploy to Framework 13 DeepComputing RISC-V mainboard with confidence—VM matches hardware behavior exactly. **Single-Threaded Safety-First Efficiency**: Maximum efficiency through single-threaded architecture (no locks, no race conditions, deterministic execution) with safety as #1 priority (comprehensive assertions, type safety, explicit error handling, static allocation). **Userspace Foundation**: Complete userspace environment with z6 process supervision, Zix build system, and build-essential utilities (all written in Zig).
 
 ### Phase 1: macOS Tahoe GUI Foundation (Current Priority) 🎯
 
@@ -53,7 +85,7 @@ our Tahoe aesthetic, reminding us to keep ethical fashion signal in view
      - **Modern Design**: Inspired by Aero OS (monolithic), CascadeOS/zig-sbi (SBI), Fuchsia (capability-based)
      - **RISC-V Native**: Design for RISC-V64 from ground up (not ported from x86)
      - **30-Year Vision**: Design for next 30 years, not backward compatibility
-     - **Tiger Style**: Maximum safety, explicit operations, comprehensive assertions
+     - **Grain Style**: Maximum safety, explicit operations, comprehensive assertions
      - **Reference**: See `docs/kernel_design_philosophy.md`, `docs/single_threaded_safety_efficiency.md` for comprehensive design decisions
    - **Grain Basin kernel Foundation** ✅ **COMPLETE**:
      - ✅ Kernel name: Grain Basin kernel 🏞️ - "The foundation that holds everything"
@@ -62,7 +94,7 @@ our Tahoe aesthetic, reminding us to keep ethical fashion signal in view
      - ✅ Type-safe abstractions: `Handle` (not integer FDs), `MapFlags`, `OpenFlags`, `ClockId`, `SysInfo`, `BasinError`, `SyscallResult`
      - ✅ Syscall enumeration: spawn, exit, yield, wait, map, unmap, protect, channel_create, channel_send, channel_recv, open, read, write, close, clock_gettime, sleep_until, sysinfo
      - ✅ Build integration: `basin_kernel_module` added to `build.zig`
-     - ✅ Tiger Style: Comprehensive assertions, explicit type safety, "why" comments, function length limits
+     - ✅ Grain Style: Comprehensive assertions, explicit type safety, "why" comments, function length limits
    - **Core Syscalls** (Phase 1 - Ready for Implementation): `spawn`, `exit`, `yield`, `map`, `unmap`, `open`, `read`, `write`, `close`
    - **Future Syscalls** (Phase 2): `channel_create`, `channel_send`, `channel_recv`, `wait`, `sleep_until`, `protect`, `clock_gettime`, `sysinfo`
    - **SBI vs Kernel Syscalls**: SBI handles platform services (timer, console, reset) via ECALL function ID < 10, kernel syscalls handle kernel services (process, memory, I/O) via ECALL function ID >= 10
@@ -83,7 +115,7 @@ our Tahoe aesthetic, reminding us to keep ethical fashion signal in view
      - **Clone Location**: `~/github/{username}/{repo}/` (external to xy workspace)
      - **Reference**: See `docs/cascadeos_analysis.md`, `docs/pluto_analysis.md`, `docs/aero_analysis.md`
    - **RISC-V SBI Integration** 🔥 **CRITICAL PRIORITY** 🎯 **NEW** ✅ **CORE COMPLETE**:
-     - **Our Own Tiger Style SBI Wrapper**: Created `src/kernel_vm/sbi.zig` - minimal, Tiger Style compliant (inspired by CascadeOS/zig-sbi, MIT licensed)
+     - **Our Own Grain Style SBI Wrapper**: Created `src/kernel_vm/sbi.zig` - minimal, Grain Style compliant (inspired by CascadeOS/zig-sbi, MIT licensed)
      - **SBI Purpose**: Platform runtime services (timer, console, reset, IPI) - different from kernel syscalls
      - **Integration Complete**: SBI calls integrated into VM ECALL handler ✅
      - **ECALL Dispatch**: VM dispatches ECALL to SBI (function ID < 10) or kernel syscalls (function ID >= 10) ✅
@@ -96,7 +128,7 @@ our Tahoe aesthetic, reminding us to keep ethical fashion signal in view
      - **Priority 1: Implement `unmap` Syscall** ✅ **COMPLETE**:
        - ✅ Validate region address (page-aligned, user space, VM memory bounds)
        - ✅ Return success/error appropriately
-       - ✅ Comprehensive assertions (Tiger Style)
+       - ✅ Comprehensive assertions (Grain Style)
        - Location: `src/kernel/basin_kernel.zig` → `syscall_unmap`
      - **Priority 2: Expand ISA with Bitwise Operations** ✅ **COMPLETE**:
        - ✅ OR instruction (funct3=0b110): execute_or function + dispatch + test
@@ -109,14 +141,14 @@ our Tahoe aesthetic, reminding us to keep ethical fashion signal in view
        - ✅ `read`: Validate handle, buffer pointer/length, return stub bytes_read=0
        - ✅ `write`: Validate handle, data pointer/length, return stub bytes_written=0
        - ✅ `close`: Validate handle, return stub success
-       - ✅ Comprehensive assertions (Tiger Style)
+       - ✅ Comprehensive assertions (Grain Style)
        - Location: `src/kernel/basin_kernel.zig` → syscall functions
      - **Next Phase: Complete Phase 1 & Expand Foundation** 🔥 **IN PROGRESS**:
        - **Priority 4: Complete Phase 1 - Implement `spawn` Syscall** ✅ **COMPLETE**:
          - ✅ Validate executable pointer/length (ELF header size minimum)
          - ✅ Validate args pointer/length (can be zero for no args)
          - ✅ Return stub process ID (1)
-         - ✅ Comprehensive assertions (Tiger Style)
+         - ✅ Comprehensive assertions (Grain Style)
          - ✅ **Phase 1 Complete: 9/9 core syscalls implemented!**
          - Location: `src/kernel/basin_kernel.zig` → `syscall_spawn`
        - **Priority 5: Expand ISA - Shift Operations** ✅ **COMPLETE**:
@@ -135,17 +167,17 @@ our Tahoe aesthetic, reminding us to keep ethical fashion signal in view
          - ✅ `channel_create`: Return stub channel ID (1)
          - ✅ `channel_send`: Validate channel ID, data pointer/length, return stub success
          - ✅ `channel_recv`: Validate channel ID, buffer pointer/length, return stub bytes_received=0
-         - ✅ Comprehensive assertions (Tiger Style)
+         - ✅ Comprehensive assertions (Grain Style)
          - ✅ **Phase 2 Complete: 8/8 syscalls implemented!**
          - Location: `src/kernel/basin_kernel.zig` → syscall functions
-       - **Foundation Implementation** ✅ **ALL PHASES COMPLETE** 🎉:
+       - **Next Phase: Foundation Implementation** 🔥 **IN PROGRESS**:
          - **Phase 3: Memory Management Foundation** ✅ **COMPLETE**:
            - ✅ Implemented mapping table (static array, max 256 entries)
            - ✅ Updated map/unmap/protect syscalls to use actual table
            - ✅ Track memory mappings (address, size, flags)
            - ✅ Validate no overlaps, proper allocation/deallocation
            - ✅ Simple allocator for kernel-chosen addresses (next_alloc_addr)
-           - ✅ Comprehensive assertions (Tiger Style)
+           - ✅ Comprehensive assertions (Grain Style)
            - ✅ Zero compiler warnings, all tests passing
            - Location: `src/kernel/basin_kernel.zig` → `MemoryMapping` struct, `mappings` table
          - **Phase 4: File System Foundation** ✅ **COMPLETE**:
@@ -153,68 +185,123 @@ our Tahoe aesthetic, reminding us to keep ethical fashion signal in view
            - ✅ Updated open/read/write/close syscalls to use actual table
            - ✅ In-memory file system (no disk yet)
            - ✅ Track file handles (path, flags, position, buffer)
-           - ✅ Simple allocator for handle IDs (next_handle_id, 1-based)
-           - ✅ Comprehensive assertions (Tiger Style)
-           - ✅ Zero compiler warnings, all tests passing
+           - ✅ Comprehensive assertions (Grain Style)
+           - ✅ All fuzz tests passing (006, 007)
            - Location: `src/kernel/basin_kernel.zig` → `FileHandle` struct, `handles` table
-         - **Phase 5: Process Management Foundation** ✅ **COMPLETE**:
-           - ✅ Implemented process table (static array, max 16 entries)
-           - ✅ Updated spawn/wait syscalls to use actual table
-           - ✅ Track processes (ID, executable, entry point, state, exit status)
-           - ✅ Simple allocator for process IDs (next_process_id, 1-based)
-           - ✅ Comprehensive assertions (Tiger Style)
-           - ✅ Zero compiler warnings, all tests passing
-           - Location: `src/kernel/basin_kernel.zig` → `ProcessEntry` struct, `processes` table
-         - **Phase 6: IPC Foundation** ✅ **COMPLETE**:
-           - ✅ Implemented channel table (static array, max 32 entries)
-           - ✅ Updated channel_create/send/recv syscalls to use actual table
-           - ✅ Message queues (circular buffers, max 32 messages, 64KB per message)
-           - ✅ Simple allocator for channel IDs (next_channel_id, 1-based)
-           - ✅ Comprehensive assertions (Tiger Style)
-           - ✅ Zero compiler warnings, all tests passing
-           - Location: `src/kernel/basin_kernel.zig` → `ChannelEntry` struct, `channels` table, `MessageQueue` struct
-         - **Phase 7: Timer Integration** ✅ **COMPLETE**:
-           - ✅ Implemented timer state tracking (system_time_ns)
-           - ✅ Updated clock_gettime syscall to use timer state
-           - ✅ Updated sleep_until syscall to use timer state
-           - ✅ Comprehensive assertions (Tiger Style)
-           - ✅ Zero compiler warnings, all tests passing
-           - Location: `src/kernel/basin_kernel.zig` → `system_time_ns` field
-         - **Foundation Summary**: All 5 foundation phases complete (Phase 3-7) ✅
-           - **Total Syscalls**: 17/17 implemented with actual table-based operations
-           - **Total Tables**: 4 static tables (mappings, handles, processes, channels)
-           - **Total Instructions**: 15 RISC-V instructions implemented
-           - **Total Tests**: 005 fuzz (6 categories), 006 fuzz (7 categories), VM tests (14 tests)
-           - **Status**: Kernel foundation complete, ready for further development
-       - **Next Phase: Testing & Enhancement** 🔥 **IN PROGRESS** 🎯 **CURRENT PRIORITY**:
-         - **007 Fuzz Test: File System Foundation** 🔥 **HIGH PRIORITY**:
-           - Create randomized fuzz test for open/read/write/close operations
-           - Test handle table operations, edge cases, state consistency
-           - Follow same pattern as 006 fuzz test
-           - **Location**: `tests/007_fuzz.zig` → file system fuzz testing
-         - **008 Fuzz Test: Process Management Foundation** 🔥 **MEDIUM PRIORITY**:
-           - Create randomized fuzz test for spawn/wait operations
-           - Test process table operations, edge cases, state consistency
-           - **Location**: `tests/008_fuzz.zig` → process management fuzz testing
-         - **009 Fuzz Test: IPC Foundation** 🔥 **MEDIUM PRIORITY**:
-           - Create randomized fuzz test for channel_create/send/recv operations
-           - Test channel table operations, message queues, edge cases
-           - **Location**: `tests/009_fuzz.zig` → IPC fuzz testing
-         - **010 Fuzz Test: Timer Integration** 🔥 **MEDIUM PRIORITY**:
-           - Create randomized fuzz test for clock_gettime/sleep_until operations
-           - Test timer state tracking, time conversions, edge cases
-           - **Location**: `tests/010_fuzz.zig` → timer fuzz testing
-       - **Future Enhancements** 🔥 **NEXT PRIORITY**:
-         - **ISA Expansion**: Additional RISC-V instructions (MUL, DIV, etc.)
-         - **ELF Loader**: Parse ELF headers for process spawning
-         - **SBI Timer Integration**: Real hardware timer support
-         - **Debug Interface**: Register viewer, memory inspector, GDB stub
+         - **RISC-V Instruction Set Expansion** ✅ **COMPLETE**:
+           - ✅ Load instructions: LB, LH, LW, LD, LBU, LHU, LWU (7 total)
+           - ✅ Store instructions: SB, SH, SW, SD (4 total)
+           - ✅ Jump instructions: JAL, JALR (2 total)
+           - ✅ Branch instructions: BNE, BLT, BGE, BLTU, BGEU (5 total)
+           - ✅ Total: 33 instructions (15 base + 18 new)
+           - ✅ All instructions include comprehensive contracts (alignment, bounds checking, sign/zero extension)
+           - ✅ Location: `src/kernel_vm/vm.zig` → instruction dispatch + execute functions
+         - **VM-Kernel Integration Layer** ✅ **COMPLETE**:
+           - ✅ Created `src/kernel_vm/integration.zig` with comprehensive contracts
+           - ✅ Implemented `Integration` struct for VM-kernel coordination
+           - ✅ Implemented syscall handler bridge (SyscallResult ↔ u64)
+           - ✅ Implemented `loadUserspaceELF()` with stack setup and argv support
+           - ✅ Module exports: `Integration` and `loadUserspaceELF` exported from `kernel_vm.zig`
+           - ✅ Integration tests: 5/5 tests passing (`tests/011_integration_test.zig`)
+           - ✅ Build integration: `zig build integration-test` command
+           - Location: `src/kernel_vm/integration.zig`
+         - **Userspace Standard Library** ✅ **COMPLETE**:
+           - ✅ Created `src/userspace/stdlib.zig` with syscall wrappers
+           - ✅ Basic file system functions (open, read, write, close, print)
+           - ✅ Inline assembly for ECALL instruction (RISC-V syscall convention)
+           - ✅ Comprehensive contracts and error handling
+           - Location: `src/userspace/stdlib.zig`
+         - **Hello World Userspace Program** 🔥 **IN PROGRESS** (~85% complete):
+           - ✅ Compiled Zig "Hello World" for RISC-V64 successfully
+           - ✅ Created userspace linker script (`linker_scripts/userspace.ld`)
+           - ✅ Build step: `zig build hello-world`
+           - ✅ Binary: `zig-out/bin/hello_world` (RISC-V64 ELF executable, 2.5MB)
+           - ✅ **Static Allocation Fix**: Changed VM allocation from stack to heap to avoid stack overflow (4MB struct)
+           - ✅ **PIE Entry Point Fix**: Fixed ELF loader to handle position-independent executables (entry point 0x0 → first PT_LOAD vaddr 0x10000)
+           - ✅ **VM Execution**: VM successfully starts and executes instructions
+           - ⏳ **Current**: Debugging opcode 0x00 instruction (instruction `0x38231400` with funct3=1, funct7=0x1c)
+           - ⏳ **Next**: Implement opcode 0x00 handling for Zig compiler compatibility
+           - Location: `examples/hello_world.zig`
+           - **Reference**: `docs/userspace_roadmap.md` for detailed progress tracking
+         - **Next Steps: Hello World Execution** 🔥 **CURRENT PRIORITY** (Sequential Order):
+           - **Step 1: Fix Opcode 0x00 Instruction Handling** ⏳ **IN PROGRESS**:
+             - **Issue**: Instruction `0x38231400` has opcode 0x00 (invalid for 32-bit RISC-V)
+             - **Analysis**: funct3=1 (SLL), funct7=0x1c (non-standard) - Zig compiler compatibility issue
+             - **Solution**: Add opcode 0x00 handler that decodes as R-type instruction (treat funct3=1 as SLL)
+             - **Location**: `src/kernel_vm/vm.zig` → instruction dispatch switch statement
+             - **Status**: Implementing opcode 0x00 handler with R-type decoding fallback
+           - **Step 2: Complete Hello World Execution**:
+             - Run Hello World program to completion in VM
+             - Capture syscall output (write syscall arguments)
+             - Verify "Hello, World!" output
+             - Location: `tests/012_hello_world_test.zig`
+           - **Step 3: Verify RISC-V Zig Code Execution**:
+             - Test more complex Zig programs in VM
+             - Verify correct RISC-V instruction semantics
+             - Validate VM matches Framework 13 RISC-V hardware behavior
+           - **Reference**: `docs/userspace_roadmap.md` - Week 3 status, ~85% complete
+         - **Phase 5: Process Management Foundation** 🔥 **MEDIUM PRIORITY**:
+           - Implement process table (static array, max 16 entries)
+           - Update spawn/wait syscalls to use actual table
+           - Track processes (ID, executable, entry point, state, exit status)
+           - Location: `src/kernel/basin_kernel.zig` → add process table structure
+         - **Phase 6: IPC Foundation** 🔥 **MEDIUM PRIORITY**:
+           - Implement channel table (static array, max 32 entries)
+           - Update channel_create/send/recv syscalls to use actual table
+           - Message queues (circular buffers)
+           - Location: `src/kernel/basin_kernel.zig` → add channel table structure
+         - **Phase 7: Timer Integration** 🔥 **MEDIUM PRIORITY**:
+           - Integrate SBI timer for time operations
+           - Update clock_gettime/sleep_until syscalls to use timer
+           - Track system time (nanoseconds since boot)
+           - Location: `src/kernel/basin_kernel.zig` → add timer state
+         - **Phase 8: VM Shutdown & User Management** ✅ **COMPLETE**:
+           - ✅ **VM Shutdown**: SBI LEGACY_SHUTDOWN (0x8) implemented, VM halts on shutdown
+           - ✅ **User Management**: Root (uid=0) and `xy` user (uid=1000) implemented
+           - ✅ **User Table**: Static allocation (max 256 users), `User` and `UserContext` structs
+           - ✅ **User Functions**: `find_user_by_uid()`, `find_user_by_name()`, `set_current_user()`
+           - ✅ **Path Structure**: Standard Unix-like paths (`/bin`, `/home`, `/etc`, `/zix/store`)
+           - ✅ **Sudo Permissions**: Capability-based sudo (CAPABILITY_SUDO, CAPABILITY_SHUTDOWN) - architecture defined
+           - ✅ **Grain Style**: Explicit types (u32 not usize), static allocation, comprehensive assertions
+           - Location: `src/kernel/basin_kernel.zig` → user management complete
+           - Reference: `docs/vm_shutdown_user_management.md` for comprehensive design
+         - **Phase 9: z6 Process Supervision** ✅ **COMPLETE**:
+           - ✅ **z6 Supervisor**: s6-like process supervision daemon written in Zig
+           - ✅ **Service Management**: Start/stop/restart services, dependency resolution
+           - ✅ **Restart Policies**: always, never, on-failure with crash rate limiting (max 10/min)
+           - ✅ **Service Directories**: `/etc/z6/service/` with `run` and `finish` scripts (architecture defined)
+           - ✅ **Logging**: Capture stdout/stderr, route to kernel logging syscall (architecture defined)
+           - ✅ **Grain Style**: Single-threaded, static allocation (64 services max), deterministic
+           - ✅ **Core Implementation**: `Z6Supervisor`, `ServiceDef`, `ServiceInstance`, supervision loop
+           - Location: `src/userspace/z6.zig` → supervisor daemon complete
+           - Reference: `docs/vm_shutdown_user_management.md` for z6 architecture
+         - **Phase 10: Zix Build System** 🔥 **LONG-TERM PRIORITY**:
+           - **Build Store**: Content-addressed store (`/zix/store/{hash}-{name}`)
+           - **Build Recipes**: Deterministic builds with SHA-256 hashing
+           - **GrainDB Integration**: Immutable build store using graindb
+           - **Referential Transparency**: Same inputs → same outputs
+           - **Name**: **Zix** - Zig + Nix-inspired build system
+           - Location: `src/userspace/zix/` → build system, `src/userspace/graindb/` → database
+           - Reference: `docs/vm_shutdown_user_management.md` for Zix build system design
+         - **Phase 11: Build-Essential Utilities** 🔥 **IN PROGRESS**:
+           - ✅ **Core Utilities**: Common shell utilities rewritten in Zig (like Debian's `build-essential`)
+           - ✅ **Implemented**: `cat` (with file handling), `echo` (basic), `ls` (stub), `mkdir` (stub)
+           - ✅ **Build System**: All utilities compile to RISC-V64 freestanding binaries
+           - ✅ **Argument Parsing Helper**: `args.zig` module created for common argument parsing
+           - 🔄 **In Progress**: Argument parsing from RISC-V registers (a0=argc, a1=argv)
+           - **Pending**: `rm`, `cp`, `mv`, `grep`, `sed`, `awk` (Zig versions)
+           - **Pending**: `make` (Zig version), `cc` wrapper for Zig compiler, `ar`, `ld` (linker)
+           - **Pending**: Directory syscalls (`readdir`, `opendir`, `mkdir`) for `ls` and `mkdir`
+           - **Grain Style**: Single-threaded, static allocation, deterministic, type-safe
+           - **Zix Integration**: All utilities built via Zix, stored in `/zix/store/` (when Zix is implemented)
+           - **Location**: `src/userspace/utils/core/` → core utilities, `src/userspace/build-tools/` → build tools
+           - **Reference**: Inspired by Debian `build-essential`, rewritten in pure Zig for Grain Basin
          - **Reference**: `docs/next_implementation_phases.md` for detailed phase plans
      - **Single-Threaded Architecture**: ✅ All layers single-threaded, no locks, deterministic
      - **Safety-First Patterns**: ✅ Comprehensive assertions, type-safe interfaces, explicit error handling, static allocation
      - **RAM-Aware Configuration**: ✅ VM memory configurable (4MB default, 64MB max), documented
      - **Debug Interface**: Register viewer, memory inspector, GDB stub (future)
-   - **Tiger Style Requirements**:
+   - **Grain Style Requirements**:
      - Static allocation for VM state structures where possible ✅
      - Comprehensive assertions for memory access, instruction decoding ✅
      - Deterministic execution: Same kernel state → same output ✅
@@ -249,7 +336,7 @@ our Tahoe aesthetic, reminding us to keep ethical fashion signal in view
    - ✅ Implemented `acceptsFirstResponder` method (returns YES for keyboard events)
    - ✅ Added window delegate methods: `windowDidBecomeKey:`, `windowDidResignKey:`
    - ✅ Event routing: Cocoa events → C routing functions → Zig event handlers
-   - ✅ Tiger Style: Comprehensive assertions, pointer validation, bounds checking
+   - ✅ Grain Style: Comprehensive assertions, pointer validation, bounds checking
    - ✅ Static allocation: Minimal dynamic allocation, static class names, associated objects
    - ✅ View hierarchy: TahoeView (content view, handles events) → NSImageView (subview, renders images)
    - ✅ Code quality: Comments explain "why" not "what", functions <70 lines, <100 columns
@@ -258,7 +345,7 @@ our Tahoe aesthetic, reminding us to keep ethical fashion signal in view
 2. **Animation/Update Loop (macOS Tahoe)** 🔥 **HIGH PRIORITY** ✅ **COMPLETE**
    - ✅ Platform VTable: `startAnimationLoop`, `stopAnimationLoop` methods added
    - ✅ Window struct: `animation_timer`, `tick_callback`, `tick_user_data` fields added
-   - ✅ Tick callback routing: `routeTickCallback` implemented with Tiger Style assertions
+   - ✅ Tick callback routing: `routeTickCallback` implemented with Grain Style assertions
    - ✅ Integration: wired into `tahoe_app.zig` and `tahoe_window.zig`
    - ✅ Timer infrastructure: `TahoeTimerTarget` class created dynamically using Objective-C runtime API
    - ✅ Timer method implementation: `tahoeTimerTick:` method implemented using `class_addMethod` to call `routeTickCallback`
@@ -273,7 +360,7 @@ our Tahoe aesthetic, reminding us to keep ethical fashion signal in view
    - ✅ Resize events route to Zig `routeWindowDidResize` function
    - ✅ Window dimensions updated on resize (buffer remains static 1024x768)
    - ✅ NSImageView automatically scales image to fit window size
-   - ✅ Tiger Style assertions for pointer validation and dimension bounds checking
+   - ✅ Grain Style assertions for pointer validation and dimension bounds checking
    - Files: `src/platform/macos_tahoe/window.zig`, `src/platform/macos_tahoe/objc_wrapper.c`
 
 4. **Text Rendering Integration (macOS Tahoe)** ⭐ **MEDIUM PRIORITY**
@@ -335,7 +422,7 @@ our Tahoe aesthetic, reminding us to keep ethical fashion signal in view
 11. **Zig-Specific Agent Prompts**
    - Comptime-aware code generation
    - Error union handling suggestions
-   - TigerStyle compliance checks
+   - GrainStyle compliance checks
    - Memory safety analysis suggestions
    - Files: `src/aurora_agent/prompts.zig`
 
@@ -423,8 +510,7 @@ our Tahoe aesthetic, reminding us to keep ethical fashion signal in view
 matklad.github.io/2025/11/10/readonly-characters.html)
 [^vibe-terminal]: [Matklad, "Vibe Coding Terminal Editor"](https://
 matklad.github.io/2025/08/31/vibe-coding-terminal-editor.html)
-[^vegan-tiger]: [Vegan Tiger — ethical streetwear inspiration](https://
-www.instagram.com/vegan_tiger/)
+[^etsy]: [Etsy.com — handmade marketplace and creative community](https://www.etsy.com/)
 [^river-overview]: [River compositor philosophy](https://github.com/
 riverwm/river)
 [^jepsen-tb]: [Jepsen, "TigerBeetle 0.16.11"](https://jepsen.io/analyses/

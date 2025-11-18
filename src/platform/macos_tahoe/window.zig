@@ -309,7 +309,7 @@ pub const Window = struct {
         // Why: Window must have a first responder to receive keyboard events.
         const makeFirstResponderSel = c.sel_getUid("makeFirstResponder:");
         std.debug.assert(makeFirstResponderSel != null);
-        const makeFirstResponderResult = cocoa.objc_msgSend1(@ptrCast(nsWindow), makeFirstResponderSel, @ptrCast(tahoeView));
+        const makeFirstResponderResult = cocoa.objc_msgSend1(@ptrCast(nsWindow), makeFirstResponderSel, @ptrCast(initTahoeView));
         // Assert: makeFirstResponder should succeed (returns YES/true).
         std.debug.assert(makeFirstResponderResult != null);
         std.debug.print("[window] Made TahoeView first responder for keyboard events.\n", .{});

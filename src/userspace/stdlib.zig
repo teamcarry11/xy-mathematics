@@ -31,6 +31,9 @@ pub const Syscall = enum(u32) {
     unlink = 34,
     rename = 35,
     mkdir = 36,
+    opendir = 37,
+    readdir = 38,
+    closedir = 39,
 
     // Time & Scheduling
     clock_gettime = 40,
@@ -224,6 +227,59 @@ pub fn mkdir(path: [*:0]const u8) i64 {
     }
 
     const result = syscall(.mkdir, @intFromPtr(path), len, 0, 0);
+
+    // Convert u64 result to i64 (negative = error, non-negative = success)
+    return @as(i64, @bitCast(result));
+}
+
+/// Open a directory.
+/// Contract:
+///   Input: path must be null-terminated string
+///   Output: Returns directory handle (non-negative), or negative error code
+///   Errors: Directory not found, permission denied
+/// Why: Directory access for userspace programs.
+pub fn opendir(path: [*:0]const u8) i64 {
+    // Calculate path length (null-terminated string).
+    var len: u64 = 0;
+    while (path[len] != 0) : (len += 1) {
+        // Bounds check (prevent infinite loop).
+        if (len >= 256) {
+            return -2; // invalid_argument (path too long)
+        }
+    }
+
+    const result = syscall(.opendir, @intFromPtr(path), len, 0, 0);
+
+    // Convert u64 result to i64 (negative = error, non-negative = success)
+    return @as(i64, @bitCast(result));
+}
+
+/// Read a directory entry.
+/// Contract:
+///   Input: dir_handle must be valid directory handle, entry_buffer must be valid slice
+///   Output: Returns number of bytes written to buffer, or 0 if end of directory, or negative error code
+///   Errors: Invalid handle, permission denied
+/// Why: Directory listing for userspace programs.
+pub fn readdir(dir_handle: u32, entry_buffer: []u8) i64 {
+    // Contract: entry_buffer.len must be reasonable (prevent overflow).
+    if (entry_buffer.len > 0x7FFFFFFF) {
+        return -2; // invalid_argument (length too large)
+    }
+
+    const result = syscall(.readdir, dir_handle, @intFromPtr(entry_buffer.ptr), entry_buffer.len, 0);
+
+    // Convert u64 result to i64 (negative = error, 0 = end of directory, positive = bytes written)
+    return @as(i64, @bitCast(result));
+}
+
+/// Close a directory handle.
+/// Contract:
+///   Input: dir_handle must be valid directory handle
+///   Output: Returns 0 on success, or negative error code
+///   Errors: Invalid handle
+/// Why: Resource cleanup for userspace programs.
+pub fn closedir(dir_handle: u32) i64 {
+    const result = syscall(.closedir, dir_handle, 0, 0, 0);
 
     // Convert u64 result to i64 (negative = error, non-negative = success)
     return @as(i64, @bitCast(result));

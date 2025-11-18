@@ -557,7 +557,7 @@ pub const TahoeSandbox = struct {
         
         // Step RISC-V VM if running.
         // Why: Execute kernel instructions continuously during VM execution.
-        if (self.vm) |*vm| {
+        if (self.vm) |vm| {
             if (vm.state == .running) {
                 // Step VM (execute one instruction).
                 vm.step() catch |err| {

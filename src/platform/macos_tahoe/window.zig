@@ -409,12 +409,20 @@ pub const Window = struct {
         std.debug.assert(setImageSel != null);
         cocoa.objc_msgSendVoid1(@ptrCast(imageView), setImageSel, nsImage);
         
+        // Set image scaling to none (pixel-perfect rendering).
+        // Why: Ensure image is displayed at 1:1 scale without interpolation.
+        const setImageScalingSel = c.sel_getUid("setImageScaling:");
+        std.debug.assert(setImageScalingSel != null);
+        // NSImageScaleNone = 0 (from AppKit), pass as c_ulong.
+        const NSImageScaleNone: c_ulong = 0;
+        _ = cocoa.objc_msgSend1Uint(@ptrCast(imageView), setImageScalingSel, NSImageScaleNone);
+        
         // Mark view as needing display.
         const setNeedsDisplaySel = c.sel_getUid("setNeedsDisplay:");
         std.debug.assert(setNeedsDisplaySel != null);
         cocoa.objc_msgSendVoidBool(@ptrCast(tahoeView), setNeedsDisplaySel, true);
         
-        std.debug.print("[window] Set NSImage on NSImageView.\n", .{});
+        std.debug.print("[window] Set NSImage on NSImageView (scaling: none).\n", .{});
     }
     
     /// Create CGImage from RGBA buffer.
@@ -487,9 +495,11 @@ pub const Window = struct {
         defer cg.CGDataProviderRelease(data_provider);
         
         // Create CGImage with BGRA format.
-        // kCGImageAlphaLast means alpha is in the last byte.
-        // On little-endian, BGRA bytes [B, G, R, A] form word 0xAARRGGBB.
-        const bitmap_info: u32 = cg.kCGImageAlphaLast | cg.kCGBitmapByteOrder32Little;
+        // Note: Core Graphics on macOS prefers premultiplied alpha for performance.
+        // kCGImageAlphaPremultipliedLast means: BGRA with premultiplied alpha.
+        // Since our alpha is always 255 (fully opaque), premultiplication doesn't change RGB values.
+        // kCGBitmapByteOrder32Little means: little-endian byte order (native on macOS).
+        const bitmap_info: u32 = cg.kCGImageAlphaPremultipliedLast | cg.kCGBitmapByteOrder32Little;
         const cg_image = cg.CGImageCreate(
             width,
             height,

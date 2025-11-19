@@ -51,8 +51,8 @@
 | project's mind.                                                         |
 |                                                                         |
 |                                                                         |
-|                                                                         |
-|                                                                         |
+| Style Guide:                                                            |
+| https://github.com/kae3g/grainkae3g/blob/main/docs/grain_style.md       |
 |                                                                         |
 |                                                                         |
 |                                                                         |

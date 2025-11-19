@@ -32,6 +32,16 @@ pub const TASKS = [_]Task{
     .{ .id = 9, .title = "Implement grainmirror strategy", .status = .done },
     .{ .id = 10, .title = "Locate teamshine05/graintime", .status = .done },
     .{ .id = 11, .title = "Calculate new graintime", .status = .done },
+    .{
+        .id = 13,
+        .title = "Build Graincard Generator Module",
+        .status = .in_progress,
+    },
+    .{
+        .id = 14,
+        .title = "Refactor entire codebase to grain_case naming",
+        .status = .todo,
+    },
 };
 
 pub const TASK_COUNT = TASKS.len;

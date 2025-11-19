@@ -288,7 +288,13 @@ names should be clear and descriptive. prefer clarity over brevity.
 
 #### variables
 
-use `snake_case` for variables and functions. be descriptive - `user_data`
+### naming conventions
+
+**grain_case**: the grain network's standard for all zig function and variable
+names. grain_case is identical to snake_case (lowercase with underscores),
+but the name reflects our philosophy: code that grows like grain.
+
+use `grain_case` for variables and functions. be descriptive - `user_data`
 is better than `ud`, `buffer_size` is better than `bufsz`.
 
 ```zig

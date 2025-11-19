@@ -1,62 +1,62 @@
-# Grainseed #007 - Frost
+# Grainseed #005 - Wild Edges
 
 ```
 +-------------------------------------------------------------------------+
 |                                                                         |
-|  GRAINSEED #007                                    Rarity: Rare (4%)    |
-|  Seed: 20251119                                    Height: 8 segments   |
-|  Type: Winter Wheat                                Lean: Straight       |
-|  Season: Winter                                    Leaves: 2            |
-|  Temperature: 28°F (-2°C)                                               |
+|  GRAINSEED #005                                    Rarity: Uncommon (7%)|
+|  Seed: 314159                                      Height: 10 segments  |
+|  Type: Edge-Habitat Wheat                          Lean: Slight Right   |
+|  Season: Summer                                    Leaves: 4            |
+|  Wild Habitat Distance: 2 feet (integrated ecosystem)                   |
 |                                                                         |
-|    *  *    *   *    *   *    *   *                                      |
-|  *    *  *   *   *    *   *    *   *                                    |
-|    *    *   *   *   *   *   *    *                                      |
-|  *   *    *   *   *   *   *   *    *                                    |
+|   🦋 <- Butterfly                                                       |
 |                                                                         |
 |                       .                                                 |
 |                     \ | /                                               |
 |                    --(@)--                                              |
 |                     / | \                                               |
 |                       |                                                 |
-|                       |                                                 |
 |                      (|                                                 |
 |                       |                                                 |
+|                       |)    (\/)                                        |
+|                       |    (o.o)  <- Ladybug (aphid predator)          |
+|                      (|    (> <)                                        |
+|                       |                                                 |
+|                       |)                                                |
 |                       |                                                 |
 |                       |                                                 |
-|                       |                                                 |
-|                       |                                                 |
-|                      (|                                                 |
 |                       |                                                 |
 |                     ~~~~~                                               |
 |                    ~~~~~~~                                              |
 |                   ~~~~~~~~~                                             |
-|              _______________                                            |
-|            /                 \                                          |
-|           |  FROZEN GROUND   |                                          |
-|            \_________________/                                          |
-|                                                                         |
-|  Growth Pattern: Dormant, cold-hardy survival mode                     |
-|  Photosynthesis: Minimal (2.1/10) - energy conservation                |
-|  Water Retention: Frozen (ice crystals in cells)                       |
-|  Soil Quality: Frozen loam, 6 inches deep                               |
-|  Cold Resistance: Exceptional (survives to -15°F)                       |
-|                                                                         |
-|  Harvest Prediction: 89 days (delayed by winter)                        |
-|  Yield Estimate: 1.4kg per stalk (reduced by cold stress)               |
+|                  ~~~~~~~~~~~                                            |
+|  ═══════════════════════════════════════════════════════════════       |
+|  ║ WILD HABITAT EDGE (2 ft from crop)                        ║         |
+|  ║ Native Grasses | Wildflowers | Shrubs | Beetle Banks      ║         |
+|  ═══════════════════════════════════════════════════════════════       |
 |                                                                         |
 |  ┌─────────────────────────────────────────────────────────────────┐   |
-|  │ WINTER CONDITIONS                                               │   |
+|  │ BENEFICIAL ORGANISM CENSUS                                      │   |
 |  ├─────────────────────────────────────────────────────────────────┤   |
-|  │ Current Temp: 28°F (-2°C)                                       │   |
-|  │ Wind Chill: 19°F (-7°C)                                         │   |
-|  │ Frost Depth: 6 inches                                           │   |
-|  │ Snow Cover: Light dusting                                       │   |
-|  │ Daylight Hours: 9.5 hours                                       │   |
-|  │ Survival Mechanism: Antifreeze proteins active                  │   |
+|  │ Ladybugs: 47/sq meter (aphid control)                           │   |
+|  │ Parasitoid Wasps: 23/sq meter (caterpillar control)             │   |
+|  │ Ground Beetles: 12/sq meter (slug/cutworm control)              │   |
+|  │ Lacewings: 8/sq meter (general predator)                        │   |
+|  │ Native Bees: 34 species (pollination services)                  │   |
+|  │ Spiders: 89/sq meter (pest suppression)                         │   |
 |  └─────────────────────────────────────────────────────────────────┘   |
 |                                                                         |
-|  "In winter's grip, grain waits. Spring will come."                     |
+|  Pest Damage: 0.8% (natural predator control)                           |
+|  Pesticide Applications: 0 (no-spray system)                            |
+|  Habitat Connectivity: 95% (continuous corridors)                       |
+|  Biodiversity Index: 9.1/10 (exceptional)                               |
+|                                                                         |
+|  Harvest Prediction: 43 days                                            |
+|  Yield Estimate: 2.6kg per stalk                                        |
+|  Ecosystem "Immune System": Fully functional                            |
+|                                                                         |
+|  "Wild edges protect the crop. Nature is the best farmer."              |
+|                                                                         |
 |                                                                         |
 |                                                                         |
 |                                                                         |

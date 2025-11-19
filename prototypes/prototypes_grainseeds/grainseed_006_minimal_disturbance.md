@@ -1,15 +1,17 @@
-# Grainseed #005 - Companion
+# Grainseed #006 - Minimal Disturbance
 
 ```
 +-------------------------------------------------------------------------+
 |                                                                         |
-|  GRAINSEED #005                                    Rarity: Uncommon (7%)|
-|  Seed: 314159                                      Height: 10 segments  |
-|  Type: Companion Wheat                             Lean: Slight Right   |
-|  Season: Summer                                    Leaves: 4            |
-|  Companions: Ladybug, Clover                                            |
+|  GRAINSEED #006                                    Rarity: Legendary (1%)|
+|  Seed: 1                                           Height: 15 segments  |
+|  Type: Ancient No-Till Einkorn                     Lean: Perfectly Str. |
+|  Season: Timeless                                  Leaves: 7            |
+|  Soil Disturbance: Zero for 10 years (pristine structure)               |
 |                                                                         |
-|                                                                         |
+|                    ═══════════                                          |
+|                   ║ UNDISTURBED ║                                       |
+|                    ═══════════                                          |
 |                                                                         |
 |                       .                                                 |
 |                     \ | /                                               |
@@ -18,46 +20,52 @@
 |                       |                                                 |
 |                      (|                                                 |
 |                       |                                                 |
-|                       |)    (\/)                                        |
-|                       |    (o.o)  <- Ladybug                            |
-|                      (|    (> <)                                        |
+|                       |)                                                |
+|                       |                                                 |
+|                      (|                                                 |
 |                       |                                                 |
 |                       |)                                                |
 |                       |                                                 |
+|                      (|                                                 |
+|                       |                                                 |
+|                       |)                                                |
+|                       |                                                 |
+|                      (|                                                 |
+|                       |                                                 |
+|                       |)                                                |
+|                       |                                                 |
+|                      (|                                                 |
+|                       |                                                 |
+|                       |)                                                |
 |                       |                                                 |
 |                       |                                                 |
 |                     ~~~~~                                               |
 |                    ~~~~~~~                                              |
 |                   ~~~~~~~~~                                             |
 |                  ~~~~~~~~~~~                                            |
-|                                                                         |
-|        @   @                                                            |
-|       @@@@@@@  <- Clover patch                                          |
-|      @@@@@@@@@                                                          |
-|       @@@@@@@                                                           |
-|        @   @                                                            |
-|                                                                         |
-|  Growth Pattern: Symbiotic ecosystem, pest-resistant                   |
-|  Photosynthesis: Enhanced (8.7/10) via companion planting              |
-|  Water Retention: Excellent (clover moisture retention)                |
-|  Soil Quality: Nitrogen-enriched by clover                              |
-|  Pest Control: Natural (ladybug aphid management)                      |
-|                                                                         |
-|  Harvest Prediction: 43 days                                            |
-|  Yield Estimate: 2.6kg per stalk                                        |
+|                 ~~~~~~~~~~~~~                                           |
 |                                                                         |
 |  ┌─────────────────────────────────────────────────────────────────┐   |
-|  │ ECOSYSTEM DATA                                                  │   |
+|  │ SOIL STRUCTURE ANALYSIS (10 years no-till)                      │   |
 |  ├─────────────────────────────────────────────────────────────────┤   |
-|  │ Ladybugs: 3 (aphid control active)                              │   |
-|  │ Clover Coverage: 40% ground cover                               │   |
-|  │ Nitrogen Fixation: +12% soil enrichment                         │   |
-|  │ Beneficial Insects: High diversity                              │   |
-|  │ Pest Pressure: Minimal (0.2% crop damage)                       │   |
-|  │ Biodiversity Index: 8.4/10                                      │   |
+|  │ Aggregate Stability: 96% (near-perfect)                         │   |
+|  │ Macropore Volume: 18% (excellent aeration)                      │   |
+|  │ Fungal Hyphae Network: 2,400 ft/g soil (intact web)             │   |
+|  │ Earthworm Tunnels: 47 per sq ft (active bioturbation)           │   |
+|  │ Water Infiltration: 4.8 in/hr (vs 0.9 in/hr tilled)             │   |
+|  │ Soil Carbon: 8.1% (vs 3.2% conventional)                        │   |
 |  └─────────────────────────────────────────────────────────────────┘   |
 |                                                                         |
-|  "Grain grows best with friends."                                       |
+|  Planting Method: Direct seed into residue (no tillage)                 |
+|  Weed Management: Selective hand-weeding + living mulch                 |
+|  Nutrient Placement: Subsurface band (minimal disturbance)              |
+|  Mycorrhizal Network: Unbroken for 10 years                             |
+|                                                                         |
+|  Harvest Prediction: 38 days (fastest growth)                           |
+|  Yield Estimate: 3.1kg per stalk (highest yield)                        |
+|  Soil Resilience: Maximum (drought/flood tolerant)                      |
+|                                                                         |
+|  "Undisturbed soil is living soil. Living soil feeds the world."        |
 |                                                                         |
 |                                                                         |
 |                                                                         |

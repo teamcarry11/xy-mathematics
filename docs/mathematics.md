@@ -38,25 +38,6 @@ pub const Entry = struct {
 
 pub const ENTRIES = [_]Entry{
     .{
-        .id = 8,
-        .timestamp = "2025-11-19T08:42:00-08:00",
-        .title = "Twelve Grainseeds",
-        .content = 
-            \\Created 12 diverse grainseed prototypes (75x100 graincards).
-            \\
-            \\Each demonstrates unique ecological principles:
-            \\- Soil food web diversity
-            \\- Living roots year-round  
-            \\- Minimal disturbance
-            \\- Wild habitat integration
-            \\
-            \\Infused with ecological farming wisdom and botanical passion.
-            \\
-            \\Location: `prototypes/prototypes_grainseeds/` (symlinked to `grainseeds/`)
-        ,
-        .tags = &.{ .experiment, .proof, .glow_g2 },
-    },
-    .{
         .id = 7,
         .timestamp = "2025-11-19T08:20:00-08:00",
         .title = "GRAINSEED SIMULATOR 1997",

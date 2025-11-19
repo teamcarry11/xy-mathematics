@@ -1,17 +1,14 @@
-# Grainseed #006 - Ancient
+# Grainseed #010 - Fungal Network
 
 ```
 +-------------------------------------------------------------------------+
 |                                                                         |
-|  GRAINSEED #006                                    Rarity: Legendary (1%)|
-|  Seed: 1                                           Height: 15 segments  |
-|  Type: Ancient Einkorn                             Lean: Perfectly Str. |
-|  Season: Timeless                                  Leaves: 7            |
-|  Age: 10,000 years (cultivated lineage)                                 |
+|  GRAINSEED #010                                    Rarity: Rare (5%)    |
+|  Seed: 777777                                      Height: 11 segments  |
+|  Type: Mycorrhizal Wheat                           Lean: Straight       |
+|  Season: Autumn                                    Leaves: 4            |
+|  Fungal Partnership: 96% root colonization (symbiotic)                  |
 |                                                                         |
-|                    ═══════════                                          |
-|                   ║ ANCIENT ║                                           |
-|                    ═══════════                                          |
 |                                                                         |
 |                       .                                                 |
 |                     \ | /                                               |
@@ -30,42 +27,46 @@
 |                       |                                                 |
 |                       |)                                                |
 |                       |                                                 |
-|                      (|                                                 |
-|                       |                                                 |
-|                       |)                                                |
-|                       |                                                 |
-|                      (|                                                 |
-|                       |                                                 |
-|                       |)                                                |
-|                       |                                                 |
 |                       |                                                 |
 |                     ~~~~~                                               |
 |                    ~~~~~~~                                              |
 |                   ~~~~~~~~~                                             |
-|                  ~~~~~~~~~~~                                            |
-|                 ~~~~~~~~~~~~~                                           |
-|                                                                         |
-|  Growth Pattern: Perfect vertical alignment (genetic purity)            |
-|  Photosynthesis: Optimal (9.8/10) - evolved efficiency                 |
-|  Water Retention: Exceptional (drought-resistant genes)                |
-|  Soil Quality: Adapts to any soil type                                  |
-|  Genetic Stability: 99.97% (minimal drift over millennia)               |
-|                                                                         |
-|  Harvest Prediction: 38 days (fastest growth)                           |
-|  Yield Estimate: 3.1kg per stalk (highest yield)                        |
+|              ═════════════════                                          |
+|            ║ FUNGAL NETWORK  ║                                          |
+|              ═════════════════                                          |
+|         ~~~{fungal hyphae extending 20 ft}~~~                           |
+|        ~~~{connecting 47 plants in network}~~~                          |
+|       ~~~{nutrient & water sharing active}~~~                           |
 |                                                                         |
 |  ┌─────────────────────────────────────────────────────────────────┐   |
-|  │ HISTORICAL DATA                                                 │   |
+|  │ MYCORRHIZAL SYMBIOSIS METRICS                                   │   |
 |  ├─────────────────────────────────────────────────────────────────┤   |
-|  │ Origin: Fertile Crescent, 8000 BCE                              │   |
-|  │ Lineage: Unbroken for 10,000 years                              │   |
-|  │ First Cultivators: Neolithic farmers                            │   |
-|  │ Genetic Markers: 47 unique ancient alleles                      │   |
-|  │ Cultural Significance: Foundation of civilization               │   |
-|  │ Preservation Status: Critical heritage variety                  │   |
+|  │ Fungal Colonization: 96% of root length                         │   |
+|  │ Hyphal Density: 2,400 ft/gram soil                              │   |
+|  │ Phosphorus Uptake: +340% vs non-mycorrhizal                     │   |
+|  │ Water Access: +180% effective root zone                         │   |
+|  │ Disease Resistance: +67% (fungal protection)                    │   |
+|  │ Network Size: 47 plants connected (resource sharing)            │   |
 |  └─────────────────────────────────────────────────────────────────┘   |
 |                                                                         |
-|  "The first grain. The eternal grain."                                  |
+|  Soil Disturbance: Minimal (preserves fungal network)                   |
+|  Fungicide Use: 0 (would destroy symbiosis)                             |
+|  Carbon Trade: Plant provides 15% photosynthate to fungi                |
+|  Nutrient Trade: Fungi provides P, N, Zn, Cu to plant                   |
+|                                                                         |
+|  Harvest Prediction: 45 days                                            |
+|  Yield Estimate: 2.8kg per stalk                                        |
+|  Network Resilience: High (shared resources buffer stress)              |
+|                                                                         |
+|  "The wood wide web feeds the grain. Fungi are farmers too."            |
+|                                                                         |
+|                                                                         |
+|                                                                         |
+|                                                                         |
+|                                                                         |
+|                                                                         |
+|                                                                         |
+|                                                                         |
 |                                                                         |
 |                                                                         |
 |                                                                         |

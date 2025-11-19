@@ -1,17 +1,14 @@
-# Grainseed #010 - Flood Plain
+# Grainseed #011 - Residue Builder
 
 ```
 +-------------------------------------------------------------------------+
 |                                                                         |
-|  GRAINSEED #010                                    Rarity: Rare (5%)    |
-|  Seed: 777777                                      Height: 10 segments  |
-|  Type: Wetland Rice                                Lean: Straight       |
-|  Season: Monsoon                                   Leaves: 4            |
-|  Water Level: 8 inches (flooded)                                        |
+|  GRAINSEED #011                                    Rarity: Common (10%) |
+|  Seed: 888888                                      Height: 10 segments  |
+|  Type: High-Biomass Rye                            Lean: Slight Right   |
+|  Season: Spring                                    Leaves: 5            |
+|  Organic Residue: Weekly additions (continuous feeding)                 |
 |                                                                         |
-|  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                       |
-|  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                       |
-|  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                       |
 |                                                                         |
 |                       .                                                 |
 |                     \ | /                                               |
@@ -26,37 +23,44 @@
 |                       |                                                 |
 |                       |)                                                |
 |                       |                                                 |
+|                      (|                                                 |
 |                       |                                                 |
-|  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                     |
-|  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                     |
-|  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                     |
-|                 FLOODED PADDY                                           |
-|  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                     |
-|  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                     |
-|                                                                         |
-|  Growth Pattern: Aquatic adaptation, aerenchyma tissue                 |
-|  Photosynthesis: Water-filtered (6.8/10)                               |
-|  Water Retention: Saturated (anaerobic root zone)                      |
-|  Soil Quality: Alluvial silt, nutrient-rich sediment                    |
-|  Flood Tolerance: Exceptional (thrives in standing water)               |
-|  Methane Production: Minimal (beneficial bacteria balance)              |
-|  Rhizosphere Activity: Aquatic microbes active                          |
-|                                                                         |
-|  Harvest Prediction: 51 days                                            |
-|  Yield Estimate: 2.4kg per stalk                                        |
+|                       |)                                                |
+|                       |                                                 |
+|                     ~~~~~                                               |
+|                    ~~~~~~~                                              |
+|                   ~~~~~~~~~                                             |
+|              ═══════════════════                                        |
+|            ║ RESIDUE LAYERS    ║                                        |
+|              ═══════════════════                                        |
+|         Week 1: Fresh clippings (high N)                                |
+|         Week 2: Partially decomposed (C:N 25:1)                         |
+|         Week 3: Well-decomposed (C:N 15:1)                              |
+|         Week 4+: Humus formation (stable C)                             |
 |                                                                         |
 |  ┌─────────────────────────────────────────────────────────────────┐   |
-|  │ WETLAND ECOLOGY                                                 │   |
+|  │ CONTINUOUS RESIDUE ADDITION SYSTEM                              │   |
 |  ├─────────────────────────────────────────────────────────────────┤   |
-|  │ Water Depth: 8 inches                                           │   |
-|  │ Water Source: Monsoon runoff + irrigation                       │   |
-|  │ Aquatic Life: Frogs, dragonflies, beneficial algae              │   |
-|  │ Nitrogen Fixation: Azolla fern symbiosis                        │   |
-|  │ Weed Suppression: Water depth controls terrestrial weeds        │   |
-|  │ Soil Microbes: Anaerobic decomposers cycling nutrients          │   |
+|  │ Weekly Additions: 50 lbs/1000 sq ft (not spring-only)           │   |
+|  │ Residue Sources: Cover crop clippings, crop residues            │   |
+|  │ Decomposition Rate: Continuous (steady microbial food)          │   |
+|  │ Nutrient Release: Slow, steady (vs spring pulse)                │   |
+|  │ Microbial Activity: Year-round (no boom-bust cycle)             │   |
+|  │ Soil Temperature: Moderated by mulch layer                      │   |
 |  └─────────────────────────────────────────────────────────────────┘   |
 |                                                                         |
-|  "In water, grain finds another way."                                   |
+|  Conventional Approach: All compost in spring (boom-bust)               |
+|  Ecological Approach: Weekly additions (steady-state)                   |
+|  Microbial Population: Stable (vs seasonal spikes)                      |
+|  Nutrient Availability: Consistent (vs spring flush)                    |
+|                                                                         |
+|  Harvest Prediction: 46 days                                            |
+|  Yield Estimate: 2.5kg per stalk                                        |
+|  Soil Organic Matter Gain: +0.6% annually                               |
+|                                                                         |
+|  "Feed the soil little and often. Microbes prefer steady meals."        |
+|                                                                         |
+|                                                                         |
 |                                                                         |
 |                                                                         |
 |                                                                         |

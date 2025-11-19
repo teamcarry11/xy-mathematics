@@ -1,18 +1,18 @@
-# Grainseed #011 - Pollinator
+# Grainseed #003 - Rhizosphere
 
 ```
 +-------------------------------------------------------------------------+
 |                                                                         |
-|  GRAINSEED #011                                    Rarity: Uncommon (9%)|
-|  Seed: 888888                                      Height: 11 segments  |
-|  Type: Buckwheat                                   Lean: Slight Right   |
-|  Season: Late Summer                               Leaves: 5            |
-|  Pollinators: Active (bees, butterflies)                                |
+|  GRAINSEED #003                                    Rarity: Rare (3%)    |
+|  Seed: 111111                                      Height: 9 segments   |
+|  Type: Perennial Barley                            Lean: Straight       |
+|  Season: Year-Round                                Leaves: 3            |
+|  Root System: Living 365 days (continuous exudation)                    |
 |                                                                         |
-|                                                                         |
-|                ~.~                                                      |
-|               ( o.o)  <- Bee                                            |
-|                > ^ <                                                    |
+|                    *         *                                          |
+|          *                        *                                     |
+|                 *       *                                               |
+|       *                      *         *                                |
 |                                                                         |
 |                       .                                                 |
 |                     \ | /                                               |
@@ -22,46 +22,45 @@
 |                      (|                                                 |
 |                       |                                                 |
 |                       |)                                                |
-|                       |          (\/)                                   |
-|                      (|         (^.^)  <- Butterfly                     |
-|                       |          (\_/)                                  |
-|                       |)                                                |
 |                       |                                                 |
 |                      (|                                                 |
 |                       |                                                 |
-|                       |)                                                |
+|                       |                                                 |
+|                       |                                                 |
 |                       |                                                 |
 |                     ~~~~~                                               |
 |                    ~~~~~~~                                              |
 |                   ~~~~~~~~~                                             |
-|                                                                         |
-|      *  *  *                                                            |
-|     *  *  *  *  <- Wildflower strip                                     |
-|      *  *  *                                                            |
-|                                                                         |
-|  Growth Pattern: Pollinator-dependent, biodiversity-enhanced           |
-|  Photosynthesis: Optimal (8.9/10)                                      |
-|  Water Retention: Good                                                  |
-|  Soil Quality: Living mulch integration, diverse root exudates          |
-|  Pollinator Activity: High (12 species observed)                       |
-|  Beneficial Insects: Predatory wasps, lacewings, hoverflies             |
-|  Wild Habitat: Integrated flowering strips within 10 feet               |
-|                                                                         |
-|  Harvest Prediction: 45 days                                            |
-|  Yield Estimate: 2.5kg per stalk                                        |
+|              ═════════════════                                          |
+|            ║ RHIZOSPHERE ZONE ║                                         |
+|              ═════════════════                                          |
+|         Root Exudates: Sugars, Amino Acids, Organic Acids               |
+|         Microbial Response: 10-100x population increase                 |
+|         Nutrient Mobilization: Active P, K, Fe solubilization           |
 |                                                                         |
 |  ┌─────────────────────────────────────────────────────────────────┐   |
-|  │ POLLINATOR ECOLOGY                                              │   |
+|  │ LIVING ROOT SYSTEM ANALYSIS                                     │   |
 |  ├─────────────────────────────────────────────────────────────────┤   |
-|  │ Bee Species: Honeybees (3), native bees (9)                     │   |
-|  │ Butterfly Species: Monarchs, swallowtails, skippers             │   |
-|  │ Flowering Companions: Phacelia, borage, calendula               │   |
-|  │ Nesting Sites: Bare ground patches, hollow stems                │   |
-|  │ Pest-to-Predator Ratio: 1:4 (balanced)                          │   |
-|  │ No Spray Zone: 50-foot buffer maintained                        │   |
+|  │ Root Biomass: 2,400 kg/ha (perennial advantage)                 │   |
+|  │ Root Depth: 2.1 meters (deep nutrient access)                   │   |
+|  │ Exudate Production: 15% of photosynthate (high)                 │   |
+|  │ Mycorrhizal Colonization: 94% root length                       │   |
+|  │ Nitrogen Fixation Partners: 3 legume species                    │   |
+|  │ Winter Dormancy: Minimal (roots active year-round)              │   |
 |  └─────────────────────────────────────────────────────────────────┘   |
 |                                                                         |
-|  "Grain feeds us. Flowers feed the helpers."                            |
+|  Soil Cover: 100% (no bare soil exposure)                               |
+|  Plant Diversity: 7 species in polyculture                              |
+|  Nutrient Cycling: Continuous (no fallow periods)                       |
+|  Water Use Efficiency: 40% better than annuals                          |
+|                                                                         |
+|  Harvest Prediction: 39 days (ratoon crop)                              |
+|  Yield Estimate: 2.7kg per stalk                                        |
+|  Soil Biology Activity: 365 days/year                                   |
+|                                                                         |
+|  "Living roots feed the soil. The soil feeds the world."                |
+|                                                                         |
+|                                                                         |
 |                                                                         |
 |                                                                         |
 |                                                                         |

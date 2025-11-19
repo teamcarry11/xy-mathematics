@@ -1,24 +1,19 @@
-# Grainseed #003 - Moonlit
+# Grainseed #004 - Polyculture
 
 ```
 +-------------------------------------------------------------------------+
 |                                                                         |
-|  GRAINSEED #003                                    Rarity: Rare (3%)    |
-|  Seed: 111111                                      Height: 9 segments   |
-|  Type: Night Barley                                Lean: Slight Left    |
-|  Season: Summer (Night Growth)                     Leaves: 3            |
-|  Moon Phase: Full Moon (Vishakha)                                       |
+|  GRAINSEED #004                                    Rarity: Common (15%) |
+|  Seed: 98765                                       Height: 12 segments  |
+|  Type: Intercropped Oat                            Lean: Straight       |
+|  Season: Spring                                    Leaves: 5            |
+|  Diversity: 9 plant species in 1 square meter                           |
 |                                                                         |
-|                    *         *                                          |
-|          *                        *                                     |
-|                 *       *                                               |
-|       *                      *         *                                |
-|                                                                         |
-|                  *    ___    *                                          |
-|              *       /   \                                              |
-|                     |  O  |        *                                    |
-|              *       \___/                                              |
-|                   *         *                                           |
+|       @   @                                                             |
+|      @@@@@@@  <- Clover (N-fixer)                                       |
+|     @@@@@@@@@                                                           |
+|      @@@@@@@                                                            |
+|       @   @                                                             |
 |                                                                         |
 |                       .                                                 |
 |                     \ | /                                               |
@@ -31,34 +26,49 @@
 |                       |                                                 |
 |                      (|                                                 |
 |                       |                                                 |
+|                       |)                                                |
 |                       |                                                 |
+|                      (|                                                 |
+|                       |                                                 |
+|                       |)                                                |
 |                       |                                                 |
 |                       |                                                 |
 |                     ~~~~~                                               |
 |                    ~~~~~~~                                              |
 |                   ~~~~~~~~~                                             |
-|                                                                         |
-|  Growth Pattern: Nocturnal photosynthesis (rare trait)                 |
-|  Photosynthesis: Lunar-enhanced (7.8/10)                                |
-|  Water Retention: Excellent (dew collection)                            |
-|  Soil Quality: Mineral-rich volcanic soil                               |
-|  Lunar Affinity: Strong (grows 23% faster during full moon)             |
-|                                                                         |
-|  Harvest Prediction: 39 days (accelerated)                              |
-|  Yield Estimate: 2.7kg per stalk                                        |
+|                  ~~~~~~~~~~~                                            |
+|              ~~~~~~~~~~~~~~~                                            |
+|           ~~~~~~~~~~~~~~~~~~~                                           |
+|        ~~~~~~~~~~~~~~~~~~~~~~~                                          |
 |                                                                         |
 |  ┌─────────────────────────────────────────────────────────────────┐   |
-|  │ ASTRONOMICAL DATA                                               │   |
+|  │ POLYCULTURE COMPOSITION                                         │   |
 |  ├─────────────────────────────────────────────────────────────────┤   |
-|  │ Moon Phase: Full (100% illumination)                            │   |
-|  │ Nakshatra: Vishakha (The Star of Purpose)                       │   |
-|  │ Moonrise: 18:42 PST                                             │   |
-|  │ Moonset: 06:15 PST                                              │   |
-|  │ Lunar Elevation: 47°                                            │   |
-|  │ Tidal Influence: High                                           │   |
+|  │ Grain: Oat (primary crop)                                       │   |
+|  │ N-Fixers: Clover, Vetch, Field Pea (3 species)                  │   |
+|  │ Deep Roots: Chicory, Plantain (nutrient miners)                 │   |
+|  │ Ground Cover: Creeping Thyme (living mulch)                     │   |
+|  │ Insectary: Yarrow, Fennel (beneficial insect habitat)           │   |
+|  │ Total Species: 9 (maximum diversity per sq meter)               │   |
 |  └─────────────────────────────────────────────────────────────────┘   |
 |                                                                         |
-|  "Under the moon's gaze, grain dreams."                                 |
+|  Soil Food Web Diversity: 340% increase vs monoculture                  |
+|  Pest Pressure: 78% reduction (predator-prey balance)                   |
+|  Nutrient Cycling: Multi-pathway (complementary root depths)            |
+|  Selective Weeding: "Chop and drop" method (no removal)                 |
+|                                                                         |
+|  Harvest Prediction: 44 days                                            |
+|  Yield Estimate: 2.1kg per stalk                                        |
+|  Ecosystem Services Value: $420/acre/year                               |
+|                                                                         |
+|  "Diversity is resilience. Monoculture is fragility."                   |
+|                                                                         |
+|                                                                         |
+|                                                                         |
+|                                                                         |
+|                                                                         |
+|                                                                         |
+|                                                                         |
 |                                                                         |
 |                                                                         |
 |                                                                         |

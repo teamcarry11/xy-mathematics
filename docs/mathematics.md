@@ -38,6 +38,37 @@ pub const Entry = struct {
 
 pub const ENTRIES = [_]Entry{
     .{
+        .id = 7,
+        .timestamp = "2025-11-19T08:20:00-08:00",
+        .title = "GRAINSEED SIMULATOR 1997",
+        .content = 
+            \\Something fun: A procedural ASCII grain generator with 90s high-school vibes.
+            \\
+            \\File: `src/grainseed.zig`
+            \\
+            \\Run: `zig run src/grainseed.zig -- 42069`
+            \\
+            \\Features: Retro UI, random growth, earnest optimism. Not cringe.
+        ,
+        .tags = &.{ .experiment, .wild_guess, .glow_g2 },
+    },
+    .{
+        .id = 6,
+        .timestamp = "2025-11-19T08:17:00-08:00",
+        .title = "The Art of Grain",
+        .content = 
+            \\We are pivoting to "Option 3": Educational Content & The "Mad Scientist" Brand.
+            \\
+            \\New Artifact: `docs/art_of_grain.md`
+            \\
+            \\The Mission:
+            \\1. Teach "Patient Discipline" and "Grain Style".
+            \\2. Build a movement around sustainable, beautiful code.
+            \\3. Monetize via books, courses, and sponsorships.
+        ,
+        .tags = &.{ .idea, .theory, .glow_g2 },
+    },
+    .{
         .id = 5,
         .timestamp = "2025-11-19T08:00:00-08:00",
         .title = "12025-11-19--0800--pst",

@@ -16,6 +16,7 @@
 //! **Development**: macOS Tahoe IDE with RISC-V VM for testing
 
 const std = @import("std");
+const Debug = @import("debug.zig");
 
 /// Basin Kernel syscall numbers.
 /// Why: Explicit syscall enumeration for type safety and clarity.
@@ -126,7 +127,7 @@ pub const Handle = struct {
     /// Why: Explicit construction, validate handle value.
     pub fn init(value: u64) Handle {
         // Assert: handle value must be non-zero (0 is invalid handle).
-        std.debug.assert(value != 0);
+        Debug.kassert(value != 0, "Handle value must be non-zero", .{});
         
         return Handle{ .value = value };
     }
@@ -213,8 +214,8 @@ pub const User = struct {
     /// Validate user record.
     /// Why: Ensure user data is valid.
     pub fn validate(self: *const User) void {
-        std.debug.assert(self.uid < 65536);
-        std.debug.assert(self.gid < 65536);
+        Debug.kassert(self.uid < 65536, "UID too large: {d}", .{self.uid});
+        Debug.kassert(self.gid < 65536, "GID too large: {d}", .{self.gid});
         // Name can be empty for uninitialized entries
     }
 };
@@ -537,25 +538,25 @@ pub const BasinKernel = struct {
         kernel.init_users();
         
         // Assert: All mappings must be unallocated initially.
-        for (kernel.mappings) |mapping| {
-            std.debug.assert(!mapping.allocated);
+        for (kernel.mappings, 0..) |mapping, i| {
+            Debug.kassert(!mapping.allocated, "Mapping {d} should be unallocated", .{i});
         }
         
         // Assert: Next allocation address must be page-aligned.
-        std.debug.assert(kernel.next_alloc_addr % 4096 == 0);
+        Debug.kassert(kernel.next_alloc_addr % 4096 == 0, "Next alloc addr {x} not aligned", .{kernel.next_alloc_addr});
         
         // Assert: All handles must be unallocated initially.
-        for (kernel.handles) |handle| {
-            std.debug.assert(!handle.allocated);
-            std.debug.assert(handle.id == 0);
+        for (kernel.handles, 0..) |handle, i| {
+            Debug.kassert(!handle.allocated, "Handle {d} should be unallocated", .{i});
+            Debug.kassert(handle.id == 0, "Handle {d} ID should be 0", .{i});
         }
         
         // Assert: Next handle ID must be non-zero (1-based).
-        std.debug.assert(kernel.next_handle_id != 0);
+        Debug.kassert(kernel.next_handle_id != 0, "Next handle ID is 0", .{});
         
         // Assert: Root user must exist.
-        std.debug.assert(kernel.user_count >= 1);
-        std.debug.assert(kernel.users[0].uid == 0);
+        Debug.kassert(kernel.user_count >= 1, "User count {d} < 1", .{kernel.user_count});
+        Debug.kassert(kernel.users[0].uid == 0, "First user UID {d} != 0", .{kernel.users[0].uid});
         
         return kernel;
     }
@@ -587,9 +588,9 @@ pub const BasinKernel = struct {
         self.user_count = 2;
         
         // Assert: Root user must exist.
-        std.debug.assert(self.users[0].uid == 0);
-        std.debug.assert(self.users[1].uid == 1000);
-        std.debug.assert(self.user_count == 2);
+        Debug.kassert(self.users[0].uid == 0, "Root UID check failed", .{});
+        Debug.kassert(self.users[1].uid == 1000, "XY UID check failed", .{});
+        Debug.kassert(self.user_count == 2, "User count check failed", .{});
     }
     
     /// Find user by UID.
@@ -639,7 +640,7 @@ pub const BasinKernel = struct {
         self.current_user = UserContext.init(user.uid, user.gid);
         
         // Assert: Current user must be set correctly.
-        std.debug.assert(self.current_user.uid == uid);
+        Debug.kassert(self.current_user.uid == uid, "Set current user failed", .{});
     }
     
     /// Find free mapping entry.
@@ -649,8 +650,8 @@ pub const BasinKernel = struct {
     fn find_free_mapping(self: *BasinKernel) ?u32 {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);
-        std.debug.assert(self_ptr != 0);
-        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
         
         var found_index: ?u32 = null;
         var free_count: u32 = 0;
@@ -672,7 +673,7 @@ pub const BasinKernel = struct {
         }
         
         // Assert: Free count must be <= MAX_MAPPINGS.
-        std.debug.assert(free_count <= MAX_MAPPINGS);
+        Debug.kassert(free_count <= MAX_MAPPINGS, "Free count > MAX", .{});
         
         return found_index;
     }
@@ -684,11 +685,11 @@ pub const BasinKernel = struct {
     fn find_mapping_by_address(self: *BasinKernel, addr: u64) ?u32 {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);
-        std.debug.assert(self_ptr != 0);
-        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
         
         // Assert: Address must be page-aligned.
-        std.debug.assert(addr % 4096 == 0);
+        Debug.kassert(addr % 4096 == 0, "Address {x} not aligned", .{addr});
         
         var found_index: ?u32 = null;
         var match_count: u32 = 0;
@@ -701,14 +702,14 @@ pub const BasinKernel = struct {
                 }
                 
                 // Assert: Matching mapping must have valid state.
-                std.debug.assert(mapping.address == addr);
-                std.debug.assert(mapping.size >= 4096);
-                std.debug.assert(mapping.size % 4096 == 0);
+                Debug.kassert(mapping.address == addr, "Mapping addr mismatch", .{});
+                Debug.kassert(mapping.size >= 4096, "Mapping size too small", .{});
+                Debug.kassert(mapping.size % 4096 == 0, "Mapping size unaligned", .{});
             }
         }
         
         // Assert: Address must be unique (no duplicate mappings).
-        std.debug.assert(match_count <= 1);
+        Debug.kassert(match_count <= 1, "Duplicate mappings found", .{});
         
         return found_index;
     }
@@ -719,13 +720,13 @@ pub const BasinKernel = struct {
     fn check_overlap(self: *BasinKernel, addr: u64, size: u64) bool {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);
-        std.debug.assert(self_ptr != 0);
-        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
         
         // Assert: Address and size must be valid.
-        std.debug.assert(addr % 4096 == 0); // Page-aligned
-        std.debug.assert(size >= 4096); // At least 1 page
-        std.debug.assert(size % 4096 == 0); // Page-aligned
+        Debug.kassert(addr % 4096 == 0, "Addr {x} unaligned", .{addr}); // Page-aligned
+        Debug.kassert(size >= 4096, "Size {d} too small", .{size}); // At least 1 page
+        Debug.kassert(size % 4096 == 0, "Size {d} unaligned", .{size}); // Page-aligned
         
         var overlap_count: u32 = 0;
         
@@ -734,16 +735,16 @@ pub const BasinKernel = struct {
                 overlap_count += 1;
                 
                 // Assert: Overlapping mapping must be allocated.
-                std.debug.assert(mapping.allocated);
+                Debug.kassert(mapping.allocated, "Overlapping mapping not allocated", .{});
                 
                 // Assert: Overlap condition must be true.
                 const does_overlap = (mapping.address < addr + size) and (addr < mapping.address + mapping.size);
-                std.debug.assert(does_overlap);
+                Debug.kassert(does_overlap, "Overlap logic error", .{});
             }
         }
         
         // Assert: Overlap count must be consistent (0 or 1, no duplicates).
-        std.debug.assert(overlap_count <= 1);
+        Debug.kassert(overlap_count <= 1, "Multiple overlaps found", .{});
         
         return overlap_count > 0;
     }
@@ -754,8 +755,8 @@ pub const BasinKernel = struct {
     pub fn count_allocated_mappings(self: *BasinKernel) u32 {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);
-        std.debug.assert(self_ptr != 0);
-        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
         
         var count: u32 = 0;
         
@@ -781,8 +782,8 @@ pub const BasinKernel = struct {
     fn find_free_handle(self: *BasinKernel) ?u32 {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);
-        std.debug.assert(self_ptr != 0);
-        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
         
         for (self.handles, 0..) |handle, i| {
             if (!handle.allocated) {
@@ -801,17 +802,17 @@ pub const BasinKernel = struct {
     fn find_handle_by_id(self: *BasinKernel, handle_id: u64) ?u32 {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);
-        std.debug.assert(self_ptr != 0);
-        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
         
         // Assert: Handle ID must be non-zero (0 is invalid).
-        std.debug.assert(handle_id != 0);
+        Debug.kassert(handle_id != 0, "Handle ID is 0", .{});
         
         for (self.handles, 0..) |handle, i| {
             if (handle.allocated and handle.id == handle_id) {
                 // Assert: Handle must be allocated and match ID.
-                std.debug.assert(handle.allocated);
-                std.debug.assert(handle.id == handle_id);
+                Debug.kassert(handle.allocated, "Handle not allocated", .{});
+                Debug.kassert(handle.id == handle_id, "Handle ID mismatch", .{});
                 return @as(u32, @intCast(i));
             }
         }
@@ -824,8 +825,8 @@ pub const BasinKernel = struct {
     pub fn count_allocated_handles(self: *BasinKernel) u32 {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);
-        std.debug.assert(self_ptr != 0);
-        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
         
         var count: u32 = 0;
         
@@ -857,28 +858,28 @@ pub const BasinKernel = struct {
     ) BasinError!SyscallResult {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);
-        std.debug.assert(self_ptr != 0);
-        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
         
         // Assert: syscall number must be >= 10 (kernel syscalls, not SBI).
         // Why: SBI calls use function ID < 10, kernel syscalls use >= 10.
-        std.debug.assert(syscall_num >= 10);
+        Debug.kassert(syscall_num >= 10, "Syscall num {d} < 10", .{syscall_num});
         
         // Assert: syscall number must be within valid range.
-        std.debug.assert(syscall_num <= @intFromEnum(Syscall.sysinfo));
+        Debug.kassert(syscall_num <= @intFromEnum(Syscall.sysinfo), "Syscall num {d} too high", .{syscall_num});
         
         // Decode syscall number.
         const syscall = @as(?Syscall, @enumFromInt(syscall_num)) orelse {
             // Assert: Invalid syscall number must return error.
-            std.debug.assert(syscall_num < 10 or syscall_num > @intFromEnum(Syscall.sysinfo));
+            Debug.kassert(syscall_num < 10 or syscall_num > @intFromEnum(Syscall.sysinfo), "Invalid syscall logic", .{});
             return BasinError.invalid_syscall;
         };
         
         // Assert: syscall must be valid enum value.
-        std.debug.assert(@intFromEnum(syscall) == syscall_num);
+        Debug.kassert(@intFromEnum(syscall) == syscall_num, "Syscall enum mismatch", .{});
         
         // Assert: syscall must be kernel syscall (not SBI).
-        std.debug.assert(@intFromEnum(syscall) >= 10);
+        Debug.kassert(@intFromEnum(syscall) >= 10, "Syscall enum < 10", .{});
         
         // Route to appropriate syscall handler.
         // Why: Explicit routing, type-safe syscall handling.
@@ -921,8 +922,8 @@ pub const BasinKernel = struct {
     ) BasinError!SyscallResult {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);
-        std.debug.assert(self_ptr != 0);
-        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
         
         _ = _arg4;
         
@@ -996,19 +997,19 @@ pub const BasinKernel = struct {
         self.processes[idx].allocated = true;
         
         // Assert: process must be allocated correctly.
-        std.debug.assert(self.processes[idx].allocated);
-        std.debug.assert(self.processes[idx].id == process_id);
-        std.debug.assert(self.processes[idx].state == .running);
+        Debug.kassert(self.processes[idx].allocated, "Process not allocated", .{});
+        Debug.kassert(self.processes[idx].id == process_id, "Process ID mismatch", .{});
+        Debug.kassert(self.processes[idx].state == .running, "Process not running", .{});
         
         // Return process ID.
         const result = SyscallResult.ok(process_id);
         
         // Assert: result must be success (not error).
-        std.debug.assert(result == .success);
-        std.debug.assert(result.success == process_id);
+        Debug.kassert(result == .success, "Result not success", .{});
+        Debug.kassert(result.success == process_id, "Result value mismatch", .{});
         
         // Assert: Process ID must be non-zero (valid process ID).
-        std.debug.assert(process_id != 0);
+        Debug.kassert(process_id != 0, "Process ID is 0", .{});
         
         return result;
     }
@@ -1022,15 +1023,15 @@ pub const BasinKernel = struct {
     ) BasinError!SyscallResult {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);
-        std.debug.assert(self_ptr != 0);
-        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
         
         _ = _arg2;
         _ = _arg3;
         _ = _arg4;
         
         // Assert: status must be valid (0-255 for exit code).
-        std.debug.assert(status <= 255);
+        Debug.kassert(status <= 255, "Exit status > 255", .{});
         const exit_status = @as(u32, @truncate(status));
         
         // Find current process (for now, use process ID 1 as current process).
@@ -1052,8 +1053,8 @@ pub const BasinKernel = struct {
             self.processes[idx].exit_status = exit_status;
             
             // Assert: process must be marked as exited.
-            std.debug.assert(self.processes[idx].state == .exited);
-            std.debug.assert(self.processes[idx].exit_status == exit_status);
+            Debug.kassert(self.processes[idx].state == .exited, "Process not exited", .{});
+            Debug.kassert(self.processes[idx].exit_status == exit_status, "Exit status mismatch", .{});
         }
         
         // Exit syscall: terminate process with status code.
@@ -1095,8 +1096,8 @@ pub const BasinKernel = struct {
     ) BasinError!SyscallResult {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);
-        std.debug.assert(self_ptr != 0);
-        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
         
         _ = _arg2;
         _ = _arg3;
@@ -1129,11 +1130,11 @@ pub const BasinKernel = struct {
             const result = SyscallResult.ok(exit_status);
             
             // Assert: result must be success (not error).
-            std.debug.assert(result == .success);
-            std.debug.assert(result.success == exit_status);
+            Debug.kassert(result == .success, "Result not success", .{});
+            Debug.kassert(result.success == exit_status, "Result value mismatch", .{});
             
             // Assert: Exit status must be valid (0-255).
-            std.debug.assert(exit_status <= 255);
+            Debug.kassert(exit_status <= 255, "Exit status > 255", .{});
             
             return result;
         }
@@ -1159,8 +1160,8 @@ pub const BasinKernel = struct {
     ) BasinError!SyscallResult {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);
-        std.debug.assert(self_ptr != 0);
-        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
         
         _ = _arg4;
         
@@ -1211,7 +1212,7 @@ pub const BasinKernel = struct {
             mapping_addr = self.next_alloc_addr;
             
             // Assert: Kernel-chosen address must be page-aligned.
-            std.debug.assert(mapping_addr % 4096 == 0);
+            Debug.kassert(mapping_addr % 4096 == 0, "Kernel addr unaligned", .{});
             
             // Assert: Kernel-chosen address must fit in VM memory.
             if (mapping_addr + size > VM_MEMORY_SIZE) {
@@ -1257,9 +1258,9 @@ pub const BasinKernel = struct {
         mapping.allocated = true;
         
         // Assert: Mapping entry must be allocated correctly.
-        std.debug.assert(mapping.allocated);
-        std.debug.assert(mapping.address == mapping_addr);
-        std.debug.assert(mapping.size == size);
+        Debug.kassert(mapping.allocated, "Mapping not allocated", .{});
+        Debug.kassert(mapping.address == mapping_addr, "Mapping addr mismatch", .{});
+        Debug.kassert(mapping.size == size, "Mapping size mismatch", .{});
         
         // Update next allocation address (for kernel-chosen addresses).
         if (addr == 0) {
@@ -1267,19 +1268,19 @@ pub const BasinKernel = struct {
             self.next_alloc_addr = mapping_addr + size;
             
             // Assert: Next allocation address must be page-aligned.
-            std.debug.assert(self.next_alloc_addr % 4096 == 0);
+            Debug.kassert(self.next_alloc_addr % 4096 == 0, "Next alloc addr unaligned", .{});
         }
         
         const result = SyscallResult.ok(mapping_addr);
         
         // Assert: result must be success (not error).
-        std.debug.assert(result == .success);
-        std.debug.assert(result.success == mapping_addr);
+        Debug.kassert(result == .success, "Result not success", .{});
+        Debug.kassert(result.success == mapping_addr, "Result value mismatch", .{});
         
         // Assert: Returned address must be valid.
-        std.debug.assert(result.success >= USER_SPACE_START);
-        std.debug.assert(result.success + size <= VM_MEMORY_SIZE);
-        std.debug.assert(result.success % 4096 == 0);
+        Debug.kassert(result.success >= USER_SPACE_START, "Addr in kernel space", .{});
+        Debug.kassert(result.success + size <= VM_MEMORY_SIZE, "Addr exceeds VM mem", .{});
+        Debug.kassert(result.success % 4096 == 0, "Addr unaligned", .{});
         
         return result;
     }
@@ -1293,8 +1294,8 @@ pub const BasinKernel = struct {
     ) BasinError!SyscallResult {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);
-        std.debug.assert(self_ptr != 0);
-        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
         
         _ = _arg2;
         _ = _arg3;
@@ -1325,8 +1326,8 @@ pub const BasinKernel = struct {
         };
         
         // Assert: Mapping must be allocated.
-        std.debug.assert(self.mappings[mapping_idx].allocated);
-        std.debug.assert(self.mappings[mapping_idx].address == region);
+        Debug.kassert(self.mappings[mapping_idx].allocated, "Mapping not allocated", .{});
+        Debug.kassert(self.mappings[mapping_idx].address == region, "Mapping addr mismatch", .{});
         
         // Free mapping entry.
         var mapping = &self.mappings[mapping_idx];
@@ -1336,13 +1337,13 @@ pub const BasinKernel = struct {
         mapping.flags = MapFlags.init(.{});
         
         // Assert: Mapping entry must be freed correctly.
-        std.debug.assert(!mapping.allocated);
+        Debug.kassert(!mapping.allocated, "Mapping still allocated", .{});
         
         const result = SyscallResult.ok(0);
         
         // Assert: result must be success (not error).
-        std.debug.assert(result == .success);
-        std.debug.assert(result.success == 0); // Unmap returns 0 on success
+        Debug.kassert(result == .success, "Result not success", .{});
+        Debug.kassert(result.success == 0, "Result not 0", .{}); // Unmap returns 0 on success
         
         return result;
     }
@@ -1356,8 +1357,8 @@ pub const BasinKernel = struct {
     ) BasinError!SyscallResult {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);
-        std.debug.assert(self_ptr != 0);
-        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
         
         _ = _arg3;
         _ = _arg4;
@@ -1400,24 +1401,24 @@ pub const BasinKernel = struct {
         };
         
         // Assert: Mapping must be allocated.
-        std.debug.assert(self.mappings[mapping_idx].allocated);
-        std.debug.assert(self.mappings[mapping_idx].address == region);
+        Debug.kassert(self.mappings[mapping_idx].allocated, "Mapping not allocated", .{});
+        Debug.kassert(self.mappings[mapping_idx].address == region, "Mapping addr mismatch", .{});
         
         // Update mapping flags (permissions).
         var mapping = &self.mappings[mapping_idx];
         mapping.flags = map_flags;
         
         // Assert: Mapping flags must be updated correctly.
-        std.debug.assert(mapping.flags.read == map_flags.read);
-        std.debug.assert(mapping.flags.write == map_flags.write);
-        std.debug.assert(mapping.flags.execute == map_flags.execute);
-        std.debug.assert(mapping.flags.shared == map_flags.shared);
+        Debug.kassert(mapping.flags.read == map_flags.read, "Read flag mismatch", .{});
+        Debug.kassert(mapping.flags.write == map_flags.write, "Write flag mismatch", .{});
+        Debug.kassert(mapping.flags.execute == map_flags.execute, "Exec flag mismatch", .{});
+        Debug.kassert(mapping.flags.shared == map_flags.shared, "Shared flag mismatch", .{});
         
         const result = SyscallResult.ok(0);
         
         // Assert: result must be success (not error).
-        std.debug.assert(result == .success);
-        std.debug.assert(result.success == 0); // Protect returns 0 on success
+        Debug.kassert(result == .success, "Result not success", .{});
+        Debug.kassert(result.success == 0, "Result not 0", .{}); // Protect returns 0 on success
         
         return result;
     }
@@ -1431,8 +1432,8 @@ pub const BasinKernel = struct {
     ) BasinError!SyscallResult {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);
-        std.debug.assert(self_ptr != 0);
-        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
         
         _ = _arg1;
         _ = _arg2;
@@ -1454,11 +1455,11 @@ pub const BasinKernel = struct {
         const result = SyscallResult.ok(channel_id);
         
         // Assert: result must be success (not error).
-        std.debug.assert(result == .success);
-        std.debug.assert(result.success == channel_id);
+        Debug.kassert(result == .success, "Result not success", .{});
+        Debug.kassert(result.success == channel_id, "Result value mismatch", .{});
         
         // Assert: Channel ID must be non-zero (valid channel ID).
-        std.debug.assert(channel_id != 0);
+        Debug.kassert(channel_id != 0, "Channel ID is 0", .{});
         
         return result;
     }
@@ -1472,8 +1473,8 @@ pub const BasinKernel = struct {
     ) BasinError!SyscallResult {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);
-        std.debug.assert(self_ptr != 0);
-        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
         
         _ = _arg4;
         
@@ -1519,8 +1520,8 @@ pub const BasinKernel = struct {
         const result = SyscallResult.ok(0);
         
         // Assert: result must be success (not error).
-        std.debug.assert(result == .success);
-        std.debug.assert(result.success == 0); // Channel_send returns 0 on success
+        Debug.kassert(result == .success, "Result not success", .{});
+        Debug.kassert(result.success == 0, "Result not 0", .{}); // Channel_send returns 0 on success
         
         return result;
     }
@@ -1534,8 +1535,8 @@ pub const BasinKernel = struct {
     ) BasinError!SyscallResult {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);
-        std.debug.assert(self_ptr != 0);
-        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
         
         _ = _arg4;
         
@@ -1583,8 +1584,8 @@ pub const BasinKernel = struct {
         const result = SyscallResult.ok(bytes_received);
         
         // Assert: result must be success (not error).
-        std.debug.assert(result == .success);
-        std.debug.assert(result.success == bytes_received);
+        Debug.kassert(result == .success, "Result not success", .{});
+        Debug.kassert(result.success == bytes_received, "Result value mismatch", .{});
         
         return result;
     }
@@ -1598,8 +1599,8 @@ pub const BasinKernel = struct {
     ) BasinError!SyscallResult {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);
-        std.debug.assert(self_ptr != 0);
-        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
         
         _ = _arg4;
         
@@ -1646,8 +1647,8 @@ pub const BasinKernel = struct {
         }
         
         // Assert: path_len must be > 0 (already checked above, but double-check for safety).
-        std.debug.assert(path_len > 0);
-        std.debug.assert(path_len <= 255);
+        Debug.kassert(path_len > 0, "Path len is 0", .{});
+        Debug.kassert(path_len <= 255, "Path len > 255", .{});
         
         // Find free handle entry.
         const handle_idx = self.find_free_handle() orelse {
@@ -1660,7 +1661,7 @@ pub const BasinKernel = struct {
         self.next_handle_id += 1;
         
         // Assert: Handle ID must be non-zero (1-based).
-        std.debug.assert(handle_id != 0);
+        Debug.kassert(handle_id != 0, "Handle ID is 0", .{});
         
         // Copy path from VM memory (simulated - in real implementation, would read from VM memory).
         // For now, store path length (actual path copying would happen here).
@@ -1693,8 +1694,8 @@ pub const BasinKernel = struct {
     ) BasinError!SyscallResult {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);
-        std.debug.assert(self_ptr != 0);
-        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
         
         _ = _arg4;
         
@@ -1732,8 +1733,8 @@ pub const BasinKernel = struct {
         };
         
         // Assert: Handle must be allocated.
-        std.debug.assert(self.handles[handle_idx].allocated);
-        std.debug.assert(self.handles[handle_idx].id == handle);
+        Debug.kassert(self.handles[handle_idx].allocated, "Handle not allocated", .{});
+        Debug.kassert(self.handles[handle_idx].id == handle, "Handle ID mismatch", .{});
         
         var file_handle = &self.handles[handle_idx];
         
@@ -1754,15 +1755,15 @@ pub const BasinKernel = struct {
         file_handle.position += bytes_to_read;
         
         // Assert: Position must not exceed buffer size.
-        std.debug.assert(file_handle.position <= file_handle.buffer_size);
+        Debug.kassert(file_handle.position <= file_handle.buffer_size, "Position > buffer size", .{});
         
         const bytes_read: u64 = @as(u64, @intCast(bytes_to_read));
         const result = SyscallResult.ok(bytes_read);
         
         // Assert: result must be success (not error).
-        std.debug.assert(result == .success);
-        std.debug.assert(result.success == bytes_read);
-        std.debug.assert(result.success <= buffer_len); // Can't read more than buffer size
+        Debug.kassert(result == .success, "Result not success", .{});
+        Debug.kassert(result.success == bytes_read, "Result value mismatch", .{});
+        Debug.kassert(result.success <= buffer_len, "Read > buffer len", .{}); // Can't read more than buffer size
         
         return result;
     }
@@ -1776,8 +1777,8 @@ pub const BasinKernel = struct {
     ) BasinError!SyscallResult {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);
-        std.debug.assert(self_ptr != 0);
-        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
         
         _ = _arg4;
         
@@ -1815,8 +1816,8 @@ pub const BasinKernel = struct {
         };
         
         // Assert: Handle must be allocated.
-        std.debug.assert(self.handles[handle_idx].allocated);
-        std.debug.assert(self.handles[handle_idx].id == handle);
+        Debug.kassert(self.handles[handle_idx].allocated, "Handle not allocated", .{});
+        Debug.kassert(self.handles[handle_idx].id == handle, "Handle ID mismatch", .{});
         
         var file_handle = &self.handles[handle_idx];
         
@@ -1842,16 +1843,16 @@ pub const BasinKernel = struct {
         }
         
         // Assert: Position and buffer size must be valid.
-        std.debug.assert(file_handle.position <= max_buffer_size);
-        std.debug.assert(file_handle.buffer_size <= max_buffer_size);
+        Debug.kassert(file_handle.position <= max_buffer_size, "Position > max buffer", .{});
+        Debug.kassert(file_handle.buffer_size <= max_buffer_size, "Buffer size > max", .{});
         
         const bytes_written: u64 = @as(u64, @intCast(bytes_to_write));
         const result = SyscallResult.ok(bytes_written);
         
         // Assert: result must be success (not error).
-        std.debug.assert(result == .success);
-        std.debug.assert(result.success == bytes_written);
-        std.debug.assert(result.success <= data_len); // Can't write more than data length
+        Debug.kassert(result == .success, "Result not success", .{});
+        Debug.kassert(result.success == bytes_written, "Result value mismatch", .{});
+        Debug.kassert(result.success <= data_len, "Written > data len", .{}); // Can't write more than data length
         
         return result;
     }
@@ -1865,8 +1866,8 @@ pub const BasinKernel = struct {
     ) BasinError!SyscallResult {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);
-        std.debug.assert(self_ptr != 0);
-        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
         
         _ = _arg2;
         _ = _arg3;
@@ -1883,8 +1884,8 @@ pub const BasinKernel = struct {
         };
         
         // Assert: Handle must be allocated.
-        std.debug.assert(self.handles[handle_idx].allocated);
-        std.debug.assert(self.handles[handle_idx].id == handle);
+        Debug.kassert(self.handles[handle_idx].allocated, "Handle not allocated", .{});
+        Debug.kassert(self.handles[handle_idx].id == handle, "Handle ID mismatch", .{});
         
         // Close handle (free entry).
         var file_handle = &self.handles[handle_idx];
@@ -1895,14 +1896,14 @@ pub const BasinKernel = struct {
         file_handle.buffer_size = 0;
         
         // Assert: Handle must be unallocated after close.
-        std.debug.assert(!file_handle.allocated);
-        std.debug.assert(file_handle.id == 0);
+        Debug.kassert(!file_handle.allocated, "Handle still allocated", .{});
+        Debug.kassert(file_handle.id == 0, "Handle ID not 0", .{});
         
         const result = SyscallResult.ok(0);
         
         // Assert: result must be success (not error).
-        std.debug.assert(result == .success);
-        std.debug.assert(result.success == 0); // Close returns 0 on success
+        Debug.kassert(result == .success, "Result not success", .{});
+        Debug.kassert(result.success == 0, "Result not 0", .{}); // Close returns 0 on success
         
         return result;
     }
@@ -1916,8 +1917,8 @@ pub const BasinKernel = struct {
     ) BasinError!SyscallResult {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);
-        std.debug.assert(self_ptr != 0);
-        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
         
         _ = _arg3;
         _ = _arg4;
@@ -1976,8 +1977,8 @@ pub const BasinKernel = struct {
     ) BasinError!SyscallResult {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);
-        std.debug.assert(self_ptr != 0);
-        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
         
         // Assert: old path pointer must be valid (non-zero, within VM memory).
         if (old_path_ptr == 0) {
@@ -2043,8 +2044,8 @@ pub const BasinKernel = struct {
     ) BasinError!SyscallResult {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);
-        std.debug.assert(self_ptr != 0);
-        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
         
         _ = _arg3;
         _ = _arg4;
@@ -2097,8 +2098,8 @@ pub const BasinKernel = struct {
     ) BasinError!SyscallResult {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);
-        std.debug.assert(self_ptr != 0);
-        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
         
         _ = _arg3;
         _ = _arg4;
@@ -2157,8 +2158,8 @@ pub const BasinKernel = struct {
     ) BasinError!SyscallResult {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);
-        std.debug.assert(self_ptr != 0);
-        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
         
         _ = _arg4;
         
@@ -2222,8 +2223,8 @@ pub const BasinKernel = struct {
     ) BasinError!SyscallResult {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);
-        std.debug.assert(self_ptr != 0);
-        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
         
         _ = _arg2;
         _ = _arg3;
@@ -2261,8 +2262,8 @@ pub const BasinKernel = struct {
     ) BasinError!SyscallResult {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);
-        std.debug.assert(self_ptr != 0);
-        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
         
         _ = _arg3;
         _ = _arg4;
@@ -2303,11 +2304,11 @@ pub const BasinKernel = struct {
         const result = SyscallResult.ok(seconds);
         
         // Assert: result must be success (not error).
-        std.debug.assert(result == .success);
-        std.debug.assert(result.success == seconds);
+        Debug.kassert(result == .success, "Result not success", .{});
+        Debug.kassert(result.success == seconds, "Result value mismatch", .{});
         
         // Assert: Nanoseconds must be valid (0-999999999).
-        std.debug.assert(nanoseconds < 1000000000);
+        Debug.kassert(nanoseconds < 1000000000, "Nanoseconds invalid", .{});
         
         return result;
     }
@@ -2321,8 +2322,8 @@ pub const BasinKernel = struct {
     ) BasinError!SyscallResult {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);
-        std.debug.assert(self_ptr != 0);
-        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
         
         _ = _arg2;
         _ = _arg3;
@@ -2349,8 +2350,8 @@ pub const BasinKernel = struct {
         const result = SyscallResult.ok(0);
         
         // Assert: result must be success (not error).
-        std.debug.assert(result == .success);
-        std.debug.assert(result.success == 0); // Sleep_until returns 0 on success
+        Debug.kassert(result == .success, "Result not success", .{});
+        Debug.kassert(result.success == 0, "Result not 0", .{}); // Sleep_until returns 0 on success
         
         return result;
     }
@@ -2364,8 +2365,8 @@ pub const BasinKernel = struct {
     ) BasinError!SyscallResult {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);
-        std.debug.assert(self_ptr != 0);
-        std.debug.assert(self_ptr % @alignOf(BasinKernel) == 0);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
         
         _ = _arg2;
         _ = _arg3;
@@ -2404,8 +2405,9 @@ pub const BasinKernel = struct {
         const result = SyscallResult.ok(0);
         
         // Assert: result must be success (not error).
-        std.debug.assert(result == .success);
-        std.debug.assert(result.success == 0); // Sysinfo returns 0 on success
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        Debug.kassert(result.success == 0, "Result not 0", .{}); // Sysinfo returns 0 on success
         
         return result;
     }

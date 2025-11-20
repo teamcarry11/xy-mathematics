@@ -1,614 +1,556 @@
-# grain style
+# GrainStyle
 
-zig development guidelines for the grain network
+> "There are three things extremely hard: steel, a diamond, and to know one's self." — Benjamin
+> Franklin
 
-## what is grain style?
+Grain OS's coding style is evolving. A collective give-and-take at the intersection of
+engineering and art. Numbers and human intuition. Reason and experience. First principles and
+knowledge. Precision and poetry. Just like music. A tight beat. A rare groove. Words that rhyme and
+rhymes that break. Biodigital jazz. This is what we've learned along the way. The best is yet to
+come.
 
-grain style is a philosophy of writing code that teaches. every line should
-help the next generation understand not just how something works, but why it
-works. we write code that lasts, code that teaches, code that grows
-sustainably like grain in a field.
+## Why Have Style?
 
-when you follow grain style, you're not just solving a problem - you're
-creating a teaching moment. future developers (including yourself) will
-read your code and understand the choices you made. they'll learn from your
-decisions, not just execute them.
+Another word for style is design.
 
-## core principles
+> "The design is not just what it looks like and feels like. The design is how it works." — Steve
+> Jobs
 
-### patient discipline
+Our design goals are safety, performance, and developer experience. In that order. All three are
+important. Good style advances these goals. Does the code make for more or less safety, performance
+or developer experience? That is why we need style.
 
-code is written once, read many times. take the time to write it right the
-first time. this doesn't mean perfection - it means intention. every
-decision should be made consciously, with awareness of the consequences.
+Put this way, style is more than readability, and readability is table stakes, a means to an end
+rather than an end in itself.
 
-when you're about to write a quick hack, pause. ask yourself: "will i
-remember why i did this in six months? will someone else understand this?"
-if the answer is no, take a moment to write it more clearly.
+> "...in programming, style is not something to pursue directly. Style is necessary only where
+> understanding is missing." ─ [Let Over
+> Lambda](https://letoverlambda.com/index.cl/guest/chap1.html)
 
-### explicit limits
+This document explores how we apply these design goals to coding style. First, a word on simplicity,
+elegance and technical debt.
 
-zig gives us the power to be explicit. use it. don't hide complexity behind
-abstractions - make it visible and understandable.
+## On Simplicity And Elegance
 
-- use explicit error types, not generic `anyerror`
-- set bounds explicitly in your types
-- document your assumptions in comments
-- make your allocators explicit
+Simplicity is not a free pass. It's not in conflict with our design goals. It need not be a
+concession or a compromise.
 
-when you see a function that takes `[]const u8`, you know exactly what it
-expects. when you see `!void`, you know it can fail. this explicitness
-makes code easier to understand and maintain.
+Rather, simplicity is how we bring our design goals together, how we identify the "super idea" that
+solves the axes simultaneously, to achieve something elegant.
 
-### sustainable practice
+> "Simplicity and elegance are unpopular because they require hard work and discipline to achieve" —
+> Edsger Dijkstra
 
-code that works today but breaks tomorrow isn't sustainable. code that
-works for one case but breaks for another isn't sustainable. write code
-that can grow without breaking.
+Contrary to popular belief, simplicity is also not the first attempt but the hardest revision. It's
+easy to say "let's do something simple", but to do that in practice takes thought, multiple passes,
+many sketches, and still we may have to ["throw one
+away"](https://en.wikipedia.org/wiki/The_Mythical_Man-Month).
 
-think about the boundaries of your code:
-- what are the valid inputs?
-- what are the edge cases?
-- what happens when memory is exhausted?
-- what happens when the system is under load?
+The hardest part, then, is how much thought goes into everything.
 
-write code that handles these cases gracefully, not code that crashes when
-they occur.
+We spend this mental energy upfront, proactively rather than reactively, because we know that when
+the thinking is done, what is spent on the design will be dwarfed by the implementation and testing,
+and then again by the costs of operation and maintenance.
 
-### code that teaches
+An hour or day of design is worth weeks or months in production:
 
-comments should explain why, not what. if you need a comment to explain what
-the code does, the code should be clearer. if you need a comment to explain
-why you made a choice, that's valuable - write it.
+> "the simple and elegant systems tend to be easier and faster to design and get right, more
+> efficient in execution, and much more reliable" — Edsger Dijkstra
 
-good comments answer questions like:
-- "why did we choose this algorithm?"
-- "what edge case does this handle?"
-- "what assumption does this code rely on?"
-- "what would break if we changed this?"
+## Technical Debt
 
-## graincard constraints
+What could go wrong? What's wrong? Which question would we rather ask? The former, because code,
+like steel, is less expensive to change while it's hot. A problem solved in production is many times
+more expensive than a problem solved in implementation, or a problem solved in design.
 
-graincards are 75×100 monospace teaching cards used throughout the grain
-network. all zig code should be written to fit within these constraints.
+Since it's hard enough to discover showstoppers, when we do find them, we solve them. We don't allow
+potential memcpy latency spikes, or exponential complexity algorithms to slip through.
 
-### dimensions
+> "You shall not pass!" — Gandalf
 
-- **total size**: 75 characters wide × 100 lines tall
-- **content area**: 73 characters wide × 98 lines tall (after borders)
-- **borders**: 1 character on each side (left, right, top, bottom)
+In other words, Grain OS has a "zero technical debt" policy. We do it right the first time. This
+is important because the second time may not transpire, and because doing good work, that we can be
+proud of, builds momentum.
 
-this means:
-- **zig code lines**: max 73 characters per line (hard wrap)
-- **zig functions**: max 70 lines (leaves 28 lines for title/metadata)
-- **borders included**: the 1-char borders are part of the 75×100 total
+We know that what we ship is solid. We may lack crucial features, but what we have meets our design
+goals. This is the only way to make steady incremental progress, knowing that the progress we have
+made is indeed progress.
 
-### why these constraints?
+## Safety
 
-graincards are designed to be:
-- **portable**: viewable in any terminal
-- **consistent**: all cards same size
-- **focused**: forces concise, clear code
-- **beautiful**: ASCII art borders create visual structure
+> "The rules act like the seat-belt in your car: initially they are perhaps a little uncomfortable,
+> but after a while their use becomes second-nature and not using them becomes unimaginable." —
+> Gerard J. Holzmann
 
-when you write zig code for graincards, you're writing for a specific
-display format. this constraint breeds creativity - it forces you to
-think carefully about every line.
+[NASA's Power of Ten — Rules for Developing Safety Critical
+Code](https://spinroot.com/gerard/pdf/P10.pdf) will change the way you code forever. To expand:
 
-### hard wrapping
+- Use **only very simple, explicit control flow** for clarity. **Do not use recursion** to ensure
+  that all executions that should be bounded are bounded. Use **only a minimum of excellent
+  abstractions** but only if they make the best sense of the domain. Abstractions are [never zero
+  cost](https://isaacfreund.com/blog/2022-05/). Every abstraction introduces the risk of a leaky
+  abstraction.
 
-zig code should be hard-wrapped to 73 characters per line. this ensures
-code fits perfectly in graincard content areas without breaking the
-visual structure.
+- **Put a limit on everything** because, in reality, this is what we expect—everything has a limit.
+  For example, all loops and all queues must have a fixed upper bound to prevent infinite loops or
+  tail latency spikes. This follows the ["fail-fast"](https://en.wikipedia.org/wiki/Fail-fast)
+  principle so that violations are detected sooner rather than later. Where a loop cannot terminate
+  (e.g. an event loop), this must be asserted.
 
-use `zig fmt` but also manually wrap lines that exceed 73 characters.
-if a line is too long, break it across multiple lines in a way that
-maintains readability.
+- Use explicitly-sized types like `u32` for everything, avoid architecture-specific `usize`.
 
-```zig
-// good: fits in 73-char width
-const result = try std.fmt.allocPrint(
-    allocator,
-    "branch: {s}",
-    .{branch_name},
-);
+- **Assertions detect programmer errors. Unlike operating errors, which are expected and which must
+  be handled, assertion failures are unexpected. The only correct way to handle corrupt code is to
+  crash. Assertions downgrade catastrophic correctness bugs into liveness bugs. Assertions are a
+  force multiplier for discovering bugs by fuzzing.**
 
-// also acceptable: if breaking would hurt readability
-const short_msg = "this fits";
-```
+  - **Assert all function arguments and return values, pre/postconditions and invariants.** A
+    function must not operate blindly on data it has not checked. The purpose of a function is to
+    increase the probability that a program is correct. Assertions within a function are part of how
+    functions serve this purpose. The assertion density of the code must average a minimum of two
+    assertions per function.
 
-### function size
+  - **[Pair assertions](https://tigerbeetle.com/blog/2023-12-27-it-takes-two-to-contract).** For
+    every property you want to enforce, try to find at least two different code paths where an
+    assertion can be added. For example, assert validity of data right before writing it to disk,
+    and also immediately after reading from disk.
 
-functions should be max 70 lines. this leaves 28 lines in a graincard
-for:
-- title and metadata
-- function signature documentation
-- brief usage examples
-- related functions or notes
+  - On occasion, you may use a blatantly true assertion instead of a comment as stronger
+    documentation where the assertion condition is critical and surprising.
 
-if a function exceeds 70 lines, consider:
-- breaking it into smaller functions
-- extracting helper functions
-- moving complex logic to separate modules
+  - Split compound assertions: prefer `assert(a); assert(b);` over `assert(a and b);`.
+    The former is simpler to read, and provides more precise information if the condition fails.
 
-remember: code that fits in a graincard is easier to understand,
-teach, and maintain.
+  - Use single-line `if` to assert an implication: `if (a) assert(b)`.
 
-### source code vs graincard display
+  - **Assert the relationships of compile-time constants** as a sanity check, and also to document
+    and enforce subtle invariants or type sizes. Compile-time assertions are extremely powerful
+    because they are able to check a program's design integrity _before_ the program even executes.
 
-it's important to understand the distinction:
+  - **The golden rule of assertions is to assert the _positive space_ that you do expect AND to
+    assert the _negative space_ that you do not expect** because where data moves across the
+    valid/invalid boundary between these spaces is where interesting bugs are often found. This is
+    also why **tests must test exhaustively**, not only with valid data but also with invalid data,
+    and as valid data becomes invalid.
 
-- **source code files** (`.zig` files): no borders, but still respect
-  73-char limit for graincard compatibility. this ensures code can be
-  displayed in graincards without modification.
+  - Assertions are a safety net, not a substitute for human understanding. With simulation testing,
+    there is the temptation to trust the fuzzer. But a fuzzer can prove only the presence of bugs,
+    not their absence. Therefore:
+    - Build a precise mental model of the code first,
+    - encode your understanding in the form of assertions,
+    - write the code and comments to explain and justify the mental model to your reviewer,
+    - and use testing as the final line of defense, to find bugs in your and reviewer's
+      understanding of code.
 
-- **graincard display format**: borders are part of the 75×100 total.
-  when code is displayed in a graincard, the borders consume 2 characters
-  horizontally (left + right) and 2 lines vertically (top + bottom).
+- All memory must be statically allocated at startup. **No memory may be dynamically allocated (or
+  freed and reallocated) after initialization.** This avoids unpredictable behavior that can
+  significantly affect performance, and avoids use-after-free. As a second-order effect, it is our
+  experience that this also makes for more efficient, simpler designs that are more performant and
+  easier to maintain and reason about, compared to designs that do not consider all possible memory
+  usage patterns upfront as part of the design.
 
-this means:
-- zig source code files should be hard-wrapped to 73 characters
-- the 73-char limit applies even though source files don't have borders
-- this ensures code fits perfectly when displayed in graincards later
+- Declare variables at the **smallest possible scope**, and **minimize the number of variables in
+  scope**, to reduce the probability that variables are misused.
 
-why this approach? it's better to write code that fits the constraint
-from the start, rather than having to reformat it later when you want
-to display it in a graincard. the constraint is a feature, not a
-limitation - it forces clear, concise code.
+- Restrict the length of function bodies to reduce the probability of poorly structured code. We
+  enforce a **hard limit of 70 lines per function**.
 
-## zig-specific guidelines
+  Splitting code into functions requires taste. There are many ways to cut a wall of code into
+  chunks of 70 lines, but only a few splits will feel right. Some rules of thumb:
 
-### memory management
+  * Good function shape is often the inverse of an hourglass: a few parameters, a simple return
+    type, and a lot of meaty logic between the braces.
+  * Centralize control flow. When splitting a large function, try to keep all switch/if
+    statements in the "parent" function, and move non-branchy logic fragments to helper
+    functions. Divide responsibility. All control flow should be handled by _one_ function, the
+    rest shouldn't care about control flow at all. In other words,
+    ["push `if`s up and `for`s down"](https://matklad.github.io/2023/11/15/push-ifs-up-and-fors-down.html).
+  * Similarly, centralize state manipulation. Let the parent function keep all relevant state in
+    local variables, and use helpers to compute what needs to change, rather than applying the
+    change directly. Keep leaf functions pure.
 
-zig gives us explicit control over memory. use it wisely.
+- Appreciate, from day one, **all compiler warnings at the compiler's strictest setting**.
 
-#### allocators
+- Whenever your program has to interact with external entities, **don't do things directly in
+  reaction to external events**. Instead, your program should run at its own pace. Not only does
+  this make your program safer by keeping the control flow of your program under your control, it
+  also improves performance for the same reason (you get to batch, instead of context switching on
+  every event). Additionally, this makes it easier to maintain bounds on work done per time period.
 
-always make allocators explicit. pass them as parameters, don't use global
-allocators unless absolutely necessary.
+Beyond these rules:
 
-```zig
-// good: explicit allocator
-fn create_buffer(allocator: std.mem.Allocator, size: usize) ![]u8 {
-    return try allocator.alloc(u8, size);
-}
+- Compound conditions that evaluate multiple booleans make it difficult for the reader to verify
+  that all cases are handled. Split compound conditions into simple conditions using nested
+  `if/else` branches. Split complex `else if` chains into `else { if { } }` trees. This makes the
+  branches and cases clear. Again, consider whether a single `if` does not also need a matching
+  `else` branch, to ensure that the positive and negative spaces are handled or asserted.
 
-// bad: implicit global allocator
-fn create_buffer(size: usize) ![]u8 {
-    return try std.heap.page_allocator.alloc(u8, size);
-}
-```
+- Negations are not easy! State invariants positively. When working with lengths and indexes, this
+  form is easy to get right (and understand):
 
-when you take an allocator, document its lifetime expectations. does the
-caller need to keep it alive? does the function own it? make this clear.
+  ```zig
+  if (index < length) {
+    // The invariant holds.
+  } else {
+    // The invariant doesn't hold.
+  }
+  ```
 
-#### error handling
+  This form is harder, and also goes against the grain of how `index` would typically be compared to
+  `length`, for example, in a loop condition:
 
-zig's error handling is explicit and powerful. use it.
+  ```zig
+  if (index >= length) {
+    // It's not true that the invariant holds.
+  }
+  ```
 
-```zig
-// good: explicit error handling
-fn parse_number(str: []const u8) !u32 {
-    return std.fmt.parseInt(u32, str, 10) catch |err| {
-        std.log.err("failed to parse '{s}': {s}", .{ str, @errorName(err) });
-        return err;
+- All errors must be handled. An [analysis of production failures in distributed data-intensive
+  systems](https://www.usenix.org/system/files/conference/osdi14/osdi14-paper-yuan.pdf) found that
+  the majority of catastrophic failures could have been prevented by simple testing of error
+  handling code.
+
+> "Specifically, we found that almost all (92%) of the catastrophic system failures are the result
+> of incorrect handling of non-fatal errors explicitly signaled in software."
+
+- **Always motivate, always say why**. Never forget to say why. Because if you explain the rationale
+  for a decision, it not only increases the hearer's understanding, and makes them more likely to
+  adhere or comply, but it also shares criteria with them with which to evaluate the decision and
+  its importance.
+
+- **Explicitly pass options to library functions at the call site, instead of relying on the
+  defaults**. For example, write `@prefetch(a, .{ .cache = .data, .rw = .read, .locality = 3 });`
+  over `@prefetch(a, .{});`. This improves readability but most of all avoids latent, potentially
+  catastrophic bugs in case the library ever changes its defaults.
+
+## Performance
+
+> "The lack of back-of-the-envelope performance sketches is the root of all evil." — Rivacindela
+> Hudsoni
+
+- Think about performance from the outset, from the beginning. **The best time to solve performance,
+  to get the huge 1000x wins, is in the design phase, which is precisely when we can't measure or
+  profile.** It's also typically harder to fix a system after implementation and profiling, and the
+  gains are less. So you have to have mechanical sympathy. Like a carpenter, work with the grain.
+
+- **Perform back-of-the-envelope sketches with respect to the four resources (network, disk, memory,
+  CPU) and their two main characteristics (bandwidth, latency).** Sketches are cheap. Use sketches
+  to be "roughly right" and land within 90% of the global maximum.
+
+- Optimize for the slowest resources first (network, disk, memory, CPU) in that order, after
+  compensating for the frequency of usage, because faster resources may be used many times more. For
+  example, a memory cache miss may be as expensive as a disk fsync, if it happens many times more.
+
+- Distinguish between the control plane and data plane. A clear delineation between control plane
+  and data plane through the use of batching enables a high level of assertion safety without losing
+  performance.
+
+- Amortize network, disk, memory and CPU costs by batching accesses.
+
+- Let the CPU be a sprinter doing the 100m. Be predictable. Don't force the CPU to zig zag and
+  change lanes. Give the CPU large enough chunks of work. This comes back to batching.
+
+- Be explicit. Minimize dependence on the compiler to do the right thing for you.
+
+  In particular, extract hot loops into stand-alone functions with primitive arguments without
+  `self`. That way, the compiler doesn't need to prove that it can cache struct's fields in
+  registers, and a human reader can spot redundant computations easier.
+
+## Developer Experience
+
+> "There are only two hard things in Computer Science: cache invalidation, naming things, and
+> off-by-one errors." — Phil Karlton
+
+### Naming Things
+
+- **Get the nouns and verbs just right.** Great names are the essence of great code, they capture
+  what a thing is or does, and provide a crisp, intuitive mental model. They show that you
+  understand the domain. Take time to find the perfect name, to find nouns and verbs that work
+  together, so that the whole is greater than the sum of its parts.
+
+- **Use `grain_case` for function, variable, and file names.** grain_case is identical to
+  snake_case (lowercase with underscores), but the name reflects our philosophy: code that grows
+  like grain. The underscore is the closest thing we have as programmers to a space, and helps to
+  separate words and encourage descriptive names.
+
+- Do not abbreviate variable names, unless the variable is a primitive integer type used as an
+  argument to a sort function or matrix calculation. Use long form arguments in scripts: `--force`,
+  not `-f`. Single letter flags are for interactive usage.
+
+- Use proper capitalization for acronyms (`VSRState`, not `VsrState`).
+
+- For the rest, follow the Zig style guide.
+
+- Add units or qualifiers to variable names, and put the units or qualifiers last, sorted by
+  descending significance, so that the variable starts with the most significant word, and ends with
+  the least significant word. For example, `latency_ms_max` rather than `max_latency_ms`. This will
+  then line up nicely when `latency_ms_min` is added, as well as group all variables that relate to
+  latency.
+
+- Infuse names with meaning. For example, `allocator: Allocator` is a good, if boring name,
+  but `gpa: Allocator` and `arena: Allocator` are excellent. They inform the reader whether
+  `deinit` should be called explicitly.
+
+- When choosing related names, try hard to find names with the same number of characters so that
+  related variables all line up in the source. For example, as arguments to a memcpy function,
+  `source` and `target` are better than `src` and `dest` because they have the second-order effect
+  that any related variables such as `source_offset` and `target_offset` will all line up in
+  calculations and slices. This makes the code symmetrical, with clean blocks that are easier for
+  the eye to parse and for the reader to check.
+
+- When a single function calls out to a helper function or callback, prefix the name of the helper
+  function with the name of the calling function to show the call history. For example,
+  `read_sector()` and `read_sector_callback()`.
+
+- Callbacks go last in the list of parameters. This mirrors control flow: callbacks are also
+  _invoked_ last.
+
+- _Order_ matters for readability (even if it doesn't affect semantics). On the first read, a file
+  is read top-down, so put important things near the top. The `main` function goes first.
+
+  The same goes for `structs`, the order is fields then types then methods:
+
+  ```zig
+  time: Time,
+  process_id: ProcessID,
+
+  const ProcessID = struct { cluster: u128, replica: u8 };
+  const Tracer = @This(); // This alias concludes the types section.
+
+  pub fn init(gpa: std.mem.Allocator, time: Time) !Tracer {
+      ...
+  }
+  ```
+
+  If a nested type is complex, make it a top-level struct.
+
+  At the same time, not everything has a single right order. When in doubt, consider sorting
+  alphabetically, taking advantage of big-endian naming.
+
+- Don't overload names with multiple meanings that are context-dependent.
+
+- Think of how names will be used outside the code, in documentation or communication. For example,
+  a noun is often a better descriptor than an adjective or present participle, because a noun can be
+  directly used in correspondence without having to be rephrased. Noun names compose more clearly
+  for derived identifiers, e.g. `config.pipeline_max`.
+
+- Zig has named arguments through the `options: struct` pattern. Use it when arguments can be
+  mixed up. A function taking two `u64` must use an options struct. If an argument can be `null`,
+  it should be named so that the meaning of `null` literal at the call site is clear.
+
+  Because dependencies like an allocator or a tracer are singletons with unique types, they should
+  be threaded through constructors positionally, from the most general to the most specific.
+
+- **Write descriptive commit messages** that inform and delight the reader, because your commit
+  messages are being read.
+
+- Don't forget to say why. Code alone is not documentation. Use comments to explain why you wrote
+  the code the way you did. Show your workings.
+
+- Don't forget to say how. For example, when writing a test, think of writing a description at the
+  top to explain the goal and methodology of the test, to help your reader get up to speed, or to
+  skip over sections, without forcing them to dive in.
+
+- Comments are sentences, with a space after the slash, with a capital letter and a full stop, or a
+  colon if they relate to something that follows. Comments are well-written prose describing the
+  code, not just scribblings in the margin. Comments after the end of a line _can_ be phrases, with
+  no punctuation.
+
+### Cache Invalidation
+
+- Don't duplicate variables or take aliases to them. This will reduce the probability that state
+  gets out of sync.
+
+- If you don't mean a function argument to be copied when passed by value, and if the argument type
+  is more than 16 bytes, then pass the argument as `*const`. This will catch bugs where the caller
+  makes an accidental copy on the stack before calling the function.
+
+- Construct larger structs _in-place_ by passing an _out pointer_ during initialization.
+
+  In-place initializations can assume **pointer stability** and **immovable types** while
+  eliminating intermediate copy-move allocations, which can lead to undesirable stack growth.
+
+  Keep in mind that in-place initializations are viral — if any field is initialized
+  in-place, the entire container struct should be initialized in-place as well.
+
+  **Prefer:**
+  ```zig
+  fn init(target: *LargeStruct) !void {
+    target.* = .{
+      // in-place initialization.
     };
-}
+  }
 
-// acceptable: simple error propagation
-fn parse_number(str: []const u8) !u32 {
-    return std.fmt.parseInt(u32, str, 10);
-}
-```
+  fn main() !void {
+    var target: LargeStruct = undefined;
+    try target.init();
+  }
+  ```
 
-don't swallow errors. if something can fail, handle it or propagate it.
-silent failures make debugging impossible.
-
-### type safety
-
-zig's type system is powerful. use it to make your code safer.
-
-#### structs over primitives
-
-if you're passing around multiple related values, use a struct. it's
-self-documenting and type-safe.
-
-```zig
-// good: explicit structure
-const Point = struct {
-    x: f32,
-    y: f32,
-};
-
-fn distance(p1: Point, p2: Point) f32 {
-    const dx = p1.x - p2.x;
-    const dy = p1.y - p2.y;
-    return std.math.sqrt(dx * dx + dy * dy);
-}
-
-// bad: magic numbers
-fn distance(x1: f32, y1: f32, x2: f32, y2: f32) f32 {
-    const dx = x1 - x2;
-    const dy = y1 - y2;
-    return std.math.sqrt(dx * dx + dy * dy);
-}
-```
-
-#### enums for state
-
-use enums to represent states, not magic numbers or strings.
-
-```zig
-// good: explicit state machine
-const ConnectionState = enum {
-    disconnected,
-    connecting,
-    connected,
-    error,
-};
-
-// bad: magic numbers
-// 0 = disconnected, 1 = connecting, 2 = connected, 3 = error
-```
-
-### decomplection
-
-separate concerns. each module should have one clear responsibility. if you
-find yourself saying "this module does X and also Y", consider splitting it.
-
-#### module organization
-
-organize your code into focused modules:
-
-```
-src/
-├── types.zig          # data structures and constants
-├── format.zig         # formatting logic
-├── parse.zig          # parsing logic
-├── graintime.zig      # public API and re-exports
-└── cli.zig            # command line interface
-```
-
-each module should be importable on its own. if `format.zig` needs
-something from `types.zig`, that's fine. if it needs something from `cli.zig`,
-that's a code smell - you might have your dependencies backwards.
-
-#### function size
-
-functions should do one thing. if your function is longer than 50 lines,
-ask yourself: "can this be broken down?" usually the answer is yes.
-
-this doesn't mean every function should be tiny - sometimes you need 100
-lines to do one thing well. but if you find yourself scrolling through a
-function to understand it, it's probably doing too much.
-
-### naming conventions
-
-names should be clear and descriptive. prefer clarity over brevity.
-
-#### variables
-
-### naming conventions
-
-**grain_case**: the grain network's standard for all zig function and variable
-names. grain_case is identical to snake_case (lowercase with underscores),
-but the name reflects our philosophy: code that grows like grain.
-
-use `grain_case` for variables and functions. be descriptive - `user_data`
-is better than `ud`, `buffer_size` is better than `bufsz`.
-
-```zig
-// good: clear and descriptive
-const user_name = "alice";
-const buffer_size: usize = 1024;
-
-// acceptable: when context is clear
-const name = "alice";
-const size: usize = 1024;
-
-// bad: cryptic abbreviations
-const un = "alice";
-const bufsz: usize = 1024;
-```
-
-#### types
-
-use `PascalCase` for types (structs, enums, unions). the name should
-describe what the type represents, not how it's implemented.
-
-```zig
-// good: describes what it is
-const User = struct {
-    name: []const u8,
-    age: u32,
-};
-
-// bad: describes implementation
-const UserStruct = struct {
-    name: []const u8,
-    age: u32,
-};
-```
-
-#### constants
-
-use `SCREAMING_SNAKE_CASE` for compile-time constants. make them const when
-possible, and use `comptime` when the value is known at compile time.
-
-```zig
-// good: compile-time constant
-const MAX_BUFFER_SIZE: usize = 4096;
-const DEFAULT_TIMEOUT_MS: u64 = 5000;
-
-// good: computed at compile time
-const MAX_PATH_LEN = comptime std.fs.MAX_PATH_BYTES;
-```
-
-### formatting
-
-consistency makes code easier to read. use `zig fmt` to format your code.
-it's the standard, and it removes the need for style debates.
-
-```bash
-zig fmt src/
-```
-
-if you disagree with a formatting decision, that's okay - but use `zig fmt`
-anyway. consistency is more valuable than personal preference.
-
-**important**: after running `zig fmt`, use `grainwrap` to enforce
-73-character line length. `zig fmt` doesn't enforce line length, so
-you need a tool to wrap long lines.
-
-```bash
-# format with zig fmt
-zig fmt src/
-
-# then wrap to 73 chars with grainwrap
-grainwrap wrap src/
-```
-
-see `teamprecision06/grainwrap` for the wrapping tool that enforces
-grain style line length constraints.
-
-### comments
-
-comments should explain why, not what. if the code needs a comment to
-explain what it does, make the code clearer instead.
-
-#### good comments
-
-```zig
-// we use a linear search here because the array is small (< 10 elements)
-// and sorted. binary search would be overkill and add complexity.
-for (items) |item| {
-    if (item.id == target_id) return item;
-}
-```
-
-```zig
-// this function can fail if the system is out of memory. we don't
-// retry here because the caller should handle retries with backoff.
-const buffer = try allocator.alloc(u8, size);
-```
-
-#### bad comments
-
-```zig
-// loop through items
-for (items) |item| {
-    // check if id matches
-    if (item.id == target_id) {
-        // return the item
-        return item;
+  **Over:**
+  ```zig
+  fn init() !LargeStruct {
+    return LargeStruct {
+      // moving the initialized object.
     }
-}
-```
+  }
 
-if you need a comment to explain what the code does, the code should be
-clearer. comments should add value, not restate the obvious.
+  fn main() !void {
+    var target = try LargeStruct.init();
+  }
+  ```
 
-### testing
+- **Shrink the scope** to minimize the number of variables at play and reduce the probability that
+  the wrong variable is used.
 
-write tests. they're how you verify your code works, and they're how you
-document how your code should be used.
+- Calculate or check variables close to where/when they are used. **Don't introduce variables before
+  they are needed.** Don't leave them around where they are not. This will reduce the probability of
+  a POCPOU (place-of-check to place-of-use), a distant cousin to the infamous
+  [TOCTOU](https://en.wikipedia.org/wiki/Time-of-check_to_time-of-use). Most bugs come down to a
+  semantic gap, caused by a gap in time or space, because it's harder to check code that's not
+  contained along those dimensions.
 
-#### test organization
+- Use simpler function signatures and return types to reduce dimensionality at the call site, the
+  number of branches that need to be handled at the call site, because this dimensionality can also
+  be viral, propagating through the call chain. For example, as a return type, `void` trumps `bool`,
+  `bool` trumps `u64`, `u64` trumps `?u64`, and `?u64` trumps `!u64`.
 
-put tests near the code they test. use `test` blocks in the same file, or
-create a `test.zig` file in the same directory.
+- Ensure that functions run to completion without suspending, so that precondition assertions are
+  true throughout the lifetime of the function. These assertions are useful documentation without a
+  suspend, but may be misleading otherwise.
 
-```zig
-// src/format.zig
-pub fn format_branch(branch: GrainBranch, allocator: std.mem.Allocator) ![]u8 {
-    // ... implementation
-}
+- Be on your guard for **[buffer bleeds](https://en.wikipedia.org/wiki/Heartbleed)**. This is a
+  buffer underflow, the opposite of a buffer overflow, where a buffer is not fully utilized, with
+  padding not zeroed correctly. This may not only leak sensitive information, but may cause
+  deterministic guarantees as required by Grain OS to be violated.
 
-// test in same file
-test "format_branch creates valid grainbranch name" {
-    // ... test code
-}
-```
+- Use newlines to **group resource allocation and deallocation**, i.e. before the resource
+  allocation and after the corresponding `defer` statement, to make leaks easier to spot.
 
-#### test names
+### Off-By-One Errors
 
-test names should describe what they're testing. "test format" is not
-helpful. "test format_branch_with_all_fields" is better.
+- **The usual suspects for off-by-one errors are casual interactions between an `index`, a `count`
+  or a `size`.** These are all primitive integer types, but should be seen as distinct types, with
+  clear rules to cast between them. To go from an `index` to a `count` you need to add one, since
+  indexes are _0-based_ but counts are _1-based_. To go from a `count` to a `size` you need to
+  multiply by the unit. Again, this is why including units and qualifiers in variable names is
+  important.
 
-```zig
-test "format_branch creates valid grainbranch name" {
-    // ...
-}
+- Show your intent with respect to division. For example, use `@divExact()`, `@divFloor()` or
+  `div_ceil()` to show the reader you've thought through all the interesting scenarios where
+  rounding may be involved.
 
-test "format_branch handles missing optional fields" {
-    // ...
-}
+### Style By The Numbers
 
-test "format_branch fails on invalid input" {
-    // ...
-}
-```
+- Run `zig fmt`.
 
-### error messages
+- Use 4 spaces of indentation, rather than 2 spaces, as that is more obvious to the eye at a
+  distance.
 
-when your code fails, it should tell the user why. error messages should be
-actionable and specific.
+- **Hard limit all line lengths to at most 73 columns** for graincard compatibility. This ensures
+  code fits perfectly in graincard content areas (75×100 total, with 1-char borders). Use it up.
+  Never go beyond. Nothing should be hidden by a horizontal scrollbar. Let your editor help you by
+  setting a column ruler. To wrap a function signature, call or data structure, add a trailing
+  comma, close your eyes and let `zig fmt` do the rest.
 
-```zig
-// good: specific and actionable
-return error.InvalidTemperature;
-// user sees: "error: InvalidTemperature"
-// they know: temperature was invalid
+- Add braces to the `if` statement unless it fits on a single line for consistency and defense in
+  depth against "goto fail;" bugs.
 
-// better: with context
-std.log.err("invalid temperature: {d}K (must be 1700-4700K)", .{temp});
-return error.InvalidTemperature;
-```
+## Graincard Constraints
 
-don't use generic errors when you can be specific. `error.InvalidInput` is
-less helpful than `error.InvalidTemperature` or `error.InvalidFormat`.
+Graincards are 75×100 monospace teaching cards used throughout the grain network. All zig code
+should be written to fit within these constraints.
 
-## project structure
+### Dimensions
 
-### directory layout
+- **Total size**: 75 characters wide × 100 lines tall
+- **Content area**: 73 characters wide × 98 lines tall (after borders)
+- **Borders**: 1 character on each side (left, right, top, bottom)
 
-organize your project clearly. here's a suggested structure:
+This means:
+- **Zig code lines**: max 73 characters per line (hard wrap)
+- **Zig functions**: max 70 lines (leaves 28 lines for title/metadata)
+- **Borders included**: the 1-char borders are part of the 75×100 total
 
-```
-project/
-├── src/
-│   ├── types.zig          # data structures
-│   ├── api.zig            # public API
-│   ├── internal/          # internal modules
-│   │   ├── format.zig
-│   │   └── parse.zig
-│   └── cli.zig            # CLI entry point
-├── tests/                 # integration tests
-├── build.zig              # build configuration
-├── readme.md              # project documentation
-└── license                # license information
-```
+### Why These Constraints?
 
-### build.zig
+Graincards are designed to be:
+- **Portable**: viewable in any terminal
+- **Consistent**: all cards same size
+- **Focused**: forces concise, clear code
+- **Beautiful**: ASCII art borders create visual structure
 
-keep your build configuration clear and minimal. document any non-obvious
-choices.
+When you write zig code for graincards, you're writing for a specific display format. This
+constraint breeds creativity - it forces you to think carefully about every line.
 
-```zig
-const std = @import("std");
+## Dependencies
 
-pub fn build(b: *std.Build) void {
-    const target = b.standardTargetOptions(.{});
-    const optimize = b.standardOptimizeOption(.{});
+Grain OS has **a "zero dependencies" policy**, apart from the Zig toolchain. Dependencies, in
+general, inevitably lead to supply chain attacks, safety and performance risk, and slow install
+times. For foundational infrastructure in particular, the cost of any dependency is further
+amplified throughout the rest of the stack.
 
-    // create the library module
-    const lib_mod = b.addModule("project", .{
-        .root_source_file = b.path("src/api.zig"),
-    });
+## Tooling
 
-    // create executable
-    const exe = b.addExecutable(.{
-        .name = "project",
-        .root_source_file = b.path("src/cli.zig"),
-        .target = target,
-        .optimize = optimize,
-    });
-    exe.root_module.addImport("project", lib_mod);
+Similarly, tools have costs. A small standardized toolbox is simpler to operate than an array of
+specialized instruments each with a dedicated manual. Our primary tool is Zig. It may not be the
+best for everything, but it's good enough for most things. We invest into our Zig tooling to ensure
+that we can tackle new problems quickly, with a minimum of accidental complexity in our local
+development environment.
 
-    b.installArtifact(exe);
-}
-```
+> "The right tool for the job is often the tool you are already using—adding new tools has a higher
+> cost than many people appreciate" — John Carmack
 
-## common patterns
+For example, the next time you write a script, instead of `scripts/*.sh`, write `scripts/*.zig`.
 
-### initialization
+This not only makes your script cross-platform and portable, but introduces type safety and
+increases the probability that running your script will succeed for everyone on the team, instead of
+hitting a Bash/Shell/OS-specific issue.
 
-when initializing structs, use `.{}` syntax for clarity:
+Standardizing on Zig for tooling is important to ensure that we reduce dimensionality, as the team,
+and therefore the range of personal tastes, grows. This may be slower for you in the short term, but
+makes for more velocity for the team in the long term.
 
-```zig
-const config = Config{
-    .enabled = true,
-    .temperature = 3000,
-    .schedule_automatic = false,
-};
-```
+## When to Break the Rules
 
-### optional values
-
-use optionals explicitly. don't use sentinel values when you can use `?T`.
+These guidelines are principles, not laws. Sometimes you need to break them. When you do, document
+why.
 
 ```zig
-// good: explicit optional
-fn find_user(id: u32) ?User {
-    // ...
-}
-
-// bad: sentinel value
-const INVALID_USER_ID: u32 = 0;
-fn find_user(id: u32) User {
-    if (id == INVALID_USER_ID) return User{ .id = 0, .name = "" };
-    // ...
-}
-```
-
-### iteration
-
-prefer explicit iteration over magic. when you iterate, make it clear what
-you're iterating over.
-
-```zig
-// good: explicit iteration
-for (users, 0..) |user, index| {
-    std.log.info("user {d}: {s}", .{ index, user.name });
-}
-
-// good: simple iteration
-for (users) |user| {
-    process_user(user);
-}
-```
-
-## when to break the rules
-
-these guidelines are principles, not laws. sometimes you need to break them.
-when you do, document why.
-
-```zig
-// we use a global allocator here because this function is called
+// We use a global allocator here because this function is called
 // from C code and we can't pass allocators through the C API.
-// this is a known limitation - see issue #123.
+// This is a known limitation - see issue #123.
 const global_allocator = std.heap.page_allocator;
 ```
 
-if you're breaking a rule, there should be a good reason. if you can't
-articulate the reason, you probably shouldn't break the rule.
+If you're breaking a rule, there should be a good reason. If you can't articulate the reason, you
+probably shouldn't break the rule.
 
-## learning resources
+## The Last Stage
 
-- [zig language reference](https://ziglang.org/documentation/)
-- [zig standard library documentation](https://ziglang.org/documentation/master/std/)
-- [zig learn](https://ziglearn.org/) - excellent tutorial resource
-- [zig news](https://zig.news/) - community articles
+At the end of the day, keep trying things out, have fun, and remember—it's called Grain OS, not
+only because code grows like grain, but because it's small, sustainable, and teaches!
 
-## questions?
-
-if you're unsure about a style choice, ask yourself:
-
-1. **will this be clear in six months?** if you can't answer yes, make it clearer.
-
-2. **does this teach something?** good code teaches. does yours?
-
-3. **is this sustainable?** will this code work when requirements change?
-
-4. **is this explicit?** zig gives us the power to be explicit. are you using it?
-
-if you're still unsure, ask the team. we're here to help each other write
-better code.
+> You don't really suppose, do you, that all your adventures and escapes were managed by mere luck,
+> just for your sole benefit? You are a very fine person, Mr. Baggins, and I am very fond of you;
+> but you are only quite a little fellow in a wide world after all!"
+>
+> "Thank goodness!" said Bilbo laughing, and handed him the tobacco-jar.
 
 ---
 
-remember: code is written once, read many times. write it for the reader.
-write it to teach. write it to last.
+**now == next + 1** 🌾⚒️
 
-now == next + 1 🌾⚒️
+---
 
+## Attribution
+
+This document is heavily inspired by and adapted from [TigerBeetle's
+TIGER_STYLE.md](https://github.com/tigerbeetle/tigerbeetle/blob/main/docs/TIGER_STYLE.md), a
+battle-tested style guide from a production distributed database. We are deeply grateful to the
+TigerBeetle team for sharing their wisdom. Their principles on safety, performance, and developer
+experience have been invaluable in shaping Grain OS's approach to systems programming.
+
+The core philosophy, safety rules, and many specific guidelines are adapted from TIGER_STYLE with
+modifications for Grain OS's specific context (graincards, grain_case naming, etc.). We stand on the
+shoulders of giants.

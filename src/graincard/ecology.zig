@@ -5,10 +5,11 @@ const types = @import("types.zig");
 // Generates ecological parameters and ASCII visualizations
 
 pub fn generate_ecological_params(
+    allocator: std.mem.Allocator,
     seed: u64,
     forced_ecology: ?types.EcologyType,
     forced_season: ?types.Season,
-) types.EcologicalParams {
+) !types.EcologicalParams {
     var rng = std.Random.DefaultPrng.init(seed);
     const random = rng.random();
 
@@ -91,13 +92,16 @@ pub fn generate_ecological_params(
         .ecology_type = ecology_type,
     });
 
+    // Generate companions
+    const companions = try generate_companions(allocator, random, ecology_type);
+
     return .{
         .seed = seed,
         .ecology_type = ecology_type,
         .season = season,
         .soil_type = soil_type,
         .weather = weather,
-        .companions = &.{}, // TODO: Generate companions
+        .companions = companions,
         .mycorrhizal_fungi = mycorrhizal_fungi,
         .bacterial_biomass = bacterial_biomass,
         .protozoa_count = protozoa_count,
@@ -113,6 +117,59 @@ pub fn generate_ecological_params(
         .leaf_count = leaf_count,
         .rarity_score = rarity_score,
     };
+}
+
+fn generate_companions(
+    allocator: std.mem.Allocator,
+    random: std.Random,
+    ecology_type: types.EcologyType,
+) ![]const types.CompanionPlant {
+    var list: std.ArrayList(types.CompanionPlant) = .{
+        .items = &.{},
+        .capacity = 0,
+    };
+    errdefer list.deinit(allocator);
+
+    // Base probability for any companion
+    if (random.boolean()) try list.append(allocator, .clover);
+    
+    // Ecology specific companions
+    switch (ecology_type) {
+        .polyculture => {
+            if (random.boolean()) try list.append(allocator, .vetch);
+            if (random.boolean()) try list.append(allocator, .field_pea);
+        },
+        .wild_edges => {
+            if (random.boolean()) try list.append(allocator, .yarrow);
+            if (random.boolean()) try list.append(allocator, .chicory);
+        },
+        .minimal_disturbance => {
+            if (random.boolean()) try list.append(allocator, .creeping_thyme);
+        },
+        .cover_crop => {
+            try list.append(allocator, .vetch);
+            try list.append(allocator, .clover);
+        },
+        .selective_weeding => {
+            if (random.boolean()) try list.append(allocator, .dandelion);
+            if (random.boolean()) try list.append(allocator, .plantain);
+        },
+        .ecosystem_immune => {
+            try list.append(allocator, .yarrow);
+            try list.append(allocator, .fennel);
+            try list.append(allocator, .dandelion);
+        },
+        else => {},
+    }
+
+    // Random additions for biodiversity
+    if (random.intRangeAtMost(u8, 0, 10) > 8) {
+        const all_companions = std.enums.values(types.CompanionPlant);
+        const idx = random.intRangeAtMost(usize, 0, all_companions.len - 1);
+        try list.append(allocator, all_companions[idx]);
+    }
+
+    return list.toOwnedSlice(allocator);
 }
 
 pub fn generate_stalk(

@@ -28,17 +28,17 @@ const Stalk = struct {
         };
     }
 
-    fn generateToBuffer(self: *Stalk, buffer: *std.ArrayList(u8)) !GrainseedMetadata {
+    fn generateToBuffer(self: *Stalk, allocator: std.mem.Allocator, buffer: *std.ArrayList(u8)) !GrainseedMetadata {
         const random = self.rng.random();
         self.height = random.intRangeAtMost(u8, 5, 15);
         self.leaf_count = 0;
         
         // Header
-        try buffer.appendSlice("      . \n");
-        try buffer.appendSlice("    \\ | / \n");
-        try buffer.appendSlice("   --(@)-- \n");
-        try buffer.appendSlice("    / | \\ \n");
-        try buffer.appendSlice("      | \n");
+        try buffer.appendSlice(allocator, "      . \n");
+        try buffer.appendSlice(allocator, "    \\ | / \n");
+        try buffer.appendSlice(allocator, "   --(@)-- \n");
+        try buffer.appendSlice(allocator, "    / | \\ \n");
+        try buffer.appendSlice(allocator, "      | \n");
 
         // Stalk
         var i: u8 = 0;
@@ -49,11 +49,11 @@ const Stalk = struct {
             if (self.lean < -3) self.lean = -3;
             if (self.lean > 3) self.lean = 3;
 
-            try self.printSegmentToBuffer(buffer, i);
+            try self.printSegmentToBuffer(allocator, buffer, i);
         }
         
         // Roots
-        try buffer.appendSlice("    ~~~~~ \n");
+        try buffer.appendSlice(allocator, "    ~~~~~ \n");
 
         // Calculate rarity
         const rarity = self.calculateRarity();
@@ -69,7 +69,7 @@ const Stalk = struct {
         };
     }
 
-    fn printSegmentToBuffer(self: *Stalk, buffer: *std.ArrayList(u8), height_idx: u8) !void {
+    fn printSegmentToBuffer(self: *Stalk, allocator: std.mem.Allocator, buffer: *std.ArrayList(u8), height_idx: u8) !void {
         const random = self.rng.random();
         
         var indent: usize = 6;
@@ -77,22 +77,22 @@ const Stalk = struct {
         if (self.lean > 0) indent += @intCast(@abs(self.lean));
 
         var j: usize = 0;
-        while (j < indent) : (j += 1) try buffer.append(' ');
+        while (j < indent) : (j += 1) try buffer.append(allocator, ' ');
 
         const has_leaf_left = random.boolean() and height_idx % 3 == 0;
         const has_leaf_right = !has_leaf_left and random.boolean() and height_idx % 3 == 0;
 
         if (has_leaf_left) {
-            try buffer.append('(');
+            try buffer.append(allocator, '(');
             self.leaf_count += 1;
         }
-        try buffer.append('|');
+        try buffer.append(allocator, '|');
         if (has_leaf_right) {
-            try buffer.append(')');
+            try buffer.append(allocator, ')');
             self.leaf_count += 1;
         }
         
-        try buffer.append('\n');
+        try buffer.append(allocator, '\n');
     }
 
     fn calculateRarity(self: *Stalk) u8 {
@@ -141,11 +141,14 @@ pub fn main() !void {
 
     var id = start_id;
     while (id <= end_id) : (id += 1) {
-        var buffer = std.ArrayList(u8).init(allocator);
-        defer buffer.deinit();
+        var buffer: std.ArrayList(u8) = .{
+            .items = &.{},
+            .capacity = 0,
+        };
+        defer buffer.deinit(allocator);
 
         var stalk = Stalk.init(id);
-        const metadata = try stalk.generateToBuffer(&buffer);
+        const metadata = try stalk.generateToBuffer(allocator, &buffer);
 
         // Write to file
         const filename = try std.fmt.allocPrint(allocator, "grainseeds_output/grainseed_{d}.txt", .{id});

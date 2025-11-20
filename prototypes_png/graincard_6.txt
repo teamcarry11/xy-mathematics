@@ -1,0 +1,24 @@
++-------------------------------------------------------------------------+
+
+  GRAINSEED #6                                    Rarity: common (12%)
+  Seed: 6                                       Height: 9 segments
+  Type: residue_builder                             Lean: Right
+  Season: year_round                                    Leaves: 2
+      . 
+    \ | / 
+   --(@)-- 
+    / | \ 
+      | 
+      (|
+     |
+     |
+    |)
+    |
+   |
+   |
+   |
+   |
+    ~~~~~ 
+  Soil Food Web: 9 species
+  Carbon Sequestration: +0.1% annually
+  Biodiversity Index: 3.3/10  "Code that grows. Grain that lasts."+-------------------------------------------------------------------------+

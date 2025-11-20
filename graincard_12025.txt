@@ -1,0 +1,27 @@
++-------------------------------------------------------------------------+
+
+  GRAINSEED #12025                                    Rarity: common (12%)
+  Seed: 12025                                       Height: 12 segments
+  Type: fungal_network                             Lean: Left
+  Season: year_round                                    Leaves: 3
+      . 
+    \ | / 
+   --(@)-- 
+    / | \ 
+      | 
+      (|
+     |
+    |
+     (|
+      |
+     |
+     |)
+    |
+   |
+   |
+    |
+     |
+    ~~~~~ 
+  Soil Food Web: 40 species
+  Carbon Sequestration: +1.1% annually
+  Biodiversity Index: 7.1/10  "Code that grows. Grain that lasts."+-------------------------------------------------------------------------+

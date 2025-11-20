@@ -7,6 +7,7 @@ pub const entries = [_]GrainStore.ManifestEntry{
     .{ .platform = "codeberg", .org = "river", .repo = "river" },
     .{ .platform = "github", .org = "matklad", .repo = "config" },
     .{ .platform = "github", .org = "teamshine05", .repo = "graintime" },
+    .{ .platform = "github", .org = "zigimg", .repo = "zigimg" },
 };
 
 

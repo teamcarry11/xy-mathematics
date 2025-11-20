@@ -22,6 +22,49 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    const zigimg_module = b.addModule("zigimg", .{
+        .root_source_file = b.path("grainstore/github/zigimg/zigimg/zigimg.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
+    // Grain TLS implementation from grainstore (forked from ianic/tls.zig)
+    const grain_tls_impl_module = b.addModule("grain_tls_impl", .{
+        .root_source_file = b.path("grainstore/github/kae3g/grain-tls/src/root.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
+    // TLS module (Grain TLS) - Simplified wrapper around grain_tls_impl
+    const tls_module = b.addModule("tls", .{
+        .root_source_file = b.path("src/grain_tls/root.zig"),
+        .target = target,
+        .optimize = optimize,
+        .imports = &.{
+            .{ .name = "grain_tls_impl", .module = grain_tls_impl_module },
+        },
+    });
+
+    const graincard_exe = b.addExecutable(.{
+        .name = "graincard",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/graincard.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "zigimg", .module = zigimg_module },
+            },
+        }),
+    });
+    b.installArtifact(graincard_exe);
+
+    const graincard_run = b.addRunArtifact(graincard_exe);
+    const graincard_step = b.step("graincard", "Run the Graincard Generator");
+    graincard_step.dependOn(&graincard_run.step);
+    if (b.args) |args| {
+        graincard_run.addArgs(args);
+    }
+
     const exe = b.addExecutable(.{
         .name = "ray",
         .root_module = b.createModule(.{
@@ -90,8 +133,11 @@ pub fn build(b: *std.Build) void {
             .root_source_file = b.path("src/kernel/main.zig"),
             .target = kernel_resolved,
             .optimize = optimize,
+            .code_model = .medium,
         }),
     });
+    kernel_exe.setLinkerScript(b.path("src/kernel/linker.ld"));
+    kernel_exe.addAssemblyFile(b.path("src/kernel/entry.S"));
     const kernel_install = b.addInstallArtifact(kernel_exe, .{});
     const kernel_step = b.step("kernel-rv64", "Build Grain RISC-V kernel image");
     kernel_step.dependOn(&kernel_install.step);
@@ -140,6 +186,22 @@ pub fn build(b: *std.Build) void {
     kernel_vm_test_step.dependOn(&kernel_vm_test_install.step);
     const kernel_vm_test_run = b.addRunArtifact(kernel_vm_test_exe);
     kernel_vm_test_step.dependOn(&kernel_vm_test_run.step);
+
+    // JIT Benchmark executable
+    const benchmark_jit_exe = b.addExecutable(.{
+        .name = "benchmark_jit",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/kernel_vm/benchmark_jit.zig"),
+            .target = target,
+            .optimize = .ReleaseFast, // Benchmark should be optimized
+            .imports = &.{
+                .{ .name = "sbi", .module = sbi_module },
+            },
+        }),
+    });
+    const benchmark_jit_run = b.addRunArtifact(benchmark_jit_exe);
+    const benchmark_jit_step = b.step("benchmark-jit", "Run JIT vs Interpreter benchmark");
+    benchmark_jit_step.dependOn(&benchmark_jit_run.step);
 
     const validate_src_exe = b.addExecutable(.{
         .name = "validate_src",
@@ -885,6 +947,41 @@ pub fn build(b: *std.Build) void {
     build_essential_step.dependOn(&ld_install.step);
     build_essential_step.dependOn(&ar_install.step);
     build_essential_step.dependOn(&make_install.step);
+
+    // Grainscape Browser (native browser for Grain OS)
+    const grainscape_exe = b.addExecutable(.{
+        .name = "grainscape",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/userspace/grainscape/main.zig"),
+            .target = target, // Host target for now
+            .optimize = optimize,
+        }),
+    });
+    const grainscape_install = b.addInstallArtifact(grainscape_exe, .{});
+    const grainscape_step = b.step("grainscape", "Build and run Grainscape browser");
+    const run_grainscape = b.addRunArtifact(grainscape_exe);
+    grainscape_step.dependOn(&run_grainscape.step);
+    run_grainscape.step.dependOn(&grainscape_install.step);
+
+    // Grainscape TLS Demo (test TLS connectivity)
+    const grainscape_tls_demo_exe = b.addExecutable(.{
+        .name = "grainscape-tls-demo",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/userspace/grainscape/tls_demo.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "tls", .module = tls_module },
+            },
+        }),
+    });
+    const grainscape_tls_demo_install = b.addInstallArtifact(grainscape_tls_demo_exe, .{});
+    const grainscape_tls_demo_step = b.step("grainscape-tls-demo", "Build and run Grainscape TLS demo");
+    const run_grainscape_tls_demo = b.addRunArtifact(grainscape_tls_demo_exe);
+    grainscape_tls_demo_step.dependOn(&run_grainscape_tls_demo.step);
+    run_grainscape_tls_demo.step.dependOn(&grainscape_tls_demo_install.step);
+
+
 
     const fuzz_003_tests = b.addTest(.{
         .root_module = b.createModule(.{

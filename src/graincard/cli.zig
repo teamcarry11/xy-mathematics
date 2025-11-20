@@ -2,6 +2,7 @@ const std = @import("std");
 const types = @import("types.zig");
 const ecology = @import("ecology.zig");
 const layout = @import("layout.zig");
+const png_generator = @import("png_generator.zig");
 
 // Graincard CLI
 // Command-line interface for graincard generation
@@ -15,6 +16,9 @@ pub const Options = struct {
     ecology_type: ?types.EcologyType = null,
     season: ?types.Season = null,
     format: Format = .txt,
+    png: bool = false,
+    png_scale: u8 = 1,
+    png_stalk_only: bool = false,
 
     pub const Format = enum {
         txt,
@@ -66,6 +70,13 @@ pub fn parse_args(allocator: std.mem.Allocator) !Options {
                 Options.Format,
                 format_str,
             ) orelse return error.InvalidFormat;
+        } else if (std.mem.eql(u8, arg, "--png")) {
+            options.png = true;
+        } else if (std.mem.eql(u8, arg, "--png-scale")) {
+            const scale_str = args.next() orelse return error.MissingScaleValue;
+            options.png_scale = try std.fmt.parseInt(u8, scale_str, 10);
+        } else if (std.mem.eql(u8, arg, "--png-stalk-only")) {
+            options.png_stalk_only = true;
         } else if (std.mem.eql(u8, arg, "--help") or std.mem.eql(u8, arg, "-h")) {
             print_usage();
             std.process.exit(0);
@@ -87,6 +98,9 @@ pub fn print_usage() void {
         \\  --ecology <type>       Force specific ecology type
         \\  --season <season>      Force specific season
         \\  --format <txt|json>    Output format (default: txt)
+        \\  --png                  Generate PNG image
+        \\  --png-scale <1-3>      Scale factor for PNG (default: 1)
+        \\  --png-stalk-only       Generate only the stalk visual in PNG
         \\  --help, -h             Show this help message
         \\
         \\Examples:
@@ -117,6 +131,18 @@ pub fn run(allocator: std.mem.Allocator) !void {
             defer file.close();
             try file.writeAll(graincard);
             std.debug.print("Generated graincard: {s}\n", .{output_path});
+
+            if (options.png) {
+                // Generate PNG filename (replace extension or append .png)
+                const png_path = try std.fmt.allocPrint(allocator, "{s}.png", .{output_path});
+                defer allocator.free(png_path);
+                
+                try png_generator.ascii_to_png(allocator, graincard, png_path, .{
+                    .scale = options.png_scale,
+                    .stalk_only = options.png_stalk_only,
+                });
+                std.debug.print("Generated PNG: {s}\n", .{png_path});
+            }
         } else {
             std.debug.print("{s}", .{graincard});
         }
@@ -147,6 +173,20 @@ pub fn run(allocator: std.mem.Allocator) !void {
             defer file.close();
             try file.writeAll(graincard);
 
+            if (options.png) {
+                const png_filename = try std.fmt.allocPrint(
+                    allocator,
+                    "{s}/graincard_{d}.png",
+                    .{ output_dir, current },
+                );
+                defer allocator.free(png_filename);
+
+                try png_generator.ascii_to_png(allocator, graincard, png_filename, .{
+                    .scale = options.png_scale,
+                    .stalk_only = options.png_stalk_only,
+                });
+            }
+
             if (current % 10 == 0) {
                 std.debug.print("Generated {d}/{d} graincards...\n", .{ current - start + 1, end - start + 1 });
             }
@@ -162,12 +202,16 @@ fn generate_graincard(
     options: Options,
 ) ![]u8 {
     // Generate ecological parameters
-    const params = ecology.generate_ecological_params(
+    const params = try ecology.generate_ecological_params(
+        allocator,
         seed,
         options.ecology_type,
         options.season,
     );
-
+    // We need to free companions if we owned them, but they are in the struct.
+    // For now we rely on the fact that we are short-lived. 
+    // Ideally we'd have a deinit on params or use an arena.
+    
     // Generate stalk visual
     const stalk = try ecology.generate_stalk(allocator, params);
     defer allocator.free(stalk);
@@ -176,14 +220,17 @@ fn generate_graincard(
     const rarity_trait = types.get_rarity_trait(params.rarity_score);
     const rarity_pct = types.get_rarity_percentage(rarity_trait);
     
+    // Note: Layout engine handles padding, so we just need content.
     const header = try std.fmt.allocPrint(
         allocator,
-        \\
-        \\  GRAINSEED #{d}                                    Rarity: {s} ({s})
-        \\  Seed: {d}                                       Height: {d} segments
-        \\  Type: {s}                             Lean: {s}
-        \\  Season: {s}                                    Leaves: {d}
-        \\
+        \\  GRAINSEED #{d}
+        \\  Rarity: {s} ({s})
+        \\  Seed: {d}
+        \\  Height: {d} segments
+        \\  Type: {s}
+        \\  Lean: {s}
+        \\  Season: {s}
+        \\  Leaves: {d}
     ,
         .{
             seed,
@@ -199,22 +246,41 @@ fn generate_graincard(
     );
     defer allocator.free(header);
 
-    // Create metrics box (simplified for now)
+    // Format companions list
+    var companions_buf: std.ArrayList(u8) = .{
+        .items = &.{},
+        .capacity = 0,
+    };
+    defer companions_buf.deinit(allocator);
+    
+    if (params.companions.len > 0) {
+        try companions_buf.appendSlice(allocator, "  Companions: ");
+        for (params.companions, 0..) |c, i| {
+            if (i > 0) try companions_buf.appendSlice(allocator, ", ");
+            try companions_buf.appendSlice(allocator, @tagName(c));
+        }
+    } else {
+        try companions_buf.appendSlice(allocator, "  Companions: None");
+    }
+
+    // Create metrics box
     const metrics = try std.fmt.allocPrint(
         allocator,
         \\  Soil Food Web: {d} species
         \\  Carbon Sequestration: +{d:.1}% annually
         \\  Biodiversity Index: {d:.1}/10
+        \\{s}
     ,
         .{
             params.nematode_diversity,
             params.soil_carbon_sequestration,
             params.biodiversity_index,
+            companions_buf.items,
         },
     );
     defer allocator.free(metrics);
 
-    const footer = "  \"Code that grows. Grain that lasts.\"";
+    const footer = "\"Code that grows. Grain that lasts.\"";
 
     // Assemble graincard
     const config = types.GraincardConfig{ .seed = seed };

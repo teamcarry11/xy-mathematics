@@ -1,0 +1,24 @@
++-------------------------------------------------------------------------+
+
+  GRAINSEED #3                                    Rarity: common (12%)
+  Seed: 3                                       Height: 9 segments
+  Type: cover_crop                             Lean: Left
+  Season: autumn                                    Leaves: 5
+      . 
+    \ | / 
+   --(@)-- 
+    / | \ 
+      | 
+     |)
+    |
+   |
+   |
+    |
+    |
+     |)
+      |
+     |
+    ~~~~~ 
+  Soil Food Web: 33 species
+  Carbon Sequestration: +0.5% annually
+  Biodiversity Index: 9.0/10  "Code that grows. Grain that lasts."+-------------------------------------------------------------------------+

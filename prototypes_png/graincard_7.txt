@@ -1,0 +1,25 @@
++-------------------------------------------------------------------------+
+
+  GRAINSEED #7                                    Rarity: uncommon (7%)
+  Seed: 7                                       Height: 10 segments
+  Type: fungal_network                             Lean: Straight
+  Season: autumn                                    Leaves: 1
+      . 
+    \ | / 
+   --(@)-- 
+    / | \ 
+      | 
+     |
+    |
+    |
+     (|
+     |
+    |
+    |
+   |
+   |
+    |
+    ~~~~~ 
+  Soil Food Web: 27 species
+  Carbon Sequestration: +0.1% annually
+  Biodiversity Index: 4.3/10  "Code that grows. Grain that lasts."+-------------------------------------------------------------------------+

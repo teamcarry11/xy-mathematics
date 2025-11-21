@@ -222,6 +222,29 @@ pub const VM = struct {
         std.debug.assert(self.regs.pc % 4 == 0 or self.state != .running);
     }
     
+    /// Enable JIT on an already-initialized VM
+    /// Why: Allow enabling JIT after loadKernel() has loaded the kernel
+    /// Contract: VM must be initialized (via init() or loadKernel())
+    /// Contract: JIT must not already be enabled
+    pub fn enable_jit(self: *Self, allocator: std.mem.Allocator) !void {
+        std.debug.assert(self.jit == null);
+        std.debug.assert(!self.jit_enabled);
+        
+        // Initialize JIT context
+        var guest_state = jit_mod.GuestState{
+            .regs = self.regs.regs,
+            .pc = self.regs.pc,
+        };
+        
+        const jit_ctx = try allocator.create(jit_mod.JitContext);
+        jit_ctx.* = try jit_mod.JitContext.init(allocator, &guest_state, self.memory[0..self.memory_size]);
+        self.jit = jit_ctx;
+        self.jit_enabled = true;
+        
+        std.debug.assert(self.jit != null);
+        std.debug.assert(self.jit_enabled);
+    }
+    
     /// Deinitialize JIT (if enabled)
     pub fn deinit_jit(self: *Self, allocator: std.mem.Allocator) void {
         if (self.jit) |jit_ctx| {

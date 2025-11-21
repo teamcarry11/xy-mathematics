@@ -386,6 +386,16 @@ pub const TahoeSandbox = struct {
                 std.debug.assert(sandbox.serial_output.buffer.len > 0);
                 std.debug.assert(sandbox.serial_output.write_pos < sandbox.serial_output.buffer.len);
                 
+                // Enable JIT compilation for VM (GrainStyle: enable JIT after kernel is loaded).
+                // Why: Enable near-native performance for kernel execution.
+                vm.enable_jit(sandbox.allocator) catch |err| {
+                    std.debug.print("[tahoe_window] Failed to enable JIT: {s}\n", .{@errorName(err)});
+                    // Continue without JIT (interpreter fallback is available).
+                };
+                
+                // Assert: JIT should be enabled (unless allocation failed).
+                // Note: JIT may not be enabled if allocation failed, but that's OK (interpreter works).
+                
                 // Store VM in sandbox (store pointer to avoid copying 4MB struct).
                 sandbox.vm = vm;
                 
@@ -644,6 +654,12 @@ pub const TahoeSandbox = struct {
     }
 
     pub fn deinit(self: *TahoeSandbox) void {
+        // Clean up VM JIT if enabled.
+        if (self.vm) |vm| {
+            vm.deinit_jit(self.allocator);
+            self.allocator.destroy(vm);
+        }
+        
         // Free BasinKernel instance (allocated on heap).
         self.allocator.destroy(self.basin_kernel_instance);
         self.aurora.deinit();
@@ -663,10 +679,11 @@ pub const TahoeSandbox = struct {
         
         // Step RISC-V VM if running.
         // Why: Execute kernel instructions continuously during VM execution.
+        // Note: Use step_jit() which automatically falls back to interpreter if JIT is disabled.
         if (self.vm) |vm| {
             if (vm.state == .running) {
-                // Step VM (execute one instruction).
-                vm.step() catch |err| {
+                // Step VM with JIT (execute one instruction, JIT if enabled, interpreter fallback).
+                vm.step_jit() catch |err| {
                     std.debug.print("[tahoe_window] VM step error: {s}\n", .{@errorName(err)});
                     vm.stop();
                 };

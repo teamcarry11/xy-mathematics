@@ -1,7 +1,7 @@
 # Grain OS Development Plan
 ## RISC-V Kernel + VM + Aurora IDE
 
-**Current Status**: Text Rendering complete ✅. Day 1-2 tasks complete! Next: Performance validation & optimization.
+**Current Status**: Performance Validation complete ✅. All Day 1-2 tasks complete! 🎉
 
 **Goal**: RISC-V-targeted Grain OS with graphical interface running in macOS Tahoe 26.1 VM, with path toward Framework 13 RISC-V hardware.
 
@@ -9,7 +9,7 @@
 
 ### Day 1-2: VM Integration & Kernel Boot 🔥 **CRITICAL**
 
-**Objective**: Get Grain Basin Kernel booting in Grain VM with JIT acceleration.
+**Objective**: Get Grain Basin Kernel booting in Grain Vantage with JIT acceleration.
 
 1. **Complete VM Integration**
    - Hook JIT into `vm.zig` dispatch loop
@@ -23,10 +23,10 @@
    - Initialize framebuffer for GUI
    - Display simple test pattern
 
-3. **Performance Validation**
-   - Benchmark JIT vs interpreter
-   - Verify 10x+ speedup on hot paths
-   - Profile memory usage
+3. **Performance Validation** ✅ **COMPLETE**
+   - ✅ Benchmark JIT vs interpreter (enhanced suite with statistics)
+   - ✅ Verify 10x+ speedup on hot paths (automatic verification)
+   - ✅ Profile memory usage (JIT: ~64MB code buffer)
 
 ### Day 3: GUI Integration
 
@@ -56,7 +56,7 @@
 ├─────────────────────────────────────┤
 │   Grain Aurora IDE (Zig GUI)       │
 ├─────────────────────────────────────┤
-│   Grain VM (RISC-V → AArch64 JIT)  │ ✅ COMPLETE
+│   Grain Vantage (RISC-V → AArch64 JIT)  │ ✅ COMPLETE
 ├─────────────────────────────────────┤
 │   Grain Basin Kernel (RISC-V64)     │
 └─────────────────────────────────────┘
@@ -175,6 +175,84 @@
 - [ ] Performance benchmarks met
 - [ ] Documentation complete
 
+## 🎨 Phase 4: Dream Editor + Browser (NEW)
+
+**Status**: 🔄 Foundation in progress (Phase 0)
+
+**Vision**: Unified IDE combining Matklad-inspired editor with Nostr-native browser, using GLM-4.6 for agentic coding at 1,000 tokens/second.
+
+### Phase 0: Shared Foundation (In Progress)
+
+**Objective**: Build shared components for both editor and browser.
+
+#### 0.1: GrainBuffer Enhancement ✅ **COMPLETE**
+- ✅ Increased readonly segments from 64 to 1000
+- ✅ Added span query functions (`isReadOnly`, `getReadonlySpans`)
+- ✅ Binary search optimization for large segment lists
+- ✅ Comprehensive assertions (GrainStyle compliance)
+
+#### 0.2: GLM-4.6 Client 🔄 **IN PROGRESS**
+- ✅ Client structure created
+- ✅ HTTP client foundation created
+- 🔄 HTTP implementation (JSON serialization, SSE streaming)
+- 📋 Tool calling support
+
+#### 0.3: Dream Protocol 📋 **PLANNED**
+- 📋 Nostr + WebSocket + TigerBeetle-style state machine
+- 📋 Event streaming (real-time, sub-millisecond latency)
+- 📋 Relay connection management
+
+### Phase 1: Dream Editor Core (Planned)
+
+**Objective**: Matklad-inspired editor with GLM-4.6 integration.
+
+- Readonly spans (text-as-UI paradigm)
+- Method folding (bodies fold by default)
+- Tree-sitter integration (syntax highlighting)
+- GLM-4.6 code completion (1,000 tps)
+- Complete LSP implementation
+- Magit-style VCS integration
+
+### Phase 2: Dream Browser Core (Planned)
+
+**Objective**: Zig-native browser with Nostr protocol.
+
+- HTML/CSS parser (subset)
+- Rendering engine (Grain Aurora)
+- Nostr content loading (real-time)
+- WebSocket transport (low-latency)
+- TigerBeetle-style state machine
+
+### Phase 3: Integration (Planned)
+
+**Objective**: Unified Editor + Browser experience.
+
+- Multi-pane layout (River compositor)
+- Live preview (real-time sync)
+- VCS integration (Magit-style)
+- GrainBank micropayments
+
+**See**: `docs/dream_implementation_roadmap.md` for complete roadmap
+
+## 👥 Parallel Development Opportunities
+
+**Current Agent Focuses**:
+1. **VM/Kernel Agent**: Grain Vantage & Kernel Boot Integration (`src/kernel_vm/`, `src/kernel/`, `src/platform/macos_tahoe/`)
+2. **Dream Editor/Browser Agent**: Foundation components (`src/aurora_*.zig`, `src/dream_*.zig`)
+
+**Available for Parallel Work** (see `docs/agent_work_summary.md` and `docs/dream_editor_agent_summary.md`):
+- **Dream Editor/Browser** (`src/aurora_*.zig`, `src/dream_*.zig`) - 🔄 Active (Phase 0)
+- **Userspace Tools** (`src/userspace/`) - Core utilities, browser engine, build tools
+- **Grain Ecosystem** (`src/graincard/`, `grainseed*.zig`) - Graincard, seed system
+- **TLS/Networking** (`src/grain_tls/`, `nostr.zig`) - TLS client, protocols
+- **Platform Implementations** (`src/platform/riscv/`) - Native RISC-V platform
+- **Kernel Advanced Features** - Memory management, process scheduling (design in parallel)
+- **Documentation** (`docs/learning-course/`) - Course content, tutorials
+
+**See**: 
+- `docs/agent_work_summary.md` - VM/Kernel agent work
+- `docs/dream_editor_agent_summary.md` - Dream Editor/Browser agent work
+
 ## 🔗 References
 
 - **Framework 13 RISC-V**: https://frame.work/products/deep-computing-risc-v-mainboard
@@ -182,4 +260,5 @@
 - **Daylight Computer**: https://daylightcomputer.com
 - **JIT Architecture**: `docs/zyx/jit_architecture.md`
 - **Tasks**: `docs/tasks.md`
+- **Agent Work Summary**: `docs/agent_work_summary.md`
 - **Development Strategy**: `docs/zyx/development_strategy_2025.md`

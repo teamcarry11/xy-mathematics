@@ -1,7 +1,7 @@
 # Grain OS Development Plan
 ## RISC-V Kernel + VM + Aurora IDE
 
-**Current Status**: Phase 4.3.2 Rendering Engine complete ✅. Layout engine and Aurora rendering implemented! 🎉
+**Current Status**: Phase 4.3.4 WebSocket Transport complete ✅. Enhanced WebSocket client with connection management and reconnection implemented! 🎉
 
 **Goal**: RISC-V-targeted Grain OS with graphical interface running in macOS Tahoe 26.1 VM, with path toward Framework 13 RISC-V hardware.
 
@@ -383,17 +383,18 @@
 - ✅ Editable spans for content (text content is editable)
 - ✅ DAG-based rendering pipeline (DOM nodes from DAG)
 
-#### 3.3: Nostr Content Loading 📋 **PLANNED**
-- 📋 Parse Nostr URLs (`nostr:note1...`, `nostr:npub1...`)
-- 📋 Subscribe to Nostr events
-- 📋 Receive events (streaming, real-time)
-- 📋 Render events to browser
+#### 3.3: Nostr Content Loading ✅ **COMPLETE**
+- ✅ Parse Nostr URLs (`nostr:note1...`, `nostr:npub1...`, `src/dream_browser_nostr.zig`)
+- ✅ Subscribe to Nostr events (via DreamProtocol, filter by URL type)
+- ✅ Receive events (streaming, real-time, WebSocket integration)
+- ✅ Render events to browser (DOM nodes with readonly spans for metadata)
+- ✅ DAG event integration (map events to DAG via browser-DAG integration)
 
-#### 3.4: WebSocket Transport 📋 **PLANNED**
-- 📋 WebSocket client (low-latency)
-- 📋 Bidirectional communication
-- 📋 Connection management
-- 📋 Error handling and reconnection
+#### 3.4: WebSocket Transport ✅ **COMPLETE**
+- ✅ WebSocket client (low-latency, `src/dream_browser_websocket.zig`)
+- ✅ Bidirectional communication (send/receive with message queue)
+- ✅ Connection management (state tracking, auto-reconnect)
+- ✅ Error handling and reconnection (exponential backoff, max 10 attempts)
 
 ### Phase 3: Integration (Planned)
 

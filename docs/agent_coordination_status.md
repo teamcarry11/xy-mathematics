@@ -52,7 +52,7 @@
 - ✅ 3.1: HTML/CSS Parser (Dream Editor/Browser Agent)
 - ✅ 3.2: Rendering Engine (Both agents - needs verification)
 - ✅ 3.3: Nostr Content Loading (VM/Kernel/Browser Agent)
-- 📋 3.4: WebSocket Transport (Next - available for either agent)
+- ✅ 3.4: WebSocket Transport (VM/Kernel/Browser Agent - **JUST COMPLETED**)
 
 ### Phase 2: DAG Integration
 - ✅ 2.1: Editor-DAG Integration (Previous work)
@@ -61,12 +61,12 @@
 
 ## Next Steps
 
-### Immediate (Phase 3.4)
-- **WebSocket Transport**: Available for either agent
-  - WebSocket client (low-latency)
-  - Bidirectional communication
-  - Connection management
-  - Error handling and reconnection
+### Immediate (Phase 3.4) ✅ **COMPLETE**
+- **WebSocket Transport**: ✅ Completed by VM/Kernel/Browser Agent
+  - ✅ WebSocket client (low-latency, `src/dream_browser_websocket.zig`)
+  - ✅ Bidirectional communication (send/receive with message queue)
+  - ✅ Connection management (state tracking, auto-reconnect)
+  - ✅ Error handling and reconnection (exponential backoff, max 10 attempts)
 
 ### Coordination Points
 

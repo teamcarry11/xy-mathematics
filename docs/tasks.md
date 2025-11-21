@@ -326,18 +326,18 @@
 - [x] Editable spans for content (text content is editable)
 - [x] DAG-based rendering pipeline (DOM nodes from DAG)
 
-#### 4.3.3 Nostr Content Loading
-- [ ] Parse Nostr URLs (`nostr:note1...`, `nostr:npub1...`)
-- [ ] Subscribe to Nostr events
-- [ ] Receive events (streaming, real-time)
-- [ ] Render events to browser
-- [ ] DAG event integration
+#### 4.3.3 Nostr Content Loading ✅ **COMPLETE**
+- [x] Parse Nostr URLs (`nostr:note1...`, `nostr:npub1...`, `src/dream_browser_nostr.zig`)
+- [x] Subscribe to Nostr events (via DreamProtocol, filter by URL type)
+- [x] Receive events (streaming, real-time, WebSocket integration)
+- [x] Render events to browser (DOM nodes with readonly spans for metadata)
+- [x] DAG event integration (map events to DAG via browser-DAG integration)
 
-#### 4.3.4 WebSocket Transport
-- [ ] WebSocket client (low-latency)
-- [ ] Bidirectional communication
-- [ ] Connection management
-- [ ] Error handling and reconnection
+#### 4.3.4 WebSocket Transport ✅ **COMPLETE**
+- [x] WebSocket client (low-latency, `src/dream_browser_websocket.zig`)
+- [x] Bidirectional communication (send/receive with message queue)
+- [x] Connection management (state tracking, auto-reconnect)
+- [x] Error handling and reconnection (exponential backoff, max 10 attempts)
 
 ### 4.3 Editor-Browser Integration (PLANNED)
 

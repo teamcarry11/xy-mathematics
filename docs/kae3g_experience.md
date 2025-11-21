@@ -6,7 +6,7 @@ I'm 29, living in Northern Nevada. I've been self-studying for 7 years now. I le
 
 Here's my story: I realized early on that the conventional path wasn't going to get me where I wanted to go. I wanted to understand how computers actually work, not just how to use the latest framework. So I took a risk. I saved up, made some bets that paid off, and decided to spend my time learning the things that actually mattered to me instead of climbing a corporate ladder.
 
-It's been 7 years of building, breaking things, learning, failing, and occasionally getting something right. I'm building an operating system from scratch in Zig, a [relatively new programming language](https://ziglang.org) for sharp systems thinkers, a [relatively new programming language](https://ziglang.org) for sharp systems thinkers. I'm working on reinventing browsers and editors. I'm exploring ideas that might be completely wrong, but at least they're asking the right questions.
+It's been 7 years of building, breaking things, learning, failing, and occasionally getting something right. I'm building an operating system from scratch in Zig, a [relatively new programming language](https://ziglang.org) for sharp systems thinkers. I'm working on reinventing browsers and editors. I'm exploring ideas that might be completely wrong, but at least they're asking the right questions.
 
 I'm not a senior engineer at Google. I'm not a professor. I'm someone who took a different path, and I've learned some things that might help you if you're also questioning the conventional wisdom.
 

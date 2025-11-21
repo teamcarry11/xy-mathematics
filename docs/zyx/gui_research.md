@@ -1,5 +1,7 @@
 # GUI & Compositor Research Notes
 
+> *Note: This document is a work in progress. For questions or to get in touch, please see `contact.md` in the root directory.*
+
 ## River Compositor Inspiration
 - River is an actively maintained Wayland compositor written in Zig (≈93% of the codebase) focused on
   dynamic tiling, runtime configuration with `riverctl`, and modular layout generators

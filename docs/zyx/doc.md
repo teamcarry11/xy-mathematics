@@ -89,8 +89,31 @@
 - Function length: max 70 lines
 - Total size: 75×100 monospace teaching cards
 
+## GrainStyle Development Guidelines
+
+### Safety & Assertions
+- **Crash Early**: Use `assert` for programmer errors
+- **Pair Assertions**: Assert preconditions AND postconditions
+- **Density**: Minimum 2 assertions per function
+- **Negative Space**: Assert what *cannot* happen
+
+### Memory Management
+- **Startup Only**: Allocate everything in `init`
+- **No Hidden Allocations**: Avoid functions that allocate implicitly
+- **Pre-allocate Collections**: Call `ensureTotalCapacity` on HashMaps/Lists
+
+### Control Flow
+- **70-Line Limit**: Hard limit. Break it down.
+- **No Recursion**: Iteration only
+- **Explicit Types**: Use `u32` over `usize` for data protocols
+- **Push Ifs Up, Fors Down**: Centralize control flow
+
+### Documentation
+- **"Why", not "What"**: Comments explain reasoning
+- **Graincards**: Think of every file as a 75×100 teaching card
+
 ## References
 - **JIT Architecture**: `docs/jit_architecture.md`
 - **Grain Style**: `docs/zyx/grain_style.md`
 - **Tasks**: `docs/tasks.md`
-- **Cursor Prompt**: `docs/cursor_prompt.md`
+- **Browser Spec**: `docs/browser_prompt.md`

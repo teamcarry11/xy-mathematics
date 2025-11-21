@@ -1,0 +1,4 @@
+# grainery
+
+placeholder directory for grain system artifacts
+

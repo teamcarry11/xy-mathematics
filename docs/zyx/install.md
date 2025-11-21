@@ -1,5 +1,7 @@
 # Installation Guide — Grain Aurora
 
+> *Note: This document is a work in progress. For questions or to get in touch, please see `contact.md` in the root directory.*
+
 ## Zig Toolchain
 
 **Use the official Zig release from ziglang.org, not Homebrew.**

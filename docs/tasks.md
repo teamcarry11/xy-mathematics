@@ -1,6 +1,49 @@
 # Grain OS Task List
 
-> "A complete roadmap for Grain OS development, from JIT compiler to production IDE."
+> "A complete roadmap for Grain OS development, from JIT compiler to production IDE and repairable hardware."
+
+## 🎯 Immediate Priorities (Next 3 Days)
+
+### Day 1-2: VM Integration & Kernel Boot 🔥 **CRITICAL**
+
+#### 2.1 Complete VM Integration
+- [ ] Hook JIT into `vm.zig` dispatch loop
+- [ ] Add `init_with_jit()` method to VM struct
+- [ ] Implement `step_jit()` with interpreter fallback
+- [ ] Sync guest state between JIT and VM
+- [ ] Test with minimal kernel boot sequence
+
+#### 2.2 Kernel Boot Sequence
+- [ ] Implement basic boot loader
+- [ ] Set up initial memory layout
+- [ ] Initialize framebuffer for GUI
+- [ ] Display simple test pattern
+
+#### 2.3 Performance Validation
+- [ ] Benchmark JIT vs interpreter
+- [ ] Verify 10x+ speedup on hot paths
+- [ ] Profile memory usage
+- [ ] Measure cache hit rate
+
+### Day 3: GUI Integration
+
+#### 2.4 Framebuffer Sync
+- [ ] Map kernel framebuffer to host memory
+- [ ] Implement dirty region tracking
+- [ ] Update macOS window on changes
+- [ ] Optimize copy performance
+
+#### 2.5 Input Pipeline
+- [ ] Route macOS keyboard events to kernel
+- [ ] Route macOS mouse events to kernel
+- [ ] Implement virtual interrupt injection
+- [ ] Test basic input handling
+
+#### 2.6 Text Rendering
+- [ ] Integrate TextRenderer into kernel
+- [ ] Render simple text to framebuffer
+- [ ] Display kernel boot messages
+- [ ] Font loading and rendering
 
 ## ✅ Phase 1: JIT Compiler (COMPLETE)
 
@@ -45,13 +88,11 @@
 - [x] Add JIT enable/disable flag
 
 ### 2.2 Performance
-- [/] **Performance Benchmarking** <!-- id: 21.5 -->
-    - [x] Create benchmark suite (`benchmark_jit.zig`)
-    - [/] Run benchmarks and collect metrics (Blocked by environment/stack overflow debugging)
-    - [ ] Optimize hot paths based on results
+- [x] Create benchmark suite (`benchmark_jit.zig`)
+- [ ] Run benchmarks and collect metrics
+- [ ] Optimize hot paths based on results
 - [ ] Profile hot paths
 - [ ] Optimize block compilation
-- [ ] Measure cache hit rate
 
 ### 2.3 Testing
 - [ ] Integration tests with real kernel code
@@ -63,13 +104,15 @@
 
 ### 3.1 Kernel Core
 - [ ] Boot sequence
-- [ ] Memory management
-- [ ] Process management
-- [ ] System calls
+- [ ] Memory management (paging, allocation)
+- [ ] Process management (scheduling, IPC)
+- [ ] System calls (POSIX subset)
 
 ### 3.2 Device Drivers
-- [ ] Serial console
-- [ ] Timer
+- [ ] Framebuffer driver
+- [ ] Keyboard driver
+- [ ] Mouse driver
+- [ ] Timer driver
 - [ ] Interrupt controller
 - [ ] Storage (virtio-blk)
 
@@ -111,53 +154,110 @@
 - [ ] Cancellation support
 - [ ] Zig-specific features
 
-## 🚀 Phase 5: Production
+## 🌐 Phase 5: GrainView Browser
 
-### 5.1 Performance
+### 5.1 Core Engine
+- [ ] HTML parser (subset of HTML5)
+- [ ] CSS parser (subset of CSS3)
+- [ ] DOM tree construction
+- [ ] Layout engine (block/inline flow)
+- [ ] Basic rendering to Grain Aurora framebuffer
+
+### 5.2 Networking
+- [ ] HTTP/1.1 client (no TLS initially)
+- [ ] URL parsing and resolution
+- [ ] Resource fetching (HTML, CSS, images)
+- [ ] Basic caching
+
+### 5.3 JavaScript Engine
+- [ ] ECMAScript 5 subset parser
+- [ ] Interpreter (or JIT via Grain VM)
+- [ ] DOM API bindings
+- [ ] Event system
+
+### 5.4 Advanced Features
+- [ ] TLS/HTTPS support
+- [ ] Image decoding (PNG, JPEG)
+- [ ] Font rendering
+- [ ] Scrolling and navigation
+- [ ] Bookmarks and history
+
+## 🔧 Phase 6: Framework 13 RISC-V Hardware
+
+### 6.1 Hardware Acquisition
+- [ ] Research DeepComputing DC-ROMA mainboard
+- [ ] Acquire Framework 13 RISC-V mainboard
+- [ ] Set up development environment
+- [ ] Test hardware compatibility
+
+### 6.2 Native RISC-V Port
+- [ ] Port Grain Basin Kernel to native RISC-V
+- [ ] Remove JIT layer (native execution)
+- [ ] Optimize for hardware
+- [ ] Boot on real hardware
+
+### 6.3 Display Integration
+- [ ] Research repairable display options
+- [ ] Design custom display module
+- [ ] Integrate with Framework 13 chassis
+- [ ] Create open-source documentation
+
+### 6.4 Driver Development
+- [ ] Display driver for custom module
+- [ ] Power management
+- [ ] Peripheral support (USB, audio, networking)
+- [ ] Hardware-specific optimizations
+
+## 🚀 Phase 7: Production
+
+### 7.1 Performance
 - [ ] Optimize JIT compilation
 - [ ] Reduce memory footprint
 - [ ] Improve startup time
 - [ ] Profile and optimize hot paths
 
-### 5.2 Stability
+### 7.2 Stability
 - [ ] Comprehensive error handling
 - [ ] Crash recovery
 - [ ] Auto-save
 - [ ] State persistence
 
-### 5.3 Documentation
+### 7.3 Documentation
 - [ ] User guide
 - [ ] API documentation
 - [ ] Architecture overview
 - [ ] Contributing guide
+- [ ] Hardware repair guides
 
-### 5.4 Distribution
+### 7.4 Distribution
 - [ ] macOS app bundle
 - [ ] Code signing
 - [ ] Notarization
 - [ ] Update mechanism
+- [ ] Hardware distribution
 
 ## 📊 Current Status
 
 **Completed**: JIT Compiler (Phase 1) ✅
 **In Progress**: VM Integration (Phase 2) 🔄
-**Next Up**: Grain Basin Kernel (Phase 3)
+**Next Up**: Kernel Boot (Phase 2), Framework 13 Hardware (Phase 6)
 
 **Test Results**: 12/12 JIT tests passing
-**Code Quality**: 1,631 lines, TigerStyle compliant
-**Documentation**: Complete (jit_architecture.md, cursor_prompt.md)
+**Code Quality**: 1,631 lines, GrainStyle compliant
+**Documentation**: Complete (jit_architecture.md, plan.md)
 
 ## 🎯 Immediate Next Steps
 
 1. **VM Integration**: Hook JIT into `vm.zig` dispatch loop
-2. **Performance Benchmarking**: Compare JIT vs interpreter
-3. **Kernel Development**: Start Grain Basin kernel implementation
-4. **Text Rendering**: Integrate TextRenderer into Aurora
+2. **Kernel Boot**: Implement basic boot sequence
+3. **GUI Integration**: Connect framebuffer to macOS window
+4. **Hardware Research**: Evaluate Framework 13 RISC-V mainboard
 
 ## 📚 References
 
-- **JIT Architecture**: `docs/jit_architecture.md`
+- **JIT Architecture**: `docs/zyx/jit_architecture.md`
 - **Grain Style**: `docs/zyx/grain_style.md`
-- **Plan**: `docs/zyx/plan.md`
+- **Plan**: `docs/plan.md`
 - **Ray Notes**: `docs/zyx/ray.md`
-- **Cursor Prompt**: `docs/cursor_prompt.md`
+- **Browser Spec**: `docs/zyx/browser_prompt.md`
+- **Development Strategy**: `docs/zyx/development_strategy_2025.md`

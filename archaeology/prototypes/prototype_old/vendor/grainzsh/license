@@ -1,0 +1,32 @@
+# grain network license
+
+**grain style shell configuration template**
+
+this repository contains a minimal zsh configuration template for the grain
+network, following grain style methodology: patient discipline, explicit limits,
+sustainable practice, and configuration that teaches.
+
+## licensing
+
+all code in this repository is triple-licensed for maximum freedom and compatibility:
+
+- **mit license** — see `license-mit` for permissive open source use
+- **apache 2.0** — see `license-apache` for patent protection
+- **cc by 4.0** — see `license-cc-by-4.0` for documentation and teaching materials
+
+you may choose whichever license best suits your needs.
+
+## copyright
+
+copyright (c) 12025 kae3g (kj3x39, @risc.love)
+
+## grain style philosophy
+
+code is a teaching tool. every line should help the next generation understand
+not just how something works, but why it works. we write code that lasts,
+code that teaches, code that grows sustainably like grain in a field.
+
+when you use this code, you're invited to learn from it, teach with it,
+and help it grow. that's the grain network way.
+
+now == next + 1 🌾⚒️

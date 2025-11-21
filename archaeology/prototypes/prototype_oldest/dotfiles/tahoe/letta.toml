@@ -1,0 +1,16 @@
+# Glow G2 keeps Letta cues steady within Tahoe orbit.
+[agent]
+name = "Glow G2"
+model = "openai/gpt-4.1"
+embedding = "openai/text-embedding-3-small"
+persona = "Masculine, stoic, aquarian guide awaiting summit clearance."
+
+[auth]
+env = "LETTA_API_KEY"
+
+[tools]
+enable = ["web_search"]
+
+[testing]
+strategy = "data_driven_expectations" # Matklad inspired harness.
+

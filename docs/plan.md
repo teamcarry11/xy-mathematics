@@ -1,0 +1,185 @@
+# Grain OS Development Plan
+## RISC-V Kernel + VM + Aurora IDE
+
+**Current Status**: JIT Compiler complete ✅. Next: VM Integration & Kernel Boot.
+
+**Goal**: RISC-V-targeted Grain OS with graphical interface running in macOS Tahoe 26.1 VM, with path toward Framework 13 RISC-V hardware.
+
+## 🎯 Immediate Priorities (Next 3 Days)
+
+### Day 1-2: VM Integration & Kernel Boot 🔥 **CRITICAL**
+
+**Objective**: Get Grain Basin Kernel booting in Grain VM with JIT acceleration.
+
+1. **Complete VM Integration**
+   - Hook JIT into `vm.zig` dispatch loop
+   - Add `init_with_jit()` and `step_jit()` methods
+   - Implement interpreter fallback for JIT failures
+   - Test with minimal kernel boot sequence
+
+2. **Kernel Boot Sequence**
+   - Implement basic boot loader
+   - Set up initial memory layout
+   - Initialize framebuffer for GUI
+   - Display simple test pattern
+
+3. **Performance Validation**
+   - Benchmark JIT vs interpreter
+   - Verify 10x+ speedup on hot paths
+   - Profile memory usage
+
+### Day 3: GUI Integration
+
+**Objective**: Connect kernel framebuffer to macOS Tahoe window.
+
+1. **Framebuffer Sync**
+   - Map kernel framebuffer to host memory
+   - Implement dirty region tracking
+   - Update macOS window on changes
+
+2. **Input Pipeline**
+   - Route macOS keyboard/mouse to kernel
+   - Implement virtual interrupt injection
+   - Test basic input handling
+
+3. **Text Rendering**
+   - Integrate TextRenderer into kernel
+   - Render simple text to framebuffer
+   - Display kernel boot messages
+
+## 🚀 Architecture Overview
+
+### Grain Aurora Stack
+```
+┌─────────────────────────────────────┐
+│   macOS Tahoe 26.1 (Native Cocoa)  │
+├─────────────────────────────────────┤
+│   Grain Aurora IDE (Zig GUI)       │
+├─────────────────────────────────────┤
+│   Grain VM (RISC-V → AArch64 JIT)  │ ✅ COMPLETE
+├─────────────────────────────────────┤
+│   Grain Basin Kernel (RISC-V64)     │
+└─────────────────────────────────────┘
+```
+
+### Hardware Target: Framework 13 RISC-V
+
+**Recommended Path**: DeepComputing DC-ROMA RISC-V Mainboard
+- **Specs**: RISC-V64, up to 64GB RAM, modular design
+- **Advantages**:
+  - Native RISC-V (no JIT needed after port)
+  - Repairable/upgradeable (Framework philosophy)
+  - Open-source firmware support
+  - Perfect match for Grain Basin Kernel
+- **Timeline**: 2-3 months for hardware acquisition + porting
+
+**Alternative Options**:
+- High-performance ARM laptop (1-2 months ARM port)
+- x86 AMD Framework 13 (2-3 months x86 port)
+- Custom RISC-V laptop (6-12 months design + manufacturing)
+
+### Display Technology
+
+**Repairable LCD Design** (Daylight Computer-inspired):
+- Modular screen assembly with replaceable components
+- Standard connectors (eDP, MIPI)
+- Open documentation and repair guides
+- Framework 13 compatibility
+
+## 📋 Development Phases
+
+### Phase 1: VM Integration (Days 1-3) 🔥 **CURRENT**
+- Complete JIT integration into VM
+- Kernel boot sequence
+- GUI framebuffer sync
+- Input pipeline
+
+### Phase 2: Framework 13 RISC-V (Weeks 2-4)
+- Acquire DeepComputing DC-ROMA mainboard
+- Port Grain Basin Kernel to native RISC-V
+- Remove JIT layer (native execution)
+- Optimize for hardware
+
+### Phase 3: Custom Display (Months 2-3)
+- Design repairable display module
+- Integrate with Framework 13 chassis
+- Open-source hardware documentation
+- Create repair guides
+
+### Phase 4: Production Hardening (Months 4-6)
+- Performance optimization
+- Power management
+- Driver development
+- User experience polish
+
+## 🌾 GrainStyle Guidelines
+
+### Core Principles
+- **Patient Discipline**: Code written once, read many times
+- **Explicit Limits**: Use `u32`/`u64`, not `usize`
+- **Sustainable Practice**: Code that grows without breaking
+- **Code That Teaches**: Comments explain why, not what
+
+### Graincard Constraints
+- **Line width**: 73 characters (hard wrap)
+- **Function length**: max 70 lines
+- **Total size**: 75×100 monospace teaching cards
+
+### Safety & Assertions
+- **Crash Early**: Use `assert` for programmer errors
+- **Pair Assertions**: Assert preconditions AND postconditions
+- **Density**: Minimum 2 assertions per function
+
+### Memory Management
+- **Startup Only**: Allocate everything in `init`
+- **No Hidden Allocations**: Avoid implicit allocations
+- **Pre-allocate Collections**: Call `ensureTotalCapacity`
+
+## 🎨 Design Principles
+
+### Repairability First
+- Modular components (Framework-inspired)
+- Standard connectors and interfaces
+- Open-source hardware documentation
+- User-replaceable parts
+
+### Performance Second
+- Native RISC-V execution (no JIT overhead)
+- Optimized kernel for target hardware
+- Efficient memory management
+- Fast boot times
+
+### Sustainability Third
+- Long-term hardware support
+- Upgradeable components
+- Repair-friendly design
+- Open documentation
+
+## 📊 Success Metrics
+
+### Week 1
+- [ ] Kernel boots in VM
+- [ ] GUI displays in macOS window
+- [ ] JIT performance validated (10x+ speedup)
+- [ ] Basic input handling works
+
+### Month 1
+- [ ] Framework 13 RISC-V mainboard acquired
+- [ ] Kernel ported to native RISC-V
+- [ ] Basic userspace running
+- [ ] Display driver working
+
+### Month 3
+- [ ] Custom display module designed
+- [ ] Full hardware integration complete
+- [ ] Performance benchmarks met
+- [ ] Documentation complete
+
+## 🔗 References
+
+- **Framework 13 RISC-V**: https://frame.work/products/deep-computing-risc-v-mainboard
+- **DeepComputing DC-ROMA**: https://deepcomputing.io/product/dc-roma-risc-v-mainboard/
+- **Daylight Computer**: https://daylightcomputer.com
+- **JIT Architecture**: `docs/zyx/jit_architecture.md`
+- **Tasks**: `docs/tasks.md`
+- **Development Strategy**: `docs/zyx/development_strategy_2025.md`

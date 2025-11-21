@@ -200,6 +200,25 @@ All 12 tests passed.
 - **Caching**: 10,000 block capacity with hash map lookup
 - **Safety**: Pair assertions (4-5 per function), comprehensive bounds checking
 
+### GrainStyle JIT Patterns
+
+#### Static Allocation Pattern
+All memory allocated at initialization. No dynamic allocation after `init()`.
+
+#### Pair Assertion Pattern
+Assert preconditions AND postconditions. Minimum 2 assertions per function.
+
+#### JIT Memory Protection (Apple Silicon)
+Toggle W^X protection before/after emitting code using `pthread_jit_write_protect_np`.
+
+#### Executable Memory Allocation
+Use `mmap` with `MAP_JIT` flag for macOS compatibility.
+
+#### Security Testing Requirements
+- **Pair Assertions**: Minimum 2 per function (pre + post conditions)
+- **Fuzz Testing**: 100+ iterations per instruction type
+- **Security Properties**: W^X enforcement, integer overflow, memory safety
+
 ### Next Steps
 1. VM Integration (hook into `vm.zig` dispatch loop)
 2. Performance benchmarking (JIT vs interpreter)

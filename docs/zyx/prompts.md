@@ -1,5 +1,7 @@
 # Prompt Chronicle (u64 Append Ledger)
 
+> *Note: Parsing our Cursor export files and integrating this into our own new Grain IDE tool is work in progress. For now, please consult the `archaeology/data/` folder for raw export files. The structs below are maintained in descending newest-to-oldest order (highest ID first) so that new entries can be appended to the beginning of the array in O(1) constant time.*
+
 ```zig
 pub const PromptEntry = struct {
     id: u64,

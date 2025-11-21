@@ -31,7 +31,7 @@
 - [x] Map kernel framebuffer to host memory
 - [x] Update macOS window on changes
 - [x] Optimize copy performance (direct memcpy)
-- [ ] Implement dirty region tracking (optional optimization)
+- [x] Implement dirty region tracking (optimization complete)
 
 #### 2.5 Input Pipeline ✅ **COMPLETE**
 - [x] Route macOS keyboard events to kernel (via VM input queue)
@@ -68,6 +68,14 @@
 - [x] Edge case validation (memory bounds, state transitions, error handling)
 - [x] Memory leak detection (state consistency, framebuffer consistency)
 - [x] All tests follow TigerStyle principles (bounded loops, explicit types, pair assertions)
+
+#### 2.10 Framebuffer Optimization ✅ **COMPLETE**
+- [x] Implemented dirty region tracking (FramebufferDirtyRegion struct)
+- [x] Mark dirty regions in framebuffer operations (fb_clear, fb_draw_pixel, fb_draw_text)
+- [x] Optimized sync_framebuffer (only copy dirty regions)
+- [x] Clear dirty regions after sync (reset tracking)
+- [x] Created comprehensive tests (tests/015_dirty_region_test.zig)
+- [x] Performance improvement: reduces memory bandwidth for small updates
 
 ## ✅ Phase 1: JIT Compiler (COMPLETE)
 
@@ -197,12 +205,16 @@
 - [ ] Tool calling (run `zig build`, `jj status`)
 - [ ] Multi-file edits (context-aware)
 
-#### 4.1.4 Tree-sitter Integration
-- [ ] Tree-sitter C library bindings
-- [ ] Zig grammar integration
-- [ ] Syntax highlighting
-- [ ] Structural navigation
-- [ ] Code actions (extract function, rename symbol)
+#### 4.1.4 Tree-sitter Integration 🔄 **IN PROGRESS**
+- [x] Foundation created (simple regex-based parser)
+- [x] Tree structure with nodes (functions, structs)
+- [x] Node lookup at positions (for hover, navigation)
+- [x] Editor integration (parse and query syntax tree)
+- [ ] Tree-sitter C library bindings (future)
+- [ ] Zig grammar integration (future)
+- [ ] Syntax highlighting (future)
+- [ ] Structural navigation (future)
+- [ ] Code actions (extract function, rename symbol) (future)
 
 #### 4.1.5 Complete LSP Implementation
 - [ ] JSON-RPC 2.0 serialization/deserialization
@@ -368,6 +380,7 @@
 - Framebuffer Syscalls (Phase 2.7) ✅
 - Userspace Framebuffer Program (Phase 2.8) ✅
 - Integration Testing (Phase 2.9) ✅
+- Framebuffer Optimization (Phase 2.10) ✅
 - Dream Editor Foundation - GrainBuffer Enhancement (Phase 4.0.1) ✅
 - Dream Editor Foundation - GLM-4.6 Client (Phase 4.0.2) ✅
 - Dream Editor Foundation - Dream Protocol (Phase 4.0.3) ✅

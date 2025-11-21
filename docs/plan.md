@@ -1,7 +1,7 @@
 # Grain OS Development Plan
 ## RISC-V Kernel + VM + Aurora IDE
 
-**Current Status**: Phase 2.8 Userspace Framebuffer Program complete ✅. Full stack working: Userspace -> Kernel -> Framebuffer Syscalls -> Display! 🎉
+**Current Status**: Phase 2.10 Framebuffer Optimization complete ✅. Dirty region tracking implemented for optimized framebuffer sync! 🎉
 
 **Goal**: RISC-V-targeted Grain OS with graphical interface running in macOS Tahoe 26.1 VM, with path toward Framework 13 RISC-V hardware.
 
@@ -35,7 +35,7 @@
 1. **Framebuffer Sync** ✅ **COMPLETE**
    - ✅ Map kernel framebuffer to host memory
    - ✅ Update macOS window on changes
-   - ⏳ Implement dirty region tracking (optional optimization)
+   - ✅ Implement dirty region tracking (optimization complete)
 
 2. **Input Pipeline** ✅ **COMPLETE**
    - ✅ Route macOS keyboard/mouse to kernel (via input event queue)
@@ -60,6 +60,22 @@
    - ✅ Added build target for fb_demo (zig build fb-demo)
    - ✅ Created end-to-end test (tests/013_fb_demo_test.zig)
    - ✅ Full stack validated: Userspace -> VM -> Kernel -> Framebuffer -> Display
+
+6. **Integration Testing** ✅ **COMPLETE**
+   - ✅ Created comprehensive kernel integration tests (tests/014_kernel_integration_test.zig)
+   - ✅ Kernel boot sequence validation (load, initialize, execute)
+   - ✅ Stress testing (long-running programs, 2000+ steps)
+   - ✅ Edge case validation (memory bounds, state transitions, error handling)
+   - ✅ Memory leak detection (state consistency, framebuffer consistency)
+   - ✅ All tests follow TigerStyle principles (bounded loops, explicit types, pair assertions)
+
+7. **Framebuffer Optimization** ✅ **COMPLETE**
+   - ✅ Implemented dirty region tracking (FramebufferDirtyRegion struct)
+   - ✅ Mark dirty regions in framebuffer operations (fb_clear, fb_draw_pixel, fb_draw_text)
+   - ✅ Optimized sync_framebuffer (only copy dirty regions)
+   - ✅ Clear dirty regions after sync (reset tracking)
+   - ✅ Created comprehensive tests (tests/015_dirty_region_test.zig)
+   - ✅ Performance improvement: reduces memory bandwidth for small updates
 
 ## 🚀 Architecture Overview
 
@@ -245,12 +261,15 @@
 - 📋 Tool calling (run `zig build`, `jj status`) - pending
 - 📋 Multi-file edits (context-aware) - pending
 
-#### 1.4: Tree-sitter Integration 📋 **PLANNED**
-- 📋 Tree-sitter C library bindings
-- 📋 Zig grammar integration
-- 📋 Syntax highlighting
-- 📋 Structural navigation
-- 📋 Code actions (extract function, rename symbol)
+#### 1.4: Tree-sitter Integration 🔄 **IN PROGRESS**
+- ✅ Foundation created (simple regex-based parser)
+- ✅ Tree structure with nodes (functions, structs)
+- ✅ Node lookup at positions (for hover, navigation)
+- ✅ Editor integration (parse and query syntax tree)
+- 📋 Tree-sitter C library bindings (future)
+- 📋 Zig grammar integration (future)
+- 📋 Syntax highlighting (future)
+- 📋 Code actions (extract function, rename symbol) (future)
 
 #### 1.5: Complete LSP Implementation 📋 **PLANNED**
 - 📋 JSON-RPC 2.0 serialization/deserialization

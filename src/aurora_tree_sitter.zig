@@ -178,7 +178,7 @@ pub const TreeSitter = struct {
     }
     
     /// Extract function name from function node.
-    pub fn getFunctionName(self: *TreeSitter, node: *const Node) ?[]const u8 {
+    pub fn getFunctionName(self: *TreeSitter, node: *const Node, source: []const u8) ?[]const u8 {
         _ = self;
         
         if (!std.mem.eql(u8, node.type, "function")) {
@@ -187,8 +187,16 @@ pub const TreeSitter = struct {
         
         // Simple extraction: find "fn " and get the next word
         // TODO: Use proper Tree-sitter query API when integrated
-        const source_slice = node.start_byte..node.end_byte;
-        // This is a placeholder - would need access to source text
+        if (node.start_byte >= source.len) return null;
+        const node_text = source[node.start_byte..@min(node.end_byte, source.len)];
+        
+        if (std.mem.indexOf(u8, node_text, "fn ")) |fn_pos| {
+            const after_fn = node_text[fn_pos + 3..];
+            if (std.mem.indexOfScalar(u8, after_fn, '(')) |paren_pos| {
+                return after_fn[0..paren_pos];
+            }
+        }
+        
         return null;
     }
 };

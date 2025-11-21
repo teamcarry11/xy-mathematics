@@ -239,7 +239,7 @@ test "getReadonlySpans returns all segments" {
 
 test "intersectsReadonlyRange with binary search" {
     // Create large buffer (1000 chars)
-    var large_text = try std.testing.allocator.alloc(u8, 1000);
+    const large_text = try std.testing.allocator.alloc(u8, 1000);
     defer std.testing.allocator.free(large_text);
     @memset(large_text, 'a');
     
@@ -252,12 +252,13 @@ test "intersectsReadonlyRange with binary search" {
         try buffer.markReadOnly(i * 10, i * 10 + 5);
     }
     
-    // Assert: Overlapping range returns true
+    // Assert: Overlapping range returns true (12-15 overlaps with segment 10-15)
     try std.testing.expect(buffer.intersectsReadonlyRange(12, 15));
     
-    // Assert: Non-overlapping range returns false
-    try std.testing.expect(!buffer.intersectsReadonlyRange(1, 4));
-    try std.testing.expect(!buffer.intersectsReadonlyRange(6, 9));
+    // Assert: Non-overlapping range returns false (1-4 is before first segment 0-5, but overlaps!)
+    // Actually 1-4 overlaps with segment 0-5, so test non-overlapping ranges
+    try std.testing.expect(!buffer.intersectsReadonlyRange(6, 9)); // Between segments
+    try std.testing.expect(!buffer.intersectsReadonlyRange(16, 19)); // Between segments
 }
 
 test "mutable command edits succeed" {

@@ -1,7 +1,7 @@
 # Grain OS Development Plan
 ## RISC-V Kernel + VM + Aurora IDE
 
-**Current Status**: Framebuffer Syscalls complete ✅. Kernel can now render to framebuffer via syscalls! 🎉
+**Current Status**: Phase 2.8 Userspace Framebuffer Program complete ✅. Full stack working: Userspace -> Kernel -> Framebuffer Syscalls -> Display! 🎉
 
 **Goal**: RISC-V-targeted Grain OS with graphical interface running in macOS Tahoe 26.1 VM, with path toward Framework 13 RISC-V hardware.
 
@@ -54,6 +54,12 @@
    - ✅ Kernel syscall for drawing text (fb_draw_text = 72)
    - ✅ Integration layer handles framebuffer operations (needs VM memory access)
    - ✅ Userspace programs can now render to framebuffer via syscalls
+
+5. **Userspace Framebuffer Program** ✅ **COMPLETE**
+   - ✅ Created fb_demo.zig userspace program (calls fb_clear, fb_draw_pixel, fb_draw_text)
+   - ✅ Added build target for fb_demo (zig build fb-demo)
+   - ✅ Created end-to-end test (tests/013_fb_demo_test.zig)
+   - ✅ Full stack validated: Userspace -> VM -> Kernel -> Framebuffer -> Display
 
 ## 🚀 Architecture Overview
 
@@ -215,16 +221,55 @@
 
 **Phase 0 Summary**: All foundation components complete! Ready for Phase 1 (Dream Editor Core).
 
-### Phase 1: Dream Editor Core (Planned)
+### Phase 1: Dream Editor Core 🔄 **IN PROGRESS**
 
 **Objective**: Matklad-inspired editor with GLM-4.6 integration.
 
-- Readonly spans (text-as-UI paradigm)
-- Method folding (bodies fold by default)
-- Tree-sitter integration (syntax highlighting)
-- GLM-4.6 code completion (1,000 tps)
-- Complete LSP implementation
-- Magit-style VCS integration
+#### 1.1: Readonly Spans Integration ✅ **COMPLETE**
+- ✅ Integrated enhanced GrainBuffer into editor
+- ✅ Edit protection (prevents modifications to readonly spans)
+- ✅ Visual rendering (readonly spans returned in render result)
+- ✅ Cursor handling (insert checks for readonly violations)
+
+#### 1.2: Method Folding ✅ **COMPLETE**
+- ✅ Parse code structure (regex-based for Zig functions/structs)
+- ✅ Identify method/function boundaries
+- ✅ Fold bodies by default, show signatures
+- ✅ Toggle folding (keyboard shortcut ready)
+- ✅ Visual indicators (fold state tracking)
+
+#### 1.3: GLM-4.6 Integration 🔄 **IN PROGRESS**
+- ✅ Code completion (ghost text at 1,000 tps integrated)
+- ✅ Editor integration (GLM-4.6 client optional, falls back to LSP)
+- 📋 Code transformation (refactor, extract, inline) - pending
+- 📋 Tool calling (run `zig build`, `jj status`) - pending
+- 📋 Multi-file edits (context-aware) - pending
+
+#### 1.4: Tree-sitter Integration 📋 **PLANNED**
+- 📋 Tree-sitter C library bindings
+- 📋 Zig grammar integration
+- 📋 Syntax highlighting
+- 📋 Structural navigation
+- 📋 Code actions (extract function, rename symbol)
+
+#### 1.5: Complete LSP Implementation 📋 **PLANNED**
+- 📋 JSON-RPC 2.0 serialization/deserialization
+- 📋 Snapshot model (incremental updates)
+- 📋 Cancellation support
+- 📋 Zig-specific features (comptime analysis)
+
+#### 1.6: Magit-Style VCS 📋 **PLANNED**
+- 📋 Generate `.jj/status.jj` (readonly metadata, editable hunks)
+- 📋 Generate `.jj/commit/*.diff` (readonly commit info, editable diff)
+- 📋 Watch for edits, invoke `jj` commands
+- 📋 Readonly spans for commit hashes, parent info
+
+#### 1.7: Multi-Pane Layout 📋 **PLANNED**
+- 📋 Split panes (horizontal/vertical)
+- 📋 Tile windows (editor, terminal, VCS status)
+- 📋 River compositor integration
+- 📋 Moonglow keybindings
+- 📋 Workspace management
 
 ### Phase 2: Dream Browser Core (Planned)
 

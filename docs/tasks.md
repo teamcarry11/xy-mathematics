@@ -55,13 +55,11 @@
 - [x] Kernel stub handlers (integration layer handles actual implementation)
 - [x] Userspace programs can render to framebuffer via syscalls
 
-#### 2.7 Framebuffer Syscalls ✅ **COMPLETE**
-- [x] Kernel syscall for clearing framebuffer (fb_clear = 70)
-- [x] Kernel syscall for drawing pixels (fb_draw_pixel = 71)
-- [x] Kernel syscall for drawing text (fb_draw_text = 72)
-- [x] Integration layer handles framebuffer operations (VM memory access)
-- [x] Kernel stub handlers (integration layer handles actual implementation)
-- [x] Userspace programs can render to framebuffer via syscalls
+#### 2.8 Userspace Framebuffer Program ✅ **COMPLETE**
+- [x] Created fb_demo.zig userspace program (calls fb_clear, fb_draw_pixel, fb_draw_text)
+- [x] Added build target for fb_demo (zig build fb-demo)
+- [x] Created end-to-end test (tests/013_fb_demo_test.zig)
+- [x] Full stack validated: Userspace -> VM -> Kernel -> Framebuffer -> Display
 
 ## ✅ Phase 1: JIT Compiler (COMPLETE)
 
@@ -171,21 +169,22 @@
 
 ### 4.1 Dream Editor Core (PLANNED)
 
-#### 4.1.1 Readonly Spans Integration
-- [ ] Integrate enhanced GrainBuffer into editor
-- [ ] Visual rendering (different color for readonly)
-- [ ] Edit protection (prevent modifications)
-- [ ] Cursor handling (skip readonly regions)
+#### 4.1.1 Readonly Spans Integration ✅ **COMPLETE**
+- [x] Integrate enhanced GrainBuffer into editor
+- [x] Visual rendering (readonly spans in render result)
+- [x] Edit protection (prevent modifications)
+- [x] Cursor handling (insert checks for readonly violations)
 
-#### 4.1.2 Method Folding
-- [ ] Parse code structure (Tree-sitter or regex)
-- [ ] Identify method/function boundaries
-- [ ] Fold bodies by default, show signatures
-- [ ] Toggle folding (keyboard shortcut)
-- [ ] Visual indicators (fold markers)
+#### 4.1.2 Method Folding ✅ **COMPLETE**
+- [x] Parse code structure (regex-based for Zig)
+- [x] Identify method/function boundaries
+- [x] Fold bodies by default, show signatures
+- [x] Toggle folding (keyboard shortcut ready)
+- [x] Visual indicators (fold state tracking)
 
-#### 4.1.3 GLM-4.6 Integration
-- [ ] Code completion (ghost text at 1,000 tps)
+#### 4.1.3 GLM-4.6 Integration 🔄 **IN PROGRESS**
+- [x] Code completion (ghost text at 1,000 tps)
+- [x] Editor integration (optional GLM-4.6, falls back to LSP)
 - [ ] Code transformation (refactor, extract, inline)
 - [ ] Tool calling (run `zig build`, `jj status`)
 - [ ] Multi-file edits (context-aware)
@@ -359,6 +358,7 @@
 - Input Pipeline (Phase 2.5) ✅
 - Text Rendering (Phase 2.6) ✅
 - Framebuffer Syscalls (Phase 2.7) ✅
+- Userspace Framebuffer Program (Phase 2.8) ✅
 - Dream Editor Foundation - GrainBuffer Enhancement (Phase 4.0.1) ✅
 - Dream Editor Foundation - GLM-4.6 Client (Phase 4.0.2) ✅
 - Dream Editor Foundation - Dream Protocol (Phase 4.0.3) ✅

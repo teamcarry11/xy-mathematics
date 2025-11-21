@@ -1,4 +1,5 @@
 const std = @import("std");
+const HttpClient = @import("dream_http_client.zig").HttpClient;
 
 /// GLM-4.6 client for Cerebras API: 1,000 tokens/second agentic coding.
 /// ~<~ Glow Airbend: explicit API calls, bounded context windows.
@@ -8,6 +9,7 @@ pub const Glm46Client = struct {
     api_key: []const u8,
     api_url: []const u8 = "https://api.cerebras.ai/v1",
     model: []const u8 = "glm-4.6",
+    http_client: HttpClient,
     
     // Bounded: Max 200K token context window
     pub const MAX_CONTEXT_TOKENS: u32 = 200_000;
@@ -53,18 +55,19 @@ pub const Glm46Client = struct {
         return Glm46Client{
             .allocator = allocator,
             .api_key = api_key,
+            .http_client = HttpClient.init(allocator),
         };
     }
     
     pub fn deinit(self: *Glm46Client) void {
-        _ = self;
-        // No dynamic allocation to clean up
+        self.http_client.deinit();
+        self.* = undefined;
     }
     
     /// Request code completion (ghost text) at 1,000 tokens/second.
     /// Returns streaming chunks via callback.
     pub fn requestCompletion(
-        self: *const Glm46Client,
+        self: *Glm46Client,
         messages: []const Message,
         callback: fn (chunk: []const u8) void,
     ) !void {
@@ -85,11 +88,99 @@ pub const Glm46Client = struct {
             .max_tokens = 512, // Reasonable default
         };
         
-        // TODO: Serialize to JSON, send HTTP POST request
-        // TODO: Parse SSE stream, call callback for each chunk
-        // For now, stub implementation
-        _ = request;
-        _ = callback;
+        // Serialize to JSON
+        const json_body = try self.serializeRequest(request);
+        defer self.allocator.free(json_body);
+        
+        // Build HTTP request
+        const http_req = HttpClient.Request{
+            .method = "POST",
+            .path = "/chat/completions",
+            .headers = &.{
+                .{ .name = "Authorization", .value = try std.fmt.allocPrint(self.allocator, "Bearer {s}", .{self.api_key}) },
+                .{ .name = "Content-Type", .value = "application/json" },
+            },
+            .body = json_body,
+        };
+        defer self.allocator.free(http_req.headers[0].value);
+        
+        // Parse URL to get host and port
+        const uri = try std.Uri.parse(self.api_url);
+        const host = uri.host orelse return error.InvalidUrl;
+        const port: u16 = if (uri.port) |p| p else 443;
+        
+        // Send HTTPS request
+        const response = try self.http_client.request(host.percent_encoded, port, http_req);
+        defer self.allocator.free(response.headers);
+        
+        // Parse SSE stream and call callback for each chunk
+        try self.parseSSEStream(response.body, callback);
+    }
+    
+    /// Serialize completion request to JSON.
+    fn serializeRequest(self: *const Glm46Client, req: CompletionRequest) ![]const u8 {
+        // Simple JSON serialization (can use std.json later)
+        var json = std.ArrayList(u8).init(self.allocator);
+        defer json.deinit();
+        const writer = json.writer();
+        
+        try writer.print("{{\"model\":\"{s}\",\"messages\":[", .{req.model});
+        
+        for (req.messages, 0..) |msg, i| {
+            if (i > 0) try writer.writeAll(",");
+            try writer.print("{{\"role\":\"{s}\",\"content\":\"", .{msg.role});
+            // Escape JSON in content
+            for (msg.content) |ch| {
+                switch (ch) {
+                    '"' => try writer.writeAll("\\\""),
+                    '\\' => try writer.writeAll("\\\\"),
+                    '\n' => try writer.writeAll("\\n"),
+                    '\r' => try writer.writeAll("\\r"),
+                    '\t' => try writer.writeAll("\\t"),
+                    else => try writer.writeByte(ch),
+                }
+            }
+            try writer.writeAll("\"}");
+        }
+        
+        try writer.print("],\"stream\":{s}", .{if (req.stream) "true" else "false"});
+        if (req.max_tokens) |max| {
+            try writer.print(",\"max_tokens\":{d}", .{max});
+        }
+        try writer.print(",\"temperature\":{d:.2}}}", .{req.temperature});
+        
+        return try json.toOwnedSlice();
+    }
+    
+    /// Parse SSE (Server-Sent Events) stream and call callback for each chunk.
+    fn parseSSEStream(
+        _: *const Glm46Client,
+        data: []const u8,
+        callback: fn (chunk: []const u8) void,
+    ) !void {
+        // Parse SSE format: "data: {...}\n\n"
+        var lines = std.mem.splitSequence(u8, data, "\n");
+        
+        while (lines.next()) |line| {
+            if (std.mem.startsWith(u8, line, "data: ")) {
+                const json_data = line[6..]; // Skip "data: "
+                if (std.mem.eql(u8, json_data, "[DONE]")) {
+                    break; // End of stream
+                }
+                
+                // Extract content from JSON (simple parsing)
+                // TODO: Use std.json for proper parsing
+                if (std.mem.indexOf(u8, json_data, "\"content\"")) |content_start| {
+                    const after_content = json_data[content_start + 9..];
+                    if (std.mem.indexOf(u8, after_content, "\"")) |quote_start| {
+                        const content = after_content[quote_start + 1..];
+                        if (std.mem.indexOf(u8, content, "\"")) |content_end| {
+                            callback(content[0..content_end]);
+                        }
+                    }
+                }
+            }
+        }
     }
     
     /// Request code transformation (refactor, extract, inline).
@@ -123,7 +214,7 @@ pub const Glm46Client = struct {
         
         // TODO: Send request, parse response
         // For now, return stub
-        _ = self;
+        _ = messages;
         return "";
     }
     
@@ -151,8 +242,7 @@ pub const Glm46Client = struct {
         
         // TODO: Send request with tool calling format
         // For now, return stub
-        _ = self;
-        _ = context;
+        _ = messages;
         return "";
     }
 };

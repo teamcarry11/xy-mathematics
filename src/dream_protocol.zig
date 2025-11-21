@@ -156,7 +156,8 @@ pub const DreamProtocol = struct {
         
         // TODO: Serialize event to JSON, send via WebSocket
         // For now, stub
-        _ = event;
+        _ = event.content;
+        _ = event.tags;
     }
     
     /// Receive message from relay (non-blocking).

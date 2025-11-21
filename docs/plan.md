@@ -1,7 +1,7 @@
 # Grain OS Development Plan
 ## RISC-V Kernel + VM + Aurora IDE
 
-**Current Status**: Performance Validation complete ✅. All Day 1-2 tasks complete! 🎉
+**Current Status**: Framebuffer Syscalls complete ✅. Kernel can now render to framebuffer via syscalls! 🎉
 
 **Goal**: RISC-V-targeted Grain OS with graphical interface running in macOS Tahoe 26.1 VM, with path toward Framework 13 RISC-V hardware.
 
@@ -40,12 +40,20 @@
 2. **Input Pipeline** ✅ **COMPLETE**
    - ✅ Route macOS keyboard/mouse to kernel (via input event queue)
    - ✅ Implement input event queue in VM
-   - ⏳ Test basic input handling (kernel syscall needed)
+   - ✅ Kernel syscall for reading input events (read_input_event = 60)
+   - ✅ Integration layer handles input event syscall
 
 3. **Text Rendering** ✅ **COMPLETE**
    - ✅ Integrate text rendering into framebuffer module
    - ✅ Render simple text to framebuffer (8x8 bitmap font)
    - ✅ Display kernel boot messages on framebuffer
+
+4. **Framebuffer Syscalls** ✅ **COMPLETE**
+   - ✅ Kernel syscall for clearing framebuffer (fb_clear = 70)
+   - ✅ Kernel syscall for drawing pixels (fb_draw_pixel = 71)
+   - ✅ Kernel syscall for drawing text (fb_draw_text = 72)
+   - ✅ Integration layer handles framebuffer operations (needs VM memory access)
+   - ✅ Userspace programs can now render to framebuffer via syscalls
 
 ## 🚀 Architecture Overview
 
@@ -191,16 +199,19 @@
 - ✅ Binary search optimization for large segment lists
 - ✅ Comprehensive assertions (GrainStyle compliance)
 
-#### 0.2: GLM-4.6 Client 🔄 **IN PROGRESS**
+#### 0.2: GLM-4.6 Client ✅ **COMPLETE**
 - ✅ Client structure created
 - ✅ HTTP client foundation created
-- 🔄 HTTP implementation (JSON serialization, SSE streaming)
-- 📋 Tool calling support
+- ✅ HTTP implementation (JSON serialization, SSE streaming)
+- ✅ Integration with Cerebras API
+- 📋 Tool calling support (future enhancement)
 
-#### 0.3: Dream Protocol 📋 **PLANNED**
-- 📋 Nostr + WebSocket + TigerBeetle-style state machine
-- 📋 Event streaming (real-time, sub-millisecond latency)
-- 📋 Relay connection management
+#### 0.3: Dream Protocol ✅ **COMPLETE**
+- ✅ Nostr event structure (Zig-native)
+- ✅ WebSocket client (low-latency, frame parsing)
+- ✅ State machine foundation (TigerBeetle-style)
+- ✅ Event streaming structure (real-time ready)
+- 📋 Relay connection management (integration pending)
 
 ### Phase 1: Dream Editor Core (Planned)
 

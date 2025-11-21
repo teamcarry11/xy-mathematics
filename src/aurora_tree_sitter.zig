@@ -145,8 +145,6 @@ pub const TreeSitter = struct {
     
     /// Get node at a specific position (for hover, go-to-definition, etc.).
     pub fn getNodeAt(self: *TreeSitter, tree: *const Tree, point: Point) ?Node {
-        _ = self;
-        
         // Simple search: find node containing the point
         return self.findNodeContaining(&tree.root, point);
     }

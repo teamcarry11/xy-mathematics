@@ -87,7 +87,11 @@
 │        virtualized kernel. we test in the vm,                           │
 │        we deploy to hardware, we build the bridge                       │
 │        between simulation and reality.                                  │
-        framework 13 represents our hardware goal,        a repairable laptop that grows with us.        we build the software, we design the path,        we create the future one commit at a time.│                                                                         │
+│                                                                         │
+│        framework 13 represents our hardware goal,                       │
+│        a repairable laptop that grows with us.                          │
+│        we build the software, we design the path,                       │
+│        we create the future one commit at a time.                       │
 │                                                                         │
 │        keaton dunsford                                                  │
 │        email: kj3x39@gmail.com                                          │

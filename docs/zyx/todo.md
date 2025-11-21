@@ -2,6 +2,10 @@
 
 pending items to revisit
 
+## 2025-11-20 18:45:00 PST
+
+- [ ] revamp teamcarry11/graincard readme (strict 75x100 format, ASCII only, match xy-mathematics style)
+
 ## 2025-11-20 18:30:00 PST
 
 - [ ] finish graincard readme for xy-mathematics (strict 75x100 format, ASCII only)

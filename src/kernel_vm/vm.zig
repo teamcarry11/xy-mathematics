@@ -54,9 +54,12 @@ pub const RegisterFile = struct {
 /// Why: Centralized memory size configuration for RAM-aware development.
 /// Note: Development machine (MacBook Air M2): 24GB RAM
 ///       Target hardware (Framework 13 RISC-V): 8GB RAM
-///       Default: 4MB (safe for both, sufficient for early kernel development)
+///       Default: 8MB (safe for both, sufficient for kernel + framebuffer)
 ///       Max recommended: 64MB (works on both machines, allows larger kernel testing)
-pub const VM_MEMORY_SIZE: usize = 4 * 1024 * 1024; // 4MB default
+///       Memory layout:
+///       - 0x80000000 - 0x8FFFFFFF: Kernel code/data (128MB virtual, 4MB physical)
+///       - 0x90000000 - 0x900BBFFF: Framebuffer (1024x768x4 = 3MB)
+pub const VM_MEMORY_SIZE: usize = 8 * 1024 * 1024; // 8MB (kernel + framebuffer)
 
 /// RISC-V64 virtual machine state.
 /// Why: Encapsulate all VM state for deterministic execution.
@@ -290,6 +293,61 @@ pub const VM = struct {
         // Assert: value must be written correctly.
         const read_back = try self.read64(addr);
         std.debug.assert(read_back == value);
+    }
+
+    /// Translate virtual address to physical offset in VM memory
+    /// Why: Map kernel virtual addresses (0x80000000+, 0x90000000+) to VM memory offsets
+    /// Contract: Returns physical offset, or null if address is invalid
+    /// Memory layout:
+    ///   - 0x80000000+: Kernel code/data -> offset 0+
+    ///   - 0x90000000+: Framebuffer -> offset (memory_size - framebuffer_size)+
+    fn translate_address(self: *const Self, virt_addr: u64) ?usize {
+        const KERNEL_BASE: u64 = 0x80000000;
+        const FRAMEBUFFER_BASE: u64 = 0x90000000;
+        const FRAMEBUFFER_SIZE: u32 = 1024 * 768 * 4; // 3MB
+        
+        if (virt_addr >= FRAMEBUFFER_BASE) {
+            // Framebuffer region: map to end of VM memory
+            const framebuffer_offset: usize = self.memory_size - FRAMEBUFFER_SIZE;
+            const offset_in_fb: u64 = virt_addr - FRAMEBUFFER_BASE;
+            
+            if (offset_in_fb >= FRAMEBUFFER_SIZE) {
+                return null; // Out of framebuffer bounds
+            }
+            
+            const phys_offset = framebuffer_offset + @as(usize, @intCast(offset_in_fb));
+            if (phys_offset >= self.memory_size) {
+                return null; // Out of memory bounds
+            }
+            
+            return phys_offset;
+        } else if (virt_addr >= KERNEL_BASE) {
+            // Kernel region: map directly (0x80000000 -> 0)
+            const offset: u64 = virt_addr - KERNEL_BASE;
+            if (offset >= self.memory_size) {
+                return null; // Out of memory bounds
+            }
+            return @as(usize, @intCast(offset));
+        } else {
+            // Low memory: map directly
+            if (virt_addr >= self.memory_size) {
+                return null;
+            }
+            return @as(usize, @intCast(virt_addr));
+        }
+    }
+
+    /// Get framebuffer memory region
+    /// Why: Provide access to framebuffer memory for host-side rendering
+    /// Contract: Returns slice of VM memory at framebuffer base address
+    /// Note: Framebuffer is at 0x90000000, mapped to offset in VM memory
+    pub fn get_framebuffer_memory(self: *Self) []u8 {
+        const FRAMEBUFFER_SIZE: u32 = 1024 * 768 * 4; // 3MB
+        const framebuffer_offset: usize = self.memory_size - FRAMEBUFFER_SIZE;
+        
+        std.debug.assert(framebuffer_offset + FRAMEBUFFER_SIZE <= self.memory_size);
+        
+        return self.memory[framebuffer_offset..][0..FRAMEBUFFER_SIZE];
     }
 
     /// Read instruction at PC (32-bit, little-endian).
@@ -1522,15 +1580,15 @@ pub const VM = struct {
             return VMError.unaligned_memory_access;
         }
 
-        // Assert: effective address must be within memory bounds.
-        if (eff_addr + 4 > self.memory_size) {
+        // Translate virtual address to physical offset
+        const phys_offset = self.translate_address(eff_addr) orelse {
             self.state = .errored;
             self.last_error = VMError.invalid_memory_access;
             return VMError.invalid_memory_access;
-        }
+        };
 
-        // Assert: effective address must fit in usize for memory access.
-        if (eff_addr > std.math.maxInt(usize)) {
+        // Assert: physical offset + 4 must be within memory bounds.
+        if (phys_offset + 4 > self.memory_size) {
             self.state = .errored;
             self.last_error = VMError.invalid_memory_access;
             return VMError.invalid_memory_access;
@@ -1541,7 +1599,7 @@ pub const VM = struct {
         const word = @as(u32, @truncate(rs2_value));
 
         // Write 32-bit word to memory.
-        @memcpy(self.memory[@as(usize, @intCast(eff_addr))..][0..4], &std.mem.toBytes(word));
+        @memcpy(self.memory[phys_offset..][0..4], &std.mem.toBytes(word));
     }
 
     /// Execute LB (Load Byte) instruction.

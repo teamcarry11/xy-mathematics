@@ -2,9 +2,14 @@ const Panic = @import("panic.zig");
 const Trap = @import("trap.zig");
 const BasinKernel = @import("basin_kernel.zig").BasinKernel;
 const Debug = @import("debug.zig");
+const Framebuffer = @import("framebuffer.zig").Framebuffer;
 
 // Global kernel instance
 var kernel: BasinKernel = undefined;
+
+// Global framebuffer (initialized in kmain)
+// Why: Static allocation for framebuffer state.
+var framebuffer: ?Framebuffer = null;
 
 pub export fn kmain() noreturn {
     // 1. Early boot banner

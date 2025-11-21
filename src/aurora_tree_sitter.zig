@@ -150,8 +150,7 @@ pub const TreeSitter = struct {
     }
     
     /// Find node containing a point (recursive search).
-    fn findNodeContaining(self: *TreeSitter, node: *const Node, point: Point) ?Node {
-        _ = self;
+    fn findNodeContaining(_: *TreeSitter, node: *const Node, point: Point) ?Node {
         
         // Check if point is within this node
         if (point.row < node.start_point.row or point.row > node.end_point.row) {

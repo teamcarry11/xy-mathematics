@@ -362,13 +362,15 @@
 - Dream Editor Foundation - GrainBuffer Enhancement (Phase 4.0.1) ✅
 - Dream Editor Foundation - GLM-4.6 Client (Phase 4.0.2) ✅
 - Dream Editor Foundation - Dream Protocol (Phase 4.0.3) ✅
+- Dream Editor Core - Readonly Spans Integration (Phase 4.1.1) ✅
+- Dream Editor Core - Method Folding (Phase 4.1.2) ✅
 
 **In Progress**: 
-- None (Phase 0 complete, ready for Phase 1)
+- Dream Editor Core - GLM-4.6 Integration (Phase 4.1.3) 🔄
 
 **Next Up**: 
 - Userspace program execution (IDE/Browser in Grain Vantage)
-- Dream Editor Core (Phase 4.1): Readonly spans, method folding, GLM-4.6 integration
+- Dream Editor Core (Phase 4.1): Tree-sitter, LSP enhancements, VCS integration
 - Dream Browser Core (Phase 4.2): HTML/CSS parser, Nostr content loading
 - Dream Browser Core (Phase 4.2)
 - Framework 13 Hardware (Phase 6)

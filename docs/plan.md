@@ -345,11 +345,14 @@
 - ✅ Node lookup by position (for navigation, hover)
 - ✅ Dependency tracking (parent-child relationships in DAG)
 
-#### 2.2: Browser-DAG Integration 📋 **PLANNED**
-- 📋 Map DOM nodes to DAG nodes
-- 📋 Map web requests to DAG events
-- 📋 Streaming updates (real-time)
-- 📋 Unified state (editor + browser)
+#### 2.2: Browser-DAG Integration ✅ **COMPLETE**
+- ✅ Map DOM nodes to DAG nodes (`src/dream_browser_dag_integration.zig`)
+- ✅ Map web requests to DAG events (HashDAG-style with parent references)
+- ✅ Map Nostr events to DAG events (real-time content updates)
+- ✅ Streaming updates (Hyperfiddle-style, TigerBeetle state machine)
+- ✅ Unified state (editor + browser, shared DAG)
+- ✅ Node lookup by URL and tag (for navigation, updates)
+- ✅ Unified state statistics (AST + DOM + UI components)
 
 #### 2.3: HashDAG Consensus 📋 **PLANNED**
 - 📋 Event ordering (Djinn's HashDAG proposal)

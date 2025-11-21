@@ -290,11 +290,14 @@
 - [x] Dependency tracking (parent-child relationships in DAG)
 - [ ] Incremental compilation integration (majjit) - future enhancement
 
-#### 4.2.2 Browser-DAG Integration 📋 **PLANNED**
-- [ ] Map DOM nodes to DAG nodes
-- [ ] Map web requests to DAG events
-- [ ] Streaming updates (real-time)
-- [ ] Unified state (editor + browser)
+#### 4.2.2 Browser-DAG Integration ✅ **COMPLETE**
+- [x] Map DOM nodes to DAG nodes (`src/dream_browser_dag_integration.zig`)
+- [x] Map web requests to DAG events (HashDAG-style with parent references)
+- [x] Map Nostr events to DAG events (real-time content updates)
+- [x] Streaming updates (Hyperfiddle-style, TigerBeetle state machine)
+- [x] Unified state (editor + browser, shared DAG)
+- [x] Node lookup by URL and tag (for navigation, updates)
+- [x] Unified state statistics (AST + DOM + UI components)
 
 #### 4.2.3 HashDAG Consensus 📋 **PLANNED**
 - [ ] Event ordering (Djinn's HashDAG proposal)

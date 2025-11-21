@@ -10,15 +10,25 @@ It's been 7 years of building, breaking things, learning, failing, and occasiona
 
 I'm not a senior engineer at Google. I'm not a professor. I'm someone who took a different path, and I've learned some things that might help you if you're also questioning the conventional wisdom.
 
-If you're building with Zig instead of Python, thinking about RISC-V instead of x86, exploring Nostr instead of Ethereum, or wondering why everyone's still talking about JavaScript when we could be building browsers from scratch—you're probably not finding great answers in the top search results. I get it. I've been there.
-
 **USD 89 per month.**
+
+## What Is This?
+
+You're probably here because you've hit a wall. You've tried Discord servers, crypto-Telegram groups, Slack communities. You've read the top search results. You've maybe even tried reaching out to people, but it's hard to get personal support without it being either too expensive or too formal.
+
+Here's the problem: when you're building with Zig instead of Python, thinking about RISC-V instead of x86, exploring Nostr instead of Ethereum, or wondering why everyone's still talking about JavaScript when we could be building browsers from scratch—you're not finding great answers in the conventional places. The mainstream advice doesn't fit what you're trying to do.
+
+The kae3g Experience is a monthly mentoring subscription. It's the space between doing it all yourself and intensive one-on-one coaching. You get access to me, to a community of people thinking similarly, to a back-catalog of real conversations about systems programming, and to Office Hours where you can ask questions or just listen.
+
+It's affordable. It's flexible. You can cancel anytime. And it's designed for people who are taking unconventional paths and need support that actually understands what they're trying to do.
 
 ## Who This Is For
 
 Maybe you're a college dropout who realized the curriculum was teaching you Python while you wanted to understand how computers actually work. Maybe you're a high school student who's already building operating systems but your parents think you should focus on getting into a "good" internship at a FAANG company. Maybe you've been grinding through Discord servers and crypto-Telegram groups, drowning in noise, trying to find someone who actually knows what they're talking about.
 
 Or maybe you're stuck between "just learn React" advice and your gut feeling that there's something fundamentally broken about how we build software. Or you're dealing with family who don't understand why you're not pursuing the conventional path, and you need help bridging that conversation.
+
+If you're building with Zig instead of Python, thinking about RISC-V instead of x86, exploring Nostr instead of Ethereum, or wondering why everyone's still talking about JavaScript when we could be building browsers from scratch—you're probably not finding great answers in the top search results. I get it. I've been there.
 
 I've been there. I'm still there, honestly. The difference is I've spent 7 years figuring out how to navigate this space without the traditional credentials, and I've made enough mistakes that I can help you avoid some of them.
 

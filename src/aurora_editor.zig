@@ -4,6 +4,7 @@ const GrainAurora = @import("grain_aurora.zig").GrainAurora;
 const LspClient = @import("aurora_lsp.zig").LspClient;
 const Folding = @import("aurora_folding.zig").Folding;
 const Glm46Client = @import("aurora_glm46.zig").Glm46Client;
+const TreeSitter = @import("aurora_tree_sitter.zig").TreeSitter;
 
 /// Aurora code editor: integrates GrainBuffer, GrainAurora, LSP, folding, and GLM-4.6.
 /// ~<~ Glow Waterbend: editor state flows deterministically through LSP diagnostics.
@@ -13,6 +14,7 @@ pub const Editor = struct {
     aurora: GrainAurora,
     lsp: LspClient,
     folding: Folding,
+    tree_sitter: TreeSitter,
     glm46: ?Glm46Client = null,
     file_uri: []const u8,
     cursor_line: u32 = 0,
@@ -30,9 +32,12 @@ pub const Editor = struct {
         const lsp = LspClient.init(allocator);
         var folding = Folding.init(allocator);
         errdefer folding.deinit();
+        var tree_sitter = TreeSitter.init(allocator);
+        errdefer tree_sitter.deinit();
         
-        // Parse initial text for folds
+        // Parse initial text for folds and syntax tree
         try folding.parse(initial_text);
+        _ = try tree_sitter.parseZig(initial_text);
 
         return Editor{
             .allocator = allocator,
@@ -48,6 +53,7 @@ pub const Editor = struct {
         if (self.glm46) |*glm46| {
             glm46.deinit();
         }
+        self.tree_sitter.deinit();
         self.folding.deinit();
         self.lsp.deinit();
         self.aurora.deinit();
@@ -111,6 +117,22 @@ pub const Editor = struct {
     /// Check if a line is folded.
     pub fn isFolded(self: *const Editor, line: u32) bool {
         return self.folding.isFolded(line);
+    }
+    
+    /// Get syntax tree for current buffer (for syntax highlighting, navigation).
+    pub fn getSyntaxTree(self: *Editor) !TreeSitter.Tree {
+        const text = self.buffer.textSlice();
+        return try self.tree_sitter.parseZig(text);
+    }
+    
+    /// Get node at current cursor position (for hover, go-to-definition).
+    pub fn getNodeAtCursor(self: *Editor) !?TreeSitter.Node {
+        const tree = try self.getSyntaxTree();
+        const point = TreeSitter.Point{
+            .row = self.cursor_line,
+            .column = self.cursor_char,
+        };
+        return self.tree_sitter.getNodeAt(&tree, point);
     }
 
     /// Insert text at cursor; triggers LSP didChange notification.

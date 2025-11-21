@@ -319,12 +319,12 @@
 - [x] DAG integration (HTML node → DOM node conversion)
 - [ ] Full HTML5/CSS3 parser (future enhancement)
 
-#### 4.3.2 Rendering Engine
-- [ ] Layout engine (block/inline flow)
-- [ ] Render to Grain Aurora components
-- [ ] Readonly spans for metadata (event ID, timestamp)
-- [ ] Editable spans for content
-- [ ] DAG-based rendering pipeline
+#### 4.3.2 Rendering Engine ✅ **COMPLETE**
+- [x] Layout engine (block/inline flow, `src/dream_browser_renderer.zig`)
+- [x] Render to Grain Aurora components (DOM → Aurora Node conversion)
+- [x] Readonly spans for metadata (event ID, timestamp, author)
+- [x] Editable spans for content (text content is editable)
+- [x] DAG-based rendering pipeline (DOM nodes from DAG)
 
 #### 4.3.3 Nostr Content Loading
 - [ ] Parse Nostr URLs (`nostr:note1...`, `nostr:npub1...`)

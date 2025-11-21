@@ -1,7 +1,7 @@
 # Grain OS Development Plan
 ## RISC-V Kernel + VM + Aurora IDE
 
-**Current Status**: Phase 4.2.2 Browser-DAG Integration complete ✅. DOM nodes and web requests mapped to unified DAG! 🎉
+**Current Status**: Phase 4.3.2 Rendering Engine complete ✅. Layout engine and Aurora rendering implemented! 🎉
 
 **Goal**: RISC-V-targeted Grain OS with graphical interface running in macOS Tahoe 26.1 VM, with path toward Framework 13 RISC-V hardware.
 
@@ -376,11 +376,12 @@
 - ✅ DAG integration (HTML node → DOM node conversion)
 - 📋 Full HTML5/CSS3 parser (future enhancement)
 
-#### 3.2: Rendering Engine 📋 **PLANNED**
-- 📋 Layout engine (block/inline flow)
-- 📋 Render to Grain Aurora components
-- 📋 Readonly spans for metadata (event ID, timestamp)
-- 📋 Editable spans for content
+#### 3.2: Rendering Engine ✅ **COMPLETE**
+- ✅ Layout engine (block/inline flow, `src/dream_browser_renderer.zig`)
+- ✅ Render to Grain Aurora components (DOM → Aurora Node conversion)
+- ✅ Readonly spans for metadata (event ID, timestamp, author)
+- ✅ Editable spans for content (text content is editable)
+- ✅ DAG-based rendering pipeline (DOM nodes from DAG)
 
 #### 3.3: Nostr Content Loading 📋 **PLANNED**
 - 📋 Parse Nostr URLs (`nostr:note1...`, `nostr:npub1...`)

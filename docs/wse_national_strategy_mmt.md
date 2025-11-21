@@ -7,7 +7,7 @@
 
 ## Executive Summary
 
-The Cerebras WSE (Wafer-Scale Engine) approach offers revolutionary performance and environmental benefits, but faces three critical limitations:
+The Cerebras WSE (Wafer-Scale Engine) approach offers revolutionary performance and environmental and America First benefits, but faces three critical limitations:
 
 1. **SRAM Capacity**: 44GB on-wafer SRAM limits hot cache size
 2. **Wafer Cost**: High initial cost for WSE wafer

@@ -1,7 +1,7 @@
 # Grain OS Development Plan
 ## RISC-V Kernel + VM + Aurora IDE
 
-**Current Status**: Phase 2.14 VM API Documentation complete ✅. Comprehensive API reference and example programs created! 🎉
+**Current Status**: Phase 4.2.2 Browser-DAG Integration complete ✅. DOM nodes and web requests mapped to unified DAG! 🎉
 
 **Goal**: RISC-V-targeted Grain OS with graphical interface running in macOS Tahoe 26.1 VM, with path toward Framework 13 RISC-V hardware.
 
@@ -346,19 +346,23 @@
 - ✅ Dependency tracking (parent-child relationships in DAG)
 
 #### 2.2: Browser-DAG Integration ✅ **COMPLETE**
-- ✅ Map DOM nodes to DAG nodes (`src/dream_browser_dag_integration.zig`)
+- ✅ Map DOM nodes to DAG nodes (`src/browser_dag_integration.zig`)
 - ✅ Map web requests to DAG events (HashDAG-style with parent references)
-- ✅ Map Nostr events to DAG events (real-time content updates)
-- ✅ Streaming updates (Hyperfiddle-style, TigerBeetle state machine)
-- ✅ Unified state (editor + browser, shared DAG)
-- ✅ Node lookup by URL and tag (for navigation, updates)
-- ✅ Unified state statistics (AST + DOM + UI components)
+- ✅ Streaming updates (real-time, `processStreamingUpdates()`)
+- ✅ Unified state (editor + browser share same DAG)
+- ✅ Dependency tracking (parent-child relationships in DOM)
+- ✅ URL node reuse (unique nodes per URL)
+- ✅ Comprehensive tests (tests/019_browser_dag_integration_test.zig)
 
-#### 2.3: HashDAG Consensus 📋 **PLANNED**
-- 📋 Event ordering (Djinn's HashDAG proposal)
-- 📋 Virtual voting (consensus without explicit votes)
-- 📋 Fast finality (seconds, not minutes)
-- 📋 High throughput (parallel ingestion)
+#### 2.3: HashDAG Consensus ✅ **COMPLETE**
+- ✅ Event ordering (Djinn's HashDAG proposal, `src/hashdag_consensus.zig`)
+- ✅ Virtual voting (consensus without explicit votes, witness determination)
+- ✅ Fast finality (seconds, not minutes, round-based finality)
+- ✅ High throughput (parallel ingestion, deterministic ordering)
+- ✅ Round determination (max parent round + 1)
+- ✅ Witness identification (first event per creator per round)
+- ✅ Fame determination (witness events are famous)
+- ✅ Finality manager (events in rounds N-2 or earlier are finalized)
 
 ### Phase 3: Dream Browser Core (Planned)
 

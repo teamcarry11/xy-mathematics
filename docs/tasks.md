@@ -293,17 +293,21 @@
 #### 4.2.2 Browser-DAG Integration ✅ **COMPLETE**
 - [x] Map DOM nodes to DAG nodes (`src/dream_browser_dag_integration.zig`)
 - [x] Map web requests to DAG events (HashDAG-style with parent references)
-- [x] Map Nostr events to DAG events (real-time content updates)
-- [x] Streaming updates (Hyperfiddle-style, TigerBeetle state machine)
-- [x] Unified state (editor + browser, shared DAG)
-- [x] Node lookup by URL and tag (for navigation, updates)
-- [x] Unified state statistics (AST + DOM + UI components)
+- [x] Streaming updates (real-time, `processStreamingUpdates()`)
+- [x] Unified state (editor + browser share same DAG)
+- [x] Dependency tracking (parent-child relationships in DOM)
+- [x] URL node reuse (unique nodes per URL)
+- [x] Comprehensive tests (tests/019_browser_dag_integration_test.zig)
 
-#### 4.2.3 HashDAG Consensus 📋 **PLANNED**
-- [ ] Event ordering (Djinn's HashDAG proposal)
-- [ ] Virtual voting (consensus without explicit votes)
-- [ ] Fast finality (seconds, not minutes)
-- [ ] High throughput (parallel ingestion)
+#### 4.2.3 HashDAG Consensus ✅ **COMPLETE**
+- [x] Event ordering (Djinn's HashDAG proposal, `src/hashdag_consensus.zig`)
+- [x] Virtual voting (consensus without explicit votes, witness determination)
+- [x] Fast finality (seconds, not minutes, round-based finality)
+- [x] High throughput (parallel ingestion, deterministic ordering)
+- [x] Round determination (max parent round + 1)
+- [x] Witness identification (first event per creator per round)
+- [x] Fame determination (witness events are famous)
+- [x] Finality manager (events in rounds N-2 or earlier are finalized)
 
 ### 4.3 Dream Browser Core (PLANNED)
 

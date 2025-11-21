@@ -214,7 +214,7 @@ pub const Glm46Client = struct {
         
         // TODO: Send request, parse response
         // For now, return stub
-        _ = messages;
+        _ = messages.items;
         return "";
     }
     
@@ -242,7 +242,7 @@ pub const Glm46Client = struct {
         
         // TODO: Send request with tool calling format
         // For now, return stub
-        _ = messages;
+        _ = context;
         return "";
     }
 };

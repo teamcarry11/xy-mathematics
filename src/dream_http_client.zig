@@ -119,7 +119,6 @@ pub const HttpClient = struct {
     
     /// Parse HTTP response.
     fn parseResponse(self: *HttpClient, data: []const u8) !Response {
-        _ = self;
         
         // Simple parser: find status line, headers, body
         var lines = std.mem.splitSequence(u8, data, "\r\n");
@@ -159,8 +158,7 @@ pub const HttpClient = struct {
     }
     
     /// Parse status code from status line.
-    fn parseStatusCode(self: *HttpClient, status_line: []const u8) !u16 {
-        _ = self;
+    fn parseStatusCode(_: *HttpClient, status_line: []const u8) !u16 {
         
         // Find first space, then next space
         const first_space = std.mem.indexOfScalar(u8, status_line, ' ') orelse return error.InvalidResponse;

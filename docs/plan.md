@@ -1,7 +1,7 @@
 # Grain OS Development Plan
 ## RISC-V Kernel + VM + Aurora IDE
 
-**Current Status**: Phase 2.11 Error Handling and Recovery complete ✅. Comprehensive error logging and recovery mechanisms implemented! 🎉
+**Current Status**: Phase 2.12 Performance Monitoring and Diagnostics complete ✅. Comprehensive performance tracking and diagnostics implemented! 🎉
 
 **Goal**: RISC-V-targeted Grain OS with graphical interface running in macOS Tahoe 26.1 VM, with path toward Framework 13 RISC-V hardware.
 
@@ -84,6 +84,16 @@
    - ✅ Error recovery mechanisms (VM can restart after error)
    - ✅ Created comprehensive tests (tests/016_error_handling_test.zig)
    - ✅ Bounded error log (256 entries, prevents memory growth)
+
+9. **Performance Monitoring and Diagnostics** ✅ **COMPLETE**
+   - ✅ Created performance metrics system (PerformanceMetrics struct)
+   - ✅ Track instruction execution, memory operations, syscalls
+   - ✅ Track JIT performance (cache hits, misses, fallbacks)
+   - ✅ Calculate IPC (instructions per cycle) and cache hit rate
+   - ✅ Created diagnostics snapshot system (DiagnosticsSnapshot)
+   - ✅ Integrated performance tracking into VM (step, memory ops, syscalls)
+   - ✅ Created comprehensive tests (tests/017_performance_monitoring_test.zig)
+   - ✅ Performance metrics summary printing
 
 ## 🚀 Architecture Overview
 

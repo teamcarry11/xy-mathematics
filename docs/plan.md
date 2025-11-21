@@ -1,7 +1,7 @@
 # Grain OS Development Plan
 ## RISC-V Kernel + VM + Aurora IDE
 
-**Current Status**: Phase 2.12 Performance Monitoring and Diagnostics complete ✅. Comprehensive performance tracking and diagnostics implemented! 🎉
+**Current Status**: Phase 2.14 VM API Documentation complete ✅. Comprehensive API reference and example programs created! 🎉
 
 **Goal**: RISC-V-targeted Grain OS with graphical interface running in macOS Tahoe 26.1 VM, with path toward Framework 13 RISC-V hardware.
 
@@ -94,6 +94,23 @@
    - ✅ Integrated performance tracking into VM (step, memory ops, syscalls)
    - ✅ Created comprehensive tests (tests/017_performance_monitoring_test.zig)
    - ✅ Performance metrics summary printing
+
+10. **VM State Persistence** ✅ **COMPLETE**
+   - ✅ Created VM state snapshot system (VMStateSnapshot struct)
+   - ✅ Save complete VM state (registers, memory, flags, performance metrics)
+   - ✅ Restore VM state from snapshot (reproducible execution)
+   - ✅ Snapshot validation (verify snapshot consistency)
+   - ✅ Integrated save_state() and restore_state() into VM
+   - ✅ Created comprehensive tests (tests/018_state_persistence_test.zig)
+   - ✅ Enables debugging, testing, and checkpointing
+
+11. **VM API Documentation** ✅ **COMPLETE**
+   - ✅ Created comprehensive VM API reference (docs/vm_api_reference.md)
+   - ✅ Documented all VM methods with contracts and examples
+   - ✅ Created example programs (examples/vm_basic_usage.zig, vm_jit_usage.zig, vm_state_persistence.zig)
+   - ✅ Documented memory layout, constants, and error handling
+   - ✅ Verified API consistency and naming conventions
+   - ✅ Complete reference for VM usage patterns
 
 ## 🚀 Architecture Overview
 

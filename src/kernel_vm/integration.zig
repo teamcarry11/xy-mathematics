@@ -351,6 +351,8 @@ fn syscall_handler_wrapper(
                 fb_memory[i + 2] = b;
                 fb_memory[i + 3] = a;
             }
+            // Mark entire framebuffer as dirty (clear operation changes everything).
+            vm.framebuffer_dirty.mark_all();
             return 0;
         }
         
@@ -374,6 +376,8 @@ fn syscall_handler_wrapper(
             vm.memory[pixel_addr + 1] = g;
             vm.memory[pixel_addr + 2] = b;
             vm.memory[pixel_addr + 3] = a;
+            // Mark pixel as dirty (optimization: only sync changed regions).
+            vm.framebuffer_dirty.mark_pixel(x, y);
             return 0;
         }
         
@@ -439,6 +443,8 @@ fn syscall_handler_wrapper(
                             vm.memory[pixel_addr + 1] = g;
                             vm.memory[pixel_addr + 2] = b;
                             vm.memory[pixel_addr + 3] = a;
+                            // Mark pixel as dirty (optimization: only sync changed regions).
+                            vm.framebuffer_dirty.mark_pixel(char_x + px, char_y + py);
                         }
                     }
                 }

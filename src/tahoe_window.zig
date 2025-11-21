@@ -701,12 +701,13 @@ pub const TahoeSandbox = struct {
         try self.platform.show();
     }
 
-    /// Sync VM framebuffer to window buffer.
+    /// Sync VM framebuffer to window buffer (optimized with dirty region tracking).
     /// Why: Copy kernel framebuffer memory to macOS window for display.
     /// GrainStyle: Explicit bounds checking, static allocation, deterministic copy.
     /// Contract:
     ///   Input: VM must be initialized, buffer must be 1024x768x4 bytes
-    ///   Output: Window buffer contains VM framebuffer content
+    ///   Output: Window buffer contains VM framebuffer content (only dirty regions copied)
+    /// Note: Uses dirty region tracking to optimize copy (only sync changed areas).
     fn sync_framebuffer(self: *TahoeSandbox, vm: *VM, buffer: []u8, buffer_width: u32, buffer_height: u32) void {
         _ = self; // Unused (method receiver)
         // Assert: VM must be initialized.
@@ -729,11 +730,41 @@ pub const TahoeSandbox = struct {
         // Assert: Framebuffer memory size must match expected size.
         std.debug.assert(framebuffer_memory.len == expected_framebuffer_size);
         
-        // Copy framebuffer memory to window buffer.
-        // GrainStyle: Direct memcpy for deterministic copy.
-        @memcpy(buffer[0..expected_framebuffer_size], framebuffer_memory);
+        // Check if any region is dirty (optimization: skip copy if nothing changed).
+        var min_x: u32 = 0;
+        var min_y: u32 = 0;
+        var max_x: u32 = 0;
+        var max_y: u32 = 0;
+        const has_dirty = vm.framebuffer_dirty.get_bounds(&min_x, &min_y, &max_x, &max_y);
         
-        // Assert: Copy must be complete.
+        if (has_dirty) {
+            // Copy only dirty region (optimization: reduce memory bandwidth).
+            // Why: Most frames only have small changes (cursor movement, text updates).
+            const bpp: u32 = 4; // RGBA
+            var y: u32 = min_y;
+            while (y < max_y) : (y += 1) {
+                const row_offset_fb: u32 = y * framebuffer_width * bpp;
+                const row_offset_buf: u32 = y * buffer_width * bpp;
+                const row_start_fb: u32 = row_offset_fb + min_x * bpp;
+                const row_start_buf: u32 = row_offset_buf + min_x * bpp;
+                const row_len: u32 = (max_x - min_x) * bpp;
+                
+                // Assert: Row offsets must be within bounds.
+                std.debug.assert(row_start_fb + row_len <= framebuffer_memory.len);
+                std.debug.assert(row_start_buf + row_len <= buffer.len);
+                
+                // Copy row (only dirty region).
+                @memcpy(buffer[row_start_buf..][0..row_len], framebuffer_memory[row_start_fb..][0..row_len]);
+            }
+            
+            // Clear dirty region after sync (reset tracking).
+            vm.framebuffer_dirty.clear();
+        } else {
+            // No dirty regions: framebuffer unchanged, skip copy.
+            // Why: Optimization - avoid unnecessary memory copy when nothing changed.
+        }
+        
+        // Assert: Buffer must be valid after sync (postcondition).
         std.debug.assert(buffer.len == expected_framebuffer_size);
     }
 

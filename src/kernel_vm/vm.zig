@@ -2,6 +2,9 @@ const std = @import("std");
 const sbi = @import("sbi");
 const SerialOutput = @import("serial.zig").SerialOutput;
 const jit_mod = @import("jit.zig");
+const error_log_mod = @import("error_log.zig");
+const performance_mod = @import("performance.zig");
+const state_snapshot_mod = @import("state_snapshot.zig");
 
 /// Pure Zig RISC-V64 emulator for kernel development.
 /// Grain Style: Static allocation where possible, comprehensive assertions,
@@ -70,6 +73,107 @@ pub const InputEventQueue = struct {
     /// Get queue size (number of events available).
     pub fn size(self: *const InputEventQueue) u32 {
         return self.count;
+    }
+};
+
+/// Framebuffer dirty region tracking.
+/// Why: Optimize framebuffer sync by only copying changed regions.
+/// GrainStyle: Static allocation, explicit types, bounded regions.
+/// Note: Tracks single rectangular region (can be expanded to multiple regions if needed).
+pub const FramebufferDirtyRegion = struct {
+    /// Whether any region is dirty (optimization: skip tracking if false).
+    is_dirty: bool = false,
+    /// Minimum X coordinate of dirty region (inclusive).
+    min_x: u32 = 0,
+    /// Minimum Y coordinate of dirty region (inclusive).
+    min_y: u32 = 0,
+    /// Maximum X coordinate of dirty region (exclusive).
+    max_x: u32 = 0,
+    /// Maximum Y coordinate of dirty region (exclusive).
+    max_y: u32 = 0,
+    
+    /// Mark pixel as dirty.
+    /// Why: Track that a pixel has been modified.
+    /// Contract: x and y must be within framebuffer bounds.
+    pub fn mark_pixel(self: *FramebufferDirtyRegion, x: u32, y: u32) void {
+        // Assert: Coordinates must be within framebuffer bounds.
+        const FRAMEBUFFER_WIDTH: u32 = 1024;
+        const FRAMEBUFFER_HEIGHT: u32 = 768;
+        std.debug.assert(x < FRAMEBUFFER_WIDTH);
+        std.debug.assert(y < FRAMEBUFFER_HEIGHT);
+        
+        if (!self.is_dirty) {
+            // First dirty pixel: initialize region.
+            self.is_dirty = true;
+            self.min_x = x;
+            self.min_y = y;
+            self.max_x = x + 1;
+            self.max_y = y + 1;
+        } else {
+            // Expand region to include new pixel.
+            if (x < self.min_x) self.min_x = x;
+            if (y < self.min_y) self.min_y = y;
+            if (x + 1 > self.max_x) self.max_x = x + 1;
+            if (y + 1 > self.max_y) self.max_y = y + 1;
+        }
+        
+        // Assert: Region bounds must be valid (postcondition).
+        std.debug.assert(self.min_x < self.max_x);
+        std.debug.assert(self.min_y < self.max_y);
+        std.debug.assert(self.max_x <= FRAMEBUFFER_WIDTH);
+        std.debug.assert(self.max_y <= FRAMEBUFFER_HEIGHT);
+    }
+    
+    /// Mark entire framebuffer as dirty.
+    /// Why: Used when clearing framebuffer (entire screen changes).
+    pub fn mark_all(self: *FramebufferDirtyRegion) void {
+        const FRAMEBUFFER_WIDTH: u32 = 1024;
+        const FRAMEBUFFER_HEIGHT: u32 = 768;
+        
+        self.is_dirty = true;
+        self.min_x = 0;
+        self.min_y = 0;
+        self.max_x = FRAMEBUFFER_WIDTH;
+        self.max_y = FRAMEBUFFER_HEIGHT;
+        
+        // Assert: Region must cover entire framebuffer (postcondition).
+        std.debug.assert(self.min_x == 0);
+        std.debug.assert(self.min_y == 0);
+        std.debug.assert(self.max_x == FRAMEBUFFER_WIDTH);
+        std.debug.assert(self.max_y == FRAMEBUFFER_HEIGHT);
+    }
+    
+    /// Clear dirty region (after sync).
+    /// Why: Reset tracking after copying dirty region to window.
+    pub fn clear(self: *FramebufferDirtyRegion) void {
+        self.is_dirty = false;
+        self.min_x = 0;
+        self.min_y = 0;
+        self.max_x = 0;
+        self.max_y = 0;
+        
+        // Assert: Region must be cleared (postcondition).
+        std.debug.assert(!self.is_dirty);
+    }
+    
+    /// Get dirty region bounds (if dirty).
+    /// Why: Query dirty region for optimized sync.
+    /// Returns: true if dirty, false if clean.
+    pub fn get_bounds(self: *const FramebufferDirtyRegion, min_x: *u32, min_y: *u32, max_x: *u32, max_y: *u32) bool {
+        if (!self.is_dirty) {
+            return false;
+        }
+        
+        min_x.* = self.min_x;
+        min_y.* = self.min_y;
+        max_x.* = self.max_x;
+        max_y.* = self.max_y;
+        
+        // Assert: Bounds must be valid (postcondition).
+        std.debug.assert(min_x.* < max_x.*);
+        std.debug.assert(min_y.* < max_y.*);
+        
+        return true;
     }
 };
 
@@ -173,6 +277,26 @@ pub const VM = struct {
 
     /// Enable JIT compilation
     jit_enabled: bool = false,
+    
+    /// Dirty region tracking for framebuffer optimization.
+    /// Why: Track changed framebuffer regions to optimize sync (only copy dirty areas).
+    /// GrainStyle: Static allocation, bounded regions, explicit types.
+    /// Note: Tracks rectangular regions that have been modified since last sync.
+    framebuffer_dirty: FramebufferDirtyRegion = .{},
+    
+    /// Error log for tracking errors.
+    /// Why: Record errors for debugging, monitoring, and recovery decisions.
+    /// GrainStyle: Static allocation, bounded buffer, deterministic logging.
+    error_log: error_log_mod.ErrorLog = .{},
+    
+    /// VM start timestamp (monotonic nanoseconds).
+    /// Why: Calculate relative timestamps for error log entries.
+    start_timestamp: u64 = 0,
+    
+    /// Performance metrics tracking.
+    /// Why: Monitor VM execution performance for optimization and diagnostics.
+    /// GrainStyle: Static allocation, bounded counters, explicit types.
+    performance: performance_mod.PerformanceMetrics = .{},
 
     const Self = @This();
 
@@ -529,6 +653,9 @@ pub const VM = struct {
     /// Contract: Initializes framebuffer memory with test pattern for visual verification
     /// GrainStyle: Explicit assertions, bounded execution, static allocation, no external dependencies
     pub fn init_framebuffer(self: *Self) void {
+        // Mark entire framebuffer as dirty (initialization changes everything).
+        self.framebuffer_dirty.mark_all();
+        
         // Framebuffer constants (matching kernel/framebuffer.zig)
         const FRAMEBUFFER_WIDTH: u32 = 1024;
         const FRAMEBUFFER_HEIGHT: u32 = 768;
@@ -796,6 +923,9 @@ pub const VM = struct {
 
         // Fetch instruction at PC.
         const inst = try self.fetch_instruction();
+        
+        // Track instruction execution (performance monitoring).
+        self.performance.increment_instruction();
 
         // Assert: instruction must be valid (not all ones, which is invalid).
         // Note: Zero instructions (NOP) are valid, so we don't check for 0x00000000.
@@ -3134,6 +3264,11 @@ pub const VM = struct {
         // Assert: VM must be halted or errored state to start.
         std.debug.assert(self.state == .halted or self.state == .errored);
 
+        // Initialize start timestamp (for error logging).
+        if (self.start_timestamp == 0) {
+            self.start_timestamp = std.time.nanoTimestamp();
+        }
+
         self.state = .running;
         self.last_error = null;
 
@@ -3148,5 +3283,81 @@ pub const VM = struct {
 
         // Assert: VM must be in halted state after stop.
         std.debug.assert(self.state == .halted);
+    }
+    
+    /// Get diagnostics snapshot.
+    /// Why: Capture VM state for debugging and diagnostics.
+    /// Returns: DiagnosticsSnapshot with current VM state and metrics.
+    pub fn get_diagnostics(self: *const Self) performance_mod.DiagnosticsSnapshot {
+        const state_val: u32 = switch (self.state) {
+            .running => 0,
+            .halted => 1,
+            .errored => 2,
+        };
+        
+        // Approximate memory usage (non-zero bytes).
+        var memory_used: u64 = 0;
+        var i: u64 = 0;
+        while (i < self.memory_size) : (i += 1) {
+            if (self.memory[@intCast(i)] != 0) {
+                memory_used += 1;
+            }
+        }
+        
+        return performance_mod.DiagnosticsSnapshot.create(
+            state_val,
+            self.regs.pc,
+            self.regs.get(2), // SP (x2)
+            self.memory_size,
+            memory_used,
+            self.jit_enabled,
+            self.error_log.entry_count,
+            self.performance,
+        );
+    }
+    
+    /// Print performance metrics summary.
+    /// Why: Display performance metrics for monitoring.
+    pub fn print_performance(self: *const Self) void {
+        self.performance.print_summary();
+    }
+    
+    /// Save VM state to snapshot.
+    /// Why: Capture VM state for debugging, testing, and checkpointing.
+    /// Contract: VM must be initialized, memory_buffer must be large enough.
+    /// Returns: VMStateSnapshot with complete VM state.
+    pub fn save_state(self: *const Self, memory_buffer: []u8) !state_snapshot_mod.VMStateSnapshot {
+        // Assert: VM must be initialized (precondition).
+        std.debug.assert(self.memory_size > 0);
+        std.debug.assert(self.memory.len > 0);
+        
+        // Assert: Memory buffer must be large enough (precondition).
+        std.debug.assert(memory_buffer.len >= self.memory.len);
+        
+        // Create snapshot.
+        const snapshot = try state_snapshot_mod.VMStateSnapshot.create(self, memory_buffer);
+        
+        // Assert: Snapshot must be valid (postcondition).
+        std.debug.assert(snapshot.is_valid());
+        
+        return snapshot;
+    }
+    
+    /// Restore VM state from snapshot.
+    /// Why: Restore VM to saved state for debugging and testing.
+    /// Contract: VM must be initialized, snapshot must be valid.
+    pub fn restore_state(self: *Self, snapshot: *const state_snapshot_mod.VMStateSnapshot) !void {
+        // Assert: Snapshot must be valid (precondition).
+        std.debug.assert(snapshot.is_valid());
+        
+        // Assert: Snapshot memory size must match VM memory size (precondition).
+        std.debug.assert(snapshot.memory_size == self.memory_size);
+        
+        // Restore state.
+        try snapshot.restore(self);
+        
+        // Assert: VM state must be restored correctly (postcondition).
+        std.debug.assert(self.regs.pc == snapshot.regs[32]);
+        std.debug.assert(self.memory_size == snapshot.memory_size);
     }
 };

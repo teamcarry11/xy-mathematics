@@ -114,24 +114,28 @@ pub const Instruction = struct {
 };
 
 /// Fixup for backpatching forward jumps.
+/// GrainStyle: Use explicit u32 instead of usize for code buffer offsets
 const Fixup = struct {
-    patch_addr: usize, // Offset in code_buffer
+    patch_addr: u32, // Offset in code_buffer (max 64MB, fits in u32)
     next: ?*Fixup,
 };
 
 /// The JIT Context manages the translation process.
+/// GrainStyle: Use explicit u32/u64 instead of usize for cross-platform consistency
 pub const JitContext = struct {
     allocator: std.mem.Allocator,
     code_buffer: []align(16384) u8,
-    cursor: usize,
+    cursor: u32, // Code buffer offset (max 64MB, fits in u32)
     guest_state: *GuestState,
     guest_ram: []u8,
+    memory_size: u64, // VM memory size in bytes
+    framebuffer_size: u32,
     perf_counters: JitPerfCounters,
 
-    block_cache: std.AutoHashMap(u64, usize),
+    block_cache: std.AutoHashMap(u64, u32), // Maps guest PC to code buffer offset
     pending_fixups: std.AutoHashMap(u64, *Fixup),
 
-    pub fn init(allocator: std.mem.Allocator, guest_state: *GuestState, guest_ram: []u8) !JitContext {
+    pub fn init(allocator: std.mem.Allocator, guest_state: *GuestState, guest_ram: []u8, memory_size: u64) !JitContext {
         // Assert: guest RAM must be non-empty
         std.debug.assert(guest_ram.len > 0);
         // Assert: guest state must be aligned
@@ -162,16 +166,28 @@ pub const JitContext = struct {
         var fixups = std.AutoHashMap(u64, *Fixup).init(allocator);
         try fixups.ensureTotalCapacity(1000);
 
+        // Framebuffer constants (matching VM translate_address)
+        const FRAMEBUFFER_SIZE: u32 = 1024 * 768 * 4; // 3MB
+        
+        // Assert: memory_size must be large enough for framebuffer
+        std.debug.assert(memory_size >= FRAMEBUFFER_SIZE);
+        
         const self = JitContext{
             .allocator = allocator,
             .code_buffer = buffer,
             .cursor = 0,
             .guest_state = guest_state,
             .guest_ram = guest_ram,
+            .memory_size = memory_size,
+            .framebuffer_size = FRAMEBUFFER_SIZE,
             .perf_counters = .{},
             .block_cache = cache,
             .pending_fixups = fixups,
         };
+        
+        // Assert: JIT context must be initialized correctly
+        std.debug.assert(self.memory_size == memory_size);
+        std.debug.assert(self.framebuffer_size == FRAMEBUFFER_SIZE);
 
         self.verify_integrity();
         return self;
@@ -215,7 +231,8 @@ pub const JitContext = struct {
         }
     }
 
-    pub fn flush_cache(self: *JitContext, start_offset: usize, len: usize) void {
+    /// GrainStyle: Use explicit u32 instead of usize for code buffer offsets
+    pub fn flush_cache(self: *JitContext, start_offset: u32, len: u32) void {
         // Assert: start offset must be within bounds
         std.debug.assert(start_offset < self.code_buffer.len);
         // Assert: end offset must be within bounds
@@ -486,6 +503,121 @@ pub const JitContext = struct {
         self.emit_u32(inst);
         std.debug.assert(self.cursor == start_cursor + 4);
         std.debug.assert(self.cursor <= self.code_buffer.len);
+    }
+
+    /// Emit address translation code
+    /// Why: Translate guest virtual address to physical offset in VM memory
+    /// Contract: Takes guest address in addr_reg, outputs physical offset in same register
+    /// GrainStyle: Explicit bounds checking, deterministic translation
+    /// Address translation logic:
+    ///   - 0x90000000+: Framebuffer -> offset = memory_size - framebuffer_size + (addr - 0x90000000)
+    ///   - 0x80000000+: Kernel -> offset = addr - 0x80000000
+    ///   - Otherwise: Direct mapping -> offset = addr
+    fn emit_translate_address(self: *JitContext, addr_reg: u5) void {
+        // Assert: addr_reg must be valid (0-31)
+        std.debug.assert(addr_reg < 32);
+        
+        // Use x4, x5, x6 as temporary registers (x27=mem_base, x28=guest_state are reserved)
+        const tmp1: u5 = 4;
+        const tmp2: u5 = 5;
+        const tmp3: u5 = 6;
+        
+        const KERNEL_BASE: u64 = 0x80000000;
+        const FRAMEBUFFER_BASE: u64 = 0x90000000;
+        
+        // Check if address >= FRAMEBUFFER_BASE (0x90000000)
+        self.emit_mov_u64(tmp1, FRAMEBUFFER_BASE);
+        self.emit_subs(tmp2, addr_reg, tmp1); // tmp2 = addr - 0x90000000, sets flags
+        // If addr >= 0x90000000, carry flag is set (unsigned >=)
+        
+        // Branch to framebuffer translation if addr >= 0x90000000
+        self.emit_b_cond(0x2, 0); // HS (unsigned >=), will patch later
+        const framebuffer_patch_pos: u32 = self.cursor - 4;
+        
+        // Check if address >= KERNEL_BASE (0x80000000)
+        self.emit_mov_u64(tmp1, KERNEL_BASE);
+        self.emit_subs(tmp3, addr_reg, tmp1); // tmp3 = addr - 0x80000000, sets flags (use tmp3 to preserve tmp2)
+        
+        // Branch to kernel translation if addr >= 0x80000000
+        self.emit_b_cond(0x2, 0); // HS (unsigned >=), will patch later
+        const kernel_patch_pos: u32 = self.cursor - 4;
+        
+        // Low memory: direct mapping (addr_reg already contains offset)
+        self.emit_b(0); // Will patch later
+        const done_patch_pos: u32 = self.cursor - 4;
+        
+        // Framebuffer translation: offset = memory_size - framebuffer_size + (addr - 0x90000000)
+        // At this point: addr_reg = guest_addr, tmp2 = addr - 0x90000000
+        const framebuffer_code_start: u32 = self.cursor;
+        self.emit_mov_u64(tmp1, @as(u64, self.memory_size));
+        self.emit_mov_u64(tmp3, @as(u64, self.framebuffer_size));
+        self.emit_subs(tmp1, tmp1, tmp3); // tmp1 = memory_size - framebuffer_size
+        self.emit_add(addr_reg, tmp1, tmp2); // addr_reg = (memory_size - framebuffer_size) + (addr - 0x90000000)
+        self.emit_b(0); // Jump to done, will patch later
+        const framebuffer_done_patch: u32 = self.cursor - 4;
+        
+        // Kernel translation: offset = addr - 0x80000000
+        // At this point: addr_reg = guest_addr, tmp3 = addr - 0x80000000
+        const kernel_code_start: u32 = self.cursor;
+        self.emit_mov(addr_reg, tmp3); // addr_reg = addr - 0x80000000
+        self.emit_b(0); // Jump to done, will patch later
+        const kernel_done_patch: u32 = self.cursor - 4;
+        
+        // Done label
+        const done_code_start: u32 = self.cursor;
+        
+        // Patch branch offsets
+        // GrainStyle: Use explicit u32 for offsets, cast to i19/i28 for branch instructions
+        // Framebuffer branch: from framebuffer_patch_pos to framebuffer_code_start
+        const framebuffer_diff: i32 = @as(i32, @intCast(framebuffer_code_start)) - @as(i32, @intCast(framebuffer_patch_pos));
+        const framebuffer_offset = @as(i19, @intCast(framebuffer_diff >> 2));
+        self.patch_b_cond(framebuffer_patch_pos, framebuffer_offset);
+        
+        // Kernel branch: from kernel_patch_pos to kernel_code_start
+        const kernel_diff: i32 = @as(i32, @intCast(kernel_code_start)) - @as(i32, @intCast(kernel_patch_pos));
+        const kernel_offset = @as(i19, @intCast(kernel_diff >> 2));
+        self.patch_b_cond(kernel_patch_pos, kernel_offset);
+        
+        // Done branch: from done_patch_pos to done_code_start
+        const done_diff: i32 = @as(i32, @intCast(done_code_start)) - @as(i32, @intCast(done_patch_pos));
+        const done_offset = @as(i28, @intCast(done_diff >> 2));
+        self.patch_b(done_patch_pos, done_offset);
+        
+        // Framebuffer done branch: from framebuffer_done_patch to done_code_start
+        const framebuffer_done_diff: i32 = @as(i32, @intCast(done_code_start)) - @as(i32, @intCast(framebuffer_done_patch));
+        const framebuffer_done_offset = @as(i28, @intCast(framebuffer_done_diff >> 2));
+        self.patch_b(framebuffer_done_patch, framebuffer_done_offset);
+        
+        // Kernel done branch: from kernel_done_patch to done_code_start
+        const kernel_done_diff: i32 = @as(i32, @intCast(done_code_start)) - @as(i32, @intCast(kernel_done_patch));
+        const kernel_done_offset = @as(i28, @intCast(kernel_done_diff >> 2));
+        self.patch_b(kernel_done_patch, kernel_done_offset);
+    }
+    
+    /// Patch B instruction at position
+    /// GrainStyle: Use explicit u32 instead of usize for code buffer offsets
+    fn patch_b(self: *JitContext, pos: u32, offset: i28) void {
+        std.debug.assert(pos + 4 <= self.code_buffer.len);
+        const existing = std.mem.readInt(u32, self.code_buffer[pos..][0..4], .little);
+        const imm26: u32 = @as(u32, @bitCast(offset)) & 0x03FFFFFF;
+        const inst = (existing & 0xFC000000) | imm26;
+        std.mem.writeInt(u32, self.code_buffer[pos..][0..4], inst, .little);
+    }
+    
+    /// Patch B.cond instruction at position
+    /// GrainStyle: Use explicit u32 instead of usize for code buffer offsets
+    fn patch_b_cond(self: *JitContext, pos: u32, offset: i19) void {
+        std.debug.assert(pos + 4 <= self.code_buffer.len);
+        const existing = std.mem.readInt(u32, self.code_buffer[pos..][0..4], .little);
+        const imm19: u32 = @as(u32, @bitCast(offset)) & 0x7FFFF;
+        const cond = existing & 0xF;
+        const inst = 0x54000000 | (imm19 << 5) | cond;
+        std.mem.writeInt(u32, self.code_buffer[pos..][0..4], inst, .little);
+    }
+    
+    /// Emit MOV (register to register)
+    fn emit_mov(self: *JitContext, rd: u5, rn: u5) void {
+        self.emit_add(rd, rn, 0); // MOV is ADD with zero
     }
 
     // --- Translation Logic ---
@@ -769,7 +901,8 @@ pub const JitContext = struct {
         return error.InvalidInstruction;
     }
 
-    fn record_fixup(self: *JitContext, target_pc: u64, patch_offset: usize) !void {
+    /// GrainStyle: Use explicit u32 instead of usize for code buffer offsets
+    fn record_fixup(self: *JitContext, target_pc: u64, patch_offset: u32) !void {
         const fixup = try self.allocator.create(Fixup);
         fixup.* = .{ .patch_addr = patch_offset, .next = null };
 
@@ -785,12 +918,13 @@ pub const JitContext = struct {
         self.unprotect_code();
         defer self.protect_code();
 
-        const start_offset = self.cursor;
+        const start_offset: u32 = self.cursor;
         var current_pc = guest_pc;
-        var instructions_in_block: usize = 0;
+        var instructions_in_block: u32 = 0;
 
         if (self.block_cache.get(guest_pc)) |addr| {
-            return @ptrCast(@alignCast(@as(*const anyopaque, @ptrFromInt(@intFromPtr(self.code_buffer.ptr) + addr))));
+            // GrainStyle: Cast u32 to usize only for pointer arithmetic
+            return @ptrCast(@alignCast(@as(*const anyopaque, @ptrFromInt(@intFromPtr(self.code_buffer.ptr) + @as(usize, addr)))));
         }
 
         self.apply_fixups(guest_pc, start_offset);
@@ -882,11 +1016,9 @@ pub const JitContext = struct {
                     self.emit_mov_u64(2, imm_u); // x2 = offset
                     self.emit_add(1, 1, 2); // x1 = guest_addr
 
-                    // Host Addr Calc: x1 = x1 - 0x80000000 + x27 (mem_base)
-                    self.emit_mov_u64(4, 0x80000000);
-                    self.emit_subs(1, 1, 4); // x1 = offset from RAM start
-                    // x27 is mem_base
-                    // LDR x0, [x27, x1]
+                    // Translate virtual address to physical offset
+                    // Why: Support both kernel (0x80000000+) and framebuffer (0x90000000+) addresses
+                    self.emit_translate_address(1); // x1 = physical offset
 
                     const size: u2 = switch (inst.funct3) {
                         0x0, 0x4 => 0, // Byte
@@ -900,6 +1032,7 @@ pub const JitContext = struct {
                         else => false,
                     };
 
+                    // Load from memory: x0 = [x27 + x1] where x27 is mem_base
                     self.emit_ldr_reg(0, 27, 1, size, signed);
                     self.emit_str_to_state(0, inst.rd);
                 },
@@ -909,8 +1042,9 @@ pub const JitContext = struct {
                     self.emit_mov_u64(2, imm_u); // x2 = offset
                     self.emit_add(1, 1, 2); // x1 = guest_addr
 
-                    self.emit_mov_u64(4, 0x80000000);
-                    self.emit_subs(1, 1, 4); // x1 = offset from RAM start
+                    // Translate virtual address to physical offset
+                    // Why: Support both kernel (0x80000000+) and framebuffer (0x90000000+) addresses
+                    self.emit_translate_address(1); // x1 = physical offset
 
                     self.emit_ldr_from_state(0, inst.rs2); // x0 = value to store
 
@@ -922,6 +1056,7 @@ pub const JitContext = struct {
                         else => 3,
                     };
 
+                    // Store to memory: [x27 + x1] = x0 where x27 is mem_base
                     self.emit_str_reg(0, 27, 1, size);
                 },
                 0x63 => { // BRANCH (B-Type)
@@ -988,11 +1123,13 @@ pub const JitContext = struct {
 
         self.flush_cache(start_offset, self.cursor - start_offset);
 
-        const code_ptr = @intFromPtr(self.code_buffer.ptr) + start_offset;
+        // GrainStyle: Cast u32 to usize only for pointer arithmetic
+        const code_ptr = @intFromPtr(self.code_buffer.ptr) + @as(usize, start_offset);
         return @ptrCast(@alignCast(@as(*const anyopaque, @ptrFromInt(code_ptr))));
     }
 
-    fn apply_fixups(self: *JitContext, target_pc: u64, target_addr: usize) void {
+    /// GrainStyle: Use explicit u32 instead of usize for code buffer offsets
+    fn apply_fixups(self: *JitContext, target_pc: u64, target_addr: u32) void {
         if (self.pending_fixups.fetchRemove(target_pc)) |entry| {
             var current: ?*Fixup = entry.value;
             while (current) |fixup| {

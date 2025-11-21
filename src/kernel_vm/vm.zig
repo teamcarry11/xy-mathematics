@@ -7,6 +7,72 @@ const jit_mod = @import("jit.zig");
 /// Grain Style: Static allocation where possible, comprehensive assertions,
 /// deterministic execution.
 /// ~<~ Glow Earthbend: VM state is explicit, no hidden allocations.
+/// Input event for kernel (simplified from platform events).
+/// Why: Kernel-friendly event representation, static allocation.
+/// GrainStyle: Explicit types, bounded size, deterministic encoding.
+pub const InputEvent = struct {
+    /// Event type: 0=mouse, 1=keyboard
+    event_type: u8,
+    /// Mouse event data (if event_type == 0)
+    mouse: MouseEventData,
+    /// Keyboard event data (if event_type == 1)
+    keyboard: KeyboardEventData,
+    
+    pub const MouseEventData = struct {
+        kind: u8, // 0=down, 1=up, 2=move, 3=drag
+        button: u8, // 0=left, 1=right, 2=middle, 3=other
+        x: u32, // X coordinate (scaled to framebuffer: 0-1023)
+        y: u32, // Y coordinate (scaled to framebuffer: 0-767)
+        modifiers: u8, // Bit flags: 1=shift, 2=control, 4=option, 8=command
+    };
+    
+    pub const KeyboardEventData = struct {
+        kind: u8, // 0=down, 1=up
+        key_code: u32, // Platform key code
+        character: u32, // Unicode character (0 if not printable)
+        modifiers: u8, // Bit flags: 1=shift, 2=control, 4=option, 8=command
+    };
+};
+
+/// Input event queue (bounded circular buffer).
+/// Why: Buffer input events for kernel to read via syscalls.
+/// GrainStyle: Static allocation, bounded queue, deterministic behavior.
+/// Note: Max 64 events (sufficient for interactive input, prevents overflow).
+const MAX_INPUT_EVENTS: u32 = 64;
+pub const InputEventQueue = struct {
+    /// Event buffer (circular queue)
+    events: [MAX_INPUT_EVENTS]InputEvent = [_]InputEvent{undefined} ** MAX_INPUT_EVENTS,
+    /// Write index (next position to write)
+    write_idx: u32 = 0,
+    /// Read index (next position to read)
+    read_idx: u32 = 0,
+    /// Number of events in queue
+    count: u32 = 0,
+    
+    /// Dequeue event (for kernel to read).
+    /// Why: Kernel reads events via syscall.
+    /// Returns: event if available, null if queue empty.
+    pub fn dequeue(self: *InputEventQueue) ?InputEvent {
+        if (self.count == 0) {
+            return null;
+        }
+        
+        const event = self.events[self.read_idx];
+        self.read_idx = (self.read_idx + 1) % MAX_INPUT_EVENTS;
+        self.count -= 1;
+        
+        // Assert: count must be consistent.
+        std.debug.assert(self.count < MAX_INPUT_EVENTS);
+        
+        return event;
+    }
+    
+    /// Get queue size (number of events available).
+    pub fn size(self: *const InputEventQueue) u32 {
+        return self.count;
+    }
+};
+
 /// RISC-V64 register file (32 general-purpose registers + PC).
 /// Why: Static allocation for register state, deterministic execution.
 pub const RegisterFile = struct {
@@ -59,7 +125,8 @@ pub const RegisterFile = struct {
 ///       Memory layout:
 ///       - 0x80000000 - 0x8FFFFFFF: Kernel code/data (128MB virtual, 4MB physical)
 ///       - 0x90000000 - 0x900BBFFF: Framebuffer (1024x768x4 = 3MB)
-pub const VM_MEMORY_SIZE: usize = 8 * 1024 * 1024; // 8MB (kernel + framebuffer)
+/// GrainStyle: Use explicit u64 instead of usize for cross-platform consistency
+pub const VM_MEMORY_SIZE: u64 = 8 * 1024 * 1024; // 8MB (kernel + framebuffer)
 
 /// RISC-V64 virtual machine state.
 /// Why: Encapsulate all VM state for deterministic execution.
@@ -74,9 +141,10 @@ pub const VM = struct {
     /// - Development: 24GB available (MacBook Air M2)
     /// - Target: 8GB available (Framework 13 RISC-V)
     /// - 4MB default is conservative and safe for both machines.
+    /// GrainStyle: Use explicit u64 for memory_size instead of usize
     memory: [VM_MEMORY_SIZE]u8 = [_]u8{0} ** VM_MEMORY_SIZE,
     /// Memory size in bytes.
-    memory_size: usize = VM_MEMORY_SIZE,
+    memory_size: u64 = VM_MEMORY_SIZE,
     /// VM execution state (running, halted, error).
     state: VMState = .halted,
     /// Last error (if state == .errored).
@@ -96,11 +164,110 @@ pub const VM = struct {
     /// JIT compiler context (optional, enabled via init_with_jit)
     /// Why: Enable near-native performance for kernel execution
     jit: ?*jit_mod.JitContext = null,
+    
+    /// Input event queue (for keyboard/mouse events from host).
+    /// Why: Buffer input events for kernel to read via syscalls.
+    /// GrainStyle: Static allocation, bounded queue, deterministic behavior.
+    /// Note: Events are enqueued from host (macOS) and dequeued by kernel.
+    input_event_queue: InputEventQueue = .{},
 
     /// Enable JIT compilation
     jit_enabled: bool = false,
 
     const Self = @This();
+
+    /// Inject mouse event into VM input queue.
+    /// Why: Route macOS mouse events to kernel via VM.
+    /// GrainStyle: Explicit bounds checking, deterministic encoding.
+    /// Note: Takes simplified event data to avoid cross-module dependency.
+    pub fn inject_mouse_event(self: *Self, kind: u8, button: u8, x: f64, y: f64, modifiers: u8) void {
+        // Assert: VM must be initialized.
+        std.debug.assert(self.memory_size > 0);
+        
+        // Assert: Event kind must be valid (0=down, 1=up, 2=move, 3=drag).
+        std.debug.assert(kind < 4);
+        
+        // Assert: Button must be valid (0=left, 1=right, 2=middle, 3=other).
+        std.debug.assert(button < 4);
+        
+        // Scale coordinates to framebuffer (1024x768).
+        const x_scaled: u32 = @intFromFloat(if (x > 1023.0) 1023.0 else if (x < 0.0) 0.0 else x);
+        const y_scaled: u32 = @intFromFloat(if (y > 767.0) 767.0 else if (y < 0.0) 0.0 else y);
+        
+        // Create input event.
+        const input_event = InputEvent{
+            .event_type = 0, // Mouse event
+            .mouse = .{
+                .kind = kind,
+                .button = button,
+                .x = x_scaled,
+                .y = y_scaled,
+                .modifiers = modifiers,
+            },
+            .keyboard = .{
+                .kind = 0,
+                .key_code = 0,
+                .character = 0,
+                .modifiers = 0,
+            },
+        };
+        
+        // Enqueue event (handle queue full by dropping oldest).
+        if (self.input_event_queue.count >= MAX_INPUT_EVENTS) {
+            self.input_event_queue.read_idx = (self.input_event_queue.read_idx + 1) % MAX_INPUT_EVENTS;
+            self.input_event_queue.count -= 1;
+        }
+        
+        self.input_event_queue.events[self.input_event_queue.write_idx] = input_event;
+        self.input_event_queue.write_idx = (self.input_event_queue.write_idx + 1) % MAX_INPUT_EVENTS;
+        self.input_event_queue.count += 1;
+        
+        // Assert: Event must be enqueued (queue size increased or oldest dropped).
+        std.debug.assert(self.input_event_queue.count <= MAX_INPUT_EVENTS);
+    }
+    
+    /// Inject keyboard event into VM input queue.
+    /// Why: Route macOS keyboard events to kernel via VM.
+    /// GrainStyle: Explicit bounds checking, deterministic encoding.
+    /// Note: Takes simplified event data to avoid cross-module dependency.
+    pub fn inject_keyboard_event(self: *Self, kind: u8, key_code: u32, character: u32, modifiers: u8) void {
+        // Assert: VM must be initialized.
+        std.debug.assert(self.memory_size > 0);
+        
+        // Assert: Event kind must be valid (0=down, 1=up).
+        std.debug.assert(kind < 2);
+        
+        // Create input event.
+        const input_event = InputEvent{
+            .event_type = 1, // Keyboard event
+            .mouse = .{
+                .kind = 0,
+                .button = 0,
+                .x = 0,
+                .y = 0,
+                .modifiers = 0,
+            },
+            .keyboard = .{
+                .kind = kind,
+                .key_code = key_code,
+                .character = character,
+                .modifiers = modifiers,
+            },
+        };
+        
+        // Enqueue event (handle queue full by dropping oldest).
+        if (self.input_event_queue.count >= MAX_INPUT_EVENTS) {
+            self.input_event_queue.read_idx = (self.input_event_queue.read_idx + 1) % MAX_INPUT_EVENTS;
+            self.input_event_queue.count -= 1;
+        }
+        
+        self.input_event_queue.events[self.input_event_queue.write_idx] = input_event;
+        self.input_event_queue.write_idx = (self.input_event_queue.write_idx + 1) % MAX_INPUT_EVENTS;
+        self.input_event_queue.count += 1;
+        
+        // Assert: Event must be enqueued (queue size increased or oldest dropped).
+        std.debug.assert(self.input_event_queue.count <= MAX_INPUT_EVENTS);
+    }
 
     pub const VMState = enum {
         running,
@@ -240,7 +407,7 @@ pub const VM = struct {
         };
         
         const jit_ctx = try allocator.create(jit_mod.JitContext);
-        jit_ctx.* = try jit_mod.JitContext.init(allocator, &guest_state, self.memory[0..self.memory_size]);
+        jit_ctx.* = try jit_mod.JitContext.init(allocator, &guest_state, self.memory[0..self.memory_size], self.memory_size);
         self.jit = jit_ctx;
         self.jit_enabled = true;
         
@@ -301,21 +468,25 @@ pub const VM = struct {
     /// Memory layout:
     ///   - 0x80000000+: Kernel code/data -> offset 0+
     ///   - 0x90000000+: Framebuffer -> offset (memory_size - framebuffer_size)+
-    fn translate_address(self: *const Self, virt_addr: u64) ?usize {
+    /// GrainStyle: Use explicit u64 instead of usize for cross-platform consistency
+    /// Translate virtual address to physical offset.
+    /// Why: Public access needed for framebuffer sync in TahoeSandbox.
+    /// GrainStyle: Explicit u64 types, bounds checking, deterministic mapping.
+    pub fn translate_address(self: *const Self, virt_addr: u64) ?u64 {
         const KERNEL_BASE: u64 = 0x80000000;
         const FRAMEBUFFER_BASE: u64 = 0x90000000;
         const FRAMEBUFFER_SIZE: u32 = 1024 * 768 * 4; // 3MB
         
         if (virt_addr >= FRAMEBUFFER_BASE) {
             // Framebuffer region: map to end of VM memory
-            const framebuffer_offset: usize = self.memory_size - FRAMEBUFFER_SIZE;
+            const framebuffer_offset: u64 = self.memory_size - @as(u64, FRAMEBUFFER_SIZE);
             const offset_in_fb: u64 = virt_addr - FRAMEBUFFER_BASE;
             
             if (offset_in_fb >= FRAMEBUFFER_SIZE) {
                 return null; // Out of framebuffer bounds
             }
             
-            const phys_offset = framebuffer_offset + @as(usize, @intCast(offset_in_fb));
+            const phys_offset = framebuffer_offset + offset_in_fb;
             if (phys_offset >= self.memory_size) {
                 return null; // Out of memory bounds
             }
@@ -327,13 +498,13 @@ pub const VM = struct {
             if (offset >= self.memory_size) {
                 return null; // Out of memory bounds
             }
-            return @as(usize, @intCast(offset));
+            return offset;
         } else {
             // Low memory: map directly
             if (virt_addr >= self.memory_size) {
                 return null;
             }
-            return @as(usize, @intCast(virt_addr));
+            return virt_addr;
         }
     }
 
@@ -341,13 +512,244 @@ pub const VM = struct {
     /// Why: Provide access to framebuffer memory for host-side rendering
     /// Contract: Returns slice of VM memory at framebuffer base address
     /// Note: Framebuffer is at 0x90000000, mapped to offset in VM memory
+    /// GrainStyle: Use explicit u64 for offset calculation, cast to usize only for array indexing
     pub fn get_framebuffer_memory(self: *Self) []u8 {
         const FRAMEBUFFER_SIZE: u32 = 1024 * 768 * 4; // 3MB
-        const framebuffer_offset: usize = self.memory_size - FRAMEBUFFER_SIZE;
+        const framebuffer_offset: u64 = self.memory_size - @as(u64, FRAMEBUFFER_SIZE);
         
-        std.debug.assert(framebuffer_offset + FRAMEBUFFER_SIZE <= self.memory_size);
+        std.debug.assert(framebuffer_offset + @as(u64, FRAMEBUFFER_SIZE) <= self.memory_size);
         
-        return self.memory[framebuffer_offset..][0..FRAMEBUFFER_SIZE];
+        return self.memory[@intCast(framebuffer_offset)..][0..FRAMEBUFFER_SIZE];
+    }
+
+    /// Initialize framebuffer from host-side code
+    /// Why: Set up framebuffer before kernel starts, clear to background, draw test pattern
+    /// Contract: Initializes framebuffer memory with test pattern for visual verification
+    /// GrainStyle: Explicit assertions, bounded execution, static allocation, no external dependencies
+    pub fn init_framebuffer(self: *Self) void {
+        // Framebuffer constants (matching kernel/framebuffer.zig)
+        const FRAMEBUFFER_WIDTH: u32 = 1024;
+        const FRAMEBUFFER_HEIGHT: u32 = 768;
+        const FRAMEBUFFER_BPP: u32 = 4; // 32-bit RGBA
+        const FRAMEBUFFER_SIZE: u32 = FRAMEBUFFER_WIDTH * FRAMEBUFFER_HEIGHT * FRAMEBUFFER_BPP; // 3MB
+        
+        // Color constants (32-bit RGBA format)
+        const COLOR_DARK_BG: u32 = 0x1E1E2EFF; // Dark background
+        const COLOR_RED: u32 = 0xFF0000FF;
+        const COLOR_GREEN: u32 = 0x00FF00FF;
+        const COLOR_BLUE: u32 = 0x0000FFFF;
+        const COLOR_WHITE: u32 = 0xFFFFFFFF;
+        
+        // Assert: VM memory must be large enough for framebuffer
+        std.debug.assert(self.memory_size >= FRAMEBUFFER_SIZE);
+        
+        // Get framebuffer memory region
+        const fb_memory = self.get_framebuffer_memory();
+        
+        // Assert: framebuffer memory must be correct size
+        std.debug.assert(fb_memory.len == FRAMEBUFFER_SIZE);
+        
+        // Clear framebuffer to dark background color
+        // Why: Fill entire framebuffer with background color before drawing test pattern
+        const bg_r: u8 = @truncate((COLOR_DARK_BG >> 24) & 0xFF);
+        const bg_g: u8 = @truncate((COLOR_DARK_BG >> 16) & 0xFF);
+        const bg_b: u8 = @truncate((COLOR_DARK_BG >> 8) & 0xFF);
+        const bg_a: u8 = @truncate(COLOR_DARK_BG & 0xFF);
+        
+        var i: u32 = 0;
+        while (i < FRAMEBUFFER_SIZE) : (i += 4) {
+            fb_memory[i + 0] = bg_r;
+            fb_memory[i + 1] = bg_g;
+            fb_memory[i + 2] = bg_b;
+            fb_memory[i + 3] = bg_a;
+        }
+        
+        // Assert: framebuffer must be cleared (check first and last pixel)
+        std.debug.assert(fb_memory[0] == bg_r);
+        std.debug.assert(fb_memory[FRAMEBUFFER_SIZE - 4] == bg_r);
+        
+        // Draw test pattern: colored rectangles at corners
+        // Why: Visual verification that framebuffer is working correctly
+        const rect_size: u32 = 100;
+        const spacing: u32 = 20;
+        
+        // Helper: Draw a filled rectangle
+        // Why: Reusable drawing primitive for test pattern
+        const draw_rect = struct {
+            fn draw(memory: []u8, x: u32, y: u32, w: u32, h: u32, color: u32) void {
+                std.debug.assert(x < FRAMEBUFFER_WIDTH);
+                std.debug.assert(y < FRAMEBUFFER_HEIGHT);
+                std.debug.assert(x + w <= FRAMEBUFFER_WIDTH);
+                std.debug.assert(y + h <= FRAMEBUFFER_HEIGHT);
+                std.debug.assert(w > 0);
+                std.debug.assert(h > 0);
+                
+                const r: u8 = @truncate((color >> 24) & 0xFF);
+                const g: u8 = @truncate((color >> 16) & 0xFF);
+                const b: u8 = @truncate((color >> 8) & 0xFF);
+                const a: u8 = @truncate(color & 0xFF);
+                
+                var py: u32 = y;
+                while (py < y + h) : (py += 1) {
+                    var px: u32 = x;
+                    while (px < x + w) : (px += 1) {
+                        const offset: u32 = (py * FRAMEBUFFER_WIDTH + px) * FRAMEBUFFER_BPP;
+                        std.debug.assert(offset + 3 < FRAMEBUFFER_SIZE);
+                        memory[offset + 0] = r;
+                        memory[offset + 1] = g;
+                        memory[offset + 2] = b;
+                        memory[offset + 3] = a;
+                    }
+                }
+                
+                // Assert: rectangle must be drawn (check top-left corner)
+                const corner_offset: u32 = (y * FRAMEBUFFER_WIDTH + x) * FRAMEBUFFER_BPP;
+                std.debug.assert(memory[corner_offset] == r);
+            }
+        }.draw;
+        
+        // Red rectangle (top-left)
+        draw_rect(fb_memory, spacing, spacing, rect_size, rect_size, COLOR_RED);
+        
+        // Green rectangle (top-right)
+        draw_rect(fb_memory, FRAMEBUFFER_WIDTH - rect_size - spacing, spacing, rect_size, rect_size, COLOR_GREEN);
+        
+        // Blue rectangle (bottom-left)
+        draw_rect(fb_memory, spacing, FRAMEBUFFER_HEIGHT - rect_size - spacing, rect_size, rect_size, COLOR_BLUE);
+        
+        // White rectangle (bottom-right)
+        draw_rect(fb_memory, FRAMEBUFFER_WIDTH - rect_size - spacing, FRAMEBUFFER_HEIGHT - rect_size - spacing, rect_size, rect_size, COLOR_WHITE);
+        
+        // Assert: test pattern must be drawn (check first red pixel)
+        const red_offset: u32 = (spacing * FRAMEBUFFER_WIDTH + spacing) * FRAMEBUFFER_BPP;
+        std.debug.assert(fb_memory[red_offset] == 0xFF); // Red component
+        
+        // Draw boot message text
+        // Why: Display kernel boot message on framebuffer for visual verification
+        // Note: Using inline text rendering to avoid cross-module dependency
+        const boot_text = "Grain Basin Kernel v0.1.0\nRISC-V64 Emulator\nFramebuffer Ready";
+        draw_text_inline(fb_memory, boot_text, 250, 300, COLOR_WHITE, COLOR_DARK_BG);
+    }
+    
+    /// Draw text inline (helper for init_framebuffer)
+    /// Why: Render text directly to framebuffer memory without Framebuffer struct
+    /// GrainStyle: Explicit bounds checking, deterministic rendering
+    fn draw_text_inline(memory: []u8, text: []const u8, start_x: u32, start_y: u32, fg_color: u32, bg_color: u32) void {
+        const FRAMEBUFFER_WIDTH: u32 = 1024;
+        const FRAMEBUFFER_BPP: u32 = 4;
+        const CHAR_WIDTH: u32 = 8;
+        const CHAR_HEIGHT: u32 = 8;
+        
+        // Extract colors
+        const fg_r: u8 = @truncate((fg_color >> 24) & 0xFF);
+        const fg_g: u8 = @truncate((fg_color >> 16) & 0xFF);
+        const fg_b: u8 = @truncate((fg_color >> 8) & 0xFF);
+        const bg_r: u8 = @truncate((bg_color >> 24) & 0xFF);
+        const bg_g: u8 = @truncate((bg_color >> 16) & 0xFF);
+        const bg_b: u8 = @truncate((bg_color >> 8) & 0xFF);
+        
+        var char_x: u32 = start_x;
+        var char_y: u32 = start_y;
+        
+        var i: u32 = 0;
+        while (i < text.len) : (i += 1) {
+            const ch = text[i];
+            
+            // Handle newline
+            if (ch == '\n') {
+                char_x = start_x;
+                char_y += CHAR_HEIGHT;
+                continue;
+            }
+            
+            // Get character pattern (8x8 bitmap)
+            const pattern = get_char_pattern_inline(ch);
+            
+            // Draw character
+            var py: u32 = 0;
+            while (py < CHAR_HEIGHT) : (py += 1) {
+                var px: u32 = 0;
+                while (px < CHAR_WIDTH) : (px += 1) {
+                    const pixel_x = char_x + px;
+                    const pixel_y = char_y + py;
+                    
+                    // Bounds check
+                    if (pixel_x >= FRAMEBUFFER_WIDTH or pixel_y >= 768) continue;
+                    
+                    const bit_idx = py * CHAR_WIDTH + px;
+                    const bit = (pattern >> @as(u6, @intCast(63 - bit_idx))) & 1;
+                    
+                    const offset: u32 = (pixel_y * FRAMEBUFFER_WIDTH + pixel_x) * FRAMEBUFFER_BPP;
+                    if (offset + 3 >= memory.len) continue;
+                    
+                    if (bit == 1) {
+                        memory[offset + 0] = fg_r;
+                        memory[offset + 1] = fg_g;
+                        memory[offset + 2] = fg_b;
+                    } else {
+                        memory[offset + 0] = bg_r;
+                        memory[offset + 1] = bg_g;
+                        memory[offset + 2] = bg_b;
+                    }
+                    memory[offset + 3] = 0xFF; // Alpha
+                }
+            }
+            
+            char_x += CHAR_WIDTH;
+        }
+    }
+    
+    /// Get 8x8 bitmap pattern for character (inline version)
+    /// Why: Simple bitmap font for text rendering
+    fn get_char_pattern_inline(ch: u8) u64 {
+        return switch (ch) {
+            ' ' => 0x0000000000000000,
+            '!' => 0x1818181818001800,
+            '.' => 0x0000000000181800,
+            '0' => 0x3C666E7E76663C00,
+            '1' => 0x1818381818187E00,
+            'A' => 0x183C66667E666600,
+            'B' => 0x7C66667C66667C00,
+            'C' => 0x3C66606060663C00,
+            'D' => 0x786C6666666C7800,
+            'E' => 0x7E60607C60607E00,
+            'F' => 0x7E60607C60606000,
+            'G' => 0x3C66606E66663C00,
+            'I' => 0x3C18181818183C00,
+            'K' => 0x666C78786C666600,
+            'L' => 0x6060606060607E00,
+            'M' => 0x63777F6B63636300,
+            'N' => 0x66767E7E6E666600,
+            'O' => 0x3C66666666663C00,
+            'R' => 0x7C66667C6C666600,
+            'S' => 0x3C603C0606663C00,
+            'V' => 0x66666666663C1800,
+            'a' => 0x00003C063E663E00,
+            'b' => 0x60607C6666667C00,
+            'c' => 0x00003C6660603C00,
+            'd' => 0x06063E6666663E00,
+            'e' => 0x00003C667E603C00,
+            'f' => 0x1C30307C30303000,
+            'g' => 0x00003E66663E063C,
+            'h' => 0x60607C6666666600,
+            'i' => 0x1800181818181800,
+            'l' => 0x1818181818181800,
+            'm' => 0x0000767F6B636300,
+            'n' => 0x00007C6666666600,
+            'o' => 0x00003C6666663C00,
+            'r' => 0x00007C6660606000,
+            's' => 0x00003E603C067C00,
+            't' => 0x30307C3030301C00,
+            'u' => 0x0000666666663E00,
+            'v' => 0x00006666663C1800,
+            'w' => 0x0000636B7F360000,
+            'x' => 0x0000663C183C6600,
+            'y' => 0x00006666663E063C,
+            'z' => 0x00007E0C18307E00,
+            '-' => 0x000000007E000000,
+            '/' => 0x303018180C0C0606,
+            else => 0x7E8185B581817E00, // fallback: box
+        };
     }
 
     /// Read instruction at PC (32-bit, little-endian).
@@ -1499,49 +1901,55 @@ pub const VM = struct {
         // If not, try using sp instead (for stack-relative accesses).
         var eff_addr = base_addr +% offset;
         if (rs1 == 8 and base_addr == 0x0) {
-            // If address with x8=0x0 is out of bounds, try sp instead.
-            if (eff_addr + 4 > self.memory_size) {
+            // If address with x8=0x0 is invalid, try sp instead.
+            const test_phys = self.translate_address(eff_addr);
+            if (test_phys == null or test_phys.? + 4 > self.memory_size) {
                 const sp = self.regs.get(2);
-                if (sp != 0x0 and sp < self.memory_size) {
-                    std.debug.print("DEBUG vm.zig: LW: x8=0x0 gives out-of-bounds addr 0x{x}, trying sp (x2=0x{x})\n", .{ eff_addr, sp });
-                    base_addr = sp;
-                    eff_addr = base_addr +% offset;
+                if (sp != 0x0) {
+                    const sp_eff = sp +% offset;
+                    const sp_phys = self.translate_address(sp_eff);
+                    if (sp_phys != null and sp_phys.? + 4 <= self.memory_size) {
+                        std.debug.print("DEBUG vm.zig: LW: x8=0x0 gives invalid addr 0x{x}, trying sp (x2=0x{x})\n", .{ eff_addr, sp });
+                        base_addr = sp;
+                        eff_addr = base_addr +% offset;
+                    }
                 }
             }
-        } else {
-            eff_addr = base_addr +% offset;
         }
-
-        // Debug: Print address calculation for troubleshooting.
-        std.debug.print("DEBUG vm.zig: LW instruction: rs1={} (x{}), base_addr=0x{x}, imm12={} (0x{x}), offset=0x{x}, eff_addr=0x{x}, memory_size=0x{x}\n", .{ rs1, rs1, base_addr, imm12, imm12, offset, eff_addr, self.memory_size });
 
         // Assert: effective address must be 4-byte aligned for word load.
         if (eff_addr % 4 != 0) {
-            std.debug.print("DEBUG vm.zig: LW unaligned address: 0x{x} (not 4-byte aligned)\n", .{eff_addr});
             self.state = .errored;
             self.last_error = VMError.unaligned_memory_access;
             return VMError.unaligned_memory_access;
         }
 
-        // Assert: effective address must be within memory bounds.
-        if (eff_addr + 4 > self.memory_size) {
-            std.debug.print("DEBUG vm.zig: LW out of bounds: eff_addr=0x{x}, eff_addr+4=0x{x}, memory_size=0x{x}\n", .{ eff_addr, eff_addr + 4, self.memory_size });
+        // Translate virtual address to physical offset
+        const phys_offset = self.translate_address(eff_addr) orelse {
+            self.state = .errored;
+            self.last_error = VMError.invalid_memory_access;
+            return VMError.invalid_memory_access;
+        };
+
+        // Assert: physical offset + 4 must be within memory bounds.
+        if (phys_offset + 4 > self.memory_size) {
             self.state = .errored;
             self.last_error = VMError.invalid_memory_access;
             return VMError.invalid_memory_access;
         }
 
-        // Read 32-bit word from memory (sign-extend to 64 bits).
-        // Assert: memory access must be within bounds (already checked above).
-        std.debug.assert(eff_addr + 4 <= self.memory_size);
-
-        const mem_slice = self.memory[@as(usize, @intCast(eff_addr))..][0..4];
+        // Read 32-bit word from memory using translated physical offset (sign-extend to 64 bits).
+        // GrainStyle: Cast u64 to usize only for array indexing
+        const mem_slice = self.memory[@intCast(phys_offset)..][0..4];
         const word = std.mem.readInt(u32, mem_slice, .little);
         const word_signed = @as(i32, @bitCast(word));
         const word64 = @as(u64, @intCast(word_signed));
 
         // Write to destination register.
         self.regs.set(rd, word64);
+
+        // Assert: register must be set correctly.
+        std.debug.assert(self.regs.get(rd) == word64);
     }
 
     /// Execute SW (Store Word) instruction.
@@ -1599,7 +2007,8 @@ pub const VM = struct {
         const word = @as(u32, @truncate(rs2_value));
 
         // Write 32-bit word to memory.
-        @memcpy(self.memory[phys_offset..][0..4], &std.mem.toBytes(word));
+        // GrainStyle: Cast u64 to usize only for array indexing
+        @memcpy(self.memory[@intCast(phys_offset)..][0..4], &std.mem.toBytes(word));
     }
 
     /// Execute LB (Load Byte) instruction.
@@ -1612,6 +2021,7 @@ pub const VM = struct {
         const rs1 = @as(u5, @truncate(inst >> 15));
         const imm12 = @as(i32, @truncate(@as(i64, inst >> 20)));
 
+        // Assert: registers must be valid (0-31).
         std.debug.assert(rd < 32);
         std.debug.assert(rs1 < 32);
 
@@ -1620,17 +2030,30 @@ pub const VM = struct {
         const offset: u64 = @bitCast(imm64); // Use @bitCast to handle negative immediates correctly
         const eff_addr = base_addr +% offset;
 
-        if (eff_addr >= self.memory_size) {
+        // Translate virtual address to physical offset
+        const phys_offset = self.translate_address(eff_addr) orelse {
+            self.state = .errored;
+            self.last_error = VMError.invalid_memory_access;
+            return VMError.invalid_memory_access;
+        };
+
+        // Assert: physical offset + 1 must be within memory bounds.
+        if (phys_offset + 1 > self.memory_size) {
             self.state = .errored;
             self.last_error = VMError.invalid_memory_access;
             return VMError.invalid_memory_access;
         }
 
-        const byte = self.memory[@as(usize, @intCast(eff_addr))];
+        // Read byte from memory using translated physical offset
+        // GrainStyle: Cast u64 to usize only for array indexing
+        const byte = self.memory[@intCast(phys_offset)];
         const byte_signed = @as(i8, @bitCast(byte));
         const byte64 = @as(u64, @intCast(byte_signed));
 
         self.regs.set(rd, byte64);
+
+        // Assert: register must be set correctly.
+        std.debug.assert(self.regs.get(rd) == byte64);
     }
 
     /// Execute LH (Load Halfword) instruction.
@@ -1643,6 +2066,7 @@ pub const VM = struct {
         const rs1 = @as(u5, @truncate(inst >> 15));
         const imm12 = @as(i32, @truncate(@as(i64, inst >> 20)));
 
+        // Assert: registers must be valid (0-31).
         std.debug.assert(rd < 32);
         std.debug.assert(rs1 < 32);
 
@@ -1651,24 +2075,38 @@ pub const VM = struct {
         const offset: u64 = @bitCast(imm64); // Use @bitCast to handle negative immediates correctly
         const eff_addr = base_addr +% offset;
 
+        // Assert: effective address must be 2-byte aligned for halfword load.
         if (eff_addr % 2 != 0) {
             self.state = .errored;
             self.last_error = VMError.unaligned_memory_access;
             return VMError.unaligned_memory_access;
         }
 
-        if (eff_addr + 2 > self.memory_size) {
+        // Translate virtual address to physical offset
+        const phys_offset = self.translate_address(eff_addr) orelse {
+            self.state = .errored;
+            self.last_error = VMError.invalid_memory_access;
+            return VMError.invalid_memory_access;
+        };
+
+        // Assert: physical offset + 2 must be within memory bounds.
+        if (phys_offset + 2 > self.memory_size) {
             self.state = .errored;
             self.last_error = VMError.invalid_memory_access;
             return VMError.invalid_memory_access;
         }
 
-        const mem_slice = self.memory[@as(usize, @intCast(eff_addr))..][0..2];
+        // Read 16-bit halfword from memory using translated physical offset
+        // GrainStyle: Cast u64 to usize only for array indexing
+        const mem_slice = self.memory[@intCast(phys_offset)..][0..2];
         const halfword = std.mem.readInt(u16, mem_slice, .little);
         const halfword_signed = @as(i16, @bitCast(halfword));
         const halfword64 = @as(u64, @intCast(halfword_signed));
 
         self.regs.set(rd, halfword64);
+
+        // Assert: register must be set correctly.
+        std.debug.assert(self.regs.get(rd) == halfword64);
     }
 
     /// Execute LD (Load Doubleword) instruction.
@@ -1692,41 +2130,52 @@ pub const VM = struct {
         // If not, try using sp instead (for stack-relative accesses).
         var eff_addr = base_addr +% offset;
         if (rs1 == 8 and base_addr == 0x0) {
-            // If address with x8=0x0 is out of bounds, try sp instead.
-            if (eff_addr + 8 > self.memory_size) {
+            // If address with x8=0x0 is invalid, try sp instead.
+            const test_phys = self.translate_address(eff_addr);
+            if (test_phys == null or test_phys.? + 8 > self.memory_size) {
                 const sp = self.regs.get(2);
-                if (sp != 0x0 and sp < self.memory_size) {
-                    std.debug.print("DEBUG vm.zig: LD: x8=0x0 gives out-of-bounds addr 0x{x}, trying sp (x2=0x{x})\n", .{ eff_addr, sp });
-                    base_addr = sp;
-                    eff_addr = base_addr +% offset;
+                if (sp != 0x0) {
+                    const sp_eff = sp +% offset;
+                    const sp_phys = self.translate_address(sp_eff);
+                    if (sp_phys != null and sp_phys.? + 8 <= self.memory_size) {
+                        std.debug.print("DEBUG vm.zig: LD: x8=0x0 gives invalid addr 0x{x}, trying sp (x2=0x{x})\n", .{ eff_addr, sp });
+                        base_addr = sp;
+                        eff_addr = base_addr +% offset;
+                    }
                 }
             }
-        } else {
-            eff_addr = base_addr +% offset;
         }
 
-        // Debug: Print address calculation for troubleshooting.
-        std.debug.print("DEBUG vm.zig: LD instruction: rs1={} (x{}), base_addr=0x{x}, imm12={} (0x{x}), offset=0x{x}, eff_addr=0x{x}, memory_size=0x{x}\n", .{ rs1, rs1, base_addr, imm12, imm12, offset, eff_addr, self.memory_size });
-
-        // Align address to 8-byte boundary for doubleword load (clear bottom 3 bits).
-        // Why: RISC-V requires 8-byte alignment for LD/SD, but programs may calculate misaligned addresses.
-        // Note: This changes semantics slightly but allows execution to continue.
+        // Assert: effective address must be 8-byte aligned for doubleword load.
         if (eff_addr % 8 != 0) {
-            std.debug.print("DEBUG vm.zig: LD unaligned address: 0x{x} (not 8-byte aligned), aligning to 0x{x}\n", .{ eff_addr, eff_addr & ~@as(u64, 7) });
-            eff_addr = eff_addr & ~@as(u64, 7);
+            self.state = .errored;
+            self.last_error = VMError.unaligned_memory_access;
+            return VMError.unaligned_memory_access;
         }
 
-        if (eff_addr + 8 > self.memory_size) {
-            std.debug.print("DEBUG vm.zig: LD out of bounds: eff_addr=0x{x}, eff_addr+8=0x{x}, memory_size=0x{x}\n", .{ eff_addr, eff_addr + 8, self.memory_size });
+        // Translate virtual address to physical offset
+        const phys_offset = self.translate_address(eff_addr) orelse {
+            self.state = .errored;
+            self.last_error = VMError.invalid_memory_access;
+            return VMError.invalid_memory_access;
+        };
+
+        // Assert: physical offset + 8 must be within memory bounds.
+        if (phys_offset + 8 > self.memory_size) {
             self.state = .errored;
             self.last_error = VMError.invalid_memory_access;
             return VMError.invalid_memory_access;
         }
 
-        const mem_slice = self.memory[@as(usize, @intCast(eff_addr))..][0..8];
+        // Read 64-bit doubleword from memory using translated physical offset
+        // GrainStyle: Cast u64 to usize only for array indexing
+        const mem_slice = self.memory[@intCast(phys_offset)..][0..8];
         const doubleword = std.mem.readInt(u64, mem_slice, .little);
 
         self.regs.set(rd, doubleword);
+
+        // Assert: register must be set correctly.
+        std.debug.assert(self.regs.get(rd) == doubleword);
     }
 
     /// Execute LBU (Load Byte Unsigned) instruction.
@@ -1739,6 +2188,7 @@ pub const VM = struct {
         const rs1 = @as(u5, @truncate(inst >> 15));
         const imm12 = @as(i32, @truncate(@as(i64, inst >> 20)));
 
+        // Assert: registers must be valid (0-31).
         std.debug.assert(rd < 32);
         std.debug.assert(rs1 < 32);
 
@@ -1747,16 +2197,28 @@ pub const VM = struct {
         const offset: u64 = @bitCast(imm64); // Use @bitCast to handle negative immediates correctly
         const eff_addr = base_addr +% offset;
 
-        if (eff_addr >= self.memory_size) {
+        // Translate virtual address to physical offset
+        const phys_offset = self.translate_address(eff_addr) orelse {
+            self.state = .errored;
+            self.last_error = VMError.invalid_memory_access;
+            return VMError.invalid_memory_access;
+        };
+
+        // Assert: physical offset + 1 must be within memory bounds.
+        if (phys_offset + 1 > self.memory_size) {
             self.state = .errored;
             self.last_error = VMError.invalid_memory_access;
             return VMError.invalid_memory_access;
         }
 
-        const byte = self.memory[@as(usize, @intCast(eff_addr))];
+        // Read byte from memory using translated physical offset (zero-extend to 64 bits)
+        const byte = self.memory[phys_offset];
         const byte64: u64 = byte;
 
         self.regs.set(rd, byte64);
+
+        // Assert: register must be set correctly.
+        std.debug.assert(self.regs.get(rd) == byte64);
     }
 
     /// Execute LHU (Load Halfword Unsigned) instruction.
@@ -1769,6 +2231,7 @@ pub const VM = struct {
         const rs1 = @as(u5, @truncate(inst >> 15));
         const imm12 = @as(i32, @truncate(@as(i64, inst >> 20)));
 
+        // Assert: registers must be valid (0-31).
         std.debug.assert(rd < 32);
         std.debug.assert(rs1 < 32);
 
@@ -1777,23 +2240,36 @@ pub const VM = struct {
         const offset: u64 = @bitCast(imm64); // Use @bitCast to handle negative immediates correctly
         const eff_addr = base_addr +% offset;
 
+        // Assert: effective address must be 2-byte aligned for halfword load.
         if (eff_addr % 2 != 0) {
             self.state = .errored;
             self.last_error = VMError.unaligned_memory_access;
             return VMError.unaligned_memory_access;
         }
 
-        if (eff_addr + 2 > self.memory_size) {
+        // Translate virtual address to physical offset
+        const phys_offset = self.translate_address(eff_addr) orelse {
+            self.state = .errored;
+            self.last_error = VMError.invalid_memory_access;
+            return VMError.invalid_memory_access;
+        };
+
+        // Assert: physical offset + 2 must be within memory bounds.
+        if (phys_offset + 2 > self.memory_size) {
             self.state = .errored;
             self.last_error = VMError.invalid_memory_access;
             return VMError.invalid_memory_access;
         }
 
-        const mem_slice = self.memory[@as(usize, @intCast(eff_addr))..][0..2];
+        // Read 16-bit halfword from memory using translated physical offset (zero-extend to 64 bits)
+        const mem_slice = self.memory[phys_offset..][0..2];
         const halfword = std.mem.readInt(u16, mem_slice, .little);
         const halfword64: u64 = halfword;
 
         self.regs.set(rd, halfword64);
+
+        // Assert: register must be set correctly.
+        std.debug.assert(self.regs.get(rd) == halfword64);
     }
 
     /// Execute LWU (Load Word Unsigned) instruction.
@@ -1806,6 +2282,7 @@ pub const VM = struct {
         const rs1 = @as(u5, @truncate(inst >> 15));
         const imm12 = @as(i32, @truncate(@as(i64, inst >> 20)));
 
+        // Assert: registers must be valid (0-31).
         std.debug.assert(rd < 32);
         std.debug.assert(rs1 < 32);
 
@@ -1814,23 +2291,36 @@ pub const VM = struct {
         const offset: u64 = @bitCast(imm64); // Use @bitCast to handle negative immediates correctly
         const eff_addr = base_addr +% offset;
 
+        // Assert: effective address must be 4-byte aligned for word load.
         if (eff_addr % 4 != 0) {
             self.state = .errored;
             self.last_error = VMError.unaligned_memory_access;
             return VMError.unaligned_memory_access;
         }
 
-        if (eff_addr + 4 > self.memory_size) {
+        // Translate virtual address to physical offset
+        const phys_offset = self.translate_address(eff_addr) orelse {
+            self.state = .errored;
+            self.last_error = VMError.invalid_memory_access;
+            return VMError.invalid_memory_access;
+        };
+
+        // Assert: physical offset + 4 must be within memory bounds.
+        if (phys_offset + 4 > self.memory_size) {
             self.state = .errored;
             self.last_error = VMError.invalid_memory_access;
             return VMError.invalid_memory_access;
         }
 
-        const mem_slice = self.memory[@as(usize, @intCast(eff_addr))..][0..4];
+        // Read 32-bit word from memory using translated physical offset (zero-extend to 64 bits)
+        const mem_slice = self.memory[phys_offset..][0..4];
         const word = std.mem.readInt(u32, mem_slice, .little);
         const word64: u64 = word;
 
         self.regs.set(rd, word64);
+
+        // Assert: register must be set correctly.
+        std.debug.assert(self.regs.get(rd) == word64);
     }
 
     /// Execute SB (Store Byte) instruction.
@@ -1844,6 +2334,7 @@ pub const VM = struct {
         const imm_11_5 = @as(u7, @truncate(inst >> 25));
         const imm_4_0 = @as(u5, @truncate(inst >> 7));
 
+        // Assert: registers must be valid (0-31).
         std.debug.assert(rs2 < 32);
         std.debug.assert(rs1 < 32);
 
@@ -1859,17 +2350,29 @@ pub const VM = struct {
         var eff_addr = base_addr +% offset;
         if (rs1 == 8 and base_addr == 0x0) {
             // If address with x8=0x0 is out of bounds, try sp instead.
-            if (eff_addr >= self.memory_size) {
+            const test_phys = self.translate_address(eff_addr);
+            if (test_phys == null or test_phys.? >= self.memory_size) {
                 const sp = self.regs.get(2);
-                if (sp != 0x0 and sp < self.memory_size) {
-                    std.debug.print("DEBUG vm.zig: SB: x8=0x0 gives out-of-bounds addr 0x{x}, trying sp (x2=0x{x})\n", .{ eff_addr, sp });
-                    base_addr = sp;
-                    eff_addr = base_addr +% offset;
+                if (sp != 0x0) {
+                    const sp_phys = self.translate_address(sp +% offset);
+                    if (sp_phys != null and sp_phys.? < self.memory_size) {
+                        std.debug.print("DEBUG vm.zig: SB: x8=0x0 gives invalid addr 0x{x}, trying sp (x2=0x{x})\n", .{ eff_addr, sp });
+                        base_addr = sp;
+                        eff_addr = base_addr +% offset;
+                    }
                 }
             }
         }
 
-        if (eff_addr >= self.memory_size) {
+        // Translate virtual address to physical offset
+        const phys_offset = self.translate_address(eff_addr) orelse {
+            self.state = .errored;
+            self.last_error = VMError.invalid_memory_access;
+            return VMError.invalid_memory_access;
+        };
+
+        // Assert: physical offset + 1 must be within memory bounds.
+        if (phys_offset + 1 > self.memory_size) {
             self.state = .errored;
             self.last_error = VMError.invalid_memory_access;
             return VMError.invalid_memory_access;
@@ -1878,7 +2381,12 @@ pub const VM = struct {
         const rs2_value = self.regs.get(rs2);
         const byte = @as(u8, @truncate(rs2_value));
 
-        self.memory[@as(usize, @intCast(eff_addr))] = byte;
+        // Write byte to memory using translated physical offset
+        // GrainStyle: Cast u64 to usize only for array indexing
+        self.memory[@intCast(phys_offset)] = byte;
+
+        // Assert: byte must be written correctly.
+        std.debug.assert(self.memory[@intCast(phys_offset)] == byte);
     }
 
     /// Execute SH (Store Halfword) instruction.
@@ -1892,6 +2400,7 @@ pub const VM = struct {
         const imm_11_5 = @as(u7, @truncate(inst >> 25));
         const imm_4_0 = @as(u5, @truncate(inst >> 7));
 
+        // Assert: registers must be valid (0-31).
         std.debug.assert(rs2 < 32);
         std.debug.assert(rs1 < 32);
 
@@ -1903,13 +2412,22 @@ pub const VM = struct {
         const offset: u64 = @bitCast(imm64); // Use @bitCast to handle negative immediates correctly
         const eff_addr = base_addr +% offset;
 
+        // Assert: effective address must be 2-byte aligned for halfword store.
         if (eff_addr % 2 != 0) {
             self.state = .errored;
             self.last_error = VMError.unaligned_memory_access;
             return VMError.unaligned_memory_access;
         }
 
-        if (eff_addr + 2 > self.memory_size) {
+        // Translate virtual address to physical offset
+        const phys_offset = self.translate_address(eff_addr) orelse {
+            self.state = .errored;
+            self.last_error = VMError.invalid_memory_access;
+            return VMError.invalid_memory_access;
+        };
+
+        // Assert: physical offset + 2 must be within memory bounds.
+        if (phys_offset + 2 > self.memory_size) {
             self.state = .errored;
             self.last_error = VMError.invalid_memory_access;
             return VMError.invalid_memory_access;
@@ -1918,7 +2436,13 @@ pub const VM = struct {
         const rs2_value = self.regs.get(rs2);
         const halfword = @as(u16, @truncate(rs2_value));
 
-        @memcpy(self.memory[@as(usize, @intCast(eff_addr))..][0..2], &std.mem.toBytes(halfword));
+        // Write 16-bit halfword to memory using translated physical offset
+        // GrainStyle: Cast u64 to usize only for array indexing
+        @memcpy(self.memory[@intCast(phys_offset)..][0..2], &std.mem.toBytes(halfword));
+
+        // Assert: halfword must be written correctly.
+        const read_back = std.mem.readInt(u16, self.memory[@intCast(phys_offset)..][0..2], .little);
+        std.debug.assert(read_back == halfword);
     }
 
     /// Execute SD (Store Doubleword) instruction.
@@ -1947,47 +2471,38 @@ pub const VM = struct {
         // If not, try using sp instead (for stack-relative accesses).
         var eff_addr = base_addr +% offset;
         if (rs1 == 8 and base_addr == 0x0) {
-            // If address with x8=0x0 is out of bounds, try sp instead.
-            if (eff_addr + 8 > self.memory_size) {
+            // If address with x8=0x0 is invalid, try sp instead.
+            const test_phys = self.translate_address(eff_addr);
+            if (test_phys == null or test_phys.? + 8 > self.memory_size) {
                 const sp = self.regs.get(2);
-                if (sp != 0x0 and sp < self.memory_size) {
-                    std.debug.print("DEBUG vm.zig: SD: x8=0x0 gives out-of-bounds addr 0x{x}, trying sp (x2=0x{x})\n", .{ eff_addr, sp });
-                    base_addr = sp;
-                    eff_addr = base_addr +% offset;
+                if (sp != 0x0) {
+                    const sp_eff = sp +% offset;
+                    const sp_phys = self.translate_address(sp_eff);
+                    if (sp_phys != null and sp_phys.? + 8 <= self.memory_size) {
+                        std.debug.print("DEBUG vm.zig: SD: x8=0x0 gives invalid addr 0x{x}, trying sp (x2=0x{x})\n", .{ eff_addr, sp });
+                        base_addr = sp;
+                        eff_addr = base_addr +% offset;
+                    }
                 }
             }
-        } else {
-            eff_addr = base_addr +% offset;
         }
 
-        // Debug: Print address calculation for troubleshooting.
-        std.debug.print("DEBUG vm.zig: SD instruction: rs1={} (x{}), base_addr=0x{x}, imm12={} (0x{x}), offset=0x{x}, eff_addr=0x{x}, memory_size=0x{x}\n", .{ rs1, rs1, base_addr, imm12, imm12, offset, eff_addr, self.memory_size });
-
-        // Debug: Print register values for troubleshooting.
-        if (rs1 == 8) {
-            std.debug.print("DEBUG vm.zig: x8 (s0/fp) register was 0x{x}, using base_addr=0x{x}\n", .{ self.regs.get(8), base_addr });
+        // Assert: effective address must be 8-byte aligned for doubleword store.
+        if (eff_addr % 8 != 0) {
+            self.state = .errored;
+            self.last_error = VMError.unaligned_memory_access;
+            return VMError.unaligned_memory_access;
         }
 
-        // Assert: effective address must fit in usize for memory access (check first).
-        // Note: On 64-bit systems, usize is u64, so this check should always pass.
-        // On 32-bit systems, we need to ensure eff_addr <= maxInt(usize).
-        if (@sizeOf(usize) == 4 and eff_addr > std.math.maxInt(usize)) {
-            std.debug.print("DEBUG vm.zig: SD address too large for usize: 0x{x} > maxInt(usize)\n", .{eff_addr});
+        // Translate virtual address to physical offset
+        const phys_offset = self.translate_address(eff_addr) orelse {
             self.state = .errored;
             self.last_error = VMError.invalid_memory_access;
             return VMError.invalid_memory_access;
-        }
+        };
 
-        // Align address to 8-byte boundary for doubleword store (clear bottom 3 bits).
-        // Why: RISC-V requires 8-byte alignment for LD/SD, but programs may calculate misaligned addresses.
-        // Note: This changes semantics slightly but allows execution to continue.
-        if (eff_addr % 8 != 0) {
-            std.debug.print("DEBUG vm.zig: SD unaligned address: 0x{x} (not 8-byte aligned), aligning to 0x{x}\n", .{ eff_addr, eff_addr & ~@as(u64, 7) });
-            eff_addr = eff_addr & ~@as(u64, 7);
-        }
-
-        if (eff_addr + 8 > self.memory_size) {
-            std.debug.print("DEBUG vm.zig: SD out of bounds: eff_addr=0x{x}, eff_addr+8=0x{x}, memory_size=0x{x}\n", .{ eff_addr, eff_addr + 8, self.memory_size });
+        // Assert: physical offset + 8 must be within memory bounds.
+        if (phys_offset + 8 > self.memory_size) {
             self.state = .errored;
             self.last_error = VMError.invalid_memory_access;
             return VMError.invalid_memory_access;
@@ -1995,9 +2510,13 @@ pub const VM = struct {
 
         const rs2_value = self.regs.get(rs2);
 
-        // Safe cast: we've already verified eff_addr <= maxInt(usize).
-        const eff_addr_usize: usize = @truncate(eff_addr);
-        @memcpy(self.memory[eff_addr_usize..][0..8], &std.mem.toBytes(rs2_value));
+        // Write 64-bit doubleword to memory using translated physical offset
+        // GrainStyle: Cast u64 to usize only for array indexing
+        @memcpy(self.memory[@intCast(phys_offset)..][0..8], &std.mem.toBytes(rs2_value));
+
+        // Assert: doubleword must be written correctly.
+        const read_back = std.mem.readInt(u64, self.memory[@intCast(phys_offset)..][0..8], .little);
+        std.debug.assert(read_back == rs2_value);
     }
 
     /// Execute BEQ (Branch if Equal) instruction.

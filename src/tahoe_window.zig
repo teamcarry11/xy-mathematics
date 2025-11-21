@@ -226,6 +226,36 @@ pub const TahoeSandbox = struct {
             event.modifiers,
         });
         
+        // Route mouse event to VM (if VM is running).
+        // Why: Kernel needs input events for interactive applications.
+        if (sandbox.vm) |vm| {
+            // Encode event kind (0=down, 1=up, 2=move, 3=drag).
+            const kind: u8 = switch (event.kind) {
+                .down => 0,
+                .up => 1,
+                .move => 2,
+                .drag => 3,
+            };
+            
+            // Encode button (0=left, 1=right, 2=middle, 3=other).
+            const button: u8 = switch (event.button) {
+                .left => 0,
+                .right => 1,
+                .middle => 2,
+                .other => 3,
+            };
+            
+            // Encode modifiers (bit flags).
+            var modifiers: u8 = 0;
+            if (event.modifiers.shift) modifiers |= 1;
+            if (event.modifiers.control) modifiers |= 2;
+            if (event.modifiers.option) modifiers |= 4;
+            if (event.modifiers.command) modifiers |= 8;
+            
+            // Inject event into VM input queue.
+            vm.inject_mouse_event(kind, button, event.x, event.y, modifiers);
+        }
+        
         // Event handled: state updated for visual feedback.
         return true;
     }
@@ -671,6 +701,41 @@ pub const TahoeSandbox = struct {
         try self.platform.show();
     }
 
+    /// Sync VM framebuffer to window buffer.
+    /// Why: Copy kernel framebuffer memory to macOS window for display.
+    /// GrainStyle: Explicit bounds checking, static allocation, deterministic copy.
+    /// Contract:
+    ///   Input: VM must be initialized, buffer must be 1024x768x4 bytes
+    ///   Output: Window buffer contains VM framebuffer content
+    fn sync_framebuffer(self: *TahoeSandbox, vm: *VM, buffer: []u8, buffer_width: u32, buffer_height: u32) void {
+        // Assert: VM must be initialized.
+        std.debug.assert(vm.memory_size > 0);
+        std.debug.assert(vm.memory.len > 0);
+        
+        // Assert: Buffer dimensions must match framebuffer (1024x768).
+        const framebuffer_width: u32 = 1024;
+        const framebuffer_height: u32 = 768;
+        std.debug.assert(buffer_width == framebuffer_width);
+        std.debug.assert(buffer_height == framebuffer_height);
+        
+        // Assert: Buffer size must match expected framebuffer size.
+        const expected_framebuffer_size: u32 = framebuffer_width * framebuffer_height * 4;
+        std.debug.assert(buffer.len == expected_framebuffer_size);
+        
+        // Get framebuffer memory slice from VM.
+        const framebuffer_memory = vm.get_framebuffer_memory();
+        
+        // Assert: Framebuffer memory size must match expected size.
+        std.debug.assert(framebuffer_memory.len == expected_framebuffer_size);
+        
+        // Copy framebuffer memory to window buffer.
+        // GrainStyle: Direct memcpy for deterministic copy.
+        @memcpy(buffer[0..expected_framebuffer_size], framebuffer_memory);
+        
+        // Assert: Copy must be complete.
+        std.debug.assert(buffer.len == expected_framebuffer_size);
+    }
+
     pub fn tick(self: *TahoeSandbox) !void {
         // Assert precondition: platform must be initialized.
         // VTable and impl are non-optional pointers in Zig 0.15.
@@ -702,25 +767,30 @@ pub const TahoeSandbox = struct {
         const buffer_width: u32 = 1024;
         const buffer_height: u32 = 768;
         
-        // Grain Style: Draw something visible to the buffer!
-        // Fill with a nice dark blue-gray background (Tahoe aesthetic).
-        const bg_color: u32 = 0xFF1E1E2E; // Dark blue-gray (RGBA)
-        @memset(buffer, @as(u8, @truncate(bg_color)));
-        @memset(buffer[1..], @as(u8, @truncate(bg_color >> 8)));
-        @memset(buffer[2..], @as(u8, @truncate(bg_color >> 16)));
-        @memset(buffer[3..], @as(u8, @truncate(bg_color >> 24)));
-        
-        // Actually, let's do it pixel by pixel for clarity.
-        var y: u32 = 0;
-        while (y < buffer_height) : (y += 1) {
-            var x: u32 = 0;
-            while (x < buffer_width) : (x += 1) {
-                const pixel_offset = (y * buffer_width + x) * 4;
-                if (pixel_offset + 3 < buffer.len) {
-                    // RGBA format: R, G, B, A
-                    buffer[pixel_offset + 0] = 0x1E; // R
-                    buffer[pixel_offset + 1] = 0x1E; // G
-                    buffer[pixel_offset + 2] = 0x2E; // B
+        // Sync VM framebuffer to window buffer (if VM is running).
+        // Why: Display kernel framebuffer content in macOS window.
+        // GrainStyle: Explicit bounds checking, static allocation, deterministic copy.
+        if (self.vm) |vm| {
+            self.sync_framebuffer(vm, buffer, buffer_width, buffer_height);
+        } else {
+            // No VM: Fill with dark blue-gray background (Tahoe aesthetic).
+            const bg_color: u32 = 0xFF1E1E2E; // Dark blue-gray (RGBA)
+            @memset(buffer, @as(u8, @truncate(bg_color)));
+            @memset(buffer[1..], @as(u8, @truncate(bg_color >> 8)));
+            @memset(buffer[2..], @as(u8, @truncate(bg_color >> 16)));
+            @memset(buffer[3..], @as(u8, @truncate(bg_color >> 24)));
+            
+            // Actually, let's do it pixel by pixel for clarity.
+            var y: u32 = 0;
+            while (y < buffer_height) : (y += 1) {
+                var x: u32 = 0;
+                while (x < buffer_width) : (x += 1) {
+                    const pixel_offset = (y * buffer_width + x) * 4;
+                    if (pixel_offset + 3 < buffer.len) {
+                        // RGBA format: R, G, B, A
+                        buffer[pixel_offset + 0] = 0x1E; // R
+                        buffer[pixel_offset + 1] = 0x1E; // G
+                        buffer[pixel_offset + 2] = 0x2E; // B
                     buffer[pixel_offset + 3] = 0xFF; // A (fully opaque)
                 }
             }

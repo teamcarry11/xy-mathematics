@@ -92,11 +92,12 @@ pub const Integration = struct {
         };
     }
 
-    /// Finish initialization (set up syscall handler).
+    /// Finish initialization (set up syscall handler and framebuffer).
     /// Contract:
     ///   Input: Self must be partially initialized (VM and kernel set)
-    ///   Output: Integration fully initialized, syscall handler registered
+    ///   Output: Integration fully initialized, syscall handler registered, framebuffer initialized
     /// Why: Complete initialization after Self is created (needed for thread-local storage).
+    /// Note: Framebuffer is initialized before kernel execution starts (host-side initialization).
     pub fn finish_init(self: *Self) void {
         // Contract: Integration must not be already initialized.
         std.debug.assert(!self.initialized);
@@ -115,6 +116,11 @@ pub const Integration = struct {
         // Register kernel as VM syscall handler.
         // Contract: syscall_handler_wrapper will access kernel via thread-local storage.
         self.vm.*.set_syscall_handler(syscall_handler_wrapper, null);
+
+        // Initialize framebuffer from host-side (before kernel execution starts).
+        // Why: Set up framebuffer with test pattern for visual verification.
+        // Contract: VM must be initialized and kernel loaded before framebuffer initialization.
+        self.vm.*.init_framebuffer();
 
         // Contract: Integration must be initialized after finish_init.
         self.initialized = true;

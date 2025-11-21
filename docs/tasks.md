@@ -281,12 +281,14 @@
 
 ### 4.2 DAG Integration (IN PROGRESS)
 
-#### 4.2.1 Editor-DAG Integration 📋 **PLANNED**
-- [ ] Map Tree-sitter AST nodes to DAG nodes
-- [ ] Map code edits to DAG events
-- [ ] Streaming updates (Hyperfiddle-style)
-- [ ] Project-wide semantic graph (Matklad vision)
-- [ ] Incremental compilation integration (majjit)
+#### 4.2.1 Editor-DAG Integration ✅ **COMPLETE**
+- [x] Map Tree-sitter AST nodes to DAG nodes (`src/aurora_dag_integration.zig`)
+- [x] Map code edits to DAG events (HashDAG-style with parent references)
+- [x] Streaming updates (Hyperfiddle-style, TigerBeetle state machine)
+- [x] Project-wide semantic graph (Matklad vision, AST node tracking)
+- [x] Node lookup by position (for navigation, hover)
+- [x] Dependency tracking (parent-child relationships in DAG)
+- [ ] Incremental compilation integration (majjit) - future enhancement
 
 #### 4.2.2 Browser-DAG Integration 📋 **PLANNED**
 - [ ] Map DOM nodes to DAG nodes

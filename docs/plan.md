@@ -337,11 +337,13 @@
 
 **Objective**: Integrate DAG core into editor and browser.
 
-#### 2.1: Editor-DAG Integration 📋 **PLANNED**
-- 📋 Map Tree-sitter AST nodes to DAG nodes
-- 📋 Map code edits to DAG events
-- 📋 Streaming updates (Hyperfiddle-style)
-- 📋 Project-wide semantic graph (Matklad vision)
+#### 2.1: Editor-DAG Integration ✅ **COMPLETE**
+- ✅ Map Tree-sitter AST nodes to DAG nodes (`src/aurora_dag_integration.zig`)
+- ✅ Map code edits to DAG events (HashDAG-style with parent references)
+- ✅ Streaming updates (Hyperfiddle-style, TigerBeetle state machine)
+- ✅ Project-wide semantic graph (Matklad vision, AST node tracking)
+- ✅ Node lookup by position (for navigation, hover)
+- ✅ Dependency tracking (parent-child relationships in DAG)
 
 #### 2.2: Browser-DAG Integration 📋 **PLANNED**
 - 📋 Map DOM nodes to DAG nodes

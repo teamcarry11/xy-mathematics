@@ -345,7 +345,7 @@ pub const VM = struct {
         };
         
         const jit_ctx = try allocator.create(jit_mod.JitContext);
-        jit_ctx.* = try jit_mod.JitContext.init(allocator, &guest_state, target.memory[0..target.memory_size]);
+        jit_ctx.* = try jit_mod.JitContext.init(allocator, &guest_state, target.memory[0..target.memory_size], target.memory_size);
         target.jit = jit_ctx;
         target.jit_enabled = true;
         
@@ -407,7 +407,9 @@ pub const VM = struct {
         };
         
         const jit_ctx = try allocator.create(jit_mod.JitContext);
+        const FRAMEBUFFER_SIZE: u32 = 1024 * 768 * 4; // 3MB
         jit_ctx.* = try jit_mod.JitContext.init(allocator, &guest_state, self.memory[0..self.memory_size], self.memory_size);
+        jit_ctx.framebuffer_size = FRAMEBUFFER_SIZE;
         self.jit = jit_ctx;
         self.jit_enabled = true;
         

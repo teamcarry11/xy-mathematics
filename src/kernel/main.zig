@@ -12,7 +12,7 @@ var kernel: BasinKernel = undefined;
 var framebuffer: ?Framebuffer = null;
 
 pub export fn kmain() noreturn {
-    // 1. Early boot banner
+    // 1. Early boot banner (serial output)
     Debug.kprint("\n", .{});
     Debug.kprint("   ______           _          ____  _____\n", .{});
     Debug.kprint("  / ____/________ _(_)___     / __ \\/ ___/\n", .{});
@@ -29,8 +29,18 @@ pub export fn kmain() noreturn {
     
     Debug.log(.info, "Users initialized: {d}", .{kernel.user_count});
 
+    // 3. Initialize framebuffer (access at 0x90000000)
+    // Why: Display boot messages and kernel output on screen.
+    // Note: Framebuffer memory is mapped by VM at 0x90000000.
+    // The kernel accesses it via store instructions, which the VM translates.
+    // For now, framebuffer is initialized host-side by VM.init_framebuffer().
+    // Kernel can write to it via store instructions to 0x90000000+ addresses.
+    // Note: Direct pointer access in kernel requires unsafe code.
+    // We'll use a syscall-based approach for kernel framebuffer access in the future.
+    
+    Debug.log(.info, "Framebuffer available at 0x90000000 (initialized by VM).", .{});
     Debug.log(.info, "System ready. Entering trap loop.", .{});
 
-    // 3. Enter trap loop
+    // 4. Enter trap loop (handles syscalls, including input events)
     Trap.loop();
 }

@@ -37,7 +37,13 @@ RISC-V is modular—you implement only what you need:
 - **RV64A**: Atomic operations
 - **RV64F/D**: Floating-point
 
-**Grain OS uses**: RV64I + RVC (compressed instructions)
+**Grain OS uses**: RV64I + RVC (compressed instructions) + RV64F/D (floating-point)
+
+**Why Floating-Point?**
+- **Aurora IDE**: Graphics rendering, UI calculations, smooth animations require floating-point math
+- **Numerical Computing**: Scientific computing, data analysis, mathematical operations
+- **Future AI/ML**: Targeting RISC-V compatible open-hardware equivalents of Cerebras WSE wafers for self-hosted baremetal cloud requires floating-point for neural network training and inference
+- **Grain Vantage VM**: Will support RV64F/D extensions for full numerical computing capabilities
 
 ## Register File
 
@@ -357,7 +363,7 @@ We'll cover JIT in detail in document 0004.
 - Fixed 32-bit instruction encoding (16-bit compressed)
 - Load/store architecture (only load/store access memory)
 - Little-endian, natural alignment required
-- Grain OS uses RV64I + RVC
+- Grain OS uses RV64I + RVC + RV64F/D (floating-point for Aurora IDE and numerical computing)
 
 ## Next Document
 

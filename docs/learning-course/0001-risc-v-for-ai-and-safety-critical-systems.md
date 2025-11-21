@@ -355,30 +355,48 @@ The shift towards spatial architectures like the WSE is not just an incremental 
 
 The future isn't *more NVMe*—it's **less material, more intelligence per atom**.
 
-## The IDE Frontier: GLM-4.6, Zed, and Building Better Tools in Zig
+## The IDE Frontier: Architecture-First AI Development Tools
 
 ### The Question
 
 Could we use GLM-4.6 (Cerebras's open-weight coding model) in Zed, or even build an even better IDE written in Zig with GLM-4.6 as a starting point? Inspired by Matklad's vision of moving away from VS Code towards editors that support readonly characters, method folding, and LSP-driven VCS integration.
 
-**Answer**: Yes. GLM-4.6 is already usable in Zed today, and building a Zig-native IDE with GLM-4.6 as a reasoning copilot represents the next frontier of developer tooling—combining Matklad's architectural vision with Cerebras's speed and Zig's safety guarantees.
+**Answer**: The real breakthrough isn't just having GLM-4.6—it's building the **right architecture** around it. The IDE architecture matters more than the specific AI model. By building in Zig with Matklad's principles, we create a foundation that could leverage any future AI advancement—including eventually wafer-scale AI when it becomes accessible as a service.
 
-### GLM-4.6 in Zed: Current State
+**Key Insight**: While GLM-4.6 isn't directly usable in Zed today (it's inference-only on Cerebras hardware), the architectural vision—project-wide semantic understanding, incremental compilation, deterministic AI patterns—is what will define the next generation of developer tools.
 
-**Integration Today**:
+### The Architecture-First Approach
 
-- GLM-4.6 is available via OpenAI-compatible API at `https://api.cerebras.ai/v1`
-- Zed supports external LLM providers through its copilot/extension system
-- Configure via `~/.config/zed/settings.json` to point to Cerebras endpoint
-- Works in assistant panel, inline transform, and prompt library
+**Why Architecture Matters More Than the Model**:
 
-**Performance Reality**:
+The real breakthrough isn't just having GLM-4.6—it's building the **right architecture** around it:
 
-- **Raw GLM-4.6**: 1,000 tokens/second on Cerebras hardware
-- **In Zed via LSP**: ~120-150 tokens/second (limited by JSON-RPC framing and 16ms frame budget)
-- **Still 3× faster than Copilot in VS Code**, but only 1/8 of raw Cerebras speed
+1. **Project-Contextual AI**: Instead of file-at-a-time, give the AI full project semantics. The IDE understands the entire codebase graph, not just the current file.
 
-**The Bottleneck**: LSP (`textDocument/inlineCompletion`) is too high-latency for real-time typing. The solution: bypass LSP with a parallel streaming channel (like Cursor and Windsurf use).
+2. **Incremental Everything**: Reuse compilation artifacts for AI context. Matklad's "majjit" concept—incremental compilation that feeds directly into AI understanding—means the IDE never re-analyzes unchanged code.
+
+3. **Deterministic AI**: Cache common patterns so the IDE feels predictable. The same code transformation should produce the same result, enabling developer trust.
+
+**Available Models Today** (while waiting for wafer-scale AI):
+
+- **DeepSeek Coder** (open weights, commercially usable)
+- **CodeLlama 70B** or smaller variants for local inference
+- **Claude 3.5 Haiku** (best balance of speed/capability for IDE work)
+
+**The Path Forward**:
+
+1. **Short-term**: Use Cursor with best available models + contribute to Zed's AI capabilities
+2. **Medium-term**: Start building your vision in Zig, focusing on the architectural insights from Matklad
+3. **Long-term**: Position your stack to leverage wafer-scale AI when it becomes accessible
+
+### GLM-4.6 and Cerebras: Current Reality
+
+**Direct Answer**: No, you cannot directly use Cerebras's GLM-4.6 in Zed today. Here's why:
+
+1. **Cerebras GLM is inference-only on their hardware** - It runs on Cerebras WSE systems, not as a local model you can integrate into an IDE
+2. **Zed's AI architecture** is built around local models (via Ollama) or cloud APIs (OpenAI, Anthropic)
+
+**However**: When such models become available via API, a Zig IDE built with Matklad's principles would be perfectly positioned to leverage them. The architecture you build today will be ready for tomorrow's AI capabilities.
 
 ### Building a Zig-Native IDE: The Vision
 
@@ -390,20 +408,69 @@ Could we use GLM-4.6 (Cerebras's open-weight coding model) in Zed, or even build
 | **Comptime metaprogramming** | Generate editor commands, LSP handlers, and layout DSLs at compile time |
 | **Cross-platform + small binary** | Full IDE can ship as <10 MB binary |
 | **Memory safety without runtime** | Use `Allocator` bounds + explicit lifetimes to avoid use-after-free in text buffer models |
+| **True zero-cost abstractions** | For the compiler integration Matklad describes—no hidden overhead in incremental compilation |
 
-**Matklad's Vision + Zig + GLM-4.6**:
+**Matklad's Vision + Zig + Future AI**:
 
-1. **Readonly Characters**: Zig's explicit memory management enables precise readonly span tracking—text buffers with `(start, end, flags)` in gap buffer or rope structure
-2. **Method Folding by Default**: Tree-sitter integration + comptime code generation for structural views
-3. **Magit-Style VCS**: Virtual file system where `.ide/status.jj`, `.ide/commit/zxf.diff` are real files—editors open them, daemon watches and updates
-4. **GLM-4.6 as Reasoning Copilot**: Not just autocomplete—agentic code transformation, tool calling, multi-file edits at 1,000 tokens/second
+1. **Readonly Characters**: Zig's explicit memory management enables precise readonly span tracking—text buffers with `(start, end, flags)` in gap buffer or rope structure. This is the foundation for "text-as-UI" where VCS status, commit messages, and diffs are just files you edit.
 
-### The Architecture
+2. **Method Folding by Default**: Tree-sitter integration + comptime code generation for structural views. The IDE understands code structure at compile time, not just at runtime.
+
+3. **Magit-Style VCS**: Virtual file system where `.ide/status.jj`, `.ide/commit/zxf.diff` are real files—editors open them, daemon watches and updates. This is the "missing IDE feature" Matklad describes—project-wide semantic understanding.
+
+4. **Incremental Compilation (Majjit)**: Reuse compilation artifacts for AI context. The IDE never re-analyzes unchanged code. This feeds directly into AI understanding—the model sees the project graph, not just file contents.
+
+5. **Project-Wide Semantic Understanding**: The IDE maintains a graph of the entire codebase. When AI suggests a change, it understands the full context—all callers, all dependencies, all related code.
+
+**Conceptual Architecture**:
+
+```zig
+// Conceptual architecture for Zig IDE with AI integration
+const AIIDE = struct {
+    // 1. Read-only character streams (per matklad)
+    read_only_document: DocumentStream,
+    
+    // 2. Majjit-style incremental compilation
+    incremental_compiler: CompilerCache,
+    
+    // 3. "Missing IDE feature" - project-wide semantic understanding
+    semantic_engine: ProjectGraph,
+    
+    // 4. AI provider abstraction (works with any model)
+    ai_providers: []AIProvider, // Local + cloud, ready for wafer-scale when available
+};
+```
+
+### The Architecture (Today and Tomorrow)
+
+**Today's Architecture** (with available models):
 
 ```
 ┌--------------┐
-│  GPU/CPU     │  ← Cerebras CS-3 card (1 kt/s, 2 kW)
-│  GLM-4.6     │
+│  Local/Cloud │  ← DeepSeek Coder, CodeLlama, or Claude 3.5 Haiku
+│  AI Model    │
+└----┬---------┘
+     │ API or local inference
+┌----┴---------┐
+│  Zig IDE     │  ← single-threaded event loop (io_uring)
+│  - tree-sitter incremental
+│  - readonly spans (matklad)
+│  - fold-bodies-by-default
+│  - magit-style .jj/status.jj
+│  - project-wide semantic graph
+└----┬---------┘
+     │  Native UI
+┌----┴---------┐
+│  User Laptop │  ← runs *only* the UI thread (Wayland/native)
+└--------------┘
+```
+
+**Tomorrow's Architecture** (when wafer-scale AI becomes accessible):
+
+```
+┌--------------┐
+│  Cerebras     │  ← WSE-3 wafer (1 kt/s, 2 kW)
+│  GLM-4.6      │  ← or future wafer-scale models
 └----┬---------┘
      │ zero-copy shared memory
 ┌----┴---------┐
@@ -412,6 +479,7 @@ Could we use GLM-4.6 (Cerebras's open-weight coding model) in Zed, or even build
 │  - readonly spans (matklad)
 │  - fold-bodies-by-default
 │  - magit-style .jj/status.jj
+│  - project-wide semantic graph
 └----┬---------┘
      │  USB-C / 10 GbE
 ┌----┴---------┐
@@ -419,51 +487,63 @@ Could we use GLM-4.6 (Cerebras's open-weight coding model) in Zed, or even build
 └--------------┘
 ```
 
-**Key Numbers**:
+**Key Numbers** (Future Vision):
 - **44 GB on-wafer SRAM**: Enough for 10,000 open files (4 MB each) without touching external RAM
 - **1,000 tokens/second**: Full 200-line function appears in <250ms—fast enough to *feel* local
 - **Cobalt-free SRAM**: Aligns with "America First, conflict-free" goal
+- **Spatial architectures**: Perfect for the graph-based code understanding Matklad describes
+- **Wafer-scale inference**: Could eventually provide instant project-wide analysis
 
-### GLM-4.6's Unique Advantages for IDE Development
+### Performance Advantages of Zig + Architecture-First Approach
 
-| Requirement | GLM-4.6 Capability |
-|-------------|-------------------|
-| **Tool-calling reliability** | #1 on BFCL—handles multi-step tool chains, stateful arguments |
-| **Code-edit accuracy** | 94.5% (per Cline telemetry)—close to Sonnet 4.5 (96.2%) |
-| **Token efficiency** | 26-31% fewer tokens than Kimi/DeepSeek → cheaper, faster edits |
-| **Latency** | 1,000 tps → 500-line diff edit in <0.5s |
+**Why Zig + Your Approach Could Win**:
 
-**Example Use Case**: Open `.jj/status.jj`. GLM-4.6 watches it. Highlight a hunk, press `Cmd+.` → "Split this hunk into new commit". GLM-4.6:
+1. **No GC pauses** for AI token streaming—deterministic rendering even during AI inference
+2. **True zero-cost abstractions** for the compiler integration Matklad describes—incremental compilation feeds directly into AI context
+3. **Cross-compilation** to deploy your IDE everywhere—RISC-V, ARM64, x86_64
+4. **Project-contextual AI**: Instead of file-at-a-time, give the AI full project semantics through the semantic graph
+5. **Incremental everything**: Reuse compilation artifacts for AI context—never re-analyze unchanged code
+6. **Deterministic AI**: Cache common patterns so the IDE feels predictable—same transformation, same result
+
+**What You Could Build Today**:
+
+1. **Zed plugin system** - prototype your ideas within Zed
+2. **Standalone Zig LSP** - implement Matklad's "majjit" concepts
+3. **Gradual migration** - replace parts of your workflow incrementally
+
+**Example Use Case** (Architecture-First AI):
+
+Open `.jj/status.jj`. The IDE's semantic engine watches it. Highlight a hunk, press `Cmd+.` → "Split this hunk into new commit". The AI (any model, today or tomorrow):
+- Accesses the project-wide semantic graph (not just file contents)
+- Understands all callers, dependencies, related code
 - Calls `jj diff --git` to get structured context
 - Generates *two diffs* (old commit ↔ new commit)
 - Uses readonly ranges to lock metadata (commit hash, parent)
 - Lets you edit the *new* diff freely
 - On `Cmd+Enter`, invokes `jj new` + `jj describe` via tool call
 
-### Fallback: Cursor Ultra
+**The Key**: The architecture enables this workflow with *any* AI model—today's DeepSeek Coder, tomorrow's wafer-scale GLM-4.6, or future models we can't yet imagine.
 
-If GLM-4.6 doesn't deliver polished Zig code initially, **Cursor Ultra** ($200/mo) provides:
-- Advanced agent features, built-in web browsing for debugging
-- Massive context handling for full-project edits
-- Already ships Cerebras backend—select `glm-4.6` in model dropdown
-- Gets ghost-text at 800-1,000 tokens/second inside Electron shell
+### The Cerebras Angle Long-term
 
-**Trade-off**: +800ms UI latency (Electron) vs. <5ms in native Zig loop.
+While you can't use GLM-4.6 locally today, the Cerebras approach points to the future:
 
-**Recommendation**: Use GLM-4.6 as primary for structural, high-frequency tasks (code edits, diff splitting, commit message gen). Use Cursor Ultra (or Sonnet 4.5) as fallback for rare, deep-reasoning tasks (architecture design, legacy migration planning).
+- **Wafer-scale inference** could eventually provide instant project-wide analysis
+- **Spatial architectures** are perfect for the graph-based code understanding Matklad describes
+- **When such models become available via API**, your Zig IDE would be perfectly positioned to leverage them
 
-### The Convergence
+**The Convergence**:
 
-We're standing at a unique convergence:
+- **Cerebras**: Speed + open-weight quality (when available)
+- **Matklad**: UI paradigm innovation (readonly spans, text-as-UI, project-wide semantics)
+- **Zig**: Safety and simplicity substrate (zero-cost, comptime, explicit)
+- **RISC-V**: Hardware foundation (simple, extensible, verifiable)
 
-- **Cerebras**: Gives speed + open-weight quality (1,000 tps, 94.5% accuracy)
-- **Matklad**: Gives the UI paradigm (readonly spans, text-as-UI, Magit-style)
-- **Zig**: Gives the substrate for safety and simplicity (zero-cost, comptime, explicit)
-- **RISC-V**: Gives the hardware foundation (simple, extensible, verifiable)
+This convergence isn't just possible—it's *inevitable*. Someone's going to build it. Why not us?
 
-This isn't just possible—it's *inevitable*. Someone's going to build it. Why not us?
+**For Grain OS**: This vision extends our mission. By building developer tools in Zig on RISC-V, with an architecture-first approach to AI integration, we create a complete stack—from hardware to IDE—that is safety-first, high-performance, and developer-friendly. The architecture we build today will be ready for tomorrow's AI capabilities, whether that's wafer-scale inference, spatial architectures, or models we can't yet imagine.
 
-**For Grain OS**: This vision extends our mission. By building developer tools in Zig on RISC-V, with GLM-4.6 as a reasoning copilot, we create a complete stack—from hardware to IDE—that is safety-first, high-performance, and developer-friendly.
+**The Strategic Insight**: The IDE architecture matters more than the specific AI model. By building in Zig with Matklad's principles, we create a foundation that could leverage any future AI advancement—including eventually something like GLM-4.6 when it becomes available as a service, or wafer-scale AI for self-hosted baremetal cloud deployments.
 
 ## Unified Conclusion: RISC-V as the Foundation for Next-Generation Computing
 

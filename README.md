@@ -22,14 +22,15 @@
 │                                                                         │
 │        current status:                                                  │
 │        - jit compiler: complete (risc-v -> aarch64)                     │
-│        - vm integration: in progress                                    │
+│        - vantage integration: in progress                              │
 │        - kernel boot: implementing                                      │
 │        - gui integration: planned                                       │
 │                                                                         │
 │        architecture:                                                    │
 │        macos tahoe 26.1 (native cocoa)                                  │
 │        grain aurora ide (zig gui)                                       │
-│        grain vm (risc-v -> aarch64 jit)                                 │
+│        grain vantage (risc-v -> aarch64 jit)                             │
+│        grain vantage (risc-v -> aarch64 jit)                            │
 │        grain basin kernel (risc-v64)                                    │
 │                                                                         │
 │        we follow grain style: explicit limits,                          │
@@ -42,7 +43,7 @@
 │        with care for the long term.                                     │
 │                                                                         │
 │        the kernel is our foundation, the vm our                         │
-│        bridge between development and deployment.                       │
+│        bridge between development and deployment.                      │
 │        we write in zig for safety, for clarity,                         │
 │        for the future. risc-v is our target,                            │
 │        framework 13 our goal, repairability our                         │
@@ -50,7 +51,7 @@
 │                                                                         │
 │        grain aurora brings the ide to life,                             │
 │        rendering our work in native macos windows.                      │
-│        we see the kernel boot, we watch the vm                          │
+│        we see the kernel boot, we watch vantage                         │
 │        execute, we build the future one line at                         │
 │        a time.                                                          │
 │                                                                         │
@@ -84,7 +85,7 @@
 │        the jit compiler transforms risc-v                               │
 │        instructions into native aarch64 code,                           │
 │        bringing near-native performance to our                          │
-│        virtualized kernel. we test in the vm,                           │
+│        virtualized kernel. we test in vantage,                         │
 │        we deploy to hardware, we build the bridge                       │
 │        between simulation and reality.                                  │
 │                                                                         │

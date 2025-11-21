@@ -708,6 +708,7 @@ pub const TahoeSandbox = struct {
     ///   Input: VM must be initialized, buffer must be 1024x768x4 bytes
     ///   Output: Window buffer contains VM framebuffer content
     fn sync_framebuffer(self: *TahoeSandbox, vm: *VM, buffer: []u8, buffer_width: u32, buffer_height: u32) void {
+        _ = self; // Unused (method receiver)
         // Assert: VM must be initialized.
         std.debug.assert(vm.memory_size > 0);
         std.debug.assert(vm.memory.len > 0);
@@ -788,10 +789,11 @@ pub const TahoeSandbox = struct {
                     const pixel_offset = (y * buffer_width + x) * 4;
                     if (pixel_offset + 3 < buffer.len) {
                         // RGBA format: R, G, B, A
-                        buffer[pixel_offset + 0] = 0x1E; // R
-                        buffer[pixel_offset + 1] = 0x1E; // G
-                        buffer[pixel_offset + 2] = 0x2E; // B
+                    buffer[pixel_offset + 0] = 0x1E; // R
+                    buffer[pixel_offset + 1] = 0x1E; // G
+                    buffer[pixel_offset + 2] = 0x2E; // B
                     buffer[pixel_offset + 3] = 0xFF; // A (fully opaque)
+                    }
                 }
             }
         }

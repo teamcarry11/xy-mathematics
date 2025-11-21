@@ -18,7 +18,7 @@ You're probably here because you've hit a wall. You've tried Discord servers, cr
 
 Here's the problem: when you follow conventional top-search-result advice and ask LLMs like ChatGPT and Copilot to write all this code, you don't actually really know what you're doing. You end up generating lots of text lines, but you don't realize that the approach to the goals to begin with is actually a really damaging start. It's hard to debug, poor in performance, risky with user safety, and hard to monetize.
 
-What you don't know by just starting out is that you should be taking advice from the most experienced seasoned devs who make content and give advice around exploring the Zig programming language, looking into the RISC-V open-source instruction set architecture and why it matters, examining bug report post-mortems from major cloud computing outages that were everywhere in the news, understanding why Rust is being backed and supported by the U.S. government for its secure citizen software, and so on. These are the conversations that actually matter when you're trying to build systems that work.
+What you don't know by just starting out is that you should be taking advice from the most experienced seasoned devs who make content and give advice around exploring the Zig programming language, looking into the RISC-V open-source instruction set architecture and why it matters, examining bug report post-mortems from major cloud computing outages that were everywhere in the news, understanding why Rust is being backed and supported by the U.S. government for its secure citizen software, and so on. These are the conversations that actually matter when you're trying to build systems that work (and there are always new conversations happening and new things we will come to find out about soon, being worked on in labs and retreat centers and hotel rooms right now all over the world, right as we speak!)
 
 The kae3g Experience is a monthly mentoring subscription. It's the space between doing it all yourself and intensive one-on-one coaching. You get access to me, to a community of people thinking similarly, to a back-catalog of real conversations about systems programming, and to Office Hours where you can ask questions or just listen.
 
@@ -26,7 +26,7 @@ It's affordable. It's flexible. You can cancel anytime. And it's designed for pe
 
 ## Who This Is For
 
-Maybe you're a college dropout who realized the curriculum was teaching you Python while you wanted to understand how computers actually work. Maybe you're a high school student who's already building operating systems but your parents think you should focus on getting into a "good" internship at a FAANG company. Maybe you've been grinding through Discord servers and crypto-Telegram groups, drowning in noise, trying to find someone who actually knows what they're talking about.
+Maybe you're a college dropout who realized the curriculum was teaching you Python while you wanted to understand how computers actually work that's unique to your learning style. Maybe you like changing your mind a lot about what you want to learn each new week and you like having flexibility and no beholden sleep pattern so you can be fluid and creative, not being on such a strict schedule. Maybe you're a high school student who's already exploring operating systems but your parents think you should focus on getting into a "good" internship at a public established company. Maybe you've been grinding through Discord servers and crypto-Telegram groups, drowning in noise, trying to find someone who actually knows what they're talking about.
 
 Or maybe you're stuck between "just learn React" advice and your gut feeling that there's something fundamentally broken about how we build software. Or you're dealing with family who don't understand why you're not pursuing the conventional path, and you need help bridging that conversation.
 
@@ -54,11 +54,11 @@ I haven't been writing Zig code for years, but the syntax is so easy, and the co
 
 I'm building an OS from scratch, so I'm learning systems programming in real-time. RISC-V architecture, operating systems design, kernel development, virtual machines, JIT compilation. I can share what I've learned and help you think through problems I've already wrestled with.
 
-I've been developing what I call "GrainStyle"—a coding discipline focused on explicit limits, bounded allocations, and code that teaches. It's not for everyone, but if you're tired of hidden allocations and implicit behavior, we can talk.
+I've been developing what I call "GrainStyle", inspired by other projects—a coding discipline focused on explicit limits, bounded allocations, and code that teaches. It's not for everyone, but if you're tired of not being able to understand what the code on your computer is really doing, this can really help.
 
-I'm interested in the grandiose, ambitious ideas that might be completely wrong but are at least asking the right questions. Building browsers from scratch. Reinventing editors. Nostr-native applications. TigerBeetle-style state machines. If you're also questioning the fundamentals, we should talk.
+I'm interested in the grandiose, ambitious ideas that might be completely wrong but are at least asking better questions, questions that (to me, at least) are interesting. Building browsers from scratch. Reinventing editors. Peer-to-peer-native applications. High-throughput-financial-database state machines. If you're also questioning the fundamentals, we should talk.
 
-I'm learning about hardware and sustainability. RISC-V for AI workloads, spatial architectures, repairable hardware, green computing. I'm not an expert, but I'm learning, and I can help you think through the trade-offs.
+I'm learning about hardware and sustainability. RISC-V for AI workloads, spatial architectures, repairable hardware, green computing. I'm not an aged veteran, but I'm learning, and I can help you think through what it is that you're really trying to question. Questioning is the noble compass that guides all science, and curiosity is what helps make life more tolerable and even fun.
 
 I can help with the non-technical stuff too. How to explain to your parents why you're not going the conventional route. How to navigate family conversations about dropping out or taking a different path. How to build a portfolio when you're not following the standard playbook. I've had these conversations. I can help you have them too.
 
@@ -84,13 +84,13 @@ This isn't therapy. It's practical help navigating conversations that can be rea
 
 Some of the ideas I'm interested in are grandiose. Building operating systems from scratch. Reinventing browsers. Questioning fundamental assumptions about how we compute. These might be completely wrong. They might be right but take 20 years to matter. They might be right and matter next year.
 
-I'm aware of the speculative nature of these claims. I'm also aware that the mainstream advice—learn Python, get a job at a big tech company, contribute to open source in the "right" way—isn't always right for everyone.
+I'm aware of the speculative nature of these claims. I'm also aware that the mainstream advice—learn Python, get a job at a big tech company, contribute to open source in the "normal" way—isn't always right for everyone.
 
 If you're someone who's questioning the fundamentals, who's willing to take risks, who's okay with being wrong sometimes in service of being right about something important, we should talk.
 
-## For Companies
+## For Companies and High Schools
 
-I offer this to individuals, but companies can also hire me for consulting. If you're an individual in a larger organization and this sounds useful, join us. If it makes sense for your company to engage me more broadly later, we'll figure that out when we get there.
+I offer this to individuals, but companies and high schools can also hire me for consulting and visiting-lecture classes. If you're an individual in a larger organization  or a student/parent/guardian/teacher and this sounds useful,feel free to work on drafting a proposal for what you're looking for and you may contact me and I would love to help! If it makes sense for your company or school to engage me more broadly later, we'll figure that out when we get there.
 
 **USD 89 per month.**
 

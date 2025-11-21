@@ -55,6 +55,14 @@ pub const Syscall = enum(u32) {
     
     // System Information
     sysinfo = 50,
+    
+    // Input Events
+    read_input_event = 60,
+    
+    // Framebuffer Operations
+    fb_clear = 70,
+    fb_draw_pixel = 71,
+    fb_draw_text = 72,
 };
 
 /// Memory mapping flags.
@@ -907,6 +915,10 @@ pub const BasinKernel = struct {
             .clock_gettime => self.syscall_clock_gettime(arg1, arg2, arg3, arg4),
             .sleep_until => self.syscall_sleep_until(arg1, arg2, arg3, arg4),
             .sysinfo => self.syscall_sysinfo(arg1, arg2, arg3, arg4),
+            .read_input_event => self.syscall_read_input_event(arg1, arg2, arg3, arg4),
+            .fb_clear => self.syscall_fb_clear(arg1, arg2, arg3, arg4),
+            .fb_draw_pixel => self.syscall_fb_draw_pixel(arg1, arg2, arg3, arg4),
+            .fb_draw_text => self.syscall_fb_draw_text(arg1, arg2, arg3, arg4),
         };
     }
     
@@ -2410,6 +2422,111 @@ pub const BasinKernel = struct {
         Debug.kassert(result.success == 0, "Result not 0", .{}); // Sysinfo returns 0 on success
         
         return result;
+    }
+    
+    fn syscall_read_input_event(
+        self: *BasinKernel,
+        event_buf: u64,
+        _arg2: u64,
+        _arg3: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg2;
+        _ = _arg3;
+        _ = _arg4;
+        
+        // Note: This syscall is handled by integration layer (needs VM access).
+        // This stub should never be called, but we include it for completeness.
+        // Contract: event_buf must be valid pointer (checked by integration layer).
+        if (event_buf == 0) {
+            return BasinError.invalid_argument;
+        }
+        
+        // This should not be reached (integration layer handles this syscall).
+        return BasinError.invalid_syscall;
+    }
+    
+    fn syscall_fb_clear(
+        self: *BasinKernel,
+        color: u64,
+        _arg2: u64,
+        _arg3: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg2;
+        _ = _arg3;
+        _ = _arg4;
+        
+        // Note: This syscall is handled by integration layer (needs VM access).
+        // This stub should never be called, but we include it for completeness.
+        // Contract: color must be valid 32-bit RGBA value.
+        if (color > 0xFFFFFFFF) {
+            return BasinError.invalid_argument;
+        }
+        
+        // This should not be reached (integration layer handles this syscall).
+        return BasinError.invalid_syscall;
+    }
+    
+    fn syscall_fb_draw_pixel(
+        self: *BasinKernel,
+        x: u64,
+        y: u64,
+        color: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg4;
+        
+        // Note: This syscall is handled by integration layer (needs VM access).
+        // This stub should never be called, but we include it for completeness.
+        // Contract: coordinates and color must be valid.
+        if (x > 0xFFFFFFFF or y > 0xFFFFFFFF or color > 0xFFFFFFFF) {
+            return BasinError.invalid_argument;
+        }
+        
+        // This should not be reached (integration layer handles this syscall).
+        return BasinError.invalid_syscall;
+    }
+    
+    fn syscall_fb_draw_text(
+        self: *BasinKernel,
+        text_ptr: u64,
+        x: u64,
+        y: u64,
+        fg_color: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        // Note: This syscall is handled by integration layer (needs VM access).
+        // This stub should never be called, but we include it for completeness.
+        // Contract: text_ptr must be valid pointer, coordinates and color must be valid.
+        if (text_ptr == 0) {
+            return BasinError.invalid_argument;
+        }
+        if (x > 0xFFFFFFFF or y > 0xFFFFFFFF or fg_color > 0xFFFFFFFF) {
+            return BasinError.invalid_argument;
+        }
+        
+        // This should not be reached (integration layer handles this syscall).
+        return BasinError.invalid_syscall;
     }
 };
 

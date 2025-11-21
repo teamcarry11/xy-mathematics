@@ -647,6 +647,24 @@ pub fn build(b: *std.Build) void {
     const hello_world_step = b.step("hello-world", "Build Hello World userspace program for RISC-V64");
     hello_world_step.dependOn(&hello_world_install.step);
 
+    // Framebuffer Demo userspace executable (RISC-V64).
+    const fb_demo_exe = b.addExecutable(.{
+        .name = "fb_demo",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/userspace/fb_demo.zig"),
+            .target = userspace_resolved,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "userspace_stdlib", .module = userspace_stdlib_module },
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+            },
+        }),
+    });
+    fb_demo_exe.setLinkerScript(b.path("linker_scripts/userspace.ld"));
+    const fb_demo_install = b.addInstallArtifact(fb_demo_exe, .{});
+    const fb_demo_step = b.step("fb-demo", "Build Framebuffer Demo userspace program for RISC-V64");
+    fb_demo_step.dependOn(&fb_demo_install.step);
+
     const hello_world_tests = b.addTest(.{
         .root_module = b.createModule(.{
             .root_source_file = b.path("tests/012_hello_world_test.zig"),
@@ -663,6 +681,23 @@ pub fn build(b: *std.Build) void {
     hello_world_tests_step.dependOn(&hello_world_tests_run.step);
     // Make hello-world-test depend on hello-world being built first.
     hello_world_tests_step.dependOn(&hello_world_install.step);
+
+    // Framebuffer Demo tests.
+    const fb_demo_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/013_fb_demo_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "kernel_vm", .module = kernel_vm_module },
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+            },
+        }),
+    });
+    const fb_demo_tests_run = b.addRunArtifact(fb_demo_tests);
+    const fb_demo_tests_step = b.step("fb-demo-test", "Test Framebuffer Demo program in VM");
+    fb_demo_tests_step.dependOn(&fb_demo_tests_run.step);
+    fb_demo_tests_step.dependOn(&fb_demo_install.step);
 
     // RISC-V Logo Display Program
     const riscv_logo_exe = b.addExecutable(.{

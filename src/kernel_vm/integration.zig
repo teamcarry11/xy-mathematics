@@ -16,6 +16,12 @@ const loadKernel = @import("loader.zig").loadKernel;
 /// Note: Safe for single-threaded execution only.
 var global_kernel_ptr: ?*BasinKernel = null;
 
+/// Module-level VM pointer for input event access.
+/// Why: Input event syscall needs VM access, but kernel doesn't have VM reference.
+/// Contract: Must be set before syscall_handler_wrapper is called (set by Integration.finish_init).
+/// Note: Safe for single-threaded execution only.
+var global_vm_ptr: ?*VM = null;
+
 /// VM-Kernel integration state.
 /// Why: Encapsulate VM and kernel instances, manage lifecycle.
 /// Grain Style: Static allocation, explicit state tracking.
@@ -112,6 +118,7 @@ pub const Integration = struct {
         // Note: Allow resetting if already set (for testing scenarios).
         // In production, this should be null, but in tests we may need to reset.
         global_kernel_ptr = self.kernel;
+        global_vm_ptr = self.vm;
 
         // Register kernel as VM syscall handler.
         // Contract: syscall_handler_wrapper will access kernel via thread-local storage.
@@ -141,6 +148,11 @@ pub const Integration = struct {
         if (global_kernel_ptr) |ptr| {
             if (ptr == self.kernel) {
                 global_kernel_ptr = null;
+            }
+        }
+        if (global_vm_ptr) |ptr| {
+            if (ptr == self.vm) {
+                global_vm_ptr = null;
             }
         }
 
@@ -243,17 +255,203 @@ fn syscall_handler_wrapper(
     // Contract: syscall_num must be >= 10 (kernel syscalls, not SBI).
     std.debug.assert(syscall_num >= 10);
 
-    // Get Integration instance from VM's user_data.
-    // Contract: VM must have set user_data to Integration pointer.
-    // Note: We need to access VM's user_data, but VM interface doesn't expose it directly.
-    // We'll use a workaround: VM stores user_data internally, we access it via closure.
-    // Actually, VM's execute_ecall calls handler directly, so we can't access user_data here.
-    // Solution: Use thread-local storage or global variable (not ideal, but works for single-threaded).
+    // Handle VM-specific syscalls directly (needs VM access).
+    // Why: These syscalls need VM memory access, kernel doesn't have VM reference.
     
-    // Better solution: Refactor to use closure pattern or pass kernel directly.
-    // For now, we'll use a static variable set by Integration.init().
-    // This is safe for single-threaded execution.
+    // Syscall numbers
+    const READ_INPUT_EVENT_SYSCALL: u32 = 60;
+    const FB_CLEAR_SYSCALL: u32 = 70;
+    const FB_DRAW_PIXEL_SYSCALL: u32 = 71;
+    const FB_DRAW_TEXT_SYSCALL: u32 = 72;
     
+    // Handle input event syscall (needs VM access to input queue).
+    if (syscall_num == READ_INPUT_EVENT_SYSCALL) {
+        const vm = global_vm_ptr orelse {
+            @panic("syscall_handler_wrapper called before Integration.finish_init");
+        };
+        const vm_addr = @intFromPtr(vm);
+        std.debug.assert(vm_addr != 0);
+        std.debug.assert(vm_addr % @alignOf(VM) == 0);
+        
+        if (vm.input_event_queue.count == 0) {
+            return @as(u64, @bitCast(@as(i64, -6))); // would_block
+        }
+        
+        const event = vm.input_event_queue.dequeue() orelse {
+            return @as(u64, @bitCast(@as(i64, -6))); // would_block
+        };
+        
+        if (arg1 == 0) {
+            return @as(u64, @bitCast(@as(i64, -2))); // invalid_argument
+        }
+        
+        const VM_MEMORY_SIZE: u64 = 4 * 1024 * 1024;
+        const EVENT_SIZE: u64 = 32;
+        if (arg1 + EVENT_SIZE > VM_MEMORY_SIZE) {
+            return @as(u64, @bitCast(@as(i64, -9))); // invalid_address
+        }
+        
+        const event_ptr = @as([*]u8, @ptrFromInt(@as(usize, @intCast(arg1))));
+        event_ptr[0] = event.event_type;
+        event_ptr[1] = 0;
+        event_ptr[2] = 0;
+        event_ptr[3] = 0;
+        
+        if (event.event_type == 0) {
+            event_ptr[4] = event.mouse.kind;
+            event_ptr[5] = event.mouse.button;
+            @memcpy(event_ptr[6..10], &std.mem.toBytes(@as(u32, event.mouse.x)));
+            @memcpy(event_ptr[10..14], &std.mem.toBytes(@as(u32, event.mouse.y)));
+            event_ptr[14] = event.mouse.modifiers;
+            @memset(event_ptr[15..32], 0);
+        } else {
+            event_ptr[4] = event.keyboard.kind;
+            event_ptr[5] = 0;
+            event_ptr[6] = 0;
+            event_ptr[7] = 0;
+            @memcpy(event_ptr[8..12], &std.mem.toBytes(@as(u32, event.keyboard.key_code)));
+            @memcpy(event_ptr[12..16], &std.mem.toBytes(@as(u32, event.keyboard.character)));
+            event_ptr[16] = event.keyboard.modifiers;
+            @memset(event_ptr[17..32], 0);
+        }
+        
+        return EVENT_SIZE;
+    }
+    
+    // Handle framebuffer syscalls (needs VM access to framebuffer memory).
+    // These are handled here because kernel doesn't have direct VM memory access.
+    if (syscall_num == FB_CLEAR_SYSCALL or syscall_num == FB_DRAW_PIXEL_SYSCALL or syscall_num == FB_DRAW_TEXT_SYSCALL) {
+        const vm = global_vm_ptr orelse {
+            @panic("syscall_handler_wrapper called before Integration.finish_init");
+        };
+        const vm_addr = @intFromPtr(vm);
+        std.debug.assert(vm_addr != 0);
+        std.debug.assert(vm_addr % @alignOf(VM) == 0);
+        
+        const FRAMEBUFFER_BASE: u64 = 0x90000000;
+        const FRAMEBUFFER_WIDTH: u32 = 1024;
+        const FRAMEBUFFER_HEIGHT: u32 = 768;
+        const FRAMEBUFFER_BPP: u32 = 4;
+        const FRAMEBUFFER_SIZE: u32 = FRAMEBUFFER_WIDTH * FRAMEBUFFER_HEIGHT * FRAMEBUFFER_BPP;
+        
+        if (syscall_num == FB_CLEAR_SYSCALL) {
+            const color: u32 = @truncate(arg1);
+            const fb_phys_offset = vm.translate_address(FRAMEBUFFER_BASE) orelse {
+                return @as(u64, @bitCast(@as(i64, -9))); // invalid_address
+            };
+            const fb_memory = vm.memory[@as(usize, @intCast(fb_phys_offset))..@as(usize, @intCast(fb_phys_offset + FRAMEBUFFER_SIZE))];
+            const r: u8 = @truncate((color >> 24) & 0xFF);
+            const g: u8 = @truncate((color >> 16) & 0xFF);
+            const b: u8 = @truncate((color >> 8) & 0xFF);
+            const a: u8 = @truncate(color & 0xFF);
+            var i: u32 = 0;
+            while (i < FRAMEBUFFER_SIZE) : (i += 4) {
+                fb_memory[i + 0] = r;
+                fb_memory[i + 1] = g;
+                fb_memory[i + 2] = b;
+                fb_memory[i + 3] = a;
+            }
+            return 0;
+        }
+        
+        if (syscall_num == FB_DRAW_PIXEL_SYSCALL) {
+            const x: u32 = @truncate(arg1);
+            const y: u32 = @truncate(arg2);
+            const color: u32 = @truncate(arg3);
+            if (x >= FRAMEBUFFER_WIDTH or y >= FRAMEBUFFER_HEIGHT) {
+                return @as(u64, @bitCast(@as(i64, -11))); // out_of_bounds
+            }
+            const fb_phys_offset = vm.translate_address(FRAMEBUFFER_BASE) orelse {
+                return @as(u64, @bitCast(@as(i64, -9))); // invalid_address
+            };
+            const offset: u32 = (y * FRAMEBUFFER_WIDTH + x) * FRAMEBUFFER_BPP;
+            const pixel_addr = @as(usize, @intCast(fb_phys_offset + offset));
+            const r: u8 = @truncate((color >> 24) & 0xFF);
+            const g: u8 = @truncate((color >> 16) & 0xFF);
+            const b: u8 = @truncate((color >> 8) & 0xFF);
+            const a: u8 = @truncate(color & 0xFF);
+            vm.memory[pixel_addr + 0] = r;
+            vm.memory[pixel_addr + 1] = g;
+            vm.memory[pixel_addr + 2] = b;
+            vm.memory[pixel_addr + 3] = a;
+            return 0;
+        }
+        
+        if (syscall_num == FB_DRAW_TEXT_SYSCALL) {
+            const text_ptr: u64 = arg1;
+            const x: u32 = @truncate(arg2);
+            const y: u32 = @truncate(arg3);
+            const fg_color: u32 = @truncate(arg4);
+            const bg_color: u32 = 0x1E1E2EFF;
+            if (text_ptr == 0) {
+                return @as(u64, @bitCast(@as(i64, -2))); // invalid_argument
+            }
+            if (x >= FRAMEBUFFER_WIDTH or y >= FRAMEBUFFER_HEIGHT) {
+                return @as(u64, @bitCast(@as(i64, -11))); // out_of_bounds
+            }
+            const text_phys = vm.translate_address(text_ptr) orelse {
+                return @as(u64, @bitCast(@as(i64, -9))); // invalid_address
+            };
+            const MAX_TEXT_LEN: u32 = 256;
+            var text_buf: [MAX_TEXT_LEN]u8 = undefined;
+            var text_len: u32 = 0;
+            while (text_len < MAX_TEXT_LEN) : (text_len += 1) {
+                const char_addr = @as(usize, @intCast(text_phys + text_len));
+                if (char_addr >= vm.memory.len) {
+                    return @as(u64, @bitCast(@as(i64, -9))); // invalid_address
+                }
+                const ch = vm.memory[char_addr];
+                text_buf[text_len] = ch;
+                if (ch == 0) break;
+            }
+            if (text_len == 0) {
+                return @as(u64, @bitCast(@as(i64, -2))); // invalid_argument
+            }
+            const fb_phys_offset = vm.translate_address(FRAMEBUFFER_BASE) orelse {
+                return @as(u64, @bitCast(@as(i64, -9))); // invalid_address
+            };
+            const text_slice = text_buf[0..text_len];
+            var char_x: u32 = x;
+            var char_y: u32 = y;
+            const char_width: u32 = 8;
+            const char_height: u32 = 8;
+            for (text_slice) |ch| {
+                if (ch == 0) break;
+                if (ch == '\n') {
+                    char_x = x;
+                    char_y += char_height;
+                    continue;
+                }
+                if (char_x + char_width <= FRAMEBUFFER_WIDTH and char_y + char_height <= FRAMEBUFFER_HEIGHT) {
+                    var py: u32 = 0;
+                    while (py < char_height) : (py += 1) {
+                        var px: u32 = 0;
+                        while (px < char_width) : (px += 1) {
+                            const pixel_offset: u32 = ((char_y + py) * FRAMEBUFFER_WIDTH + (char_x + px)) * FRAMEBUFFER_BPP;
+                            const pixel_addr = @as(usize, @intCast(fb_phys_offset + pixel_offset));
+                            const use_fg = (px > 0 and px < char_width - 1 and py > 0 and py < char_height - 1);
+                            const pixel_color = if (use_fg) fg_color else bg_color;
+                            const r: u8 = @truncate((pixel_color >> 24) & 0xFF);
+                            const g: u8 = @truncate((pixel_color >> 16) & 0xFF);
+                            const b: u8 = @truncate((pixel_color >> 8) & 0xFF);
+                            const a: u8 = @truncate(pixel_color & 0xFF);
+                            vm.memory[pixel_addr + 0] = r;
+                            vm.memory[pixel_addr + 1] = g;
+                            vm.memory[pixel_addr + 2] = b;
+                            vm.memory[pixel_addr + 3] = a;
+                        }
+                    }
+                }
+                char_x += char_width;
+                if (char_x + char_width > FRAMEBUFFER_WIDTH) {
+                    char_x = x;
+                    char_y += char_height;
+                }
+            }
+            return text_len;
+        }
+    }
+
     // Get kernel pointer from module-level storage (set by Integration.finish_init).
     // Contract: global_kernel_ptr must be set before syscall_handler_wrapper is called.
     const kernel = global_kernel_ptr orelse {

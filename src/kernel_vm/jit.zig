@@ -160,7 +160,7 @@ pub const JitContext = struct {
             pthread_jit_write_protect_np(1);
         }
 
-        var cache = std.AutoHashMap(u64, usize).init(allocator);
+        var cache = std.AutoHashMap(u64, u32).init(allocator);
         try cache.ensureTotalCapacity(10_000);
 
         var fixups = std.AutoHashMap(u64, *Fixup).init(allocator);
@@ -599,7 +599,7 @@ pub const JitContext = struct {
     fn patch_b(self: *JitContext, pos: u32, offset: i28) void {
         std.debug.assert(pos + 4 <= self.code_buffer.len);
         const existing = std.mem.readInt(u32, self.code_buffer[pos..][0..4], .little);
-        const imm26: u32 = @as(u32, @bitCast(offset)) & 0x03FFFFFF;
+        const imm26: u32 = @as(u32, @intCast(offset)) & 0x03FFFFFF;
         const inst = (existing & 0xFC000000) | imm26;
         std.mem.writeInt(u32, self.code_buffer[pos..][0..4], inst, .little);
     }
@@ -609,7 +609,7 @@ pub const JitContext = struct {
     fn patch_b_cond(self: *JitContext, pos: u32, offset: i19) void {
         std.debug.assert(pos + 4 <= self.code_buffer.len);
         const existing = std.mem.readInt(u32, self.code_buffer[pos..][0..4], .little);
-        const imm19: u32 = @as(u32, @bitCast(offset)) & 0x7FFFF;
+        const imm19: u32 = @as(u32, @intCast(offset)) & 0x7FFFF;
         const cond = existing & 0xF;
         const inst = 0x54000000 | (imm19 << 5) | cond;
         std.mem.writeInt(u32, self.code_buffer[pos..][0..4], inst, .little);

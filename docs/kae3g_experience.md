@@ -4,19 +4,21 @@
 
 I'm 29, living in Northern Nevada. I've been self-studying for 7 years now. I left formal employment behind to live like a monk off modest savings and some lucky bets, so I could stay on the cutting edge of research that's evolved into this wild software technology extravaganza we're all living through right now.
 
-Here's my story: I realized early on that the conventional path wasn't going to get me where I wanted to go. I wanted to understand how computers actually work, not just how to use the latest framework. So I took a risk. I saved up, made some bets that paid off, and decided to spend my time learning the things that I was interested in.
+Here's my story: I realized early on that the conventional path wasn't going to get me where I wanted to go. I wanted to understand how computers actually work, not just how to use the latest framework. So I took a risk. I saved up, made some bets that paid off, and decided to spend my time learning things that I was interested in.
 
-It's been 7 years of building, breaking things, learning, failing, and occasionally getting something right. I'm building an operating system from scratch in Zig, a [relatively new programming language](https://ziglang.org) for sharp systems thinkers. I'm working on reinventing browsers and editors. I'm exploring ideas that might be completely wrong, but at least they're asking the right questions.
+It's been 7 years of building, breaking things, learning, failing, and occasionally getting something right. I'm building an operating system from scratch in Zig, a [relatively new programming language](https://ziglang.org) for sharp systems thinkers. I'm working on reinventing browsers and editors. I'm exploring ideas that might be completely wrong, but at least (I think) they're asking the right questions.
 
-I'm not a senior engineer at Google. I'm not a professor. I'm someone who took a different path, and I've learned some things that might help you if you're also questioning the conventional wisdom.
+I'm not a senior engineer at Google. I'm not a professor. I'm someone who took a different path, and I've learned some things that might help you in your situation if you're also questioning the conventional wisdom.
 
 **USD 89 per month.**
 
 ## What Is This?
 
-You're probably here because you've hit a wall. You've tried Discord servers, crypto-Telegram groups, Slack communities. You've read the top search results. You've maybe even tried reaching out to people, but it's hard to get personal support without it being either too expensive or too formal.
+You're probably here because you've hit a wall. You've tried Discord servers, crypto-Telegram groups, Slack communities, Meetups, maybe conferences. You've read the top search results. You've maybe even tried reaching out to people, but it's hard to get personal support without it being either too expensive or too formal.
 
-Here's the problem: when you're building with Zig instead of Python, thinking about RISC-V instead of x86, exploring Nostr instead of Ethereum, or wondering why everyone's still talking about JavaScript when we could be building browsers from scratch—you're not finding great answers in the conventional places. The mainstream advice doesn't fit what you're trying to do.
+Here's the problem: when you follow conventional top-search-result advice and ask LLMs like ChatGPT and Copilot to write all this code, you don't actually really know what you're doing. You end up generating lots of text lines, but you don't realize that the approach to the goals to begin with is actually a really damaging start. It's hard to debug, poor in performance, risky with user safety, and hard to monetize.
+
+What you don't know by just starting out is that you should be taking advice from the most experienced seasoned devs who make content and give advice around exploring the Zig programming language, looking into the RISC-V open-source instruction set architecture and why it matters, examining bug report post-mortems from major cloud computing outages that were everywhere in the news, understanding why Rust is being backed and supported by the U.S. government for its secure citizen software, and so on. These are the conversations that actually matter when you're trying to build systems that work.
 
 The kae3g Experience is a monthly mentoring subscription. It's the space between doing it all yourself and intensive one-on-one coaching. You get access to me, to a community of people thinking similarly, to a back-catalog of real conversations about systems programming, and to Office Hours where you can ask questions or just listen.
 

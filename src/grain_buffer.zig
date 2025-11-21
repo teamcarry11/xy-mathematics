@@ -238,7 +238,12 @@ test "getReadonlySpans returns all segments" {
 }
 
 test "intersectsReadonlyRange with binary search" {
-    var buffer = try GrainBuffer.fromSlice(std.testing.allocator, "a".repeat(1000));
+    // Create large buffer (1000 chars)
+    var large_text = try std.testing.allocator.alloc(u8, 1000);
+    defer std.testing.allocator.free(large_text);
+    @memset(large_text, 'a');
+    
+    var buffer = try GrainBuffer.fromSlice(std.testing.allocator, large_text);
     defer buffer.deinit();
     
     // Create many readonly segments (triggers binary search path)

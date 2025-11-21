@@ -311,12 +311,13 @@
 
 ### 4.3 Dream Browser Core (PLANNED)
 
-#### 4.3.1 HTML/CSS Parser
-- [ ] HTML parser (subset of HTML5)
-- [ ] CSS parser (subset of CSS3)
-- [ ] DOM tree construction
-- [ ] Style computation
-- [ ] DAG-based DOM representation
+#### 4.3.1 HTML/CSS Parser ✅ **COMPLETE**
+- [x] HTML parser (subset of HTML5, `src/dream_browser_parser.zig`)
+- [x] CSS parser (subset of CSS3, basic rule parsing)
+- [x] DOM tree construction (bounded depth, explicit nodes)
+- [x] Style computation (cascade, specificity - basic implementation)
+- [x] DAG integration (HTML node → DOM node conversion)
+- [ ] Full HTML5/CSS3 parser (future enhancement)
 
 #### 4.3.2 Rendering Engine
 - [ ] Layout engine (block/inline flow)

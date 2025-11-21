@@ -364,16 +364,35 @@
 - ✅ Fame determination (witness events are famous)
 - ✅ Finality manager (events in rounds N-2 or earlier are finalized)
 
-### Phase 3: Dream Browser Core (Planned)
+### Phase 3: Dream Browser Core 🔄 **IN PROGRESS**
 
 **Objective**: Zig-native browser with Nostr protocol.
 
-- HTML/CSS parser (subset)
-- Rendering engine (Grain Aurora)
-- Nostr content loading (real-time)
-- WebSocket transport (low-latency)
-- TigerBeetle-style state machine
-- DAG-based state management
+#### 3.1: HTML/CSS Parser ✅ **COMPLETE**
+- ✅ HTML parser (subset of HTML5, `src/dream_browser_parser.zig`)
+- ✅ CSS parser (subset of CSS3, basic rule parsing)
+- ✅ DOM tree construction (bounded depth, explicit nodes)
+- ✅ Style computation (cascade, specificity - basic implementation)
+- ✅ DAG integration (HTML node → DOM node conversion)
+- 📋 Full HTML5/CSS3 parser (future enhancement)
+
+#### 3.2: Rendering Engine 📋 **PLANNED**
+- 📋 Layout engine (block/inline flow)
+- 📋 Render to Grain Aurora components
+- 📋 Readonly spans for metadata (event ID, timestamp)
+- 📋 Editable spans for content
+
+#### 3.3: Nostr Content Loading 📋 **PLANNED**
+- 📋 Parse Nostr URLs (`nostr:note1...`, `nostr:npub1...`)
+- 📋 Subscribe to Nostr events
+- 📋 Receive events (streaming, real-time)
+- 📋 Render events to browser
+
+#### 3.4: WebSocket Transport 📋 **PLANNED**
+- 📋 WebSocket client (low-latency)
+- 📋 Bidirectional communication
+- 📋 Connection management
+- 📋 Error handling and reconnection
 
 ### Phase 3: Integration (Planned)
 

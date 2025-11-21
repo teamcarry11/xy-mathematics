@@ -270,7 +270,15 @@
 - ✅ Event streaming structure (real-time ready)
 - 📋 Relay connection management (integration pending)
 
-**Phase 0 Summary**: All foundation components complete! Ready for Phase 1 (Dream Editor Core).
+#### 0.4: DAG Core Foundation ✅ **COMPLETE**
+- ✅ Core DAG data structure (`src/dag_core.zig`)
+- ✅ Nodes, edges, events (HashDAG-style)
+- ✅ TigerBeetle-style state machine execution
+- ✅ Bounded allocations (max 10,000 nodes, 100,000 edges)
+- ✅ Comprehensive assertions (GrainStyle compliance)
+- ✅ Tests for initialization, node/edge/event operations
+
+**Phase 0 Summary**: All foundation components complete! Ready for Phase 1 (Dream Editor Core) and Phase 2 (DAG integration).
 
 ### Phase 1: Dream Editor Core 🔄 **IN PROGRESS**
 
@@ -325,7 +333,29 @@
 - 📋 Moonglow keybindings
 - 📋 Workspace management
 
-### Phase 2: Dream Browser Core (Planned)
+### Phase 2: DAG Integration 🔄 **IN PROGRESS**
+
+**Objective**: Integrate DAG core into editor and browser.
+
+#### 2.1: Editor-DAG Integration 📋 **PLANNED**
+- 📋 Map Tree-sitter AST nodes to DAG nodes
+- 📋 Map code edits to DAG events
+- 📋 Streaming updates (Hyperfiddle-style)
+- 📋 Project-wide semantic graph (Matklad vision)
+
+#### 2.2: Browser-DAG Integration 📋 **PLANNED**
+- 📋 Map DOM nodes to DAG nodes
+- 📋 Map web requests to DAG events
+- 📋 Streaming updates (real-time)
+- 📋 Unified state (editor + browser)
+
+#### 2.3: HashDAG Consensus 📋 **PLANNED**
+- 📋 Event ordering (Djinn's HashDAG proposal)
+- 📋 Virtual voting (consensus without explicit votes)
+- 📋 Fast finality (seconds, not minutes)
+- 📋 High throughput (parallel ingestion)
+
+### Phase 3: Dream Browser Core (Planned)
 
 **Objective**: Zig-native browser with Nostr protocol.
 
@@ -334,6 +364,7 @@
 - Nostr content loading (real-time)
 - WebSocket transport (low-latency)
 - TigerBeetle-style state machine
+- DAG-based state management
 
 ### Phase 3: Integration (Planned)
 

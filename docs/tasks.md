@@ -218,6 +218,15 @@
 - [x] Event streaming structure (real-time ready)
 - [ ] Relay connection management (integration pending)
 
+#### 4.0.4 DAG Core Foundation ✅ **COMPLETE**
+- [x] Core DAG data structure (`src/dag_core.zig`)
+- [x] Nodes, edges, events (HashDAG-style)
+- [x] TigerBeetle-style state machine execution
+- [x] Bounded allocations (max 10,000 nodes, 100,000 edges)
+- [x] Comprehensive assertions (GrainStyle compliance)
+- [x] Tests for initialization, node/edge/event operations
+- [x] Acyclic verification (basic checks)
+
 ### 4.1 Dream Editor Core (PLANNED)
 
 #### 4.1.1 Readonly Spans Integration ✅ **COMPLETE**
@@ -270,27 +279,51 @@
 - [ ] Moonglow keybindings
 - [ ] Workspace management
 
-### 4.2 Dream Browser Core (PLANNED)
+### 4.2 DAG Integration (IN PROGRESS)
 
-#### 4.2.1 HTML/CSS Parser
+#### 4.2.1 Editor-DAG Integration 📋 **PLANNED**
+- [ ] Map Tree-sitter AST nodes to DAG nodes
+- [ ] Map code edits to DAG events
+- [ ] Streaming updates (Hyperfiddle-style)
+- [ ] Project-wide semantic graph (Matklad vision)
+- [ ] Incremental compilation integration (majjit)
+
+#### 4.2.2 Browser-DAG Integration 📋 **PLANNED**
+- [ ] Map DOM nodes to DAG nodes
+- [ ] Map web requests to DAG events
+- [ ] Streaming updates (real-time)
+- [ ] Unified state (editor + browser)
+
+#### 4.2.3 HashDAG Consensus 📋 **PLANNED**
+- [ ] Event ordering (Djinn's HashDAG proposal)
+- [ ] Virtual voting (consensus without explicit votes)
+- [ ] Fast finality (seconds, not minutes)
+- [ ] High throughput (parallel ingestion)
+
+### 4.3 Dream Browser Core (PLANNED)
+
+#### 4.3.1 HTML/CSS Parser
 - [ ] HTML parser (subset of HTML5)
 - [ ] CSS parser (subset of CSS3)
 - [ ] DOM tree construction
 - [ ] Style computation
+- [ ] DAG-based DOM representation
 
-#### 4.2.2 Rendering Engine
+#### 4.3.2 Rendering Engine
 - [ ] Layout engine (block/inline flow)
 - [ ] Render to Grain Aurora components
 - [ ] Readonly spans for metadata (event ID, timestamp)
 - [ ] Editable spans for content
+- [ ] DAG-based rendering pipeline
 
-#### 4.2.3 Nostr Content Loading
+#### 4.3.3 Nostr Content Loading
 - [ ] Parse Nostr URLs (`nostr:note1...`, `nostr:npub1...`)
 - [ ] Subscribe to Nostr events
 - [ ] Receive events (streaming, real-time)
 - [ ] Render events to browser
+- [ ] DAG event integration
 
-#### 4.2.4 WebSocket Transport
+#### 4.3.4 WebSocket Transport
 - [ ] WebSocket client (low-latency)
 - [ ] Bidirectional communication
 - [ ] Connection management

@@ -248,6 +248,31 @@ The WSE isn't just compute; it's a vast, high-bandwidth, on-chip SRAM distribute
 
 For a vast class of problems—especially AI model training and inference, large-scale graph analysis, and scientific simulation—a spatial computer with enough on-chip and near-chip memory could process the entire working set without ever needing to page to an SSD. The SSD becomes an archival/initial-load device, not an active participant in the compute loop.
 
+**4. Turbopuffer Architecture on WSE: The Path to Baremetal Open Hardware**
+
+Turbopuffer's serverless search architecture provides a blueprint for WSE baremetal deployment:
+
+**Turbopuffer's Key Innovation**: Separates compute (NVMe SSD + memory cache) from state storage (object storage). This aligns perfectly with WSE's spatial computing model:
+
+* **WSE Compute Layer**: 900,000 cores with 44GB on-wafer SRAM act as the "compute nodes" (replacing NVMe SSD + memory cache)
+* **Object Storage Layer**: External object storage (S3-like) for cold data, archival state
+* **Hot Data in SRAM**: Actively searched data (code state, web content, UI state) cached in 44GB on-wafer SRAM
+* **Vector + Full-Text Search**: SPFresh ANN index + BM25 inverted index run on-wafer (spatial computing, parallel execution)
+
+**WSE Baremetal Vision**:
+* **State Storage**: Object storage (S3-compatible) for cold data, checkpoints
+* **Hot Cache**: 44GB on-wafer SRAM for active queries, code state, web content
+* **Compute**: 900,000 cores for parallel search, vector operations, full-text indexing
+* **Consistency**: Write-Ahead Log (WAL) for ACD guarantees, deterministic state machine
+* **Latency**: Sub-millisecond queries (spatial computing, zero-copy operations)
+
+**Benefits for Open Hardware**:
+* **No Proprietary Storage**: Object storage is standard (S3 API), open protocols
+* **Repairable**: WSE compute layer is modular, object storage is replaceable
+* **Scalable**: Horizontal scaling via object storage, vertical scaling via WSE cores
+* **Cost-Efficient**: Cold data in object storage (cheap), hot data in SRAM (fast)
+* **Deterministic**: WAL + state machine = reproducible, verifiable operations
+
 ### Environmental and Geopolitical Impact
 
 Removing the SSD from the active compute loop has profound consequences.
@@ -325,6 +350,33 @@ This vision plays directly into a strategy of national technological resilience.
 | **Software** | Zig/Rust systems with *explicit memory contracts* (like TigerBeetle): no GC, no unbounded allocs, composable failure domains |
 | **Fault Tolerance** | Spatial redundancy (e.g., spare cores), erasure-coded checkpointing, Byzantine-tolerant consensus *over SRAM state* |
 | **Use Cases** | Real-time inference serving, in-memory graph DBs, LLM context caches, scientific simulation state-holding |
+
+### Turbopuffer + WSE: The Baremetal Open Hardware Path
+
+**Turbopuffer Architecture on WSE**:
+
+| Component | Turbopuffer (Current) | WSE Baremetal Vision |
+|-----------|----------------------|---------------------|
+| **State Storage** | Object storage (S3) | Object storage (S3-compatible, open protocols) |
+| **Hot Cache** | NVMe SSD + memory | 44GB on-wafer SRAM (spatial computing) |
+| **Compute** | Serverless nodes | 900,000 cores (parallel search, vector ops) |
+| **Search Index** | SPFresh ANN + BM25 | On-wafer execution (spatial, zero-copy) |
+| **Consistency** | WAL (ACD) | WAL + state machine (deterministic) |
+| **Latency** | p50 8ms (warm) | Sub-millisecond (spatial, on-wafer) |
+| **Scalability** | Trillions of documents | Horizontal (object storage) + vertical (WSE cores) |
+
+**Key Advantages for Open Hardware**:
+* **No Proprietary Storage**: Object storage uses standard S3 API, open protocols
+* **Repairable**: WSE compute layer is modular, object storage is replaceable
+* **Deterministic**: WAL + state machine = reproducible, verifiable operations
+* **Cost-Efficient**: Cold data in object storage (cheap), hot data in SRAM (fast)
+* **Green Computing**: RAM-only execution, no disk I/O, reduced e-waste
+
+**Path to WSE Baremetal**:
+1. **Phase 1**: Implement Turbopuffer-style architecture on standard hardware (object storage + compute nodes)
+2. **Phase 2**: Port to WSE (replace NVMe SSD + memory with 44GB SRAM)
+3. **Phase 3**: Optimize for spatial computing (parallel search, vector ops on 900k cores)
+4. **Phase 4**: Open hardware deployment (Framework 13 RISC-V, WSE-style chips)
 
 **Key Insight**: This isn't sci-fi. Cerebras already runs **full LLM training in on-wafer memory** (no host DDR bottlenecks). Scaling this to general-purpose cloud services is a software + systems challenge—not a physics one.
 

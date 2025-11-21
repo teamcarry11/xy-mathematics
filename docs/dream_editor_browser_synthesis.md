@@ -155,6 +155,60 @@ Payment confirmed instantly
 5. **Complete LSP**: JSON-RPC, snapshot model
 6. **Magit VCS**: Virtual files (`.jj/status.jj`)
 7. **Multi-Pane Layout**: River compositor
+8. **DAG-Based UI** (Hyperfiddle + Matklad): Streaming DAG architecture for unified editor/browser state
+
+### Matklad's Architecture-First AI Integration
+
+**Key Insights from Matklad's Vision** (from 0001 learning course):
+
+1. **Project-Contextual AI**: Instead of file-at-a-time, give the AI full project semantics. The IDE understands the entire codebase graph, not just the current file.
+
+2. **Incremental Everything**: Reuse compilation artifacts for AI context. Matklad's "majjit" concept—incremental compilation that feeds directly into AI understanding—means the IDE never re-analyzes unchanged code.
+
+3. **Deterministic AI**: Cache common patterns so the IDE feels predictable. The same code transformation should produce the same result, enabling developer trust.
+
+4. **Readonly Characters**: Zig's explicit memory management enables precise readonly span tracking—text buffers with `(start, end, flags)` in gap buffer or rope structure. This is the foundation for "text-as-UI" where VCS status, commit messages, and diffs are just files you edit.
+
+5. **Project-Wide Semantic Understanding**: The IDE maintains a graph of the entire codebase. When AI suggests a change, it understands the full context—all callers, all dependencies, all related code.
+
+**Integration with DAG Architecture**:
+
+The Matklad vision aligns perfectly with our DAG-based UI architecture:
+
+* **Project Graph = DAG**: The codebase graph Matklad describes is a DAG (functions call other functions, structs reference other structs)
+* **Incremental Compilation = DAG Updates**: Matklad's "majjit" incremental compilation feeds into DAG nodes (AST nodes, semantic nodes)
+* **Readonly Spans = DAG Node Attributes**: Readonly spans are attributes on DAG nodes (metadata, structure, VCS info)
+* **Streaming Updates = DAG Propagation**: Code changes stream through the DAG, updating only affected nodes (incremental, efficient)
+
+**Unified Architecture**:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│   Matklad IDE Features (Project-Wide Semantics)        │
+│   - Project graph (DAG of code relationships)           │
+│   - Incremental compilation (majjit)                    │
+│   - Readonly spans (text-as-UI)                         │
+│   - Method folding (structural views)                   │
+├─────────────────────────────────────────────────────────┤
+│   DAG-Based State Machine (Hyperfiddle)                 │
+│   - Events: code edits, web requests, UI interactions   │
+│   - Nodes: AST nodes, DOM nodes, UI components          │
+│   - Edges: dependencies, data flow, transformations    │
+│   - Streaming: deterministic propagation               │
+├─────────────────────────────────────────────────────────┤
+│   TigerBeetle-Style Execution                           │
+│   - Single-threaded, deterministic                      │
+│   - Bounded allocations, explicit limits                │
+│   - Fast queries, immutable history                     │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Benefits of Integration**:
+
+* **Unified Model**: Project graph (Matklad) = DAG nodes (Hyperfiddle)
+* **Incremental Efficiency**: Majjit (Matklad) = DAG streaming (Hyperfiddle)
+* **Text-as-UI**: Readonly spans (Matklad) = DAG node attributes (Hyperfiddle)
+* **Deterministic**: Same code = same DAG = same AI suggestions (Matklad + TigerBeetle)
 
 ### Dream Browser Components
 

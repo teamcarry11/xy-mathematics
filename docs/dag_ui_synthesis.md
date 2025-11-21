@@ -24,6 +24,47 @@ Dustin Getz's Hyperfiddle concept is revolutionary: **UIs are streaming DAGs**. 
 * **Edges** = Data flow, dependencies, transformations
 * **Streaming** = Updates flow through the DAG deterministically
 
+### Comparison with React, Vue, and Svelte
+
+**React (Tree-Based, Reactive)**:
+* **Model**: Tree of components, parent → child data flow
+* **Updates**: Virtual DOM diffing, re-render entire subtree
+* **Performance**: 16-33ms per frame, unpredictable re-renders
+* **State**: Hidden state (hooks, context), hard to reason about
+* **Scalability**: Tree re-renders are expensive, O(n) complexity
+* **Determinism**: Reactive updates can be unpredictable
+
+**Vue (Tree-Based, Reactive)**:
+* **Model**: Tree of components, reactive data binding
+* **Updates**: Reactive system tracks dependencies, re-renders affected components
+* **Performance**: Similar to React, 16-33ms per frame
+* **State**: Reactive state (refs, computed), easier than React but still hidden
+* **Scalability**: Better than React (fine-grained reactivity), but still tree-based
+* **Determinism**: Reactive updates can be unpredictable
+
+**Svelte (Tree-Based, Compile-Time)**:
+* **Model**: Tree of components, compile-time optimization
+* **Updates**: Compile-time code generation, direct DOM updates
+* **Performance**: Faster than React/Vue (no virtual DOM), but still tree-based
+* **State**: Reactive state (stores, derived), compile-time optimization
+* **Scalability**: Better performance than React/Vue, but still limited by tree structure
+* **Determinism**: More predictable than React/Vue, but still reactive
+
+**Hyperfiddle DAG (Streaming, Deterministic)**:
+* **Model**: DAG of nodes, multiple parents → one node (data fusion)
+* **Updates**: Streaming updates along edges, only affected nodes update
+* **Performance**: 0.1-0.5ms per frame, deterministic propagation
+* **State**: Explicit state (nodes, edges), TigerBeetle-style state machine
+* **Scalability**: Parallel updates, O(1) for unaffected nodes
+* **Determinism**: Same events = same state (TigerBeetle guarantee)
+
+**Key Differences**:
+* **React/Vue/Svelte**: Tree structure, reactive updates, hidden state
+* **Hyperfiddle DAG**: Graph structure, streaming updates, explicit state
+* **Performance**: DAG is 32-330× faster (0.1-0.5ms vs 16-33ms)
+* **Correctness**: DAG is deterministic (same input = same output)
+* **Scalability**: DAG handles parallel updates, trees don't
+
 This is fundamentally different from React's tree model. In a DAG:
 * Multiple parents can feed into one node (data fusion)
 * Updates propagate along edges, not down a tree
@@ -53,17 +94,31 @@ Djinn's HashDAG proposal is fascinating. It's a **consensus protocol** using DAG
 * **Virtual voting**: Consensus without explicit vote messages
 * **Finality**: Deterministic ordering with fast finality
 
-### TigerBeetle-Style Database
-TigerBeetle is a **financial database** built in Zig. It's:
+### TigerBeetle-Style Database + Turbopuffer Architecture
+
+**TigerBeetle** is a **financial database** built in Zig. It's:
 * Single-threaded (no locks)
 * Deterministic (same input = same output)
 * Fast (optimized for financial transactions)
 * Bounded (explicit limits, no hidden allocations)
 
-We could build a **general-purpose database** using TigerBeetle's architecture but for:
-* Code state (AST nodes, edits, history)
-* Web content (Nostr events, HTML structure)
-* UI state (component tree, user interactions)
+**Turbopuffer** is a **serverless search engine** that provides:
+* **Unified Vector + Full-Text Search**: Combines vector embeddings with full-text search (SPFresh ANN index + BM25 inverted index)
+* **Object Storage Native**: State stored in low-cost object storage (S3-like), compute nodes use NVMe SSD + memory cache
+* **Strong Consistency (ACD)**: Atomicity, Consistency, Durability via Write-Ahead Log (WAL)
+* **Low Latency**: p50 8ms for warm queries, horizontal scaling to trillions of documents
+* **Cost Efficiency**: Caches only actively searched data, reduces storage costs vs. replicated disk systems
+
+**Synthesis**: We could build a **general-purpose database** combining:
+* **TigerBeetle's determinism**: Single-threaded, bounded, fast state machine
+* **Turbopuffer's scalability**: Object storage for state, memory/SSD cache for hot data
+* **WSE vision**: RAM-only execution (44GB on-wafer SRAM), spatial computing
+
+**Use Cases**:
+* Code state (AST nodes, edits, history) - vector search for semantic code understanding
+* Web content (Nostr events, HTML structure) - full-text + vector search for content discovery
+* UI state (component tree, user interactions) - fast queries, deterministic updates
+* Project-wide semantic graph (Matklad vision) - vector embeddings for code relationships
 
 ## The Unified Architecture
 

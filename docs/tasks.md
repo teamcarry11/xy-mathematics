@@ -208,10 +208,27 @@
 - [ ] Storage (virtio-blk)
 
 ### 3.3 Userspace Support
-- [ ] ELF loader
-- [ ] System call interface
-- [ ] Process creation/termination
-- [ ] IPC mechanisms
+- [x] ELF loader ✅ **COMPLETE**
+  - [x] loadUserspaceELF function in integration layer
+  - [x] ELF parsing and segment loading
+  - [x] Stack setup and argv/argc initialization
+- [x] System call interface ✅ **COMPLETE**
+  - [x] Syscall enumeration and routing
+  - [x] Integration layer syscall handler
+  - [x] Error code mapping
+- [x] Process creation/termination ✅ **COMPLETE**
+  - [x] Process scheduler with round-robin
+  - [x] Process state transitions (spawn/exit)
+  - [x] Process context tracking (PC, SP, entry point)
+  - [x] Enhanced spawn syscall with ELF support
+  - [x] Wait syscall enhancement
+  - [x] Comprehensive TigerStyle tests
+- [x] IPC mechanisms ✅ **COMPLETE**
+  - [x] IPC channel module (`src/kernel/channel.zig`)
+  - [x] Message queue (bounded, 32 messages max, 4KB per message)
+  - [x] Channel table (64 channels max)
+  - [x] channel_create/send/recv syscalls
+  - [x] Comprehensive TigerStyle tests
 
 ## 🎨 Phase 4: Dream Editor + Browser
 
@@ -303,12 +320,17 @@
 - [x] Virtual file system with bounded allocations
 - [x] GrainStyle compliance (u32 types, assertions, no recursion)
 
-#### 4.1.7 Multi-Pane Layout
-- [ ] Split panes (horizontal/vertical)
-- [ ] Tile windows (editor, terminal, VCS status)
-- [ ] River compositor integration
-- [ ] Moonglow keybindings
-- [ ] Workspace management
+#### 4.1.7 Multi-Pane Layout ✅ **COMPLETE**
+- [x] Split panes (horizontal/vertical)
+- [x] Tile windows (editor, terminal, VCS status, browser)
+- [x] Workspace management (max 10 workspaces, River-style switching)
+- [x] Focus navigation (next pane, iterative traversal)
+- [x] Pane closing and merging
+- [x] Layout resizing (recalculate rectangles on resize)
+- [x] Iterative tree traversal (no recursion, GrainStyle compliant)
+- [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
+- [ ] River compositor integration (future: full Wayland compositor)
+- [ ] Moonglow keybindings (future: keybinding system)
 
 ### 4.2 DAG Integration (IN PROGRESS)
 

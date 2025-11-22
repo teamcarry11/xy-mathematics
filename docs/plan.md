@@ -1,7 +1,7 @@
 # Grain OS Development Plan
 ## RISC-V Kernel + VM + Aurora IDE
 
-**Current Status**: Phase 3.3 IPC Channels complete ✅. IPC channel system with message queues and channel management implemented! 🎉
+**Current Status**: Phase 3.3 Userspace Support complete ✅. Enhanced process management with ELF loading support and process context tracking implemented! 🎉
 
 **Goal**: RISC-V-targeted Grain OS with graphical interface running in macOS Tahoe 26.1 VM, with path toward Framework 13 RISC-V hardware.
 
@@ -374,12 +374,17 @@
 - ✅ Virtual file system with bounded allocations
 - ✅ GrainStyle compliance (u32 types, assertions, no recursion)
 
-#### 1.7: Multi-Pane Layout 📋 **PLANNED**
-- 📋 Split panes (horizontal/vertical)
-- 📋 Tile windows (editor, terminal, VCS status)
-- 📋 River compositor integration
-- 📋 Moonglow keybindings
-- 📋 Workspace management
+#### 1.7: Multi-Pane Layout ✅ **COMPLETE**
+- ✅ Split panes (horizontal/vertical)
+- ✅ Tile windows (editor, terminal, VCS status, browser)
+- ✅ Workspace management (max 10 workspaces, River-style switching)
+- ✅ Focus navigation (next pane, iterative traversal)
+- ✅ Pane closing and merging
+- ✅ Layout resizing (recalculate rectangles on resize)
+- ✅ Iterative tree traversal (no recursion, GrainStyle compliant)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+- 📋 River compositor integration (future: full Wayland compositor)
+- 📋 Moonglow keybindings (future: keybinding system)
 
 ### Phase 2: DAG Integration 🔄 **IN PROGRESS**
 

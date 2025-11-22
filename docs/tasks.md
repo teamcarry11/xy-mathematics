@@ -273,22 +273,26 @@
 - [ ] Tool calling (run `zig build`, `jj status`)
 - [ ] Multi-file edits (context-aware)
 
-#### 4.1.4 Tree-sitter Integration 🔄 **IN PROGRESS**
+#### 4.1.4 Tree-sitter Integration ✅ **ENHANCED**
 - [x] Foundation created (simple regex-based parser)
 - [x] Tree structure with nodes (functions, structs)
 - [x] Node lookup at positions (for hover, navigation)
 - [x] Editor integration (parse and query syntax tree)
+- [x] Syntax token extraction (keywords, strings, comments, numbers, operators)
+- [x] Iterative node search (no recursion, GrainStyle compliant)
+- [x] Token lookup at positions for syntax highlighting
 - [ ] Tree-sitter C library bindings (future)
 - [ ] Zig grammar integration (future)
-- [ ] Syntax highlighting (future)
-- [ ] Structural navigation (future)
 - [ ] Code actions (extract function, rename symbol) (future)
 
-#### 4.1.5 Complete LSP Implementation
-- [ ] JSON-RPC 2.0 serialization/deserialization
-- [ ] Snapshot model (incremental updates)
-- [ ] Cancellation support
-- [ ] Zig-specific features (comptime analysis)
+#### 4.1.5 Complete LSP Implementation ✅ **COMPLETE**
+- [x] JSON-RPC 2.0 serialization/deserialization
+- [x] Snapshot model (incremental updates, Matklad-style)
+- [x] Cancellation support for pending requests
+- [x] Server communication (stdin/stdout with Content-Length headers)
+- [x] Document lifecycle (didOpen, didChange with incremental edits)
+- [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
+- [ ] Zig-specific features (comptime analysis) - pending
 
 #### 4.1.6 Magit-Style VCS
 - [ ] Generate `.jj/status.jj` (readonly metadata, editable hunks)

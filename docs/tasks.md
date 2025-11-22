@@ -170,8 +170,23 @@
 ## 📋 Phase 3: Grain Basin Kernel
 
 ### 3.1 Kernel Core
-- [ ] Boot sequence
-- [ ] Memory management (paging, allocation)
+- [x] Boot sequence ✅ **COMPLETE**
+  - [x] Boot sequence module (`src/kernel/boot.zig`)
+  - [x] Boot phase enumeration (early, timer, interrupt, memory, storage, scheduler, channels, input, users, complete)
+  - [x] Boot sequence tracking (start time, completion time, duration)
+  - [x] Subsystem initialization order validation
+  - [x] Boot sequence execution (`boot_kernel()` function)
+  - [x] Kernel main integration (boot sequence called in `kmain()`)
+  - [x] Comprehensive TigerStyle tests (`tests/028_boot_sequence_test.zig`)
+- [x] Memory management (paging, allocation) ✅ **COMPLETE**
+  - [x] Memory allocator module (`src/kernel/memory.zig`)
+  - [x] Page-based allocation (4KB pages, 1024 pages max)
+  - [x] Memory pool (4MB max, static allocation)
+  - [x] Page allocation and deallocation
+  - [x] Contiguous page allocation (first-fit algorithm)
+  - [x] Byte-based allocation (convenience functions with page rounding)
+  - [x] Memory pool integration with kernel (BasinKernel.memory_pool)
+  - [x] Comprehensive TigerStyle tests (`tests/027_memory_allocator_test.zig`)
 - [x] Process management (scheduling, IPC) ✅ **COMPLETE**
   - [x] Process scheduler module (`src/kernel/scheduler.zig`)
   - [x] Round-robin scheduling
@@ -438,11 +453,15 @@
 - [x] Update queue with bounded allocations (max 1,000 updates/second)
 - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
 
-#### 4.3.3 GrainBank Integration
-- [ ] Micropayments in browser
-- [ ] Deterministic contracts
-- [ ] Peer-to-peer payments
-- [ ] State machine execution
+#### 4.3.3 GrainBank Integration ✅ **COMPLETE**
+- [x] Micropayments in browser (automatic payments for content)
+- [x] Deterministic contracts (TigerBeetle-style state machine)
+- [x] Peer-to-peer payments (direct Nostr-based transfers)
+- [x] State machine execution (bounded, deterministic)
+- [x] Contract management (create, execute actions: mint, burn, transfer, collect_tax)
+- [x] Payment processing (batch processing, deterministic execution)
+- [x] DAG integration (contracts and payments as DAG events)
+- [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
 
 ### 4.4 Window System (COMPLETE - Legacy)
 - [x] Window rendering

@@ -172,15 +172,39 @@
 ### 3.1 Kernel Core
 - [ ] Boot sequence
 - [ ] Memory management (paging, allocation)
-- [ ] Process management (scheduling, IPC)
+- [x] Process management (scheduling, IPC) ✅ **COMPLETE**
+  - [x] Process scheduler module (`src/kernel/scheduler.zig`)
+  - [x] Round-robin scheduling
+  - [x] Current process tracking
+  - [x] Process state transitions (spawn/exit)
+  - [x] Wait syscall enhancement (polling-based)
+  - [x] Scheduler integration with kernel
+  - [x] Comprehensive TigerStyle tests (`tests/022_process_scheduler_test.zig`)
 - [ ] System calls (POSIX subset)
 
 ### 3.2 Device Drivers
-- [ ] Framebuffer driver
+- [x] Framebuffer driver ✅ **COMPLETE**
 - [ ] Keyboard driver
 - [ ] Mouse driver
-- [ ] Timer driver
-- [ ] Interrupt controller
+- [x] Timer driver ✅ **COMPLETE**
+  - [x] Timer driver module (`src/kernel/timer.zig`)
+  - [x] Monotonic clock (nanoseconds since boot)
+  - [x] Realtime clock (nanoseconds since epoch)
+  - [x] Uptime tracking
+  - [x] SBI timer integration (set_timer)
+  - [x] Kernel timer integration (BasinKernel.timer)
+  - [x] clock_gettime syscall (handled in integration layer)
+  - [x] sleep_until syscall (timer-based validation)
+  - [x] Comprehensive TigerStyle tests (`tests/020_timer_driver_test.zig`)
+- [x] Interrupt controller ✅ **COMPLETE**
+  - [x] Interrupt controller module (`src/kernel/interrupt.zig`)
+  - [x] Interrupt types (timer, external, software)
+  - [x] Handler registration (timer, external, software)
+  - [x] Interrupt dispatch and routing
+  - [x] Pending interrupt tracking
+  - [x] Process pending interrupts
+  - [x] Kernel interrupt controller integration
+  - [x] Comprehensive TigerStyle tests (`tests/021_interrupt_controller_test.zig`)
 - [ ] Storage (virtio-blk)
 
 ### 3.3 Userspace Support

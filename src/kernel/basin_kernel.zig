@@ -17,6 +17,9 @@
 
 const std = @import("std");
 const Debug = @import("debug.zig");
+const Timer = @import("timer.zig").Timer;
+const InterruptController = @import("interrupt.zig").InterruptController;
+const Scheduler = @import("scheduler.zig").Scheduler;
 
 /// Basin Kernel syscall numbers.
 /// Why: Explicit syscall enumeration for type safety and clarity.
@@ -537,10 +540,29 @@ pub const BasinKernel = struct {
         .egid = 0,
     },
     
+    /// Timer driver.
+    /// Why: Provide monotonic clock and time-based syscalls.
+    /// Grain Style: Static allocation, initialized at kernel boot.
+    timer: Timer,
+    
+    /// Interrupt controller.
+    /// Why: Handle interrupts (timer, external, software).
+    /// Grain Style: Static allocation, initialized at kernel boot.
+    interrupt_controller: InterruptController,
+    
+    /// Process scheduler.
+    /// Why: Manage process execution and scheduling.
+    /// Grain Style: Static allocation, initialized at kernel boot.
+    scheduler: Scheduler,
+    
     /// Initialize Basin Kernel.
     /// Why: Explicit initialization, validate kernel state.
     pub fn init() BasinKernel {
-        var kernel = BasinKernel{};
+        var kernel = BasinKernel{
+            .timer = Timer.init(),
+            .interrupt_controller = InterruptController.init(),
+            .scheduler = Scheduler.init(),
+        };
         
         // Initialize default users (root and xy).
         kernel.init_users();
@@ -565,6 +587,17 @@ pub const BasinKernel = struct {
         // Assert: Root user must exist.
         Debug.kassert(kernel.user_count >= 1, "User count {d} < 1", .{kernel.user_count});
         Debug.kassert(kernel.users[0].uid == 0, "First user UID {d} != 0", .{kernel.users[0].uid});
+        
+        // Assert: Timer must be initialized.
+        Debug.kassert(kernel.timer.initialized, "Timer not initialized", .{});
+        Debug.kassert(kernel.timer.boot_time_ns > 0, "Boot time is zero", .{});
+        
+        // Assert: Interrupt controller must be initialized.
+        Debug.kassert(kernel.interrupt_controller.initialized, "Interrupt controller not initialized", .{});
+        
+        // Assert: Scheduler must be initialized.
+        Debug.kassert(kernel.scheduler.initialized, "Scheduler not initialized", .{});
+        Debug.kassert(kernel.scheduler.current_pid == 0, "Current PID not 0 at init", .{});
         
         return kernel;
     }
@@ -1008,10 +1041,14 @@ pub const BasinKernel = struct {
         self.processes[idx].executable_len = MIN_ELF_SIZE; // Stub: use minimum size
         self.processes[idx].allocated = true;
         
+        // Set as current running process in scheduler.
+        self.scheduler.set_current(process_id);
+        
         // Assert: process must be allocated correctly.
         Debug.kassert(self.processes[idx].allocated, "Process not allocated", .{});
         Debug.kassert(self.processes[idx].id == process_id, "Process ID mismatch", .{});
         Debug.kassert(self.processes[idx].state == .running, "Process not running", .{});
+        Debug.kassert(self.scheduler.is_current(process_id), "Process not current", .{});
         
         // Return process ID.
         const result = SyscallResult.ok(process_id);
@@ -1046,9 +1083,8 @@ pub const BasinKernel = struct {
         Debug.kassert(status <= 255, "Exit status > 255", .{});
         const exit_status = @as(u32, @truncate(status));
         
-        // Find current process (for now, use process ID 1 as current process).
-        // TODO: Track current process ID in kernel state (when multi-process is implemented).
-        const current_process_id: u64 = 1;
+        // Get current process ID from scheduler.
+        const current_process_id = self.scheduler.get_current();
         
         // Find process in process table.
         var found: ?usize = null;
@@ -1063,6 +1099,11 @@ pub const BasinKernel = struct {
             // Mark process as exited.
             self.processes[idx].state = .exited;
             self.processes[idx].exit_status = exit_status;
+            
+            // Clear from scheduler if it's the current process.
+            if (self.scheduler.is_current(current_process_id)) {
+                self.scheduler.clear_current();
+            }
             
             // Assert: process must be marked as exited.
             Debug.kassert(self.processes[idx].state == .exited, "Process not exited", .{});
@@ -1151,16 +1192,28 @@ pub const BasinKernel = struct {
             return result;
         }
         
-        // Process is still running: wait for it to exit.
-        // TODO: Implement blocking wait (when scheduler is implemented).
-        // For now, return error (process still running).
-        // Note: In full implementation, we would:
+        // Process is still running: check if we can wait (blocking).
+        // Note: In full implementation with preemptive scheduling, we would:
         // - Block current process until target process exits
         // - Wake up when target process calls exit()
         // - Return exit status when process exits
+        // For now, with cooperative scheduling, we return error if process still running.
         
-        // Stub: Return error (process still running, blocking wait not implemented).
-        return BasinError.invalid_argument; // Process still running (blocking wait not implemented)
+        // Check if target process has exited (polling approach for now).
+        // In full implementation, this would block and wake up on exit.
+        if (self.processes[idx].state == .exited) {
+            const exit_status: u64 = self.processes[idx].exit_status;
+            const result = SyscallResult.ok(exit_status);
+            
+            // Assert: result must be success (not error).
+            Debug.kassert(result == .success, "Result not success", .{});
+            Debug.kassert(result.success == exit_status, "Result value mismatch", .{});
+            
+            return result;
+        }
+        
+        // Process still running: return error (blocking wait not fully implemented).
+        return BasinError.would_block; // Process still running (would block)
     }
     
     fn syscall_map(
@@ -2302,27 +2355,12 @@ pub const BasinKernel = struct {
             return BasinError.invalid_argument; // Timespec exceeds VM memory
         }
         
-        // TODO: Implement actual time retrieval (when timer is implemented).
-        // For now, return stub (zero timestamp).
-        // Why: Simple stub - matches current kernel development stage.
-        // Note: In full implementation, we would:
-        // - Get current time from system timer (SBI timer or hardware clock)
-        // - Write seconds and nanoseconds to timespec structure
-        // - Handle different clock types (monotonic vs realtime)
+        // Note: This syscall is handled by integration layer (needs VM access).
+        // This stub should never be called, but we include it for completeness.
+        // Contract: clock_id and timespec_ptr must be valid (checked by integration layer).
         
-        // Stub: Return zero timestamp (simple implementation).
-        const seconds: u64 = 0;
-        const nanoseconds: u64 = 0;
-        const result = SyscallResult.ok(seconds);
-        
-        // Assert: result must be success (not error).
-        Debug.kassert(result == .success, "Result not success", .{});
-        Debug.kassert(result.success == seconds, "Result value mismatch", .{});
-        
-        // Assert: Nanoseconds must be valid (0-999999999).
-        Debug.kassert(nanoseconds < 1000000000, "Nanoseconds invalid", .{});
-        
-        return result;
+        // This should not be reached (integration layer handles this syscall).
+        return BasinError.invalid_syscall;
     }
     
     fn syscall_sleep_until(
@@ -2348,17 +2386,35 @@ pub const BasinKernel = struct {
             return BasinError.invalid_argument; // Zero timestamp (invalid)
         }
         
-        // TODO: Implement actual sleep until timestamp (when timer is implemented).
-        // For now, return stub success (immediate return).
+        // Get current monotonic time (nanoseconds since boot).
+        const current_time_ns = self.timer.get_monotonic_ns();
+        
+        // Assert: Current time must be valid.
+        Debug.kassert(current_time_ns >= 0, "Current time negative", .{});
+        
+        // Check if timestamp is in the past.
+        // Note: timestamp is nanoseconds since boot (monotonic clock).
+        if (timestamp < current_time_ns) {
+            // Timestamp is in the past: return error.
+            return BasinError.invalid_argument; // Timestamp in the past
+        }
+        
+        // Calculate sleep duration (nanoseconds to wait).
+        const sleep_duration_ns = timestamp - current_time_ns;
+        
+        // Assert: Sleep duration must be non-negative.
+        Debug.kassert(sleep_duration_ns >= 0, "Sleep duration negative", .{});
+        
+        // TODO: Implement actual blocking sleep (when scheduler is implemented).
+        // For now, return success immediately (non-blocking stub).
         // Why: Simple stub - matches current kernel development stage.
         // Note: In full implementation, we would:
-        // - Get current time from system timer
-        // - Calculate sleep duration (timestamp - current_time)
-        // - Sleep until timestamp is reached
-        // - Return error if timestamp is in the past
-        // - Handle timer interrupts/wakeups
+        // - Set timer interrupt for timestamp
+        // - Block current process until timer interrupt
+        // - Wake up when timer interrupt fires
+        // - Return success when woken up
         
-        // Stub: Return success immediately (simple implementation).
+        // Stub: Return success immediately (non-blocking).
         const result = SyscallResult.ok(0);
         
         // Assert: result must be success (not error).

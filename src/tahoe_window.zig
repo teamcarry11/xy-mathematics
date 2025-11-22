@@ -72,7 +72,7 @@ pub const TahoeSandbox = struct {
         // Why: BasinKernel contains large static allocations (256 mappings, 64 handles, 32 dir handles, 16 processes, 256 users).
         const basin_kernel_instance = try allocator.create(basin_kernel.BasinKernel);
         errdefer allocator.destroy(basin_kernel_instance);
-        basin_kernel_instance.* = basin_kernel.BasinKernel{};
+        basin_kernel_instance.* = basin_kernel.BasinKernel.init();
         
         var sandbox = TahoeSandbox{
             .allocator = allocator,
@@ -567,7 +567,7 @@ pub const TahoeSandbox = struct {
         const sandbox_ptr = @as(?*TahoeSandbox, @ptrCast(@alignCast(global_sandbox_ptr)));
         if (sandbox_ptr == null) {
             // No sandbox available: use default kernel behavior.
-            var kernel = basin_kernel.BasinKernel{};
+            var kernel = basin_kernel.BasinKernel.init();
             const result = kernel.handle_syscall(syscall_num, arg1, arg2, arg3, arg4) catch |err| {
                 const error_code = @as(i64, @intCast(@intFromError(err)));
                 return @as(u64, @bitCast(-error_code));

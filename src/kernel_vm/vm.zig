@@ -3266,7 +3266,7 @@ pub const VM = struct {
 
         // Initialize start timestamp (for error logging).
         if (self.start_timestamp == 0) {
-            self.start_timestamp = std.time.nanoTimestamp();
+            self.start_timestamp = @as(u64, @intCast(std.time.nanoTimestamp()));
         }
 
         self.state = .running;

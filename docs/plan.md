@@ -1,7 +1,7 @@
 # Grain OS Development Plan
 ## RISC-V Kernel + VM + Aurora IDE
 
-**Current Status**: Phase 4.3.4 WebSocket Transport complete ✅. Enhanced WebSocket client with connection management and reconnection implemented! 🎉
+**Current Status**: Phase 3.1 Process Scheduler complete ✅. Process scheduler with round-robin scheduling and state management implemented! 🎉
 
 **Goal**: RISC-V-targeted Grain OS with graphical interface running in macOS Tahoe 26.1 VM, with path toward Framework 13 RISC-V hardware.
 
@@ -111,6 +111,36 @@
    - ✅ Documented memory layout, constants, and error handling
    - ✅ Verified API consistency and naming conventions
    - ✅ Complete reference for VM usage patterns
+
+12. **Timer Driver** ✅ **COMPLETE**
+   - ✅ Created timer driver module (src/kernel/timer.zig)
+   - ✅ Monotonic clock (nanoseconds since boot)
+   - ✅ Realtime clock (nanoseconds since epoch)
+   - ✅ Uptime tracking
+   - ✅ SBI timer integration (set_timer)
+   - ✅ Kernel timer integration (BasinKernel.timer)
+   - ✅ clock_gettime syscall (handled in integration layer)
+   - ✅ sleep_until syscall (timer-based validation)
+   - ✅ Comprehensive TigerStyle tests (tests/020_timer_driver_test.zig)
+
+13. **Interrupt Controller** ✅ **COMPLETE**
+   - ✅ Created interrupt controller module (src/kernel/interrupt.zig)
+   - ✅ Interrupt types (timer, external, software)
+   - ✅ Handler registration (timer, external, software)
+   - ✅ Interrupt dispatch and routing
+   - ✅ Pending interrupt tracking
+   - ✅ Process pending interrupts
+   - ✅ Kernel interrupt controller integration (BasinKernel.interrupt_controller)
+   - ✅ Comprehensive TigerStyle tests (tests/021_interrupt_controller_test.zig)
+
+14. **Process Scheduler** ✅ **COMPLETE**
+   - ✅ Created process scheduler module (src/kernel/scheduler.zig)
+   - ✅ Round-robin scheduling algorithm
+   - ✅ Current process tracking
+   - ✅ Process state transitions (spawn sets current, exit clears current)
+   - ✅ Wait syscall enhancement (polling-based, returns would_block if still running)
+   - ✅ Scheduler integration with kernel (BasinKernel.scheduler)
+   - ✅ Comprehensive TigerStyle tests (tests/022_process_scheduler_test.zig)
 
 ## 🚀 Architecture Overview
 

@@ -26,9 +26,31 @@ pub const TreeSitter = struct {
         column: u32,
     };
     
+    /// Syntax token: for syntax highlighting (keywords, strings, comments, etc.).
+    pub const Token = struct {
+        type: TokenType,
+        start_byte: u32,
+        end_byte: u32,
+        start_point: Point,
+        end_point: Point,
+    };
+    
+    /// Token types for syntax highlighting.
+    pub const TokenType = enum {
+        keyword,
+        string_literal,
+        number_literal,
+        comment,
+        identifier,
+        operator,
+        punctuation,
+        whitespace,
+    };
+    
     pub const Tree = struct {
         root: Node,
         source: []const u8,
+        tokens: []const Token,
     };
     
     pub fn init(allocator: std.mem.Allocator) TreeSitter {
@@ -137,10 +159,250 @@ pub const TreeSitter = struct {
             .children = try nodes.toOwnedSlice(),
         };
         
+        // Extract syntax tokens for highlighting
+        const tokens = try self.extractTokens(source);
+        
         return Tree{
             .root = root,
             .source = source,
+            .tokens = tokens,
         };
+    }
+    
+    /// Extract syntax tokens from source code (for syntax highlighting).
+    /// Bounded: Max 10,000 tokens per file.
+    pub const MAX_TOKENS: u32 = 10_000;
+    
+    fn extractTokens(self: *TreeSitter, source: []const u8) ![]const Token {
+        // Assert: Source must be non-empty
+        std.debug.assert(source.len > 0);
+        std.debug.assert(source.len <= 100 * 1024 * 1024); // Bounded source size (100MB)
+        
+        var tokens = std.ArrayList(Token).init(self.allocator);
+        errdefer tokens.deinit();
+        
+        // Zig keywords (common subset)
+        const keywords = [_][]const u8{
+            "pub", "fn", "const", "var", "if", "else", "while", "for",
+            "return", "break", "continue", "defer", "errdefer", "try",
+            "catch", "switch", "struct", "enum", "union", "error", "comptime",
+        };
+        
+        var i: u32 = 0;
+        var row: u32 = 0;
+        var column: u32 = 0;
+        
+        while (i < source.len) {
+            // Assert: Bounded tokens
+            std.debug.assert(tokens.items.len < MAX_TOKENS);
+            
+            const start_byte = i;
+            const start_point = Point{ .row = row, .column = column };
+            
+            const ch = source[i];
+            
+            // String literals
+            if (ch == '"') {
+                i += 1;
+                column += 1;
+                var escaped = false;
+                while (i < source.len) {
+                    if (escaped) {
+                        escaped = false;
+                        i += 1;
+                        column += 1;
+                    } else if (source[i] == '\\') {
+                        escaped = true;
+                        i += 1;
+                        column += 1;
+                    } else if (source[i] == '"') {
+                        i += 1;
+                        column += 1;
+                        break;
+                    } else {
+                        if (source[i] == '\n') {
+                            row += 1;
+                            column = 0;
+                        } else {
+                            column += 1;
+                        }
+                        i += 1;
+                    }
+                }
+                const end_byte = i;
+                const end_point = Point{ .row = row, .column = column };
+                try tokens.append(Token{
+                    .type = .string_literal,
+                    .start_byte = start_byte,
+                    .end_byte = end_byte,
+                    .start_point = start_point,
+                    .end_point = end_point,
+                });
+                continue;
+            }
+            
+            // Line comments
+            if (i + 1 < source.len and source[i] == '/' and source[i + 1] == '/') {
+                i += 2;
+                column += 2;
+                while (i < source.len and source[i] != '\n') {
+                    i += 1;
+                    column += 1;
+                }
+                const end_byte = i;
+                const end_point = Point{ .row = row, .column = column };
+                try tokens.append(Token{
+                    .type = .comment,
+                    .start_byte = start_byte,
+                    .end_byte = end_byte,
+                    .start_point = start_point,
+                    .end_point = end_point,
+                });
+                continue;
+            }
+            
+            // Block comments
+            if (i + 1 < source.len and source[i] == '/' and source[i + 1] == '*') {
+                i += 2;
+                column += 2;
+                while (i + 1 < source.len) {
+                    if (source[i] == '*' and source[i + 1] == '/') {
+                        i += 2;
+                        column += 2;
+                        break;
+                    }
+                    if (source[i] == '\n') {
+                        row += 1;
+                        column = 0;
+                    } else {
+                        column += 1;
+                    }
+                    i += 1;
+                }
+                const end_byte = i;
+                const end_point = Point{ .row = row, .column = column };
+                try tokens.append(Token{
+                    .type = .comment,
+                    .start_byte = start_byte,
+                    .end_byte = end_byte,
+                    .start_point = start_point,
+                    .end_point = end_point,
+                });
+                continue;
+            }
+            
+            // Whitespace
+            if (std.ascii.isWhitespace(ch)) {
+                i += 1;
+                if (ch == '\n') {
+                    row += 1;
+                    column = 0;
+                } else {
+                    column += 1;
+                }
+                continue;
+            }
+            
+            // Numbers
+            if (std.ascii.isDigit(ch)) {
+                i += 1;
+                column += 1;
+                while (i < source.len and (std.ascii.isAlNum(source[i]) or source[i] == '.' or source[i] == '_')) {
+                    i += 1;
+                    column += 1;
+                }
+                const end_byte = i;
+                const end_point = Point{ .row = row, .column = column };
+                try tokens.append(Token{
+                    .type = .number_literal,
+                    .start_byte = start_byte,
+                    .end_byte = end_byte,
+                    .start_point = start_point,
+                    .end_point = end_point,
+                });
+                continue;
+            }
+            
+            // Operators and punctuation
+            const operators = "=+-*/%<>!&|^~?:.";
+            if (std.mem.indexOfScalar(u8, operators, ch) != null) {
+                i += 1;
+                column += 1;
+                const end_byte = i;
+                const end_point = Point{ .row = row, .column = column };
+                try tokens.append(Token{
+                    .type = if (ch == '(' or ch == ')' or ch == '{' or ch == '}' or ch == '[' or ch == ']' or ch == ',' or ch == ';' or ch == ':') .punctuation else .operator,
+                    .start_byte = start_byte,
+                    .end_byte = end_byte,
+                    .start_point = start_point,
+                    .end_point = end_point,
+                });
+                continue;
+            }
+            
+            // Identifiers and keywords
+            if (std.ascii.isAlphabetic(ch) or ch == '_') {
+                i += 1;
+                column += 1;
+                while (i < source.len and (std.ascii.isAlnum(source[i]) or source[i] == '_')) {
+                    i += 1;
+                    column += 1;
+                }
+                const end_byte = i;
+                const end_point = Point{ .row = row, .column = column };
+                const token_text = source[start_byte..end_byte];
+                
+                // Check if keyword
+                var is_keyword = false;
+                for (keywords) |keyword| {
+                    if (std.mem.eql(u8, token_text, keyword)) {
+                        is_keyword = true;
+                        break;
+                    }
+                }
+                
+                try tokens.append(Token{
+                    .type = if (is_keyword) .keyword else .identifier,
+                    .start_byte = start_byte,
+                    .end_byte = end_byte,
+                    .start_point = start_point,
+                    .end_point = end_point,
+                });
+                continue;
+            }
+            
+            // Unknown character: skip
+            i += 1;
+            column += 1;
+        }
+        
+        // Assert: Tokens extracted successfully
+        std.debug.assert(tokens.items.len <= MAX_TOKENS);
+        
+        return try tokens.toOwnedSlice();
+    }
+    
+    /// Get token at a specific position (for syntax highlighting).
+    /// Returns the token containing the point, or null if none.
+    pub fn getTokenAt(_: *TreeSitter, tree: *const Tree, point: Point) ?Token {
+        // Assert: Point must be valid
+        std.debug.assert(point.row <= MAX_DEPTH * 1000); // Bounded row
+        std.debug.assert(point.column <= 1000); // Bounded column
+        
+        // Find token containing the point
+        for (tree.tokens) |token| {
+            if (point.row >= token.start_point.row and point.row <= token.end_point.row) {
+                if (point.row == token.start_point.row and point.column < token.start_point.column) {
+                    continue;
+                }
+                if (point.row == token.end_point.row and point.column > token.end_point.column) {
+                    continue;
+                }
+                return token;
+            }
+        }
+        
+        return null;
     }
     
     /// Get node at a specific position (for hover, go-to-definition, etc.).
@@ -149,29 +411,59 @@ pub const TreeSitter = struct {
         return self.findNodeContaining(&tree.root, point);
     }
     
-    /// Find node containing a point (recursive search).
-    fn findNodeContaining(_: *TreeSitter, node: *const Node, point: Point) ?Node {
+    /// Find node containing a point (iterative search to avoid recursion).
+    /// GrainStyle: No recursion, use explicit stack.
+    fn findNodeContaining(self: *TreeSitter, node: *const Node, point: Point) ?Node {
+        _ = self;
         
-        // Check if point is within this node
-        if (point.row < node.start_point.row or point.row > node.end_point.row) {
-            return null;
-        }
-        if (point.row == node.start_point.row and point.column < node.start_point.column) {
-            return null;
-        }
-        if (point.row == node.end_point.row and point.column > node.end_point.column) {
-            return null;
-        }
+        // Assert: Point must be valid
+        std.debug.assert(point.row <= MAX_DEPTH * 1000); // Bounded row
+        std.debug.assert(point.column <= 1000); // Bounded column
         
-        // Check children first (more specific)
-        for (node.children) |child| {
-            if (self.findNodeContaining(&child, point)) |found| {
-                return found;
+        // Use explicit stack instead of recursion (GrainStyle)
+        // Bounded: Max stack depth of MAX_DEPTH
+        var stack: [MAX_DEPTH]?*const Node = undefined;
+        var stack_len: u32 = 0;
+        
+        stack[stack_len] = node;
+        stack_len += 1;
+        
+        var best_match: ?*const Node = null;
+        
+        while (stack_len > 0) {
+            // Assert: Stack depth within bounds
+            std.debug.assert(stack_len <= MAX_DEPTH);
+            
+            stack_len -= 1;
+            const current = stack[stack_len].?;
+            
+            // Check if point is within this node
+            if (point.row < current.start_point.row or point.row > current.end_point.row) {
+                continue;
+            }
+            if (point.row == current.start_point.row and point.column < current.start_point.column) {
+                continue;
+            }
+            if (point.row == current.end_point.row and point.column > current.end_point.column) {
+                continue;
+            }
+            
+            // This node contains the point, check children for more specific match
+            best_match = current;
+            
+            // Check children (more specific)
+            for (current.children) |*child| {
+                // Assert: Stack has room
+                std.debug.assert(stack_len < MAX_DEPTH);
+                stack[stack_len] = child;
+                stack_len += 1;
             }
         }
         
-        // This node contains the point
-        return node.*;
+        if (best_match) |match| {
+            return match.*;
+        }
+        return null;
     }
     
     /// Extract function name from function node.

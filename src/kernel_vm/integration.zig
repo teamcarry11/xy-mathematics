@@ -260,6 +260,7 @@ fn syscall_handler_wrapper(
     
     // Syscall numbers
     const READ_INPUT_EVENT_SYSCALL: u32 = 60;
+    const CLOCK_GETTIME_SYSCALL: u32 = 40;
     const FB_CLEAR_SYSCALL: u32 = 70;
     const FB_DRAW_PIXEL_SYSCALL: u32 = 71;
     const FB_DRAW_TEXT_SYSCALL: u32 = 72;
@@ -316,6 +317,72 @@ fn syscall_handler_wrapper(
         }
         
         return EVENT_SIZE;
+    }
+    
+    // Handle clock_gettime syscall (needs VM access to write timespec).
+    // Why: Kernel doesn't have direct VM memory access, integration layer handles it.
+    if (syscall_num == CLOCK_GETTIME_SYSCALL) {
+        const kernel = global_kernel_ptr orelse {
+            @panic("syscall_handler_wrapper called before Integration.finish_init");
+        };
+        const kernel_addr = @intFromPtr(kernel);
+        std.debug.assert(kernel_addr != 0);
+        std.debug.assert(kernel_addr % @alignOf(BasinKernel) == 0);
+        
+        const vm = global_vm_ptr orelse {
+            @panic("syscall_handler_wrapper called before Integration.finish_init");
+        };
+        const vm_addr = @intFromPtr(vm);
+        std.debug.assert(vm_addr != 0);
+        std.debug.assert(vm_addr % @alignOf(VM) == 0);
+        
+        const clock_id: u64 = arg1;
+        const timespec_ptr: u64 = arg2;
+        
+        // Validate clock_id (monotonic=0, realtime=1).
+        if (clock_id > 1) {
+            return @as(u64, @bitCast(@as(i64, -2))); // invalid_argument
+        }
+        
+        // Validate timespec pointer.
+        if (timespec_ptr == 0) {
+            return @as(u64, @bitCast(@as(i64, -2))); // invalid_argument
+        }
+        
+        const VM_MEMORY_SIZE: u64 = 4 * 1024 * 1024;
+        const TIMESPEC_SIZE: u64 = 16; // 8 bytes seconds + 8 bytes nanoseconds
+        if (timespec_ptr + TIMESPEC_SIZE > VM_MEMORY_SIZE) {
+            return @as(u64, @bitCast(@as(i64, -9))); // invalid_address
+        }
+        
+        // Get time from kernel timer.
+        const time_ns: u64 = if (clock_id == 0)
+            kernel.timer.get_monotonic_ns()
+        else
+            kernel.timer.get_realtime_ns();
+        
+        // Convert nanoseconds to seconds and nanoseconds.
+        const seconds: u64 = time_ns / 1000000000;
+        const nanoseconds: u64 = time_ns % 1000000000;
+        
+        // Assert: Nanoseconds must be valid (0-999999999).
+        std.debug.assert(nanoseconds < 1000000000);
+        
+        // Write timespec structure to VM memory.
+        const timespec_phys = vm.translate_address(timespec_ptr) orelse {
+            return @as(u64, @bitCast(@as(i64, -9))); // invalid_address
+        };
+        
+        // Write seconds (8 bytes, little-endian).
+        const seconds_bytes = std.mem.toBytes(seconds);
+        @memcpy(vm.memory[@as(usize, @intCast(timespec_phys))..@as(usize, @intCast(timespec_phys + 8))], &seconds_bytes);
+        
+        // Write nanoseconds (8 bytes, little-endian).
+        const nanoseconds_bytes = std.mem.toBytes(nanoseconds);
+        @memcpy(vm.memory[@as(usize, @intCast(timespec_phys + 8))..@as(usize, @intCast(timespec_phys + 16))], &nanoseconds_bytes);
+        
+        // Return success (0).
+        return 0;
     }
     
     // Handle framebuffer syscalls (needs VM access to framebuffer memory).

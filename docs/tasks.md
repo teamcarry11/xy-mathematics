@@ -294,11 +294,14 @@
 - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
 - [ ] Zig-specific features (comptime analysis) - pending
 
-#### 4.1.6 Magit-Style VCS
-- [ ] Generate `.jj/status.jj` (readonly metadata, editable hunks)
-- [ ] Generate `.jj/commit/*.diff` (readonly commit info, editable diff)
-- [ ] Watch for edits, invoke `jj` commands
-- [ ] Readonly spans for commit hashes, parent info
+#### 4.1.6 Magit-Style VCS ✅ **COMPLETE**
+- [x] Generate `.jj/status.jj` (readonly metadata, editable hunks)
+- [x] Generate `.jj/commit/*.diff` (readonly commit info, editable diff)
+- [x] Watch for edits, invoke `jj` commands
+- [x] Readonly spans for commit hashes, parent info, file paths, diff headers
+- [x] Parse `jj status` and `jj diff` output
+- [x] Virtual file system with bounded allocations
+- [x] GrainStyle compliance (u32 types, assertions, no recursion)
 
 #### 4.1.7 Multi-Pane Layout
 - [ ] Split panes (horizontal/vertical)

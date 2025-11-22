@@ -1,7 +1,7 @@
 # Grain OS Development Plan
 ## RISC-V Kernel + VM + Aurora IDE
 
-**Current Status**: Phase 3.1 Process Scheduler complete ✅. Process scheduler with round-robin scheduling and state management implemented! 🎉
+**Current Status**: Phase 3.3 IPC Channels complete ✅. IPC channel system with message queues and channel management implemented! 🎉
 
 **Goal**: RISC-V-targeted Grain OS with graphical interface running in macOS Tahoe 26.1 VM, with path toward Framework 13 RISC-V hardware.
 
@@ -141,6 +141,16 @@
    - ✅ Wait syscall enhancement (polling-based, returns would_block if still running)
    - ✅ Scheduler integration with kernel (BasinKernel.scheduler)
    - ✅ Comprehensive TigerStyle tests (tests/022_process_scheduler_test.zig)
+
+15. **IPC Channels** ✅ **COMPLETE**
+   - ✅ Created IPC channel module (src/kernel/channel.zig)
+   - ✅ Message queue (bounded: 32 messages max, 4KB per message)
+   - ✅ Channel table (64 channels max, static allocation)
+   - ✅ channel_create syscall (creates channel, returns channel ID)
+   - ✅ channel_send syscall (validates channel and data, integration layer handles memory)
+   - ✅ channel_recv syscall (validates channel and buffer, integration layer handles memory)
+   - ✅ Channel integration with kernel (BasinKernel.channels)
+   - ✅ Comprehensive TigerStyle tests (tests/023_ipc_channel_test.zig)
 
 ## 🚀 Architecture Overview
 
@@ -355,11 +365,14 @@
 - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 - 📋 Zig-specific features (comptime analysis) - pending
 
-#### 1.6: Magit-Style VCS 📋 **PLANNED**
-- 📋 Generate `.jj/status.jj` (readonly metadata, editable hunks)
-- 📋 Generate `.jj/commit/*.diff` (readonly commit info, editable diff)
-- 📋 Watch for edits, invoke `jj` commands
-- 📋 Readonly spans for commit hashes, parent info
+#### 1.6: Magit-Style VCS ✅ **COMPLETE**
+- ✅ Generate `.jj/status.jj` (readonly metadata, editable hunks)
+- ✅ Generate `.jj/commit/*.diff` (readonly commit info, editable diff)
+- ✅ Watch for edits, invoke `jj` commands
+- ✅ Readonly spans for commit hashes, parent info, file paths, diff headers
+- ✅ Parse `jj status` and `jj diff` output
+- ✅ Virtual file system with bounded allocations
+- ✅ GrainStyle compliance (u32 types, assertions, no recursion)
 
 #### 1.7: Multi-Pane Layout 📋 **PLANNED**
 - 📋 Split panes (horizontal/vertical)

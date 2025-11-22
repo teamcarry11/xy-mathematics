@@ -349,7 +349,9 @@ pub const LivePreview = struct {
         errdefer self.allocator.free(content_copy);
         
         const timestamp = std.time.timestamp();
-        const timestamp_u64 = @intCast(@max(timestamp, 0));
+        // Assert: Timestamp must be non-negative (cast to u64)
+        std.debug.assert(timestamp >= 0);
+        const timestamp_u64 = @intCast(timestamp);
         
         try self.pending_updates.append(Update{
             .source = .editor_edit,
@@ -382,7 +384,9 @@ pub const LivePreview = struct {
         errdefer self.allocator.free(content_copy);
         
         const timestamp = std.time.timestamp();
-        const timestamp_u64 = @intCast(@max(timestamp, 0));
+        // Assert: Timestamp must be non-negative (cast to u64)
+        std.debug.assert(timestamp >= 0);
+        const timestamp_u64 = @intCast(timestamp);
         
         try self.pending_updates.append(Update{
             .source = .nostr_event,

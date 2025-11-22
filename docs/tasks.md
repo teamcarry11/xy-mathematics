@@ -184,8 +184,21 @@
 
 ### 3.2 Device Drivers
 - [x] Framebuffer driver ✅ **COMPLETE**
-- [ ] Keyboard driver
-- [ ] Mouse driver
+- [x] Keyboard driver ✅ **COMPLETE**
+  - [x] Keyboard driver module (`src/kernel/keyboard.zig`)
+  - [x] Key state tracking (256 keys max, pressed/released)
+  - [x] Last key code tracking
+  - [x] Key press/release handling
+  - [x] Keyboard integration with kernel (BasinKernel.keyboard)
+  - [x] Comprehensive TigerStyle tests (`tests/026_keyboard_mouse_driver_test.zig`)
+- [x] Mouse driver ✅ **COMPLETE**
+  - [x] Mouse driver module (`src/kernel/mouse.zig`)
+  - [x] Position tracking (X, Y coordinates, max 65535 each)
+  - [x] Button state tracking (5 buttons max, pressed/released)
+  - [x] Last button tracking
+  - [x] Button press/release handling
+  - [x] Mouse integration with kernel (BasinKernel.mouse)
+  - [x] Comprehensive TigerStyle tests (`tests/026_keyboard_mouse_driver_test.zig`)
 - [x] Timer driver ✅ **COMPLETE**
   - [x] Timer driver module (`src/kernel/timer.zig`)
   - [x] Monotonic clock (nanoseconds since boot)
@@ -415,10 +428,15 @@
 - [x] Title extraction from URIs and URLs
 - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
 
-#### 4.3.2 Live Preview
-- [ ] Editor edits → Browser preview (real-time)
-- [ ] Nostr event updates → Editor sync
-- [ ] Bidirectional sync (editor ↔ browser)
+#### 4.3.2 Live Preview ✅ **COMPLETE**
+- [x] Editor edits → Browser preview (real-time propagation)
+- [x] Nostr event updates → Editor sync (bidirectional)
+- [x] Bidirectional sync (editor ↔ browser)
+- [x] Sync subscriptions (editor-to-browser, browser-to-editor, bidirectional)
+- [x] DAG-based event propagation (HashDAG-style ordering)
+- [x] Streaming updates (Hyperfiddle-style, TigerBeetle state machine)
+- [x] Update queue with bounded allocations (max 1,000 updates/second)
+- [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
 
 #### 4.3.3 GrainBank Integration
 - [ ] Micropayments in browser

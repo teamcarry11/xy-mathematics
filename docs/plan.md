@@ -1,7 +1,7 @@
 # Grain OS Development Plan
 ## RISC-V Kernel + VM + Aurora IDE
 
-**Current Status**: Phase 3.3 Userspace Support complete ✅. Enhanced process management with ELF loading support and process context tracking implemented! 🎉
+**Current Status**: Phase 3.2 Device Drivers complete ✅. Keyboard and mouse drivers with state tracking implemented! 🎉
 
 **Goal**: RISC-V-targeted Grain OS with graphical interface running in macOS Tahoe 26.1 VM, with path toward Framework 13 RISC-V hardware.
 
@@ -465,10 +465,15 @@
 - ✅ Title extraction from URIs and URLs
 - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 
-#### 3.2: Live Preview 📋 **PLANNED**
-- 📋 Editor edits → Browser preview (real-time)
-- 📋 Nostr event updates → Editor sync
-- 📋 Bidirectional sync (editor ↔ browser)
+#### 3.2: Live Preview ✅ **COMPLETE**
+- ✅ Editor edits → Browser preview (real-time propagation)
+- ✅ Nostr event updates → Editor sync (bidirectional)
+- ✅ Bidirectional sync (editor ↔ browser)
+- ✅ Sync subscriptions (editor-to-browser, browser-to-editor, bidirectional)
+- ✅ DAG-based event propagation (HashDAG-style ordering)
+- ✅ Streaming updates (Hyperfiddle-style, TigerBeetle state machine)
+- ✅ Update queue with bounded allocations (max 1,000 updates/second)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 
 #### 3.3: GrainBank Integration 📋 **PLANNED**
 - 📋 Micropayments in browser

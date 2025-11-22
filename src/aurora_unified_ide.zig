@@ -14,6 +14,8 @@ pub const UnifiedIde = struct {
     allocator: std.mem.Allocator,
     layout: Layout,
     shared_aurora: GrainAurora,
+    dag: DagCore,
+    grainbank: AuroraGrainBank,
     
     // Bounded: Max 100 editor tabs
     pub const MAX_EDITOR_TABS: u32 = 100;

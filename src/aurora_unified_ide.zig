@@ -163,6 +163,9 @@ pub const UnifiedIde = struct {
         const url_copy = try self.allocator.dupe(u8, url);
         errdefer self.allocator.free(url_copy);
         
+        // Check if URL requires payment (Nostr content may include GrainBank contracts)
+        const contract_id = try self.detect_payment_contract(url);
+        
         const tab_id = @intCast(self.browser_tabs.items.len);
         try self.browser_tabs.append(BrowserTab{
             .id = tab_id,
@@ -170,6 +173,8 @@ pub const UnifiedIde = struct {
             .parser = parser,
             .renderer = renderer,
             .title = title,
+            .contract_id = contract_id,
+            .payment_enabled = contract_id != null,
         });
         
         // Set as current tab
@@ -179,6 +184,81 @@ pub const UnifiedIde = struct {
         std.debug.assert(self.browser_tabs.items.len <= MAX_BROWSER_TABS);
         
         return tab_id;
+    }
+    
+    /// Detect if URL/content requires GrainBank payment contract.
+    fn detect_payment_contract(self: *UnifiedIde, url: []const u8) !?u64 {
+        _ = self;
+        
+        // Assert: URL must be valid
+        std.debug.assert(url.len > 0);
+        std.debug.assert(url.len <= 4096); // Bounded URL length
+        
+        // For now, return null (no payment required)
+        // In future, this would:
+        // 1. Parse Nostr event from URL
+        // 2. Check if event includes GrainBank contract metadata
+        // 3. Create or find contract in GrainBank
+        // 4. Return contract ID
+        
+        return null;
+    }
+    
+    /// Trigger automatic micropayment for content viewing.
+    pub fn trigger_content_payment(
+        self: *UnifiedIde,
+        browser_tab_id: u32,
+        amount: u128,
+        from_npub: [32]u8,
+        to_npub: [32]u8,
+    ) !?u64 {
+        // Assert: Browser tab ID and amount must be valid
+        std.debug.assert(browser_tab_id < self.browser_tabs.items.len);
+        std.debug.assert(amount > 0);
+        
+        const tab = &self.browser_tabs.items[browser_tab_id];
+        
+        // Assert: Payment must be enabled for this tab
+        std.debug.assert(tab.payment_enabled);
+        std.debug.assert(tab.contract_id != null);
+        
+        const contract_id = tab.contract_id.?;
+        
+        // Create payment via GrainBank
+        const payment_id = try self.grainbank.create_payment(
+            contract_id,
+            amount,
+            from_npub,
+            to_npub,
+        );
+        
+        // Process pending payments (deterministic state machine)
+        try self.grainbank.process_pending_payments();
+        
+        // Assert: Payment created successfully
+        std.debug.assert(payment_id > 0);
+        
+        return payment_id;
+    }
+    
+    /// Enable or disable automatic micropayments for browser tab.
+    pub fn set_payment_enabled(self: *UnifiedIde, browser_tab_id: u32, enabled: bool) void {
+        // Assert: Browser tab ID must be valid
+        std.debug.assert(browser_tab_id < self.browser_tabs.items.len);
+        
+        const tab = &self.browser_tabs.items[browser_tab_id];
+        tab.payment_enabled = enabled;
+    }
+    
+    /// Associate GrainBank contract with browser tab.
+    pub fn set_tab_contract(self: *UnifiedIde, browser_tab_id: u32, contract_id: u64) void {
+        // Assert: Browser tab ID and contract ID must be valid
+        std.debug.assert(browser_tab_id < self.browser_tabs.items.len);
+        std.debug.assert(contract_id > 0);
+        
+        const tab = &self.browser_tabs.items[browser_tab_id];
+        tab.contract_id = contract_id;
+        tab.payment_enabled = true;
     }
     
     /// Close editor tab.

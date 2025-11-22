@@ -335,9 +335,11 @@
 
 #### 4.3.4 WebSocket Transport ✅ **COMPLETE**
 - [x] WebSocket client (low-latency, `src/dream_browser_websocket.zig`)
-- [x] Bidirectional communication (send/receive with message queue)
-- [x] Connection management (state tracking, auto-reconnect)
-- [x] Error handling and reconnection (exponential backoff, max 10 attempts)
+- [x] Bidirectional communication (send/receive messages via WebSocketClient)
+- [x] Connection management (connection pool, state tracking, max 10 connections)
+- [x] Error handling and reconnection (exponential backoff, max 10 attempts, max 60s delay)
+- [x] Connection pooling (multiple relay connections, URL parsing)
+- [x] Health monitoring (ping/pong handling, connection statistics)
 
 ### 4.3 Editor-Browser Integration (PLANNED)
 

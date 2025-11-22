@@ -195,7 +195,18 @@
   - [x] Wait syscall enhancement (polling-based)
   - [x] Scheduler integration with kernel
   - [x] Comprehensive TigerStyle tests (`tests/022_process_scheduler_test.zig`)
-- [ ] System calls (POSIX subset)
+- [x] System calls (POSIX subset) ✅ **COMPLETE**
+  - [x] All syscalls implemented with comprehensive validation
+  - [x] Enhanced sysinfo syscall (returns actual system information)
+  - [x] Memory management syscalls (map, unmap, protect)
+  - [x] Process management syscalls (spawn, exit, yield, wait)
+  - [x] IPC syscalls (channel_create, channel_send, channel_recv)
+  - [x] File I/O syscalls (open, read, write, close, unlink, rename, mkdir, opendir, readdir, closedir)
+  - [x] Time syscalls (clock_gettime, sleep_until)
+  - [x] Input syscalls (read_input_event)
+  - [x] Framebuffer syscalls (fb_clear, fb_draw_pixel, fb_draw_text)
+  - [x] Comprehensive error handling and validation
+  - [x] GrainStyle compliance (u32/u64 types, assertions, bounded allocations)
 
 ### 3.2 Device Drivers
 - [x] Framebuffer driver ✅ **COMPLETE**
@@ -461,6 +472,16 @@
 - [x] Contract management (create, execute actions: mint, burn, transfer, collect_tax)
 - [x] Payment processing (batch processing, deterministic execution)
 - [x] DAG integration (contracts and payments as DAG events)
+- [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
+
+#### 4.3.4 GrainBank Browser Integration ✅ **COMPLETE**
+- [x] Integrate GrainBank into unified IDE
+- [x] Browser tabs can have associated GrainBank contracts
+- [x] Automatic micropayments triggered when viewing paid content
+- [x] Payment detection from URL/content (Nostr event parsing)
+- [x] Enable/disable payments per tab
+- [x] Associate contracts with browser tabs
+- [x] Process payments via deterministic state machine
 - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
 
 ### 4.4 Window System (COMPLETE - Legacy)

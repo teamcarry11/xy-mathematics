@@ -1,7 +1,7 @@
 # Grain OS Development Plan
 ## RISC-V Kernel + VM + Aurora IDE
 
-**Current Status**: Phase 3.1 Boot Sequence complete ✅. Kernel boot sequence with subsystem initialization order implemented! 🎉
+**Current Status**: Phase 3.1 System Calls complete ✅. All POSIX subset syscalls implemented with comprehensive validation! 🎉
 
 **Goal**: RISC-V-targeted Grain OS with graphical interface running in macOS Tahoe 26.1 VM, with path toward Framework 13 RISC-V hardware.
 
@@ -483,6 +483,16 @@
 - ✅ Contract management (create, execute actions: mint, burn, transfer, collect_tax)
 - ✅ Payment processing (batch processing, deterministic execution)
 - ✅ DAG integration (contracts and payments as DAG events)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+
+#### 3.4: GrainBank Browser Integration ✅ **COMPLETE**
+- ✅ Integrate GrainBank into unified IDE
+- ✅ Browser tabs can have associated GrainBank contracts
+- ✅ Automatic micropayments triggered when viewing paid content
+- ✅ Payment detection from URL/content (Nostr event parsing)
+- ✅ Enable/disable payments per tab
+- ✅ Associate contracts with browser tabs
+- ✅ Process payments via deterministic state machine
 - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 
 **See**: `docs/dream_implementation_roadmap.md` for complete roadmap

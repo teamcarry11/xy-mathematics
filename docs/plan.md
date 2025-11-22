@@ -451,14 +451,30 @@
 - ✅ Connection pooling (multiple relay connections, URL parsing)
 - ✅ Health monitoring (ping/pong handling, connection statistics)
 
-### Phase 3: Integration (Planned)
+### Phase 3: Integration 🔄 **IN PROGRESS**
 
 **Objective**: Unified Editor + Browser experience.
 
-- Multi-pane layout (River compositor)
-- Live preview (real-time sync)
-- VCS integration (Magit-style)
-- GrainBank micropayments
+#### 3.1: Unified UI ✅ **COMPLETE**
+- ✅ Multi-pane layout (editor + browser integrated)
+- ✅ Tab management (editor tabs, browser tabs, max 100 each)
+- ✅ Workspace management (River-style switching)
+- ✅ Shared Grain Aurora UI
+- ✅ Split panes and open editor/browser in new panes
+- ✅ Focus navigation and pane closing
+- ✅ Title extraction from URIs and URLs
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+
+#### 3.2: Live Preview 📋 **PLANNED**
+- 📋 Editor edits → Browser preview (real-time)
+- 📋 Nostr event updates → Editor sync
+- 📋 Bidirectional sync (editor ↔ browser)
+
+#### 3.3: GrainBank Integration 📋 **PLANNED**
+- 📋 Micropayments in browser
+- 📋 Deterministic contracts
+- 📋 Peer-to-peer payments
+- 📋 State machine execution
 
 **See**: `docs/dream_implementation_roadmap.md` for complete roadmap
 

@@ -205,7 +205,16 @@
   - [x] Process pending interrupts
   - [x] Kernel interrupt controller integration
   - [x] Comprehensive TigerStyle tests (`tests/021_interrupt_controller_test.zig`)
-- [ ] Storage (virtio-blk)
+- [x] Storage (in-memory filesystem) ✅ **COMPLETE**
+  - [x] Storage filesystem module (`src/kernel/storage.zig`)
+  - [x] File operations (create, read, write, delete)
+  - [x] Directory operations (create, list)
+  - [x] File table (128 files max, 64KB per file)
+  - [x] Directory table (32 directories max)
+  - [x] Storage integration with kernel (BasinKernel.storage)
+  - [x] File I/O syscall integration (open/read/write/close)
+  - [x] Comprehensive TigerStyle tests (`tests/025_storage_filesystem_test.zig`)
+  - [ ] virtio-blk backend (future: persistent storage)
 
 ### 3.3 Userspace Support
 - [x] ELF loader ✅ **COMPLETE**
@@ -394,13 +403,17 @@
 - [x] Connection pooling (multiple relay connections, URL parsing)
 - [x] Health monitoring (ping/pong handling, connection statistics)
 
-### 4.3 Editor-Browser Integration (PLANNED)
+### 4.3 Editor-Browser Integration 🔄 **IN PROGRESS**
 
-#### 4.3.1 Unified UI
-- [ ] Multi-pane layout (editor + browser)
-- [ ] Tab management (editor tabs, browser tabs)
-- [ ] Workspace management
-- [ ] Shared Grain Aurora UI
+#### 4.3.1 Unified UI ✅ **COMPLETE**
+- [x] Multi-pane layout (editor + browser integrated)
+- [x] Tab management (editor tabs, browser tabs, max 100 each)
+- [x] Workspace management (River-style switching)
+- [x] Shared Grain Aurora UI
+- [x] Split panes and open editor/browser in new panes
+- [x] Focus navigation and pane closing
+- [x] Title extraction from URIs and URLs
+- [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
 
 #### 4.3.2 Live Preview
 - [ ] Editor edits → Browser preview (real-time)

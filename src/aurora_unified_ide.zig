@@ -4,6 +4,8 @@ const Layout = @import("aurora_layout.zig").Layout;
 const DreamBrowserParser = @import("dream_browser_parser.zig").DreamBrowserParser;
 const DreamBrowserRenderer = @import("dream_browser_renderer.zig").DreamBrowserRenderer;
 const GrainAurora = @import("grain_aurora.zig").GrainAurora;
+const AuroraGrainBank = @import("aurora_grainbank.zig").AuroraGrainBank;
+const DagCore = @import("dag_core.zig").DagCore;
 
 /// Unified IDE: integrates Dream Editor and Dream Browser in multi-pane layout.
 /// ~<~ Glow Airbend: explicit tab management, bounded tabs.
@@ -36,6 +38,8 @@ pub const UnifiedIde = struct {
         parser: DreamBrowserParser,
         renderer: DreamBrowserRenderer,
         title: []const u8,
+        contract_id: ?u64 = null, // Associated GrainBank contract (if content requires payment)
+        payment_enabled: bool = false, // Whether automatic micropayments are enabled
     };
     
     pub fn init(allocator: std.mem.Allocator, width: u32, height: u32) !UnifiedIde {
@@ -54,10 +58,18 @@ pub const UnifiedIde = struct {
         const shared_aurora = try GrainAurora.init(allocator, "");
         errdefer shared_aurora.deinit();
         
+        var dag = try DagCore.init(allocator);
+        errdefer dag.deinit();
+        
+        var grainbank = try AuroraGrainBank.init(allocator, &dag);
+        errdefer grainbank.deinit();
+        
         return UnifiedIde{
             .allocator = allocator,
             .layout = layout,
             .shared_aurora = shared_aurora,
+            .dag = dag,
+            .grainbank = grainbank,
             .editor_tabs = std.ArrayList(EditorTab).init(allocator),
             .browser_tabs = std.ArrayList(BrowserTab).init(allocator),
         };
@@ -81,6 +93,8 @@ pub const UnifiedIde = struct {
         }
         self.browser_tabs.deinit();
         
+        self.grainbank.deinit();
+        self.dag.deinit();
         self.shared_aurora.deinit();
         self.layout.deinit();
         self.* = undefined;

@@ -1,7 +1,7 @@
 # Grain OS Development Plan
 ## RISC-V Kernel + VM + Aurora IDE
 
-**Current Status**: Phase 3.3 Enhanced Trap/Exception Handling complete ✅. Trap loop integrated with interrupt controller, exception handling implemented! 🎉
+**Current Status**: Phase 3.5 Exception Statistics in State Snapshot complete ✅. Exception statistics integrated into VM state persistence! 🎉
 
 **Goal**: RISC-V-targeted Grain OS with graphical interface running in macOS Tahoe 26.1 VM, with path toward Framework 13 RISC-V hardware.
 
@@ -163,6 +163,19 @@
    - ✅ Kernel main integration (kmain() calls loop_with_kernel())
    - ✅ Comprehensive TigerStyle tests (tests/029_trap_handler_test.zig)
    - ✅ GrainStyle compliance (u32 types, assertions, bounded loops, no recursion)
+
+17. **Exception Statistics Tracking** ✅ **COMPLETE**
+   - ✅ Exception statistics module (src/kernel_vm/exception_stats.zig)
+   - ✅ Exception count tracking by type (16 exception types, RISC-V codes)
+   - ✅ Total exception count tracking
+   - ✅ Exception statistics summary (ExceptionSummary struct)
+   - ✅ VM integration (exception_stats field in VM struct)
+   - ✅ Automatic exception recording (VM errors mapped to RISC-V exception codes)
+   - ✅ Exception recording in VM error paths (invalid instruction, misaligned access, etc.)
+   - ✅ Statistics query interface (get_count, get_total_count, get_summary)
+   - ✅ Statistics reset capability
+   - ✅ Comprehensive TigerStyle tests (tests/030_exception_stats_test.zig)
+   - ✅ GrainStyle compliance (u32 types, assertions, bounded counters, static allocation)
 
 ## 🚀 Architecture Overview
 

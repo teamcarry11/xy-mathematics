@@ -25,6 +25,10 @@ test "scheduler init" {
 
 // Test set current process.
 test "scheduler set current" {
+    // Disable RawIO to avoid SIGILL in tests.
+    RawIO.disable();
+    defer RawIO.enable();
+    
     var kernel = BasinKernel.init();
     
     const pid: u64 = 1;
@@ -40,6 +44,10 @@ test "scheduler set current" {
 
 // Test clear current process.
 test "scheduler clear current" {
+    // Disable RawIO to avoid SIGILL in tests.
+    RawIO.disable();
+    defer RawIO.enable();
+    
     var kernel = BasinKernel.init();
     
     kernel.scheduler.set_current(1);
@@ -52,6 +60,10 @@ test "scheduler clear current" {
 
 // Test find next runnable process.
 test "scheduler find next runnable" {
+    // Disable RawIO to avoid SIGILL in tests.
+    RawIO.disable();
+    defer RawIO.enable();
+    
     var kernel = BasinKernel.init();
     
     // Use kernel's scheduler and processes
@@ -88,6 +100,10 @@ test "scheduler find next runnable" {
 
 // Test find next runnable with no processes.
 test "scheduler find next runnable empty" {
+    // Disable RawIO to avoid SIGILL in tests.
+    RawIO.disable();
+    defer RawIO.enable();
+    
     var kernel = BasinKernel.init();
     
     // No processes spawned, should return 0.
@@ -99,6 +115,10 @@ test "scheduler find next runnable empty" {
 
 // Test reset scheduler.
 test "scheduler reset" {
+    // Disable RawIO to avoid SIGILL in tests.
+    RawIO.disable();
+    defer RawIO.enable();
+    
     var kernel = BasinKernel.init();
     
     kernel.scheduler.set_current(1);
@@ -112,6 +132,10 @@ test "scheduler reset" {
 
 // Test kernel scheduler integration.
 test "kernel scheduler integration" {
+    // Disable RawIO to avoid SIGILL in tests.
+    RawIO.disable();
+    defer RawIO.enable();
+    
     var kernel = BasinKernel.init();
     
     // Assert: Kernel scheduler must be initialized.

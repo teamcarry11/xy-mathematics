@@ -871,17 +871,35 @@
 - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
 - [ ] Grain Aurora rendering integration - requires coordination with Dream Editor/Browser agent
 
-#### 8.2.3 Advanced Features
-- [ ] Session management
-- [ ] Grainscript integration
-- [ ] Plugin system
+#### 8.2.3 Advanced Features ✅ **COMPLETE**
+- [x] Session management (`src/grain_terminal/session.zig`)
+- [x] Session save/restore functionality
+- [x] Tab management in sessions
+- [x] Configuration snapshots for sessions
+- [x] Grainscript integration (`src/grain_terminal/grainscript_integration.zig`)
+- [x] Command execution with output capture
+- [x] Script execution from files
+- [x] REPL state management (command history)
+- [x] Plugin system (`src/grain_terminal/plugin.zig`)
+- [x] Plugin loading/unloading
+- [x] Plugin API definition (hooks for terminal events)
+- [x] Comprehensive tests (`tests/047_grain_terminal_advanced_test.zig`)
+- [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
 
 ### 8.3 Grain Skate (PLANNED)
 
-#### 8.3.1 Core Engine
-- [ ] DAG data structures (may leverage `src/dag_core.zig`)
-- [ ] Block storage and linking
-- [ ] Basic text editing with Vim bindings
+#### 8.3.1 Core Engine ✅ **COMPLETE**
+- [x] Block storage (`src/grain_skate/block.zig`)
+- [x] Block linking system (bidirectional links and backlinks)
+- [x] Block content and title management
+- [x] Text editor with Vim bindings (`src/grain_skate/editor.zig`)
+- [x] Editor modes (normal, insert, visual, command)
+- [x] Cursor movement (h, j, k, l)
+- [x] Text buffer management
+- [x] Undo/redo history structure
+- [x] Comprehensive tests (`tests/048_grain_skate_core_test.zig`)
+- [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
+- [ ] DAG integration - can leverage `src/dag_core.zig` for future graph visualization
 
 #### 8.3.2 UI Framework
 - [ ] Native macOS window management

@@ -184,6 +184,13 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    // Grain Skate module
+    const grain_skate_module = b.addModule("grain_skate", .{
+        .root_source_file = b.path("src/grain_skate/root.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
     // Kernel VM test executable (for testing VM functionality).
     const kernel_vm_test_exe = b.addExecutable(.{
         .name = "kernel_vm_test",
@@ -369,6 +376,30 @@ pub fn build(b: *std.Build) void {
     const editor_tests = b.addTest(.{
         .root_module = b.createModule(.{
             .root_source_file = b.path("src/aurora_editor.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+
+    const ai_provider_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/aurora_ai_provider.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+
+    const glm46_provider_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/aurora_glm46_provider.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+
+    const ai_transforms_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/aurora_ai_transforms.zig"),
             .target = target,
             .optimize = optimize,
         }),
@@ -1048,6 +1079,32 @@ pub fn build(b: *std.Build) void {
     });
     const grain_terminal_ui_tests_run = b.addRunArtifact(grain_terminal_ui_tests);
     test_step.dependOn(&grain_terminal_ui_tests_run.step);
+
+    const grain_terminal_advanced_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/047_grain_terminal_advanced_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_terminal", .module = grain_terminal_module },
+            },
+        }),
+    });
+    const grain_terminal_advanced_tests_run = b.addRunArtifact(grain_terminal_advanced_tests);
+    test_step.dependOn(&grain_terminal_advanced_tests_run.step);
+
+    const grain_skate_core_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/048_grain_skate_core_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_skate", .module = grain_skate_module },
+            },
+        }),
+    });
+    const grain_skate_core_tests_run = b.addRunArtifact(grain_skate_core_tests);
+    test_step.dependOn(&grain_skate_core_tests_run.step);
 
     // RISC-V Logo Display Program
     const riscv_logo_exe = b.addExecutable(.{

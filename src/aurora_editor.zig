@@ -17,6 +17,7 @@ pub const Editor = struct {
     folding: Folding,
     tree_sitter: TreeSitter,
     ai_provider: ?AiProvider = null,
+    ai_transforms: ?AiTransforms = null,
     file_uri: []const u8,
     cursor_line: u32 = 0,
     cursor_char: u32 = 0,
@@ -133,6 +134,11 @@ pub const Editor = struct {
         
         // Initialize AI provider
         self.ai_provider = try AiProvider.init(provider_type, self.allocator, config);
+        
+        // Initialize AI transforms with the provider
+        if (self.ai_provider) |*provider| {
+            self.ai_transforms = AiTransforms.init(self.allocator, provider);
+        }
     }
     
     /// Toggle fold at current line.
@@ -242,6 +248,186 @@ pub const Editor = struct {
                 .error_output = "AI provider not enabled",
                 .exit_code = -1,
             };
+        }
+    }
+    
+    /// Refactor: Rename symbol at current cursor position.
+    pub fn refactor_rename(
+        self: *Editor,
+        symbol_name: []const u8,
+        new_name: []const u8,
+    ) !AiTransforms.TransformResult {
+        // Assert: Symbol names must be valid
+        std.debug.assert(symbol_name.len > 0);
+        std.debug.assert(symbol_name.len <= AiTransforms.MAX_SYMBOL_NAME_LENGTH);
+        std.debug.assert(new_name.len > 0);
+        std.debug.assert(new_name.len <= AiTransforms.MAX_SYMBOL_NAME_LENGTH);
+        
+        if (self.ai_transforms) |*transforms| {
+            return try transforms.refactor_rename(
+                self.file_uri,
+                symbol_name,
+                new_name,
+                self.cursor_line,
+                self.cursor_char,
+            );
+        } else {
+            return AiTransforms.TransformResult{
+                .transform_type = .refactor_rename,
+                .file_edits = &.{},
+                .file_edits_len = 0,
+                .success = false,
+                .error_message = "AI provider not enabled",
+            };
+        }
+    }
+    
+    /// Refactor: Move function/struct to different location.
+    pub fn refactor_move(
+        self: *Editor,
+        symbol_name: []const u8,
+        target_file_uri: []const u8,
+        target_line: u32,
+    ) !AiTransforms.TransformResult {
+        // Assert: Parameters must be valid
+        std.debug.assert(symbol_name.len > 0);
+        std.debug.assert(symbol_name.len <= AiTransforms.MAX_SYMBOL_NAME_LENGTH);
+        std.debug.assert(target_file_uri.len > 0);
+        std.debug.assert(target_file_uri.len <= AiTransforms.MAX_FILE_URI_LENGTH);
+        
+        if (self.ai_transforms) |*transforms| {
+            return try transforms.refactor_move(
+                self.file_uri,
+                symbol_name,
+                target_file_uri,
+                target_line,
+                self.cursor_line,
+                self.cursor_char,
+            );
+        } else {
+            return AiTransforms.TransformResult{
+                .transform_type = .refactor_move,
+                .file_edits = &.{},
+                .file_edits_len = 0,
+                .success = false,
+                .error_message = "AI provider not enabled",
+            };
+        }
+    }
+    
+    /// Extract function: Extract selected code into new function.
+    pub fn extract_function(
+        self: *Editor,
+        function_name: []const u8,
+        start_line: u32,
+        start_char: u32,
+        end_line: u32,
+        end_char: u32,
+    ) !AiTransforms.TransformResult {
+        // Assert: Parameters must be valid
+        std.debug.assert(function_name.len > 0);
+        std.debug.assert(function_name.len <= AiTransforms.MAX_SYMBOL_NAME_LENGTH);
+        std.debug.assert(start_line <= end_line);
+        
+        if (self.ai_transforms) |*transforms| {
+            // Get selected text from buffer
+            const text = self.buffer.textSlice();
+            const start_pos = start_line * 80 + start_char;
+            const end_pos = end_line * 80 + end_char;
+            
+            // Assert: Positions must be within bounds
+            std.debug.assert(start_pos <= text.len);
+            std.debug.assert(end_pos <= text.len);
+            std.debug.assert(start_pos <= end_pos);
+            
+            const selected_text = text[start_pos..end_pos];
+            
+            return try transforms.extract_function(
+                self.file_uri,
+                function_name,
+                start_line,
+                start_char,
+                end_line,
+                end_char,
+                selected_text,
+            );
+        } else {
+            return AiTransforms.TransformResult{
+                .transform_type = .extract_function,
+                .file_edits = &.{},
+                .file_edits_len = 0,
+                .success = false,
+                .error_message = "AI provider not enabled",
+            };
+        }
+    }
+    
+    /// Inline function: Inline function call at current cursor position.
+    pub fn inline_function(
+        self: *Editor,
+        function_name: []const u8,
+    ) !AiTransforms.TransformResult {
+        // Assert: Function name must be valid
+        std.debug.assert(function_name.len > 0);
+        std.debug.assert(function_name.len <= AiTransforms.MAX_SYMBOL_NAME_LENGTH);
+        
+        if (self.ai_transforms) |*transforms| {
+            return try transforms.inline_function(
+                self.file_uri,
+                function_name,
+                self.cursor_line,
+                self.cursor_char,
+            );
+        } else {
+            return AiTransforms.TransformResult{
+                .transform_type = .inline_function,
+                .file_edits = &.{},
+                .file_edits_len = 0,
+                .success = false,
+                .error_message = "AI provider not enabled",
+            };
+        }
+    }
+    
+    /// Apply transformation edits to current buffer.
+    pub fn apply_transformation_edits(
+        self: *Editor,
+        result: AiTransforms.TransformResult,
+    ) !void {
+        // Assert: Result must be valid
+        std.debug.assert(result.file_edits_len <= AiTransforms.MAX_FILES_PER_TRANSFORM);
+        
+        if (!result.success) {
+            return;
+        }
+        
+        // Get current file content
+        const file_content = self.buffer.textSlice();
+        
+        // Filter edits for current file
+        var current_file_edits = std.ArrayList(AiTransforms.FileEdit).init(self.allocator);
+        defer current_file_edits.deinit();
+        
+        for (result.file_edits[0..result.file_edits_len]) |edit| {
+            if (std.mem.eql(u8, edit.file_uri, self.file_uri)) {
+                try current_file_edits.append(edit);
+            }
+        }
+        
+        if (current_file_edits.items.len > 0) {
+            // Apply edits using AiTransforms
+            if (self.ai_transforms) |*transforms| {
+                const modified_content = try transforms.apply_edits(file_content, current_file_edits.items);
+                defer self.allocator.free(modified_content);
+                
+                // Replace buffer content
+                self.buffer.deinit();
+                self.buffer = try GrainBuffer.fromSlice(self.allocator, modified_content);
+                
+                // Update Aurora
+                self.aurora.deinit();
+                self.aurora = try GrainAurora.init(self.allocator, modified_content);
+            }
         }
     }
 };

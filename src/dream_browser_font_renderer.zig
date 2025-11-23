@@ -290,11 +290,10 @@ pub const DreamBrowserFontRenderer = struct {
         std.debug.assert(font_size > 0);
         std.debug.assert(font_size <= 256); // Bounded font size
         
-        // Self not used in placeholder implementation
+        // Self, character, font_family, font_size not used in placeholder implementation
+        // (will be used in full implementation)
         _ = self;
         _ = character;
-        _ = font_family;
-        _ = font_size;
         
         // TODO: Implement full glyph rendering
         // For now, return error (placeholder)

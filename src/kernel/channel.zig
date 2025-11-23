@@ -237,6 +237,7 @@ pub const ChannelTable = struct {
         self.channels[idx].message_count = 0;
         self.channels[idx].read_pos = 0;
         self.channels[idx].write_pos = 0;
+        self.channels[idx].owner_process_id = 0; // Will be set by syscall_channel_create
         
         self.channel_count += 1;
         

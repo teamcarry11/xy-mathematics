@@ -182,17 +182,17 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
-    _ = grainscript_module; // Used by grainscript tests (added by Grain Skate agent).
+    // grainscript_module is used by grain_terminal_module and grainscript tests
 
-    // Grain Buffer module (for grain_terminal)
-    const grain_buffer_module = b.addModule("grain_buffer", .{
+    // Grain Buffer module (for grain_terminal) - reuse if exists
+    const grain_buffer_module = b.addModule("grain_buffer_terminal", .{
         .root_source_file = b.path("src/grain_buffer.zig"),
         .target = target,
         .optimize = optimize,
     });
 
-    // Window module (macos_tahoe, for grain_terminal)
-    const window_module_for_terminal = b.addModule("macos_window", .{
+    // Window module (macos_tahoe, for grain_terminal) - use different name to avoid conflict
+    const window_module_for_terminal = b.addModule("macos_window_terminal", .{
         .root_source_file = b.path("src/platform/macos_tahoe/window.zig"),
         .target = target,
         .optimize = optimize,
@@ -206,6 +206,7 @@ pub fn build(b: *std.Build) void {
         .imports = &.{
             .{ .name = "grain_buffer", .module = grain_buffer_module },
             .{ .name = "macos_window", .module = window_module_for_terminal },
+            .{ .name = "grainscript", .module = grainscript_module },
         },
     });
 
@@ -1146,6 +1147,8 @@ pub fn build(b: *std.Build) void {
             .optimize = optimize,
             .imports = &.{
                 .{ .name = "grain_terminal", .module = grain_terminal_module },
+                .{ .name = "grain_buffer", .module = grain_buffer_module },
+                .{ .name = "macos_window", .module = window_module_for_terminal },
             },
         }),
     });

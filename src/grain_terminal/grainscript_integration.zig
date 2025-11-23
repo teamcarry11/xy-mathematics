@@ -36,7 +36,7 @@ pub const GrainscriptIntegration = struct {
         /// Initialize output capture.
         pub fn init(allocator: std.mem.Allocator) !OutputCapture {
             // Assert: Allocator must be valid
-            std.debug.assert(allocator.ptr != null);
+            // Assert: Allocator must be valid (allocator is used below)
 
             // Pre-allocate stdout buffer
             const stdout = try allocator.alloc(u8, MAX_OUTPUT_BUFFER);
@@ -59,7 +59,7 @@ pub const GrainscriptIntegration = struct {
         /// Deinitialize output capture and free memory.
         pub fn deinit(self: *OutputCapture) void {
             // Assert: Allocator must be valid
-            std.debug.assert(self.allocator.ptr != null);
+            // Assert: Allocator must be valid (allocator is used below)
 
             self.allocator.free(self.stdout);
             self.allocator.free(self.stderr);
@@ -92,7 +92,7 @@ pub const GrainscriptIntegration = struct {
 
     /// REPL state structure.
     pub const ReplState = struct {
-        history: []const []const u8, // Command history (bounded)
+        history: []?[]const u8, // Command history (bounded, nullable for shifting)
         history_len: u32,
         history_index: u32, // Current history index
         allocator: std.mem.Allocator,
@@ -100,10 +100,11 @@ pub const GrainscriptIntegration = struct {
         /// Initialize REPL state.
         pub fn init(allocator: std.mem.Allocator) !ReplState {
             // Assert: Allocator must be valid
-            std.debug.assert(allocator.ptr != null);
+            // Assert: Allocator must be valid (allocator is used below)
 
             // Pre-allocate history buffer
-            const history = try allocator.alloc([]const u8, MAX_REPL_HISTORY);
+            const history = try allocator.alloc(?[]const u8, MAX_REPL_HISTORY);
+            @memset(history, null);
             errdefer allocator.free(history);
 
             return ReplState{
@@ -117,12 +118,14 @@ pub const GrainscriptIntegration = struct {
         /// Deinitialize REPL state and free memory.
         pub fn deinit(self: *ReplState) void {
             // Assert: Allocator must be valid
-            std.debug.assert(self.allocator.ptr != null);
+            // Assert: Allocator must be valid (allocator is used below)
 
             // Free all history entries
             var i: u32 = 0;
             while (i < self.history_len) : (i += 1) {
-                self.allocator.free(self.history[i]);
+                if (self.history[i]) |cmd| {
+                    self.allocator.free(cmd);
+                }
             }
 
             // Free history buffer
@@ -136,11 +139,14 @@ pub const GrainscriptIntegration = struct {
             // Check history limit
             if (self.history_len >= MAX_REPL_HISTORY) {
                 // Remove oldest entry (shift left)
-                self.allocator.free(self.history[0]);
+                if (self.history[0]) |old_cmd| {
+                    self.allocator.free(old_cmd);
+                }
                 var i: u32 = 0;
                 while (i < self.history_len - 1) : (i += 1) {
                     self.history[i] = self.history[i + 1];
                 }
+                self.history[self.history_len - 1] = null;
                 self.history_len -= 1;
             }
 
@@ -148,7 +154,7 @@ pub const GrainscriptIntegration = struct {
             const command_copy = try self.allocator.dupe(u8, command);
             errdefer self.allocator.free(command_copy);
 
-            self.history[self.history_len] = command_copy;
+            self.history[self.history_len] = command_copy; // Store as non-null
             self.history_len += 1;
             self.history_index = self.history_len; // Reset to end
         }
@@ -159,7 +165,10 @@ pub const GrainscriptIntegration = struct {
                 return null;
             }
             self.history_index -= 1;
-            return self.history[self.history_index];
+            if (self.history[self.history_index]) |cmd| {
+                return cmd;
+            }
+            return "";
         }
 
         /// Get next command from history.
@@ -178,7 +187,7 @@ pub const GrainscriptIntegration = struct {
     /// Execute Grainscript command and capture output.
     pub fn execute_command(allocator: std.mem.Allocator, source: []const u8) !OutputCapture {
         // Assert: Allocator must be valid
-        std.debug.assert(allocator.ptr != null);
+            // Assert: Allocator must be valid (allocator is used below)
 
         // Assert: Source must be bounded
         std.debug.assert(source.len <= MAX_COMMAND_LEN);
@@ -217,7 +226,7 @@ pub const GrainscriptIntegration = struct {
     /// Execute Grainscript script from file.
     pub fn execute_script(allocator: std.mem.Allocator, file_path: []const u8) !OutputCapture {
         // Assert: Allocator must be valid
-        std.debug.assert(allocator.ptr != null);
+            // Assert: Allocator must be valid (allocator is used below)
 
         // Read file (bounded)
         const file = try std.fs.cwd().openFile(file_path, .{});

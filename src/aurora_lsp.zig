@@ -41,6 +41,11 @@ pub const LspClient = struct {
         detail: ?[]const u8 = null,
         documentation: ?[]const u8 = null,
     };
+    
+    pub const HoverResult = struct {
+        contents: []const u8, // Hover content (markdown or plain text)
+        range: ?Range = null, // Optional range for hover
+    };
 
     pub const Diagnostic = struct {
         range: Range,
@@ -174,6 +179,94 @@ pub const LspClient = struct {
                     }
                 }
                 return completions;
+            }
+        }
+        return null;
+    }
+    
+    /// Request textDocument/hover at a position.
+    pub fn requestHover(
+        self: *LspClient,
+        uri: []const u8,
+        line: u32,
+        character: u32,
+    ) !?HoverResult {
+        // Assert: URI and position must be valid
+        std.debug.assert(uri.len > 0);
+        std.debug.assert(uri.len <= 4096); // Bounded URI length
+        
+        var params_obj = std.json.ObjectMap.init(self.allocator);
+        defer params_obj.deinit();
+        
+        var text_doc_obj = std.json.ObjectMap.init(self.allocator);
+        defer text_doc_obj.deinit();
+        try text_doc_obj.put("uri", std.json.Value{ .string = uri });
+        try params_obj.put("textDocument", std.json.Value{ .object = text_doc_obj });
+        
+        var position_obj = std.json.ObjectMap.init(self.allocator);
+        defer position_obj.deinit();
+        try position_obj.put("line", std.json.Value{ .integer = @intCast(line) });
+        try position_obj.put("character", std.json.Value{ .integer = @intCast(character) });
+        try params_obj.put("position", std.json.Value{ .object = position_obj });
+        
+        const params = std.json.Value{ .object = params_obj };
+        const response = try self.sendRequest("textDocument/hover", params);
+        
+        // Parse hover result from response.result
+        if (response.result) |result| {
+            if (result == .object) {
+                const obj = result.object;
+                var contents: []const u8 = "";
+                var hover_range: ?Range = null;
+                
+                // Parse contents (can be string or object with value)
+                if (obj.get("contents")) |contents_val| {
+                    if (contents_val == .string) {
+                        contents = contents_val.string;
+                    } else if (contents_val == .object) {
+                        if (contents_val.object.get("value")) |value| {
+                            if (value == .string) {
+                                contents = value.string;
+                            }
+                        }
+                    }
+                }
+                
+                // Parse range (optional)
+                if (obj.get("range")) |range_val| {
+                    if (range_val == .object) {
+                        const range_obj = range_val.object;
+                        if (range_obj.get("start")) |start_val| {
+                            if (start_val == .object) {
+                                const start_obj = start_val.object;
+                                const start_line = if (start_obj.get("line")) |l| @as(u32, @intCast(l.integer)) else 0;
+                                const start_char = if (start_obj.get("character")) |c| @as(u32, @intCast(c.integer)) else 0;
+                                
+                                if (range_obj.get("end")) |end_val| {
+                                    if (end_val == .object) {
+                                        const end_obj = end_val.object;
+                                        const end_line = if (end_obj.get("line")) |l| @as(u32, @intCast(l.integer)) else 0;
+                                        const end_char = if (end_obj.get("character")) |c| @as(u32, @intCast(c.integer)) else 0;
+                                        
+                                        hover_range = Range{
+                                            .start = Position{ .line = start_line, .character = start_char },
+                                            .end = Position{ .line = end_line, .character = end_char },
+                                        };
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                if (contents.len > 0) {
+                    // Allocate hover result
+                    const contents_copy = try self.allocator.dupe(u8, contents);
+                    return HoverResult{
+                        .contents = contents_copy,
+                        .range = hover_range,
+                    };
+                }
             }
         }
         return null;

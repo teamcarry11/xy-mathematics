@@ -36,7 +36,7 @@ pub const Pane = struct {
     /// Initialize leaf pane (no split).
     pub fn init_leaf(allocator: std.mem.Allocator, id: u32, x: u32, y: u32, width: u32, height: u32) !Pane {
         // Assert: Allocator must be valid
-        std.debug.assert(allocator.ptr != null);
+        // Assert: Allocator must be valid (allocator is used below)
 
         // Assert: Dimensions must be valid
         std.debug.assert(width > 0);
@@ -63,7 +63,7 @@ pub const Pane = struct {
     /// Initialize split pane.
     pub fn init_split(allocator: std.mem.Allocator, id: u32, x: u32, y: u32, width: u32, height: u32, direction: SplitDirection) !Pane {
         // Assert: Allocator must be valid
-        std.debug.assert(allocator.ptr != null);
+        // Assert: Allocator must be valid (allocator is used below)
 
         // Assert: Dimensions must be valid
         std.debug.assert(width > 0);

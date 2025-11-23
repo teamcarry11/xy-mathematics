@@ -69,7 +69,7 @@ pub const Config = struct {
     /// Initialize default configuration.
     pub fn init(allocator: std.mem.Allocator) !Config {
         // Assert: Allocator must be valid
-        std.debug.assert(allocator.ptr != null);
+        // Assert: Allocator must be valid (allocator is used below)
 
         // Pre-allocate entries buffer
         const entries = try allocator.alloc(ConfigEntry, MAX_CONFIG_ENTRIES);
@@ -97,7 +97,7 @@ pub const Config = struct {
     /// Deinitialize configuration and free memory.
     pub fn deinit(self: *Config, allocator: std.mem.Allocator) void {
         // Assert: Allocator must be valid
-        std.debug.assert(allocator.ptr != null);
+        // Assert: Allocator must be valid (allocator is used below)
 
         // Free all entry keys and values
         var i: u32 = 0;

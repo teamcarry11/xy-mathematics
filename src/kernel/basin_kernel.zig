@@ -1841,6 +1841,11 @@ pub const BasinKernel = struct {
         _ = _arg3;
         _ = _arg4;
         
+        // Get current process ID from scheduler.
+        // Why: Track which process owns this channel for resource cleanup.
+        const current_process_id = self.scheduler.get_current();
+        const owner_process_id = @as(u32, @truncate(current_process_id));
+        
         // Create channel in channel table.
         const channel_id = self.channels.create();
         
@@ -1850,6 +1855,13 @@ pub const BasinKernel = struct {
         
         // Assert: Channel ID must be non-zero.
         Debug.kassert(channel_id != 0, "Channel ID is 0", .{});
+        
+        // Set owner process ID for the channel.
+        // Why: Track which process owns this channel for resource cleanup.
+        const channel = self.channels.find(channel_id);
+        if (channel) |ch| {
+            ch.owner_process_id = owner_process_id;
+        }
         
         const result = SyscallResult.ok(channel_id);
         
@@ -2051,6 +2063,11 @@ pub const BasinKernel = struct {
             return SyscallResult.fail(BasinError.out_of_memory); // Handle table full
         };
         
+        // Get current process ID from scheduler.
+        // Why: Track which process owns this handle for resource cleanup.
+        const current_process_id = self.scheduler.get_current();
+        const owner_process_id = @as(u32, @truncate(current_process_id));
+        
         // Allocate handle entry.
         var file_handle = &self.handles[handle_idx];
         const handle_id = self.next_handle_id;
@@ -2072,6 +2089,7 @@ pub const BasinKernel = struct {
         file_handle.position = 0;
         file_handle.buffer_size = 0;
         file_handle.allocated = true;
+        file_handle.owner_process_id = owner_process_id;
         
         // If truncate flag is set, clear buffer.
         if (open_flags.truncate) {
@@ -2308,6 +2326,7 @@ pub const BasinKernel = struct {
         file_handle.path_len = 0;
         file_handle.position = 0;
         file_handle.buffer_size = 0;
+        file_handle.owner_process_id = 0;
         
         // Assert: Handle must be unallocated after close.
         Debug.kassert(!file_handle.allocated, "Handle still allocated", .{});

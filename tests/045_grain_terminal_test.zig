@@ -14,7 +14,6 @@ test "terminal init" {
     try testing.expect(terminal.state == .normal);
 }
 
-/// Test terminal character processing.
 test "terminal process char" {
     var terminal = Terminal.init(80, 24);
     var cells: [80 * 24]Terminal.Cell = undefined;
@@ -30,7 +29,6 @@ test "terminal process char" {
     try testing.expect(cell.?.ch == 'H');
 }
 
-/// Test terminal newline.
 test "terminal newline" {
     var terminal = Terminal.init(80, 24);
     var cells: [80 * 24]Terminal.Cell = undefined;
@@ -40,7 +38,6 @@ test "terminal newline" {
     try testing.expect(terminal.cursor_y == 1);
 }
 
-/// Test terminal carriage return.
 test "terminal carriage return" {
     var terminal = Terminal.init(80, 24);
     var cells: [80 * 24]Terminal.Cell = undefined;
@@ -50,7 +47,6 @@ test "terminal carriage return" {
     try testing.expect(terminal.cursor_x == 0);
 }
 
-/// Test terminal clear.
 test "terminal clear" {
     var terminal = Terminal.init(80, 24);
     var cells: [80 * 24]Terminal.Cell = undefined;
@@ -72,7 +68,6 @@ test "terminal clear" {
     try testing.expect(cell.?.ch == ' ');
 }
 
-/// Test terminal escape sequence (cursor save/restore).
 test "terminal escape sequence" {
     var terminal = Terminal.init(80, 24);
     var cells: [80 * 24]Terminal.Cell = undefined;
@@ -98,7 +93,6 @@ test "terminal escape sequence" {
     try testing.expect(terminal.cursor_y == 5);
 }
 
-/// Test terminal CSI sequence (cursor movement).
 test "terminal csi sequence" {
     var terminal = Terminal.init(80, 24);
     var cells: [80 * 24]Terminal.Cell = undefined;
@@ -116,7 +110,6 @@ test "terminal csi sequence" {
     try testing.expect(terminal.cursor_x == 5);
 }
 
-/// Test terminal scroll.
 test "terminal scroll" {
     var terminal = Terminal.init(80, 24);
     var cells: [80 * 24]Terminal.Cell = undefined;
@@ -133,7 +126,6 @@ test "terminal scroll" {
     try testing.expect(terminal.scrollback_lines > 0);
 }
 
-/// Test terminal SGR sequence (colors).
 test "terminal sgr sequence" {
     var terminal = Terminal.init(80, 24);
     var cells: [80 * 24]Terminal.Cell = undefined;
@@ -155,7 +147,6 @@ test "terminal sgr sequence" {
     try testing.expect(terminal.current_attrs.bold == false);
 }
 
-/// Test terminal erase display.
 test "terminal erase display" {
     var terminal = Terminal.init(80, 24);
     var cells: [80 * 24]Terminal.Cell = undefined;
@@ -179,14 +170,13 @@ test "terminal erase display" {
     try testing.expect(cell.?.ch == ' ');
 }
 
-/// Test renderer ANSI colors.
 test "renderer ansi colors" {
     try testing.expect(Renderer.ANSI_COLORS.len == 16);
     try testing.expect(Renderer.ANSI_COLORS[0] == 0x000000FF); // Black
     try testing.expect(Renderer.ANSI_COLORS[7] == 0xC0C0C0FF); // White
 }
 
-/// Test renderer character pattern.
+test renderer character pattern.
 test "renderer char pattern" {
     const space_pattern = Renderer.get_char_pattern(' ');
     try testing.expect(space_pattern == 0x0000000000000000);

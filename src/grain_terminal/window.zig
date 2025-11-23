@@ -47,10 +47,10 @@ pub const GrainAurora = struct {
     pub const Component = fn (context: *RenderContext) RenderResult;
     
     allocator: std.mem.Allocator,
-    buffer: @import("../grain_buffer.zig").GrainBuffer,
+    buffer: @import("grain_buffer").GrainBuffer,
     
     pub fn init(allocator: std.mem.Allocator, seed: []const u8) !GrainAurora {
-        const GrainBuffer = @import("../grain_buffer.zig").GrainBuffer;
+        const GrainBuffer = @import("grain_buffer").GrainBuffer;
         const buffer = try GrainBuffer.fromSlice(allocator, seed);
         return GrainAurora{
             .allocator = allocator,
@@ -212,14 +212,7 @@ pub const TerminalWindow = struct {
             // Create terminal component that uses pane result
             // Note: In a full implementation, we'd create a component struct here
             // For now, we just use pane_result directly
-            _ = pane_result;
-            
-            // Return pane result (simplified for now)
-            // In full implementation, would create proper component structure
-                        .readonly_spans = &.{},
-                    };
-                }
-            };
+            // pane_result will be used in full implementation
             
             // Render to Aurora
             // Note: Full integration would pass pane_result.root to component

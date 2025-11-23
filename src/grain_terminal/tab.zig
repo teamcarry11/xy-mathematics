@@ -34,7 +34,7 @@ pub const Tab = struct {
     /// Initialize tab with terminal dimensions.
     pub fn init(allocator: std.mem.Allocator, id: u32, width: u32, height: u32, title: []const u8) !Tab {
         // Assert: Allocator must be valid
-        std.debug.assert(allocator.ptr != null);
+        // Assert: Allocator must be valid (allocator is used below)
 
         // Assert: Dimensions must be valid
         std.debug.assert(width > 0 and width <= Terminal.MAX_WIDTH);

@@ -56,6 +56,9 @@ pub const Editor = struct {
         if (self.ai_provider) |*provider| {
             provider.deinit();
         }
+        if (self.pending_completion) |completion| {
+            self.allocator.free(completion);
+        }
         self.tree_sitter.deinit();
         self.folding.deinit();
         self.lsp.deinit();
@@ -100,12 +103,28 @@ pub const Editor = struct {
             };
             
             // Request completion (streaming callback)
-            try provider.request_completion(request, struct {
-                fn callback(chunk: AiProvider.CompletionChunk) void {
-                    // TODO: Display ghost text in editor
-                    _ = chunk;
+            var completion_buffer = std.ArrayList(u8).init(self.allocator);
+            defer completion_buffer.deinit();
+            
+            // Capture buffer in closure-like struct
+            const CallbackContext = struct {
+                buffer: *std.ArrayList(u8),
+                fn callback(ctx: @This(), chunk: AiProvider.CompletionChunk) void {
+                    // Accumulate completion chunks for ghost text
+                    ctx.buffer.appendSlice(chunk.content) catch {};
                 }
-            }.callback);
+            };
+            
+            const callback_ctx = CallbackContext{ .buffer = &completion_buffer };
+            try provider.request_completion(request, callback_ctx.callback);
+            
+            // Store completion as ghost text (would be displayed in render)
+            if (completion_buffer.items.len > 0) {
+                if (self.pending_completion) |old| {
+                    self.allocator.free(old);
+                }
+                self.pending_completion = try completion_buffer.toOwnedSlice();
+            }
             return;
         }
         
@@ -180,16 +199,40 @@ pub const Editor = struct {
             return error.ReadOnlyViolation;
         }
         
+        // Store cursor position before insertion for LSP notification
+        const insert_char = self.cursor_char;
+        
         try self.buffer.insert(pos, text);
         self.cursor_char += @as(u32, @intCast(text.len));
-        // TODO: send textDocument/didChange to LSP.
+        
+        // Send textDocument/didChange to LSP (incremental edit)
+        // Range is from insertion point to insertion point (empty range = insertion)
+        const change = LspClient.TextDocumentChange{
+            .range = LspClient.Range{
+                .start = LspClient.Position{
+                    .line = self.cursor_line,
+                    .character = insert_char,
+                },
+                .end = LspClient.Position{
+                    .line = self.cursor_line,
+                    .character = insert_char,
+                },
+            },
+            .text = text,
+        };
+        try self.lsp.didChange(self.file_uri, &.{change});
     }
 
     /// Move cursor; may trigger hover requests.
     pub fn moveCursor(self: *Editor, line: u32, char: u32) void {
         self.cursor_line = line;
         self.cursor_char = char;
-        // TODO: request hover info if cursor hovers over symbol.
+        
+        // Request hover info if cursor hovers over symbol (non-blocking)
+        // Note: This is async - hover result would be handled via callback in full implementation
+        _ = self.lsp.requestHover(self.file_uri, line, char) catch {
+            // Hover request failed (server not ready, etc.) - ignore
+        };
     }
 
     /// Render editor view: buffer content + LSP diagnostics overlay.

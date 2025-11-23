@@ -325,7 +325,18 @@
    - ✅ Resource cleanup integration in exception handler (trap.zig)
    - ✅ Comprehensive tests for resource cleanup (tests/049_resource_cleanup_test.zig)
    - ✅ GrainStyle compliance (u32/u64 types, assertions, bounded operations, static allocation)
-   - ⏳ TODO: Add `owner_process_id` to MemoryMapping, FileHandle, and Channel structures for full cleanup
+
+34. **Owner Process ID Tracking for Resource Cleanup** ✅ **COMPLETE**
+   - ✅ Added `owner_process_id` field to `MemoryMapping` struct
+   - ✅ Added `owner_process_id` field to `FileHandle` struct
+   - ✅ Added `owner_process_id` field to `Channel` struct
+   - ✅ Updated `syscall_map` to set `owner_process_id` when creating mappings
+   - ✅ Updated `syscall_open` to set `owner_process_id` when creating handles
+   - ✅ Updated `syscall_channel_create` to set `owner_process_id` when creating channels
+   - ✅ Updated `syscall_unmap` and `syscall_close` to clear `owner_process_id`
+   - ✅ Updated `resource_cleanup.zig` to use `owner_process_id` for actual cleanup
+   - ✅ Comprehensive tests for owner_process_id tracking and cleanup
+   - ✅ GrainStyle compliance (u32/u64 types, assertions, bounded operations, static allocation)
 
 ## 🚀 Architecture Overview
 

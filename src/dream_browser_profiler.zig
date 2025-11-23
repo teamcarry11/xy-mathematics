@@ -22,8 +22,6 @@ pub const DreamBrowserProfiler = struct {
     // Critical path threshold: functions taking >10ms are critical
     pub const CRITICAL_PATH_THRESHOLD_US: u32 = 10_000; // 10ms in microseconds
     
-    allocator: std.mem.Allocator,
-    
     /// Function profile (call statistics).
     pub const FunctionProfile = struct {
         function_name: []const u8, // Function name (e.g., "layout", "render")

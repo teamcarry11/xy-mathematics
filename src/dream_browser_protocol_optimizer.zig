@@ -23,8 +23,6 @@ pub const DreamBrowserProtocolOptimizer = struct {
     // Target latency: sub-millisecond (0.1-0.5ms)
     pub const TARGET_LATENCY_US: u32 = 500; // 0.5ms in microseconds
     
-    allocator: std.mem.Allocator,
-    
     /// Message batch (for combining multiple messages).
     pub const MessageBatch = struct {
         messages: []const []const u8, // Messages to batch
@@ -60,6 +58,7 @@ pub const DreamBrowserProtocolOptimizer = struct {
         tail: u32, // Queue tail index
     };
     
+    allocator: std.mem.Allocator,
     message_buffer: MessageBuffer,
     pending_queue: PendingQueue,
     latency_history: []LatencyMeasurement, // Circular buffer

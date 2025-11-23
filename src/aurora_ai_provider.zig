@@ -253,9 +253,7 @@ test "ai provider initialization" {
     };
     
     // Initialize AI provider (GLM-4.6)
-    var provider = AiProvider.init(.glm46, arena.allocator(), config) catch |err| {
-        std.debug.panic("Failed to init AI provider: {}", .{err});
-    };
+    var provider = try AiProvider.init(.glm46, arena.allocator(), config);
     defer provider.deinit();
     
     // Assert: Provider type correct

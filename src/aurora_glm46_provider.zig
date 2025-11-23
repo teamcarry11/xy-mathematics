@@ -87,7 +87,6 @@ pub const Glm46Provider = struct {
         // Convert transformation request to GLM-4.6 format
         // For now, return placeholder (full implementation would call GLM-4.6 API)
         _ = request;
-        _ = provider;
         
         const error_msg = try provider.allocator.dupe(u8, "Not yet implemented");
         return AiProvider.TransformResult{
@@ -143,7 +142,7 @@ test "glm46 provider initialization" {
         },
     };
     
-    var provider = try Glm46Provider.init(arena.allocator(), config);
+    const provider = try Glm46Provider.init(arena.allocator(), config);
     defer Glm46Provider.deinit_impl(provider);
     
     // Assert: Provider initialized

@@ -848,6 +848,21 @@
 - [x] Pane management (`src/grain_terminal/pane.zig`)
 - [x] Split windows (horizontal and vertical splits)
 - [x] Configuration management (`src/grain_terminal/config.zig`)
+- [x] Theme support (dark, light, solarized, gruvbox)
+- [x] Font size management (small, medium, large, xlarge)
+- [x] Aurora rendering integration (`src/grain_terminal/aurora_renderer.zig`) ✅ **COMPLETE**
+  - [x] Convert terminal cells to Aurora components
+  - [x] Render tabs to Aurora button components
+  - [x] Render panes to Aurora row/column components
+  - [x] Iterative algorithms (no recursion)
+  - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
+- [x] Window management (`src/grain_terminal/window.zig`) ✅ **COMPLETE**
+  - [x] Terminal window using Aurora window system
+  - [x] macOS window integration (MacWindow.Window)
+  - [x] Tab and pane management
+  - [x] Active tab tracking
+  - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
+- [x] Configuration management (`src/grain_terminal/config.zig`)
 - [x] Themes support (dark, light, solarized, gruvbox)
 - [x] Font size management (small, medium, large, xlarge)
 - [x] Configuration key-value storage

@@ -268,6 +268,18 @@
   - [x] SIGKILL immediate termination (cannot be caught or blocked)
   - [x] Signal integration with Process struct (Process.signals)
   - [x] Comprehensive assertions (GrainStyle compliance)
+- [x] Exception Statistics Tracking ✅ **COMPLETE**
+  - [x] Exception statistics module (`src/kernel_vm/exception_stats.zig`)
+  - [x] Exception count tracking by type (16 exception types)
+  - [x] Total exception count tracking
+  - [x] Exception statistics summary (ExceptionSummary struct)
+  - [x] VM integration (exception_stats field in VM struct)
+  - [x] Automatic exception recording (VM errors mapped to RISC-V codes)
+  - [x] Exception recording in VM error paths
+  - [x] Statistics query interface (get_count, get_total_count, get_summary)
+  - [x] Statistics reset capability
+  - [x] Comprehensive TigerStyle tests (`tests/030_exception_stats_test.zig`)
+  - [x] GrainStyle compliance (u32 types, assertions, bounded counters)
 
 ### 3.3 Userspace Support
 - [x] ELF loader ✅ **COMPLETE**
@@ -512,6 +524,7 @@
 
 ### 5.1 Performance Optimization
 - [x] Fix Zig 0.15 API compatibility issues (ArrayList, JSON serialization, flush)
+- [x] Convert recursive functions to iterative (stack-based) for GrainStyle compliance
 - [ ] Profile and optimize hot paths
 - [ ] Reduce allocations in hot paths
 - [ ] Optimize rendering (60fps guaranteed)

@@ -26,7 +26,7 @@ pub const Plugin = struct {
     pub const PluginState = enum(u8) {
         loaded, // Plugin loaded
         unloaded, // Plugin unloaded
-        error, // Plugin error state
+        error_state, // Plugin error state
     };
 
     /// Plugin structure.

@@ -1,5 +1,5 @@
 const std = @import("std");
-const MacWindow = @import("../platform/macos_tahoe/window.zig");
+const MacWindow = @import("macos_window");
 const AuroraRenderer = @import("aurora_renderer.zig").AuroraRenderer;
 const Pane = @import("pane.zig").Pane;
 const Tab = @import("tab.zig").Tab;
@@ -30,7 +30,7 @@ pub const GrainAurora = struct {
     
     pub const RenderContext = struct {
         allocator: std.mem.Allocator,
-        buffer: *@import("../grain_buffer.zig").GrainBuffer,
+        buffer: *@import("grain_buffer").GrainBuffer,
         route: []const u8,
     };
     
@@ -210,25 +210,12 @@ pub const TerminalWindow = struct {
             const pane_result = try self.renderer.render_pane(pane, &self.config);
             
             // Create terminal component that uses pane result
-            const component = struct {
-                pane_result: GrainAurora.RenderResult,
-                
-                fn view(ctx: *GrainAurora.RenderContext) GrainAurora.RenderResult {
-                    // Get pane result from closure (stored in component)
-                    _ = ctx;
-                    // Note: In a full implementation, we'd pass pane_result via context
-                    // For now, return empty component
-                    const empty_text = "";
-                    const text_node = GrainAurora.Node{
-                        .text = empty_text,
-                    };
-                    
-                    const column = GrainAurora.Column{
-                        .children = &.{text_node},
-                    };
-                    
-                    return GrainAurora.RenderResult{
-                        .root = .{ .column = column },
+            // Note: In a full implementation, we'd create a component struct here
+            // For now, we just use pane_result directly
+            _ = pane_result;
+            
+            // Return pane result (simplified for now)
+            // In full implementation, would create proper component structure
                         .readonly_spans = &.{},
                     };
                 }

@@ -184,11 +184,29 @@ pub fn build(b: *std.Build) void {
     });
     _ = grainscript_module; // Used by grainscript tests (added by Grain Skate agent).
 
+    // Grain Buffer module (for grain_terminal)
+    const grain_buffer_module = b.addModule("grain_buffer", .{
+        .root_source_file = b.path("src/grain_buffer.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
+    // Window module (macos_tahoe, for grain_terminal)
+    const window_module_for_terminal = b.addModule("macos_window", .{
+        .root_source_file = b.path("src/platform/macos_tahoe/window.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
     // Grain Terminal module
     const grain_terminal_module = b.addModule("grain_terminal", .{
         .root_source_file = b.path("src/grain_terminal/root.zig"),
         .target = target,
         .optimize = optimize,
+        .imports = &.{
+            .{ .name = "grain_buffer", .module = grain_buffer_module },
+            .{ .name = "macos_window", .module = window_module_for_terminal },
+        },
     });
 
     // Grain Skate module

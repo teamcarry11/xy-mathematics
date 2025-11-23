@@ -52,6 +52,9 @@ pub const Channel = struct {
     write_pos: u32,
     /// Whether channel is allocated.
     allocated: bool,
+    /// Owner process ID (0 = kernel-owned, non-zero = process-owned).
+    /// Why: Track which process owns this channel for resource cleanup.
+    owner_process_id: u32,
     
     /// Initialize empty channel.
     /// Why: Explicit initialization, clear state.
@@ -63,6 +66,7 @@ pub const Channel = struct {
             .read_pos = 0,
             .write_pos = 0,
             .allocated = false,
+            .owner_process_id = 0,
         };
     }
     

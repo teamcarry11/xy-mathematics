@@ -547,6 +547,12 @@
   - ✅ Implement `apply_edits` to apply edits to file contents
   - ✅ Return modified file contents (editor handles disk writes)
   - ✅ GrainStyle compliance (bounded allocations, assertions, explicit types)
+- ✅ Aurora LSP Test Fix ✅ **COMPLETE**
+  - ✅ Fix ArrayList initialization (use ArrayListUnmanaged)
+  - ✅ Fix deinit to pass allocator (Zig 0.15.2 API)
+  - ✅ Fix test character range (correct text replacement)
+  - ✅ Test now passes: `All 1 tests passed.`
+  - ✅ GrainStyle compliance (explicit types, proper initialization)
 - ✅ Editor Integration with AI Transforms ✅ **COMPLETE**
   - ✅ Add `ai_transforms` field to Editor
   - ✅ Initialize `AiTransforms` when AI provider is enabled

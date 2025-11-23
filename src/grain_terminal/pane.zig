@@ -138,7 +138,7 @@ pub const Pane = struct {
         if (direction == .horizontal) {
             // Horizontal split: left and right panes
             var left_pane = try Pane.init_leaf(allocator, self.id + 1, self.x, self.y, split_pos, self.height);
-            var right_pane = try Pane.init_leaf(allocator, self.id + 2, self.x + split_pos, self.y, self.width - split_pos, self.height);
+            const right_pane = try Pane.init_leaf(allocator, self.id + 2, self.x + split_pos, self.y, self.width - split_pos, self.height);
 
             // Copy tab to left pane
             left_pane.tab = self.tab;
@@ -148,7 +148,7 @@ pub const Pane = struct {
         } else {
             // Vertical split: top and bottom panes
             var top_pane = try Pane.init_leaf(allocator, self.id + 1, self.x, self.y, self.width, split_pos);
-            var bottom_pane = try Pane.init_leaf(allocator, self.id + 2, self.x, self.y + split_pos, self.width, self.height - split_pos);
+            const bottom_pane = try Pane.init_leaf(allocator, self.id + 2, self.x, self.y + split_pos, self.width, self.height - split_pos);
 
             // Copy tab to top pane
             top_pane.tab = self.tab;

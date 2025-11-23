@@ -205,8 +205,9 @@ pub const Session = struct {
     }
 
     /// Copy configuration (create snapshot).
+    // 2025-11-23-150318-pst: Active function
     fn copy_config(self: *Session, config: *const Config) !Config {
-        _ = self; // Unused for now
+        // self will be used in full implementation for session-specific config
         // Create a new config with same settings
         // In a full implementation, we'd deep copy all config entries
         var new_config = try Config.init(self.allocator);

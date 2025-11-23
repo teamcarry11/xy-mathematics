@@ -490,6 +490,12 @@
   - [x] Add `inline_function` method to Editor
   - [x] Add `apply_transformation_edits` method to apply edits to buffer
   - [x] GrainStyle compliance (bounded allocations, assertions, explicit types)
+- [x] Aurora LSP Test Fix ✅ **COMPLETE**
+  - [x] Fix ArrayList initialization (use ArrayListUnmanaged)
+  - [x] Fix deinit to pass allocator (Zig 0.15.2 API)
+  - [x] Fix test character range (correct text replacement)
+  - [x] Test now passes: `All 1 tests passed.`
+  - [x] GrainStyle compliance (explicit types, proper initialization)
 
 #### 4.1.4 Tree-sitter Integration ✅ **ENHANCED**
 - [x] Foundation created (simple regex-based parser)

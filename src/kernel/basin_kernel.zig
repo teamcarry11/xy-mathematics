@@ -351,6 +351,9 @@ const MemoryMapping = struct {
     flags: MapFlags,
     /// Whether this entry is allocated (in use).
     allocated: bool,
+    /// Owner process ID (0 = kernel-owned, non-zero = process-owned).
+    /// Why: Track which process owns this mapping for resource cleanup.
+    owner_process_id: u32,
     
     /// Initialize empty mapping entry.
     /// Why: Explicit initialization, clear state.
@@ -360,6 +363,7 @@ const MemoryMapping = struct {
             .size = 0,
             .flags = MapFlags.init(.{}),
             .allocated = false,
+            .owner_process_id = 0,
         };
     }
     
@@ -399,6 +403,9 @@ const FileHandle = struct {
     buffer_size: u32,
     /// Whether this entry is allocated (in use).
     allocated: bool,
+    /// Owner process ID (0 = kernel-owned, non-zero = process-owned).
+    /// Why: Track which process owns this handle for resource cleanup.
+    owner_process_id: u32,
     
     /// Initialize empty file handle entry.
     /// Why: Explicit initialization, clear state.
@@ -412,6 +419,7 @@ const FileHandle = struct {
             .buffer = [_]u8{0} ** (64 * 1024),
             .buffer_size = 0,
             .allocated = false,
+            .owner_process_id = 0,
         };
     }
 };
@@ -1598,12 +1606,18 @@ pub const BasinKernel = struct {
             return BasinError.out_of_memory; // Mapping table full
         };
         
+        // Get current process ID from scheduler.
+        // Why: Track which process owns this mapping for resource cleanup.
+        const current_process_id = self.scheduler.get_current();
+        const owner_process_id = @as(u32, @truncate(current_process_id));
+        
         // Allocate mapping entry.
         var mapping = &self.mappings[mapping_idx];
         mapping.address = mapping_addr;
         mapping.size = size;
         mapping.flags = map_flags;
         mapping.allocated = true;
+        mapping.owner_process_id = owner_process_id;
         
         // Update page table (map pages with permissions).
         // Convert MapFlags to PageFlags (same structure).
@@ -1699,6 +1713,7 @@ pub const BasinKernel = struct {
         mapping.address = 0;
         mapping.size = 0;
         mapping.flags = MapFlags.init(.{});
+        mapping.owner_process_id = 0;
         
         // Update page table (unmap pages).
         self.page_table.unmap_pages(region, mapping_size);

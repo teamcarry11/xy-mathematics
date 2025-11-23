@@ -356,8 +356,9 @@ pub const Terminal = struct {
     }
 
     /// Parse CSI parameter (number or default).
+    // 2025-11-23-150318-pst: Active function
     fn parse_csi_param(self: *const Terminal, params: []const u8, default_val: u32) u32 {
-        _ = self;
+        // self will be used in full implementation for terminal-specific parsing
         if (params.len == 0) {
             return default_val;
         }

@@ -288,6 +288,14 @@
   - [x] Enhanced state persistence tests (exception statistics verification)
   - [x] Comprehensive TigerStyle tests (`tests/031_exception_stats_snapshot_test.zig`)
   - [x] GrainStyle compliance (u32 types, assertions, bounded arrays)
+- [x] Exception Statistics in Diagnostics Snapshot ✅ **COMPLETE**
+  - [x] Exception statistics snapshot type in DiagnosticsSnapshot
+  - [x] Exception statistics capture in diagnostics snapshot
+  - [x] Exception statistics display in diagnostics print
+  - [x] VM get_diagnostics integration (exception statistics included)
+  - [x] Enhanced diagnostics tests (exception statistics verification)
+  - [x] Comprehensive TigerStyle tests (`tests/032_exception_stats_diagnostics_test.zig`)
+  - [x] GrainStyle compliance (u32 types, assertions, bounded arrays)
 
 ### 3.3 Userspace Support
 - [x] ELF loader ✅ **COMPLETE**
@@ -533,8 +541,16 @@
 ### 5.1 Performance Optimization
 - [x] Fix Zig 0.15 API compatibility issues (ArrayList, JSON serialization, flush)
 - [x] Convert recursive functions to iterative (stack-based) for GrainStyle compliance
+- [x] Reduce allocations in hot paths ✅ **COMPLETE**
+  - [x] Pre-allocate ArrayList capacity in layout() (boxes, stack)
+  - [x] Pre-allocate ArrayList capacity in renderToAurora() (stack, root_children, child_children)
+  - [x] Pre-allocate ArrayList capacity in createReadonlySpans() (readonly_spans, stack)
+  - [x] Pre-allocate ArrayList capacity in createEditableSpans() (stack)
+  - [x] Pre-allocate ArrayList capacity in parseHtml() (attributes)
+  - [x] Pre-allocate ArrayList capacity in parseCss() (rules, declarations)
+  - [x] All pre-allocations use conservative estimates based on MAX bounds
+  - [x] Reduces reallocations in hot paths, improving performance
 - [ ] Profile and optimize hot paths
-- [ ] Reduce allocations in hot paths
 - [ ] Optimize rendering (60fps guaranteed)
 - [ ] Optimize protocol (sub-millisecond latency)
 

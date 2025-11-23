@@ -9,9 +9,14 @@ const Storage = basin_kernel.basin_kernel.Storage;
 const FileEntry = basin_kernel.basin_kernel.FileEntry;
 const DirectoryEntry = basin_kernel.basin_kernel.DirectoryEntry;
 const MAX_FILE_SIZE = basin_kernel.basin_kernel.MAX_FILE_SIZE;
+const RawIO = basin_kernel.RawIO;
 
 // Test storage initialization.
 test "storage init" {
+    // Disable RawIO to avoid SIGILL in tests.
+    RawIO.disable();
+    defer RawIO.enable();
+    
     const storage_instance = Storage.init();
     
     // Assert: Storage must be initialized.

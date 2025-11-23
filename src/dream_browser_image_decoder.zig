@@ -48,6 +48,7 @@ pub const DreamBrowserImageDecoder = struct {
         entries_index: u32, // Circular buffer index
     };
     
+    allocator: std.mem.Allocator,
     cache: ImageCache,
     
     /// Initialize image decoder.
@@ -131,6 +132,9 @@ pub const DreamBrowserImageDecoder = struct {
         self: *DreamBrowserImageDecoder,
         data: []const u8,
     ) !DecodedImage {
+        // Self and data not used in placeholder implementation
+        _ = self;
+        _ = data;
         // Assert: Data must be non-empty
         std.debug.assert(data.len > 0);
         std.debug.assert(data.len <= MAX_IMAGE_SIZE);

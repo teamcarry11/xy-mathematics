@@ -202,12 +202,10 @@ pub const DreamBrowserRenderer = struct {
         // Assert: Node must be valid
         std.debug.assert(node.tag_name.len > 0);
         
-        // Compute styles for node
+        // Compute styles for node (for future use in rendering)
         const parser = DreamBrowserParser.init(self.allocator);
         defer parser.deinit();
-        const styles = try parser.computeStyles(node, css_rules);
-        defer self.allocator.free(styles);
-        _ = styles; // Styles computed but not used in simplified rendering
+        _ = try parser.computeStyles(node, css_rules); // Styles computed but not used in simplified rendering
         
         // Iterative stack-based rendering (replaces recursion)
         var stack = std.ArrayList(RenderStackFrame){ .items = &.{}, .capacity = 0 };
@@ -402,12 +400,11 @@ pub const DreamBrowserRenderer = struct {
             if (current_node.text_content.len > 0) {
                 const buffer_text = buffer.textSlice();
                 if (std.mem.indexOf(u8, buffer_text, current_node.text_content)) |start| {
-                    const end = start + @as(u32, @intCast(current_node.text_content.len));
-                    
                     // Check if this span is already readonly
                     if (!buffer.isReadOnly(start)) {
                         // Content is editable (no action needed, editable by default)
                         // But we could mark it explicitly if needed
+                        _ = start; // Position found but not used (editable by default)
                     }
                 }
             }

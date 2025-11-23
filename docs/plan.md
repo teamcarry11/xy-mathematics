@@ -564,6 +564,14 @@
   - ✅ Fix test character range (correct text replacement)
   - ✅ Test now passes: `All 1 tests passed.`
   - ✅ GrainStyle compliance (explicit types, proper initialization)
+- ✅ Editor LSP Integration Enhancements ✅ **COMPLETE**
+  - ✅ Implement LSP didChange notification on text insert
+  - ✅ Add LSP hover request support (requestHover method)
+  - ✅ Integrate hover requests into moveCursor
+  - ✅ Implement ghost text storage for AI completions
+  - ✅ Fix didChange range calculation for insertions
+  - ✅ All three editor TODOs now complete
+  - ✅ GrainStyle compliant: explicit types, bounded operations, assertions
 - ✅ Editor Integration with AI Transforms ✅ **COMPLETE**
   - ✅ Add `ai_transforms` field to Editor
   - ✅ Initialize `AiTransforms` when AI provider is enabled

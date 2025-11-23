@@ -155,7 +155,7 @@ pub const Parser = struct {
         gt, // >
         ge, // >=
         // Logical
-        and, // &&
+        and_op, // &&
         or, // ||
     };
 
@@ -1270,7 +1270,7 @@ pub const Parser = struct {
             .op_le => .le,
             .op_gt => .gt,
             .op_ge => .ge,
-            .op_and => .and,
+            .op_and => .and_op,
             .op_or => .or,
             else => null,
         };

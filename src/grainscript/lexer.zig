@@ -162,7 +162,7 @@ pub const Lexer = struct {
             self.tokens_len += 1;
 
             // Stop on EOF or error
-            if (token.token_type == .eof or token.token_type == .error) {
+            if (token.token_type == .eof or token.token_type == .error_token) {
                 break;
             }
         }
@@ -439,7 +439,7 @@ pub const Lexer = struct {
             // Assert: String length must be within bounds
             if (pos - start > MAX_STRING_LEN) {
                 return Token{
-                    .token_type = .error,
+                    .token_type = .error_token,
                     .start = start,
                     .end = pos,
                     .line = start_line,
@@ -468,7 +468,7 @@ pub const Lexer = struct {
         std.debug.assert(start < self.source.len);
 
         const ch = self.source[start];
-        var token_type: TokenType = .error;
+        var token_type: TokenType = .error_token;
         var len: u32 = 1;
 
         // Single-character operators
@@ -551,7 +551,7 @@ pub const Lexer = struct {
             ':' => token_type = .punc_colon,
             '.' => token_type = .punc_dot,
             '?' => token_type = .punc_question,
-            else => token_type = .error,
+            else => token_type = .error_token,
         }
 
         // Update position
@@ -804,7 +804,7 @@ pub const Lexer = struct {
             self.tokens_len += 1;
 
             // Stop on EOF or error
-            if (token.token_type == .eof or token.token_type == .error) {
+            if (token.token_type == .eof or token.token_type == .error_token) {
                 break;
             }
         }
@@ -1081,7 +1081,7 @@ pub const Lexer = struct {
             // Assert: String length must be within bounds
             if (pos - start > MAX_STRING_LEN) {
                 return Token{
-                    .token_type = .error,
+                    .token_type = .error_token,
                     .start = start,
                     .end = pos,
                     .line = start_line,
@@ -1110,7 +1110,7 @@ pub const Lexer = struct {
         std.debug.assert(start < self.source.len);
 
         const ch = self.source[start];
-        var token_type: TokenType = .error;
+        var token_type: TokenType = .error_token;
         var len: u32 = 1;
 
         // Single-character operators
@@ -1193,7 +1193,7 @@ pub const Lexer = struct {
             ':' => token_type = .punc_colon,
             '.' => token_type = .punc_dot,
             '?' => token_type = .punc_question,
-            else => token_type = .error,
+            else => token_type = .error_token,
         }
 
         // Update position
@@ -1446,7 +1446,7 @@ pub const Lexer = struct {
             self.tokens_len += 1;
 
             // Stop on EOF or error
-            if (token.token_type == .eof or token.token_type == .error) {
+            if (token.token_type == .eof or token.token_type == .error_token) {
                 break;
             }
         }
@@ -1723,7 +1723,7 @@ pub const Lexer = struct {
             // Assert: String length must be within bounds
             if (pos - start > MAX_STRING_LEN) {
                 return Token{
-                    .token_type = .error,
+                    .token_type = .error_token,
                     .start = start,
                     .end = pos,
                     .line = start_line,
@@ -1752,7 +1752,7 @@ pub const Lexer = struct {
         std.debug.assert(start < self.source.len);
 
         const ch = self.source[start];
-        var token_type: TokenType = .error;
+        var token_type: TokenType = .error_token;
         var len: u32 = 1;
 
         // Single-character operators
@@ -1835,7 +1835,7 @@ pub const Lexer = struct {
             ':' => token_type = .punc_colon,
             '.' => token_type = .punc_dot,
             '?' => token_type = .punc_question,
-            else => token_type = .error,
+            else => token_type = .error_token,
         }
 
         // Update position

@@ -154,6 +154,9 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/kernel/basin_kernel.zig"),
         .target = target,
         .optimize = optimize,
+        .imports = &.{
+            .{ .name = "elf_parser", .module = elf_parser_module },
+        },
     });
 
     // RISC-V SBI module (platform runtime services).

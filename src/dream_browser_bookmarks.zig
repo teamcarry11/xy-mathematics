@@ -65,6 +65,7 @@ pub const DreamBrowserBookmarks = struct {
         entries_index: u32, // Circular buffer index
     };
     
+    allocator: std.mem.Allocator,
     bookmarks_storage: BookmarksStorage,
     history_storage: HistoryStorage,
     

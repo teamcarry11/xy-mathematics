@@ -346,6 +346,17 @@
   - [x] Memory statistics snapshot
   - [x] Comprehensive TigerStyle tests (`tests/037_memory_stats_test.zig`)
   - [x] GrainStyle compliance (u32 types, assertions, bounded loops)
+- [x] Memory Sharing and Copy-on-Write (COW) ✅ **COMPLETE**
+  - [x] COW page entry structure (CowPageEntry)
+  - [x] COW table structure (CowTable with 1024 entries)
+  - [x] Reference count tracking (increment/decrement)
+  - [x] COW marking (mark pages for copy-on-write)
+  - [x] COW detection (should_copy_on_write function)
+  - [x] Shared page detection (is_shared function)
+  - [x] Reference count queries (get_ref_count function)
+  - [x] Integration with BasinKernel
+  - [x] Comprehensive TigerStyle tests (`tests/038_cow_test.zig`)
+  - [x] GrainStyle compliance (u32 types, assertions, bounded loops)
 
 ### 3.3 Userspace Support
 - [x] ELF loader ✅ **COMPLETE**
@@ -662,7 +673,15 @@
   - [x] Statistics (bookmark count, history count, folder count)
   - [x] All functions follow GrainStyle/TigerStyle (u32 types, assertions, bounded allocations)
   - [x] Comprehensive tests for bookmark and history operations
-- [ ] Tab management enhancements
+- [x] Tab management enhancements ✅ **COMPLETE**
+  - [x] Create TabManager module (tab reordering, groups, pinning, metadata)
+  - [x] Tab reordering (move tabs left/right)
+  - [x] Tab groups (group related tabs together, max 20 groups)
+  - [x] Tab pinning (pin important tabs)
+  - [x] Tab metadata (last accessed time, group ID, order)
+  - [x] Tab statistics (counts, pinned tabs)
+  - [x] All functions follow GrainStyle/TigerStyle (u32 types, assertions, bounded allocations)
+  - [x] Comprehensive tests for tab management operations
 
 ### 5.3 WSE Hardware Integration (Future)
 - [ ] RAM-only storage (44GB SRAM)
@@ -701,6 +720,100 @@
 - [ ] Power management
 - [ ] Peripheral support (USB, audio, networking)
 - [ ] Hardware-specific optimizations
+
+## 🌾 Phase 8: Grain Skate / Terminal / Script
+
+**Status**: ✅ Grainscript Phase 8.1.1 (Lexer) COMPLETE | 🔄 Grainscript Phase 8.1.2 (Parser) IN PROGRESS
+
+### 8.1 Grainscript: Core Language
+
+#### 8.1.1 Lexer ✅ **COMPLETE**
+- [x] Tokenizer implementation (`src/grainscript/lexer.zig`)
+- [x] Token types (identifiers, keywords, literals, operators, punctuation)
+- [x] Number parsing (integer, float, hex, binary)
+- [x] String literal parsing (single/double quotes, escape sequences)
+- [x] Comment parsing (single-line `//`, multi-line `/* */`)
+- [x] Keyword recognition (if, else, while, for, fn, var, const, return, etc.)
+- [x] Operator recognition (arithmetic, comparison, logical, assignment)
+- [x] Line/column tracking for error reporting
+- [x] Bounded allocations (MAX_TOKENS: 10,000, MAX_TOKEN_LEN: 1,024)
+- [x] Comprehensive tests (`tests/039_grainscript_lexer_test.zig`)
+- [x] GrainStyle compliance (u32 types, assertions, iterative algorithms, no recursion)
+
+#### 8.1.2 Parser 🔄 **IN PROGRESS**
+- [ ] AST node types (expressions, statements, declarations)
+- [ ] Expression parsing (arithmetic, comparison, logical)
+- [ ] Statement parsing (if, while, for, return, break, continue)
+- [ ] Declaration parsing (var, const, fn)
+- [ ] Type parsing (explicit types, no `any`)
+- [ ] Error recovery and reporting
+- [ ] Bounded AST depth (prevent stack overflow)
+- [ ] Comprehensive tests
+
+#### 8.1.3 Basic Command Execution
+- [ ] Command parsing and execution
+- [ ] Built-in commands (echo, cd, pwd, etc.)
+- [ ] External command execution
+- [ ] Exit code handling
+- [ ] Error handling
+
+#### 8.1.4 Variable Handling
+- [ ] Variable declaration and assignment
+- [ ] Variable scope (local, global)
+- [ ] Variable lookup and resolution
+- [ ] Type checking for variables
+
+#### 8.1.5 Control Flow
+- [ ] If/else statements
+- [ ] While loops
+- [ ] For loops
+- [ ] Break and continue
+- [ ] Return statements
+
+#### 8.1.6 Type System
+- [ ] Explicit type annotations (no `any` types)
+- [ ] Type checking
+- [ ] Type inference (where safe)
+- [ ] Type error reporting
+
+### 8.2 Grain Terminal (PLANNED)
+
+#### 8.2.1 Terminal Core
+- [ ] Terminal emulation (VT100/VT220 subset)
+- [ ] Character cell rendering
+- [ ] Scrollback buffer
+- [ ] Input handling (keyboard, mouse)
+- [ ] RISC-V compilation target
+- [ ] Grain Kernel syscall integration
+
+#### 8.2.2 UI Features
+- [ ] Tabs and panes
+- [ ] Split windows
+- [ ] Themes and fonts
+- [ ] Configuration management
+- [ ] Grain Aurora rendering integration
+
+#### 8.2.3 Advanced Features
+- [ ] Session management
+- [ ] Grainscript integration
+- [ ] Plugin system
+
+### 8.3 Grain Skate (PLANNED)
+
+#### 8.3.1 Core Engine
+- [ ] DAG data structures (may leverage `src/dag_core.zig`)
+- [ ] Block storage and linking
+- [ ] Basic text editing with Vim bindings
+
+#### 8.3.2 UI Framework
+- [ ] Native macOS window management
+- [ ] Modal editing system (Vim/Kakoune keybindings)
+- [ ] Graph visualization
+
+#### 8.3.3 Social Features
+- [ ] Link-based reply system
+- [ ] Transclusion engine
+- [ ] Export/import capabilities
 
 ## 🚀 Phase 7: Production
 
@@ -751,15 +864,18 @@
 - Dream Editor Foundation - Dream Protocol (Phase 4.0.3) ✅
 - Dream Editor Core - Readonly Spans Integration (Phase 4.1.1) ✅
 - Dream Editor Core - Method Folding (Phase 4.1.2) ✅
+- Grainscript - Lexer (Phase 8.1.1) ✅
+- Enhanced Process Execution (Phase 3.13) ✅
 
 **In Progress**: 
 - Dream Editor Core - GLM-4.6 Integration (Phase 4.1.3) 🔄
+- Grainscript - Parser (Phase 8.1.2) 🔄
 
 **Next Up**: 
 - Userspace program execution (IDE/Browser in Grain Vantage)
 - Dream Editor Core (Phase 4.1): Tree-sitter, LSP enhancements, VCS integration
 - Dream Browser Core (Phase 4.2): HTML/CSS parser, Nostr content loading
-- Dream Browser Core (Phase 4.2)
+- Grainscript (Phase 8.1): Parser, command execution, variables, control flow
 - Framework 13 Hardware (Phase 6)
 
 **Test Results**: 12/12 JIT tests passing
@@ -786,6 +902,11 @@
    - **Status**: Phase 0.1 complete, Phase 0.2 in progress
    - **See**: `docs/dream_editor_agent_summary.md`
 
+3. **Grain Skate Agent**: Grainscript / Terminal / Skate
+   - **Active Modules**: `src/grainscript/`
+   - **Status**: Phase 8.1.1 (Lexer) complete, Phase 8.1.2 (Parser) in progress
+   - **See**: `docs/grain_skate_agent_prompt.md`, `docs/grain_skate_agent_summary.md`
+
 **Available for Parallel Work** (low conflict risk):
 - **Dream Editor/Browser** (`src/aurora_*.zig`, `src/dream_*.zig`) - 🔄 Active (Phase 0)
 - **Userspace Tools** (`src/userspace/`) - Utilities, browser, build tools
@@ -798,6 +919,8 @@
 **See**: 
 - `docs/agent_work_summary.md` - VM/Kernel agent work
 - `docs/dream_editor_agent_summary.md` - Dream Editor/Browser agent work
+- `docs/grain_skate_agent_prompt.md` - Grain Skate/Terminal/Script agent work
+- `docs/grain_skate_agent_summary.md` - Grain Skate agent summary
 - `docs/dream_implementation_roadmap.md` - Complete Dream Editor/Browser roadmap
 
 ## 📚 References

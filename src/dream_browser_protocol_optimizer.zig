@@ -220,7 +220,14 @@ pub const DreamBrowserProtocolOptimizer = struct {
         self: *DreamBrowserProtocolOptimizer,
         send_time_us: u64,
     ) void {
+        // Assert: Send time must be valid
+        std.debug.assert(send_time_us > 0);
+        
         const receive_time_us = get_current_time_us();
+        
+        // Assert: Receive time must be after send time
+        std.debug.assert(receive_time_us >= send_time_us);
+        
         const latency_us = @as(u32, @intCast(receive_time_us - send_time_us));
         
         // Assert: Latency must be reasonable (not negative, not too large)

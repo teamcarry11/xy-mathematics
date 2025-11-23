@@ -4,7 +4,7 @@ const std = @import("std");
 const Grainorder = @import("grainstore/github/teamcarry11/grainorder/src/core.zig").Grainorder;
 
 pub fn main() !void {
-    const current_str = "zyxsqp";
+    const current_str = "zyxsqn";
     const current = try Grainorder.from_string(current_str);
     
     if (current.prev()) |next| {

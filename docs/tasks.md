@@ -504,11 +504,14 @@
 - [x] Animation/update loop
 - [x] Window resizing
 
-## 🌐 Phase 5: Dream Browser Advanced Features (PLANNED)
+## 🌐 Phase 5: Dream Browser Advanced Features (IN PROGRESS)
+
+**Status**: 🔄 Zig 0.15 API compatibility fixes complete ✅ | Next: Performance optimization
 
 **Note**: Core browser features are now in Phase 4.2 (Dream Browser Core). This phase covers advanced features.
 
 ### 5.1 Performance Optimization
+- [x] Fix Zig 0.15 API compatibility issues (ArrayList, JSON serialization, flush)
 - [ ] Profile and optimize hot paths
 - [ ] Reduce allocations in hot paths
 - [ ] Optimize rendering (60fps guaranteed)

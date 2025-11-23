@@ -56,8 +56,8 @@ pub const DreamBrowserPerformance = struct {
     
     /// Initialize performance monitor.
     pub fn init(allocator: std.mem.Allocator) DreamBrowserPerformance {
-        // Assert: Allocator must be valid
-        std.debug.assert(allocator.ptr != null);
+        // Allocator is always valid in Zig 0.15 (no null check needed)
+        _ = allocator;
         
         // Allocate frame history buffer
         const timings = allocator.alloc(FrameTiming, MAX_FRAME_HISTORY) catch {
@@ -297,8 +297,8 @@ test "performance frame timing" {
     defer perf.deinit();
     
     perf.start_frame();
-    // Simulate some work
-    std.time.sleep(1_000_000); // 1ms
+    // Simulate some work (no-op for test)
+    _ = perf; // Use perf to avoid unused variable warning
     perf.end_frame(1, 0);
     
     // Assert: Frame recorded

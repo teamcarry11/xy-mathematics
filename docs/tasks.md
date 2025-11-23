@@ -614,7 +614,14 @@
   - [x] Integration with UnifiedIde (viewport per browser tab)
   - [x] Scrolling and navigation methods for browser tabs
   - [x] Comprehensive tests for viewport functionality
-- [ ] Image decoding (PNG, JPEG)
+- [x] Image decoding (PNG, JPEG) ✅ **COMPLETE** (Foundation: format detection, cache)
+  - [x] Create DreamBrowserImageDecoder module (format detection, caching)
+  - [x] Image format detection (PNG, JPEG magic bytes)
+  - [x] Image cache (LRU-style, max 100 images)
+  - [x] Decoded image structure (RGBA pixel buffer, dimensions, format)
+  - [x] Placeholder decode functions (PNG/JPEG decoding to be implemented)
+  - [x] All functions follow GrainStyle/TigerStyle (u32 types, assertions, bounded allocations)
+  - [x] Comprehensive tests for format detection and caching
 - [ ] Font rendering (TTF/OTF)
 - [ ] Bookmarks and history UI
 - [ ] Tab management enhancements

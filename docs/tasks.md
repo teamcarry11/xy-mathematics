@@ -652,7 +652,16 @@
   - [x] Glyph rendering (placeholder, to be implemented)
   - [x] All functions follow GrainStyle/TigerStyle (u32 types, assertions, bounded allocations)
   - [x] Comprehensive tests for format detection and caching
-- [ ] Bookmarks and history UI
+- [x] Bookmarks and history UI ✅ **COMPLETE**
+  - [x] Create DreamBrowserBookmarks module (bookmark storage, history tracking)
+  - [x] Bookmark management (add, remove, get, search by title/URL)
+  - [x] History tracking (add entries, get recent entries)
+  - [x] Bookmark folders (organization support)
+  - [x] Bookmark tags (tagging support, max 100 tags per bookmark)
+  - [x] Search functionality (search by title or URL)
+  - [x] Statistics (bookmark count, history count, folder count)
+  - [x] All functions follow GrainStyle/TigerStyle (u32 types, assertions, bounded allocations)
+  - [x] Comprehensive tests for bookmark and history operations
 - [ ] Tab management enhancements
 
 ### 5.3 WSE Hardware Integration (Future)

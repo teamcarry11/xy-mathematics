@@ -60,8 +60,6 @@ pub const Glm46Transforms = struct {
         // Assert: Client must be valid
         std.debug.assert(@intFromPtr(client) != 0);
         
-        _ = allocator; // Allocator is stored in struct
-        
         return Glm46Transforms{
             .allocator = allocator,
             .client = client,
@@ -319,7 +317,7 @@ test "glm46 transforms initialization" {
     var client = Glm46Client.init(arena.allocator(), "test-api-key");
     defer client.deinit();
     
-    var transforms = Glm46Transforms.init(arena.allocator(), &client);
+    const transforms = Glm46Transforms.init(arena.allocator(), &client);
     
     // Assert: Transforms initialized
     try std.testing.expect(@intFromPtr(transforms.client) != 0);

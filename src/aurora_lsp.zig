@@ -301,7 +301,8 @@ pub const LspClient = struct {
         try text_doc_obj.put("uri", std.json.Value{ .string = uri });
         try text_doc_obj.put("version", std.json.Value{ .integer = @intCast(snapshot.version) });
         try params_obj.put("textDocument", std.json.Value{ .object = text_doc_obj });
-        try params_obj.put("contentChanges", std.json.Value{ .array = .{ .items = try change_objects.toOwnedSlice() } });
+        const changes_slice = try change_objects.toOwnedSlice(self.allocator);
+        try params_obj.put("contentChanges", std.json.Value{ .array = .{ .items = changes_slice } });
         
         const params = std.json.Value{ .object = params_obj };
         try self.sendNotification("textDocument/didChange", params);
@@ -400,7 +401,7 @@ pub const LspClient = struct {
             },
             .object => |obj| {
                 try writer.writeByte('{');
-                var it = obj.iterator(self.allocator);
+                var it = obj.iterator();
                 var first = true;
                 while (it.next()) |entry| {
                     if (!first) try writer.writeByte(',');

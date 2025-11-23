@@ -211,6 +211,38 @@ pub const Editor = struct {
             .readonly_spans = try spans.toOwnedSlice(),
         };
     }
+    
+    /// Request tool call from AI provider (if enabled).
+    /// Executes commands like `zig build`, `jj status`, etc.
+    pub fn request_tool_call(
+        self: *Editor,
+        tool_name: []const u8,
+        arguments: []const []const u8,
+        context: []const AiProvider.Message,
+    ) !AiProvider.ToolCallResult {
+        // Assert: Tool name and arguments must be valid
+        std.debug.assert(tool_name.len > 0);
+        std.debug.assert(tool_name.len <= 256); // Bounded: MAX_TOOL_NAME_LEN
+        std.debug.assert(arguments.len <= 32); // Bounded: MAX_TOOL_ARGS
+        
+        if (self.ai_provider) |*provider| {
+            const request = AiProvider.ToolCallRequest{
+                .tool_name = tool_name,
+                .arguments = arguments,
+                .context = context,
+            };
+            
+            return try provider.request_tool_call(request);
+        } else {
+            // No AI provider enabled, return error
+            return AiProvider.ToolCallResult{
+                .success = false,
+                .output = "",
+                .error_output = "AI provider not enabled",
+                .exit_code = -1,
+            };
+        }
+    }
 };
 
 // Note: Tests commented out due to Zig 0.15.2 comptime evaluation issue

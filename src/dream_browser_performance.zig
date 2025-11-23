@@ -20,8 +20,6 @@ pub const DreamBrowserPerformance = struct {
     // Bounded: Max 10,000ms frame time (10 seconds, for error detection)
     pub const MAX_FRAME_TIME_MS: u32 = 10_000;
     
-    allocator: std.mem.Allocator,
-    
     /// Frame timing information.
     pub const FrameTiming = struct {
         frame_start_time: u64, // Timestamp in milliseconds
@@ -50,6 +48,7 @@ pub const DreamBrowserPerformance = struct {
         timings_index: u32, // Circular buffer index
     };
     
+    allocator: std.mem.Allocator,
     frame_history: FrameHistory,
     current_frame_start: u64, // Current frame start time
     last_frame_time: u64, // Last frame end time

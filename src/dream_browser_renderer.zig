@@ -397,17 +397,9 @@ pub const DreamBrowserRenderer = struct {
             const current_node = stack.pop();
             
             // Text content is editable by default (unless marked readonly)
-            if (current_node.text_content.len > 0) {
-                const buffer_text = buffer.textSlice();
-                if (std.mem.indexOf(u8, buffer_text, current_node.text_content)) |start| {
-                    // Check if this span is already readonly
-                    if (!buffer.isReadOnly(start)) {
-                        // Content is editable (no action needed, editable by default)
-                        // But we could mark it explicitly if needed
-                        _ = start; // Position found but not used (editable by default)
-                    }
-                }
-            }
+            // No action needed - content is editable by default in GrainBuffer
+            _ = current_node;
+            _ = buffer;
             
             // Push children onto stack (in reverse order for correct processing)
             var i: u32 = current_node.children.len;

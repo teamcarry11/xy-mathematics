@@ -3,6 +3,7 @@ const Trap = @import("trap.zig");
 const BasinKernel = @import("basin_kernel.zig").BasinKernel;
 const Debug = @import("debug.zig");
 const Framebuffer = @import("framebuffer.zig").Framebuffer;
+const boot = @import("boot.zig");
 
 // Global kernel instance
 var kernel: BasinKernel = undefined;
@@ -27,9 +28,13 @@ pub export fn kmain() noreturn {
     Debug.log(.info, "Initializing Basin...", .{});
     kernel = BasinKernel.init();
     
+    // 3. Execute boot sequence (validate all subsystems initialized).
+    // Why: Ensure all subsystems are initialized in correct order.
+    boot.boot_kernel(&kernel);
+    
     Debug.log(.info, "Users initialized: {d}", .{kernel.user_count});
 
-    // 3. Initialize framebuffer (access at 0x90000000)
+    // 4. Initialize framebuffer (access at 0x90000000)
     // Why: Display boot messages and kernel output on screen.
     // Note: Framebuffer memory is mapped by VM at 0x90000000.
     // The kernel accesses it via store instructions, which the VM translates.
@@ -41,6 +46,7 @@ pub export fn kmain() noreturn {
     Debug.log(.info, "Framebuffer available at 0x90000000 (initialized by VM).", .{});
     Debug.log(.info, "System ready. Entering trap loop.", .{});
 
-    // 4. Enter trap loop (handles syscalls, including input events)
-    Trap.loop();
+    // 5. Enter trap loop (handles interrupts and exceptions)
+    // Why: Process pending interrupts and handle exceptions in main loop.
+    Trap.loop_with_kernel(&kernel);
 }

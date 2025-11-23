@@ -48,7 +48,11 @@ pub const VMStateSnapshot = struct {
     
     /// Performance metrics snapshot.
     /// Why: Capture performance state for analysis.
-    performance: struct {
+    performance: PerformanceSnapshot,
+    
+    /// Performance snapshot type.
+    /// Why: Explicit type for performance metrics.
+    pub const PerformanceSnapshot = struct {
         instructions_executed: u64,
         cycles_simulated: u64,
         memory_reads: u64,
@@ -58,7 +62,7 @@ pub const VMStateSnapshot = struct {
         jit_cache_hits: u64,
         jit_cache_misses: u64,
         interpreter_fallbacks: u64,
-    },
+    };
     
     /// Error log entry count.
     error_count: u32,
@@ -96,16 +100,17 @@ pub const VMStateSnapshot = struct {
         };
         
         // Capture last error.
-        const last_error_val: u32 = if (vm.last_error) |err| switch (err) {
-            .invalid_instruction => 0,
-            .invalid_memory_access => 1,
-            .unaligned_instruction => 2,
-            .unaligned_memory_access => 3,
+        const last_error_val: u32 = if (vm.last_error) |err| blk: {
+            if (err == VM.VMError.invalid_instruction) break :blk 0;
+            if (err == VM.VMError.invalid_memory_access) break :blk 1;
+            if (err == VM.VMError.unaligned_instruction) break :blk 2;
+            if (err == VM.VMError.unaligned_memory_access) break :blk 3;
+            break :blk 255; // Unknown error
         } else 255; // No error
         
         // Capture performance metrics.
         const perf = vm.performance;
-        const performance_snapshot = .{
+        const performance_snapshot: VMStateSnapshot.PerformanceSnapshot = .{
             .instructions_executed = perf.instructions_executed,
             .cycles_simulated = perf.cycles_simulated,
             .memory_reads = perf.memory_reads,

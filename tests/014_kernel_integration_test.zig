@@ -33,7 +33,7 @@ const VM = kernel_vm.VM;
 const loadKernel = kernel_vm.loadKernel;
 const basin_kernel = @import("basin_kernel");
 const BasinKernel = basin_kernel.BasinKernel;
-const framebuffer = @import("../src/kernel/framebuffer.zig");
+const framebuffer = @import("framebuffer");
 
 // Framebuffer constants (explicit types, no usize).
 const FRAMEBUFFER_WIDTH: u32 = framebuffer.FRAMEBUFFER_WIDTH;
@@ -207,7 +207,8 @@ test "Stress Test: Long-running program execution" {
     const initial_x1 = vm.regs.get(1);
     
     // Assert: Initial register value must be valid (precondition).
-    _ = initial_x1; // x1 may be any value initially.
+    // x1 may be any value initially, so we just verify it's accessible.
+    _ = initial_x1;
     
     while (vm.state == .running and step_count < STRESS_TEST_STEPS) : (step_count += 1) {
         vm.step() catch |err| {

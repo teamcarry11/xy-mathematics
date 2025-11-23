@@ -699,6 +699,271 @@ pub fn build(b: *std.Build) void {
     fb_demo_tests_step.dependOn(&fb_demo_tests_run.step);
     fb_demo_tests_step.dependOn(&fb_demo_install.step);
 
+    // Kernel and VM tests
+    // Framebuffer module for framebuffer tests
+    const framebuffer_module = b.addModule("framebuffer", .{
+        .root_source_file = b.path("src/kernel/framebuffer.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    
+    const framebuffer_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/framebuffer_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "kernel_vm", .module = kernel_vm_module },
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+                .{ .name = "framebuffer", .module = framebuffer_module },
+            },
+        }),
+    });
+    const framebuffer_tests_run = b.addRunArtifact(framebuffer_tests);
+    test_step.dependOn(&framebuffer_tests_run.step);
+
+    const framebuffer_syscall_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/framebuffer_syscall_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "kernel_vm", .module = kernel_vm_module },
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+                .{ .name = "framebuffer", .module = framebuffer_module },
+            },
+        }),
+    });
+    const framebuffer_syscall_tests_run = b.addRunArtifact(framebuffer_syscall_tests);
+    test_step.dependOn(&framebuffer_syscall_tests_run.step);
+
+    const kernel_integration_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/014_kernel_integration_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "kernel_vm", .module = kernel_vm_module },
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+                .{ .name = "framebuffer", .module = framebuffer_module },
+            },
+        }),
+    });
+    const kernel_integration_tests_run = b.addRunArtifact(kernel_integration_tests);
+    test_step.dependOn(&kernel_integration_tests_run.step);
+
+    const dirty_region_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/015_dirty_region_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "kernel_vm", .module = kernel_vm_module },
+                .{ .name = "framebuffer", .module = framebuffer_module },
+            },
+        }),
+    });
+    const dirty_region_tests_run = b.addRunArtifact(dirty_region_tests);
+    test_step.dependOn(&dirty_region_tests_run.step);
+
+    const error_handling_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/016_error_handling_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "kernel_vm", .module = kernel_vm_module },
+            },
+        }),
+    });
+    const error_handling_tests_run = b.addRunArtifact(error_handling_tests);
+    test_step.dependOn(&error_handling_tests_run.step);
+
+    const performance_monitoring_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/017_performance_monitoring_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "kernel_vm", .module = kernel_vm_module },
+            },
+        }),
+    });
+    const performance_monitoring_tests_run = b.addRunArtifact(performance_monitoring_tests);
+    test_step.dependOn(&performance_monitoring_tests_run.step);
+
+    const state_persistence_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/018_state_persistence_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "kernel_vm", .module = kernel_vm_module },
+            },
+        }),
+    });
+    const state_persistence_tests_run = b.addRunArtifact(state_persistence_tests);
+    test_step.dependOn(&state_persistence_tests_run.step);
+
+    const timer_driver_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/020_timer_driver_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+            },
+        }),
+    });
+    const timer_driver_tests_run = b.addRunArtifact(timer_driver_tests);
+    test_step.dependOn(&timer_driver_tests_run.step);
+
+    const interrupt_controller_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/021_interrupt_controller_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+            },
+        }),
+    });
+    const interrupt_controller_tests_run = b.addRunArtifact(interrupt_controller_tests);
+    test_step.dependOn(&interrupt_controller_tests_run.step);
+
+    const process_scheduler_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/022_process_scheduler_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+            },
+        }),
+    });
+    const process_scheduler_tests_run = b.addRunArtifact(process_scheduler_tests);
+    test_step.dependOn(&process_scheduler_tests_run.step);
+
+    const ipc_channel_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/023_ipc_channel_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+            },
+        }),
+    });
+    const ipc_channel_tests_run = b.addRunArtifact(ipc_channel_tests);
+    test_step.dependOn(&ipc_channel_tests_run.step);
+
+    const process_elf_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/024_process_elf_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+                .{ .name = "kernel_vm", .module = kernel_vm_module },
+            },
+        }),
+    });
+    const process_elf_tests_run = b.addRunArtifact(process_elf_tests);
+    test_step.dependOn(&process_elf_tests_run.step);
+
+    const storage_filesystem_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/025_storage_filesystem_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+            },
+        }),
+    });
+    const storage_filesystem_tests_run = b.addRunArtifact(storage_filesystem_tests);
+    test_step.dependOn(&storage_filesystem_tests_run.step);
+
+    const keyboard_mouse_driver_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/026_keyboard_mouse_driver_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+            },
+        }),
+    });
+    const keyboard_mouse_driver_tests_run = b.addRunArtifact(keyboard_mouse_driver_tests);
+    test_step.dependOn(&keyboard_mouse_driver_tests_run.step);
+
+    // Memory module for memory allocator tests
+    const memory_module = b.addModule("memory", .{
+        .root_source_file = b.path("src/kernel/memory.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    
+    // Events module for platform events
+    const events_module = b.addModule("events", .{
+        .root_source_file = b.path("src/platform/events.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
+    // Window module for window tests (defined before use in fuzz_003_tests)
+    const window_module = b.addModule("window", .{
+        .root_source_file = b.path("src/platform/macos_tahoe/window.zig"),
+        .target = target,
+        .optimize = optimize,
+        .imports = &.{
+            .{ .name = "events", .module = events_module },
+        },
+    });
+    
+    const memory_allocator_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/027_memory_allocator_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+                .{ .name = "memory", .module = memory_module },
+            },
+        }),
+    });
+    const memory_allocator_tests_run = b.addRunArtifact(memory_allocator_tests);
+    test_step.dependOn(&memory_allocator_tests_run.step);
+
+    // Boot module for boot sequence tests (defined before use, after basin_kernel)
+    // Note: boot.zig is imported by basin_kernel.zig, so we can't create a separate module
+    // Instead, we'll use relative imports in the test
+    const boot_sequence_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/028_boot_sequence_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+            },
+        }),
+    });
+    const boot_sequence_tests_run = b.addRunArtifact(boot_sequence_tests);
+    test_step.dependOn(&boot_sequence_tests_run.step);
+
+    const trap_handler_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/029_trap_handler_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+            },
+        }),
+    });
+    const trap_handler_tests_run = b.addRunArtifact(trap_handler_tests);
+    test_step.dependOn(&trap_handler_tests_run.step);
+
     // RISC-V Logo Display Program
     const riscv_logo_exe = b.addExecutable(.{
         .name = "riscv_logo",
@@ -1025,6 +1290,7 @@ pub fn build(b: *std.Build) void {
             .optimize = optimize,
             .imports = &.{
                 .{ .name = "ray", .module = ray_module },
+                .{ .name = "window", .module = window_module },
             },
         }),
     });

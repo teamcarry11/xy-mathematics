@@ -1,24 +1,23 @@
 const std = @import("std");
 const GrainBuffer = @import("grain_buffer.zig").GrainBuffer;
 
+// Cancellation support: track pending requests
+// Bounded: Max 100 pending requests
+pub const MAX_PENDING_REQUESTS: u32 = 100;
+
 /// LSP client for Aurora IDE: communicates with ZLS (Zig Language Server) via JSON-RPC 2.0.
 /// ~<~ Glow Airbend: static allocation for message buffers; process lifecycle explicit.
 /// ~~~~ Glow Waterbend: snapshot model tracks incremental document changes (Matklad-style).
 pub const LspClient = struct {
+    // Snapshot model: track document versions incrementally (Matklad-style)
+    // Bounded: Max 1000 document snapshots
+    pub const MAX_SNAPSHOTS: u32 = 1000;
     allocator: std.mem.Allocator,
     server_process: ?std.process.Child = null,
     request_id: u64 = 1,
     message_buffer: [8192]u8 = undefined,
-    
-    // Snapshot model: track document versions incrementally (Matklad-style)
-    // Bounded: Max 1000 document snapshots
-    pub const MAX_SNAPSHOTS: u32 = 1000;
     snapshots: std.ArrayList(DocumentSnapshot) = undefined,
     current_snapshot_id: u64 = 0,
-    
-    // Cancellation support: track pending requests
-    // Bounded: Max 100 pending requests
-    pub const MAX_PENDING_REQUESTS: u32 = 100;
     pending_requests: std.AutoHashMap(u64, void) = undefined,
 
     pub const Message = struct {
@@ -79,7 +78,7 @@ pub const LspClient = struct {
     pub fn init(allocator: std.mem.Allocator) LspClient {
         return LspClient{
             .allocator = allocator,
-            .snapshots = std.ArrayList(DocumentSnapshot).init(allocator),
+            .snapshots = std.ArrayList(DocumentSnapshot){ .items = &.{}, .capacity = 0 },
             .pending_requests = std.AutoHashMap(u64, void).init(allocator),
         };
     }
@@ -90,7 +89,7 @@ pub const LspClient = struct {
             self.allocator.free(snapshot.uri);
             self.allocator.free(snapshot.text);
         }
-        self.snapshots.deinit();
+        self.snapshots.deinit(self.allocator);
         self.pending_requests.deinit();
         
         if (self.server_process) |*proc| {
@@ -124,10 +123,10 @@ pub const LspClient = struct {
         
         try params_obj.put("rootUri", std.json.Value{ .string = root_uri });
         
-        var capabilities_obj = std.json.ObjectMap.init(self.allocator);
-        try params_obj.put("capabilities", std.json.Value{ .object = .{ .string_map = capabilities_obj } });
+        const capabilities_obj = std.json.ObjectMap.init(self.allocator);
+        try params_obj.put("capabilities", std.json.Value{ .object = capabilities_obj });
         
-        const params = std.json.Value{ .object = .{ .string_map = params_obj } };
+        const params = std.json.Value{ .object = params_obj };
         _ = try self.sendRequest("initialize", params);
     }
 
@@ -147,15 +146,15 @@ pub const LspClient = struct {
         var text_doc_obj = std.json.ObjectMap.init(self.allocator);
         defer text_doc_obj.deinit();
         try text_doc_obj.put("uri", std.json.Value{ .string = uri });
-        try params_obj.put("textDocument", std.json.Value{ .object = .{ .string_map = text_doc_obj } });
+        try params_obj.put("textDocument", std.json.Value{ .object = text_doc_obj });
         
         var position_obj = std.json.ObjectMap.init(self.allocator);
         defer position_obj.deinit();
         try position_obj.put("line", std.json.Value{ .integer = @intCast(line) });
         try position_obj.put("character", std.json.Value{ .integer = @intCast(character) });
-        try params_obj.put("position", std.json.Value{ .object = .{ .string_map = position_obj } });
+        try params_obj.put("position", std.json.Value{ .object = position_obj });
         
-        const params = std.json.Value{ .object = .{ .string_map = params_obj } };
+        const params = std.json.Value{ .object = params_obj };
         const response = try self.sendRequest("textDocument/completion", params);
         
         // Parse completion items from response.result
@@ -165,7 +164,7 @@ pub const LspClient = struct {
                 var completions = try self.allocator.alloc(CompletionItem, items.len);
                 for (items, 0..) |item, i| {
                     if (item == .object) {
-                        const obj = item.object.string_map;
+                        const obj = item.object;
                         completions[i] = CompletionItem{
                             .label = if (obj.get("label")) |l| l.string else "",
                             .kind = if (obj.get("kind")) |k| @intCast(k.integer) else null,
@@ -199,7 +198,7 @@ pub const LspClient = struct {
         };
         self.current_snapshot_id += 1;
         
-        try self.snapshots.append(snapshot);
+        try self.snapshots.append(self.allocator, snapshot);
         
         // Assert: Snapshot added successfully
         std.debug.assert(self.snapshots.items.len <= MAX_SNAPSHOTS);
@@ -213,9 +212,9 @@ pub const LspClient = struct {
         try text_doc_obj.put("languageId", std.json.Value{ .string = "zig" });
         try text_doc_obj.put("version", std.json.Value{ .integer = 0 });
         try text_doc_obj.put("text", std.json.Value{ .string = text });
-        try params_obj.put("textDocument", std.json.Value{ .object = .{ .string_map = text_doc_obj } });
+        try params_obj.put("textDocument", std.json.Value{ .object = text_doc_obj });
         
-        const params = std.json.Value{ .object = .{ .string_map = params_obj } };
+        const params = std.json.Value{ .object = params_obj };
         try self.sendNotification("textDocument/didOpen", params);
     }
     
@@ -267,8 +266,8 @@ pub const LspClient = struct {
         snapshot.version += 1;
         
         // Build LSP params
-        var change_objects = std.ArrayList(std.json.Value).init(self.allocator);
-        defer change_objects.deinit();
+        var change_objects = std.ArrayList(std.json.Value){ .items = &.{}, .capacity = 0 };
+        defer change_objects.deinit(self.allocator);
         
         for (changes) |change| {
             var change_obj = std.json.ObjectMap.init(self.allocator);
@@ -278,21 +277,21 @@ pub const LspClient = struct {
                 var start_obj = std.json.ObjectMap.init(self.allocator);
                 try start_obj.put("line", std.json.Value{ .integer = @intCast(range.start.line) });
                 try start_obj.put("character", std.json.Value{ .integer = @intCast(range.start.character) });
-                try range_obj.put("start", std.json.Value{ .object = .{ .string_map = start_obj } });
+                try range_obj.put("start", std.json.Value{ .object = start_obj });
                 
                 var end_obj = std.json.ObjectMap.init(self.allocator);
                 try end_obj.put("line", std.json.Value{ .integer = @intCast(range.end.line) });
                 try end_obj.put("character", std.json.Value{ .integer = @intCast(range.end.character) });
-                try range_obj.put("end", std.json.Value{ .object = .{ .string_map = end_obj } });
+                try range_obj.put("end", std.json.Value{ .object = end_obj });
                 
-                try change_obj.put("range", std.json.Value{ .object = .{ .string_map = range_obj } });
+                try change_obj.put("range", std.json.Value{ .object = range_obj });
                 
                 if (change.range_length) |len| {
                     try change_obj.put("rangeLength", std.json.Value{ .integer = @intCast(len) });
                 }
             }
             try change_obj.put("text", std.json.Value{ .string = change.text });
-            try change_objects.append(std.json.Value{ .object = .{ .string_map = change_obj } });
+            try change_objects.append(self.allocator, std.json.Value{ .object = change_obj });
         }
         
         var params_obj = std.json.ObjectMap.init(self.allocator);
@@ -301,10 +300,10 @@ pub const LspClient = struct {
         var text_doc_obj = std.json.ObjectMap.init(self.allocator);
         try text_doc_obj.put("uri", std.json.Value{ .string = uri });
         try text_doc_obj.put("version", std.json.Value{ .integer = @intCast(snapshot.version) });
-        try params_obj.put("textDocument", std.json.Value{ .object = .{ .string_map = text_doc_obj } });
+        try params_obj.put("textDocument", std.json.Value{ .object = text_doc_obj });
         try params_obj.put("contentChanges", std.json.Value{ .array = .{ .items = try change_objects.toOwnedSlice() } });
         
-        const params = std.json.Value{ .object = .{ .string_map = params_obj } };
+        const params = std.json.Value{ .object = params_obj };
         try self.sendNotification("textDocument/didChange", params);
     }
     
@@ -317,7 +316,7 @@ pub const LspClient = struct {
         defer params_obj.deinit();
         try params_obj.put("id", std.json.Value{ .integer = @intCast(request_id) });
         
-        const params = std.json.Value{ .object = .{ .string_map = params_obj } };
+        const params = std.json.Value{ .object = params_obj };
         try self.sendNotification("$/cancelRequest", params);
         _ = self.pending_requests.remove(request_id);
     }
@@ -350,6 +349,79 @@ pub const LspClient = struct {
         return error.InvalidPosition;
     }
 
+    /// Serialize JSON Value to string (manual implementation for Zig 0.15 compatibility).
+    /// Bounded: Max 10MB JSON output.
+    fn serialize_json_value(
+        self: *LspClient,
+        value: std.json.Value,
+    ) ![]const u8 {
+        var buffer = std.ArrayList(u8){ .items = &.{}, .capacity = 0 };
+        errdefer buffer.deinit(self.allocator);
+        const writer = buffer.writer(self.allocator);
+        
+        try self.write_json_value(writer, value);
+        
+        return try buffer.toOwnedSlice(self.allocator);
+    }
+    
+    /// Recursively write JSON value to writer.
+    fn write_json_value(
+        self: *LspClient,
+        writer: anytype,
+        value: std.json.Value,
+    ) !void {
+        switch (value) {
+            .string => |s| {
+                try writer.writeByte('"');
+                // Escape JSON special characters
+                for (s) |ch| {
+                    switch (ch) {
+                        '"' => try writer.writeAll("\\\""),
+                        '\\' => try writer.writeAll("\\\\"),
+                        '\n' => try writer.writeAll("\\n"),
+                        '\r' => try writer.writeAll("\\r"),
+                        '\t' => try writer.writeAll("\\t"),
+                        else => try writer.writeByte(ch),
+                    }
+                }
+                try writer.writeByte('"');
+            },
+            .integer => |i| try writer.print("{d}", .{i}),
+            .float => |f| try writer.print("{d}", .{f}),
+            .bool => |b| try writer.print("{}", .{b}),
+            .null => try writer.writeAll("null"),
+            .array => |arr| {
+                try writer.writeByte('[');
+                for (arr.items, 0..) |item, i| {
+                    if (i > 0) try writer.writeByte(',');
+                    try self.write_json_value(writer, item);
+                }
+                try writer.writeByte(']');
+            },
+            .object => |obj| {
+                try writer.writeByte('{');
+                var it = obj.iterator(self.allocator);
+                var first = true;
+                while (it.next()) |entry| {
+                    if (!first) try writer.writeByte(',');
+                    first = false;
+                    // Write key
+                    try writer.writeByte('"');
+                    try writer.writeAll(entry.key_ptr.*);
+                    try writer.writeByte('"');
+                    try writer.writeByte(':');
+                    // Write value
+                    try self.write_json_value(writer, entry.value_ptr.*);
+                }
+                try writer.writeByte('}');
+            },
+            .number_string => |ns| {
+                // Number stored as string (e.g., "123")
+                try writer.writeAll(ns);
+            },
+        }
+    }
+    
     /// Send a JSON-RPC request; returns response message.
     fn sendRequest(
         self: *LspClient,
@@ -363,10 +435,7 @@ pub const LspClient = struct {
         std.debug.assert(self.pending_requests.count() < MAX_PENDING_REQUESTS);
         try self.pending_requests.put(id, {});
         
-        // Serialize request to JSON
-        var json_buffer = std.ArrayList(u8).init(self.allocator);
-        defer json_buffer.deinit();
-        
+        // Build request object
         var request_obj = std.json.ObjectMap.init(self.allocator);
         defer request_obj.deinit();
         try request_obj.put("jsonrpc", std.json.Value{ .string = "2.0" });
@@ -374,26 +443,23 @@ pub const LspClient = struct {
         try request_obj.put("method", std.json.Value{ .string = method });
         try request_obj.put("params", params);
         
-        try std.json.stringify(
-            std.json.Value{ .object = .{ .string_map = request_obj } },
-            .{},
-            json_buffer.writer(),
-        );
+        // Serialize to JSON string
+        const request_value = std.json.Value{ .object = request_obj };
+        const json_string = try self.serialize_json_value(request_value);
+        defer self.allocator.free(json_string);
         
         // Write to server stdin (LSP uses Content-Length header)
         if (self.server_process) |*proc| {
             const stdin = proc.stdin orelse return error.NoStdin;
-            const content = json_buffer.items;
             const header = try std.fmt.allocPrint(
                 self.allocator,
                 "Content-Length: {d}\r\n\r\n",
-                .{content.len},
+                .{json_string.len},
             );
             defer self.allocator.free(header);
             
             try stdin.writeAll(header);
-            try stdin.writeAll(content);
-            try stdin.flush();
+            try stdin.writeAll(json_string);
         }
         
         // Read response from server stdout
@@ -409,36 +475,30 @@ pub const LspClient = struct {
         method: []const u8,
         params: std.json.Value,
     ) !void {
-        // Serialize notification to JSON
-        var json_buffer = std.ArrayList(u8).init(self.allocator);
-        defer json_buffer.deinit();
-        
+        // Build notification object
         var notification_obj = std.json.ObjectMap.init(self.allocator);
         defer notification_obj.deinit();
         try notification_obj.put("jsonrpc", std.json.Value{ .string = "2.0" });
         try notification_obj.put("method", std.json.Value{ .string = method });
         try notification_obj.put("params", params);
         
-        try std.json.stringify(
-            std.json.Value{ .object = .{ .string_map = notification_obj } },
-            .{},
-            json_buffer.writer(),
-        );
+        // Serialize to JSON string
+        const notification_value = std.json.Value{ .object = notification_obj };
+        const json_string = try self.serialize_json_value(notification_value);
+        defer self.allocator.free(json_string);
         
         // Write to server stdin
         if (self.server_process) |*proc| {
             const stdin = proc.stdin orelse return error.NoStdin;
-            const content = json_buffer.items;
             const header = try std.fmt.allocPrint(
                 self.allocator,
                 "Content-Length: {d}\r\n\r\n",
-                .{content.len},
+                .{json_string.len},
             );
             defer self.allocator.free(header);
             
             try stdin.writeAll(header);
-            try stdin.writeAll(content);
-            try stdin.flush();
+            try stdin.writeAll(json_string);
         }
     }
     
@@ -514,7 +574,7 @@ pub const LspClient = struct {
         var message = Message{};
         
         if (root == .object) {
-            const obj = root.object.string_map;
+            const obj = root.object;
             if (obj.get("id")) |id| {
                 message.id = @intCast(id.integer);
             }
@@ -526,7 +586,7 @@ pub const LspClient = struct {
             }
             if (obj.get("error")) |err| {
                 if (err == .object) {
-                    const err_obj = err.object.string_map;
+                    const err_obj = err.object;
                     message.lsp_error = LspError{
                         .code = if (err_obj.get("code")) |c| @intCast(c.integer) else 0,
                         .message = if (err_obj.get("message")) |m| m.string else "",

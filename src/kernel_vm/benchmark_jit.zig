@@ -102,7 +102,7 @@ pub fn main() !void {
             steps,
         });
     }
-    
+
     // 2. Run JIT (multiple runs, reuse single VM)
     std.debug.print("\n🚀 JIT Benchmarks:\n", .{});
     std.debug.print("──────────────────\n", .{});
@@ -155,9 +155,9 @@ pub fn main() !void {
         if (run_idx == n_runs - 1) {
             if (vm_jit.jit) |jit| {
                 std.debug.print("\n", .{});
-                jit.perf_counters.print_stats();
-            }
+            jit.perf_counters.print_stats();
         }
+    }
     }
     
     // 3. Calculate statistics

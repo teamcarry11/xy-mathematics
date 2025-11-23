@@ -5,6 +5,7 @@
 const std = @import("std");
 const Debug = @import("debug.zig");
 const ProcessState = @import("basin_kernel.zig").ProcessState;
+const Process = @import("basin_kernel.zig").Process;
 
 /// Process scheduler for Grain Basin kernel.
 /// Why: Manage process execution order and state management.
@@ -81,11 +82,7 @@ pub const Scheduler = struct {
     /// Returns: Process ID if found, 0 if no runnable process.
     pub fn find_next_runnable(
         self: *Scheduler,
-        processes: []const struct {
-            id: u64,
-            state: ProcessState,
-            allocated: bool,
-        },
+        processes: []const Process,
         max_processes: u32,
     ) u64 {
         // Assert: Scheduler must be initialized.
@@ -105,7 +102,8 @@ pub const Scheduler = struct {
             const process = processes[idx];
             
             // Check if process is runnable (allocated and running).
-            if (process.allocated and process.state == .running) {
+            // Why: Process is allocated if id != 0.
+            if (process.id != 0 and process.state == .running) {
                 // Update next_index for next round-robin.
                 self.next_index = (idx + 1) % max_processes;
                 
@@ -190,17 +188,17 @@ test "scheduler clear current" {
 test "scheduler find next runnable" {
     var scheduler = Scheduler.init();
     
-    const Process = struct {
+    const TestProcess = struct {
         id: u64,
         state: ProcessState,
         allocated: bool,
     };
     
-    var processes = [_]Process{
-        Process{ .id = 0, .state = .free, .allocated = false },
-        Process{ .id = 1, .state = .running, .allocated = true },
-        Process{ .id = 0, .state = .free, .allocated = false },
-        Process{ .id = 2, .state = .running, .allocated = true },
+    var processes = [_]TestProcess{
+        TestProcess{ .id = 0, .state = .free, .allocated = false },
+        TestProcess{ .id = 1, .state = .running, .allocated = true },
+        TestProcess{ .id = 0, .state = .free, .allocated = false },
+        TestProcess{ .id = 2, .state = .running, .allocated = true },
     };
     
     const pid1 = scheduler.find_next_runnable(&processes, 4);

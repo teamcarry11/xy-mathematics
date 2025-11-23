@@ -40,7 +40,8 @@ const SimpleRng = struct {
     }
 };
 
-const Window = @import("../src/platform/macos_tahoe/window.zig").Window;
+// Window import - using module system
+const Window = @import("window").Window;
 
 test "003 fuzz: window buffer operations with random data" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);

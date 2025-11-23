@@ -71,8 +71,8 @@ pub const TreeSitter = struct {
         
         // Simple parser: identify function definitions, structs, etc.
         // This is a placeholder until we integrate the actual Tree-sitter library.
-        var nodes = std.ArrayList(Node).init(self.allocator);
-        defer nodes.deinit();
+        var nodes = std.ArrayList(Node){ .items = &.{}, .capacity = 0 };
+        defer nodes.deinit(self.allocator);
         
         var lines = std.mem.splitSequence(u8, source, "\n");
         var row: u32 = 0;
@@ -114,7 +114,7 @@ pub const TreeSitter = struct {
                     if (brace_count == 0 and found_start) break;
                 }
                 
-                try nodes.append(Node{
+                try nodes.append(self.allocator, Node{
                     .type = "function",
                     .start_byte = start_byte,
                     .end_byte = end_byte_final,
@@ -133,7 +133,7 @@ pub const TreeSitter = struct {
                 const start_byte = byte_offset;
                 const end_byte = byte_offset + @as(u32, @intCast(line.len));
                 
-                try nodes.append(Node{
+                try nodes.append(self.allocator, Node{
                     .type = "type_definition",
                     .start_byte = start_byte,
                     .end_byte = end_byte,
@@ -156,7 +156,7 @@ pub const TreeSitter = struct {
             .end_byte = @as(u32, @intCast(source.len)),
             .start_point = Point{ .row = 0, .column = 0 },
             .end_point = Point{ .row = row, .column = 0 },
-            .children = try nodes.toOwnedSlice(),
+            .children = try nodes.toOwnedSlice(self.allocator),
         };
         
         // Extract syntax tokens for highlighting
@@ -178,8 +178,8 @@ pub const TreeSitter = struct {
         std.debug.assert(source.len > 0);
         std.debug.assert(source.len <= 100 * 1024 * 1024); // Bounded source size (100MB)
         
-        var tokens = std.ArrayList(Token).init(self.allocator);
-        errdefer tokens.deinit();
+        var tokens = std.ArrayList(Token){ .items = &.{}, .capacity = 0 };
+        errdefer tokens.deinit(self.allocator);
         
         // Zig keywords (common subset)
         const keywords = [_][]const u8{
@@ -231,7 +231,7 @@ pub const TreeSitter = struct {
                 }
                 const end_byte = i;
                 const end_point = Point{ .row = row, .column = column };
-                try tokens.append(Token{
+                try tokens.append(self.allocator, Token{
                     .type = .string_literal,
                     .start_byte = start_byte,
                     .end_byte = end_byte,
@@ -251,7 +251,7 @@ pub const TreeSitter = struct {
                 }
                 const end_byte = i;
                 const end_point = Point{ .row = row, .column = column };
-                try tokens.append(Token{
+                try tokens.append(self.allocator, Token{
                     .type = .comment,
                     .start_byte = start_byte,
                     .end_byte = end_byte,
@@ -281,7 +281,7 @@ pub const TreeSitter = struct {
                 }
                 const end_byte = i;
                 const end_point = Point{ .row = row, .column = column };
-                try tokens.append(Token{
+                try tokens.append(self.allocator, Token{
                     .type = .comment,
                     .start_byte = start_byte,
                     .end_byte = end_byte,
@@ -307,13 +307,13 @@ pub const TreeSitter = struct {
             if (std.ascii.isDigit(ch)) {
                 i += 1;
                 column += 1;
-                while (i < source.len and (std.ascii.isAlNum(source[i]) or source[i] == '.' or source[i] == '_')) {
+                while (i < source.len and (std.ascii.isAlphanumeric(source[i]) or source[i] == '.' or source[i] == '_')) {
                     i += 1;
                     column += 1;
                 }
                 const end_byte = i;
                 const end_point = Point{ .row = row, .column = column };
-                try tokens.append(Token{
+                try tokens.append(self.allocator, Token{
                     .type = .number_literal,
                     .start_byte = start_byte,
                     .end_byte = end_byte,
@@ -330,7 +330,7 @@ pub const TreeSitter = struct {
                 column += 1;
                 const end_byte = i;
                 const end_point = Point{ .row = row, .column = column };
-                try tokens.append(Token{
+                try tokens.append(self.allocator, Token{
                     .type = if (ch == '(' or ch == ')' or ch == '{' or ch == '}' or ch == '[' or ch == ']' or ch == ',' or ch == ';' or ch == ':') .punctuation else .operator,
                     .start_byte = start_byte,
                     .end_byte = end_byte,
@@ -344,7 +344,7 @@ pub const TreeSitter = struct {
             if (std.ascii.isAlphabetic(ch) or ch == '_') {
                 i += 1;
                 column += 1;
-                while (i < source.len and (std.ascii.isAlnum(source[i]) or source[i] == '_')) {
+                while (i < source.len and (std.ascii.isAlphanumeric(source[i]) or source[i] == '_')) {
                     i += 1;
                     column += 1;
                 }
@@ -361,7 +361,7 @@ pub const TreeSitter = struct {
                     }
                 }
                 
-                try tokens.append(Token{
+                try tokens.append(self.allocator, Token{
                     .type = if (is_keyword) .keyword else .identifier,
                     .start_byte = start_byte,
                     .end_byte = end_byte,
@@ -379,7 +379,7 @@ pub const TreeSitter = struct {
         // Assert: Tokens extracted successfully
         std.debug.assert(tokens.items.len <= MAX_TOKENS);
         
-        return try tokens.toOwnedSlice();
+        return try tokens.toOwnedSlice(self.allocator);
     }
     
     /// Get token at a specific position (for syntax highlighting).

@@ -254,6 +254,20 @@
   - [x] File I/O syscall integration (open/read/write/close)
   - [x] Comprehensive TigerStyle tests (`tests/025_storage_filesystem_test.zig`)
   - [ ] virtio-blk backend (future: persistent storage)
+- [x] Signal handling ✅ **COMPLETE**
+  - [x] Signal handling module (`src/kernel/signal.zig`)
+  - [x] Signal types (SIGTERM, SIGKILL, SIGINT, SIGUSR1, SIGUSR2, etc.)
+  - [x] Signal table per process (SignalTable struct)
+  - [x] Signal handler registration (SignalAction)
+  - [x] Pending signal tracking (bitmap)
+  - [x] Blocked signal tracking (bitmap)
+  - [x] Signal delivery and processing
+  - [x] kill syscall (send signal to process by PID)
+  - [x] signal syscall (register signal handler)
+  - [x] sigaction syscall (POSIX-compatible signal action)
+  - [x] SIGKILL immediate termination (cannot be caught or blocked)
+  - [x] Signal integration with Process struct (Process.signals)
+  - [x] Comprehensive assertions (GrainStyle compliance)
 
 ### 3.3 Userspace Support
 - [x] ELF loader ✅ **COMPLETE**

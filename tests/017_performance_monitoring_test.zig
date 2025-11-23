@@ -25,7 +25,7 @@ const std = @import("std");
 const testing = std.testing;
 const kernel_vm = @import("kernel_vm");
 const VM = kernel_vm.VM;
-const performance_mod = kernel_vm.performance;
+const performance_mod = @import("performance");
 const PerformanceMetrics = performance_mod.PerformanceMetrics;
 
 test "Performance Metrics: Track instruction execution" {

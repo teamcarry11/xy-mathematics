@@ -2,7 +2,7 @@ const std = @import("std");
 const c = @import("objc_runtime.zig").c;
 const cg = @import("objc_runtime.zig").cg;
 const cocoa = @import("cocoa_bridge.zig");
-const events = @import("../events.zig");
+const events = @import("events");
 
 // C helper function to create NSImage from CGImage.
 extern fn createNSImageFromCGImage(cgImage: *anyopaque, width: f64, height: f64) ?*c.objc_object;

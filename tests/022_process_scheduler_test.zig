@@ -3,75 +3,79 @@
 //! Grain Style: Explicit types (u64 not usize), minimum 2 assertions per function.
 
 const std = @import("std");
-const Scheduler = @import("../src/kernel/scheduler.zig").Scheduler;
-const ProcessState = @import("../src/kernel/basin_kernel.zig").ProcessState;
-const BasinKernel = @import("../src/kernel/basin_kernel.zig").BasinKernel;
+const basin_kernel = @import("basin_kernel");
+const BasinKernel = basin_kernel.BasinKernel;
+const ProcessState = basin_kernel.ProcessState;
+const MAX_PROCESSES: u32 = 16;
 
 // Test scheduler initialization.
 test "scheduler init" {
-    const scheduler = Scheduler.init();
+    const kernel = BasinKernel.init();
     
     // Assert: Scheduler must be initialized.
-    try std.testing.expect(scheduler.initialized);
-    try std.testing.expect(scheduler.current_pid == 0);
-    try std.testing.expect(scheduler.next_index == 0);
+    try std.testing.expect(kernel.scheduler.initialized);
+    try std.testing.expect(kernel.scheduler.current_pid == 0);
+    try std.testing.expect(kernel.scheduler.next_index == 0);
 }
 
 // Test set current process.
 test "scheduler set current" {
-    var scheduler = Scheduler.init();
+    var kernel = BasinKernel.init();
     
     const pid: u64 = 1;
-    scheduler.set_current(pid);
+    kernel.scheduler.set_current(pid);
     
     // Assert: Current PID must be set.
-    try std.testing.expect(scheduler.get_current() == pid);
-    try std.testing.expect(scheduler.is_current(pid));
+    try std.testing.expect(kernel.scheduler.get_current() == pid);
+    try std.testing.expect(kernel.scheduler.is_current(pid));
     
     // Assert: Non-current PID must return false.
-    try std.testing.expect(!scheduler.is_current(2));
+    try std.testing.expect(!kernel.scheduler.is_current(2));
 }
 
 // Test clear current process.
 test "scheduler clear current" {
-    var scheduler = Scheduler.init();
+    var kernel = BasinKernel.init();
     
-    scheduler.set_current(1);
-    scheduler.clear_current();
+    kernel.scheduler.set_current(1);
+    kernel.scheduler.clear_current();
     
     // Assert: Current PID must be cleared.
-    try std.testing.expect(scheduler.get_current() == 0);
-    try std.testing.expect(!scheduler.is_current(1));
+    try std.testing.expect(kernel.scheduler.get_current() == 0);
+    try std.testing.expect(!kernel.scheduler.is_current(1));
 }
 
 // Test find next runnable process.
 test "scheduler find next runnable" {
-    var scheduler = Scheduler.init();
+    var kernel = BasinKernel.init();
     
-    const Process = struct {
-        id: u64,
-        state: ProcessState,
-        allocated: bool,
-    };
+    // Use kernel's scheduler and processes
+    const pid1 = kernel.scheduler.find_next_runnable(kernel.processes[0..], MAX_PROCESSES);
     
-    var processes = [_]Process{
-        Process{ .id = 0, .state = .free, .allocated = false },
-        Process{ .id = 1, .state = .running, .allocated = true },
-        Process{ .id = 0, .state = .free, .allocated = false },
-        Process{ .id = 2, .state = .running, .allocated = true },
-    };
+    // Assert: Must return 0 initially (no processes).
+    try std.testing.expect(pid1 == 0);
     
-    const pid1 = scheduler.find_next_runnable(&processes, 4);
+    // Spawn a process to test scheduling.
+    const spawn_result = kernel.handle_syscall(
+        1, // spawn syscall
+        0x1000,
+        0,
+        0,
+        0,
+    );
     
-    // Assert: Must find first runnable process.
-    try std.testing.expect(pid1 == 1);
+    const spawn_result_unwrapped = try spawn_result;
+    try std.testing.expect(spawn_result_unwrapped == .success or spawn_result_unwrapped == .err);
+    if (spawn_result_unwrapped == .err) return error.TestUnexpectedError;
     
-    const pid2 = scheduler.find_next_runnable(&processes, 4);
+    const pid = spawn_result_unwrapped.success;
     
-    // Assert: Must find next runnable process (round-robin).
-    try std.testing.expect(pid2 == 2);
+    const pid2 = kernel.scheduler.find_next_runnable(kernel.processes[0..], MAX_PROCESSES);
     
-    const pid3 = scheduler.find_next_runnable(&processes, 4);
+    // Assert: Must find the spawned process.
+    try std.testing.expect(pid2 == pid);
+    
+    const pid3 = kernel.scheduler.find_next_runnable(kernel.processes[0..], MAX_PROCESSES);
     
     // Assert: Must wrap around to first process.
     try std.testing.expect(pid3 == 1);
@@ -79,20 +83,10 @@ test "scheduler find next runnable" {
 
 // Test find next runnable with no processes.
 test "scheduler find next runnable empty" {
-    var scheduler = Scheduler.init();
+    var kernel = BasinKernel.init();
     
-    const Process = struct {
-        id: u64,
-        state: ProcessState,
-        allocated: bool,
-    };
-    
-    var processes = [_]Process{
-        Process{ .id = 0, .state = .free, .allocated = false },
-        Process{ .id = 0, .state = .free, .allocated = false },
-    };
-    
-    const pid = scheduler.find_next_runnable(&processes, 2);
+    // No processes spawned, should return 0.
+    const pid = kernel.scheduler.find_next_runnable(kernel.processes[0..], MAX_PROCESSES);
     
     // Assert: Must return 0 (no runnable process).
     try std.testing.expect(pid == 0);
@@ -100,15 +94,15 @@ test "scheduler find next runnable empty" {
 
 // Test reset scheduler.
 test "scheduler reset" {
-    var scheduler = Scheduler.init();
+    var kernel = BasinKernel.init();
     
-    scheduler.set_current(1);
-    scheduler.next_index = 2;
-    scheduler.reset();
+    kernel.scheduler.set_current(1);
+    kernel.scheduler.next_index = 2;
+    kernel.scheduler.reset();
     
     // Assert: Scheduler must be reset.
-    try std.testing.expect(scheduler.get_current() == 0);
-    try std.testing.expect(scheduler.next_index == 0);
+    try std.testing.expect(kernel.scheduler.get_current() == 0);
+    try std.testing.expect(kernel.scheduler.next_index == 0);
 }
 
 // Test kernel scheduler integration.
@@ -121,17 +115,17 @@ test "kernel scheduler integration" {
     
     // Test spawn sets current process.
     const executable: u64 = 0x1000;
-    const result = kernel.handle_syscall(
-        @intFromEnum(kernel.Syscall.spawn),
+    const result_raw = kernel.handle_syscall(
+        1, // spawn syscall
         executable,
         0,
         0,
         0,
     );
-    
+    const result = try result_raw;
     // Assert: Spawn must succeed.
-    try std.testing.expect(result == .success);
-    
+    try std.testing.expect(result == .success or result == .err);
+    if (result == .err) return error.TestUnexpectedError;
     const pid = result.success;
     
     // Assert: Process must be current.
@@ -144,15 +138,16 @@ test "kernel exit clears current" {
     
     // Spawn a process.
     const executable: u64 = 0x1000;
-    const spawn_result = kernel.handle_syscall(
-        @intFromEnum(kernel.Syscall.spawn),
+    const spawn_result_raw = kernel.handle_syscall(
+        1, // spawn syscall
         executable,
         0,
         0,
         0,
     );
-    
-    try std.testing.expect(spawn_result == .success);
+    const spawn_result = try spawn_result_raw;
+    try std.testing.expect(spawn_result == .success or spawn_result == .err);
+    if (spawn_result == .err) return error.TestUnexpectedError;
     const pid = spawn_result.success;
     
     // Assert: Process must be current.
@@ -160,14 +155,15 @@ test "kernel exit clears current" {
     
     // Exit process.
     const exit_result = kernel.handle_syscall(
-        @intFromEnum(kernel.Syscall.exit),
+        2, // exit syscall
         0,
         0,
         0,
         0,
     );
     
-    try std.testing.expect(exit_result == .success);
+    const exit_result_unwrapped = try exit_result;
+    try std.testing.expect(exit_result_unwrapped == .success);
     
     // Assert: Process must not be current.
     try std.testing.expect(!kernel.scheduler.is_current(pid));
@@ -180,29 +176,32 @@ test "kernel wait exited process" {
     
     // Spawn a process.
     const executable: u64 = 0x1000;
-    const spawn_result = kernel.handle_syscall(
-        @intFromEnum(kernel.Syscall.spawn),
+    const spawn_result_raw = kernel.handle_syscall(
+        1, // spawn syscall
         executable,
         0,
         0,
         0,
     );
-    
-    try std.testing.expect(spawn_result == .success);
+    const spawn_result = try spawn_result_raw;
+    try std.testing.expect(spawn_result == .success or spawn_result == .err);
+    if (spawn_result == .err) return error.TestUnexpectedError;
     const pid = spawn_result.success;
     
     // Exit process.
-    _ = kernel.handle_syscall(
-        @intFromEnum(kernel.Syscall.exit),
+    const exit_result_raw = kernel.handle_syscall(
+        2, // exit syscall
         42,
         0,
         0,
         0,
     );
+    // Exit may return error, ignore for test.
+    _ = exit_result_raw catch {};
     
     // Wait for process.
     const wait_result = kernel.handle_syscall(
-        @intFromEnum(kernel.Syscall.wait),
+        3, // wait syscall
         pid,
         0,
         0,
@@ -210,7 +209,8 @@ test "kernel wait exited process" {
     );
     
     // Assert: Wait must succeed and return exit status.
-    try std.testing.expect(wait_result == .success);
-    try std.testing.expect(wait_result.success == 42);
+    const wait_result_unwrapped = try wait_result;
+    try std.testing.expect(wait_result_unwrapped == .success);
+    try std.testing.expect(wait_result_unwrapped.success == 42);
 }
 

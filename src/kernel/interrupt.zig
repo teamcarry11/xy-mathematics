@@ -201,7 +201,7 @@ pub const InterruptController = struct {
         Debug.kassert(self.initialized, "Interrupt controller not initialized", .{});
         
         // Set pending bit for interrupt type.
-        const interrupt_id = @intFromEnum(interrupt_type);
+        const interrupt_id = @as(u5, @intCast(@intFromEnum(interrupt_type)));
         self.pending |= (@as(u32, 1) << interrupt_id);
         
         // Assert: Pending bit must be set.
@@ -241,7 +241,7 @@ pub const InterruptController = struct {
         // Assert: Interrupt controller must be initialized.
         Debug.kassert(self.initialized, "Interrupt controller not initialized", .{});
         
-        const interrupt_id = @intFromEnum(interrupt_type);
+        const interrupt_id = @as(u5, @intCast(@intFromEnum(interrupt_type)));
         return (self.pending & (@as(u32, 1) << interrupt_id)) != 0;
     }
     
@@ -252,7 +252,7 @@ pub const InterruptController = struct {
         // Assert: Interrupt controller must be initialized.
         Debug.kassert(self.initialized, "Interrupt controller not initialized", .{});
         
-        const interrupt_id = @intFromEnum(interrupt_type);
+        const interrupt_id = @as(u5, @intCast(@intFromEnum(interrupt_type)));
         self.pending &= ~(@as(u32, 1) << interrupt_id);
         
         // Assert: Pending bit must be cleared.

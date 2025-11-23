@@ -128,8 +128,8 @@ pub const HttpClient = struct {
         const status_code = try self.parseStatusCode(status_line);
         
         // Headers (until empty line)
-        var headers = std.ArrayList(Header).init(self.allocator);
-        defer headers.deinit();
+        var headers = std.ArrayList(Header){ .items = &.{}, .capacity = 0 };
+        defer headers.deinit(self.allocator);
         
         while (lines.next()) |line| {
             if (line.len == 0) break; // Empty line = end of headers
@@ -140,7 +140,7 @@ pub const HttpClient = struct {
             // Skip leading space in value
             const value_start = std.mem.indexOfNone(u8, value, " \t") orelse value.len;
             
-            try headers.append(Header{
+            try headers.append(self.allocator, Header{
                 .name = name,
                 .value = value[value_start..],
             });
@@ -152,7 +152,7 @@ pub const HttpClient = struct {
         
         return Response{
             .status_code = status_code,
-            .headers = try headers.toOwnedSlice(),
+            .headers = try headers.toOwnedSlice(self.allocator),
             .body = body,
         };
     }

@@ -2012,7 +2012,7 @@ pub const VM = struct {
     /// Format: LW rd, offset(rs1)
     /// Encoding: imm[11:0] | rs1 | 010 | rd | 0000011
     /// Why: Load 32-bit word from memory for kernel data access.
-    fn execute_lw(self: *Self, inst: u32) !void {
+    pub fn execute_lw(self: *Self, inst: u32) !void {
         // Decode: rd = bits [11:7], rs1 = bits [19:15], imm[11:0] = bits [31:20].
         const rd = @as(u5, @truncate(inst >> 7));
         const rs1 = @as(u5, @truncate(inst >> 15));
@@ -2088,7 +2088,7 @@ pub const VM = struct {
     /// Format: SW rs2, offset(rs1)
     /// Encoding: imm[11:5] | rs2 | rs1 | 010 | imm[4:0] | 0100011
     /// Why: Store 32-bit word to memory for kernel data writes.
-    fn execute_sw(self: *Self, inst: u32) !void {
+    pub fn execute_sw(self: *Self, inst: u32) !void {
         // Decode S-type: rs2 = bits [24:20], rs1 = bits [19:15], imm[11:5] = bits [31:25], imm[4:0] = bits [11:7].
         const rs2 = @as(u5, @truncate(inst >> 20));
         const rs1 = @as(u5, @truncate(inst >> 15));
@@ -2148,7 +2148,7 @@ pub const VM = struct {
     /// Encoding: imm[11:0] | rs1 | 000 | rd | 0000011
     /// Contract: Loads 8-bit byte, sign-extends to 64 bits
     /// Why: Load byte from memory for kernel data access.
-    fn execute_lb(self: *Self, inst: u32) !void {
+    pub fn execute_lb(self: *Self, inst: u32) !void {
         const rd = @as(u5, @truncate(inst >> 7));
         const rs1 = @as(u5, @truncate(inst >> 15));
         const imm12 = @as(i32, @truncate(@as(i64, inst >> 20)));
@@ -2460,7 +2460,7 @@ pub const VM = struct {
     /// Encoding: imm[11:5] | rs2 | rs1 | 000 | imm[4:0] | 0100011
     /// Contract: Stores low 8 bits of rs2 to memory
     /// Why: Store byte to memory for kernel data writes.
-    fn execute_sb(self: *Self, inst: u32) !void {
+    pub fn execute_sb(self: *Self, inst: u32) !void {
         const rs2 = @as(u5, @truncate(inst >> 20));
         const rs1 = @as(u5, @truncate(inst >> 15));
         const imm_11_5 = @as(u7, @truncate(inst >> 25));
@@ -2526,7 +2526,7 @@ pub const VM = struct {
     /// Encoding: imm[11:5] | rs2 | rs1 | 001 | imm[4:0] | 0100011
     /// Contract: Stores low 16 bits of rs2 to memory, must be 2-byte aligned
     /// Why: Store halfword to memory for kernel data writes.
-    fn execute_sh(self: *Self, inst: u32) !void {
+    pub fn execute_sh(self: *Self, inst: u32) !void {
         const rs2 = @as(u5, @truncate(inst >> 20));
         const rs1 = @as(u5, @truncate(inst >> 15));
         const imm_11_5 = @as(u7, @truncate(inst >> 25));
@@ -2582,7 +2582,7 @@ pub const VM = struct {
     /// Encoding: imm[11:5] | rs2 | rs1 | 011 | imm[4:0] | 0100011
     /// Contract: Stores 64-bit value from rs2 to memory, must be 8-byte aligned
     /// Why: Store doubleword to memory for kernel data writes.
-    fn execute_sd(self: *Self, inst: u32) !void {
+    pub fn execute_sd(self: *Self, inst: u32) !void {
         const rs2 = @as(u5, @truncate(inst >> 20));
         const rs1 = @as(u5, @truncate(inst >> 15));
         const imm_11_5 = @as(u7, @truncate(inst >> 25));

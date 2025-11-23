@@ -171,7 +171,7 @@ pub const JitContext = struct {
         
         // Assert: memory_size must be large enough for framebuffer
         std.debug.assert(memory_size >= FRAMEBUFFER_SIZE);
-        
+
         const self = JitContext{
             .allocator = allocator,
             .code_buffer = buffer,

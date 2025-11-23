@@ -1,7 +1,7 @@
 # Grain OS Development Plan
 ## RISC-V Kernel + VM + Aurora IDE
 
-**Current Status**: Phase 3.1 System Calls complete ✅. All POSIX subset syscalls implemented with comprehensive validation! 🎉
+**Current Status**: Phase 3.2 Signal Handling complete ✅. Signal system implemented with kill, signal, and sigaction syscalls! 🎉
 
 **Goal**: RISC-V-targeted Grain OS with graphical interface running in macOS Tahoe 26.1 VM, with path toward Framework 13 RISC-V hardware.
 

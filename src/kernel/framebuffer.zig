@@ -58,10 +58,10 @@ pub const Framebuffer = struct {
         std.debug.assert(self.memory.len == FRAMEBUFFER_SIZE);
 
         // Convert 32-bit RGBA color to bytes
-        const r: u8 = @truncate((color >> 24) & 0xFF);
-        const g: u8 = @truncate((color >> 16) & 0xFF);
-        const b: u8 = @truncate((color >> 8) & 0xFF);
-        const a: u8 = @truncate(color & 0xFF);
+        const r: u8 = @as(u8, @truncate((color >> 24) & 0xFF));
+        const g: u8 = @as(u8, @truncate((color >> 16) & 0xFF));
+        const b: u8 = @as(u8, @truncate((color >> 8) & 0xFF));
+        const a: u8 = @as(u8, @truncate(color & 0xFF));
 
         // Fill framebuffer with color (RGBA format)
         var i: u32 = 0;
@@ -89,10 +89,10 @@ pub const Framebuffer = struct {
         std.debug.assert(offset + 3 < FRAMEBUFFER_SIZE);
 
         // Convert 32-bit RGBA color to bytes
-        const r: u8 = @truncate((color >> 24) & 0xFF);
-        const g: u8 = @truncate((color >> 16) & 0xFF);
-        const b: u8 = @truncate((color >> 8) & 0xFF);
-        const a: u8 = @truncate(color & 0xFF);
+        const r: u8 = @as(u8, @truncate((color >> 24) & 0xFF));
+        const g: u8 = @as(u8, @truncate((color >> 16) & 0xFF));
+        const b: u8 = @as(u8, @truncate((color >> 8) & 0xFF));
+        const a: u8 = @as(u8, @truncate(color & 0xFF));
 
         // Write pixel (RGBA format)
         self.memory[offset + 0] = r;
@@ -123,7 +123,7 @@ pub const Framebuffer = struct {
         }
 
         // Assert: rectangle must be drawn (check corners).
-        std.debug.assert(self.memory[(y * self.width + x) * self.bpp] == @truncate((color >> 24) & 0xFF));
+        std.debug.assert(self.memory[(y * self.width + x) * self.bpp] == @as(u8, @truncate((color >> 24) & 0xFF)));
     }
 
     // Draw a test pattern

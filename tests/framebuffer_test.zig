@@ -6,11 +6,12 @@ const std = @import("std");
 const testing = std.testing;
 const kernel_vm = @import("kernel_vm");
 const VM = kernel_vm.VM;
-const framebuffer = @import("../src/kernel/framebuffer.zig");
-const FRAMEBUFFER_BASE = framebuffer.FRAMEBUFFER_BASE;
-const FRAMEBUFFER_SIZE = framebuffer.FRAMEBUFFER_SIZE;
-const FRAMEBUFFER_WIDTH = framebuffer.FRAMEBUFFER_WIDTH;
-const FRAMEBUFFER_HEIGHT = framebuffer.FRAMEBUFFER_HEIGHT;
+// Framebuffer module - will be added to build.zig
+const framebuffer_mod = @import("framebuffer");
+const FRAMEBUFFER_BASE = framebuffer_mod.FRAMEBUFFER_BASE;
+const FRAMEBUFFER_SIZE = framebuffer_mod.FRAMEBUFFER_SIZE;
+const FRAMEBUFFER_WIDTH = framebuffer_mod.FRAMEBUFFER_WIDTH;
+const FRAMEBUFFER_HEIGHT = framebuffer_mod.FRAMEBUFFER_HEIGHT;
 
 // Helper: Encode RISC-V SB instruction
 // Format: SB rs2, offset(rs1)
@@ -380,8 +381,8 @@ test "Framebuffer initialization: memory layout verification" {
 }
 
 test "Integration: framebuffer initialization via finish_init" {
-    const kernel_vm = @import("kernel_vm");
-    const Integration = kernel_vm.Integration;
+    const kernel_vm_mod = @import("kernel_vm");
+    const Integration = kernel_vm_mod.Integration;
     const BasinKernel = @import("basin_kernel").BasinKernel;
     
     // Create VM and kernel instances

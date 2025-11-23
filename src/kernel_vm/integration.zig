@@ -524,7 +524,7 @@ fn syscall_handler_wrapper(
             return text_len;
         }
     }
-
+    
     // Get kernel pointer from module-level storage (set by Integration.finish_init).
     // Contract: global_kernel_ptr must be set before syscall_handler_wrapper is called.
     const kernel = global_kernel_ptr orelse {

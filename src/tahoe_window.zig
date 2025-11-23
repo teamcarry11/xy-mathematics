@@ -806,20 +806,20 @@ pub const TahoeSandbox = struct {
             self.sync_framebuffer(vm, buffer, buffer_width, buffer_height);
         } else {
             // No VM: Fill with dark blue-gray background (Tahoe aesthetic).
-            const bg_color: u32 = 0xFF1E1E2E; // Dark blue-gray (RGBA)
-            @memset(buffer, @as(u8, @truncate(bg_color)));
-            @memset(buffer[1..], @as(u8, @truncate(bg_color >> 8)));
-            @memset(buffer[2..], @as(u8, @truncate(bg_color >> 16)));
-            @memset(buffer[3..], @as(u8, @truncate(bg_color >> 24)));
-            
-            // Actually, let's do it pixel by pixel for clarity.
-            var y: u32 = 0;
-            while (y < buffer_height) : (y += 1) {
-                var x: u32 = 0;
-                while (x < buffer_width) : (x += 1) {
-                    const pixel_offset = (y * buffer_width + x) * 4;
-                    if (pixel_offset + 3 < buffer.len) {
-                        // RGBA format: R, G, B, A
+        const bg_color: u32 = 0xFF1E1E2E; // Dark blue-gray (RGBA)
+        @memset(buffer, @as(u8, @truncate(bg_color)));
+        @memset(buffer[1..], @as(u8, @truncate(bg_color >> 8)));
+        @memset(buffer[2..], @as(u8, @truncate(bg_color >> 16)));
+        @memset(buffer[3..], @as(u8, @truncate(bg_color >> 24)));
+        
+        // Actually, let's do it pixel by pixel for clarity.
+        var y: u32 = 0;
+        while (y < buffer_height) : (y += 1) {
+            var x: u32 = 0;
+            while (x < buffer_width) : (x += 1) {
+                const pixel_offset = (y * buffer_width + x) * 4;
+                if (pixel_offset + 3 < buffer.len) {
+                    // RGBA format: R, G, B, A
                     buffer[pixel_offset + 0] = 0x1E; // R
                     buffer[pixel_offset + 1] = 0x1E; // G
                     buffer[pixel_offset + 2] = 0x2E; // B

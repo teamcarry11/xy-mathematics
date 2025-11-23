@@ -26,8 +26,8 @@ const std = @import("std");
 const testing = std.testing;
 const kernel_vm = @import("kernel_vm");
 const VM = kernel_vm.VM;
-const FramebufferDirtyRegion = kernel_vm.VM.FramebufferDirtyRegion;
-const framebuffer = @import("../src/kernel/framebuffer.zig");
+const FramebufferDirtyRegion = kernel_vm.FramebufferDirtyRegion;
+const framebuffer = @import("framebuffer");
 
 // Framebuffer constants (explicit types, no usize).
 const FRAMEBUFFER_WIDTH: u32 = framebuffer.FRAMEBUFFER_WIDTH;

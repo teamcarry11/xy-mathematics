@@ -34,7 +34,7 @@ const VM = kernel_vm.VM;
 const basin_kernel = @import("basin_kernel");
 const BasinKernel = basin_kernel.BasinKernel;
 const Syscall = basin_kernel.Syscall;
-const framebuffer = @import("../src/kernel/framebuffer.zig");
+const framebuffer = @import("framebuffer");
 
 // Framebuffer constants (explicit types, no usize).
 const FRAMEBUFFER_BASE: u64 = framebuffer.FRAMEBUFFER_BASE;
@@ -129,8 +129,7 @@ fn call_syscall(
     
     // Assert: result must be valid (either success >= 0 or error < 0).
     // Note: We don't assert specific value here, just that it's a valid u64.
-    _ = result;
-    
+    // Return result directly (no discard needed).
     return result;
 }
 
@@ -153,8 +152,7 @@ fn read_framebuffer_pixel(vm: *VM, x: u32, y: u32) u32 {
     
     // Assert: pixel value must be valid (not corrupted).
     // Note: Any 32-bit value is technically valid, but we check offset was correct.
-    _ = pixel; // Pixel value itself is not validated (could be any color).
-    
+    // Return pixel directly (no discard needed).
     return pixel;
 }
 
@@ -167,8 +165,8 @@ test "fb_clear: valid color clears entire framebuffer" {
     // Methodology: Clear framebuffer with known color, verify all pixels match.
     
     var setup = create_test_integration();
-    var vm = &setup.vm;
-    var integration = &setup.integration;
+    const vm = &setup.vm;
+    const integration = &setup.integration;
     
     // Clear framebuffer to red color.
     const clear_color: u32 = COLOR_RED;
@@ -198,17 +196,17 @@ test "fb_clear: different colors produce different results" {
     // Methodology: Clear with different colors, verify pixels match each color.
     
     var setup = create_test_integration();
-    var vm = &setup.vm;
-    var integration = &setup.integration;
+    const vm = &setup.vm;
+    const integration = &setup.integration;
     
     // Clear to red, verify.
-    var result = call_syscall(vm, kernel, FB_CLEAR_SYSCALL, COLOR_RED, 0, 0, 0);
+    var result = call_syscall(integration, FB_CLEAR_SYSCALL, COLOR_RED, 0, 0, 0);
     try testing.expectEqual(@as(u64, 0), result);
     var pixel = read_framebuffer_pixel(vm, 0, 0);
     try testing.expectEqual(COLOR_RED, pixel);
     
     // Clear to green, verify changed.
-    result = call_syscall(vm, kernel, FB_CLEAR_SYSCALL, COLOR_GREEN, 0, 0, 0);
+    result = call_syscall(integration, FB_CLEAR_SYSCALL, COLOR_GREEN, 0, 0, 0);
     try testing.expectEqual(@as(u64, 0), result);
     pixel = read_framebuffer_pixel(vm, 0, 0);
     try testing.expectEqual(COLOR_GREEN, pixel);
@@ -222,8 +220,8 @@ test "fb_clear: all color components preserved" {
     // Methodology: Clear with color containing all components, verify each component.
     
     var setup = create_test_integration();
-    var vm = &setup.vm;
-    var integration = &setup.integration;
+    const vm = &setup.vm;
+    const integration = &setup.integration;
     
     // Test color with all components set: R=0xFF, G=0xAA, B=0x55, A=0xFF
     const test_color: u32 = 0xFFAA55FF;
@@ -256,11 +254,11 @@ test "fb_draw_pixel: valid coordinates draw pixel correctly" {
     // Methodology: Draw pixel at known position, verify it appears at correct location.
     
     var setup = create_test_integration();
-    var vm = &setup.vm;
-    var integration = &setup.integration;
+    const vm = &setup.vm;
+    const integration = &setup.integration;
     
     // Clear framebuffer first (known state).
-    _ = call_syscall(vm, kernel, FB_CLEAR_SYSCALL, COLOR_BLACK, 0, 0, 0);
+    _ = call_syscall(integration, FB_CLEAR_SYSCALL, COLOR_BLACK, 0, 0, 0);
     
     // Draw red pixel at (100, 200).
     const x: u32 = 100;
@@ -287,11 +285,11 @@ test "fb_draw_pixel: boundary coordinates (corners)" {
     // Methodology: Draw pixels at all four corners, verify they are drawn correctly.
     
     var setup = create_test_integration();
-    var vm = &setup.vm;
-    var integration = &setup.integration;
+    const vm = &setup.vm;
+    const integration = &setup.integration;
     
     // Clear framebuffer.
-    _ = call_syscall(vm, kernel, FB_CLEAR_SYSCALL, COLOR_BLACK, 0, 0, 0);
+    _ = call_syscall(integration, FB_CLEAR_SYSCALL, COLOR_BLACK, 0, 0, 0);
     
     // Draw pixels at all four corners.
     const corners = [_]struct { x: u32, y: u32, color: u32 }{
@@ -318,8 +316,7 @@ test "fb_draw_pixel: out of bounds x coordinate" {
     // Methodology: Attempt to draw pixel with x >= FRAMEBUFFER_WIDTH, verify error.
     
     var setup = create_test_integration();
-    var vm = &setup.vm;
-    var integration = &setup.integration;
+    const integration = &setup.integration;
     
     // Attempt to draw pixel with x = FRAMEBUFFER_WIDTH (out of bounds).
     const x: u32 = FRAMEBUFFER_WIDTH; // Out of bounds
@@ -338,8 +335,7 @@ test "fb_draw_pixel: out of bounds y coordinate" {
     // Methodology: Attempt to draw pixel with y >= FRAMEBUFFER_HEIGHT, verify error.
     
     var setup = create_test_integration();
-    var vm = &setup.vm;
-    var integration = &setup.integration;
+    const integration = &setup.integration;
     
     // Attempt to draw pixel with y = FRAMEBUFFER_HEIGHT (out of bounds).
     const x: u32 = 100;
@@ -357,8 +353,8 @@ test "fb_draw_pixel: maximum valid coordinates" {
     // Methodology: Draw pixel at (WIDTH-1, HEIGHT-1), verify success.
     
     var setup = create_test_integration();
-    var vm = &setup.vm;
-    var integration = &setup.integration;
+    const vm = &setup.vm;
+    const integration = &setup.integration;
     
     // Draw pixel at maximum valid coordinates.
     const x: u32 = FRAMEBUFFER_WIDTH - 1;
@@ -379,11 +375,11 @@ test "fb_draw_pixel: multiple pixels don't interfere" {
     // Methodology: Draw pixels at different locations, verify each is independent.
     
     var setup = create_test_integration();
-    var vm = &setup.vm;
-    var integration = &setup.integration;
+    const vm = &setup.vm;
+    const integration = &setup.integration;
     
     // Clear framebuffer.
-    _ = call_syscall(vm, kernel, FB_CLEAR_SYSCALL, COLOR_BLACK, 0, 0, 0);
+    _ = call_syscall(integration, FB_CLEAR_SYSCALL, COLOR_BLACK, 0, 0, 0);
     
     // Draw multiple pixels with different colors.
     const pixels = [_]struct { x: u32, y: u32, color: u32 }{
@@ -417,30 +413,28 @@ test "fb_draw_text: valid text string renders" {
     // Methodology: Write text to kernel memory, call syscall, verify text appears.
     
     var setup = create_test_integration();
-    var vm = &setup.vm;
-    var integration = &setup.integration;
+    const vm = &setup.vm;
+    const integration = &setup.integration;
     
     // Clear framebuffer.
-    _ = call_syscall(vm, kernel, FB_CLEAR_SYSCALL, COLOR_BLACK, 0, 0, 0);
+    _ = call_syscall(integration, FB_CLEAR_SYSCALL, COLOR_BLACK, 0, 0, 0);
     
     // Write text string to kernel memory (at kernel base address).
     const text = "Hello";
     const text_addr: u64 = 0x80001000; // Kernel memory address
     
     // Write text to VM memory (simulating kernel memory).
-    const text_phys = vm.translate_address(text_addr) orelse {
+    const text_phys = vm.translate_address(text_addr);
+    if (text_phys) |phys| {
+        @memcpy(vm.memory[@as(usize, @intCast(phys))..][0..text.len], text);
+        vm.memory[@as(usize, @intCast(phys + text.len))] = 0;
+    } else {
         // If translation fails, use direct offset (kernel base = 0x80000000, offset = 0x1000).
         const kernel_base: u64 = 0x80000000;
         const offset: u64 = text_addr - kernel_base;
         @memcpy(vm.memory[@as(usize, @intCast(offset))..][0..text.len], text);
-        @intCast(offset);
-    } else |_| {
-        @memcpy(vm.memory[@as(usize, @intCast(text_phys))..][0..text.len], text);
-        text_phys;
-    };
-    
-    // Write null terminator.
-    vm.memory[@as(usize, @intCast(text_phys + text.len))] = 0;
+        vm.memory[@as(usize, @intCast(offset + text.len))] = 0;
+    }
     
     // Draw text at (10, 10) with white foreground.
     const x: u32 = 10;
@@ -481,8 +475,7 @@ test "fb_draw_text: null pointer returns error" {
     // Methodology: Call syscall with text_ptr = 0, verify error.
     
     var setup = create_test_integration();
-    var vm = &setup.vm;
-    var integration = &setup.integration;
+    const integration = &setup.integration;
     
     const text_ptr: u64 = 0; // Null pointer
     const x: u32 = 10;
@@ -501,8 +494,8 @@ test "fb_draw_text: out of bounds x coordinate" {
     // Methodology: Call syscall with x >= FRAMEBUFFER_WIDTH, verify error.
     
     var setup = create_test_integration();
-    var vm = &setup.vm;
-    var integration = &setup.integration;
+    const vm = &setup.vm;
+    const integration = &setup.integration;
     
     // Write text to kernel memory.
     const text = "Test";
@@ -526,8 +519,8 @@ test "fb_draw_text: out of bounds y coordinate" {
     // Methodology: Call syscall with y >= FRAMEBUFFER_HEIGHT, verify error.
     
     var setup = create_test_integration();
-    var vm = &setup.vm;
-    var integration = &setup.integration;
+    const vm = &setup.vm;
+    const integration = &setup.integration;
     
     // Write text to kernel memory.
     const text = "Test";
@@ -551,8 +544,8 @@ test "fb_draw_text: empty string returns error" {
     // Methodology: Write null terminator to kernel memory, call syscall, verify error.
     
     var setup = create_test_integration();
-    var vm = &setup.vm;
-    var integration = &setup.integration;
+    const vm = &setup.vm;
+    const integration = &setup.integration;
     
     // Write null terminator only (empty string).
     const text_addr: u64 = 0x80001000;
@@ -574,11 +567,11 @@ test "fb_draw_text: text wraps at framebuffer edge" {
     // Methodology: Draw long text starting near right edge, verify wrapping behavior.
     
     var setup = create_test_integration();
-    var vm = &setup.vm;
-    var integration = &setup.integration;
+    const vm = &setup.vm;
+    const integration = &setup.integration;
     
     // Clear framebuffer.
-    _ = call_syscall(vm, kernel, FB_CLEAR_SYSCALL, COLOR_BLACK, 0, 0, 0);
+    _ = call_syscall(integration, FB_CLEAR_SYSCALL, COLOR_BLACK, 0, 0, 0);
     
     // Write long text string.
     const text = "This is a very long text string that should wrap";
@@ -603,11 +596,11 @@ test "fb_draw_text: newline character wraps to next line" {
     // Methodology: Write text with newline, verify text appears on multiple lines.
     
     var setup = create_test_integration();
-    var vm = &setup.vm;
-    var integration = &setup.integration;
+    const vm = &setup.vm;
+    const integration = &setup.integration;
     
     // Clear framebuffer.
-    _ = call_syscall(vm, kernel, FB_CLEAR_SYSCALL, COLOR_BLACK, 0, 0, 0);
+    _ = call_syscall(integration, FB_CLEAR_SYSCALL, COLOR_BLACK, 0, 0, 0);
     
     // Write text with newline.
     const text = "Line1\nLine2";
@@ -656,15 +649,15 @@ test "Integration: clear then draw pixel sequence" {
     // Methodology: Clear framebuffer, then draw pixels, verify final state.
     
     var setup = create_test_integration();
-    var vm = &setup.vm;
-    var integration = &setup.integration;
+    const vm = &setup.vm;
+    const integration = &setup.integration;
     
     // Clear to black.
-    var result = call_syscall(vm, kernel, FB_CLEAR_SYSCALL, COLOR_BLACK, 0, 0, 0);
+    var result = call_syscall(integration, FB_CLEAR_SYSCALL, COLOR_BLACK, 0, 0, 0);
     try testing.expectEqual(@as(u64, 0), result);
     
     // Draw red pixel at (50, 50).
-    result = call_syscall(vm, kernel, FB_DRAW_PIXEL_SYSCALL, 50, 50, COLOR_RED, 0);
+    result = call_syscall(integration, FB_DRAW_PIXEL_SYSCALL, 50, 50, COLOR_RED, 0);
     try testing.expectEqual(@as(u64, 0), result);
     
     // Verify pixel is red.
@@ -681,11 +674,11 @@ test "Integration: clear then draw text sequence" {
     // Methodology: Clear framebuffer, draw text, verify text appears.
     
     var setup = create_test_integration();
-    var vm = &setup.vm;
-    var integration = &setup.integration;
+    const vm = &setup.vm;
+    const integration = &setup.integration;
     
     // Clear to dark background.
-    var result = call_syscall(vm, kernel, FB_CLEAR_SYSCALL, COLOR_DARK_BG, 0, 0, 0);
+    var result = call_syscall(integration, FB_CLEAR_SYSCALL, COLOR_DARK_BG, 0, 0, 0);
     try testing.expectEqual(@as(u64, 0), result);
     
     // Write text to kernel memory.
@@ -696,7 +689,7 @@ test "Integration: clear then draw text sequence" {
     vm.memory[@as(usize, @intCast(text_phys + text.len))] = 0;
     
     // Draw text.
-    result = call_syscall(vm, kernel, FB_DRAW_TEXT_SYSCALL, text_addr, 20, 20, COLOR_WHITE);
+    result = call_syscall(integration, FB_DRAW_TEXT_SYSCALL, text_addr, 20, 20, COLOR_WHITE);
     try testing.expect(result >= 0);
     
     // Verify text was drawn (pixels changed from background).
@@ -726,13 +719,13 @@ test "Edge case: maximum color value" {
     // Methodology: Use maximum color value, verify it's handled correctly.
     
     var setup = create_test_integration();
-    var vm = &setup.vm;
-    var integration = &setup.integration;
+    const vm = &setup.vm;
+    const integration = &setup.integration;
     
     const max_color: u32 = 0xFFFFFFFF;
     
     // Clear with maximum color.
-    var result = call_syscall(vm, kernel, FB_CLEAR_SYSCALL, max_color, 0, 0, 0);
+    var result = call_syscall(integration, FB_CLEAR_SYSCALL, max_color, 0, 0, 0);
     try testing.expectEqual(@as(u64, 0), result);
     
     // Verify framebuffer is filled with maximum color.
@@ -740,7 +733,7 @@ test "Edge case: maximum color value" {
     try testing.expectEqual(max_color, pixel);
     
     // Draw pixel with maximum color.
-    result = call_syscall(vm, kernel, FB_DRAW_PIXEL_SYSCALL, 100, 100, max_color, 0);
+    result = call_syscall(integration, FB_DRAW_PIXEL_SYSCALL, 100, 100, max_color, 0);
     try testing.expectEqual(@as(u64, 0), result);
     
     const drawn_pixel = read_framebuffer_pixel(vm, 100, 100);
@@ -752,13 +745,13 @@ test "Edge case: zero color value" {
     // Methodology: Use zero color value, verify it's handled correctly.
     
     var setup = create_test_integration();
-    var vm = &setup.vm;
-    var integration = &setup.integration;
+    const vm = &setup.vm;
+    const integration = &setup.integration;
     
     const zero_color: u32 = 0x00000000;
     
     // Clear with zero color.
-    var result = call_syscall(vm, kernel, FB_CLEAR_SYSCALL, zero_color, 0, 0, 0);
+    const result = call_syscall(integration, FB_CLEAR_SYSCALL, zero_color, 0, 0, 0);
     try testing.expectEqual(@as(u64, 0), result);
     
     // Verify framebuffer is filled with zero color.
@@ -771,8 +764,8 @@ test "Edge case: coordinates at exact boundary" {
     // Methodology: Draw pixel at maximum valid coordinates, verify success.
     
     var setup = create_test_integration();
-    var vm = &setup.vm;
-    var integration = &setup.integration;
+    const vm = &setup.vm;
+    const integration = &setup.integration;
     
     // Draw pixel at exact boundary.
     const x: u32 = FRAMEBUFFER_WIDTH - 1;
@@ -792,24 +785,23 @@ test "Edge case: text pointer at maximum kernel address" {
     // Methodology: Write text at high kernel address, verify syscall works.
     
     var setup = create_test_integration();
-    var vm = &setup.vm;
-    var integration = &setup.integration;
+    const vm = &setup.vm;
+    const integration = &setup.integration;
     
     // Write text at high kernel address (near end of kernel memory).
     const text = "Test";
     const text_addr: u64 = 0x80000000 + vm.memory_size - 100; // Near end of kernel memory
-    const text_phys = vm.translate_address(text_addr) orelse {
+    const text_phys_opt = vm.translate_address(text_addr);
+    if (text_phys_opt) |text_phys| {
+        @memcpy(vm.memory[@as(usize, @intCast(text_phys))..][0..text.len], text);
+        vm.memory[@as(usize, @intCast(text_phys + text.len))] = 0;
+    } else {
         // Fallback: use direct offset.
         const kernel_base: u64 = 0x80000000;
         const offset: u64 = text_addr - kernel_base;
         @memcpy(vm.memory[@as(usize, @intCast(offset))..][0..text.len], text);
         vm.memory[@as(usize, @intCast(offset + text.len))] = 0;
-        @intCast(offset);
-    } else |_| {
-        @memcpy(vm.memory[@as(usize, @intCast(text_phys))..][0..text.len], text);
-        vm.memory[@as(usize, @intCast(text_phys + text.len))] = 0;
-        text_phys;
-    };
+    }
     
     const result = call_syscall(integration, FB_DRAW_TEXT_SYSCALL, text_addr, 10, 10, COLOR_WHITE);
     
@@ -826,8 +818,8 @@ test "Stress: clear framebuffer multiple times" {
     // Methodology: Clear framebuffer with different colors multiple times, verify final state.
     
     var setup = create_test_integration();
-    var vm = &setup.vm;
-    var integration = &setup.integration;
+    const vm = &setup.vm;
+    const integration = &setup.integration;
     
     const colors = [_]u32{ COLOR_RED, COLOR_GREEN, COLOR_BLUE, COLOR_WHITE, COLOR_BLACK };
     
@@ -850,11 +842,11 @@ test "Stress: draw many pixels" {
     // Methodology: Draw pixels in a pattern, verify all are drawn correctly.
     
     var setup = create_test_integration();
-    var vm = &setup.vm;
-    var integration = &setup.integration;
+    const vm = &setup.vm;
+    const integration = &setup.integration;
     
     // Clear framebuffer.
-    _ = call_syscall(vm, kernel, FB_CLEAR_SYSCALL, COLOR_BLACK, 0, 0, 0);
+    _ = call_syscall(integration, FB_CLEAR_SYSCALL, COLOR_BLACK, 0, 0, 0);
     
     // Draw pixels in a 10x10 grid pattern.
     const grid_size: u32 = 10;
@@ -896,19 +888,18 @@ test "Error codes: verify all error conditions return correct codes" {
     // Methodology: Trigger each error condition, verify error code matches specification.
     
     var setup = create_test_integration();
-    var vm = &setup.vm;
-    var integration = &setup.integration;
+    const integration = &setup.integration;
     
     // Test invalid_argument (-2): null text pointer.
-    var result = call_syscall(vm, kernel, FB_DRAW_TEXT_SYSCALL, 0, 10, 10, COLOR_WHITE);
+    var result = call_syscall(integration, FB_DRAW_TEXT_SYSCALL, 0, 10, 10, COLOR_WHITE);
     try testing.expectEqual(@as(u64, @bitCast(@as(i64, -2))), result);
     
     // Test out_of_bounds (-11): x coordinate out of bounds.
-    result = call_syscall(vm, kernel, FB_DRAW_PIXEL_SYSCALL, FRAMEBUFFER_WIDTH, 10, COLOR_RED, 0);
+    result = call_syscall(integration, FB_DRAW_PIXEL_SYSCALL, FRAMEBUFFER_WIDTH, 10, COLOR_RED, 0);
     try testing.expectEqual(@as(u64, @bitCast(@as(i64, -11))), result);
     
     // Test out_of_bounds (-11): y coordinate out of bounds.
-    result = call_syscall(vm, kernel, FB_DRAW_PIXEL_SYSCALL, 10, FRAMEBUFFER_HEIGHT, COLOR_RED, 0);
+    result = call_syscall(integration, FB_DRAW_PIXEL_SYSCALL, 10, FRAMEBUFFER_HEIGHT, COLOR_RED, 0);
     try testing.expectEqual(@as(u64, @bitCast(@as(i64, -11))), result);
 }
 

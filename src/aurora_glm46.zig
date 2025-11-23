@@ -120,9 +120,9 @@ pub const Glm46Client = struct {
     /// Serialize completion request to JSON.
     fn serializeRequest(self: *const Glm46Client, req: CompletionRequest) ![]const u8 {
         // Simple JSON serialization (can use std.json later)
-        var json = std.ArrayList(u8).init(self.allocator);
-        defer json.deinit();
-        const writer = json.writer();
+        var json = std.ArrayList(u8){ .items = &.{}, .capacity = 0 };
+        defer json.deinit(self.allocator);
+        const writer = json.writer(self.allocator);
         
         try writer.print("{{\"model\":\"{s}\",\"messages\":[", .{req.model});
         
@@ -149,7 +149,7 @@ pub const Glm46Client = struct {
         }
         try writer.print(",\"temperature\":{d:.2}}}", .{req.temperature});
         
-        return try json.toOwnedSlice();
+        return try json.toOwnedSlice(self.allocator);
     }
     
     /// Parse SSE (Server-Sent Events) stream and call callback for each chunk.

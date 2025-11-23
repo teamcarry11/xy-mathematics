@@ -3,9 +3,14 @@
 /// ~<~ Glow Earthbend: VM state is explicit, no hidden allocations.
 
 pub const VM = @import("vm.zig").VM;
+pub const VMError = @import("vm.zig").VM.VMError;
+pub const FramebufferDirtyRegion = @import("vm.zig").FramebufferDirtyRegion;
 pub const loadKernel = @import("loader.zig").loadKernel;
 pub const SerialOutput = @import("serial.zig").SerialOutput;
 pub const handleSyscall = @import("syscall.zig").handleSyscall;
 pub const Integration = @import("integration.zig").Integration;
 pub const loadUserspaceELF = @import("integration.zig").loadUserspaceELF;
+pub const performance = @import("performance.zig");
+pub const error_log = @import("error_log.zig");
+pub const state_snapshot = @import("state_snapshot.zig");
 

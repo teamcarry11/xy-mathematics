@@ -27,7 +27,7 @@ pub const Editor = struct {
     ) !Editor {
         var buffer = try GrainBuffer.fromSlice(allocator, initial_text);
         errdefer buffer.deinit();
-        const aurora = try GrainAurora.init(allocator, initial_text);
+        var aurora = try GrainAurora.init(allocator, initial_text);
         errdefer aurora.deinit();
         const lsp = LspClient.init(allocator);
         var folding = Folding.init(allocator);

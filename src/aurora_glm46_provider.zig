@@ -89,11 +89,12 @@ pub const Glm46Provider = struct {
         _ = request;
         _ = provider;
         
+        const error_msg = try provider.allocator.dupe(u8, "Not yet implemented");
         return AiProvider.TransformResult{
             .file_edits = &.{},
             .file_edits_len = 0,
             .success = false,
-            .error_message = try provider.allocator.dupe(u8, "Not yet implemented"),
+            .error_message = error_msg,
         };
     }
     
@@ -106,12 +107,12 @@ pub const Glm46Provider = struct {
         
         // For now, return placeholder (full implementation would call GLM-4.6 API with tool calling)
         _ = request;
-        _ = provider;
         
+        const error_msg = try provider.allocator.dupe(u8, "Not yet implemented");
         return AiProvider.ToolCallResult{
             .success = false,
             .output = "",
-            .error_output = try provider.allocator.dupe(u8, "Not yet implemented"),
+            .error_output = error_msg,
             .exit_code = -1,
         };
     }

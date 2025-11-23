@@ -280,6 +280,16 @@
    - ✅ Comprehensive TigerStyle tests (tests/042_scheduler_integration_test.zig)
    - ✅ GrainStyle compliance (u32 types, assertions, bounded operations, static allocation)
 
+29. **Grain Terminal Kernel Integration** ✅ **COMPLETE**
+   - ✅ Input event syscall (`read_input_event`) - fully implemented in integration layer
+   - ✅ File I/O syscalls (`open`, `read`, `write`, `close`) - ready for configuration files
+   - ✅ Process spawn syscall (`spawn`) - ready for command execution
+   - ✅ API documentation (`docs/terminal_kernel_integration_api.md`)
+   - ✅ Comprehensive TigerStyle tests (tests/047_terminal_kernel_integration_test.zig)
+   - ✅ GrainStyle compliance (u32 types, assertions, bounded operations, static allocation)
+   - ✅ Event structure format documented (32-byte event buffer)
+   - ✅ Error codes documented (would_block, invalid_argument, etc.)
+
 ## 🚀 Architecture Overview
 
 ### Grain Aurora Stack
@@ -488,7 +498,11 @@
   - ✅ Refactoring documentation (`docs/ai_provider_refactoring.md`)
 - 📋 Tool calling (run `zig build`, `jj status`) - pending
 - 📋 Multi-file edits (context-aware) - pending (Note: Foundation complete, full implementation pending)
-- 📋 Editor integration with AI provider (refactor `aurora_editor.zig` to use `AiProvider`) - pending
+- ✅ Editor integration with AI provider (refactor `aurora_editor.zig` to use `AiProvider`) ✅ **COMPLETE**
+  - ✅ Replace `glm46: ?Glm46Client` with `ai_provider: ?AiProvider`
+  - ✅ Update `enableGlm46()` → `enable_ai_provider(provider_type, config)`
+  - ✅ Update `requestCompletions()` → `request_completions()` using `ai_provider.request_completion()`
+  - ✅ Add tests for editor with AI provider
 - 📋 Transforms integration with AI provider (refactor `aurora_glm46_transforms.zig` to use `AiProvider`) - pending
 
 #### 1.4: Tree-sitter Integration ✅ **ENHANCED**
@@ -748,12 +762,18 @@
 - ⚠️ RISC-V compilation target - ready for integration
 - ⚠️ Grain Kernel syscall integration - requires coordination with VM/Kernel agent
 
-#### 8.2.2: UI Features (PLANNED)
-- [ ] Tabs and panes
-- [ ] Split windows
-- [ ] Themes and fonts
-- [ ] Configuration management
-- [ ] Grain Aurora rendering integration
+#### 8.2.2: UI Features ✅ **COMPLETE**
+- ✅ Tab management (`src/grain_terminal/tab.zig`)
+- ✅ Pane management (`src/grain_terminal/pane.zig`)
+- ✅ Split windows (horizontal and vertical splits)
+- ✅ Configuration management (`src/grain_terminal/config.zig`)
+- ✅ Themes support (dark, light, solarized, gruvbox)
+- ✅ Font size management (small, medium, large, xlarge)
+- ✅ Configuration key-value storage
+- ✅ Pane position and hit testing (iterative, no recursion)
+- ✅ Comprehensive tests (`tests/046_grain_terminal_ui_test.zig`)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+- ⚠️ Grain Aurora rendering integration - requires coordination with Dream Editor/Browser agent
 
 #### 8.2.3: Advanced Features (PLANNED)
 - [ ] Session management
@@ -931,12 +951,18 @@
 - ⚠️ RISC-V compilation target - ready for integration
 - ⚠️ Grain Kernel syscall integration - requires coordination with VM/Kernel agent
 
-#### 8.2.2: UI Features (PLANNED)
-- [ ] Tabs and panes
-- [ ] Split windows
-- [ ] Themes and fonts
-- [ ] Configuration management
-- [ ] Grain Aurora rendering integration
+#### 8.2.2: UI Features ✅ **COMPLETE**
+- ✅ Tab management (`src/grain_terminal/tab.zig`)
+- ✅ Pane management (`src/grain_terminal/pane.zig`)
+- ✅ Split windows (horizontal and vertical splits)
+- ✅ Configuration management (`src/grain_terminal/config.zig`)
+- ✅ Themes support (dark, light, solarized, gruvbox)
+- ✅ Font size management (small, medium, large, xlarge)
+- ✅ Configuration key-value storage
+- ✅ Pane position and hit testing (iterative, no recursion)
+- ✅ Comprehensive tests (`tests/046_grain_terminal_ui_test.zig`)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+- ⚠️ Grain Aurora rendering integration - requires coordination with Dream Editor/Browser agent
 
 #### 8.2.3: Advanced Features (PLANNED)
 - [ ] Session management
@@ -1114,12 +1140,18 @@
 - ⚠️ RISC-V compilation target - ready for integration
 - ⚠️ Grain Kernel syscall integration - requires coordination with VM/Kernel agent
 
-#### 8.2.2: UI Features (PLANNED)
-- [ ] Tabs and panes
-- [ ] Split windows
-- [ ] Themes and fonts
-- [ ] Configuration management
-- [ ] Grain Aurora rendering integration
+#### 8.2.2: UI Features ✅ **COMPLETE**
+- ✅ Tab management (`src/grain_terminal/tab.zig`)
+- ✅ Pane management (`src/grain_terminal/pane.zig`)
+- ✅ Split windows (horizontal and vertical splits)
+- ✅ Configuration management (`src/grain_terminal/config.zig`)
+- ✅ Themes support (dark, light, solarized, gruvbox)
+- ✅ Font size management (small, medium, large, xlarge)
+- ✅ Configuration key-value storage
+- ✅ Pane position and hit testing (iterative, no recursion)
+- ✅ Comprehensive tests (`tests/046_grain_terminal_ui_test.zig`)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+- ⚠️ Grain Aurora rendering integration - requires coordination with Dream Editor/Browser agent
 
 #### 8.2.3: Advanced Features (PLANNED)
 - [ ] Session management

@@ -16,7 +16,7 @@ test "switch to process context sets VM registers" {
     VM.init(&vm, &[_]u8{}, 0);
     const context = ProcessContext.init(0x10000, 0x400000, 0x10000);
     
-    process_execution.switch_to_process_context(&vm, &context);
+    pe.switch_to_process_context(&vm, &context);
     
     // Assert: VM PC must be set to context PC.
     try testing.expect(vm.regs.pc == 0x10000);
@@ -33,7 +33,7 @@ test "save process context preserves VM state" {
     vm.regs.set(2, 0x400010); // SP register
     
     var context = ProcessContext.init(0x10000, 0x400000, 0x10000);
-    process_execution.save_process_context(&vm, &context);
+    pe.save_process_context(&vm, &context);
     
     // Assert: Context PC must be saved from VM PC.
     try testing.expect(context.pc == 0x10010);

@@ -252,11 +252,13 @@ test "ai provider initialization" {
         },
     };
     
-    // Note: This will fail if Glm46Provider is not implemented yet
-    // var provider = try AiProvider.init(.glm46, arena.allocator(), config);
-    // defer provider.deinit();
+    // Initialize AI provider (GLM-4.6)
+    var provider = AiProvider.init(.glm46, arena.allocator(), config) catch |err| {
+        std.debug.panic("Failed to init AI provider: {}", .{err});
+    };
+    defer provider.deinit();
     
     // Assert: Provider type correct
-    // try std.testing.expect(provider.get_provider_type() == .glm46);
+    try std.testing.expect(provider.get_provider_type() == .glm46);
 }
 

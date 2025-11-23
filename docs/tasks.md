@@ -443,7 +443,11 @@
   - [x] GLM-4.6 provider implementation (`src/aurora_glm46_provider.zig`)
   - [x] Refactoring documentation (`docs/ai_provider_refactoring.md`)
 - [ ] Tool calling (run `zig build`, `jj status`) - pending
-- [ ] Editor integration with AI provider (refactor `aurora_editor.zig`) - pending
+- [x] Editor integration with AI provider (refactor `aurora_editor.zig`) ✅ **COMPLETE**
+  - [x] Replace `glm46: ?Glm46Client` with `ai_provider: ?AiProvider`
+  - [x] Update `enableGlm46()` → `enable_ai_provider(provider_type, config)`
+  - [x] Update `requestCompletions()` → `request_completions()` using `ai_provider.request_completion()`
+  - [x] Add tests for editor with AI provider
 - [ ] Transforms integration with AI provider (refactor `aurora_glm46_transforms.zig`) - pending
 - [ ] Code transformation (refactor, extract, inline)
 - [ ] Tool calling (run `zig build`, `jj status`)
@@ -834,12 +838,18 @@
 - [ ] RISC-V compilation target - ready for integration
 - [ ] Grain Kernel syscall integration - requires coordination with VM/Kernel agent
 
-#### 8.2.2 UI Features
-- [ ] Tabs and panes
-- [ ] Split windows
-- [ ] Themes and fonts
-- [ ] Configuration management
-- [ ] Grain Aurora rendering integration
+#### 8.2.2 UI Features ✅ **COMPLETE**
+- [x] Tab management (`src/grain_terminal/tab.zig`)
+- [x] Pane management (`src/grain_terminal/pane.zig`)
+- [x] Split windows (horizontal and vertical splits)
+- [x] Configuration management (`src/grain_terminal/config.zig`)
+- [x] Themes support (dark, light, solarized, gruvbox)
+- [x] Font size management (small, medium, large, xlarge)
+- [x] Configuration key-value storage
+- [x] Pane position and hit testing (iterative, no recursion)
+- [x] Comprehensive tests (`tests/046_grain_terminal_ui_test.zig`)
+- [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
+- [ ] Grain Aurora rendering integration - requires coordination with Dream Editor/Browser agent
 
 #### 8.2.3 Advanced Features
 - [ ] Session management
@@ -918,6 +928,7 @@
 - Enhanced Process Execution (Phase 3.13) ✅
 - Process Context Switching and Execution (Phase 3.14) ✅
 - Scheduler-Process Execution Integration (Phase 3.15) ✅
+- Grain Terminal Kernel Integration (Phase 3.16) ✅
 
 **In Progress**: 
 - Dream Editor Core - GLM-4.6 Integration (Phase 4.1.3) 🔄

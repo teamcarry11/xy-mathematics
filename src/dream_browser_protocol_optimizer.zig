@@ -149,9 +149,13 @@ pub const DreamBrowserProtocolOptimizer = struct {
     ) !MessageBatch {
         // Assert: Max batch size must be within bounds
         std.debug.assert(max_batch_size <= MAX_BATCH_SIZE);
+        std.debug.assert(max_batch_size > 0);
         
         const queue = &self.pending_queue;
         const batch_size = @min(max_batch_size, queue.messages_len);
+        
+        // Assert: Batch size is valid
+        std.debug.assert(batch_size <= max_batch_size);
         
         if (batch_size == 0) {
             return MessageBatch{

@@ -39,6 +39,7 @@ const memory_stats = @import("memory_stats.zig");
 const MemoryStats = memory_stats.MemoryStats;
 const cow = @import("cow.zig");
 const CowTable = cow.CowTable;
+const resource_cleanup = @import("resource_cleanup.zig");
 
 // Export RawIO for tests to disable hardware access.
 pub const RawIO = @import("raw_io.zig");
@@ -1250,11 +1251,11 @@ pub const BasinKernel = struct {
                     if (self.vm_memory_reader) |read_fn| {
                         if (self.vm_memory_writer) |write_fn| {
                             const loaded = segment_loader.load_program_segment(
+                                self,
                                 segment,
                                 executable,
                                 read_fn,
                                 write_fn,
-                                self,
                             );
                             
                             if (loaded) {
@@ -1373,14 +1374,25 @@ pub const BasinKernel = struct {
                 self.scheduler.clear_current();
             }
             
+            // Clean up process resources (memory mappings, handles, channels).
+            // Why: Free resources when process exits to prevent leaks.
+            const process_id_u32 = @as(u32, @truncate(current_process_id));
+            const resources_cleaned = resource_cleanup.cleanup_process_resources(
+                self,
+                process_id_u32,
+            );
+            
             // Assert: process must be marked as exited.
             Debug.kassert(self.processes[idx].state == .exited, "Process not exited", .{});
             Debug.kassert(self.processes[idx].exit_status == exit_status, "Exit status mismatch", .{});
+            
+            // Assert: Resources cleaned must be reasonable (postcondition).
+            const MAX_RESOURCES: u32 = 1000;
+            Debug.kassert(resources_cleaned <= MAX_RESOURCES * 3, "Resources cleaned too large", .{});
         }
         
         // Exit syscall: terminate process with status code.
         // Note: In full implementation, we would also:
-        // - Free process resources (memory, handles, etc.)
         // - Wake up any processes waiting on this process
         // - Schedule next process (if any)
         

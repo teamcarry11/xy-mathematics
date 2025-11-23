@@ -64,12 +64,13 @@ pub const CrossIntegration = struct {
         file_path,
     };
     
+    allocator: std.mem.Allocator,
     clipboard: ?Clipboard = null,
     
     /// Initialize cross integration.
     pub fn init(allocator: std.mem.Allocator) CrossIntegration {
         // Assert: Allocator must be valid
-        std.debug.assert(allocator.ptr != null);
+        std.debug.assert(@intFromPtr(allocator.ptr) != 0);
         
         return CrossIntegration{
             .allocator = allocator,

@@ -321,29 +321,173 @@ pub const Social = struct {
         allocator: std.mem.Allocator,
 
         /// Export block to JSON format.
-        // 2025-11-23-122043-pst: Active function
+        // 2025-11-23-124357-pst: Active function
         pub fn export_block_json(self: *ExportManager, block_id: u32, output: []u8) !u32 {
-            _ = self.block_storage.get_block(block_id) orelse return error.BlockNotFound;
+            const block = self.block_storage.get_block(block_id) orelse return error.BlockNotFound;
 
-            // Simple JSON export (full implementation would use proper JSON library)
             var output_len: u32 = 0;
-            const json_start = "{\"id\":";
+
+            // Start JSON object
+            const json_start = "{";
             if (output_len + json_start.len > output.len) return error.OutputTooSmall;
             @memcpy(output[output_len..][0..json_start.len], json_start);
             output_len += @as(u32, @intCast(json_start.len));
 
-            // Export ID, title, content, links, etc.
-            // Simplified for now - full implementation would serialize all fields
+            // Export ID
+            const id_str = try std.fmt.bufPrint(output[output_len..], "\"id\":{}", .{block.id});
+            if (output_len + id_str.len > output.len) return error.OutputTooSmall;
+            output_len += @as(u32, @intCast(id_str.len));
+
+            // Export title
+            if (block.title_len > 0) {
+                const title_comma = ",\"title\":\"";
+                if (output_len + title_comma.len > output.len) return error.OutputTooSmall;
+                @memcpy(output[output_len..][0..title_comma.len], title_comma);
+                output_len += @as(u32, @intCast(title_comma.len));
+
+                // Escape JSON in title
+                var i: u32 = 0;
+                while (i < block.title_len) : (i += 1) {
+                    if (output_len >= output.len) return error.OutputTooSmall;
+                    switch (block.title[i]) {
+                        '"' => {
+                            if (output_len + 2 > output.len) return error.OutputTooSmall;
+                            @memcpy(output[output_len..][0..2], "\\\"");
+                            output_len += 2;
+                        },
+                        '\\' => {
+                            if (output_len + 2 > output.len) return error.OutputTooSmall;
+                            @memcpy(output[output_len..][0..2], "\\\\");
+                            output_len += 2;
+                        },
+                        '\n' => {
+                            if (output_len + 2 > output.len) return error.OutputTooSmall;
+                            @memcpy(output[output_len..][0..2], "\\n");
+                            output_len += 2;
+                        },
+                        '\r' => {
+                            if (output_len + 2 > output.len) return error.OutputTooSmall;
+                            @memcpy(output[output_len..][0..2], "\\r");
+                            output_len += 2;
+                        },
+                        '\t' => {
+                            if (output_len + 2 > output.len) return error.OutputTooSmall;
+                            @memcpy(output[output_len..][0..2], "\\t");
+                            output_len += 2;
+                        },
+                        else => {
+                            output[output_len] = block.title[i];
+                            output_len += 1;
+                        },
+                    }
+                }
+
+                const title_end = "\"";
+                if (output_len + title_end.len > output.len) return error.OutputTooSmall;
+                @memcpy(output[output_len..][0..title_end.len], title_end);
+                output_len += @as(u32, @intCast(title_end.len));
+            }
+
+            // Export content
+            if (block.content_len > 0) {
+                const content_comma = ",\"content\":\"";
+                if (output_len + content_comma.len > output.len) return error.OutputTooSmall;
+                @memcpy(output[output_len..][0..content_comma.len], content_comma);
+                output_len += @as(u32, @intCast(content_comma.len));
+
+                // Escape JSON in content
+                var i: u32 = 0;
+                while (i < block.content_len) : (i += 1) {
+                    if (output_len >= output.len) return error.OutputTooSmall;
+                    switch (block.content[i]) {
+                        '"' => {
+                            if (output_len + 2 > output.len) return error.OutputTooSmall;
+                            @memcpy(output[output_len..][0..2], "\\\"");
+                            output_len += 2;
+                        },
+                        '\\' => {
+                            if (output_len + 2 > output.len) return error.OutputTooSmall;
+                            @memcpy(output[output_len..][0..2], "\\\\");
+                            output_len += 2;
+                        },
+                        '\n' => {
+                            if (output_len + 2 > output.len) return error.OutputTooSmall;
+                            @memcpy(output[output_len..][0..2], "\\n");
+                            output_len += 2;
+                        },
+                        '\r' => {
+                            if (output_len + 2 > output.len) return error.OutputTooSmall;
+                            @memcpy(output[output_len..][0..2], "\\r");
+                            output_len += 2;
+                        },
+                        '\t' => {
+                            if (output_len + 2 > output.len) return error.OutputTooSmall;
+                            @memcpy(output[output_len..][0..2], "\\t");
+                            output_len += 2;
+                        },
+                        else => {
+                            output[output_len] = block.content[i];
+                            output_len += 1;
+                        },
+                    }
+                }
+
+                const content_end = "\"";
+                if (output_len + content_end.len > output.len) return error.OutputTooSmall;
+                @memcpy(output[output_len..][0..content_end.len], content_end);
+                output_len += @as(u32, @intCast(content_end.len));
+            }
+
+            // Export timestamps
+            const timestamps = try std.fmt.bufPrint(
+                output[output_len..],
+                ",\"created_at\":{},\"updated_at\":{}",
+                .{ block.created_at, block.updated_at }
+            );
+            if (output_len + timestamps.len > output.len) return error.OutputTooSmall;
+            output_len += @as(u32, @intCast(timestamps.len));
+
+            // Export links
+            if (block.links_len > 0) {
+                const links_start = ",\"links\":[";
+                if (output_len + links_start.len > output.len) return error.OutputTooSmall;
+                @memcpy(output[output_len..][0..links_start.len], links_start);
+                output_len += @as(u32, @intCast(links_start.len));
+
+                var i: u32 = 0;
+                while (i < block.links_len) : (i += 1) {
+                    if (i > 0) {
+                        const comma = ",";
+                        if (output_len + comma.len > output.len) return error.OutputTooSmall;
+                        @memcpy(output[output_len..][0..comma.len], comma);
+                        output_len += @as(u32, @intCast(comma.len));
+                    }
+
+                    const link_str = try std.fmt.bufPrint(output[output_len..], "{}", .{block.links[i]});
+                    if (output_len + link_str.len > output.len) return error.OutputTooSmall;
+                    output_len += @as(u32, @intCast(link_str.len));
+                }
+
+                const links_end = "]";
+                if (output_len + links_end.len > output.len) return error.OutputTooSmall;
+                @memcpy(output[output_len..][0..links_end.len], links_end);
+                output_len += @as(u32, @intCast(links_end.len));
+            }
+
+            // End JSON object
+            const json_end = "}";
+            if (output_len + json_end.len > output.len) return error.OutputTooSmall;
+            @memcpy(output[output_len..][0..json_end.len], json_end);
+            output_len += @as(u32, @intCast(json_end.len));
 
             return output_len;
         }
 
         /// Export block to Markdown format.
-        // 2025-11-23-122043-pst: Active function
+        // 2025-11-23-124357-pst: Active function
         pub fn export_block_markdown(self: *ExportManager, block_id: u32, output: []u8) !u32 {
             const block = self.block_storage.get_block(block_id) orelse return error.BlockNotFound;
 
-            // Simple Markdown export
             var output_len: u32 = 0;
 
             // Title as heading
@@ -370,17 +514,242 @@ pub const Social = struct {
                 output_len += block.content_len;
             }
 
+            // Export links as Markdown links
+            if (block.links_len > 0) {
+                const links_header = "\n\n## Links\n\n";
+                if (output_len + links_header.len > output.len) return error.OutputTooSmall;
+                @memcpy(output[output_len..][0..links_header.len], links_header);
+                output_len += @as(u32, @intCast(links_header.len));
+
+                var i: u32 = 0;
+                while (i < block.links_len) : (i += 1) {
+                    const link_block = self.block_storage.get_block(block.links[i]);
+                    if (link_block) |linked| {
+                        const link_md = try std.fmt.bufPrint(
+                            output[output_len..],
+                            "- [{}](block:{})\n",
+                            .{ linked.title, block.links[i] }
+                        );
+                        if (output_len + link_md.len > output.len) return error.OutputTooSmall;
+                        output_len += @as(u32, @intCast(link_md.len));
+                    } else {
+                        const link_md = try std.fmt.bufPrint(
+                            output[output_len..],
+                            "- [Block {}](block:{})\n",
+                            .{ block.links[i], block.links[i] }
+                        );
+                        if (output_len + link_md.len > output.len) return error.OutputTooSmall;
+                        output_len += @as(u32, @intCast(link_md.len));
+                    }
+                }
+            }
+
+            // Export metadata as frontmatter
+            const frontmatter = try std.fmt.bufPrint(
+                output[output_len..],
+                "\n\n---\nid: {}\ncreated_at: {}\nupdated_at: {}\n---\n",
+                .{ block.id, block.created_at, block.updated_at }
+            );
+            if (output_len + frontmatter.len > output.len) return error.OutputTooSmall;
+            output_len += @as(u32, @intCast(frontmatter.len));
+
             return output_len;
         }
 
         /// Import block from JSON format.
-        // 2025-11-23-122043-pst: Active function
+        // 2025-11-23-124357-pst: Active function
         pub fn import_block_json(self: *ExportManager, json_data: []const u8) !u32 {
-            // Simple JSON import (full implementation would use proper JSON parser)
-            _ = self;
-            _ = json_data;
-            // For now, return error - full implementation needed
-            return error.NotImplemented;
+            // Simple JSON parser (iterative, no recursion)
+            // Parse: {"id":123,"title":"...","content":"...","created_at":...,"updated_at":...,"links":[...]}
+
+            var pos: u32 = 0;
+            var id: ?u32 = null;
+            var title: ?[]const u8 = null;
+            var content: ?[]const u8 = null;
+            var created_at: ?u64 = null;
+            var updated_at: ?u64 = null;
+            var links = std.ArrayList(u32).init(self.allocator);
+            defer links.deinit();
+
+            // Skip whitespace
+            while (pos < json_data.len and std.ascii.isWhitespace(json_data[pos])) {
+                pos += 1;
+            }
+
+            // Expect '{'
+            if (pos >= json_data.len or json_data[pos] != '{') {
+                return error.InvalidJson;
+            }
+            pos += 1;
+
+            // Parse fields iteratively
+            var first_field = true;
+            while (pos < json_data.len) {
+                // Skip whitespace
+                while (pos < json_data.len and std.ascii.isWhitespace(json_data[pos])) {
+                    pos += 1;
+                }
+
+                // Check for closing brace
+                if (json_data[pos] == '}') {
+                    pos += 1;
+                    break;
+                }
+
+                // Expect comma (except first field)
+                if (!first_field) {
+                    if (pos >= json_data.len or json_data[pos] != ',') {
+                        return error.InvalidJson;
+                    }
+                    pos += 1;
+                }
+                first_field = false;
+
+                // Skip whitespace
+                while (pos < json_data.len and std.ascii.isWhitespace(json_data[pos])) {
+                    pos += 1;
+                }
+
+                // Parse field name
+                if (pos >= json_data.len or json_data[pos] != '"') {
+                    return error.InvalidJson;
+                }
+                pos += 1;
+
+                const field_name_start = pos;
+                while (pos < json_data.len and json_data[pos] != '"') {
+                    pos += 1;
+                }
+                if (pos >= json_data.len) {
+                    return error.InvalidJson;
+                }
+                const field_name = json_data[field_name_start..pos];
+                pos += 1;
+
+                // Skip whitespace and ':'
+                while (pos < json_data.len and std.ascii.isWhitespace(json_data[pos])) {
+                    pos += 1;
+                }
+                if (pos >= json_data.len or json_data[pos] != ':') {
+                    return error.InvalidJson;
+                }
+                pos += 1;
+                while (pos < json_data.len and std.ascii.isWhitespace(json_data[pos])) {
+                    pos += 1;
+                }
+
+                // Parse field value based on field name
+                if (std.mem.eql(u8, field_name, "id")) {
+                    // Parse number
+                    const num_start = pos;
+                    while (pos < json_data.len and std.ascii.isDigit(json_data[pos])) {
+                        pos += 1;
+                    }
+                    const num_str = json_data[num_start..pos];
+                    id = try std.fmt.parseInt(u32, num_str, 10);
+                } else if (std.mem.eql(u8, field_name, "title")) {
+                    // Parse string
+                    if (pos >= json_data.len or json_data[pos] != '"') {
+                        return error.InvalidJson;
+                    }
+                    pos += 1;
+                    const str_start = pos;
+                    while (pos < json_data.len and json_data[pos] != '"') {
+                        if (json_data[pos] == '\\' and pos + 1 < json_data.len) {
+                            pos += 2; // Skip escape sequence
+                        } else {
+                            pos += 1;
+                        }
+                    }
+                    if (pos >= json_data.len) {
+                        return error.InvalidJson;
+                    }
+                    title = json_data[str_start..pos];
+                    pos += 1;
+                } else if (std.mem.eql(u8, field_name, "content")) {
+                    // Parse string
+                    if (pos >= json_data.len or json_data[pos] != '"') {
+                        return error.InvalidJson;
+                    }
+                    pos += 1;
+                    const str_start = pos;
+                    while (pos < json_data.len and json_data[pos] != '"') {
+                        if (json_data[pos] == '\\' and pos + 1 < json_data.len) {
+                            pos += 2; // Skip escape sequence
+                        } else {
+                            pos += 1;
+                        }
+                    }
+                    if (pos >= json_data.len) {
+                        return error.InvalidJson;
+                    }
+                    content = json_data[str_start..pos];
+                    pos += 1;
+                } else if (std.mem.eql(u8, field_name, "created_at")) {
+                    const num_start = pos;
+                    while (pos < json_data.len and std.ascii.isDigit(json_data[pos])) {
+                        pos += 1;
+                    }
+                    const num_str = json_data[num_start..pos];
+                    created_at = try std.fmt.parseInt(u64, num_str, 10);
+                } else if (std.mem.eql(u8, field_name, "updated_at")) {
+                    const num_start = pos;
+                    while (pos < json_data.len and std.ascii.isDigit(json_data[pos])) {
+                        pos += 1;
+                    }
+                    const num_str = json_data[num_start..pos];
+                    updated_at = try std.fmt.parseInt(u64, num_str, 10);
+                } else if (std.mem.eql(u8, field_name, "links")) {
+                    // Parse array
+                    if (pos >= json_data.len or json_data[pos] != '[') {
+                        return error.InvalidJson;
+                    }
+                    pos += 1;
+
+                    var first_link = true;
+                    while (pos < json_data.len) {
+                        while (pos < json_data.len and std.ascii.isWhitespace(json_data[pos])) {
+                            pos += 1;
+                        }
+                        if (json_data[pos] == ']') {
+                            pos += 1;
+                            break;
+                        }
+                        if (!first_link) {
+                            if (json_data[pos] != ',') {
+                                return error.InvalidJson;
+                            }
+                            pos += 1;
+                        }
+                        first_link = false;
+
+                        const link_start = pos;
+                        while (pos < json_data.len and std.ascii.isDigit(json_data[pos])) {
+                            pos += 1;
+                        }
+                        const link_str = json_data[link_start..pos];
+                        const link_id = try std.fmt.parseInt(u32, link_str, 10);
+                        try links.append(link_id);
+                    }
+                }
+            }
+
+            // Create block from parsed data
+            _ = id orelse return error.MissingField;
+            const block_title = title orelse "";
+            const block_content = content orelse "";
+
+            const new_block_id = try self.block_storage.create_block(block_title, block_content);
+
+            // Restore links (if any)
+            var i: u32 = 0;
+            while (i < links.items.len) : (i += 1) {
+                // Note: Linked blocks must exist for this to work
+                // In a full implementation, we'd create missing blocks or handle errors
+                try self.block_storage.link_blocks(new_block_id, links.items[i]);
+            }
+
+            return new_block_id;
         }
     };
 };

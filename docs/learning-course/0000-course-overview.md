@@ -71,6 +71,61 @@ GrainStyle principles: explicit limits, patient discipline, code that teaches.
     - Development workflow
     - Testing strategies
 
+11. **0011-knowledge-graphs-and-blocks.md**
+    - Block-based knowledge graph architecture
+    - Block structure and storage
+    - Bidirectional linking
+    - Iterative graph traversal
+
+12. **0012-social-threading-and-replies.md**
+    - Reply relationships between blocks
+    - Thread depth calculation (iterative)
+    - Thread navigation
+    - Cycle detection
+
+13. **0013-transclusion-and-embedding.md**
+    - Transclusion (embedding blocks)
+    - Transclusion depth tracking
+    - Content expansion
+    - Cycle detection
+
+14. **0014-export-import-formats.md** (PLANNED)
+    - JSON and Markdown export
+    - Serialization patterns
+    - Import from external formats
+
+15. **0015-dag-based-architectures.md** (PLANNED)
+    - DAG-based UI architecture
+    - Streaming updates
+    - Node and edge management
+
+16. **0016-grain-field-wse-compute.md**
+    - WSE RAM-only spatial computing
+    - SRAM allocation and management
+    - Field topology (2D grid)
+    - Parallel operations
+
+17. **0017-grain-silo-object-storage.md**
+    - Object storage abstraction
+    - Hot/cold data separation
+    - Promotion/demotion strategies
+    - Integration with Grain Field
+
+18. **0018-terminal-emulation.md** (PLANNED)
+    - VT100/VT220 escape sequences
+    - Character cell rendering
+    - Scrollback buffer
+
+19. **0019-grainscript-language.md** (PLANNED)
+    - Grainscript DSL design
+    - Lexer and parser
+    - Interpreter and runtime
+
+20. **0020-storage-integration-patterns.md** (PLANNED)
+    - Block-to-object mapping
+    - Hot cache integration
+    - Persistence strategies
+
 ## Learning Path
 
 ### Phase 1: Foundations (Documents 0002-0005)
@@ -86,6 +141,16 @@ Learn kernel patterns and graphics concepts needed for Grain Basin Kernel.
 
 ### Phase 3: Integration (Documents 0008-0010)
 Understand macOS integration and GrainStyle principles applied to Grain OS.
+
+**Time Estimate**: 2-3 hours reading + exercises
+
+### Phase 4: Knowledge Graphs & Social Features (Documents 0011-0013)
+Learn knowledge graph architecture, social threading, and transclusion.
+
+**Time Estimate**: 3-4 hours reading + exercises
+
+### Phase 5: Storage & Compute (Documents 0016-0017)
+Understand Grain Field (WSE compute) and Grain Silo (object storage).
 
 **Time Estimate**: 2-3 hours reading + exercises
 

@@ -116,7 +116,8 @@ pub const DreamBrowserProfiler = struct {
     
     /// Start profiling a function call.
     pub fn start_function(self: *DreamBrowserProfiler, function_name: []const u8) u64 {
-        // Function name not used in start (only in end_function)
+        // Self and function_name not used in start (only in end_function)
+        _ = self;
         _ = function_name;
         // Record start time
         return get_current_time_us();

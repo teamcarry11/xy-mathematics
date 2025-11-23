@@ -83,26 +83,17 @@ pub const DreamBrowserImageDecoder = struct {
         // Assert: Data must be non-empty
         std.debug.assert(data.len > 0);
         
-        if (data.len < 8) {
-            return .unknown;
-        }
-        
-        // PNG signature: 89 50 4E 47 0D 0A 1A 0A
-        if (data.len >= 8 and std.mem.eql(u8, data[0..8], "\x89PNG\r\n\x1a\n")) {
-            return .png;
-        }
-        
-        // JPEG signature: FF D8 FF (or FF D8 FF E0/E1 for JFIF/EXIF)
-        if (data.len >= 3) {
+        // JPEG signature: FF D8 (minimum 2 bytes)
+        if (data.len >= 2) {
             if (data[0] == 0xFF and data[1] == 0xD8) {
-                // Check for JPEG marker (FF D8)
-                if (data.len >= 4 and data[2] == 0xFF) {
-                    // FF D8 FF is valid JPEG start
-                    return .jpeg;
-                } else if (data.len >= 4) {
-                    // FF D8 followed by any byte is also JPEG
-                    return .jpeg;
-                }
+                return .jpeg;
+            }
+        }
+        
+        // PNG signature: 89 50 4E 47 0D 0A 1A 0A (requires 8 bytes)
+        if (data.len >= 8) {
+            if (std.mem.eql(u8, data[0..8], "\x89PNG\r\n\x1a\n")) {
+                return .png;
             }
         }
         

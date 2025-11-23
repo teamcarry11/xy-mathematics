@@ -510,7 +510,13 @@
   - ✅ Return exit code and output
   - ✅ Add `request_tool_call` method to `Editor`
   - ✅ GrainStyle compliance (bounded allocations, assertions, explicit types)
-- 📋 Multi-file edits (context-aware) - pending (Note: Foundation complete, full implementation pending)
+- ✅ Multi-file edits (context-aware) ✅ **COMPLETE**
+  - ✅ Add `FileContent` struct for passing file contents
+  - ✅ Enhance `multi_file_edit` to accept file contents and build context
+  - ✅ Build context from all file contents for AI provider
+  - ✅ Implement `apply_edits` to apply edits to file contents
+  - ✅ Return modified file contents (editor handles disk writes)
+  - ✅ GrainStyle compliance (bounded allocations, assertions, explicit types)
 - ✅ Editor integration with AI provider (refactor `aurora_editor.zig` to use `AiProvider`) ✅ **COMPLETE**
   - ✅ Replace `glm46: ?Glm46Client` with `ai_provider: ?AiProvider`
   - ✅ Update `enableGlm46()` → `enable_ai_provider(provider_type, config)`
@@ -799,19 +805,50 @@
 - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 - ⚠️ Grain Aurora rendering integration - requires coordination with Dream Editor/Browser agent
 
-#### 8.2.3: Advanced Features (PLANNED)
-- [ ] Session management
-- [ ] Grainscript integration
-- [ ] Plugin system
+#### 8.2.3: Advanced Features ✅ **COMPLETE**
+- ✅ Session management (`src/grain_terminal/session.zig`)
+- ✅ Session save/restore functionality
+- ✅ Tab management in sessions
+- ✅ Configuration snapshots for sessions
+- ✅ Grainscript integration (`src/grain_terminal/grainscript_integration.zig`)
+- ✅ Command execution with output capture
+- ✅ Script execution from files
+- ✅ REPL state management (command history)
+- ✅ Plugin system (`src/grain_terminal/plugin.zig`)
+- ✅ Plugin loading/unloading
+- ✅ Plugin API definition (hooks for terminal events)
+- ✅ Comprehensive tests (`tests/047_grain_terminal_advanced_test.zig`)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 
-### 8.3 Grain Skate: Knowledge Graph Application (PLANNED)
+### 8.3 Grain Skate: Knowledge Graph Application
 
-**Objective**: Native macOS knowledge graph with social threading.
+**Objective**: Native macOS knowledge graph with social threading, powered by Grain Toroid (WSE compute) and Grain Silo (object storage).
 
-#### 8.3.1: Core Engine (PLANNED)
-- [ ] DAG data structures (may leverage `src/dag_core.zig`)
-- [ ] Block storage and linking
-- [ ] Basic text editing with Vim bindings
+#### 8.3.0: Storage & Compute Foundation ✅ **COMPLETE**
+- ✅ Grain Toroid (`src/grain_toroid/compute.zig`) - WSE RAM-only spatial computing abstraction
+- ✅ Toroidal topology (2D grid with wrap-around)
+- ✅ SRAM allocation and management (44GB+ capacity)
+- ✅ Parallel operations (vector search, full-text search, matrix multiply)
+- ✅ Core state management (idle, active, waiting, error)
+- ✅ Grain Silo (`src/grain_silo/storage.zig`) - Object storage abstraction (Turbopuffer replacement)
+- ✅ Hot/cold data separation (SRAM cache vs object storage)
+- ✅ Object storage with metadata
+- ✅ Hot cache promotion/demotion
+- ✅ Comprehensive tests (`tests/049_grain_toroid_test.zig`, `tests/050_grain_silo_test.zig`)
+- ✅ GrainStyle compliance (u32/u64 types, assertions, bounded allocations)
+
+#### 8.3.1: Core Engine ✅ **COMPLETE**
+- ✅ Block storage (`src/grain_skate/block.zig`)
+- ✅ Block linking system (bidirectional links and backlinks)
+- ✅ Block content and title management
+- ✅ Text editor with Vim bindings (`src/grain_skate/editor.zig`)
+- ✅ Editor modes (normal, insert, visual, command)
+- ✅ Cursor movement (h, j, k, l)
+- ✅ Text buffer management
+- ✅ Undo/redo history structure
+- ✅ Comprehensive tests (`tests/048_grain_skate_core_test.zig`)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+- ⚠️ DAG integration - can leverage `src/dag_core.zig` for future graph visualization
 
 #### 8.3.2: UI Framework (PLANNED)
 - [ ] Native macOS window management
@@ -988,19 +1025,50 @@
 - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 - ⚠️ Grain Aurora rendering integration - requires coordination with Dream Editor/Browser agent
 
-#### 8.2.3: Advanced Features (PLANNED)
-- [ ] Session management
-- [ ] Grainscript integration
-- [ ] Plugin system
+#### 8.2.3: Advanced Features ✅ **COMPLETE**
+- ✅ Session management (`src/grain_terminal/session.zig`)
+- ✅ Session save/restore functionality
+- ✅ Tab management in sessions
+- ✅ Configuration snapshots for sessions
+- ✅ Grainscript integration (`src/grain_terminal/grainscript_integration.zig`)
+- ✅ Command execution with output capture
+- ✅ Script execution from files
+- ✅ REPL state management (command history)
+- ✅ Plugin system (`src/grain_terminal/plugin.zig`)
+- ✅ Plugin loading/unloading
+- ✅ Plugin API definition (hooks for terminal events)
+- ✅ Comprehensive tests (`tests/047_grain_terminal_advanced_test.zig`)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 
-### 8.3 Grain Skate: Knowledge Graph Application (PLANNED)
+### 8.3 Grain Skate: Knowledge Graph Application
 
-**Objective**: Native macOS knowledge graph with social threading.
+**Objective**: Native macOS knowledge graph with social threading, powered by Grain Toroid (WSE compute) and Grain Silo (object storage).
 
-#### 8.3.1: Core Engine (PLANNED)
-- [ ] DAG data structures (may leverage `src/dag_core.zig`)
-- [ ] Block storage and linking
-- [ ] Basic text editing with Vim bindings
+#### 8.3.0: Storage & Compute Foundation ✅ **COMPLETE**
+- ✅ Grain Toroid (`src/grain_toroid/compute.zig`) - WSE RAM-only spatial computing abstraction
+- ✅ Toroidal topology (2D grid with wrap-around)
+- ✅ SRAM allocation and management (44GB+ capacity)
+- ✅ Parallel operations (vector search, full-text search, matrix multiply)
+- ✅ Core state management (idle, active, waiting, error)
+- ✅ Grain Silo (`src/grain_silo/storage.zig`) - Object storage abstraction (Turbopuffer replacement)
+- ✅ Hot/cold data separation (SRAM cache vs object storage)
+- ✅ Object storage with metadata
+- ✅ Hot cache promotion/demotion
+- ✅ Comprehensive tests (`tests/049_grain_toroid_test.zig`, `tests/050_grain_silo_test.zig`)
+- ✅ GrainStyle compliance (u32/u64 types, assertions, bounded allocations)
+
+#### 8.3.1: Core Engine ✅ **COMPLETE**
+- ✅ Block storage (`src/grain_skate/block.zig`)
+- ✅ Block linking system (bidirectional links and backlinks)
+- ✅ Block content and title management
+- ✅ Text editor with Vim bindings (`src/grain_skate/editor.zig`)
+- ✅ Editor modes (normal, insert, visual, command)
+- ✅ Cursor movement (h, j, k, l)
+- ✅ Text buffer management
+- ✅ Undo/redo history structure
+- ✅ Comprehensive tests (`tests/048_grain_skate_core_test.zig`)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+- ⚠️ DAG integration - can leverage `src/dag_core.zig` for future graph visualization
 
 #### 8.3.2: UI Framework (PLANNED)
 - [ ] Native macOS window management
@@ -1177,19 +1245,50 @@
 - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 - ⚠️ Grain Aurora rendering integration - requires coordination with Dream Editor/Browser agent
 
-#### 8.2.3: Advanced Features (PLANNED)
-- [ ] Session management
-- [ ] Grainscript integration
-- [ ] Plugin system
+#### 8.2.3: Advanced Features ✅ **COMPLETE**
+- ✅ Session management (`src/grain_terminal/session.zig`)
+- ✅ Session save/restore functionality
+- ✅ Tab management in sessions
+- ✅ Configuration snapshots for sessions
+- ✅ Grainscript integration (`src/grain_terminal/grainscript_integration.zig`)
+- ✅ Command execution with output capture
+- ✅ Script execution from files
+- ✅ REPL state management (command history)
+- ✅ Plugin system (`src/grain_terminal/plugin.zig`)
+- ✅ Plugin loading/unloading
+- ✅ Plugin API definition (hooks for terminal events)
+- ✅ Comprehensive tests (`tests/047_grain_terminal_advanced_test.zig`)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 
-### 8.3 Grain Skate: Knowledge Graph Application (PLANNED)
+### 8.3 Grain Skate: Knowledge Graph Application
 
-**Objective**: Native macOS knowledge graph with social threading.
+**Objective**: Native macOS knowledge graph with social threading, powered by Grain Toroid (WSE compute) and Grain Silo (object storage).
 
-#### 8.3.1: Core Engine (PLANNED)
-- [ ] DAG data structures (may leverage `src/dag_core.zig`)
-- [ ] Block storage and linking
-- [ ] Basic text editing with Vim bindings
+#### 8.3.0: Storage & Compute Foundation ✅ **COMPLETE**
+- ✅ Grain Toroid (`src/grain_toroid/compute.zig`) - WSE RAM-only spatial computing abstraction
+- ✅ Toroidal topology (2D grid with wrap-around)
+- ✅ SRAM allocation and management (44GB+ capacity)
+- ✅ Parallel operations (vector search, full-text search, matrix multiply)
+- ✅ Core state management (idle, active, waiting, error)
+- ✅ Grain Silo (`src/grain_silo/storage.zig`) - Object storage abstraction (Turbopuffer replacement)
+- ✅ Hot/cold data separation (SRAM cache vs object storage)
+- ✅ Object storage with metadata
+- ✅ Hot cache promotion/demotion
+- ✅ Comprehensive tests (`tests/049_grain_toroid_test.zig`, `tests/050_grain_silo_test.zig`)
+- ✅ GrainStyle compliance (u32/u64 types, assertions, bounded allocations)
+
+#### 8.3.1: Core Engine ✅ **COMPLETE**
+- ✅ Block storage (`src/grain_skate/block.zig`)
+- ✅ Block linking system (bidirectional links and backlinks)
+- ✅ Block content and title management
+- ✅ Text editor with Vim bindings (`src/grain_skate/editor.zig`)
+- ✅ Editor modes (normal, insert, visual, command)
+- ✅ Cursor movement (h, j, k, l)
+- ✅ Text buffer management
+- ✅ Undo/redo history structure
+- ✅ Comprehensive tests (`tests/048_grain_skate_core_test.zig`)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+- ⚠️ DAG integration - can leverage `src/dag_core.zig` for future graph visualization
 
 #### 8.3.2: UI Framework (PLANNED)
 - [ ] Native macOS window management

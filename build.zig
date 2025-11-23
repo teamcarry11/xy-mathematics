@@ -191,6 +191,20 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    // Grain Field module
+    const grain_field_module = b.addModule("grain_field", .{
+        .root_source_file = b.path("src/grain_field/root.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
+    // Grain Silo module
+    const grain_silo_module = b.addModule("grain_silo", .{
+        .root_source_file = b.path("src/grain_silo/root.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
     // Kernel VM test executable (for testing VM functionality).
     const kernel_vm_test_exe = b.addExecutable(.{
         .name = "kernel_vm_test",
@@ -1045,6 +1059,19 @@ pub fn build(b: *std.Build) void {
     const scheduler_integration_tests_run = b.addRunArtifact(scheduler_integration_tests);
     test_step.dependOn(&scheduler_integration_tests_run.step);
 
+    const program_segment_loading_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/048_program_segment_loading_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+            },
+        }),
+    });
+    const program_segment_loading_tests_run = b.addRunArtifact(program_segment_loading_tests);
+    test_step.dependOn(&program_segment_loading_tests_run.step);
+
     const terminal_kernel_integration_tests = b.addTest(.{
         .root_module = b.createModule(.{
             .root_source_file = b.path("tests/047_terminal_kernel_integration_test.zig"),
@@ -1111,6 +1138,32 @@ pub fn build(b: *std.Build) void {
     });
     const grain_skate_core_tests_run = b.addRunArtifact(grain_skate_core_tests);
     test_step.dependOn(&grain_skate_core_tests_run.step);
+
+    const grain_toroid_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/049_grain_toroid_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_toroid", .module = grain_toroid_module },
+            },
+        }),
+    });
+    const grain_toroid_tests_run = b.addRunArtifact(grain_toroid_tests);
+    test_step.dependOn(&grain_toroid_tests_run.step);
+
+    const grain_silo_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/050_grain_silo_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_silo", .module = grain_silo_module },
+            },
+        }),
+    });
+    const grain_silo_tests_run = b.addRunArtifact(grain_silo_tests);
+    test_step.dependOn(&grain_silo_tests_run.step);
 
     // RISC-V Logo Display Program
     const riscv_logo_exe = b.addExecutable(.{

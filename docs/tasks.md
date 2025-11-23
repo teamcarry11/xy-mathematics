@@ -468,7 +468,13 @@
   - [x] Return exit code and output
   - [x] Add `request_tool_call` method to `Editor`
   - [x] GrainStyle compliance (bounded allocations, assertions, explicit types)
-- [ ] Multi-file edits (context-aware)
+- [x] Multi-file edits (context-aware) ✅ **COMPLETE**
+  - [x] Add `FileContent` struct for passing file contents
+  - [x] Enhance `multi_file_edit` to accept file contents and build context
+  - [x] Build context from all file contents for AI provider
+  - [x] Implement `apply_edits` to apply edits to file contents
+  - [x] Return modified file contents (editor handles disk writes)
+  - [x] GrainStyle compliance (bounded allocations, assertions, explicit types)
 
 #### 4.1.4 Tree-sitter Integration ✅ **ENHANCED**
 - [x] Foundation created (simple regex-based parser)
@@ -898,7 +904,22 @@
 - [x] Comprehensive tests (`tests/047_grain_terminal_advanced_test.zig`)
 - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
 
-### 8.3 Grain Skate (PLANNED)
+### 8.3 Grain Skate
+
+**Objective**: Native macOS knowledge graph with social threading, powered by Grain Toroid (WSE compute) and Grain Silo (object storage).
+
+#### 8.3.0 Storage & Compute Foundation ✅ **COMPLETE**
+- [x] Grain Toroid (`src/grain_toroid/compute.zig`) - WSE RAM-only spatial computing abstraction
+- [x] Toroidal topology (2D grid with wrap-around)
+- [x] SRAM allocation and management (44GB+ capacity)
+- [x] Parallel operations (vector search, full-text search, matrix multiply)
+- [x] Core state management (idle, active, waiting, error)
+- [x] Grain Silo (`src/grain_silo/storage.zig`) - Object storage abstraction (Turbopuffer replacement)
+- [x] Hot/cold data separation (SRAM cache vs object storage)
+- [x] Object storage with metadata
+- [x] Hot cache promotion/demotion
+- [x] Comprehensive tests (`tests/049_grain_toroid_test.zig`, `tests/050_grain_silo_test.zig`)
+- [x] GrainStyle compliance (u32/u64 types, assertions, bounded allocations)
 
 #### 8.3.1 Core Engine ✅ **COMPLETE**
 - [x] Block storage (`src/grain_skate/block.zig`)

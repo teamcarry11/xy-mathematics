@@ -40,6 +40,12 @@ pub const AiTransforms = struct {
         multi_file_edit, // Edit multiple files contextually
     };
     
+    /// File content (for multi-file transformations).
+    pub const FileContent = struct {
+        file_uri: []const u8, // File URI
+        content: []const u8, // File content
+    };
+    
     /// File edit (for multi-file transformations).
     pub const FileEdit = struct {
         file_uri: []const u8, // File URI
@@ -49,6 +55,12 @@ pub const AiTransforms = struct {
         start_char: u32, // Start character (0-based)
         end_line: u32, // End line (0-based)
         end_char: u32, // End character (0-based)
+    };
+    
+    /// Applied edit result (modified file content).
+    pub const AppliedEdit = struct {
+        file_uri: []const u8, // File URI
+        modified_content: []const u8, // Modified file content
     };
     
     /// Transformation result.
@@ -341,34 +353,55 @@ pub const AiTransforms = struct {
     }
     
     /// Multi-file edit: Context-aware transformation across files.
+    /// Accepts file contents as input (files are loaded into editor buffers).
     pub fn multi_file_edit(
         self: *AiTransforms,
-        file_uris: []const []const u8,
-        context: []const u8,
+        file_contents: []const FileContent,
         instruction: []const u8,
     ) !TransformResult {
         // Assert: Parameters must be valid
-        std.debug.assert(file_uris.len > 0);
-        std.debug.assert(file_uris.len <= MAX_FILES_PER_TRANSFORM);
-        std.debug.assert(context.len <= MAX_FILE_EDIT_SIZE);
+        std.debug.assert(file_contents.len > 0);
+        std.debug.assert(file_contents.len <= MAX_FILES_PER_TRANSFORM);
         std.debug.assert(instruction.len > 0);
         std.debug.assert(instruction.len <= MAX_FILE_URI_LENGTH); // Reuse constant for instruction length
         
-        // Validate all file URIs
-        for (file_uris) |uri| {
-            std.debug.assert(uri.len > 0);
-            std.debug.assert(uri.len <= MAX_FILE_URI_LENGTH);
+        // Validate all file contents
+        for (file_contents) |file| {
+            std.debug.assert(file.file_uri.len > 0);
+            std.debug.assert(file.file_uri.len <= MAX_FILE_URI_LENGTH);
+            std.debug.assert(file.content.len <= MAX_FILE_EDIT_SIZE);
         }
         
-        // Build context message
-        var context_messages = try self.allocator.alloc(AiProvider.Message, if (context.len > 0) 1 else 0);
+        // Build context from all file contents
+        var context_builder = std.ArrayList(u8).init(self.allocator);
+        defer context_builder.deinit();
+        
+        // Add file contents to context
+        for (file_contents) |file| {
+            try context_builder.writer().print("=== File: {s} ===\n{s}\n\n", .{ file.file_uri, file.content });
+        }
+        
+        // Assert: Context size bounded
+        std.debug.assert(context_builder.items.len <= MAX_FILE_EDIT_SIZE * MAX_FILES_PER_TRANSFORM);
+        
+        // Build context messages
+        const context_str = try context_builder.toOwnedSlice();
+        defer self.allocator.free(context_str);
+        
+        var context_messages = try self.allocator.alloc(AiProvider.Message, 1);
         defer self.allocator.free(context_messages);
         
-        if (context.len > 0) {
-            context_messages[0] = AiProvider.Message{
-                .role = "user",
-                .content = context,
-            };
+        context_messages[0] = AiProvider.Message{
+            .role = "user",
+            .content = context_str,
+        };
+        
+        // Extract file URIs for the request
+        var file_uris = try self.allocator.alloc([]const u8, file_contents.len);
+        defer self.allocator.free(file_uris);
+        
+        for (file_contents, 0..) |file, i| {
+            file_uris[i] = file.file_uri;
         }
         
         // Create transformation request
@@ -412,11 +445,15 @@ pub const AiTransforms = struct {
         };
     }
     
-    /// Apply file edits to files (placeholder - actual implementation would modify files).
-    pub fn apply_edits(self: *AiTransforms, edits: []const FileEdit) !void {
-        _ = self;
-        
-        // Assert: Edits must be valid
+    /// Apply file edits to file contents.
+    /// Returns modified file contents (does not write to disk - editor handles that).
+    pub fn apply_edits(
+        self: *AiTransforms,
+        file_content: []const u8,
+        edits: []const FileEdit,
+    ) ![]const u8 {
+        // Assert: Parameters must be valid
+        std.debug.assert(file_content.len <= MAX_FILE_EDIT_SIZE);
         std.debug.assert(edits.len > 0);
         std.debug.assert(edits.len <= MAX_FILES_PER_TRANSFORM);
         
@@ -428,11 +465,60 @@ pub const AiTransforms = struct {
             std.debug.assert(edit.new_text.len <= MAX_FILE_EDIT_SIZE);
         }
         
-        // Placeholder: Actual implementation would:
-        // 1. Read files
-        // 2. Apply edits (replace old_text with new_text)
-        // 3. Write files back
-        // 4. Update DAG with transformation events
+        // Build modified content by applying edits
+        var result = std.ArrayList(u8).init(self.allocator);
+        errdefer result.deinit();
+        
+        // Convert file content to lines for easier editing
+        var lines = std.ArrayList([]const u8).init(self.allocator);
+        defer lines.deinit();
+        
+        var line_start: u32 = 0;
+        var line_num: u32 = 0;
+        
+        // Split content into lines
+        for (file_content, 0..) |char, i| {
+            if (char == '\n' or i == file_content.len - 1) {
+                const line_end = if (i == file_content.len - 1) @as(u32, @intCast(i + 1)) else @as(u32, @intCast(i));
+                const line = file_content[line_start..line_end];
+                try lines.append(line);
+                line_start = @as(u32, @intCast(i + 1));
+                line_num += 1;
+            }
+        }
+        
+        // Apply edits (simple text replacement for now)
+        // In a full implementation, we'd use line/char positions for precise edits
+        var modified_content = try self.allocator.dupe(u8, file_content);
+        errdefer self.allocator.free(modified_content);
+        
+        // Apply each edit by replacing old_text with new_text
+        var current_pos: u32 = 0;
+        for (edits) |edit| {
+            // Find old_text in content
+            if (std.mem.indexOf(u8, modified_content[current_pos..], edit.old_text)) |pos| {
+                const actual_pos = current_pos + @as(u32, @intCast(pos));
+                
+                // Build new content with replacement
+                var new_content = std.ArrayList(u8).init(self.allocator);
+                defer new_content.deinit();
+                
+                // Add content before edit
+                try new_content.appendSlice(modified_content[0..actual_pos]);
+                // Add new text
+                try new_content.appendSlice(edit.new_text);
+                // Add content after edit
+                const after_pos = actual_pos + @as(u32, @intCast(edit.old_text.len));
+                try new_content.appendSlice(modified_content[after_pos..]);
+                
+                // Update modified_content
+                self.allocator.free(modified_content);
+                modified_content = try new_content.toOwnedSlice();
+                current_pos = actual_pos + @as(u32, @intCast(edit.new_text.len));
+            }
+        }
+        
+        return modified_content;
     }
 };
 

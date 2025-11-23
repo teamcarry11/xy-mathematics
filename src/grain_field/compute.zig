@@ -1,6 +1,6 @@
 const std = @import("std");
 
-/// Grain Toroid: WSE RAM-only spatial computing abstraction.
+/// Grain Field: WSE RAM-only spatial computing abstraction.
 /// ~<~ Glow Airbend: explicit compute state, bounded core management.
 /// ~~~~ Glow Waterbend: deterministic spatial computing, iterative algorithms.
 ///
@@ -14,7 +14,7 @@ const std = @import("std");
 /// - Assertions for preconditions/postconditions
 /// - No recursion (iterative algorithms, stack-based)
 pub const Compute = struct {
-    // Bounded: Max cores per toroid (explicit limit)
+    // Bounded: Max cores per field (explicit limit)
     pub const MAX_CORES: u32 = 1_000_000; // 900k cores + headroom
 
     // Bounded: Max SRAM capacity (explicit limit, in bytes)
@@ -23,7 +23,7 @@ pub const Compute = struct {
     // Bounded: Max parallel operations (explicit limit)
     pub const MAX_PARALLEL_OPS: u32 = 10_000;
 
-    /// Toroid core structure.
+    /// Field core structure.
     pub const Core = struct {
         id: u32, // Core ID (unique identifier)
         state: CoreState, // Core state
@@ -41,8 +41,8 @@ pub const Compute = struct {
         error, // Core is in error state
     };
 
-    /// Toroid compute structure.
-    pub const ToroidCompute = struct {
+    /// Field compute structure.
+    pub const FieldCompute = struct {
         cores: []Core, // Cores buffer (bounded)
         cores_len: u32, // Number of cores
         sram_capacity: u64, // Total SRAM capacity (bytes)
@@ -79,8 +79,8 @@ pub const Compute = struct {
             error, // Operation error
         };
 
-        /// Initialize toroid compute.
-        pub fn init(allocator: std.mem.Allocator, sram_capacity: u64, core_count: u32) !ToroidCompute {
+        /// Initialize field compute.
+        pub fn init(allocator: std.mem.Allocator, sram_capacity: u64, core_count: u32) !FieldCompute {
             // Assert: Allocator must be valid
             std.debug.assert(allocator.ptr != null);
 
@@ -101,6 +101,8 @@ pub const Compute = struct {
             errdefer allocator.free(parallel_ops);
 
             // Initialize cores (toroidal topology)
+            // Calculate grid dimensions (square grid for simplicity)
+            const grid_size = @as(u32, @intFromFloat(@ceil(@sqrt(@as(f64, @floatFromInt(core_count))))));
             var i: u32 = 0;
             while (i < core_count) : (i += 1) {
                 // Calculate toroidal neighbors (simplified: each core has 4 neighbors)
@@ -108,12 +110,19 @@ pub const Compute = struct {
                 errdefer allocator.free(neighbors);
 
                 // Toroidal topology: connect to neighbors in 2D grid
-                const row = i / 1000; // Assuming 1000 cores per row
-                const col = i % 1000;
-                neighbors[0] = ((row + 1) % (core_count / 1000)) * 1000 + col; // Down
-                neighbors[1] = ((row - 1 + (core_count / 1000)) % (core_count / 1000)) * 1000 + col; // Up
-                neighbors[2] = row * 1000 + ((col + 1) % 1000); // Right
-                neighbors[3] = row * 1000 + ((col - 1 + 1000) % 1000); // Left
+                const row = i / grid_size;
+                const col = i % grid_size;
+                
+                // Calculate neighbor IDs (toroidal wrap-around)
+                const row_down = (row + 1) % grid_size;
+                const row_up = (row - 1 + grid_size) % grid_size;
+                const col_right = (col + 1) % grid_size;
+                const col_left = (col - 1 + grid_size) % grid_size;
+                
+                neighbors[0] = row_down * grid_size + col; // Down
+                neighbors[1] = row_up * grid_size + col; // Up
+                neighbors[2] = row * grid_size + col_right; // Right
+                neighbors[3] = row * grid_size + col_left; // Left
 
                 cores[i] = Core{
                     .id = i,
@@ -125,7 +134,7 @@ pub const Compute = struct {
                 };
             }
 
-            return ToroidCompute{
+            return FieldCompute{
                 .cores = cores,
                 .cores_len = core_count,
                 .sram_capacity = sram_capacity,
@@ -137,8 +146,8 @@ pub const Compute = struct {
             };
         }
 
-        /// Deinitialize toroid compute and free memory.
-        pub fn deinit(self: *ToroidCompute) void {
+        /// Deinitialize field compute and free memory.
+        pub fn deinit(self: *FieldCompute) void {
             // Assert: Allocator must be valid
             std.debug.assert(self.allocator.ptr != null);
 
@@ -180,8 +189,8 @@ pub const Compute = struct {
             return offset;
         }
 
-        /// Execute parallel operation on toroid.
-        pub fn execute_parallel(self: *ToroidCompute, op_type: OpType, core_ids: []const u32, data_offset: u64, data_size: u64) !u32 {
+        /// Execute parallel operation on field.
+        pub fn execute_parallel(self: *FieldCompute, op_type: OpType, core_ids: []const u32, data_offset: u64, data_size: u64) !u32 {
             // Assert: Core IDs must be valid
             var i: u32 = 0;
             while (i < core_ids.len) : (i += 1) {
@@ -221,7 +230,7 @@ pub const Compute = struct {
         }
 
         /// Get operation status.
-        pub fn get_op_status(self: *ToroidCompute, op_id: u32) ?OpStatus {
+        pub fn get_op_status(self: *FieldCompute, op_id: u32) ?OpStatus {
             if (op_id >= self.parallel_ops_len) {
                 return null;
             }
@@ -229,7 +238,7 @@ pub const Compute = struct {
         }
 
         /// Get core by ID.
-        pub fn get_core(self: *ToroidCompute, core_id: u32) ?*Core {
+        pub fn get_core(self: *FieldCompute, core_id: u32) ?*Core {
             if (core_id >= self.cores_len) {
                 return null;
             }

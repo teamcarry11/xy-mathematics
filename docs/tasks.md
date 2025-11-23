@@ -731,7 +731,7 @@
 
 ## 🌾 Phase 8: Grain Skate / Terminal / Script
 
-**Status**: ✅ Grainscript Phase 8.1.1 (Lexer) COMPLETE | 🔄 Grainscript Phase 8.1.2 (Parser) IN PROGRESS
+**Status**: ✅ Grainscript Phase 8.1.1 (Lexer) COMPLETE | ✅ Grainscript Phase 8.1.2 (Parser) COMPLETE
 
 ### 8.1 Grainscript: Core Language
 
@@ -748,15 +748,17 @@
 - [x] Comprehensive tests (`tests/039_grainscript_lexer_test.zig`)
 - [x] GrainStyle compliance (u32 types, assertions, iterative algorithms, no recursion)
 
-#### 8.1.2 Parser 🔄 **IN PROGRESS**
-- [ ] AST node types (expressions, statements, declarations)
-- [ ] Expression parsing (arithmetic, comparison, logical)
-- [ ] Statement parsing (if, while, for, return, break, continue)
-- [ ] Declaration parsing (var, const, fn)
-- [ ] Type parsing (explicit types, no `any`)
-- [ ] Error recovery and reporting
-- [ ] Bounded AST depth (prevent stack overflow)
-- [ ] Comprehensive tests
+#### 8.1.2 Parser ✅ **COMPLETE**
+- [x] AST node types (expressions, statements, declarations, `src/grainscript/parser.zig`)
+- [x] Expression parsing (arithmetic, comparison, logical, precedence-based)
+- [x] Statement parsing (if, while, for, return, break, continue)
+- [x] Declaration parsing (var, const, fn)
+- [x] Type parsing (explicit types, no `any`)
+- [x] Error recovery and reporting (ParserError enum)
+- [x] Bounded AST depth (MAX_AST_DEPTH: 100, prevents stack overflow)
+- [x] Comprehensive tests (`tests/040_grainscript_parser_test.zig`)
+- [x] Iterative parsing (no recursion, stack-based precedence)
+- [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
 
 #### 8.1.3 Basic Command Execution
 - [ ] Command parsing and execution
@@ -874,6 +876,7 @@
 - Dream Editor Core - Method Folding (Phase 4.1.2) ✅
 - Grainscript - Lexer (Phase 8.1.1) ✅
 - Enhanced Process Execution (Phase 3.13) ✅
+- Process Context Switching and Execution (Phase 3.14) ✅
 
 **In Progress**: 
 - Dream Editor Core - GLM-4.6 Integration (Phase 4.1.3) 🔄
@@ -912,7 +915,7 @@
 
 3. **Grain Skate Agent**: Grainscript / Terminal / Skate
    - **Active Modules**: `src/grainscript/`
-   - **Status**: Phase 8.1.1 (Lexer) complete, Phase 8.1.2 (Parser) in progress
+   - **Status**: Phase 8.1.1 (Lexer) complete, Phase 8.1.2 (Parser) complete
    - **See**: `docs/grain_skate_agent_prompt.md`, `docs/grain_skate_agent_summary.md`
 
 **Available for Parallel Work** (low conflict risk):

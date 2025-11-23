@@ -296,6 +296,25 @@
   - [x] Enhanced diagnostics tests (exception statistics verification)
   - [x] Comprehensive TigerStyle tests (`tests/032_exception_stats_diagnostics_test.zig`)
   - [x] GrainStyle compliance (u32 types, assertions, bounded arrays)
+- [x] Enhanced Exception Recovery ✅ **COMPLETE**
+  - [x] Fatal exception detection (is_fatal_exception function)
+  - [x] Process termination on fatal exceptions (terminate_process_on_exception function)
+  - [x] Exit status calculation (128 + exception code, Unix convention)
+  - [x] Scheduler integration (clear current process on termination)
+  - [x] Exception handling for all exception types (fatal vs non-fatal)
+  - [x] Comprehensive TigerStyle tests (`tests/033_exception_recovery_test.zig`)
+  - [x] GrainStyle compliance (u32 types, assertions, bounded loops)
+- [x] Memory Protection Enforcement ✅ **COMPLETE**
+  - [x] Memory permission checking (check_memory_permission function)
+  - [x] Permission checker callback in VM
+  - [x] Permission checks in all load instructions
+  - [x] Permission checks in all store instructions
+  - [x] Permission checks in instruction fetch
+  - [x] Access fault exceptions (load/store/instruction)
+  - [x] Kernel space always accessible
+  - [x] Framebuffer always readable/writable
+  - [x] Comprehensive TigerStyle tests (`tests/034_memory_protection_test.zig`)
+  - [x] GrainStyle compliance (u32 types, assertions, bounded loops)
 
 ### 3.3 Userspace Support
 - [x] ELF loader ✅ **COMPLETE**
@@ -567,7 +586,14 @@
   - [x] Integration with DreamBrowserWebSocket (optional optimizer, send_batch method)
   - [x] Fast path for common operations (ping/pong, immediate responses)
   - [x] All functions follow GrainStyle/TigerStyle (u32 types, assertions, bounded allocations)
-- [ ] Profile and optimize hot paths
+- [x] Profile and optimize hot paths ✅ **COMPLETE**
+  - [x] Create DreamBrowserProfiler module (function call profiling, hot path detection)
+  - [x] Function call profiling (track call counts, total time, average time, min/max)
+  - [x] Hot path identification (functions exceeding 1ms threshold)
+  - [x] Critical path identification (functions exceeding 10ms threshold)
+  - [x] Call stack sampling (identify slow call chains, parent function tracking)
+  - [x] Integration with DreamBrowserRenderer (optional profiler)
+  - [x] All functions follow GrainStyle/TigerStyle (u32 types, assertions, bounded allocations)
 
 ### 5.2 Advanced Browser Features
 - [x] Scrolling and navigation ✅ **COMPLETE**

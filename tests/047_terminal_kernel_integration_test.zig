@@ -9,9 +9,14 @@ const VM = kernel_vm.VM;
 const Integration = kernel_vm.Integration;
 const basin_kernel = @import("basin_kernel");
 const BasinKernel = basin_kernel.BasinKernel;
+const RawIO = @import("basin_kernel").basin_kernel.RawIO;
 
 // Test: read_input_event syscall reads keyboard events.
 test "read_input_event reads keyboard events" {
+    // Disable RawIO to avoid SIGILL in tests.
+    RawIO.disable();
+    defer RawIO.enable();
+    
     var vm: VM = undefined;
     VM.init(&vm, &[_]u8{}, 0);
     var kernel = BasinKernel.init();

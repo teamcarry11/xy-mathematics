@@ -39,6 +39,9 @@ const MemoryStats = memory_stats.MemoryStats;
 const cow = @import("cow.zig");
 const CowTable = cow.CowTable;
 
+// Export RawIO for tests to disable hardware access.
+pub const RawIO = @import("raw_io.zig");
+
 /// Basin Kernel syscall numbers.
 /// Why: Explicit syscall enumeration for type safety and clarity.
 pub const Syscall = enum(u32) {

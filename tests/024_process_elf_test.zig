@@ -6,6 +6,7 @@ const std = @import("std");
 const basin_kernel = @import("basin_kernel");
 const BasinKernel = basin_kernel.BasinKernel;
 const ProcessContext = basin_kernel.basin_kernel.ProcessContext;
+const RawIO = @import("basin_kernel").basin_kernel.RawIO;
 
 // Test process context initialization.
 test "process context init" {
@@ -44,6 +45,10 @@ test "process context reset" {
 
 // Test kernel spawn with process context.
 test "kernel spawn process context" {
+    // Disable RawIO to avoid SIGILL in tests.
+    RawIO.disable();
+    defer RawIO.enable();
+    
     var kernel = BasinKernel.init();
     
     // Spawn a process.

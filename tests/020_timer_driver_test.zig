@@ -7,6 +7,7 @@ const basin_kernel = @import("basin_kernel");
 const BasinKernel = basin_kernel.BasinKernel;
 const ClockId = basin_kernel.ClockId;
 const Timer = basin_kernel.basin_kernel.Timer;
+const RawIO = basin_kernel.RawIO;
 
 // Test timer initialization.
 test "timer init" {

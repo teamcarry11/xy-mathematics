@@ -1,10 +1,79 @@
 const std = @import("std");
-const GrainAurora = @import("../grain_aurora.zig").GrainAurora;
 const MacWindow = @import("../platform/macos_tahoe/window.zig");
 const AuroraRenderer = @import("aurora_renderer.zig").AuroraRenderer;
 const Pane = @import("pane.zig").Pane;
 const Tab = @import("tab.zig").Tab;
 const Config = @import("config.zig").Config;
+
+// Note: GrainAurora import will be resolved via build.zig module dependencies
+// For now, we'll use a forward declaration approach
+pub const GrainAurora = struct {
+    pub const Node = union(enum) {
+        text: []const u8,
+        column: Column,
+        row: Row,
+        button: Button,
+    };
+    
+    pub const Column = struct {
+        children: []const Node,
+    };
+    
+    pub const Row = struct {
+        children: []const Node,
+    };
+    
+    pub const Button = struct {
+        id: []const u8,
+        label: []const u8,
+    };
+    
+    pub const RenderContext = struct {
+        allocator: std.mem.Allocator,
+        buffer: *@import("../grain_buffer.zig").GrainBuffer,
+        route: []const u8,
+    };
+    
+    pub const RenderResult = struct {
+        root: Node,
+        readonly_spans: []const Span,
+    };
+    
+    pub const Span = struct {
+        start: usize,
+        end: usize,
+    };
+    
+    pub const Component = fn (context: *RenderContext) RenderResult;
+    
+    allocator: std.mem.Allocator,
+    buffer: @import("../grain_buffer.zig").GrainBuffer,
+    
+    pub fn init(allocator: std.mem.Allocator, seed: []const u8) !GrainAurora {
+        const GrainBuffer = @import("../grain_buffer.zig").GrainBuffer;
+        const buffer = try GrainBuffer.fromSlice(allocator, seed);
+        return GrainAurora{
+            .allocator = allocator,
+            .buffer = buffer,
+        };
+    }
+    
+    pub fn deinit(self: *GrainAurora) void {
+        self.buffer.deinit();
+        self.* = undefined;
+    }
+    
+    pub fn render(
+        self: *GrainAurora,
+        component: Component,
+        route: []const u8,
+    ) !void {
+        _ = self;
+        _ = component;
+        _ = route;
+        // Placeholder: full implementation would call component
+    }
+};
 
 /// Grain Terminal Window: Window management using Aurora window system.
 /// ~<~ Glow Airbend: explicit window state, bounded components.

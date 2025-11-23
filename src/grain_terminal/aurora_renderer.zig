@@ -1,9 +1,42 @@
 const std = @import("std");
-const GrainAurora = @import("../grain_aurora.zig").GrainAurora;
 const Terminal = @import("terminal.zig").Terminal;
 const Tab = @import("tab.zig").Tab;
 const Pane = @import("pane.zig").Pane;
 const Config = @import("config.zig").Config;
+
+// Note: GrainAurora import will be resolved via build.zig module dependencies
+// For now, we'll use a forward declaration approach
+pub const GrainAurora = struct {
+    pub const Node = union(enum) {
+        text: []const u8,
+        column: Column,
+        row: Row,
+        button: Button,
+    };
+    
+    pub const Column = struct {
+        children: []const Node,
+    };
+    
+    pub const Row = struct {
+        children: []const Node,
+    };
+    
+    pub const Button = struct {
+        id: []const u8,
+        label: []const u8,
+    };
+    
+    pub const RenderResult = struct {
+        root: Node,
+        readonly_spans: []const Span,
+    };
+    
+    pub const Span = struct {
+        start: usize,
+        end: usize,
+    };
+};
 
 /// Grain Terminal Aurora Renderer: Converts terminal cells to Aurora components.
 /// ~<~ Glow Airbend: explicit rendering state, bounded components.
@@ -237,7 +270,7 @@ pub const AuroraRenderer = struct {
     pub fn render_tab_bar(
         self: *AuroraRenderer,
         tabs: []const *Tab,
-        active_tab_id: u32,
+        _: u32, // active_tab_id (unused for now)
         config: *const Config,
     ) !GrainAurora.RenderResult {
         // Assert: Config must be valid

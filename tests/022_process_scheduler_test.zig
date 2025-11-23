@@ -7,9 +7,14 @@ const basin_kernel = @import("basin_kernel");
 const BasinKernel = basin_kernel.BasinKernel;
 const ProcessState = basin_kernel.ProcessState;
 const MAX_PROCESSES: u32 = 16;
+const RawIO = @import("basin_kernel").basin_kernel.RawIO;
 
 // Test scheduler initialization.
 test "scheduler init" {
+    // Disable RawIO to avoid SIGILL in tests.
+    RawIO.disable();
+    defer RawIO.enable();
+    
     const kernel = BasinKernel.init();
     
     // Assert: Scheduler must be initialized.

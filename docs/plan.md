@@ -262,15 +262,6 @@
    - ✅ Comprehensive TigerStyle tests (tests/038_cow_test.zig)
    - ✅ GrainStyle compliance (u32 types, assertions, bounded loops, static allocation)
 
-26. **Enhanced Process Execution and Userspace Program Loading** ✅ **COMPLETE**
-   - ✅ VM memory reader callback mechanism (allows kernel to read VM memory)
-   - ✅ ELF header parsing in syscall_spawn (extracts entry point from ELF)
-   - ✅ Process context setup (PC, SP, entry point initialization)
-   - ✅ Process context integration (ProcessContext stored in Process struct)
-   - ✅ Backward compatibility (works without VM memory reader)
-   - ✅ Comprehensive TigerStyle tests (tests/040_enhanced_process_execution_test.zig)
-   - ✅ GrainStyle compliance (u32 types, assertions, bounded operations, static allocation)
-
 ## 🚀 Architecture Overview
 
 ### Grain Aurora Stack
@@ -599,6 +590,308 @@
 - ✅ Deterministic contracts (TigerBeetle-style state machine)
 - ✅ Peer-to-peer payments (direct Nostr-based transfers)
 - ✅ State machine execution (bounded, deterministic)
+- ✅ Contract management (create, execute actions: mint, burn, transfer, collect_tax)
+- ✅ Payment processing (batch processing, deterministic execution)
+- ✅ DAG integration (contracts and payments as DAG events)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+
+#### 3.4: GrainBank Browser Integration ✅ **COMPLETE**
+- ✅ Integrate GrainBank into unified IDE
+- ✅ Browser tabs can have associated GrainBank contracts
+- ✅ Automatic micropayments triggered when viewing paid content
+- ✅ Payment detection from URL/content (Nostr event parsing)
+- ✅ Enable/disable payments per tab
+- ✅ Associate contracts with browser tabs
+- ✅ Process payments via deterministic state machine
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+
+**See**: `docs/dream_implementation_roadmap.md` for complete roadmap
+
+## 🌾 Phase 8: Grain Skate / Terminal / Script
+
+**Status**: ✅ Grainscript Phase 8.1.1 (Lexer) COMPLETE | 🔄 Grainscript Phase 8.1.2 (Parser) IN PROGRESS
+
+**Vision**: Three complementary projects for Grain OS:
+1. **Grain Terminal**: Wezterm-level terminal for Grain OS (RISC-V target)
+2. **Grainscript**: Unified scripting/configuration language to replace Bash/Zsh/Fish and all config/data file formats (`.gr` files)
+3. **Grain Skate**: Native macOS knowledge graph application with social threading
+
+### 8.1 Grainscript: Unified Scripting/Configuration Language
+
+#### 8.1.1: Lexer ✅ **COMPLETE**
+- ✅ Tokenizer implementation (`src/grainscript/lexer.zig`)
+- ✅ Token types (identifiers, keywords, literals, operators, punctuation)
+- ✅ Number parsing (integer, float, hex, binary)
+- ✅ String literal parsing (single/double quotes, escape sequences)
+- ✅ Comment parsing (single-line `//`, multi-line `/* */`)
+- ✅ Keyword recognition (if, else, while, for, fn, var, const, return, etc.)
+- ✅ Operator recognition (arithmetic, comparison, logical, assignment)
+- ✅ Line/column tracking for error reporting
+- ✅ Bounded allocations (MAX_TOKENS: 10,000, MAX_TOKEN_LEN: 1,024)
+- ✅ Comprehensive tests (`tests/039_grainscript_lexer_test.zig`)
+- ✅ GrainStyle compliance (u32 types, assertions, iterative algorithms, no recursion)
+
+#### 8.1.2: Parser 🔄 **IN PROGRESS**
+- [ ] AST node types (expressions, statements, declarations)
+- [ ] Expression parsing (arithmetic, comparison, logical)
+- [ ] Statement parsing (if, while, for, return, break, continue)
+- [ ] Declaration parsing (var, const, fn)
+- [ ] Type parsing (explicit types, no `any`)
+- [ ] Error recovery and reporting
+- [ ] Bounded AST depth (prevent stack overflow)
+- [ ] Comprehensive tests
+
+#### 8.1.3: Basic Command Execution
+- [ ] Command parsing and execution
+- [ ] Built-in commands (echo, cd, pwd, etc.)
+- [ ] External command execution
+- [ ] Exit code handling
+- [ ] Error handling
+
+#### 8.1.4: Variable Handling
+- [ ] Variable declaration and assignment
+- [ ] Variable scope (local, global)
+- [ ] Variable lookup and resolution
+- [ ] Type checking for variables
+
+#### 8.1.5: Control Flow
+- [ ] If/else statements
+- [ ] While loops
+- [ ] For loops
+- [ ] Break and continue
+- [ ] Return statements
+
+#### 8.1.6: Type System
+- [ ] Explicit type annotations (no `any` types)
+- [ ] Type checking
+- [ ] Type inference (where safe)
+- [ ] Type error reporting
+
+### 8.2 Grain Terminal: Terminal Application (PLANNED)
+
+**Objective**: Wezterm-level terminal for Grain OS running in Grain Vantage VM.
+
+#### 8.2.1: Terminal Core (PLANNED)
+- [ ] Terminal emulation (VT100/VT220 subset)
+- [ ] Character cell rendering
+- [ ] Scrollback buffer
+- [ ] Input handling (keyboard, mouse)
+- [ ] RISC-V compilation target
+- [ ] Grain Kernel syscall integration
+
+#### 8.2.2: UI Features (PLANNED)
+- [ ] Tabs and panes
+- [ ] Split windows
+- [ ] Themes and fonts
+- [ ] Configuration management
+- [ ] Grain Aurora rendering integration
+
+#### 8.2.3: Advanced Features (PLANNED)
+- [ ] Session management
+- [ ] Grainscript integration
+- [ ] Plugin system
+
+### 8.3 Grain Skate: Knowledge Graph Application (PLANNED)
+
+**Objective**: Native macOS knowledge graph with social threading.
+
+#### 8.3.1: Core Engine (PLANNED)
+- [ ] DAG data structures (may leverage `src/dag_core.zig`)
+- [ ] Block storage and linking
+- [ ] Basic text editing with Vim bindings
+
+#### 8.3.2: UI Framework (PLANNED)
+- [ ] Native macOS window management
+- [ ] Modal editing system (Vim/Kakoune keybindings)
+- [ ] Graph visualization
+
+#### 8.3.3: Social Features (PLANNED)
+- [ ] Link-based reply system
+- [ ] Transclusion engine
+- [ ] Export/import capabilities
+
+## 👥 Parallel Development Opportunities
+
+**Current Agent Focuses**:
+1. **VM/Kernel Agent**: Grain Vantage & Kernel Boot Integration (`src/kernel_vm/`, `src/kernel/`, `src/platform/macos_tahoe/`)
+2. **Dream Editor/Browser Agent**: Foundation components (`src/aurora_*.zig`, `src/dream_*.zig`)
+3. **Grain Skate Agent**: Grainscript (`src/grainscript/`), Grain Terminal, Grain Skate
+
+**Available for Parallel Work** (see `docs/agent_work_summary.md` and `docs/dream_editor_agent_summary.md`):
+- **Dream Editor/Browser** (`src/aurora_*.zig`, `src/dream_*.zig`) - 🔄 Active (Phase 0)
+- **Userspace Tools** (`src/userspace/`) - Core utilities, browser engine, build tools
+- **Grain Ecosystem** (`src/graincard/`, `grainseed*.zig`) - Graincard, seed system
+- **TLS/Networking** (`src/grain_tls/`, `nostr.zig`) - TLS client, protocols
+- **Platform Implementations** (`src/platform/riscv/`) - Native RISC-V platform
+- **Kernel Advanced Features** - Memory management, process scheduling (design in parallel)
+- **Documentation** (`docs/learning-course/`) - Course content, tutorials
+
+**See**: 
+- `docs/agent_work_summary.md` - VM/Kernel agent work
+- `docs/dream_editor_agent_summary.md` - Dream Editor/Browser agent work
+- `docs/grain_skate_agent_acknowledgment.md` - Grain Skate/Terminal/Script agent acknowledgment and plan
+
+## 🔗 References
+
+- **Framework 13 RISC-V**: https://frame.work/products/deep-computing-risc-v-mainboard
+- **DeepComputing DC-ROMA**: https://deepcomputing.io/product/dc-roma-risc-v-mainboard/
+- **Daylight Computer**: https://daylightcomputer.com
+- **JIT Architecture**: `docs/zyx/jit_architecture.md`
+- **Tasks**: `docs/tasks.md`
+- **Agent Work Summary**: `docs/agent_work_summary.md`
+- **Development Strategy**: `docs/zyx/development_strategy_2025.md`
+
+- ✅ Contract management (create, execute actions: mint, burn, transfer, collect_tax)
+- ✅ Payment processing (batch processing, deterministic execution)
+- ✅ DAG integration (contracts and payments as DAG events)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+
+#### 3.4: GrainBank Browser Integration ✅ **COMPLETE**
+- ✅ Integrate GrainBank into unified IDE
+- ✅ Browser tabs can have associated GrainBank contracts
+- ✅ Automatic micropayments triggered when viewing paid content
+- ✅ Payment detection from URL/content (Nostr event parsing)
+- ✅ Enable/disable payments per tab
+- ✅ Associate contracts with browser tabs
+- ✅ Process payments via deterministic state machine
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+
+**See**: `docs/dream_implementation_roadmap.md` for complete roadmap
+
+## 🌾 Phase 8: Grain Skate / Terminal / Script
+
+**Status**: ✅ Grainscript Phase 8.1.1 (Lexer) COMPLETE | 🔄 Grainscript Phase 8.1.2 (Parser) IN PROGRESS
+
+**Vision**: Three complementary projects for Grain OS:
+1. **Grain Terminal**: Wezterm-level terminal for Grain OS (RISC-V target)
+2. **Grainscript**: Unified scripting/configuration language to replace Bash/Zsh/Fish and all config/data file formats (`.gr` files)
+3. **Grain Skate**: Native macOS knowledge graph application with social threading
+
+### 8.1 Grainscript: Unified Scripting/Configuration Language
+
+#### 8.1.1: Lexer ✅ **COMPLETE**
+- ✅ Tokenizer implementation (`src/grainscript/lexer.zig`)
+- ✅ Token types (identifiers, keywords, literals, operators, punctuation)
+- ✅ Number parsing (integer, float, hex, binary)
+- ✅ String literal parsing (single/double quotes, escape sequences)
+- ✅ Comment parsing (single-line `//`, multi-line `/* */`)
+- ✅ Keyword recognition (if, else, while, for, fn, var, const, return, etc.)
+- ✅ Operator recognition (arithmetic, comparison, logical, assignment)
+- ✅ Line/column tracking for error reporting
+- ✅ Bounded allocations (MAX_TOKENS: 10,000, MAX_TOKEN_LEN: 1,024)
+- ✅ Comprehensive tests (`tests/039_grainscript_lexer_test.zig`)
+- ✅ GrainStyle compliance (u32 types, assertions, iterative algorithms, no recursion)
+
+#### 8.1.2: Parser 🔄 **IN PROGRESS**
+- [ ] AST node types (expressions, statements, declarations)
+- [ ] Expression parsing (arithmetic, comparison, logical)
+- [ ] Statement parsing (if, while, for, return, break, continue)
+- [ ] Declaration parsing (var, const, fn)
+- [ ] Type parsing (explicit types, no `any`)
+- [ ] Error recovery and reporting
+- [ ] Bounded AST depth (prevent stack overflow)
+- [ ] Comprehensive tests
+
+#### 8.1.3: Basic Command Execution
+- [ ] Command parsing and execution
+- [ ] Built-in commands (echo, cd, pwd, etc.)
+- [ ] External command execution
+- [ ] Exit code handling
+- [ ] Error handling
+
+#### 8.1.4: Variable Handling
+- [ ] Variable declaration and assignment
+- [ ] Variable scope (local, global)
+- [ ] Variable lookup and resolution
+- [ ] Type checking for variables
+
+#### 8.1.5: Control Flow
+- [ ] If/else statements
+- [ ] While loops
+- [ ] For loops
+- [ ] Break and continue
+- [ ] Return statements
+
+#### 8.1.6: Type System
+- [ ] Explicit type annotations (no `any` types)
+- [ ] Type checking
+- [ ] Type inference (where safe)
+- [ ] Type error reporting
+
+### 8.2 Grain Terminal: Terminal Application (PLANNED)
+
+**Objective**: Wezterm-level terminal for Grain OS running in Grain Vantage VM.
+
+#### 8.2.1: Terminal Core (PLANNED)
+- [ ] Terminal emulation (VT100/VT220 subset)
+- [ ] Character cell rendering
+- [ ] Scrollback buffer
+- [ ] Input handling (keyboard, mouse)
+- [ ] RISC-V compilation target
+- [ ] Grain Kernel syscall integration
+
+#### 8.2.2: UI Features (PLANNED)
+- [ ] Tabs and panes
+- [ ] Split windows
+- [ ] Themes and fonts
+- [ ] Configuration management
+- [ ] Grain Aurora rendering integration
+
+#### 8.2.3: Advanced Features (PLANNED)
+- [ ] Session management
+- [ ] Grainscript integration
+- [ ] Plugin system
+
+### 8.3 Grain Skate: Knowledge Graph Application (PLANNED)
+
+**Objective**: Native macOS knowledge graph with social threading.
+
+#### 8.3.1: Core Engine (PLANNED)
+- [ ] DAG data structures (may leverage `src/dag_core.zig`)
+- [ ] Block storage and linking
+- [ ] Basic text editing with Vim bindings
+
+#### 8.3.2: UI Framework (PLANNED)
+- [ ] Native macOS window management
+- [ ] Modal editing system (Vim/Kakoune keybindings)
+- [ ] Graph visualization
+
+#### 8.3.3: Social Features (PLANNED)
+- [ ] Link-based reply system
+- [ ] Transclusion engine
+- [ ] Export/import capabilities
+
+## 👥 Parallel Development Opportunities
+
+**Current Agent Focuses**:
+1. **VM/Kernel Agent**: Grain Vantage & Kernel Boot Integration (`src/kernel_vm/`, `src/kernel/`, `src/platform/macos_tahoe/`)
+2. **Dream Editor/Browser Agent**: Foundation components (`src/aurora_*.zig`, `src/dream_*.zig`)
+3. **Grain Skate Agent**: Grainscript (`src/grainscript/`), Grain Terminal, Grain Skate
+
+**Available for Parallel Work** (see `docs/agent_work_summary.md` and `docs/dream_editor_agent_summary.md`):
+- **Dream Editor/Browser** (`src/aurora_*.zig`, `src/dream_*.zig`) - 🔄 Active (Phase 0)
+- **Userspace Tools** (`src/userspace/`) - Core utilities, browser engine, build tools
+- **Grain Ecosystem** (`src/graincard/`, `grainseed*.zig`) - Graincard, seed system
+- **TLS/Networking** (`src/grain_tls/`, `nostr.zig`) - TLS client, protocols
+- **Platform Implementations** (`src/platform/riscv/`) - Native RISC-V platform
+- **Kernel Advanced Features** - Memory management, process scheduling (design in parallel)
+- **Documentation** (`docs/learning-course/`) - Course content, tutorials
+
+**See**: 
+- `docs/agent_work_summary.md` - VM/Kernel agent work
+- `docs/dream_editor_agent_summary.md` - Dream Editor/Browser agent work
+- `docs/grain_skate_agent_acknowledgment.md` - Grain Skate/Terminal/Script agent acknowledgment and plan
+
+## 🔗 References
+
+- **Framework 13 RISC-V**: https://frame.work/products/deep-computing-risc-v-mainboard
+- **DeepComputing DC-ROMA**: https://deepcomputing.io/product/dc-roma-risc-v-mainboard/
+- **Daylight Computer**: https://daylightcomputer.com
+- **JIT Architecture**: `docs/zyx/jit_architecture.md`
+- **Tasks**: `docs/tasks.md`
+- **Agent Work Summary**: `docs/agent_work_summary.md`
+- **Development Strategy**: `docs/zyx/development_strategy_2025.md`
+
 - ✅ Contract management (create, execute actions: mint, burn, transfer, collect_tax)
 - ✅ Payment processing (batch processing, deterministic execution)
 - ✅ DAG integration (contracts and payments as DAG events)

@@ -66,7 +66,7 @@ The **Aurora IDE and Dream Browser agent** has implemented:
 1. **Aurora IDE** (`src/aurora_*.zig`):
    - LSP client with JSON-RPC 2.0 (`src/aurora_lsp.zig`)
    - Tree-sitter integration for syntax highlighting (`src/aurora_tree_sitter.zig`)
-   - GLM-4.6 client for AI coding assistance (`src/aurora_glm46.zig`)
+   - AI provider abstraction (`src/aurora_ai_provider.zig`) with GLM-4.6 provider (`src/aurora_glm46_provider.zig`) for AI coding assistance
    - Magit-style VCS integration (`src/aurora_vcs.zig`)
    - Multi-pane layout system (`src/aurora_layout.zig`)
    - Unified IDE combining editor and browser (`src/aurora_unified_ide.zig`)

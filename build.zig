@@ -168,6 +168,20 @@ pub fn build(b: *std.Build) void {
         },
     });
 
+    // Grainscript module
+    const grainscript_module = b.addModule("grainscript", .{
+        .root_source_file = b.path("src/grainscript/root.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
+    // Grain Terminal module
+    const grain_terminal_module = b.addModule("grain_terminal", .{
+        .root_source_file = b.path("src/grain_terminal/root.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
     // Kernel VM test executable (for testing VM functionality).
     const kernel_vm_test_exe = b.addExecutable(.{
         .name = "kernel_vm_test",
@@ -991,6 +1005,20 @@ pub fn build(b: *std.Build) void {
     });
     const scheduler_integration_tests_run = b.addRunArtifact(scheduler_integration_tests);
     test_step.dependOn(&scheduler_integration_tests_run.step);
+
+    // Grain Terminal tests
+    const grain_terminal_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/045_grain_terminal_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_terminal", .module = grain_terminal_module },
+            },
+        }),
+    });
+    const grain_terminal_tests_run = b.addRunArtifact(grain_terminal_tests);
+    test_step.dependOn(&grain_terminal_tests_run.step);
 
     // RISC-V Logo Display Program
     const riscv_logo_exe = b.addExecutable(.{

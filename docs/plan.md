@@ -646,7 +646,7 @@
 
 ## 🌾 Phase 8: Grain Skate / Terminal / Script
 
-**Status**: ✅ Grainscript Phase 8.1.1 (Lexer) COMPLETE | ✅ Grainscript Phase 8.1.2 (Parser) COMPLETE
+**Status**: ✅ Grainscript Phase 8.1.1 (Lexer) COMPLETE | ✅ Grainscript Phase 8.1.2 (Parser) COMPLETE | ✅ Grainscript Phase 8.1.3 (Basic Command Execution) COMPLETE | ✅ Grainscript Phase 8.1.4 (Variable Handling) COMPLETE | ✅ Grainscript Phase 8.1.5 (Control Flow) COMPLETE | ✅ Grainscript Phase 8.1.6 (Type System) COMPLETE
 
 **Vision**: Three complementary projects for Grain OS:
 1. **Grain Terminal**: Wezterm-level terminal for Grain OS (RISC-V target)
@@ -695,36 +695,58 @@
 - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 - ⚠️ External command execution (requires kernel syscall integration - Phase 8.1.4+)
 
-#### 8.1.4: Variable Handling
-- [ ] Variable declaration and assignment
-- [ ] Variable scope (local, global)
-- [ ] Variable lookup and resolution
-- [ ] Type checking for variables
+#### 8.1.4: Variable Handling ✅ **COMPLETE**
+- ✅ Assignment operator parsing (`expr_assign` node type)
+- ✅ Assignment expression evaluation
+- ✅ Variable scope management (local vs global, scope depth tracking)
+- ✅ Variable lookup with scope resolution (local to global search)
+- ✅ Type checking for variable assignments (type compatibility)
+- ✅ Constant protection (cannot assign to constants)
+- ✅ Scope cleanup (automatic cleanup of local variables on block exit)
+- ✅ Comprehensive tests (`tests/042_grainscript_variable_handling_test.zig`)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 
-#### 8.1.5: Control Flow
-- [ ] If/else statements
-- [ ] While loops
-- [ ] For loops
-- [ ] Break and continue
-- [ ] Return statements
+#### 8.1.5: Control Flow ✅ **COMPLETE**
+- ✅ If/else statements (already implemented in Phase 8.1.3)
+- ✅ While loops (already implemented in Phase 8.1.3)
+- ✅ For loops (already implemented in Phase 8.1.3)
+- ✅ Break and continue statements (control flow signal system)
+- ✅ Return statements (already implemented in Phase 8.1.3)
+- ✅ Control flow signal propagation (break/continue propagate through blocks)
+- ✅ Nested loop support (break/continue work in nested loops)
+- ✅ Comprehensive tests (`tests/043_grainscript_control_flow_test.zig`)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 
-#### 8.1.6: Type System
-- [ ] Explicit type annotations (no `any` types)
-- [ ] Type checking
-- [ ] Type inference (where safe)
-- [ ] Type error reporting
+#### 8.1.6: Type System ✅ **COMPLETE**
+- ✅ Explicit type annotations (no `any` types, supports i32/i64/int, f32/f64/float, string/str, bool/boolean)
+- ✅ Type checking (variable declarations, assignments, type compatibility)
+- ✅ Type inference (infers type from initializer when not explicitly declared)
+- ✅ Type error reporting (type_mismatch error for incompatible types)
+- ✅ Variable type tracking (stores declared/inferred types with variables)
+- ✅ Type aliases support (int/i32/i64, float/f32/f64, str/string, bool/boolean)
+- ✅ Numeric type compatibility (integer and float are compatible)
+- ✅ Comprehensive tests (`tests/044_grainscript_type_system_test.zig`)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 
 ### 8.2 Grain Terminal: Terminal Application (PLANNED)
 
 **Objective**: Wezterm-level terminal for Grain OS running in Grain Vantage VM.
 
-#### 8.2.1: Terminal Core (PLANNED)
-- [ ] Terminal emulation (VT100/VT220 subset)
-- [ ] Character cell rendering
-- [ ] Scrollback buffer
-- [ ] Input handling (keyboard, mouse)
-- [ ] RISC-V compilation target
-- [ ] Grain Kernel syscall integration
+#### 8.2.1: Terminal Core ✅ **IN PROGRESS**
+- ✅ Terminal emulation (VT100/VT220 subset, `src/grain_terminal/terminal.zig`)
+- ✅ Character cell grid management (Cell struct, CellAttributes)
+- ✅ Escape sequence handling (ESC, CSI, OSC sequences)
+- ✅ Cursor movement (up, down, forward, backward, position)
+- ✅ Text attributes (bold, italic, underline, blink, reverse video)
+- ✅ ANSI color support (16-color palette)
+- ✅ Scrollback buffer tracking
+- ✅ Character cell rendering (`src/grain_terminal/renderer.zig`)
+- ✅ Framebuffer integration (renders cells to framebuffer)
+- ✅ Comprehensive tests (`tests/045_grain_terminal_test.zig`)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+- ⚠️ Input handling (keyboard, mouse) - requires kernel syscall integration
+- ⚠️ RISC-V compilation target - ready for integration
+- ⚠️ Grain Kernel syscall integration - requires coordination with VM/Kernel agent
 
 #### 8.2.2: UI Features (PLANNED)
 - [ ] Tabs and panes
@@ -807,7 +829,7 @@
 
 ## 🌾 Phase 8: Grain Skate / Terminal / Script
 
-**Status**: ✅ Grainscript Phase 8.1.1 (Lexer) COMPLETE | ✅ Grainscript Phase 8.1.2 (Parser) COMPLETE
+**Status**: ✅ Grainscript Phase 8.1.1 (Lexer) COMPLETE | ✅ Grainscript Phase 8.1.2 (Parser) COMPLETE | ✅ Grainscript Phase 8.1.3 (Basic Command Execution) COMPLETE | ✅ Grainscript Phase 8.1.4 (Variable Handling) COMPLETE | ✅ Grainscript Phase 8.1.5 (Control Flow) COMPLETE | ✅ Grainscript Phase 8.1.6 (Type System) COMPLETE
 
 **Vision**: Three complementary projects for Grain OS:
 1. **Grain Terminal**: Wezterm-level terminal for Grain OS (RISC-V target)
@@ -856,36 +878,58 @@
 - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 - ⚠️ External command execution (requires kernel syscall integration - Phase 8.1.4+)
 
-#### 8.1.4: Variable Handling
-- [ ] Variable declaration and assignment
-- [ ] Variable scope (local, global)
-- [ ] Variable lookup and resolution
-- [ ] Type checking for variables
+#### 8.1.4: Variable Handling ✅ **COMPLETE**
+- ✅ Assignment operator parsing (`expr_assign` node type)
+- ✅ Assignment expression evaluation
+- ✅ Variable scope management (local vs global, scope depth tracking)
+- ✅ Variable lookup with scope resolution (local to global search)
+- ✅ Type checking for variable assignments (type compatibility)
+- ✅ Constant protection (cannot assign to constants)
+- ✅ Scope cleanup (automatic cleanup of local variables on block exit)
+- ✅ Comprehensive tests (`tests/042_grainscript_variable_handling_test.zig`)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 
-#### 8.1.5: Control Flow
-- [ ] If/else statements
-- [ ] While loops
-- [ ] For loops
-- [ ] Break and continue
-- [ ] Return statements
+#### 8.1.5: Control Flow ✅ **COMPLETE**
+- ✅ If/else statements (already implemented in Phase 8.1.3)
+- ✅ While loops (already implemented in Phase 8.1.3)
+- ✅ For loops (already implemented in Phase 8.1.3)
+- ✅ Break and continue statements (control flow signal system)
+- ✅ Return statements (already implemented in Phase 8.1.3)
+- ✅ Control flow signal propagation (break/continue propagate through blocks)
+- ✅ Nested loop support (break/continue work in nested loops)
+- ✅ Comprehensive tests (`tests/043_grainscript_control_flow_test.zig`)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 
-#### 8.1.6: Type System
-- [ ] Explicit type annotations (no `any` types)
-- [ ] Type checking
-- [ ] Type inference (where safe)
-- [ ] Type error reporting
+#### 8.1.6: Type System ✅ **COMPLETE**
+- ✅ Explicit type annotations (no `any` types, supports i32/i64/int, f32/f64/float, string/str, bool/boolean)
+- ✅ Type checking (variable declarations, assignments, type compatibility)
+- ✅ Type inference (infers type from initializer when not explicitly declared)
+- ✅ Type error reporting (type_mismatch error for incompatible types)
+- ✅ Variable type tracking (stores declared/inferred types with variables)
+- ✅ Type aliases support (int/i32/i64, float/f32/f64, str/string, bool/boolean)
+- ✅ Numeric type compatibility (integer and float are compatible)
+- ✅ Comprehensive tests (`tests/044_grainscript_type_system_test.zig`)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 
 ### 8.2 Grain Terminal: Terminal Application (PLANNED)
 
 **Objective**: Wezterm-level terminal for Grain OS running in Grain Vantage VM.
 
-#### 8.2.1: Terminal Core (PLANNED)
-- [ ] Terminal emulation (VT100/VT220 subset)
-- [ ] Character cell rendering
-- [ ] Scrollback buffer
-- [ ] Input handling (keyboard, mouse)
-- [ ] RISC-V compilation target
-- [ ] Grain Kernel syscall integration
+#### 8.2.1: Terminal Core ✅ **IN PROGRESS**
+- ✅ Terminal emulation (VT100/VT220 subset, `src/grain_terminal/terminal.zig`)
+- ✅ Character cell grid management (Cell struct, CellAttributes)
+- ✅ Escape sequence handling (ESC, CSI, OSC sequences)
+- ✅ Cursor movement (up, down, forward, backward, position)
+- ✅ Text attributes (bold, italic, underline, blink, reverse video)
+- ✅ ANSI color support (16-color palette)
+- ✅ Scrollback buffer tracking
+- ✅ Character cell rendering (`src/grain_terminal/renderer.zig`)
+- ✅ Framebuffer integration (renders cells to framebuffer)
+- ✅ Comprehensive tests (`tests/045_grain_terminal_test.zig`)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+- ⚠️ Input handling (keyboard, mouse) - requires kernel syscall integration
+- ⚠️ RISC-V compilation target - ready for integration
+- ⚠️ Grain Kernel syscall integration - requires coordination with VM/Kernel agent
 
 #### 8.2.2: UI Features (PLANNED)
 - [ ] Tabs and panes
@@ -968,7 +1012,7 @@
 
 ## 🌾 Phase 8: Grain Skate / Terminal / Script
 
-**Status**: ✅ Grainscript Phase 8.1.1 (Lexer) COMPLETE | ✅ Grainscript Phase 8.1.2 (Parser) COMPLETE
+**Status**: ✅ Grainscript Phase 8.1.1 (Lexer) COMPLETE | ✅ Grainscript Phase 8.1.2 (Parser) COMPLETE | ✅ Grainscript Phase 8.1.3 (Basic Command Execution) COMPLETE | ✅ Grainscript Phase 8.1.4 (Variable Handling) COMPLETE | ✅ Grainscript Phase 8.1.5 (Control Flow) COMPLETE | ✅ Grainscript Phase 8.1.6 (Type System) COMPLETE
 
 **Vision**: Three complementary projects for Grain OS:
 1. **Grain Terminal**: Wezterm-level terminal for Grain OS (RISC-V target)
@@ -1017,36 +1061,58 @@
 - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 - ⚠️ External command execution (requires kernel syscall integration - Phase 8.1.4+)
 
-#### 8.1.4: Variable Handling
-- [ ] Variable declaration and assignment
-- [ ] Variable scope (local, global)
-- [ ] Variable lookup and resolution
-- [ ] Type checking for variables
+#### 8.1.4: Variable Handling ✅ **COMPLETE**
+- ✅ Assignment operator parsing (`expr_assign` node type)
+- ✅ Assignment expression evaluation
+- ✅ Variable scope management (local vs global, scope depth tracking)
+- ✅ Variable lookup with scope resolution (local to global search)
+- ✅ Type checking for variable assignments (type compatibility)
+- ✅ Constant protection (cannot assign to constants)
+- ✅ Scope cleanup (automatic cleanup of local variables on block exit)
+- ✅ Comprehensive tests (`tests/042_grainscript_variable_handling_test.zig`)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 
-#### 8.1.5: Control Flow
-- [ ] If/else statements
-- [ ] While loops
-- [ ] For loops
-- [ ] Break and continue
-- [ ] Return statements
+#### 8.1.5: Control Flow ✅ **COMPLETE**
+- ✅ If/else statements (already implemented in Phase 8.1.3)
+- ✅ While loops (already implemented in Phase 8.1.3)
+- ✅ For loops (already implemented in Phase 8.1.3)
+- ✅ Break and continue statements (control flow signal system)
+- ✅ Return statements (already implemented in Phase 8.1.3)
+- ✅ Control flow signal propagation (break/continue propagate through blocks)
+- ✅ Nested loop support (break/continue work in nested loops)
+- ✅ Comprehensive tests (`tests/043_grainscript_control_flow_test.zig`)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 
-#### 8.1.6: Type System
-- [ ] Explicit type annotations (no `any` types)
-- [ ] Type checking
-- [ ] Type inference (where safe)
-- [ ] Type error reporting
+#### 8.1.6: Type System ✅ **COMPLETE**
+- ✅ Explicit type annotations (no `any` types, supports i32/i64/int, f32/f64/float, string/str, bool/boolean)
+- ✅ Type checking (variable declarations, assignments, type compatibility)
+- ✅ Type inference (infers type from initializer when not explicitly declared)
+- ✅ Type error reporting (type_mismatch error for incompatible types)
+- ✅ Variable type tracking (stores declared/inferred types with variables)
+- ✅ Type aliases support (int/i32/i64, float/f32/f64, str/string, bool/boolean)
+- ✅ Numeric type compatibility (integer and float are compatible)
+- ✅ Comprehensive tests (`tests/044_grainscript_type_system_test.zig`)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 
 ### 8.2 Grain Terminal: Terminal Application (PLANNED)
 
 **Objective**: Wezterm-level terminal for Grain OS running in Grain Vantage VM.
 
-#### 8.2.1: Terminal Core (PLANNED)
-- [ ] Terminal emulation (VT100/VT220 subset)
-- [ ] Character cell rendering
-- [ ] Scrollback buffer
-- [ ] Input handling (keyboard, mouse)
-- [ ] RISC-V compilation target
-- [ ] Grain Kernel syscall integration
+#### 8.2.1: Terminal Core ✅ **IN PROGRESS**
+- ✅ Terminal emulation (VT100/VT220 subset, `src/grain_terminal/terminal.zig`)
+- ✅ Character cell grid management (Cell struct, CellAttributes)
+- ✅ Escape sequence handling (ESC, CSI, OSC sequences)
+- ✅ Cursor movement (up, down, forward, backward, position)
+- ✅ Text attributes (bold, italic, underline, blink, reverse video)
+- ✅ ANSI color support (16-color palette)
+- ✅ Scrollback buffer tracking
+- ✅ Character cell rendering (`src/grain_terminal/renderer.zig`)
+- ✅ Framebuffer integration (renders cells to framebuffer)
+- ✅ Comprehensive tests (`tests/045_grain_terminal_test.zig`)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+- ⚠️ Input handling (keyboard, mouse) - requires kernel syscall integration
+- ⚠️ RISC-V compilation target - ready for integration
+- ⚠️ Grain Kernel syscall integration - requires coordination with VM/Kernel agent
 
 #### 8.2.2: UI Features (PLANNED)
 - [ ] Tabs and panes

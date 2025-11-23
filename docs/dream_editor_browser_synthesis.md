@@ -7,7 +7,7 @@
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │   Dream IDE (Unified Editor + Browser)                     │
-│   - Dream Editor: Matklad + GLM-4.6 (1,000 tps)            │
+│   - Dream Editor: Matklad + AI Provider (GLM-4.6, 1,000 tps)            │
 │   - Dream Browser: Nostr + WebSocket (real-time)           │
 │   - Dream Protocol: TigerBeetle-style (sub-ms latency)    │
 ├─────────────────────────────────────────────────────────────┤
@@ -26,7 +26,7 @@
 │   - Grain VM (RISC-V → AArch64 JIT)                        │
 │   - Spatial computing (WSE-style dataflow)                │
 │   - RAM-only execution (44GB on-wafer SRAM)                │
-│   - GLM-4.6 agentic coding (1,000 tokens/second)          │
+│   - AI Provider (GLM-4.6) agentic coding (1,000 tokens/second)          │
 ├─────────────────────────────────────────────────────────────┤
 │   Kernel Foundation                                         │
 │   - Grain Basin Kernel (RISC-V64)                          │
@@ -44,7 +44,7 @@
 **Dream Vision**: Unified experience where:
 - **Code editing** happens in browser (readonly spans protect structure)
 - **Web content** is editable (Nostr events, real-time updates)
-- **GLM-4.6** assists both (1,000 tps agentic coding)
+- **AI Provider (GLM-4.6)** assists both (1,000 tps agentic coding)
 - **VCS integration** works for both (Magit-style `.jj/status.jj`)
 
 **Example Workflow**:
@@ -54,7 +54,7 @@
 3. User edits content, presses Cmd+S
 4. Browser sends updated event via Nostr (WebSocket, <1ms)
 5. Other clients receive update in real-time
-6. GLM-4.6 can assist: suggest improvements, transform content
+6. AI Provider (GLM-4.6) can assist: suggest improvements, transform content
 7. VCS integration: `.jj/status.jj` shows web content changes
 ```
 
@@ -151,7 +151,7 @@ Payment confirmed instantly
 1. **Readonly Spans** (Matklad): Text-as-UI paradigm
 2. **Method Folding**: Fold bodies by default, show signatures
 3. **Tree-sitter**: Syntax highlighting, structural editing
-4. **GLM-4.6 Client**: Agentic coding (1,000 tps)
+4. **AI Provider (GLM-4.6)**: Agentic coding (1,000 tps) - pluggable provider architecture
 5. **Complete LSP**: JSON-RPC, snapshot model
 6. **Magit VCS**: Virtual files (`.jj/status.jj`)
 7. **Multi-Pane Layout**: River compositor
@@ -223,7 +223,7 @@ The Matklad vision aligns perfectly with our DAG-based UI architecture:
 ### Unified Features
 
 1. **Real-Time Collaboration**: Nostr events, WebSocket streaming
-2. **Agentic Assistance**: GLM-4.6 for both code and web content
+2. **Agentic Assistance**: AI Provider (GLM-4.6) for both code and web content
 3. **VCS Integration**: Magit-style for both code and web
 4. **Micropayments**: GrainBank contracts for both
 5. **Spatial Computing**: WSE-style dataflow for both

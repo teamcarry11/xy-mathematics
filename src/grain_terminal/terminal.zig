@@ -1,0 +1,593 @@
+const std = @import("std");
+
+/// Grain Terminal: Terminal emulator for Grain OS.
+/// ~<~ Glow Airbend: explicit character cells, bounded terminal state.
+/// ~~~~ Glow Waterbend: deterministic rendering, iterative algorithms.
+///
+/// GrainStyle/TigerStyle compliance:
+/// - grain_case function names
+/// - u32/u64 types (not usize)
+/// - MAX_ constants for bounded allocations
+/// - Assertions for preconditions/postconditions
+/// - No recursion (iterative algorithms, stack-based)
+pub const Terminal = struct {
+    // Bounded: Max terminal width (explicit limit)
+    pub const MAX_WIDTH: u32 = 256;
+
+    // Bounded: Max terminal height (explicit limit)
+    pub const MAX_HEIGHT: u32 = 256;
+
+    // Bounded: Max scrollback lines (explicit limit)
+    pub const MAX_SCROLLBACK: u32 = 10_000;
+
+    // Bounded: Max escape sequence length (explicit limit)
+    pub const MAX_ESCAPE_SEQ: u32 = 256;
+
+    /// Character cell attributes.
+    pub const CellAttributes = packed struct {
+        fg_color: u8, // Foreground color index (0-15 for ANSI colors)
+        bg_color: u8, // Background color index (0-15 for ANSI colors)
+        bold: bool, // Bold text
+        italic: bool, // Italic text
+        underline: bool, // Underline text
+        blink: bool, // Blinking text
+        reverse: bool, // Reverse video
+        _padding: u1 = 0,
+    };
+
+    /// Character cell (single cell in terminal grid).
+    pub const Cell = struct {
+        ch: u8, // Character (ASCII/UTF-8)
+        attrs: CellAttributes, // Cell attributes
+    };
+
+    /// Terminal state enumeration.
+    pub const State = enum(u8) {
+        normal, // Normal text input
+        escape, // Processing escape sequence
+        csi, // Control Sequence Introducer (CSI)
+        osc, // Operating System Command (OSC)
+    };
+
+    /// Terminal dimensions and state.
+    width: u32, // Terminal width (columns)
+    height: u32, // Terminal height (rows)
+    cursor_x: u32, // Cursor X position (0-based)
+    cursor_y: u32, // Cursor Y position (0-based)
+    saved_cursor_x: u32, // Saved cursor X position
+    saved_cursor_y: u32, // Saved cursor Y position
+    state: State, // Current terminal state
+    escape_buffer: [MAX_ESCAPE_SEQ]u8, // Escape sequence buffer
+    escape_len: u32, // Escape sequence length
+    scrollback_lines: u32, // Number of scrollback lines
+    default_fg: u8, // Default foreground color
+    default_bg: u8, // Default background color
+    current_attrs: CellAttributes, // Current cell attributes
+
+    /// Initialize terminal with dimensions.
+    pub fn init(width: u32, height: u32) Terminal {
+        // Assert: Dimensions must be within bounds
+        std.debug.assert(width > 0 and width <= MAX_WIDTH);
+        std.debug.assert(height > 0 and height <= MAX_HEIGHT);
+
+        return Terminal{
+            .width = width,
+            .height = height,
+            .cursor_x = 0,
+            .cursor_y = 0,
+            .saved_cursor_x = 0,
+            .saved_cursor_y = 0,
+            .state = .normal,
+            .escape_buffer = [_]u8{0} ** MAX_ESCAPE_SEQ,
+            .escape_len = 0,
+            .scrollback_lines = 0,
+            .default_fg = 7, // Default: white foreground
+            .default_bg = 0, // Default: black background
+            .current_attrs = CellAttributes{
+                .fg_color = 7,
+                .bg_color = 0,
+                .bold = false,
+                .italic = false,
+                .underline = false,
+                .blink = false,
+                .reverse = false,
+            },
+        };
+    }
+
+    /// Process input character (VT100/VT220 escape sequence handling).
+    pub fn process_char(self: *Terminal, ch: u8, cells: []Cell) void {
+        // Assert: Terminal must be valid
+        std.debug.assert(self.width > 0 and self.height > 0);
+        std.debug.assert(self.cursor_x < self.width);
+        std.debug.assert(self.cursor_y < self.height);
+
+        // Assert: Cells buffer must be valid
+        std.debug.assert(cells.len >= self.width * self.height);
+
+        switch (self.state) {
+            .normal => {
+                if (ch == 0x1B) { // ESC
+                    self.state = .escape;
+                    self.escape_len = 0;
+                } else if (ch == '\r') { // Carriage return
+                    self.cursor_x = 0;
+                } else if (ch == '\n') { // Line feed
+                    self.cursor_y += 1;
+                    if (self.cursor_y >= self.height) {
+                        self.scroll_up(cells);
+                        self.cursor_y = self.height - 1;
+                    }
+                } else if (ch == '\t') { // Tab
+                    self.cursor_x = (self.cursor_x + 8) & ~@as(u32, 7); // Round to next tab stop
+                    if (self.cursor_x >= self.width) {
+                        self.cursor_x = self.width - 1;
+                    }
+                } else if (ch >= 0x20 and ch < 0x7F) { // Printable ASCII
+                    self.write_char(ch, cells);
+                    self.cursor_x += 1;
+                    if (self.cursor_x >= self.width) {
+                        self.cursor_x = 0;
+                        self.cursor_y += 1;
+                        if (self.cursor_y >= self.height) {
+                            self.scroll_up(cells);
+                            self.cursor_y = self.height - 1;
+                        }
+                    }
+                }
+            },
+            .escape => {
+                if (ch == '[') {
+                    self.state = .csi;
+                    self.escape_len = 0;
+                } else if (ch == ']') {
+                    self.state = .osc;
+                    self.escape_len = 0;
+                } else {
+                    // Single-character escape sequence
+                    self.handle_escape_sequence(ch);
+                    self.state = .normal;
+                    self.escape_len = 0;
+                }
+            },
+            .csi => {
+                if (ch >= 0x40 and ch <= 0x7E) { // Final character
+                    self.escape_buffer[self.escape_len] = ch;
+                    self.escape_len += 1;
+                    self.handle_csi_sequence(cells);
+                    self.state = .normal;
+                    self.escape_len = 0;
+                } else if (self.escape_len < MAX_ESCAPE_SEQ - 1) {
+                    self.escape_buffer[self.escape_len] = ch;
+                    self.escape_len += 1;
+                }
+            },
+            .osc => {
+                if (ch == 0x07 or ch == 0x1B) { // BEL or ESC
+                    self.handle_osc_sequence();
+                    self.state = .normal;
+                    self.escape_len = 0;
+                } else if (self.escape_len < MAX_ESCAPE_SEQ - 1) {
+                    self.escape_buffer[self.escape_len] = ch;
+                    self.escape_len += 1;
+                }
+            },
+        }
+    }
+
+    /// Write character to current cursor position.
+    fn write_char(self: *Terminal, ch: u8, cells: []Cell) void {
+        // Assert: Cursor position must be valid
+        std.debug.assert(self.cursor_x < self.width);
+        std.debug.assert(self.cursor_y < self.height);
+
+        const idx = self.cursor_y * self.width + self.cursor_x;
+        std.debug.assert(idx < cells.len);
+
+        cells[idx] = Cell{
+            .ch = ch,
+            .attrs = self.current_attrs,
+        };
+    }
+
+    /// Scroll terminal up (add new line at bottom).
+    fn scroll_up(self: *Terminal, cells: []Cell) void {
+        // Assert: Cells buffer must be valid
+        std.debug.assert(cells.len >= self.width * self.height);
+
+        // Move all lines up by one
+        var y: u32 = 1;
+        while (y < self.height) : (y += 1) {
+            var x: u32 = 0;
+            while (x < self.width) : (x += 1) {
+                const src_idx = y * self.width + x;
+                const dst_idx = (y - 1) * self.width + x;
+                cells[dst_idx] = cells[src_idx];
+            }
+        }
+
+        // Clear bottom line
+        var x: u32 = 0;
+        while (x < self.width) : (x += 1) {
+            const idx = (self.height - 1) * self.width + x;
+            cells[idx] = Cell{
+                .ch = ' ',
+                .attrs = CellAttributes{
+                    .fg_color = self.default_fg,
+                    .bg_color = self.default_bg,
+                    .bold = false,
+                    .italic = false,
+                    .underline = false,
+                    .blink = false,
+                    .reverse = false,
+                },
+            };
+        }
+
+        // Increment scrollback counter
+        if (self.scrollback_lines < MAX_SCROLLBACK) {
+            self.scrollback_lines += 1;
+        }
+    }
+
+    /// Handle single-character escape sequence.
+    fn handle_escape_sequence(self: *Terminal, ch: u8) void {
+        switch (ch) {
+            '7' => {
+                // Save cursor position
+                self.saved_cursor_x = self.cursor_x;
+                self.saved_cursor_y = self.cursor_y;
+            },
+            '8' => {
+                // Restore cursor position
+                self.cursor_x = self.saved_cursor_x;
+                self.cursor_y = self.saved_cursor_y;
+                if (self.cursor_x >= self.width) {
+                    self.cursor_x = self.width - 1;
+                }
+                if (self.cursor_y >= self.height) {
+                    self.cursor_y = self.height - 1;
+                }
+            },
+            'c' => {
+                // Reset terminal
+                self.cursor_x = 0;
+                self.cursor_y = 0;
+                self.current_attrs = CellAttributes{
+                    .fg_color = self.default_fg,
+                    .bg_color = self.default_bg,
+                    .bold = false,
+                    .italic = false,
+                    .underline = false,
+                    .blink = false,
+                    .reverse = false,
+                };
+            },
+            else => {
+                // Unknown escape sequence, ignore
+            },
+        }
+    }
+
+    /// Handle CSI (Control Sequence Introducer) sequence.
+    fn handle_csi_sequence(self: *Terminal, cells: []Cell) void {
+        // Assert: Escape buffer must have at least final character
+        std.debug.assert(self.escape_len > 0);
+
+        const final_char = self.escape_buffer[self.escape_len - 1];
+        const params = self.escape_buffer[0..self.escape_len - 1];
+
+        switch (final_char) {
+            'A' => {
+                // Cursor Up
+                const n = self.parse_csi_param(params, 1);
+                if (self.cursor_y >= n) {
+                    self.cursor_y -= n;
+                } else {
+                    self.cursor_y = 0;
+                }
+            },
+            'B' => {
+                // Cursor Down
+                const n = self.parse_csi_param(params, 1);
+                self.cursor_y += n;
+                if (self.cursor_y >= self.height) {
+                    self.cursor_y = self.height - 1;
+                }
+            },
+            'C' => {
+                // Cursor Forward
+                const n = self.parse_csi_param(params, 1);
+                self.cursor_x += n;
+                if (self.cursor_x >= self.width) {
+                    self.cursor_x = self.width - 1;
+                }
+            },
+            'D' => {
+                // Cursor Backward
+                const n = self.parse_csi_param(params, 1);
+                if (self.cursor_x >= n) {
+                    self.cursor_x -= n;
+                } else {
+                    self.cursor_x = 0;
+                }
+            },
+            'H' => {
+                // Cursor Position
+                var params_iter = std.mem.splitScalar(u8, params, ';');
+                const row_str = params_iter.next() orelse "1";
+                const col_str = params_iter.next() orelse "1";
+                const row = self.parse_number(row_str, 1);
+                const col = self.parse_number(col_str, 1);
+                self.cursor_y = if (row > 0) row - 1 else 0;
+                self.cursor_x = if (col > 0) col - 1 else 0;
+                if (self.cursor_y >= self.height) {
+                    self.cursor_y = self.height - 1;
+                }
+                if (self.cursor_x >= self.width) {
+                    self.cursor_x = self.width - 1;
+                }
+            },
+            'J' => {
+                // Erase in Display
+                const n = self.parse_csi_param(params, 0);
+                self.erase_display(n, cells);
+            },
+            'K' => {
+                // Erase in Line
+                const n = self.parse_csi_param(params, 0);
+                self.erase_line(n, cells);
+            },
+            'm' => {
+                // Select Graphic Rendition (SGR)
+                self.handle_sgr_sequence(params);
+            },
+            else => {
+                // Unknown CSI sequence, ignore
+            },
+        }
+    }
+
+    /// Handle OSC (Operating System Command) sequence.
+    fn handle_osc_sequence(self: *Terminal) void {
+        // OSC sequences are typically for window title, etc.
+        // For now, we ignore them
+        _ = self;
+    }
+
+    /// Parse CSI parameter (number or default).
+    fn parse_csi_param(self: *const Terminal, params: []const u8, default_val: u32) u32 {
+        _ = self;
+        if (params.len == 0) {
+            return default_val;
+        }
+        return self.parse_number(params, default_val);
+    }
+
+    /// Parse number from string.
+    fn parse_number(self: *const Terminal, str: []const u8, default_val: u32) u32 {
+        _ = self;
+        if (str.len == 0) {
+            return default_val;
+        }
+        return std.fmt.parseInt(u32, str, 10) catch default_val;
+    }
+
+    /// Erase display (clear screen).
+    fn erase_display(self: *Terminal, mode: u32, cells: []Cell) void {
+        // Assert: Cells buffer must be valid
+        std.debug.assert(cells.len >= self.width * self.height);
+
+        switch (mode) {
+            0 => {
+                // Erase from cursor to end of screen
+                var y: u32 = self.cursor_y;
+                while (y < self.height) : (y += 1) {
+                    var x: u32 = if (y == self.cursor_y) self.cursor_x else 0;
+                    while (x < self.width) : (x += 1) {
+                        const idx = y * self.width + x;
+                        cells[idx] = Cell{
+                            .ch = ' ',
+                            .attrs = self.current_attrs,
+                        };
+                    }
+                }
+            },
+            1 => {
+                // Erase from beginning of screen to cursor
+                var y: u32 = 0;
+                while (y <= self.cursor_y) : (y += 1) {
+                    var x: u32 = 0;
+                    const end_x = if (y == self.cursor_y) self.cursor_x + 1 else self.width;
+                    while (x < end_x) : (x += 1) {
+                        const idx = y * self.width + x;
+                        cells[idx] = Cell{
+                            .ch = ' ',
+                            .attrs = self.current_attrs,
+                        };
+                    }
+                }
+            },
+            2 => {
+                // Erase entire screen
+                var y: u32 = 0;
+                while (y < self.height) : (y += 1) {
+                    var x: u32 = 0;
+                    while (x < self.width) : (x += 1) {
+                        const idx = y * self.width + x;
+                        cells[idx] = Cell{
+                            .ch = ' ',
+                            .attrs = self.current_attrs,
+                        };
+                    }
+                }
+            },
+            else => {
+                // Unknown mode, ignore
+            },
+        }
+    }
+
+    /// Erase line.
+    fn erase_line(self: *Terminal, mode: u32, cells: []Cell) void {
+        // Assert: Cursor position must be valid
+        std.debug.assert(self.cursor_y < self.height);
+        std.debug.assert(cells.len >= self.width * self.height);
+
+        switch (mode) {
+            0 => {
+                // Erase from cursor to end of line
+                var x: u32 = self.cursor_x;
+                while (x < self.width) : (x += 1) {
+                    const idx = self.cursor_y * self.width + x;
+                    cells[idx] = Cell{
+                        .ch = ' ',
+                        .attrs = self.current_attrs,
+                    };
+                }
+            },
+            1 => {
+                // Erase from beginning of line to cursor
+                var x: u32 = 0;
+                while (x <= self.cursor_x) : (x += 1) {
+                    const idx = self.cursor_y * self.width + x;
+                    cells[idx] = Cell{
+                        .ch = ' ',
+                        .attrs = self.current_attrs,
+                    };
+                }
+            },
+            2 => {
+                // Erase entire line
+                var x: u32 = 0;
+                while (x < self.width) : (x += 1) {
+                    const idx = self.cursor_y * self.width + x;
+                    cells[idx] = Cell{
+                        .ch = ' ',
+                        .attrs = self.current_attrs,
+                    };
+                }
+            },
+            else => {
+                // Unknown mode, ignore
+            },
+        }
+    }
+
+    /// Handle SGR (Select Graphic Rendition) sequence.
+    fn handle_sgr_sequence(self: *Terminal, params: []const u8) void {
+        if (params.len == 0) {
+            // Reset attributes
+            self.current_attrs = CellAttributes{
+                .fg_color = self.default_fg,
+                .bg_color = self.default_bg,
+                .bold = false,
+                .italic = false,
+                .underline = false,
+                .blink = false,
+                .reverse = false,
+            };
+            return;
+        }
+
+        var params_iter = std.mem.splitScalar(u8, params, ';');
+        while (params_iter.next()) |param_str| {
+            const code = self.parse_number(param_str, 0);
+            switch (code) {
+                0 => {
+                    // Reset all attributes
+                    self.current_attrs = CellAttributes{
+                        .fg_color = self.default_fg,
+                        .bg_color = self.default_bg,
+                        .bold = false,
+                        .italic = false,
+                        .underline = false,
+                        .blink = false,
+                        .reverse = false,
+                    };
+                },
+                1 => self.current_attrs.bold = true,
+                3 => self.current_attrs.italic = true,
+                4 => self.current_attrs.underline = true,
+                5 => self.current_attrs.blink = true,
+                7 => self.current_attrs.reverse = true,
+                22 => self.current_attrs.bold = false,
+                23 => self.current_attrs.italic = false,
+                24 => self.current_attrs.underline = false,
+                25 => self.current_attrs.blink = false,
+                27 => self.current_attrs.reverse = false,
+                30...37 => {
+                    // Foreground color (30-37)
+                    self.current_attrs.fg_color = @as(u8, @intCast(code - 30));
+                },
+                38 => {
+                    // Extended foreground color (not fully implemented)
+                    // Skip next parameter
+                    _ = params_iter.next();
+                },
+                39 => {
+                    // Default foreground color
+                    self.current_attrs.fg_color = self.default_fg;
+                },
+                40...47 => {
+                    // Background color (40-47)
+                    self.current_attrs.bg_color = @as(u8, @intCast(code - 40));
+                },
+                48 => {
+                    // Extended background color (not fully implemented)
+                    // Skip next parameter
+                    _ = params_iter.next();
+                },
+                49 => {
+                    // Default background color
+                    self.current_attrs.bg_color = self.default_bg;
+                },
+                else => {
+                    // Unknown code, ignore
+                },
+            }
+        }
+    }
+
+    /// Get cell at position.
+    pub fn get_cell(self: *const Terminal, x: u32, y: u32, cells: []const Cell) ?Cell {
+        // Assert: Position must be valid
+        std.debug.assert(x < self.width);
+        std.debug.assert(y < self.height);
+        std.debug.assert(cells.len >= self.width * self.height);
+
+        const idx = y * self.width + x;
+        return cells[idx];
+    }
+
+    /// Clear terminal (reset all cells).
+    pub fn clear(self: *Terminal, cells: []Cell) void {
+        // Assert: Cells buffer must be valid
+        std.debug.assert(cells.len >= self.width * self.height);
+
+        var y: u32 = 0;
+        while (y < self.height) : (y += 1) {
+            var x: u32 = 0;
+            while (x < self.width) : (x += 1) {
+                const idx = y * self.width + x;
+                cells[idx] = Cell{
+                    .ch = ' ',
+                    .attrs = CellAttributes{
+                        .fg_color = self.default_fg,
+                        .bg_color = self.default_bg,
+                        .bold = false,
+                        .italic = false,
+                        .underline = false,
+                        .blink = false,
+                        .reverse = false,
+                    },
+                };
+            }
+        }
+
+        self.cursor_x = 0;
+        self.cursor_y = 0;
+        self.scrollback_lines = 0;
+    }
+};
+

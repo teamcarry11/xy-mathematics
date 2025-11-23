@@ -30,7 +30,7 @@ You are the **third agent** responsible for:
 
 ### Completed Components
 
-- **Aurora IDE**: LSP client, Tree-sitter, GLM-4.6, VCS integration, multi-pane layout
+- **Aurora IDE**: LSP client, Tree-sitter, AI provider abstraction (GLM-4.6 provider), VCS integration, multi-pane layout
 - **Dream Browser**: HTML/CSS parser, rendering engine, WebSocket transport, viewport, performance monitoring
 - **DAG Core**: Unified DAG foundation for event ordering and consensus
 - **GrainBank**: Micropayments and deterministic contracts

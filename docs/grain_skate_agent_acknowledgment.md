@@ -151,7 +151,7 @@ I'm here to build alongside you. 🪵⛸️
 ### With Aurora IDE / Dream Browser Agent
 
 **Current Understanding**:
-- Aurora IDE: LSP client, Tree-sitter, GLM-4.6, VCS integration, multi-pane layout
+- Aurora IDE: LSP client, Tree-sitter, AI provider abstraction (GLM-4.6 provider), VCS integration, multi-pane layout
 - Dream Browser: HTML/CSS parser, rendering engine, WebSocket transport, viewport
 - DAG Core: Unified DAG foundation for event ordering
 - GrainBank: Micropayments and deterministic contracts

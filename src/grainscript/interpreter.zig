@@ -97,12 +97,28 @@ pub const Interpreter = struct {
         }
     };
 
+    /// Variable scope enumeration.
+    pub const VariableScope = enum(u8) {
+        global, // Global scope (top-level)
+        local, // Local scope (function/block)
+    };
+
+    /// Variable type information.
+    pub const VariableType = struct {
+        type_name: []const u8, // Type name (i32, u64, string, etc.) or null for inferred
+        type_name_len: u32,
+        is_inferred: bool, // True if type was inferred from initializer
+    };
+
     /// Variable entry (name-value pair).
     pub const Variable = struct {
         name: []const u8, // Variable name (bounded)
         name_len: u32,
         value: Value,
         is_const: bool, // Constant flag
+        scope: VariableScope, // Variable scope
+        scope_depth: u32, // Scope depth (0 = global, 1+ = local)
+        var_type: ?VariableType, // Variable type (optional, for type checking)
     };
 
     /// Function entry (user-defined or built-in).
@@ -123,6 +139,13 @@ pub const Interpreter = struct {
         return_node: ?u32, // Return statement node index (if any)
         local_vars_start: u32, // Start index in variables array
         local_vars_count: u32, // Number of local variables
+    };
+
+    /// Control flow signal (for break/continue).
+    pub const ControlFlowSignal = enum(u8) {
+        none, // No signal
+        break_loop, // Break out of loop
+        continue_loop, // Continue to next iteration
     };
 
     /// Interpreter error enumeration.
@@ -152,6 +175,8 @@ pub const Interpreter = struct {
     call_stack_len: u32,
     exit_code: u32, // Script exit code
     current_directory: []const u8, // Current working directory (bounded)
+    scope_depth: u32, // Current scope depth (0 = global, 1+ = local)
+    control_flow_signal: ControlFlowSignal, // Current control flow signal (break/continue)
 
     /// Initialize interpreter with parser.
     pub fn init(allocator: std.mem.Allocator, parser: *const Parser) !Interpreter {
@@ -188,6 +213,8 @@ pub const Interpreter = struct {
             .call_stack_len = 0,
             .exit_code = 0,
             .current_directory = current_dir,
+            .scope_depth = 0, // Start at global scope
+            .control_flow_signal = .none, // No control flow signal initially
         };
 
         // Register built-in commands
@@ -201,12 +228,17 @@ pub const Interpreter = struct {
         // Assert: Interpreter must be valid
         std.debug.assert(self.allocator.ptr != null);
 
-        // Free all variable string values
+        // Free all variable string values and type names
         var i: u32 = 0;
         while (i < self.variables_len) : (i += 1) {
             self.variables[i].value.deinit(self.allocator);
             if (self.variables[i].name_len > 0) {
                 self.allocator.free(self.variables[i].name);
+            }
+            if (self.variables[i].var_type) |var_type| {
+                if (var_type.type_name_len > 0) {
+                    self.allocator.free(var_type.type_name);
+                }
             }
         }
 
@@ -452,21 +484,68 @@ pub const Interpreter = struct {
 
         // Evaluate initializer (if any)
         var value = Value.from_null();
+        var inferred_type: ?VariableType = null;
+
         if (stmt_data.init) |init_node_idx| {
             const init_node = self.parser.get_node(init_node_idx) orelse return Error.runtime_error;
             value = try self.evaluate_expression(init_node);
+
+            // Type inference: infer type from initializer if not explicitly declared
+            if (stmt_data.type_node == null) {
+                const inferred_type_name = try self.infer_type_from_value(value);
+                const type_name_copy = try self.allocator.dupe(u8, inferred_type_name);
+                errdefer self.allocator.free(type_name_copy);
+
+                inferred_type = VariableType{
+                    .type_name = type_name_copy,
+                    .type_name_len = @as(u32, @intCast(type_name_copy.len)),
+                    .is_inferred = true,
+                };
+            }
         }
+
+        // Parse declared type (if any)
+        var declared_type: ?VariableType = null;
+        if (stmt_data.type_node) |type_node_idx| {
+            const type_node = self.parser.get_node(type_node_idx) orelse return Error.runtime_error;
+            if (type_node.node_type == .type_named) {
+                const type_name = type_node.data.type_named.name;
+                const type_name_copy = try self.allocator.dupe(u8, type_name);
+                errdefer self.allocator.free(type_name_copy);
+
+                declared_type = VariableType{
+                    .type_name = type_name_copy,
+                    .type_name_len = @as(u32, @intCast(type_name_copy.len)),
+                    .is_inferred = false,
+                };
+
+                // Type checking: verify initializer matches declared type
+                if (stmt_data.init) |init_node_idx| {
+                    const init_node = self.parser.get_node(init_node_idx) orelse return Error.runtime_error;
+                    const init_value = try self.evaluate_expression(init_node);
+                    if (!self.value_matches_type(init_value, type_name)) {
+                        return Error.type_mismatch;
+                    }
+                }
+            }
+        }
+
+        // Use declared type if available, otherwise use inferred type
+        const var_type = declared_type orelse inferred_type;
 
         // Allocate variable name
         const var_name = try self.allocator.dupe(u8, stmt_data.name);
         errdefer self.allocator.free(var_name);
 
-        // Store variable
+        // Store variable (with scope information and type)
         self.variables[self.variables_len] = Variable{
             .name = var_name,
             .name_len = @as(u32, @intCast(var_name.len)),
             .value = value,
             .is_const = false,
+            .scope = if (self.scope_depth == 0) .global else .local,
+            .scope_depth = self.scope_depth,
+            .var_type = var_type,
         };
         self.variables_len += 1;
 
@@ -499,12 +578,54 @@ pub const Interpreter = struct {
         const var_name = try self.allocator.dupe(u8, stmt_data.name);
         errdefer self.allocator.free(var_name);
 
-        // Store variable (as constant)
+        // Type inference: infer type from initializer if not explicitly declared
+        var inferred_type: ?VariableType = null;
+        if (stmt_data.type_node == null) {
+            const inferred_type_name = try self.infer_type_from_value(value);
+            const type_name_copy = try self.allocator.dupe(u8, inferred_type_name);
+            errdefer self.allocator.free(type_name_copy);
+
+            inferred_type = VariableType{
+                .type_name = type_name_copy,
+                .type_name_len = @as(u32, @intCast(type_name_copy.len)),
+                .is_inferred = true,
+            };
+        }
+
+        // Parse declared type (if any)
+        var declared_type: ?VariableType = null;
+        if (stmt_data.type_node) |type_node_idx| {
+            const type_node = self.parser.get_node(type_node_idx) orelse return Error.runtime_error;
+            if (type_node.node_type == .type_named) {
+                const type_name = type_node.data.type_named.name;
+                const type_name_copy = try self.allocator.dupe(u8, type_name);
+                errdefer self.allocator.free(type_name_copy);
+
+                declared_type = VariableType{
+                    .type_name = type_name_copy,
+                    .type_name_len = @as(u32, @intCast(type_name_copy.len)),
+                    .is_inferred = false,
+                };
+
+                // Type checking: verify initializer matches declared type
+                if (!self.value_matches_type(value, type_name)) {
+                    return Error.type_mismatch;
+                }
+            }
+        }
+
+        // Use declared type if available, otherwise use inferred type
+        const var_type = declared_type orelse inferred_type;
+
+        // Store variable (as constant, with scope information and type)
         self.variables[self.variables_len] = Variable{
             .name = var_name,
             .name_len = @as(u32, @intCast(var_name.len)),
             .value = value,
             .is_const = true,
+            .scope = if (self.scope_depth == 0) .global else .local,
+            .scope_depth = self.scope_depth,
+            .var_type = var_type,
         };
         self.variables_len += 1;
 
@@ -544,6 +665,9 @@ pub const Interpreter = struct {
 
         // Loop while condition is true
         while (true) {
+            // Reset control flow signal at start of iteration
+            self.control_flow_signal = .none;
+
             const condition_node = self.parser.get_node(stmt_data.condition) orelse return Error.runtime_error;
             const condition_value = try self.evaluate_expression(condition_node);
             const condition_bool = condition_value.to_boolean();
@@ -554,7 +678,22 @@ pub const Interpreter = struct {
 
             const body_node = self.parser.get_node(stmt_data.body) orelse return Error.runtime_error;
             _ = try self.execute_block_statement(body_node);
+
+            // Check for break signal
+            if (self.control_flow_signal == .break_loop) {
+                self.control_flow_signal = .none;
+                break;
+            }
+
+            // Continue signal is handled by loop iteration (already at top)
+            if (self.control_flow_signal == .continue_loop) {
+                self.control_flow_signal = .none;
+                continue;
+            }
         }
+
+        // Reset control flow signal after loop
+        self.control_flow_signal = .none;
 
         return Value.from_null();
     }
@@ -574,6 +713,9 @@ pub const Interpreter = struct {
 
         // Loop while condition is true
         while (true) {
+            // Reset control flow signal at start of iteration
+            self.control_flow_signal = .none;
+
             // Check condition (if any)
             if (stmt_data.condition) |condition_node_idx| {
                 const condition_node = self.parser.get_node(condition_node_idx) orelse return Error.runtime_error;
@@ -589,12 +731,28 @@ pub const Interpreter = struct {
             const body_node = self.parser.get_node(stmt_data.body) orelse return Error.runtime_error;
             _ = try self.execute_block_statement(body_node);
 
+            // Check for break signal (before update)
+            if (self.control_flow_signal == .break_loop) {
+                self.control_flow_signal = .none;
+                break;
+            }
+
+            // Check for continue signal (skip update, go to next iteration)
+            if (self.control_flow_signal == .continue_loop) {
+                self.control_flow_signal = .none;
+                // Skip update and continue to next iteration
+                continue;
+            }
+
             // Execute update (if any)
             if (stmt_data.update) |update_node_idx| {
                 const update_node = self.parser.get_node(update_node_idx) orelse return Error.runtime_error;
                 _ = try self.evaluate_expression(update_node);
             }
         }
+
+        // Reset control flow signal after loop
+        self.control_flow_signal = .none;
 
         return Value.from_null();
     }
@@ -617,18 +775,18 @@ pub const Interpreter = struct {
 
     /// Execute break statement.
     fn execute_break_statement(self: *Interpreter, node: Parser.Node) Error!Value {
-        _ = self;
-        _ = node;
-        // TODO: Implement break handling (requires loop context)
-        return Error.runtime_error;
+        _ = node; // Unused for now
+        // Set break signal
+        self.control_flow_signal = .break_loop;
+        return Value.from_null();
     }
 
     /// Execute continue statement.
     fn execute_continue_statement(self: *Interpreter, node: Parser.Node) Error!Value {
-        _ = self;
-        _ = node;
-        // TODO: Implement continue handling (requires loop context)
-        return Error.runtime_error;
+        _ = node; // Unused for now
+        // Set continue signal
+        self.control_flow_signal = .continue_loop;
+        return Value.from_null();
     }
 
     /// Execute block statement.
@@ -638,12 +796,38 @@ pub const Interpreter = struct {
 
         const stmt_data = node.data.block;
 
+        // Enter new scope
+        const old_scope_depth = self.scope_depth;
+        self.scope_depth += 1;
+        defer self.scope_depth = old_scope_depth;
+
+        // Track variables created in this scope
+        const vars_before = self.variables_len;
+
         // Execute all statements in block
         var i: u32 = 0;
         while (i < stmt_data.statements_len) : (i += 1) {
+            // Check for break/continue signal (propagate to loop)
+            if (self.control_flow_signal != .none) {
+                break;
+            }
+
             const stmt_node_idx = stmt_data.statements[i];
             const stmt_node = self.parser.get_node(stmt_node_idx) orelse return Error.runtime_error;
             _ = try self.execute_statement_or_declaration(stmt_node);
+
+            // Check for break/continue signal after statement
+            if (self.control_flow_signal != .none) {
+                break;
+            }
+        }
+
+        // Clean up local variables (free string values)
+        while (self.variables_len > vars_before) {
+            self.variables_len -= 1;
+            const variable = &self.variables[self.variables_len];
+            variable.value.deinit(self.allocator);
+            self.allocator.free(variable.name);
         }
 
         return Value.from_null();
@@ -731,6 +915,7 @@ pub const Interpreter = struct {
             .expr_unary => self.evaluate_unary_expression(node),
             .expr_call => self.evaluate_call_expression(node),
             .expr_group => self.evaluate_group_expression(node),
+            .expr_assign => self.evaluate_assign_expression(node),
             else => Error.runtime_error,
         };
     }
@@ -1117,12 +1302,137 @@ pub const Interpreter = struct {
         return self.evaluate_expression(expr_node);
     }
 
-    /// Find variable by name.
+    /// Evaluate assignment expression.
+    fn evaluate_assign_expression(self: *Interpreter, node: Parser.Node) Error!Value {
+        // Assert: Node must be assignment expression
+        std.debug.assert(node.node_type == .expr_assign);
+
+        const assign_data = node.data.assign;
+
+        // Get target identifier
+        const target_node = self.parser.get_node(assign_data.target) orelse return Error.runtime_error;
+        if (target_node.node_type != .expr_identifier) {
+            return Error.runtime_error;
+        }
+        const target_name = target_node.data.identifier.name;
+
+        // Find variable (must exist)
+        const variable = self.find_variable(target_name) orelse {
+            return Error.variable_not_found;
+        };
+
+        // Check if constant (cannot assign to constants)
+        if (variable.is_const) {
+            return Error.runtime_error; // Cannot assign to constant
+        }
+
+        // Evaluate value expression
+        const value_node = self.parser.get_node(assign_data.value) orelse return Error.runtime_error;
+        const new_value = try self.evaluate_expression(value_node);
+
+        // Type checking: check against declared type or existing value type
+        if (variable.var_type) |var_type| {
+            // Check against declared/inferred type
+            const type_name = var_type.type_name;
+            if (!self.value_matches_type(new_value, type_name)) {
+                return Error.type_mismatch;
+            }
+        } else if (variable.value != .null) {
+            // Fallback: check type compatibility with existing value
+            if (!self.types_compatible(variable.value, new_value)) {
+                return Error.type_mismatch;
+            }
+        }
+
+        // Free old value (if string)
+        variable.value.deinit(self.allocator);
+
+        // Assign new value (copy for strings)
+        const assigned_value = switch (new_value) {
+            .integer => |v| Value.from_integer(v),
+            .float => |v| Value.from_float(v),
+            .string => |v| blk: {
+                // Copy string value
+                break :blk try Value.from_string(self.allocator, v);
+            },
+            .boolean => |v| Value.from_boolean(v),
+            .null => Value.from_null(),
+        };
+
+        variable.value = assigned_value;
+
+        // Return the assigned value (copy for strings)
+        return switch (assigned_value) {
+            .integer => |v| Value.from_integer(v),
+            .float => |v| Value.from_float(v),
+            .string => |v| blk: {
+                // Copy string value for return
+                break :blk try Value.from_string(self.allocator, v);
+            },
+            .boolean => |v| Value.from_boolean(v),
+            .null => Value.from_null(),
+        };
+    }
+
+    /// Check if two value types are compatible.
+    fn types_compatible(self: *const Interpreter, old: Value, new: Value) bool {
+        _ = self;
+        // Same type is always compatible
+        if (@as(ValueType, old) == @as(ValueType, new)) {
+            return true;
+        }
+
+        // Integer and float are compatible (numeric)
+        return switch (old) {
+            .integer => switch (new) {
+                .float => true,
+                else => false,
+            },
+            .float => switch (new) {
+                .integer => true,
+                else => false,
+            },
+            else => false,
+        };
+    }
+
+    /// Infer type name from value.
+    fn infer_type_from_value(self: *const Interpreter, value: Value) Error![]const u8 {
+        _ = self;
+        return switch (value) {
+            .integer => "i64",
+            .float => "f64",
+            .string => "string",
+            .boolean => "bool",
+            .null => "null",
+        };
+    }
+
+    /// Check if value matches type name.
+    fn value_matches_type(self: *const Interpreter, value: Value, type_name: []const u8) bool {
+        _ = self;
+        // Type name matching (case-sensitive)
+        return switch (value) {
+            .integer => std.mem.eql(u8, type_name, "i32") or std.mem.eql(u8, type_name, "i64") or std.mem.eql(u8, type_name, "int"),
+            .float => std.mem.eql(u8, type_name, "f32") or std.mem.eql(u8, type_name, "f64") or std.mem.eql(u8, type_name, "float"),
+            .string => std.mem.eql(u8, type_name, "string") or std.mem.eql(u8, type_name, "str"),
+            .boolean => std.mem.eql(u8, type_name, "bool") or std.mem.eql(u8, type_name, "boolean"),
+            .null => std.mem.eql(u8, type_name, "null") or std.mem.eql(u8, type_name, "void"),
+        };
+    }
+
+    /// Find variable by name (with scope resolution).
     fn find_variable(self: *const Interpreter, name: []const u8) ?*Variable {
-        var i: u32 = 0;
-        while (i < self.variables_len) : (i += 1) {
-            if (std.mem.eql(u8, self.variables[i].name, name)) {
-                return &self.variables[i];
+        // Search from most recent to oldest (local to global)
+        var i: u32 = self.variables_len;
+        while (i > 0) {
+            i -= 1;
+            const variable = &self.variables[i];
+            if (std.mem.eql(u8, variable.name, name)) {
+                // Check if variable is in accessible scope
+                if (variable.scope_depth <= self.scope_depth) {
+                    return variable;
+                }
             }
         }
         return null;

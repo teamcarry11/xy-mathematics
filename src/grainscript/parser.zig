@@ -36,6 +36,7 @@ pub const Parser = struct {
         expr_unary, // Unary operation (!, -)
         expr_call, // Function call
         expr_group, // Parenthesized expression
+        expr_assign, // Assignment (=)
 
         // Statements
         stmt_expr, // Expression statement
@@ -86,6 +87,8 @@ pub const Parser = struct {
         call: CallData,
         // Grouped expression
         group: GroupData,
+        // Assignment expression
+        assign: AssignData,
         // Variable statement
         var_stmt: VarStmtData,
         // If statement
@@ -178,6 +181,12 @@ pub const Parser = struct {
     /// Grouped expression data.
     pub const GroupData = struct {
         expr: u32, // Expression node index
+    };
+
+    /// Assignment expression data.
+    pub const AssignData = struct {
+        target: u32, // Target identifier node index
+        value: u32, // Value expression node index
     };
 
     /// Variable statement data.
@@ -872,6 +881,54 @@ pub const Parser = struct {
     fn parse_expression(self: *Parser) !u32 {
         // Assert: Token index must be valid
         std.debug.assert(self.token_index < self.tokens.len);
+
+        // Check for assignment (lowest precedence)
+        const token = self.get_current_token();
+        if (token.token_type == .identifier) {
+            // Look ahead to see if next token is assignment
+            if (self.token_index + 1 < self.tokens.len) {
+                const next_token = self.tokens[self.token_index + 1];
+                if (next_token.token_type == .op_assign) {
+                    // Parse assignment: identifier = expression
+                    const target_token = token;
+                    self.advance(); // Skip identifier
+                    self.advance(); // Skip '='
+
+                    // Parse target identifier
+                    const target_name = self.source[target_token.start..target_token.end];
+                    const target = try self.create_node(
+                        .expr_identifier,
+                        target_token.start,
+                        target_token.end,
+                        target_token.line,
+                        target_token.column,
+                        .{ .identifier = .{
+                            .name = target_name,
+                            .name_len = @as(u32, @intCast(target_name.len)),
+                        } },
+                    );
+
+                    // Parse value expression
+                    const value = try self.parse_expression_precedence(0);
+
+                    // Create assignment node
+                    const target_node = self.get_node(target) orelse return error.InvalidNode;
+                    const value_node = self.get_node(value) orelse return error.InvalidNode;
+
+                    return try self.create_node(
+                        .expr_assign,
+                        target_node.start,
+                        value_node.end,
+                        target_token.line,
+                        target_token.column,
+                        .{ .assign = .{
+                            .target = target,
+                            .value = value,
+                        } },
+                    );
+                }
+            }
+        }
 
         // Parse with precedence (iterative, no recursion)
         return try self.parse_expression_precedence(0);

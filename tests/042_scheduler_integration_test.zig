@@ -4,14 +4,17 @@
 
 const std = @import("std");
 const testing = std.testing;
-const VM = @import("kernel_vm").VM;
-const BasinKernel = @import("basin_kernel").BasinKernel;
-const ProcessContext = @import("basin_kernel").ProcessContext;
-const Integration = @import("kernel_vm").Integration;
+const kernel_vm = @import("kernel_vm");
+const VM = kernel_vm.VM;
+const Integration = kernel_vm.Integration;
+const basin_kernel = @import("basin_kernel");
+const BasinKernel = basin_kernel.BasinKernel;
+const ProcessContext = basin_kernel.basin_kernel.ProcessContext;
 
 // Test: run_current_process executes current process.
 test "run_current_process executes current process" {
-    var vm = VM.init(&[_]u8{}, 0, 0);
+    var vm: VM = undefined;
+    VM.init(&vm, &[_]u8{}, 0);
     var kernel = BasinKernel.init();
     
     // Spawn a process.
@@ -39,7 +42,8 @@ test "run_current_process executes current process" {
 
 // Test: schedule_and_run_next schedules and runs next process.
 test "schedule_and_run_next schedules and runs next process" {
-    var vm = VM.init(&[_]u8{}, 0);
+    var vm: VM = undefined;
+    VM.init(&vm, &[_]u8{}, 0);
     var kernel = BasinKernel.init();
     
     // Spawn a process.
@@ -64,7 +68,8 @@ test "schedule_and_run_next schedules and runs next process" {
 
 // Test: schedule_and_run_next returns false when no runnable process.
 test "schedule_and_run_next returns false when no runnable process" {
-    var vm = VM.init(&[_]u8{}, 0);
+    var vm: VM = undefined;
+    VM.init(&vm, &[_]u8{}, 0);
     var kernel = BasinKernel.init();
     
     // Create integration (no processes spawned).
@@ -81,7 +86,8 @@ test "schedule_and_run_next returns false when no runnable process" {
 
 // Test: run_current_process returns false when no current process.
 test "run_current_process returns false when no current process" {
-    var vm = VM.init(&[_]u8{}, 0);
+    var vm: VM = undefined;
+    VM.init(&vm, &[_]u8{}, 0);
     var kernel = BasinKernel.init();
     
     // Create integration (no current process).

@@ -308,14 +308,15 @@ test "image decoder cache" {
     
     // Create a test image
     const test_url = "test.png";
+    const pixels = try arena.allocator().alloc(u8, 100 * 100 * 4);
     const test_image = DreamBrowserImageDecoder.DecodedImage{
         .width = 100,
         .height = 100,
-        .pixels = try arena.allocator().alloc(u8, 100 * 100 * 4),
+        .pixels = pixels,
         .format = .png,
     };
     
-    // Cache image
+    // Cache image (pixels will be copied/owned by cache)
     try decoder.cache_image(test_url, test_image);
     
     // Get cached image

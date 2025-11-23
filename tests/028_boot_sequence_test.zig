@@ -150,6 +150,10 @@ test "boot sequence phase order" {
 
 // Test boot sequence validation.
 test "boot sequence validation" {
+    // Disable RawIO to avoid SIGILL in tests.
+    RawIO.disable();
+    defer RawIO.enable();
+    
     var kernel = BasinKernel.init();
     
     // Execute boot sequence.

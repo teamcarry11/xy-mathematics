@@ -42,6 +42,27 @@ const Elf64_Ehdr = extern struct {
 /// Why: Validate ELF file format.
 const ELF_MAGIC = [_]u8{ 0x7F, 'E', 'L', 'F' };
 
+/// ELF program header structure (64-bit, little-endian).
+/// Why: Parse program headers to extract segment information.
+const Elf64_Phdr = extern struct {
+    /// Segment type (1 = PT_LOAD, 2 = PT_DYNAMIC, etc.).
+    p_type: u32,
+    /// Segment flags (read, write, execute).
+    p_flags: u32,
+    /// Segment file offset.
+    p_offset: u64,
+    /// Segment virtual address.
+    p_vaddr: u64,
+    /// Segment physical address (usually same as virtual).
+    p_paddr: u64,
+    /// Segment size in file.
+    p_filesz: u64,
+    /// Segment size in memory.
+    p_memsz: u64,
+    /// Segment alignment.
+    p_align: u64,
+};
+
 /// ELF parser result.
 /// Why: Return parsed ELF information for process setup.
 pub const ElfInfo = struct {
@@ -51,6 +72,15 @@ pub const ElfInfo = struct {
     /// Whether ELF is valid.
     /// Why: Validate ELF format before using.
     valid: bool,
+    /// Program header table offset.
+    /// Why: Location of program headers for segment loading.
+    phoff: u64,
+    /// Program header entry size.
+    /// Why: Size of each program header entry.
+    phentsize: u16,
+    /// Program header count.
+    /// Why: Number of program headers.
+    phnum: u16,
     
     /// Initialize empty ELF info.
     /// Why: Explicit initialization, clear state.
@@ -58,6 +88,9 @@ pub const ElfInfo = struct {
         return ElfInfo{
             .entry_point = 0,
             .valid = false,
+            .phoff = 0,
+            .phentsize = 0,
+            .phnum = 0,
         };
     }
 };
@@ -120,10 +153,57 @@ pub fn parse_elf_header(buffer: []const u8) ElfInfo {
         return ElfInfo.init(); // Invalid: entry point too large
     }
     
-    // Return valid ELF info.
+    // Read program header table offset (little-endian u64 at offset 32).
+    // Why: Extract program header location for future segment loading.
+    const PHOFF_OFFSET: u32 = 32;
+    if (buffer.len < PHOFF_OFFSET + 8) {
+        return ElfInfo.init(); // Invalid: buffer too small for phoff
+    }
+    
+    var phoff: u64 = 0;
+    i = 0;
+    while (i < 8) : (i += 1) {
+        const byte = buffer[PHOFF_OFFSET + i];
+        phoff |= (@as(u64, byte) << @as(u6, @intCast(i * 8)));
+    }
+    
+    // Read program header entry size (little-endian u16 at offset 54).
+    // Why: Size of each program header entry.
+    const PHENTSIZE_OFFSET: u32 = 54;
+    if (buffer.len < PHENTSIZE_OFFSET + 2) {
+        return ElfInfo.init(); // Invalid: buffer too small for phentsize
+    }
+    
+    const phentsize: u16 = @as(u16, buffer[PHENTSIZE_OFFSET]) | (@as(u16, buffer[PHENTSIZE_OFFSET + 1]) << 8);
+    
+    // Read program header count (little-endian u16 at offset 56).
+    // Why: Number of program headers.
+    const PHNUM_OFFSET: u32 = 56;
+    if (buffer.len < PHNUM_OFFSET + 2) {
+        return ElfInfo.init(); // Invalid: buffer too small for phnum
+    }
+    
+    const phnum: u16 = @as(u16, buffer[PHNUM_OFFSET]) | (@as(u16, buffer[PHNUM_OFFSET + 1]) << 8);
+    
+    // Assert: Program header entry size must be reasonable (56 bytes for ELF64).
+    const ELF64_PHDR_SIZE: u16 = 56;
+    if (phentsize != 0 and phentsize < ELF64_PHDR_SIZE) {
+        return ElfInfo.init(); // Invalid: phentsize too small
+    }
+    
+    // Assert: Program header count must be reasonable (max 128 segments).
+    const MAX_PHDR_COUNT: u16 = 128;
+    if (phnum > MAX_PHDR_COUNT) {
+        return ElfInfo.init(); // Invalid: too many program headers
+    }
+    
+    // Return valid ELF info with program header information.
     const info = ElfInfo{
         .entry_point = entry_point,
         .valid = true,
+        .phoff = phoff,
+        .phentsize = phentsize,
+        .phnum = phnum,
     };
     
     // Assert: ELF info must be valid (postcondition).

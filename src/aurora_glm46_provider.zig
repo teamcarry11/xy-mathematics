@@ -98,21 +98,115 @@ pub const Glm46Provider = struct {
     }
     
     /// Request tool call.
+    /// Executes commands like `zig build`, `jj status`, etc.
     pub fn request_tool_call_impl(
         self: *anyopaque,
         request: AiProvider.ToolCallRequest,
     ) !AiProvider.ToolCallResult {
         const provider: *Glm46Provider = @ptrCast(@alignCast(self));
         
-        // For now, return placeholder (full implementation would call GLM-4.6 API with tool calling)
-        _ = request;
+        // Assert: Tool name and arguments must be valid
+        std.debug.assert(request.tool_name.len > 0);
+        std.debug.assert(request.tool_name.len <= 256); // Bounded: MAX_TOOL_NAME_LEN
+        std.debug.assert(request.arguments.len <= 32); // Bounded: MAX_TOOL_ARGS
         
-        const error_msg = try provider.allocator.dupe(u8, "Not yet implemented");
+        // Build command arguments
+        var cmd_args = std.ArrayList([]const u8).init(provider.allocator);
+        defer cmd_args.deinit();
+        
+        // Add tool name as first argument
+        const tool_name_owned = try provider.allocator.dupe(u8, request.tool_name);
+        errdefer provider.allocator.free(tool_name_owned);
+        try cmd_args.append(tool_name_owned);
+        
+        // Add arguments
+        for (request.arguments) |arg| {
+            // Assert: Each argument must be within bounds
+            std.debug.assert(arg.len <= 4096); // Bounded: MAX_ARG_LEN
+            
+            const arg_owned = try provider.allocator.dupe(u8, arg);
+            errdefer provider.allocator.free(arg_owned);
+            try cmd_args.append(arg_owned);
+        }
+        
+        // Spawn process
+        var child = std.process.Child.init(cmd_args.items, provider.allocator);
+        child.stdout_behavior = .Pipe;
+        child.stderr_behavior = .Pipe;
+        
+        try child.spawn();
+        
+        // Read stdout
+        const stdout = child.stdout orelse return error.NoStdout;
+        var output = std.ArrayList(u8).init(provider.allocator);
+        errdefer output.deinit();
+        
+        var stdout_buf: [4096]u8 = undefined;
+        while (true) {
+            const bytes_read_u64 = try stdout.read(&stdout_buf);
+            if (bytes_read_u64 == 0) break;
+            
+            // Assert: Bytes read fits in u32
+            std.debug.assert(bytes_read_u64 <= std.math.maxInt(u32));
+            const bytes_read = @intCast(bytes_read_u64);
+            
+            // Assert: Output size bounded (10MB max)
+            std.debug.assert(output.items.len + bytes_read <= 10 * 1024 * 1024);
+            
+            try output.appendSlice(stdout_buf[0..bytes_read]);
+        }
+        
+        // Read stderr
+        const stderr = child.stderr orelse return error.NoStderr;
+        var error_output = std.ArrayList(u8).init(provider.allocator);
+        errdefer error_output.deinit();
+        
+        var stderr_buf: [4096]u8 = undefined;
+        while (true) {
+            const bytes_read_u64 = try stderr.read(&stderr_buf);
+            if (bytes_read_u64 == 0) break;
+            
+            // Assert: Bytes read fits in u32
+            std.debug.assert(bytes_read_u64 <= std.math.maxInt(u32));
+            const bytes_read = @intCast(bytes_read_u64);
+            
+            // Assert: Error output size bounded (10MB max)
+            std.debug.assert(error_output.items.len + bytes_read <= 10 * 1024 * 1024);
+            
+            try error_output.appendSlice(stderr_buf[0..bytes_read]);
+        }
+        
+        // Wait for process
+        const term = try child.wait();
+        
+        // Determine exit code
+        const exit_code: i32 = switch (term) {
+            .Exited => |code| code,
+            .Signal => |sig| -@as(i32, @intCast(sig)),
+            .Stopped => |sig| -@as(i32, @intCast(sig)),
+            .Unknown => |code| code,
+        };
+        
+        // Allocate output strings
+        const output_str = try output.toOwnedSlice();
+        errdefer provider.allocator.free(output_str);
+        
+        const error_output_str = if (error_output.items.len > 0) 
+            try error_output.toOwnedSlice() 
+        else 
+            null;
+        errdefer if (error_output_str) |err| provider.allocator.free(err);
+        
+        // Clean up command arguments
+        for (cmd_args.items) |arg| {
+            provider.allocator.free(arg);
+        }
+        
         return AiProvider.ToolCallResult{
-            .success = false,
-            .output = "",
-            .error_output = error_msg,
-            .exit_code = -1,
+            .success = exit_code == 0,
+            .output = output_str,
+            .error_output = error_output_str,
+            .exit_code = exit_code,
         };
     }
     

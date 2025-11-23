@@ -21,12 +21,26 @@ fn create_test_elf_header(entry_point: u64) [64]u8 {
     h[1] = 'E';
     h[2] = 'L';
     h[3] = 'F';
-    h[4] = 2;
-    h[5] = 1;
+    h[4] = 2; // 64-bit
+    h[5] = 1; // little-endian
+    // Entry point at offset 24
     var i: u32 = 0;
     while (i < 8) : (i += 1) {
         h[24 + i] = @truncate((entry_point >> @as(u6, @intCast(i * 8))) & 0xFF);
     }
+    // Program header table offset at offset 32 (set to 64 = after header)
+    const phoff: u64 = 64;
+    i = 0;
+    while (i < 8) : (i += 1) {
+        h[32 + i] = @truncate((phoff >> @as(u6, @intCast(i * 8))) & 0xFF);
+    }
+    // Program header entry size at offset 54 (56 bytes for ELF64)
+    const phentsize: u16 = 56;
+    h[54] = @truncate(phentsize & 0xFF);
+    h[55] = @truncate((phentsize >> 8) & 0xFF);
+    // Program header count at offset 56 (0 for minimal test)
+    h[56] = 0;
+    h[57] = 0;
     return h;
 }
 

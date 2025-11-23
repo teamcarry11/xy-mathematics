@@ -289,6 +289,13 @@
    - ✅ GrainStyle compliance (u32 types, assertions, bounded operations, static allocation)
    - ✅ Event structure format documented (32-byte event buffer)
    - ✅ Error codes documented (would_block, invalid_argument, etc.)
+   - ✅ Runtime error fixes (RawIO.disable() for tests, SIGILL fixes)
+
+30. **Userspace Program Execution Improvements** 🔄 **IN PROGRESS**
+   - 🔄 Enhanced ELF parser (program header parsing)
+   - 🔄 Improved process execution error handling
+   - 🔄 Better resource management for processes
+   - ⏳ Comprehensive userspace execution tests
 
 ## 🚀 Architecture Overview
 
@@ -496,7 +503,13 @@
   - ✅ Unified interfaces: CompletionRequest, TransformRequest, ToolCallRequest
   - ✅ GrainStyle compliance (bounded allocations, assertions)
   - ✅ Refactoring documentation (`docs/ai_provider_refactoring.md`)
-- 📋 Tool calling (run `zig build`, `jj status`) - pending
+- ✅ Tool calling (run `zig build`, `jj status`) ✅ **COMPLETE**
+  - ✅ Implement `request_tool_call_impl` in `aurora_glm46_provider.zig`
+  - ✅ Execute commands using `std.process.Child`
+  - ✅ Capture stdout and stderr
+  - ✅ Return exit code and output
+  - ✅ Add `request_tool_call` method to `Editor`
+  - ✅ GrainStyle compliance (bounded allocations, assertions, explicit types)
 - 📋 Multi-file edits (context-aware) - pending (Note: Foundation complete, full implementation pending)
 - ✅ Editor integration with AI provider (refactor `aurora_editor.zig` to use `AiProvider`) ✅ **COMPLETE**
   - ✅ Replace `glm46: ?Glm46Client` with `ai_provider: ?AiProvider`

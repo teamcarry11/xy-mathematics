@@ -398,8 +398,8 @@ pub const DreamBrowserRenderer = struct {
             
             // Text content is editable by default (unless marked readonly)
             // No action needed - content is editable by default in GrainBuffer
-            _ = current_node;
-            _ = buffer;
+            // Process children (current_node and buffer are used in loop below)
+            _ = buffer; // Buffer not used in this simplified implementation
             
             // Push children onto stack (in reverse order for correct processing)
             var i: u32 = current_node.children.len;

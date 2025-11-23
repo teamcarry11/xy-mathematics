@@ -3,9 +3,11 @@ const Editor = @import("aurora_editor.zig").Editor;
 const Layout = @import("aurora_layout.zig").Layout;
 const DreamBrowserParser = @import("dream_browser_parser.zig").DreamBrowserParser;
 const DreamBrowserRenderer = @import("dream_browser_renderer.zig").DreamBrowserRenderer;
+const DreamBrowserViewport = @import("dream_browser_viewport.zig").DreamBrowserViewport;
 const GrainAurora = @import("grain_aurora.zig").GrainAurora;
 const AuroraGrainBank = @import("aurora_grainbank.zig").AuroraGrainBank;
 const DagCore = @import("dag_core.zig").DagCore;
+const BrowserDagIntegration = @import("dream_browser_dag_integration.zig").BrowserDagIntegration;
 
 /// Unified IDE: integrates Dream Editor and Dream Browser in multi-pane layout.
 /// ~<~ Glow Airbend: explicit tab management, bounded tabs.
@@ -39,6 +41,7 @@ pub const UnifiedIde = struct {
         url: []const u8,
         parser: DreamBrowserParser,
         renderer: DreamBrowserRenderer,
+        viewport: DreamBrowserViewport, // Viewport for scrolling and navigation
         title: []const u8,
         contract_id: ?u64 = null, // Associated GrainBank contract (if content requires payment)
         payment_enabled: bool = false, // Whether automatic micropayments are enabled
@@ -90,10 +93,11 @@ pub const UnifiedIde = struct {
         for (self.browser_tabs.items) |*tab| {
             tab.parser.deinit();
             tab.renderer.deinit();
+            tab.viewport.deinit();
             self.allocator.free(tab.url);
             self.allocator.free(tab.title);
         }
-        self.browser_tabs.deinit();
+        self.browser_tabs.deinit(self.allocator);
         
         self.grainbank.deinit();
         self.dag.deinit();
@@ -149,12 +153,15 @@ pub const UnifiedIde = struct {
         // Assert: Bounded browser tabs
         std.debug.assert(self.browser_tabs.items.len < MAX_BROWSER_TABS);
         
-        // Create parser and renderer
+        // Create parser, renderer, and viewport
         var parser = DreamBrowserParser.init(self.allocator);
         errdefer parser.deinit();
         
         var renderer = DreamBrowserRenderer.init(self.allocator);
         errdefer renderer.deinit();
+        
+        var viewport = DreamBrowserViewport.init(self.allocator);
+        errdefer viewport.deinit();
         
         // Extract title from URL
         const title = try self.extract_title_from_url(url);
@@ -166,12 +173,16 @@ pub const UnifiedIde = struct {
         // Check if URL requires payment (Nostr content may include GrainBank contracts)
         const contract_id = try self.detect_payment_contract(url);
         
+        // Add to history
+        try viewport.add_history_entry(url_copy);
+        
         const tab_id = @intCast(self.browser_tabs.items.len);
-        try self.browser_tabs.append(BrowserTab{
+        try self.browser_tabs.append(self.allocator, BrowserTab{
             .id = tab_id,
             .url = url_copy,
             .parser = parser,
             .renderer = renderer,
+            .viewport = viewport,
             .title = title,
             .contract_id = contract_id,
             .payment_enabled = contract_id != null,

@@ -426,7 +426,7 @@ test "bookmarks search" {
     
     // Search for "Example"
     const results = bookmarks.search_bookmarks("Example");
-    defer arena.allocator().free(results);
+    defer if (results.len > 0) arena.allocator().free(results);
     
     // Assert: Search found bookmark
     try std.testing.expect(results.len == 1);

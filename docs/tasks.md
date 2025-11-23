@@ -481,6 +481,15 @@
   - [x] Implement `apply_edits` to apply edits to file contents
   - [x] Return modified file contents (editor handles disk writes)
   - [x] GrainStyle compliance (bounded allocations, assertions, explicit types)
+- [x] Editor Integration with AI Transforms ✅ **COMPLETE**
+  - [x] Add `ai_transforms` field to Editor
+  - [x] Initialize `AiTransforms` when AI provider is enabled
+  - [x] Add `refactor_rename` method to Editor
+  - [x] Add `refactor_move` method to Editor
+  - [x] Add `extract_function` method to Editor
+  - [x] Add `inline_function` method to Editor
+  - [x] Add `apply_transformation_edits` method to apply edits to buffer
+  - [x] GrainStyle compliance (bounded allocations, assertions, explicit types)
 
 #### 4.1.4 Tree-sitter Integration ✅ **ENHANCED**
 - [x] Foundation created (simple regex-based parser)

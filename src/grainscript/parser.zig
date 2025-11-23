@@ -1271,7 +1271,7 @@ pub const Parser = struct {
             .op_gt => .gt,
             .op_ge => .ge,
             .op_and => .and_op,
-            .op_or => .or,
+            .op_or => .or_op,
             else => null,
         };
     }

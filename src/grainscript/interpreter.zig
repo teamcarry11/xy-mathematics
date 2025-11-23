@@ -1003,7 +1003,7 @@ pub const Interpreter = struct {
             .gt => self.binary_gt(left_value, right_value),
             .ge => self.binary_ge(left_value, right_value),
             .and_op => self.binary_and(left_value, right_value),
-            .or => self.binary_or(left_value, right_value),
+            .or_op => self.binary_or(left_value, right_value),
         };
     }
 

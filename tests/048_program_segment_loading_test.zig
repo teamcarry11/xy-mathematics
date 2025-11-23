@@ -9,9 +9,9 @@ const BasinKernel = basin_kernel.BasinKernel;
 const BasinError = basin_kernel.BasinError;
 const RawIO = basin_kernel.RawIO;
 
-// Import elf_parser via module import.
+// Import elf_parser via basin_kernel module.
 // Why: Test needs direct access to parse_program_header function.
-const elf_parser_mod = @import("elf_parser");
+const elf_parser_mod = basin_kernel.basin_kernel.elf_parser;
 
 // Helper: Create test ELF header with program header table.
 fn create_test_elf_with_segments(entry_point: u64, segment_vaddr: u64, segment_size: u64) [256]u8 {

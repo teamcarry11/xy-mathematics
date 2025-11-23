@@ -4,7 +4,7 @@
 
 const std = @import("std");
 const Debug = @import("debug.zig");
-const elf_parser = @import("elf_parser.zig");
+const elf_parser = @import("elf_parser");
 const BasinKernel = @import("basin_kernel.zig").BasinKernel;
 const MapFlags = @import("basin_kernel.zig").MapFlags;
 const SyscallResult = @import("basin_kernel.zig").SyscallResult;

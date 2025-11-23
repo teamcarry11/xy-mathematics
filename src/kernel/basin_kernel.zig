@@ -1901,12 +1901,13 @@ pub const BasinKernel = struct {
             return BasinError.invalid_argument; // Data pointer exceeds VM memory
         }
         
-        // Assert: data length must be reasonable (max 64KB per message).
+        // Assert: data length must be reasonable (max 4KB per message, matches MAX_MESSAGE_SIZE).
+        const MAX_MESSAGE_SIZE: u32 = 4096; // Matches channel.zig MAX_MESSAGE_SIZE
         if (data_len == 0) {
             return BasinError.invalid_argument; // Zero-length data
         }
-        if (data_len > 64 * 1024) {
-            return BasinError.invalid_argument; // Data too large (> 64KB)
+        if (data_len > MAX_MESSAGE_SIZE) {
+            return BasinError.invalid_argument; // Data too large (> 4KB)
         }
         
         // Assert: data must fit within VM memory.
@@ -1914,17 +1915,47 @@ pub const BasinKernel = struct {
             return BasinError.invalid_argument; // Data exceeds VM memory
         }
         
-        // TODO: Implement actual channel send (when IPC is implemented).
-        // For now, return stub success.
-        // Why: Simple stub - matches current kernel development stage.
-        // Note: In full implementation, we would:
-        // - Look up channel in channel table
-        // - Verify channel exists and is open
-        // - Copy data to channel message queue
-        // - Wake up waiting receivers (if any)
-        // - Return error if channel full or not found
+        // Look up channel in channel table.
+        // Why: Find channel to send message to.
+        const channel_ptr = self.channels.find(channel);
+        if (channel_ptr == null) {
+            return BasinError.not_found; // Channel not found
+        }
         
-        // Stub: Return success (simple implementation).
+        const ch = channel_ptr.?;
+        
+        // Assert: Channel must be allocated.
+        Debug.kassert(ch.allocated, "Channel not allocated", .{});
+        Debug.kassert(ch.id == channel, "Channel ID mismatch", .{});
+        
+        // Read data from VM memory.
+        // Why: Copy data from VM memory to channel message queue.
+        if (self.vm_memory_reader == null) {
+            return BasinError.invalid_syscall; // VM memory reader not available
+        }
+        
+        const data_len_u32 = @as(u32, @truncate(data_len));
+        var data_buffer: [4096]u8 = undefined;
+        const data_slice = data_buffer[0..data_len_u32];
+        
+        const bytes_read = self.vm_memory_reader.?(data_ptr, data_len_u32, data_slice) orelse {
+            return BasinError.invalid_argument; // Failed to read data from VM memory
+        };
+        
+        if (bytes_read != data_len_u32) {
+            return BasinError.invalid_argument; // Incomplete read
+        }
+        
+        // Send message to channel.
+        // Why: Add message to channel queue.
+        const sent = ch.send(data_slice);
+        if (!sent) {
+            return BasinError.would_block; // Channel queue full
+        }
+        
+        // Assert: Message must be sent (postcondition).
+        Debug.kassert(ch.message_count > 0, "Message not sent", .{});
+        
         const result = SyscallResult.ok(0);
         
         // Assert: result must be success (not error).
@@ -1963,12 +1994,13 @@ pub const BasinKernel = struct {
             return BasinError.invalid_argument; // Buffer pointer exceeds VM memory
         }
         
-        // Assert: buffer length must be reasonable (max 64KB per message).
+        // Assert: buffer length must be reasonable (max 4KB per message, matches MAX_MESSAGE_SIZE).
+        const MAX_MESSAGE_SIZE: u32 = 4096; // Matches channel.zig MAX_MESSAGE_SIZE
         if (buffer_len == 0) {
             return BasinError.invalid_argument; // Zero-length buffer
         }
-        if (buffer_len > 64 * 1024) {
-            return BasinError.invalid_argument; // Buffer too large (> 64KB)
+        if (buffer_len > MAX_MESSAGE_SIZE) {
+            return BasinError.invalid_argument; // Buffer too large (> 4KB)
         }
         
         // Assert: buffer must fit within VM memory.
@@ -1976,24 +2008,60 @@ pub const BasinKernel = struct {
             return BasinError.invalid_argument; // Buffer exceeds VM memory
         }
         
-        // TODO: Implement actual channel receive (when IPC is implemented).
-        // For now, return stub (0 bytes received).
-        // Why: Simple stub - matches current kernel development stage.
-        // Note: In full implementation, we would:
-        // - Look up channel in channel table
-        // - Verify channel exists and is open
-        // - Wait for message (if channel empty)
-        // - Copy message from channel to buffer
-        // - Return bytes received count
-        // - Return error if channel not found
+        // Look up channel in channel table.
+        // Why: Find channel to receive message from.
+        const channel_ptr = self.channels.find(channel);
+        if (channel_ptr == null) {
+            return BasinError.not_found; // Channel not found
+        }
         
-        // Stub: Return 0 bytes received (simple implementation).
-        const bytes_received: u64 = 0;
+        const ch = channel_ptr.?;
+        
+        // Assert: Channel must be allocated.
+        Debug.kassert(ch.allocated, "Channel not allocated", .{});
+        Debug.kassert(ch.id == channel, "Channel ID mismatch", .{});
+        
+        // Receive message from channel.
+        // Why: Get message from channel queue.
+        var message_buffer: [4096]u8 = undefined;
+        const bytes_received_u32 = ch.receive(&message_buffer);
+        
+        if (bytes_received_u32 == 0) {
+            // Queue empty: return 0 bytes received (non-blocking).
+            // Why: Non-blocking receive - return immediately if no message.
+            const result = SyscallResult.ok(0);
+            Debug.kassert(result == .success, "Result not success", .{});
+            Debug.kassert(result.success == 0, "Result not 0", .{});
+            return result;
+        }
+        
+        // Write message data to VM memory.
+        // Why: Copy message data from channel to VM memory buffer.
+        if (self.vm_memory_writer == null) {
+            return BasinError.invalid_syscall; // VM memory writer not available
+        }
+        
+        const bytes_to_write = @min(bytes_received_u32, @as(u32, @truncate(buffer_len)));
+        const message_slice = message_buffer[0..bytes_to_write];
+        
+        const bytes_written = self.vm_memory_writer.?(buffer_ptr, bytes_to_write, message_slice) orelse {
+            return BasinError.invalid_argument; // Failed to write data to VM memory
+        };
+        
+        if (bytes_written != bytes_to_write) {
+            return BasinError.invalid_argument; // Incomplete write
+        }
+        
+        // Assert: Bytes written must match bytes received (postcondition).
+        Debug.kassert(bytes_written == bytes_to_write, "Bytes written mismatch", .{});
+        
+        const bytes_received: u64 = @as(u64, bytes_written);
         const result = SyscallResult.ok(bytes_received);
         
         // Assert: result must be success (not error).
         Debug.kassert(result == .success, "Result not success", .{});
         Debug.kassert(result.success == bytes_received, "Result value mismatch", .{});
+        Debug.kassert(result.success > 0, "Bytes received is 0", .{}); // Must receive at least 1 byte
         
         return result;
     }

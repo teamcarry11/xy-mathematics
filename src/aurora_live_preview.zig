@@ -5,23 +5,18 @@ const BrowserDagIntegration = @import("dream_browser_dag_integration.zig").Brows
 const DagCore = @import("dag_core.zig").DagCore;
 const DreamBrowserParser = @import("dream_browser_parser.zig").DreamBrowserParser;
 const DreamBrowserRenderer = @import("dream_browser_renderer.zig").DreamBrowserRenderer;
+const GrainBuffer = @import("grain_buffer.zig").GrainBuffer;
+const GrainAurora = @import("grain_aurora.zig").GrainAurora;
 
 /// Live Preview: Real-time bidirectional sync between editor and browser.
 /// ~<~ Glow Airbend: explicit sync state, bounded updates.
 /// ~~~~ Glow Waterbend: edits flow through DAG deterministically.
 pub const LivePreview = struct {
-    allocator: std.mem.Allocator,
-    dag: DagCore,
-    editor_dag: EditorDagIntegration,
-    browser_dag: BrowserDagIntegration,
-    
     // Bounded: Max 100 sync subscriptions
     pub const MAX_SYNC_SUBSCRIPTIONS: u32 = 100;
-    sync_subscriptions: std.ArrayList(SyncSubscription) = undefined,
     
     // Bounded: Max 1,000 pending updates per second
     pub const MAX_UPDATES_PER_SECOND: u32 = 1_000;
-    pending_updates: std.ArrayList(Update) = undefined,
     
     pub const SyncSubscription = struct {
         editor_tab_id: u32,
@@ -49,6 +44,13 @@ pub const LivePreview = struct {
         nostr_event, // Nostr event in browser
         browser_content, // Browser content update
     };
+    
+    allocator: std.mem.Allocator,
+    dag: DagCore,
+    editor_dag: EditorDagIntegration,
+    browser_dag: BrowserDagIntegration,
+    sync_subscriptions: std.ArrayList(SyncSubscription) = undefined,
+    pending_updates: std.ArrayList(Update) = undefined,
     
     pub fn init(allocator: std.mem.Allocator) !LivePreview {
         // Assert: Allocator must be valid
@@ -203,7 +205,12 @@ pub const LivePreview = struct {
     }
     
     /// Process pending updates (streaming, Hyperfiddle-style).
-    pub fn process_updates(self: *LivePreview) !void {
+    /// Takes optional editor and browser renderer instances for actual updates.
+    pub fn process_updates(
+        self: *LivePreview,
+        editor_instances: ?[]const EditorInstance,
+        browser_renderers: ?[]const BrowserRendererInstance,
+    ) !void {
         // Assert: Updates must be within bounds
         std.debug.assert(self.pending_updates.items.len <= MAX_UPDATES_PER_SECOND);
         
@@ -213,13 +220,62 @@ pub const LivePreview = struct {
             switch (update.source) {
                 .editor_edit => {
                     // Editor edit → Browser preview
-                    // This would trigger browser re-render
-                    // Placeholder: actual browser update logic would go here
+                    // Find browser renderer for target tab
+                    if (browser_renderers) |renderers| {
+                        for (renderers) |renderer_instance| {
+                            if (renderer_instance.tab_id == update.target_id) {
+                                // Parse new content as HTML
+                                var parser = DreamBrowserParser.init(self.allocator);
+                                defer parser.deinit();
+                                
+                                const html_node = parser.parseHtml(update.data) catch {
+                                    // If parsing fails, skip this update
+                                    continue;
+                                };
+                                
+                                // Re-render browser with new content
+                                renderer_instance.renderer.renderPage(
+                                    &html_node,
+                                    &.{}, // Empty CSS rules for now
+                                    renderer_instance.buffer,
+                                ) catch {
+                                    // If rendering fails, skip this update
+                                    continue;
+                                };
+                                break;
+                            }
+                        }
+                    }
                 },
                 .nostr_event, .browser_content => {
                     // Browser update → Editor sync
-                    // This would update editor buffer
-                    // Placeholder: actual editor update logic would go here
+                    // Find editor for target tab
+                    if (editor_instances) |editors| {
+                        for (editors) |editor_instance| {
+                            if (editor_instance.tab_id == update.target_id) {
+                                // Update editor buffer with new content
+                                // Replace entire buffer content with new content
+                                const current_text = editor_instance.editor.buffer.textSlice();
+                                
+                                // Clear existing buffer and create new one with updated content
+                                editor_instance.editor.buffer.deinit();
+                                
+                                // Create new buffer with updated content
+                                editor_instance.editor.buffer = try GrainBuffer.fromSlice(
+                                    editor_instance.editor.allocator,
+                                    update.data,
+                                );
+                                
+                                // Update Aurora rendering
+                                editor_instance.editor.aurora.deinit();
+                                editor_instance.editor.aurora = try GrainAurora.init(
+                                    editor_instance.editor.allocator,
+                                    update.data,
+                                );
+                                break;
+                            }
+                        }
+                    }
                 },
             }
         }
@@ -237,6 +293,19 @@ pub const LivePreview = struct {
         // Assert: Updates processed successfully
         std.debug.assert(self.pending_updates.items.len == 0);
     }
+    
+    /// Editor instance (for update processing).
+    pub const EditorInstance = struct {
+        tab_id: u32,
+        editor: *Editor,
+    };
+    
+    /// Browser renderer instance (for update processing).
+    pub const BrowserRendererInstance = struct {
+        tab_id: u32,
+        renderer: *DreamBrowserRenderer,
+        buffer: *GrainBuffer,
+    };
     
     /// Find or create editor node in DAG for file URI.
     fn find_or_create_editor_node(self: *LivePreview, file_uri: []const u8) !u32 {

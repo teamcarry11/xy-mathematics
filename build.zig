@@ -143,20 +143,15 @@ pub fn build(b: *std.Build) void {
     kernel_step.dependOn(&kernel_install.step);
 
     // ELF Parser module (for tests that need direct access).
-    const elf_parser_module = b.addModule("elf_parser", .{
-        .root_source_file = b.path("src/kernel/elf_parser.zig"),
-        .target = target,
-        .optimize = optimize,
-    });
+    // Note: elf_parser.zig is imported as a file by basin_kernel.zig and segment_loader.zig
+    // It's not a separate module to avoid module conflicts.
+    // Tests that need elf_parser can import it via basin_kernel or use relative imports.
 
     // Basin Kernel module (syscall interface and kernel structures).
     const basin_kernel_module = b.addModule("basin_kernel", .{
         .root_source_file = b.path("src/kernel/basin_kernel.zig"),
         .target = target,
         .optimize = optimize,
-        .imports = &.{
-            .{ .name = "elf_parser", .module = elf_parser_module },
-        },
     });
 
     // RISC-V SBI module (platform runtime services).
@@ -1095,7 +1090,6 @@ pub fn build(b: *std.Build) void {
             .optimize = optimize,
             .imports = &.{
                 .{ .name = "basin_kernel", .module = basin_kernel_module },
-                .{ .name = "elf_parser", .module = elf_parser_module },
             },
         }),
     });
@@ -1114,6 +1108,19 @@ pub fn build(b: *std.Build) void {
     });
     const resource_cleanup_tests_run = b.addRunArtifact(resource_cleanup_tests);
     test_step.dependOn(&resource_cleanup_tests_run.step);
+
+    const channel_send_recv_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/050_channel_send_recv_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+            },
+        }),
+    });
+    const channel_send_recv_tests_run = b.addRunArtifact(channel_send_recv_tests);
+    test_step.dependOn(&channel_send_recv_tests_run.step);
 
     const terminal_kernel_integration_tests = b.addTest(.{
         .root_module = b.createModule(.{

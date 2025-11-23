@@ -176,7 +176,6 @@ test "renderer ansi colors" {
     try testing.expect(Renderer.ANSI_COLORS[7] == 0xC0C0C0FF); // White
 }
 
-test renderer character pattern.
 test "renderer char pattern" {
     const space_pattern = Renderer.get_char_pattern(' ');
     try testing.expect(space_pattern == 0x0000000000000000);

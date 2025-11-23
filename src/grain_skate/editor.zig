@@ -181,9 +181,8 @@ pub const Editor = struct {
         allocator: std.mem.Allocator,
 
         /// Initialize editor state.
+        // 2025-11-23-122043-pst: Active function
         pub fn init(allocator: std.mem.Allocator, initial_content: []const u8) !EditorState {
-            // Assert: Allocator must be valid (check by attempting allocation)
-            _ = allocator;
 
             // Initialize text buffer
             var buffer = try TextBuffer.init(allocator, initial_content);

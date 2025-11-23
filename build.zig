@@ -1147,6 +1147,19 @@ pub fn build(b: *std.Build) void {
     const grain_skate_core_tests_run = b.addRunArtifact(grain_skate_core_tests);
     test_step.dependOn(&grain_skate_core_tests_run.step);
 
+    const grain_skate_social_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/051_grain_skate_social_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_skate", .module = grain_skate_module },
+            },
+        }),
+    });
+    const grain_skate_social_tests_run = b.addRunArtifact(grain_skate_social_tests);
+    test_step.dependOn(&grain_skate_social_tests_run.step);
+
     const grain_field_tests = b.addTest(.{
         .root_module = b.createModule(.{
             .root_source_file = b.path("tests/049_grain_field_test.zig"),

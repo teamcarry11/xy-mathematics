@@ -4,6 +4,7 @@ const GrainAurora = @import("grain_aurora.zig").GrainAurora;
 const LspClient = @import("aurora_lsp.zig").LspClient;
 const Folding = @import("aurora_folding.zig").Folding;
 const AiProvider = @import("aurora_ai_provider.zig").AiProvider;
+const AiTransforms = @import("aurora_ai_transforms.zig").AiTransforms;
 const TreeSitter = @import("aurora_tree_sitter.zig").TreeSitter;
 
 /// Aurora code editor: integrates GrainBuffer, GrainAurora, LSP, folding, and AI provider.

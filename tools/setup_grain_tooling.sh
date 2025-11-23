@@ -101,11 +101,12 @@ fi
 cd "$TEAMCARRY_DIR/grainwrap-100"
 if ! gh repo view "$ORG/grainwrap-100" &> /dev/null; then
     echo -e "${YELLOW}Creating GitHub repo: $ORG/grainwrap-100...${NC}"
-    gh repo create "$ORG/grainwrap-100" --public --source=. --remote=origin --default-branch=main --push
+    gh repo create "$ORG/grainwrap-100" --public --source=. --remote=origin --push
     echo -e "${GREEN}✓ grainwrap-100 repo created${NC}"
 else
     echo -e "${YELLOW}Repo $ORG/grainwrap-100 already exists, skipping...${NC}"
     git remote add origin "https://github.com/$ORG/grainwrap-100.git" 2>/dev/null || true
+    git branch -M main 2>/dev/null || true
     git push -u origin main 2>/dev/null || true
 fi
 
@@ -113,11 +114,12 @@ fi
 cd "$TEAMCARRY_DIR/grainvalidate-70"
 if ! gh repo view "$ORG/grainvalidate-70" &> /dev/null; then
     echo -e "${YELLOW}Creating GitHub repo: $ORG/grainvalidate-70...${NC}"
-    gh repo create "$ORG/grainvalidate-70" --public --source=. --remote=origin --default-branch=main --push
+    gh repo create "$ORG/grainvalidate-70" --public --source=. --remote=origin --push
     echo -e "${GREEN}✓ grainvalidate-70 repo created${NC}"
 else
     echo -e "${YELLOW}Repo $ORG/grainvalidate-70 already exists, skipping...${NC}"
     git remote add origin "https://github.com/$ORG/grainvalidate-70.git" 2>/dev/null || true
+    git branch -M main 2>/dev/null || true
     git push -u origin main 2>/dev/null || true
 fi
 

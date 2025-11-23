@@ -539,6 +539,15 @@
   - ✅ Implement `apply_edits` to apply edits to file contents
   - ✅ Return modified file contents (editor handles disk writes)
   - ✅ GrainStyle compliance (bounded allocations, assertions, explicit types)
+- ✅ Editor Integration with AI Transforms ✅ **COMPLETE**
+  - ✅ Add `ai_transforms` field to Editor
+  - ✅ Initialize `AiTransforms` when AI provider is enabled
+  - ✅ Add `refactor_rename` method to Editor
+  - ✅ Add `refactor_move` method to Editor
+  - ✅ Add `extract_function` method to Editor
+  - ✅ Add `inline_function` method to Editor
+  - ✅ Add `apply_transformation_edits` method to apply edits to buffer
+  - ✅ GrainStyle compliance (bounded allocations, assertions, explicit types)
 - ✅ Editor integration with AI provider (refactor `aurora_editor.zig` to use `AiProvider`) ✅ **COMPLETE**
   - ✅ Replace `glm46: ?Glm46Client` with `ai_provider: ?AiProvider`
   - ✅ Update `enableGlm46()` → `enable_ai_provider(provider_type, config)`
@@ -881,10 +890,14 @@
 - [ ] Modal editing system (Vim/Kakoune keybindings)
 - [ ] Graph visualization
 
-#### 8.3.3: Social Features (PLANNED)
-- [ ] Link-based reply system
-- [ ] Transclusion engine
-- [ ] Export/import capabilities
+#### 8.3.3: Social Features ✅ **COMPLETE**
+- ✅ Link-based reply system (`src/grain_skate/social.zig`)
+- ✅ Reply threading with depth calculation (iterative, no recursion)
+- ✅ Transclusion engine (block embedding with depth tracking)
+- ✅ Transcluded content expansion
+- ✅ Export/import capabilities (JSON and Markdown formats)
+- ✅ Comprehensive tests (`tests/051_grain_skate_social_test.zig`)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 
 ## 👥 Parallel Development Opportunities
 
@@ -1105,10 +1118,14 @@
 - [ ] Modal editing system (Vim/Kakoune keybindings)
 - [ ] Graph visualization
 
-#### 8.3.3: Social Features (PLANNED)
-- [ ] Link-based reply system
-- [ ] Transclusion engine
-- [ ] Export/import capabilities
+#### 8.3.3: Social Features ✅ **COMPLETE**
+- ✅ Link-based reply system (`src/grain_skate/social.zig`)
+- ✅ Reply threading with depth calculation (iterative, no recursion)
+- ✅ Transclusion engine (block embedding with depth tracking)
+- ✅ Transcluded content expansion
+- ✅ Export/import capabilities (JSON and Markdown formats)
+- ✅ Comprehensive tests (`tests/051_grain_skate_social_test.zig`)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 
 ## 👥 Parallel Development Opportunities
 
@@ -1329,10 +1346,14 @@
 - [ ] Modal editing system (Vim/Kakoune keybindings)
 - [ ] Graph visualization
 
-#### 8.3.3: Social Features (PLANNED)
-- [ ] Link-based reply system
-- [ ] Transclusion engine
-- [ ] Export/import capabilities
+#### 8.3.3: Social Features ✅ **COMPLETE**
+- ✅ Link-based reply system (`src/grain_skate/social.zig`)
+- ✅ Reply threading with depth calculation (iterative, no recursion)
+- ✅ Transclusion engine (block embedding with depth tracking)
+- ✅ Transcluded content expansion
+- ✅ Export/import capabilities (JSON and Markdown formats)
+- ✅ Comprehensive tests (`tests/051_grain_skate_social_test.zig`)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 
 ## 👥 Parallel Development Opportunities
 

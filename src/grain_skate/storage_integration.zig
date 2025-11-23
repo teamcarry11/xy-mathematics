@@ -34,8 +34,6 @@ pub const StorageIntegration = struct {
         /// Initialize block mapping.
         // 2025-11-23-114146-pst: Active function
         pub fn init(allocator: std.mem.Allocator, block_id: u32, object_key: []const u8) !BlockMapping {
-            // Assert: Allocator must be valid (check by attempting allocation)
-            _ = allocator;
 
             // Allocate object key
             const key_copy = try allocator.dupe(u8, object_key);

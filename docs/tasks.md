@@ -442,7 +442,7 @@
   - [x] Create unified AI provider interface (`src/aurora_ai_provider.zig`)
   - [x] GLM-4.6 provider implementation (`src/aurora_glm46_provider.zig`)
   - [x] Refactoring documentation (`docs/ai_provider_refactoring.md`)
-- [ ] Tool calling (run `zig build`, `jj status`) - pending
+- [x] Tool calling (run `zig build`, `jj status`) ✅ **COMPLETE**
 - [x] Editor integration with AI provider (refactor `aurora_editor.zig`) ✅ **COMPLETE**
   - [x] Replace `glm46: ?Glm46Client` with `ai_provider: ?AiProvider`
   - [x] Update `enableGlm46()` → `enable_ai_provider(provider_type, config)`
@@ -949,10 +949,14 @@
 - [ ] Modal editing system (Vim/Kakoune keybindings)
 - [ ] Graph visualization
 
-#### 8.3.3 Social Features
-- [ ] Link-based reply system
-- [ ] Transclusion engine
-- [ ] Export/import capabilities
+#### 8.3.3 Social Features ✅ **COMPLETE**
+- [x] Link-based reply system (`src/grain_skate/social.zig`)
+- [x] Reply threading with depth calculation (iterative, no recursion)
+- [x] Transclusion engine (block embedding with depth tracking)
+- [x] Transcluded content expansion
+- [x] Export/import capabilities (JSON and Markdown formats)
+- [x] Comprehensive tests (`tests/051_grain_skate_social_test.zig`)
+- [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
 
 ## 🚀 Phase 7: Production
 

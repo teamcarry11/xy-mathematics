@@ -10,8 +10,6 @@ const std = @import("std");
 /// - Image format detection (magic bytes)
 /// - Decoded image storage (RGBA pixel buffer)
 pub const DreamBrowserImageDecoder = struct {
-    allocator: std.mem.Allocator,
-    
     // Bounded: Max 10MB image size
     pub const MAX_IMAGE_SIZE: u32 = 10 * 1024 * 1024;
     

@@ -8,9 +8,14 @@ const BasinKernel = basin_kernel.BasinKernel;
 const Keyboard = basin_kernel.basin_kernel.Keyboard;
 const Mouse = basin_kernel.basin_kernel.Mouse;
 const KeyCode = basin_kernel.basin_kernel.KeyCode;
+const RawIO = basin_kernel.RawIO;
 
 // Test keyboard driver integration.
 test "keyboard driver integration" {
+    // Disable RawIO to avoid SIGILL in tests.
+    RawIO.disable();
+    defer RawIO.enable();
+    
     const kernel_instance = BasinKernel.init();
     
     // Assert: Keyboard must be initialized.

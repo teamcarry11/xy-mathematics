@@ -8,6 +8,7 @@ const MemoryPool = basin_kernel.basin_kernel.MemoryPool;
 const PAGE_SIZE = basin_kernel.basin_kernel.PAGE_SIZE;
 const MAX_PAGES = basin_kernel.basin_kernel.MAX_PAGES;
 const BasinKernel = basin_kernel.BasinKernel;
+const RawIO = basin_kernel.RawIO;
 
 // Test memory pool initialization.
 test "memory pool init" {
@@ -129,6 +130,9 @@ test "memory pool allocation failure" {
 
 // Test deallocation failure (invalid page).
 test "memory pool deallocation failure" {
+    // Disable RawIO to avoid SIGILL in tests.
+    RawIO.disable();
+    defer RawIO.enable();
     var pool = MemoryPool.init();
     
     // Try to deallocate unallocated page.

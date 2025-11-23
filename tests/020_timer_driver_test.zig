@@ -86,6 +86,10 @@ test "timer set timer" {
 
 // Test kernel timer integration.
 test "kernel timer integration" {
+    // Disable RawIO to avoid SIGILL in tests.
+    RawIO.disable();
+    defer RawIO.enable();
+    
     var kernel = BasinKernel.init();
     
     // Assert: Kernel timer must be initialized.
@@ -103,6 +107,10 @@ test "kernel timer integration" {
 
 // Test clock_gettime syscall (via integration layer).
 test "clock_gettime syscall" {
+    // Disable RawIO to avoid SIGILL in tests.
+    RawIO.disable();
+    defer RawIO.enable();
+    
     // Note: This test requires VM and integration layer setup.
     // For now, we test the timer directly.
     var kernel = BasinKernel.init();

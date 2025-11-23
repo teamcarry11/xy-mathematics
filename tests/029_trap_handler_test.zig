@@ -6,9 +6,14 @@ const std = @import("std");
 const basin_kernel = @import("basin_kernel");
 const BasinKernel = basin_kernel.BasinKernel;
 const ExceptionType = basin_kernel.basin_kernel.ExceptionType;
+const RawIO = basin_kernel.RawIO;
 
 // Test trap loop initialization.
 test "trap loop with kernel" {
+    // Disable RawIO to avoid SIGILL in tests.
+    RawIO.disable();
+    defer RawIO.enable();
+    
     const kernel = BasinKernel.init();
     
     // Assert: Kernel must be initialized (precondition).

@@ -8,6 +8,7 @@ const BasinKernel = basin_kernel.BasinKernel;
 const BootSequence = basin_kernel.basin_kernel.BootSequence;
 const BootPhase = basin_kernel.basin_kernel.BootPhase;
 const boot_kernel = basin_kernel.basin_kernel.boot_kernel;
+const RawIO = basin_kernel.RawIO;
 
 // Test boot sequence initialization.
 test "boot sequence init" {
@@ -24,6 +25,10 @@ test "boot sequence init" {
 
 // Test boot sequence start.
 test "boot sequence start" {
+    // Disable RawIO to avoid SIGILL in tests.
+    RawIO.disable();
+    defer RawIO.enable();
+    
     var kernel = BasinKernel.init();
     var boot_seq = BootSequence.init();
     

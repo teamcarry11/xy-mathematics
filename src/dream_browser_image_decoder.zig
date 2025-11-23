@@ -92,9 +92,18 @@ pub const DreamBrowserImageDecoder = struct {
             return .png;
         }
         
-        // JPEG signature: FF D8 FF
-        if (data.len >= 3 and data[0] == 0xFF and data[1] == 0xD8 and data[2] == 0xFF) {
-            return .jpeg;
+        // JPEG signature: FF D8 FF (or FF D8 FF E0/E1 for JFIF/EXIF)
+        if (data.len >= 3) {
+            if (data[0] == 0xFF and data[1] == 0xD8) {
+                // Check for JPEG marker (FF D8)
+                if (data.len >= 4 and data[2] == 0xFF) {
+                    // FF D8 FF is valid JPEG start
+                    return .jpeg;
+                } else if (data.len >= 4) {
+                    // FF D8 followed by any byte is also JPEG
+                    return .jpeg;
+                }
+            }
         }
         
         return .unknown;

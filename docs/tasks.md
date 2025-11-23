@@ -906,11 +906,11 @@
 
 ### 8.3 Grain Skate
 
-**Objective**: Native macOS knowledge graph with social threading, powered by Grain Toroid (WSE compute) and Grain Silo (object storage).
+**Objective**: Native macOS knowledge graph with social threading, powered by Grain Field (WSE compute) and Grain Silo (object storage).
 
 #### 8.3.0 Storage & Compute Foundation ✅ **COMPLETE**
-- [x] Grain Toroid (`src/grain_toroid/compute.zig`) - WSE RAM-only spatial computing abstraction
-- [x] Toroidal topology (2D grid with wrap-around)
+- [x] Grain Field (`src/grain_field/compute.zig`) - WSE RAM-only spatial computing abstraction
+- [x] Field topology (2D grid with wrap-around) (2D grid with wrap-around)
 - [x] SRAM allocation and management (44GB+ capacity)
 - [x] Parallel operations (vector search, full-text search, matrix multiply)
 - [x] Core state management (idle, active, waiting, error)
@@ -918,7 +918,7 @@
 - [x] Hot/cold data separation (SRAM cache vs object storage)
 - [x] Object storage with metadata
 - [x] Hot cache promotion/demotion
-- [x] Comprehensive tests (`tests/049_grain_toroid_test.zig`, `tests/050_grain_silo_test.zig`)
+- [x] Comprehensive tests (`tests/049_grain_field_test.zig`, `tests/050_grain_silo_test.zig`)
 - [x] GrainStyle compliance (u32/u64 types, assertions, bounded allocations)
 
 #### 8.3.1 Core Engine ✅ **COMPLETE**

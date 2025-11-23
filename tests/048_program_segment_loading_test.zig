@@ -172,22 +172,16 @@ test "syscall_spawn creates memory mappings for segments" {
     
     // Create VM memory reader with captured ELF data (const copy).
     const Reader = struct {
-        elf: [256]u8,
-        fn read(self_ptr: *const @This(), addr: u64, len: u32, buffer: []u8) ?u32 {
+        const elf: [256]u8 = elf_data;
+        fn read(addr: u64, len: u32, buffer: []u8) ?u32 {
             _ = addr;
             if (len > buffer.len or len > 256) return null;
-            @memcpy(buffer[0..len], self_ptr.elf[0..len]);
+            @memcpy(buffer[0..len], elf[0..len]);
             return len;
         }
     };
     
-    const reader_instance = Reader{ .elf = elf_data };
-    const read_fn = struct {
-        const r: Reader = reader_instance;
-        fn read_wrapper(addr: u64, len: u32, buffer: []u8) ?u32 {
-            return r.read(addr, len, buffer);
-        }
-    }.read_wrapper;
+    const read_fn = Reader.read;
     
     kernel.vm_memory_reader = read_fn;
     
@@ -216,8 +210,9 @@ test "syscall_spawn creates memory mappings for segments" {
     // Note: Mapping creation depends on syscall_map success.
     // If mapping creation fails (e.g., address conflict), that's okay for this test.
     // The important thing is that spawn succeeds and segment parsing works.
-    // Variables are used in assertions above.
+    // mapping_found is used in the loop above.
     _ = mapping_found;
+    _ = process_id;
 }
 
 // Test: syscall_spawn handles ELF without program headers.
@@ -250,22 +245,16 @@ test "syscall_spawn handles ELF without program headers" {
     
     // Create VM memory reader with captured ELF data (const copy).
     const Reader = struct {
-        elf: [64]u8,
-        fn read_wrapper(self_ptr: *const @This(), addr: u64, len: u32, buffer: []u8) ?u32 {
+        const elf: [64]u8 = elf_data;
+        fn read(addr: u64, len: u32, buffer: []u8) ?u32 {
             _ = addr;
             if (len > buffer.len or len > 64) return null;
-            @memcpy(buffer[0..len], self_ptr.elf[0..len]);
+            @memcpy(buffer[0..len], elf[0..len]);
             return len;
         }
     };
     
-    const reader_instance = Reader{ .elf = elf_data };
-    const read_fn = struct {
-        const r: Reader = reader_instance;
-        fn read(addr: u64, len: u32, buffer: []u8) ?u32 {
-            return r.read_wrapper(addr, len, buffer);
-        }
-    }.read;
+    const read_fn = Reader.read;
     
     kernel.vm_memory_reader = read_fn;
     

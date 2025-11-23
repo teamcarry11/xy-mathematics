@@ -465,37 +465,14 @@ pub const AiTransforms = struct {
             std.debug.assert(edit.new_text.len <= MAX_FILE_EDIT_SIZE);
         }
         
-        // Build modified content by applying edits
-        var result = std.ArrayList(u8).init(self.allocator);
-        errdefer result.deinit();
-        
-        // Convert file content to lines for easier editing
-        var lines = std.ArrayList([]const u8).init(self.allocator);
-        defer lines.deinit();
-        
-        var line_start: u32 = 0;
-        var line_num: u32 = 0;
-        
-        // Split content into lines
-        for (file_content, 0..) |char, i| {
-            if (char == '\n' or i == file_content.len - 1) {
-                const line_end = if (i == file_content.len - 1) @as(u32, @intCast(i + 1)) else @as(u32, @intCast(i));
-                const line = file_content[line_start..line_end];
-                try lines.append(line);
-                line_start = @as(u32, @intCast(i + 1));
-                line_num += 1;
-            }
-        }
-        
-        // Apply edits (simple text replacement for now)
-        // In a full implementation, we'd use line/char positions for precise edits
+        // Start with original content
         var modified_content = try self.allocator.dupe(u8, file_content);
         errdefer self.allocator.free(modified_content);
         
         // Apply each edit by replacing old_text with new_text
         var current_pos: u32 = 0;
         for (edits) |edit| {
-            // Find old_text in content
+            // Find old_text in remaining content
             if (std.mem.indexOf(u8, modified_content[current_pos..], edit.old_text)) |pos| {
                 const actual_pos = current_pos + @as(u32, @intCast(pos));
                 

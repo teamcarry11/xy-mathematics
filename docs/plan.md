@@ -822,11 +822,11 @@
 
 ### 8.3 Grain Skate: Knowledge Graph Application
 
-**Objective**: Native macOS knowledge graph with social threading, powered by Grain Toroid (WSE compute) and Grain Silo (object storage).
+**Objective**: Native macOS knowledge graph with social threading, powered by Grain Field (WSE compute) and Grain Silo (object storage).
 
 #### 8.3.0: Storage & Compute Foundation ✅ **COMPLETE**
-- ✅ Grain Toroid (`src/grain_toroid/compute.zig`) - WSE RAM-only spatial computing abstraction
-- ✅ Toroidal topology (2D grid with wrap-around)
+- ✅ Grain Field (`src/grain_field/compute.zig`) - WSE RAM-only spatial computing abstraction
+- ✅ Field topology (2D grid with wrap-around) (2D grid with wrap-around)
 - ✅ SRAM allocation and management (44GB+ capacity)
 - ✅ Parallel operations (vector search, full-text search, matrix multiply)
 - ✅ Core state management (idle, active, waiting, error)
@@ -834,7 +834,7 @@
 - ✅ Hot/cold data separation (SRAM cache vs object storage)
 - ✅ Object storage with metadata
 - ✅ Hot cache promotion/demotion
-- ✅ Comprehensive tests (`tests/049_grain_toroid_test.zig`, `tests/050_grain_silo_test.zig`)
+- ✅ Comprehensive tests (`tests/049_grain_field_test.zig`, `tests/050_grain_silo_test.zig`)
 - ✅ GrainStyle compliance (u32/u64 types, assertions, bounded allocations)
 
 #### 8.3.1: Core Engine ✅ **COMPLETE**
@@ -1042,11 +1042,11 @@
 
 ### 8.3 Grain Skate: Knowledge Graph Application
 
-**Objective**: Native macOS knowledge graph with social threading, powered by Grain Toroid (WSE compute) and Grain Silo (object storage).
+**Objective**: Native macOS knowledge graph with social threading, powered by Grain Field (WSE compute) and Grain Silo (object storage).
 
 #### 8.3.0: Storage & Compute Foundation ✅ **COMPLETE**
-- ✅ Grain Toroid (`src/grain_toroid/compute.zig`) - WSE RAM-only spatial computing abstraction
-- ✅ Toroidal topology (2D grid with wrap-around)
+- ✅ Grain Field (`src/grain_field/compute.zig`) - WSE RAM-only spatial computing abstraction
+- ✅ Field topology (2D grid with wrap-around) (2D grid with wrap-around)
 - ✅ SRAM allocation and management (44GB+ capacity)
 - ✅ Parallel operations (vector search, full-text search, matrix multiply)
 - ✅ Core state management (idle, active, waiting, error)
@@ -1054,7 +1054,7 @@
 - ✅ Hot/cold data separation (SRAM cache vs object storage)
 - ✅ Object storage with metadata
 - ✅ Hot cache promotion/demotion
-- ✅ Comprehensive tests (`tests/049_grain_toroid_test.zig`, `tests/050_grain_silo_test.zig`)
+- ✅ Comprehensive tests (`tests/049_grain_field_test.zig`, `tests/050_grain_silo_test.zig`)
 - ✅ GrainStyle compliance (u32/u64 types, assertions, bounded allocations)
 
 #### 8.3.1: Core Engine ✅ **COMPLETE**
@@ -1262,11 +1262,11 @@
 
 ### 8.3 Grain Skate: Knowledge Graph Application
 
-**Objective**: Native macOS knowledge graph with social threading, powered by Grain Toroid (WSE compute) and Grain Silo (object storage).
+**Objective**: Native macOS knowledge graph with social threading, powered by Grain Field (WSE compute) and Grain Silo (object storage).
 
 #### 8.3.0: Storage & Compute Foundation ✅ **COMPLETE**
-- ✅ Grain Toroid (`src/grain_toroid/compute.zig`) - WSE RAM-only spatial computing abstraction
-- ✅ Toroidal topology (2D grid with wrap-around)
+- ✅ Grain Field (`src/grain_field/compute.zig`) - WSE RAM-only spatial computing abstraction
+- ✅ Field topology (2D grid with wrap-around) (2D grid with wrap-around)
 - ✅ SRAM allocation and management (44GB+ capacity)
 - ✅ Parallel operations (vector search, full-text search, matrix multiply)
 - ✅ Core state management (idle, active, waiting, error)
@@ -1274,7 +1274,7 @@
 - ✅ Hot/cold data separation (SRAM cache vs object storage)
 - ✅ Object storage with metadata
 - ✅ Hot cache promotion/demotion
-- ✅ Comprehensive tests (`tests/049_grain_toroid_test.zig`, `tests/050_grain_silo_test.zig`)
+- ✅ Comprehensive tests (`tests/049_grain_field_test.zig`, `tests/050_grain_silo_test.zig`)
 - ✅ GrainStyle compliance (u32/u64 types, assertions, bounded allocations)
 
 #### 8.3.1: Core Engine ✅ **COMPLETE**

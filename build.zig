@@ -1139,18 +1139,18 @@ pub fn build(b: *std.Build) void {
     const grain_skate_core_tests_run = b.addRunArtifact(grain_skate_core_tests);
     test_step.dependOn(&grain_skate_core_tests_run.step);
 
-    const grain_toroid_tests = b.addTest(.{
+    const grain_field_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/049_grain_toroid_test.zig"),
+            .root_source_file = b.path("tests/049_grain_field_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_toroid", .module = grain_toroid_module },
+                .{ .name = "grain_field", .module = grain_field_module },
             },
         }),
     });
-    const grain_toroid_tests_run = b.addRunArtifact(grain_toroid_tests);
-    test_step.dependOn(&grain_toroid_tests_run.step);
+    const grain_field_tests_run = b.addRunArtifact(grain_field_tests);
+    test_step.dependOn(&grain_field_tests_run.step);
 
     const grain_silo_tests = b.addTest(.{
         .root_module = b.createModule(.{

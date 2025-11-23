@@ -57,6 +57,7 @@ pub const DreamBrowserProfiler = struct {
         samples_index: u32, // Circular buffer index
     };
     
+    allocator: std.mem.Allocator,
     profile_map: ProfileMap,
     sample_buffer: SampleBuffer,
     
@@ -115,6 +116,8 @@ pub const DreamBrowserProfiler = struct {
     
     /// Start profiling a function call.
     pub fn start_function(self: *DreamBrowserProfiler, function_name: []const u8) u64 {
+        // Function name not used in start (only in end_function)
+        _ = function_name;
         // Record start time
         return get_current_time_us();
     }

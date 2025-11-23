@@ -568,8 +568,9 @@ pub const Social = struct {
             var content: ?[]const u8 = null;
             var created_at: ?u64 = null;
             var updated_at: ?u64 = null;
-            var links = std.ArrayList(u32).init(self.allocator);
-            defer links.deinit();
+            // Bounded: Max links per block (use fixed array instead of ArrayList)
+            var links: [Block.MAX_LINKS_PER_BLOCK]u32 = undefined;
+            var links_len: u32 = 0;
 
             // Skip whitespace
             while (pos < json_data.len and std.ascii.isWhitespace(json_data[pos])) {
@@ -729,7 +730,11 @@ pub const Social = struct {
                         }
                         const link_str = json_data[link_start..pos];
                         const link_id = try std.fmt.parseInt(u32, link_str, 10);
-                        try links.append(link_id);
+                        if (links_len >= Block.MAX_LINKS_PER_BLOCK) {
+                            return error.TooManyLinks;
+                        }
+                        links[links_len] = link_id;
+                        links_len += 1;
                     }
                 }
             }

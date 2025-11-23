@@ -1251,11 +1251,11 @@ pub const BasinKernel = struct {
                     if (self.vm_memory_reader) |read_fn| {
                         if (self.vm_memory_writer) |write_fn| {
                             const loaded = segment_loader.load_program_segment(
-                                self,
                                 segment,
                                 executable,
                                 read_fn,
                                 write_fn,
+                                self,
                             );
                             
                             if (loaded) {

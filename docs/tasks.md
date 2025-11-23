@@ -738,6 +738,7 @@
   - [x] URL extraction (HTTP/HTTPS, Nostr URLs)
   - [x] File path extraction (file:// URLs, absolute paths)
   - [x] Cross-component search (search across editor and browser tabs)
+  - [x] Fix allocator field bug (add missing allocator field to struct)
   - [x] All functions follow GrainStyle/TigerStyle (u32 types, assertions, bounded allocations)
   - [x] Comprehensive tests for clipboard, URL extraction, and search
 

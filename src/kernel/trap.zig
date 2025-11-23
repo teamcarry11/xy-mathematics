@@ -295,17 +295,31 @@ fn terminate_process_on_exception(
             kernel.scheduler.clear_current();
         }
         
+        // Clean up process resources (memory mappings, handles, channels).
+        // Why: Free resources when process terminates due to exception.
+        const process_id_u32 = @as(u32, @truncate(current_process_id));
+        const resource_cleanup = @import("resource_cleanup.zig");
+        const resources_cleaned = resource_cleanup.cleanup_process_resources(
+            kernel,
+            process_id_u32,
+        );
+        
         // Log process termination.
-        Debug.kprint("kernel: process {d} terminated due to exception {d} at PC=0x{x}, exit status={d}\n", .{
+        Debug.kprint("kernel: process {d} terminated due to exception {d} at PC=0x{x}, exit status={d}, resources cleaned={d}\n", .{
             current_process_id,
             exception_code,
             exception_pc,
             exit_status,
+            resources_cleaned,
         });
         
         // Assert: Process must be marked as exited (postcondition).
         Debug.kassert(process.state == .exited, "Process not exited", .{});
         Debug.kassert(process.exit_status == exit_status, "Exit status mismatch", .{});
+        
+        // Assert: Resources cleaned must be reasonable (postcondition).
+        const MAX_RESOURCES: u32 = 1000;
+        Debug.kassert(resources_cleaned <= MAX_RESOURCES * 3, "Resources cleaned too large", .{});
     } else {
         // Process not found (should not happen).
         Debug.kprint("kernel: process {d} not found for termination\n", .{current_process_id});

@@ -623,8 +623,8 @@ test "lsp snapshot model" {
     // Test incremental change
     const change = LspClient.TextDocumentChange{
         .range = LspClient.Range{
-            .start = LspClient.Position{ .line = 0, .character = 11 },
-            .end = LspClient.Position{ .line = 0, .character = 12 },
+            .start = LspClient.Position{ .line = 0, .character = 10 },
+            .end = LspClient.Position{ .line = 0, .character = 11 },
         },
         .text = "2",
     };

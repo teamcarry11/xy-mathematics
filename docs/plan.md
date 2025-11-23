@@ -1,7 +1,7 @@
 # Grain OS Development Plan
 ## RISC-V Kernel + VM + Aurora IDE
 
-**Current Status**: Phase 3.5 Exception Statistics in State Snapshot complete ✅. Exception statistics integrated into VM state persistence! 🎉
+**Current Status**: Phase 3.8 Memory Protection Enforcement complete ✅. Memory protection with permission checking implemented! 🎉
 
 **Goal**: RISC-V-targeted Grain OS with graphical interface running in macOS Tahoe 26.1 VM, with path toward Framework 13 RISC-V hardware.
 
@@ -185,6 +185,36 @@
    - ✅ Enhanced state persistence tests (exception statistics verification)
    - ✅ Comprehensive TigerStyle tests (tests/031_exception_stats_snapshot_test.zig)
    - ✅ GrainStyle compliance (u32 types, assertions, bounded arrays, static allocation)
+
+19. **Exception Statistics in Diagnostics Snapshot** ✅ **COMPLETE**
+   - ✅ Exception statistics snapshot type in DiagnosticsSnapshot (ExceptionStatsSnapshot struct)
+   - ✅ Exception statistics capture in diagnostics snapshot (create function)
+   - ✅ Exception statistics display in diagnostics print (print function)
+   - ✅ VM get_diagnostics integration (exception statistics included)
+   - ✅ Enhanced diagnostics tests (exception statistics verification)
+   - ✅ Comprehensive TigerStyle tests (tests/032_exception_stats_diagnostics_test.zig)
+   - ✅ GrainStyle compliance (u32 types, assertions, bounded arrays, static allocation)
+
+20. **Enhanced Exception Recovery** ✅ **COMPLETE**
+   - ✅ Fatal exception detection (is_fatal_exception function)
+   - ✅ Process termination on fatal exceptions (terminate_process_on_exception function)
+   - ✅ Exit status calculation (128 + exception code, Unix convention)
+   - ✅ Scheduler integration (clear current process on termination)
+   - ✅ Exception handling for all exception types (fatal vs non-fatal)
+   - ✅ Comprehensive TigerStyle tests (tests/033_exception_recovery_test.zig)
+   - ✅ GrainStyle compliance (u32 types, assertions, bounded loops, static allocation)
+
+21. **Memory Protection Enforcement** ✅ **COMPLETE**
+   - ✅ Memory permission checking (check_memory_permission function in BasinKernel)
+   - ✅ Permission checker callback in VM (permission_checker field)
+   - ✅ Permission checks in all load instructions (execute_lb, execute_lh, execute_ld, execute_lbu, execute_lhu, execute_lwu, execute_lw)
+   - ✅ Permission checks in all store instructions (execute_sb, execute_sh, execute_sd, execute_sw)
+   - ✅ Permission checks in instruction fetch (fetch_instruction, execute permission)
+   - ✅ Access fault exceptions (code 5 for load, code 7 for store, code 1 for instruction)
+   - ✅ Kernel space always accessible (read/write/execute)
+   - ✅ Framebuffer always readable/writable (not executable)
+   - ✅ Comprehensive TigerStyle tests (tests/034_memory_protection_test.zig)
+   - ✅ GrainStyle compliance (u32 types, assertions, bounded loops, static allocation)
 
 ## 🚀 Architecture Overview
 

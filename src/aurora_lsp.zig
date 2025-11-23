@@ -302,7 +302,7 @@ pub const LspClient = struct {
         try text_doc_obj.put("version", std.json.Value{ .integer = @intCast(snapshot.version) });
         try params_obj.put("textDocument", std.json.Value{ .object = text_doc_obj });
         const changes_slice = try change_objects.toOwnedSlice(self.allocator);
-        try params_obj.put("contentChanges", std.json.Value{ .array = .{ .items = changes_slice } });
+        try params_obj.put("contentChanges", std.json.Value{ .array = .{ .items = changes_slice, .capacity = changes_slice.len } });
         
         const params = std.json.Value{ .object = params_obj };
         try self.sendNotification("textDocument/didChange", params);

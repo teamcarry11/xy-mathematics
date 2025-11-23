@@ -11,8 +11,6 @@ const std = @import("std");
 /// - Fast path for common operations (optimized hot paths)
 /// - Latency monitoring (track message send/receive times)
 pub const DreamBrowserProtocolOptimizer = struct {
-    allocator: std.mem.Allocator,
-    
     // Bounded: Max 100 messages per batch
     pub const MAX_BATCH_SIZE: u32 = 100;
     
@@ -24,6 +22,8 @@ pub const DreamBrowserProtocolOptimizer = struct {
     
     // Target latency: sub-millisecond (0.1-0.5ms)
     pub const TARGET_LATENCY_US: u32 = 500; // 0.5ms in microseconds
+    
+    allocator: std.mem.Allocator,
     
     /// Message batch (for combining multiple messages).
     pub const MessageBatch = struct {

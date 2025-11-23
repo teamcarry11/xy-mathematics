@@ -63,6 +63,10 @@ test "boot sequence advance" {
 
 // Test boot sequence complete.
 test "boot sequence complete" {
+    // Disable RawIO to avoid SIGILL in tests.
+    RawIO.disable();
+    defer RawIO.enable();
+    
     var kernel = BasinKernel.init();
     var boot_seq = BootSequence.init();
     
@@ -87,6 +91,10 @@ test "boot sequence complete" {
 
 // Test boot sequence duration.
 test "boot sequence duration" {
+    // Disable RawIO to avoid SIGILL in tests.
+    RawIO.disable();
+    defer RawIO.enable();
+    
     var kernel = BasinKernel.init();
     var boot_seq = BootSequence.init();
     
@@ -105,6 +113,10 @@ test "boot sequence duration" {
 
 // Test boot kernel function.
 test "boot kernel function" {
+    // Disable RawIO to avoid SIGILL in tests.
+    RawIO.disable();
+    defer RawIO.enable();
+    
     var kernel = BasinKernel.init();
     
     // Execute boot sequence.

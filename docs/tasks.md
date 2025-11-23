@@ -454,6 +454,12 @@
   - [x] Update all transformation functions to use `provider.request_transformation()`
   - [x] Convert between `AiProvider.TransformResult` and `AiTransforms.TransformResult`
   - [x] GrainStyle compliance (bounded allocations, assertions, explicit types)
+- [x] Build System Integration ✅ **COMPLETE**
+  - [x] Add test targets for `aurora_ai_provider.zig`
+  - [x] Add test targets for `aurora_glm46_provider.zig`
+  - [x] Add test targets for `aurora_ai_transforms.zig`
+  - [x] All test targets integrated into `build.zig` test step
+  - [x] All modules compile successfully
 - [ ] Code transformation (refactor, extract, inline)
 - [ ] Tool calling (run `zig build`, `jj status`)
 - [ ] Multi-file edits (context-aware)

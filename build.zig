@@ -561,6 +561,12 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&run_lsp_tests.step);
     const run_editor_tests = b.addRunArtifact(editor_tests);
     test_step.dependOn(&run_editor_tests.step);
+    const run_ai_provider_tests = b.addRunArtifact(ai_provider_tests);
+    test_step.dependOn(&run_ai_provider_tests.step);
+    const run_glm46_provider_tests = b.addRunArtifact(glm46_provider_tests);
+    test_step.dependOn(&run_glm46_provider_tests.step);
+    const run_ai_transforms_tests = b.addRunArtifact(ai_transforms_tests);
+    test_step.dependOn(&run_ai_transforms_tests.step);
     const run_route_tests = b.addRunArtifact(route_tests);
     test_step.dependOn(&run_route_tests.step);
     const run_orchestrator_tests = b.addRunArtifact(orchestrator_tests);

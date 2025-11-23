@@ -163,6 +163,10 @@ test "kernel scheduler integration" {
 
 // Test exit clears current process.
 test "kernel exit clears current" {
+    // Disable RawIO to avoid SIGILL in tests.
+    RawIO.disable();
+    defer RawIO.enable();
+    
     var kernel = BasinKernel.init();
     
     // Spawn a process.
@@ -201,6 +205,10 @@ test "kernel exit clears current" {
 
 // Test wait for exited process.
 test "kernel wait exited process" {
+    // Disable RawIO to avoid SIGILL in tests.
+    RawIO.disable();
+    defer RawIO.enable();
+    
     var kernel = BasinKernel.init();
     
     // Spawn a process.

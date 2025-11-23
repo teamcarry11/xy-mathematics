@@ -89,8 +89,10 @@ pub const DreamBrowserParser = struct {
         const tag_name = tag_str[0..space_idx];
         
         // Parse attributes (simple: name="value")
-        var attributes = std.ArrayList(Attribute).init(self.allocator);
-        defer attributes.deinit();
+        // Pre-allocate capacity (optimization: reduce reallocations)
+        var attributes = std.ArrayList(Attribute){ .items = &.{}, .capacity = 0 };
+        defer attributes.deinit(self.allocator);
+        try attributes.ensureTotalCapacity(self.allocator, 10); // Pre-allocate for common case
         
         var attr_start = space_idx;
         while (attr_start < tag_str.len) {
@@ -154,8 +156,10 @@ pub const DreamBrowserParser = struct {
         // For now, parse basic structure: selector { property: value; }
         // TODO: Implement full CSS3 parser
         
-        var rules = std.ArrayList(CssRule).init(self.allocator);
-        defer rules.deinit();
+        // Pre-allocate capacity (optimization: reduce reallocations)
+        var rules = std.ArrayList(CssRule){ .items = &.{}, .capacity = 0 };
+        defer rules.deinit(self.allocator);
+        try rules.ensureTotalCapacity(self.allocator, @min(MAX_CSS_RULES, 50)); // Pre-allocate for common case
         
         // Find first rule
         var pos: usize = 0;
@@ -177,8 +181,10 @@ pub const DreamBrowserParser = struct {
             const decl_str = css[decl_start..decl_start + decl_end];
             
             // Parse declarations (simple: property: value;)
-            var declarations = std.ArrayList(Declaration).init(self.allocator);
-            defer declarations.deinit();
+            // Pre-allocate capacity (optimization: reduce reallocations)
+            var declarations = std.ArrayList(Declaration){ .items = &.{}, .capacity = 0 };
+            defer declarations.deinit(self.allocator);
+            try declarations.ensureTotalCapacity(self.allocator, 10); // Pre-allocate for common case
             
             var decl_pos: usize = 0;
             while (decl_pos < decl_str.len) {

@@ -105,12 +105,15 @@ pub const DreamBrowserRenderer = struct {
         std.debug.assert(viewport_width > 0);
         std.debug.assert(viewport_height > 0);
         
+        // Pre-allocate capacity for performance (optimization: reduce reallocations)
         var boxes = std.ArrayList(LayoutBox){ .items = &.{}, .capacity = 0 };
         errdefer boxes.deinit(self.allocator);
+        try boxes.ensureTotalCapacity(self.allocator, @min(MAX_LAYOUT_BOXES, 100)); // Pre-allocate for common case
         
-        // Iterative stack-based layout (replaces recursion)
+        // Pre-allocate stack capacity (optimization: reduce reallocations)
         var stack = std.ArrayList(LayoutStackFrame){ .items = &.{}, .capacity = 0 };
         errdefer stack.deinit(self.allocator);
+        try stack.ensureTotalCapacity(self.allocator, @min(MAX_STACK_DEPTH, 50)); // Pre-allocate for common case
         
         // Push root node onto stack
         try stack.append(self.allocator, LayoutStackFrame{
@@ -208,12 +211,15 @@ pub const DreamBrowserRenderer = struct {
         _ = try parser.computeStyles(node, css_rules); // Styles computed but not used in simplified rendering
         
         // Iterative stack-based rendering (replaces recursion)
+        // Pre-allocate stack capacity (optimization: reduce reallocations)
         var stack = std.ArrayList(RenderStackFrame){ .items = &.{}, .capacity = 0 };
         errdefer stack.deinit(self.allocator);
+        try stack.ensureTotalCapacity(self.allocator, @min(MAX_STACK_DEPTH, 50)); // Pre-allocate for common case
         
-        // Root children list
+        // Root children list (pre-allocate capacity)
         var root_children = std.ArrayList(GrainAurora.Node){ .items = &.{}, .capacity = 0 };
         errdefer root_children.deinit(self.allocator);
+        try root_children.ensureTotalCapacity(self.allocator, 20); // Pre-allocate for common case
         
         // Push root node onto stack
         try stack.append(self.allocator, RenderStackFrame{

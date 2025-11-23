@@ -1,5 +1,6 @@
 const std = @import("std");
 const DreamBrowserParser = @import("dream_browser_parser.zig").DreamBrowserParser;
+const DreamBrowserPerformance = @import("dream_browser_performance.zig").DreamBrowserPerformance;
 const GrainAurora = @import("grain_aurora.zig").GrainAurora;
 const GrainBuffer = @import("grain_buffer.zig").GrainBuffer;
 
@@ -64,6 +65,22 @@ pub const DreamBrowserRenderer = struct {
         
         return DreamBrowserRenderer{
             .allocator = allocator,
+            .performance = null,
+        };
+    }
+    
+    /// Initialize renderer with performance monitoring.
+    pub fn init_with_performance(
+        allocator: std.mem.Allocator,
+        performance: *DreamBrowserPerformance,
+    ) DreamBrowserRenderer {
+        // Assert: Allocator and performance monitor must be valid
+        std.debug.assert(allocator.ptr != null);
+        std.debug.assert(performance.allocator.ptr != null);
+        
+        return DreamBrowserRenderer{
+            .allocator = allocator,
+            .performance = performance,
         };
     }
     

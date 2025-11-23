@@ -461,7 +461,13 @@
   - [x] All test targets integrated into `build.zig` test step
   - [x] All modules compile successfully
 - [ ] Code transformation (refactor, extract, inline)
-- [ ] Tool calling (run `zig build`, `jj status`)
+- [x] Tool calling (run `zig build`, `jj status`) ✅ **COMPLETE**
+  - [x] Implement `request_tool_call_impl` in `aurora_glm46_provider.zig`
+  - [x] Execute commands using `std.process.Child`
+  - [x] Capture stdout and stderr
+  - [x] Return exit code and output
+  - [x] Add `request_tool_call` method to `Editor`
+  - [x] GrainStyle compliance (bounded allocations, assertions, explicit types)
 - [ ] Multi-file edits (context-aware)
 
 #### 4.1.4 Tree-sitter Integration ✅ **ENHANCED**

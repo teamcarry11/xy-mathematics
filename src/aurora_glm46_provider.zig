@@ -148,7 +148,7 @@ pub const Glm46Provider = struct {
             
             // Assert: Bytes read fits in u32
             std.debug.assert(bytes_read_u64 <= std.math.maxInt(u32));
-            const bytes_read = @intCast(bytes_read_u64);
+            const bytes_read = @as(u32, @intCast(bytes_read_u64));
             
             // Assert: Output size bounded (10MB max)
             std.debug.assert(output.items.len + bytes_read <= 10 * 1024 * 1024);
@@ -168,7 +168,7 @@ pub const Glm46Provider = struct {
             
             // Assert: Bytes read fits in u32
             std.debug.assert(bytes_read_u64 <= std.math.maxInt(u32));
-            const bytes_read = @intCast(bytes_read_u64);
+            const bytes_read = @as(u32, @intCast(bytes_read_u64));
             
             // Assert: Error output size bounded (10MB max)
             std.debug.assert(error_output.items.len + bytes_read <= 10 * 1024 * 1024);

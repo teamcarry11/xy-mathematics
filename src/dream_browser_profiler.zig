@@ -287,7 +287,7 @@ pub const DreamBrowserProfiler = struct {
     
     /// Get all critical paths (functions exceeding critical threshold).
     /// Note: Returns slice pointing to allocated array (caller must free).
-    pub fn get_critical_paths(self: *const DreamBrowserProfiler) []const FunctionProfile {
+    pub fn get_critical_paths(self: *DreamBrowserProfiler) []const FunctionProfile {
         // Count critical paths
         var critical_count: u32 = 0;
         var i: u32 = 0;

@@ -384,8 +384,8 @@ pub const TabManager = struct {
             .editor_tabs_count = self.storage.editor_tabs_len,
             .browser_tabs_count = self.storage.browser_tabs_len,
             .groups_count = self.storage.groups_len,
-            .pinned_editor_tabs: count_pinned_editor_tabs(self),
-            .pinned_browser_tabs: count_pinned_browser_tabs(self),
+            .pinned_editor_tabs = count_pinned_editor_tabs(self),
+            .pinned_browser_tabs = count_pinned_browser_tabs(self),
         };
     }
     

@@ -212,6 +212,8 @@ pub const DreamBrowserProtocolOptimizer = struct {
     
     /// Record send latency (start measurement).
     pub fn record_send_start(self: *DreamBrowserProtocolOptimizer) u64 {
+        // Self not used in this function (could be static, but kept as method for consistency)
+        _ = self;
         return get_current_time_us();
     }
     

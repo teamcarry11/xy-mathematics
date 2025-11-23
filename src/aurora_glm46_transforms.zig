@@ -1,0 +1,344 @@
+const std = @import("std");
+const Glm46Client = @import("aurora_glm46.zig").Glm46Client;
+
+/// GLM-4.6 Code Transformations: Refactor, extract, inline operations.
+/// ~<~ Glow Airbend: explicit transformation state, bounded edits.
+/// ~~~~ Glow Waterbend: transformations flow deterministically through DAG.
+///
+/// This implements:
+/// - Code refactoring (rename symbol, move function, etc.)
+/// - Extract function (extract selected code into new function)
+/// - Inline function (inline function call at call site)
+/// - Multi-file edits (context-aware transformations across files)
+pub const Glm46Transforms = struct {
+    allocator: std.mem.Allocator,
+    client: *Glm46Client,
+    
+    // Bounded: Max 100 transformation operations
+    pub const MAX_TRANSFORMATIONS: u32 = 100;
+    
+    // Bounded: Max 10 files per transformation
+    pub const MAX_FILES_PER_TRANSFORM: u32 = 10;
+    
+    // Bounded: Max 1MB per file edit
+    pub const MAX_FILE_EDIT_SIZE: u32 = 1024 * 1024;
+    
+    // Bounded: Max 256 characters for symbol name
+    pub const MAX_SYMBOL_NAME_LENGTH: u32 = 256;
+    
+    /// Transformation type.
+    pub const TransformType = enum {
+        refactor_rename, // Rename symbol
+        refactor_move, // Move function/struct to different location
+        extract_function, // Extract selected code into new function
+        inline_function, // Inline function call at call site
+        multi_file_edit, // Edit multiple files contextually
+    };
+    
+    /// File edit (for multi-file transformations).
+    pub const FileEdit = struct {
+        file_uri: []const u8, // File URI
+        old_text: []const u8, // Old text to replace
+        new_text: []const u8, // New text
+        start_line: u32, // Start line (0-based)
+        start_char: u32, // Start character (0-based)
+        end_line: u32, // End line (0-based)
+        end_char: u32, // End character (0-based)
+    };
+    
+    /// Transformation result.
+    pub const TransformResult = struct {
+        transform_type: TransformType, // Type of transformation
+        file_edits: []const FileEdit, // File edits to apply
+        file_edits_len: u32, // Number of file edits
+        success: bool, // Whether transformation succeeded
+        error_message: ?[]const u8 = null, // Error message if failed
+    };
+    
+    /// Initialize transformations.
+    pub fn init(allocator: std.mem.Allocator, client: *Glm46Client) Glm46Transforms {
+        // Assert: Client must be valid
+        std.debug.assert(@intFromPtr(client) != 0);
+        
+        _ = allocator; // Allocator is stored in struct
+        
+        return Glm46Transforms{
+            .allocator = allocator,
+            .client = client,
+        };
+    }
+    
+    /// Refactor: Rename symbol.
+    pub fn refactor_rename(
+        self: *Glm46Transforms,
+        file_uri: []const u8,
+        symbol_name: []const u8,
+        new_name: []const u8,
+        line: u32,
+        char: u32,
+    ) !TransformResult {
+        // Assert: Parameters must be valid
+        std.debug.assert(file_uri.len > 0);
+        std.debug.assert(file_uri.len <= 4096); // Bounded URI length
+        std.debug.assert(symbol_name.len > 0);
+        std.debug.assert(symbol_name.len <= MAX_SYMBOL_NAME_LENGTH);
+        std.debug.assert(new_name.len > 0);
+        std.debug.assert(new_name.len <= MAX_SYMBOL_NAME_LENGTH);
+        
+        // Create prompt for GLM-4.6
+        const prompt = try std.fmt.allocPrint(
+            self.allocator,
+            \\Refactor: Rename symbol "{s}" to "{s}" in file {s} at line {d}, char {d}.
+            \\Find all occurrences of this symbol and rename them consistently.
+            \\Return the file edits in JSON format with file_uri, old_text, new_text, start_line, start_char, end_line, end_char.
+        ,
+            .{ symbol_name, new_name, file_uri, line, char },
+        );
+        defer self.allocator.free(prompt);
+        
+        // Request transformation from GLM-4.6
+        // Note: This is a placeholder - actual implementation would call GLM-4.6 API
+        _ = self.client;
+        
+        // For now, return empty result (to be implemented with actual GLM-4.6 API call)
+        return TransformResult{
+            .transform_type = .refactor_rename,
+            .file_edits = &.{},
+            .file_edits_len = 0,
+            .success = false,
+            .error_message = try self.allocator.dupe(u8, "Not yet implemented"),
+        };
+    }
+    
+    /// Refactor: Move function/struct to different location.
+    pub fn refactor_move(
+        self: *Glm46Transforms,
+        file_uri: []const u8,
+        symbol_name: []const u8,
+        target_file_uri: []const u8,
+        target_line: u32,
+        line: u32,
+        char: u32,
+    ) !TransformResult {
+        // Assert: Parameters must be valid
+        std.debug.assert(file_uri.len > 0);
+        std.debug.assert(file_uri.len <= 4096);
+        std.debug.assert(symbol_name.len > 0);
+        std.debug.assert(symbol_name.len <= MAX_SYMBOL_NAME_LENGTH);
+        std.debug.assert(target_file_uri.len > 0);
+        std.debug.assert(target_file_uri.len <= 4096);
+        
+        // Create prompt for GLM-4.6
+        const prompt = try std.fmt.allocPrint(
+            self.allocator,
+            \\Refactor: Move symbol "{s}" from file {s} (line {d}, char {d}) to file {s} at line {d}.
+            \\Update all references to this symbol to use the new location.
+            \\Return the file edits in JSON format.
+        ,
+            .{ symbol_name, file_uri, line, char, target_file_uri, target_line },
+        );
+        defer self.allocator.free(prompt);
+        
+        // Request transformation from GLM-4.6
+        _ = self.client;
+        
+        // For now, return empty result
+        return TransformResult{
+            .transform_type = .refactor_move,
+            .file_edits = &.{},
+            .file_edits_len = 0,
+            .success = false,
+            .error_message = try self.allocator.dupe(u8, "Not yet implemented"),
+        };
+    }
+    
+    /// Extract: Extract selected code into new function.
+    pub fn extract_function(
+        self: *Glm46Transforms,
+        file_uri: []const u8,
+        function_name: []const u8,
+        start_line: u32,
+        start_char: u32,
+        end_line: u32,
+        end_char: u32,
+        selected_text: []const u8,
+    ) !TransformResult {
+        // Assert: Parameters must be valid
+        std.debug.assert(file_uri.len > 0);
+        std.debug.assert(file_uri.len <= 4096);
+        std.debug.assert(function_name.len > 0);
+        std.debug.assert(function_name.len <= MAX_SYMBOL_NAME_LENGTH);
+        std.debug.assert(selected_text.len > 0);
+        std.debug.assert(selected_text.len <= MAX_FILE_EDIT_SIZE);
+        
+        // Create prompt for GLM-4.6
+        const prompt = try std.fmt.allocPrint(
+            self.allocator,
+            \\Extract function: Extract the following code into a new function named "{s}" in file {s}.
+            \\Code to extract (lines {d}-{d}, chars {d}-{d}):
+            \\{s}
+            \\Analyze the code to determine function parameters and return type.
+            \\Replace the selected code with a function call.
+            \\Return the file edits in JSON format.
+        ,
+            .{ function_name, file_uri, start_line, end_line, start_char, end_char, selected_text },
+        );
+        defer self.allocator.free(prompt);
+        
+        // Request transformation from GLM-4.6
+        _ = self.client;
+        
+        // For now, return empty result
+        return TransformResult{
+            .transform_type = .extract_function,
+            .file_edits = &.{},
+            .file_edits_len = 0,
+            .success = false,
+            .error_message = try self.allocator.dupe(u8, "Not yet implemented"),
+        };
+    }
+    
+    /// Inline: Inline function call at call site.
+    pub fn inline_function(
+        self: *Glm46Transforms,
+        file_uri: []const u8,
+        function_name: []const u8,
+        call_line: u32,
+        call_char: u32,
+    ) !TransformResult {
+        // Assert: Parameters must be valid
+        std.debug.assert(file_uri.len > 0);
+        std.debug.assert(file_uri.len <= 4096);
+        std.debug.assert(function_name.len > 0);
+        std.debug.assert(function_name.len <= MAX_SYMBOL_NAME_LENGTH);
+        
+        // Create prompt for GLM-4.6
+        const prompt = try std.fmt.allocPrint(
+            self.allocator,
+            \\Inline function: Inline the function call "{s}" at line {d}, char {d} in file {s}.
+            \\Find the function definition and replace the call with the function body.
+            \\Handle parameters and return values correctly.
+            \\Return the file edits in JSON format.
+        ,
+            .{ function_name, call_line, call_char, file_uri },
+        );
+        defer self.allocator.free(prompt);
+        
+        // Request transformation from GLM-4.6
+        _ = self.client;
+        
+        // For now, return empty result
+        return TransformResult{
+            .transform_type = .inline_function,
+            .file_edits = &.{},
+            .file_edits_len = 0,
+            .success = false,
+            .error_message = try self.allocator.dupe(u8, "Not yet implemented"),
+        };
+    }
+    
+    /// Multi-file edit: Context-aware transformation across files.
+    pub fn multi_file_edit(
+        self: *Glm46Transforms,
+        file_uris: []const []const u8,
+        context: []const u8,
+        instruction: []const u8,
+    ) !TransformResult {
+        // Assert: Parameters must be valid
+        std.debug.assert(file_uris.len > 0);
+        std.debug.assert(file_uris.len <= MAX_FILES_PER_TRANSFORM);
+        std.debug.assert(context.len <= MAX_FILE_EDIT_SIZE);
+        std.debug.assert(instruction.len > 0);
+        std.debug.assert(instruction.len <= 4096); // Bounded instruction length
+        
+        // Validate all file URIs
+        for (file_uris) |uri| {
+            std.debug.assert(uri.len > 0);
+            std.debug.assert(uri.len <= 4096);
+        }
+        
+        // Create prompt for GLM-4.6
+        const prompt_buf = std.ArrayList(u8).init(self.allocator);
+        defer prompt_buf.deinit();
+        
+        try prompt_buf.writer().print("Multi-file edit: {s}\n\n", .{instruction});
+        try prompt_buf.writer().print("Files to edit:\n", .{});
+        for (file_uris) |uri| {
+            try prompt_buf.writer().print("  - {s}\n", .{uri});
+        }
+        if (context.len > 0) {
+            try prompt_buf.writer().print("\nContext:\n{s}\n", .{context});
+        }
+        try prompt_buf.writer().print("\nReturn the file edits in JSON format.\n", .{});
+        
+        const prompt = try prompt_buf.toOwnedSlice();
+        defer self.allocator.free(prompt);
+        
+        // Request transformation from GLM-4.6
+        _ = self.client;
+        
+        // For now, return empty result
+        return TransformResult{
+            .transform_type = .multi_file_edit,
+            .file_edits = &.{},
+            .file_edits_len = 0,
+            .success = false,
+            .error_message = try self.allocator.dupe(u8, "Not yet implemented"),
+        };
+    }
+    
+    /// Apply file edits to files (placeholder - actual implementation would modify files).
+    pub fn apply_edits(self: *Glm46Transforms, edits: []const FileEdit) !void {
+        _ = self;
+        
+        // Assert: Edits must be valid
+        std.debug.assert(edits.len > 0);
+        std.debug.assert(edits.len <= MAX_FILES_PER_TRANSFORM);
+        
+        // Validate all edits
+        for (edits) |edit| {
+            std.debug.assert(edit.file_uri.len > 0);
+            std.debug.assert(edit.file_uri.len <= 4096);
+            std.debug.assert(edit.old_text.len <= MAX_FILE_EDIT_SIZE);
+            std.debug.assert(edit.new_text.len <= MAX_FILE_EDIT_SIZE);
+        }
+        
+        // Placeholder: Actual implementation would:
+        // 1. Read files
+        // 2. Apply edits (replace old_text with new_text)
+        // 3. Write files back
+        // 4. Update DAG with transformation events
+    }
+};
+
+test "glm46 transforms initialization" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    
+    // Create mock GLM-4.6 client
+    var client = Glm46Client.init(arena.allocator(), "test-api-key");
+    defer client.deinit();
+    
+    var transforms = Glm46Transforms.init(arena.allocator(), &client);
+    
+    // Assert: Transforms initialized
+    try std.testing.expect(@intFromPtr(transforms.client) != 0);
+}
+
+test "glm46 transforms refactor rename" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    
+    var client = Glm46Client.init(arena.allocator(), "test-api-key");
+    defer client.deinit();
+    
+    var transforms = Glm46Transforms.init(arena.allocator(), &client);
+    
+    const result = try transforms.refactor_rename("file:///test.zig", "old_name", "new_name", 10, 5);
+    defer if (result.error_message) |msg| arena.allocator().free(msg);
+    
+    // Assert: Result returned (even if not implemented)
+    try std.testing.expect(result.transform_type == .refactor_rename);
+    try std.testing.expect(result.file_edits_len == 0);
+}
+

@@ -1,5 +1,6 @@
 const std = @import("std");
 const WebSocketClient = @import("dream_websocket.zig").WebSocketClient;
+const DreamBrowserProtocolOptimizer = @import("dream_browser_protocol_optimizer.zig").DreamBrowserProtocolOptimizer;
 
 /// Dream Browser WebSocket Transport: Connection management, error handling, reconnection.
 /// ~<~ Glow Airbend: explicit connection state, bounded retries.
@@ -137,17 +138,30 @@ pub const DreamBrowserWebSocket = struct {
     };
     
     pool: ConnectionPool,
+    optimizer: ?*DreamBrowserProtocolOptimizer = null, // Optional protocol optimizer
     
     /// Initialize WebSocket transport.
     pub fn init(allocator: std.mem.Allocator) !DreamBrowserWebSocket {
-        // Assert: Allocator must be valid
-        std.debug.assert(allocator.ptr != null);
-        
         const pool = try ConnectionPool.init(allocator);
         
         return DreamBrowserWebSocket{
             .allocator = allocator,
             .pool = pool,
+            .optimizer = null,
+        };
+    }
+    
+    /// Initialize WebSocket transport with protocol optimizer.
+    pub fn init_with_optimizer(
+        allocator: std.mem.Allocator,
+        optimizer: *DreamBrowserProtocolOptimizer,
+    ) !DreamBrowserWebSocket {
+        const pool = try ConnectionPool.init(allocator);
+        
+        return DreamBrowserWebSocket{
+            .allocator = allocator,
+            .pool = pool,
+            .optimizer = optimizer,
         };
     }
     

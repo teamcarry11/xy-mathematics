@@ -78,7 +78,7 @@ pub const LspClient = struct {
     pub fn init(allocator: std.mem.Allocator) LspClient {
         return LspClient{
             .allocator = allocator,
-            .snapshots = std.ArrayList(DocumentSnapshot){ .items = &.{}, .capacity = 0 },
+            .snapshots = std.ArrayList(DocumentSnapshot).init(allocator),
             .pending_requests = std.AutoHashMap(u64, void).init(allocator),
         };
     }

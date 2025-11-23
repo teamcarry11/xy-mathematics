@@ -1080,6 +1080,19 @@ pub fn build(b: *std.Build) void {
     const program_segment_loading_tests_run = b.addRunArtifact(program_segment_loading_tests);
     test_step.dependOn(&program_segment_loading_tests_run.step);
 
+    const resource_cleanup_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/049_resource_cleanup_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+            },
+        }),
+    });
+    const resource_cleanup_tests_run = b.addRunArtifact(resource_cleanup_tests);
+    test_step.dependOn(&resource_cleanup_tests_run.step);
+
     const terminal_kernel_integration_tests = b.addTest(.{
         .root_module = b.createModule(.{
             .root_source_file = b.path("tests/047_terminal_kernel_integration_test.zig"),

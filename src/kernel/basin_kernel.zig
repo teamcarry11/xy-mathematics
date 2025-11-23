@@ -41,6 +41,9 @@ const cow = @import("cow.zig");
 const CowTable = cow.CowTable;
 const resource_cleanup = @import("resource_cleanup.zig");
 
+// Export resource_cleanup for tests.
+pub const resource_cleanup_module = resource_cleanup;
+
 // Export RawIO for tests to disable hardware access.
 pub const RawIO = @import("raw_io.zig");
 

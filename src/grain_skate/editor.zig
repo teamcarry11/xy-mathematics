@@ -42,8 +42,11 @@ pub const Editor = struct {
             std.debug.assert(content.len <= MAX_BUFFER_SIZE);
 
             // Split content into lines (bounded)
-            var lines = std.ArrayList([]const u8).init(allocator);
-            errdefer lines.deinit();
+            // Use fixed array instead of ArrayList for GrainStyle compliance
+            const MAX_LINES: u32 = MAX_BUFFER_SIZE / 64; // Max lines estimate
+            var lines: [MAX_LINES]?[]const u8 = undefined;
+            @memset(&lines, null);
+            var lines_len: u32 = 0;
 
             var start: u32 = 0;
             var i: u32 = 0;
@@ -53,7 +56,11 @@ pub const Editor = struct {
                     if (line.len > MAX_LINE_LEN) {
                         return error.LineTooLong;
                     }
-                    try lines.append(line);
+                    if (lines_len >= MAX_LINES) {
+                        return error.TooManyLines;
+                    }
+                    lines[lines_len] = line;
+                    lines_len += 1;
                     start = i + 1;
                 }
             }
@@ -64,14 +71,27 @@ pub const Editor = struct {
                 if (line.len > MAX_LINE_LEN) {
                     return error.LineTooLong;
                 }
-                try lines.append(line);
+                if (lines_len >= MAX_LINES) {
+                    return error.TooManyLines;
+                }
+                lines[lines_len] = line;
+                lines_len += 1;
             } else if (content.len > 0 and content[content.len - 1] == '\n') {
                 // Empty line at end
-                try lines.append("");
+                if (lines_len >= MAX_LINES) {
+                    return error.TooManyLines;
+                }
+                lines[lines_len] = "";
+                lines_len += 1;
             }
 
-            const lines_slice = try lines.toOwnedSlice();
+            // Allocate lines slice from fixed array
+            const lines_slice = try allocator.alloc([]const u8, lines_len);
             errdefer allocator.free(lines_slice);
+            var j: u32 = 0;
+            while (j < lines_len) : (j += 1) {
+                lines_slice[j] = lines[j] orelse "";
+            }
 
             return TextBuffer{
                 .lines = lines_slice,
@@ -303,7 +323,7 @@ pub const Editor = struct {
             // 3. Add to undo history
             // 4. Move cursor right
             _ = ch;
-            _ = self;
+            // self will be used in full implementation
         }
 
         /// Delete character at cursor (Vim 'x').
@@ -316,7 +336,7 @@ pub const Editor = struct {
             // 1. Delete character at cursor position
             // 2. Update buffer
             // 3. Add to undo history
-            _ = self;
+            // self will be used in full implementation
         }
     };
 };

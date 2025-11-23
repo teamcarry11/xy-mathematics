@@ -748,10 +748,10 @@ pub const Social = struct {
 
             // Restore links (if any)
             var i: u32 = 0;
-            while (i < links.items.len) : (i += 1) {
+            while (i < links_len) : (i += 1) {
                 // Note: Linked blocks must exist for this to work
                 // In a full implementation, we'd create missing blocks or handle errors
-                try self.block_storage.link_blocks(new_block_id, links.items[i]);
+                try self.block_storage.link_blocks(new_block_id, links[i]);
             }
 
             return new_block_id;

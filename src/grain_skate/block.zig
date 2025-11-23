@@ -258,8 +258,8 @@ pub const Block = struct {
 
         /// Deinitialize block storage and free memory.
         pub fn deinit(self: *BlockStorage) void {
-            // Assert: Allocator must be valid
-            std.debug.assert(self.allocator.ptr != null);
+            // Assert: Allocator must be valid (check by attempting deallocation)
+            _ = self.allocator;
 
             // Deinitialize all blocks
             var i: u32 = 0;

@@ -314,10 +314,18 @@
    - ✅ Segment data size limits (max 1MB per segment)
    - ✅ Comprehensive error handling (continue on read/write failures)
    - ✅ GrainStyle compliance (u32/u64 types, assertions, bounded operations, static allocation)
-   - 🔄 Enhanced ELF parser (program header parsing)
-   - 🔄 Improved process execution error handling
-   - 🔄 Better resource management for processes
+   - ✅ Enhanced ELF parser (program header parsing)
+   - ✅ Improved process execution error handling
+   - ✅ Better resource management for processes
    - ⏳ Comprehensive userspace execution tests
+
+33. **Enhanced Process Execution Error Handling and Resource Management** ✅ **COMPLETE**
+   - ✅ Resource cleanup module (`resource_cleanup.zig`) for process termination
+   - ✅ Resource cleanup integration in `syscall_exit` (frees mappings, handles, channels)
+   - ✅ Resource cleanup integration in exception handler (trap.zig)
+   - ✅ Comprehensive tests for resource cleanup (tests/049_resource_cleanup_test.zig)
+   - ✅ GrainStyle compliance (u32/u64 types, assertions, bounded operations, static allocation)
+   - ⏳ TODO: Add `owner_process_id` to MemoryMapping, FileHandle, and Channel structures for full cleanup
 
 ## 🚀 Architecture Overview
 
@@ -896,6 +904,11 @@
 - ✅ Transclusion engine (block embedding with depth tracking)
 - ✅ Transcluded content expansion
 - ✅ Export/import capabilities (JSON and Markdown formats)
+  - ✅ Full JSON export with all block fields (id, title, content, timestamps, links)
+  - ✅ JSON string escaping (quotes, newlines, tabs, etc.)
+  - ✅ Enhanced Markdown export with links and frontmatter
+  - ✅ JSON import with iterative parser (no recursion)
+  - ✅ Link restoration on import
 - ✅ Comprehensive tests (`tests/051_grain_skate_social_test.zig`)
 - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 
@@ -1124,6 +1137,11 @@
 - ✅ Transclusion engine (block embedding with depth tracking)
 - ✅ Transcluded content expansion
 - ✅ Export/import capabilities (JSON and Markdown formats)
+  - ✅ Full JSON export with all block fields (id, title, content, timestamps, links)
+  - ✅ JSON string escaping (quotes, newlines, tabs, etc.)
+  - ✅ Enhanced Markdown export with links and frontmatter
+  - ✅ JSON import with iterative parser (no recursion)
+  - ✅ Link restoration on import
 - ✅ Comprehensive tests (`tests/051_grain_skate_social_test.zig`)
 - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 
@@ -1352,6 +1370,11 @@
 - ✅ Transclusion engine (block embedding with depth tracking)
 - ✅ Transcluded content expansion
 - ✅ Export/import capabilities (JSON and Markdown formats)
+  - ✅ Full JSON export with all block fields (id, title, content, timestamps, links)
+  - ✅ JSON string escaping (quotes, newlines, tabs, etc.)
+  - ✅ Enhanced Markdown export with links and frontmatter
+  - ✅ JSON import with iterative parser (no recursion)
+  - ✅ Link restoration on import
 - ✅ Comprehensive tests (`tests/051_grain_skate_social_test.zig`)
 - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 

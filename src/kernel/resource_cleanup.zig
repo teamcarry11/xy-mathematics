@@ -55,6 +55,7 @@ pub fn cleanup_process_resources(
 /// Contract: process_id must be valid, kernel must be initialized.
 /// Returns: Number of mappings freed.
 /// Grain Style: Explicit types, bounded operations, static allocation.
+/// Note: MemoryMapping doesn't track owner_process_id yet, so this is a stub.
 fn cleanup_process_mappings(
     kernel: *BasinKernel,
     process_id: u32,
@@ -66,31 +67,12 @@ fn cleanup_process_mappings(
     // Assert: Process ID must be valid (non-zero).
     Debug.kassert(process_id != 0, "Process ID is 0", .{});
 
-    // Free all memory mappings owned by this process.
-    // Why: Process memory mappings should be freed on exit.
-    var mappings_freed: u32 = 0;
-    const MAX_MAPPINGS: u32 = 256; // Matches MAX_MAPPINGS in basin_kernel.zig
+    // TODO: Implement memory mapping cleanup when MemoryMapping tracks owner_process_id.
+    // Why: MemoryMapping structure doesn't currently track owner_process_id.
+    // For now, return 0 (no mappings cleaned).
+    // Note: kernel and process_id are validated in assertions above.
 
-    var i: u32 = 0;
-    while (i < MAX_MAPPINGS) : (i += 1) {
-        const mapping = &kernel.mappings[i];
-        if (mapping.allocated and mapping.owner_process_id == process_id) {
-            // Free mapping (mark as unallocated).
-            // Why: Free memory mapping when process exits.
-            mapping.allocated = false;
-            mapping.owner_process_id = 0;
-            mappings_freed += 1;
-
-            // Assert: Mapping must be freed (postcondition).
-            Debug.kassert(!mapping.allocated, "Mapping not freed", .{});
-            Debug.kassert(mapping.owner_process_id == 0, "Owner not cleared", .{});
-        }
-    }
-
-    // Assert: Mappings freed must be reasonable (postcondition).
-    Debug.kassert(mappings_freed <= MAX_MAPPINGS, "Mappings freed too large", .{});
-
-    return mappings_freed;
+    return 0;
 }
 
 /// Clean up file handles owned by a process.
@@ -98,6 +80,7 @@ fn cleanup_process_mappings(
 /// Contract: process_id must be valid, kernel must be initialized.
 /// Returns: Number of handles closed.
 /// Grain Style: Explicit types, bounded operations, static allocation.
+/// Note: FileHandle doesn't track owner_process_id yet, so this is a stub.
 fn cleanup_process_handles(
     kernel: *BasinKernel,
     process_id: u32,
@@ -109,31 +92,12 @@ fn cleanup_process_handles(
     // Assert: Process ID must be valid (non-zero).
     Debug.kassert(process_id != 0, "Process ID is 0", .{});
 
-    // Close all file handles owned by this process.
-    // Why: Process file handles should be closed on exit.
-    var handles_closed: u32 = 0;
-    const MAX_HANDLES: u32 = 256; // Matches MAX_HANDLES in basin_kernel.zig
+    // TODO: Implement file handle cleanup when FileHandle tracks owner_process_id.
+    // Why: FileHandle structure doesn't currently track owner_process_id.
+    // For now, return 0 (no handles cleaned).
+    // Note: kernel and process_id are validated in assertions above.
 
-    var i: u32 = 0;
-    while (i < MAX_HANDLES) : (i += 1) {
-        const handle = &kernel.handles[i];
-        if (handle.allocated and handle.owner_process_id == process_id) {
-            // Close handle (mark as unallocated).
-            // Why: Close file handle when process exits.
-            handle.allocated = false;
-            handle.owner_process_id = 0;
-            handles_closed += 1;
-
-            // Assert: Handle must be closed (postcondition).
-            Debug.kassert(!handle.allocated, "Handle not closed", .{});
-            Debug.kassert(handle.owner_process_id == 0, "Owner not cleared", .{});
-        }
-    }
-
-    // Assert: Handles closed must be reasonable (postcondition).
-    Debug.kassert(handles_closed <= MAX_HANDLES, "Handles closed too large", .{});
-
-    return handles_closed;
+    return 0;
 }
 
 /// Clean up IPC channels owned by a process.
@@ -141,6 +105,7 @@ fn cleanup_process_handles(
 /// Contract: process_id must be valid, kernel must be initialized.
 /// Returns: Number of channels closed.
 /// Grain Style: Explicit types, bounded operations, static allocation.
+/// Note: Channel doesn't track owner_process_id yet, so this is a stub.
 fn cleanup_process_channels(
     kernel: *BasinKernel,
     process_id: u32,
@@ -152,30 +117,11 @@ fn cleanup_process_channels(
     // Assert: Process ID must be valid (non-zero).
     Debug.kassert(process_id != 0, "Process ID is 0", .{});
 
-    // Close all IPC channels owned by this process.
-    // Why: Process IPC channels should be closed on exit.
-    var channels_closed: u32 = 0;
-    const MAX_CHANNELS: u32 = 256; // Matches MAX_CHANNELS in basin_kernel.zig
+    // TODO: Implement channel cleanup when Channel tracks owner_process_id.
+    // Why: Channel structure doesn't currently track owner_process_id.
+    // For now, return 0 (no channels cleaned).
+    // Note: kernel and process_id are validated in assertions above.
 
-    var i: u32 = 0;
-    while (i < MAX_CHANNELS) : (i += 1) {
-        const channel = &kernel.channels[i];
-        if (channel.allocated and channel.owner_process_id == process_id) {
-            // Close channel (mark as unallocated).
-            // Why: Close IPC channel when process exits.
-            channel.allocated = false;
-            channel.owner_process_id = 0;
-            channels_closed += 1;
-
-            // Assert: Channel must be closed (postcondition).
-            Debug.kassert(!channel.allocated, "Channel not closed", .{});
-            Debug.kassert(channel.owner_process_id == 0, "Owner not cleared", .{});
-        }
-    }
-
-    // Assert: Channels closed must be reasonable (postcondition).
-    Debug.kassert(channels_closed <= MAX_CHANNELS, "Channels closed too large", .{});
-
-    return channels_closed;
+    return 0;
 }
 

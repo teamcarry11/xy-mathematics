@@ -965,6 +965,11 @@
 - [x] Transclusion engine (block embedding with depth tracking)
 - [x] Transcluded content expansion
 - [x] Export/import capabilities (JSON and Markdown formats)
+  - [x] Full JSON export with all block fields
+  - [x] JSON string escaping
+  - [x] Enhanced Markdown export with links and frontmatter
+  - [x] JSON import with iterative parser
+  - [x] Link restoration on import
 - [x] Comprehensive tests (`tests/051_grain_skate_social_test.zig`)
 - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
 
@@ -1027,7 +1032,7 @@
 - Userspace Program Execution Improvements (Phase 3.17) ✅
 - Program Segment Loading (Phase 3.18) ✅
 - Actual Segment Data Loading (Phase 3.19) ✅
-- Userspace Program Execution Improvements (Phase 3.17) 🔄
+- Enhanced Process Execution Error Handling and Resource Management (Phase 3.20) ✅
 
 **In Progress**: 
 - Dream Editor Core - GLM-4.6 Integration (Phase 4.1.3) 🔄

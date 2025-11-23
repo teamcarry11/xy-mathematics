@@ -82,7 +82,7 @@ pub const StorageIntegration = struct {
             object_storage: *ObjectStorage,
         ) !Integration {
             // Assert: Allocator must be valid (check by attempting allocation)
-            _ = allocator;
+            // allocator is used in pre-allocate calls below
 
             // Pre-allocate mappings buffer
             const mappings = try allocator.alloc(BlockMapping, MAX_BLOCK_MAPPINGS);

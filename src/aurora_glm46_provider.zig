@@ -13,7 +13,6 @@ pub const Glm46Provider = struct {
     pub fn init(allocator: std.mem.Allocator, config: AiProvider.ProviderConfig) !*Glm46Provider {
         // Assert: Config must be for GLM-4.6
         std.debug.assert(config == .glm46);
-        std.debug.assert(allocator.ptr != null);
         std.debug.assert(config.glm46.api_key.len > 0);
         
         const provider = try allocator.create(Glm46Provider);

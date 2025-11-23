@@ -30,6 +30,7 @@ const SignalTable = @import("signal.zig").SignalTable;
 const Signal = @import("signal.zig").Signal;
 const SignalAction = @import("signal.zig").SignalAction;
 const elf_parser = @import("elf_parser.zig");
+const segment_loader = @import("segment_loader.zig");
 const page_table = @import("page_table.zig");
 const PageTable = page_table.PageTable;
 const page_fault_stats = @import("page_fault_stats.zig");
@@ -654,6 +655,17 @@ pub const BasinKernel = struct {
     /// Why: Pass context to memory reader (e.g., VM instance).
     vm_memory_reader_user_data: ?*anyopaque = null,
     
+    /// VM memory write callback (optional).
+    /// Why: Allow kernel to write VM memory for segment data loading.
+    /// Note: Type-erased to avoid requiring VM import at module level.
+    /// Contract: Must be set by integration layer before use.
+    /// Returns: Number of bytes written, or null if write fails.
+    vm_memory_writer: ?*const fn (addr: u64, len: u32, data: []const u8) ?u32 = null,
+    
+    /// User data for VM memory writer (optional).
+    /// Why: Pass context to memory writer (e.g., VM instance).
+    vm_memory_writer_user_data: ?*anyopaque = null,
+    
     /// Initialize Basin Kernel.
     /// Why: Explicit initialization, validate kernel state.
     pub fn init() BasinKernel {
@@ -1233,35 +1245,22 @@ pub const BasinKernel = struct {
                         continue; // Skip invalid segments
                     }
                     
-                    // Create memory mapping for segment (page-aligned size).
-                    // Why: Map segment virtual address range with proper permissions.
-                    const segment_size = segment.p_memsz;
-                    const page_size: u64 = 4096;
-                    const aligned_size = ((segment_size + page_size - 1) / page_size) * page_size;
-                    
-                    // Convert segment flags to MapFlags.
-                    // Why: RISC-V ELF uses PF_R (0x4), PF_W (0x2), PF_X (0x1) flags.
-                    const PF_R: u32 = 0x4;
-                    const PF_W: u32 = 0x2;
-                    const PF_X: u32 = 0x1;
-                    
-                    const map_flags = MapFlags{
-                        .read = (segment.p_flags & PF_R) != 0,
-                        .write = (segment.p_flags & PF_W) != 0,
-                        .execute = (segment.p_flags & PF_X) != 0,
-                        .shared = false,
-                        ._padding = 0,
-                    };
-                    
-                    // Create mapping for segment (use segment's virtual address).
-                    // Why: Map segment at its intended virtual address.
-                    const map_result = self.syscall_map(segment.p_vaddr, aligned_size, @as(u64, @bitCast(map_flags)), 0);
-                    if (map_result) |result| {
-                        if (result == .success) {
-                            segments_loaded += 1;
+                    // Load program segment (mapping + data loading).
+                    // Why: Extract segment loading logic to reduce nesting and function length.
+                    if (self.vm_memory_reader) |read_fn| {
+                        if (self.vm_memory_writer) |write_fn| {
+                            const loaded = segment_loader.load_program_segment(
+                                segment,
+                                executable,
+                                read_fn,
+                                write_fn,
+                                self,
+                            );
+                            
+                            if (loaded) {
+                                segments_loaded += 1;
+                            }
                         }
-                    } else |_| {
-                        // Mapping failed, continue with other segments
                     }
                 }
                 

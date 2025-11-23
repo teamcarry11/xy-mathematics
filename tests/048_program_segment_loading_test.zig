@@ -7,8 +7,11 @@ const testing = std.testing;
 const basin_kernel = @import("basin_kernel");
 const BasinKernel = basin_kernel.BasinKernel;
 const BasinError = basin_kernel.BasinError;
-const elf_parser = basin_kernel.basin_kernel.elf_parser;
 const RawIO = basin_kernel.RawIO;
+
+// Import elf_parser via module import.
+// Why: Test needs direct access to parse_program_header function.
+const elf_parser_mod = @import("elf_parser");
 
 // Helper: Create test ELF header with program header table.
 fn create_test_elf_with_segments(entry_point: u64, segment_vaddr: u64, segment_size: u64) [256]u8 {
@@ -131,7 +134,7 @@ test "parse_program_header parses valid PT_LOAD segment" {
     }
     
     // Parse program header.
-    const segment = elf_parser.parse_program_header(&phdr);
+    const segment = elf_parser_mod.parse_program_header(&phdr);
     
     // Assert: Segment must be valid.
     try testing.expect(segment.valid);
@@ -150,7 +153,7 @@ test "parse_program_header rejects non-PT_LOAD segments" {
     phdr[0] = 2; // PT_DYNAMIC
     
     // Parse program header.
-    const segment = elf_parser.parse_program_header(&phdr);
+    const segment = elf_parser_mod.parse_program_header(&phdr);
     
     // Assert: Segment must be invalid (not PT_LOAD).
     try testing.expect(!segment.valid);
@@ -195,10 +198,11 @@ test "syscall_spawn creates memory mappings for segments" {
     
     // Assert: Memory mapping may be created for segment (depends on syscall_map success).
     // Check if mapping exists for segment virtual address.
-    var mapping_found = false;
+    // Note: Mapping creation depends on syscall_map success.
+    // If mapping creation fails (e.g., address conflict), that's okay for this test.
+    // The important thing is that spawn succeeds and segment parsing works.
     for (kernel.mappings) |mapping| {
         if (mapping.allocated and mapping.address == segment_vaddr) {
-            mapping_found = true;
             // Assert: Mapping must have correct permissions (read, execute).
             try testing.expect(mapping.flags.read);
             try testing.expect(!mapping.flags.write);
@@ -207,11 +211,7 @@ test "syscall_spawn creates memory mappings for segments" {
         }
     }
     
-    // Note: Mapping creation depends on syscall_map success.
-    // If mapping creation fails (e.g., address conflict), that's okay for this test.
-    // The important thing is that spawn succeeds and segment parsing works.
-    // mapping_found is used in the loop above.
-    _ = mapping_found;
+    // Assert: Process ID must be valid (used in assertion above).
     _ = process_id;
 }
 
@@ -224,24 +224,27 @@ test "syscall_spawn handles ELF without program headers" {
     var kernel = BasinKernel.init();
     
     // Create minimal ELF header (no program headers).
-    var elf_data: [64]u8 = undefined;
-    @memset(&elf_data, 0);
-    elf_data[0] = 0x7F;
-    elf_data[1] = 'E';
-    elf_data[2] = 'L';
-    elf_data[3] = 'F';
-    elf_data[4] = 2;
-    elf_data[5] = 1;
+    var elf_data_temp: [64]u8 = undefined;
+    @memset(&elf_data_temp, 0);
+    elf_data_temp[0] = 0x7F;
+    elf_data_temp[1] = 'E';
+    elf_data_temp[2] = 'L';
+    elf_data_temp[3] = 'F';
+    elf_data_temp[4] = 2;
+    elf_data_temp[5] = 1;
     
     const entry_point: u64 = 0x10000;
     var i: u32 = 0;
     while (i < 8) : (i += 1) {
-        elf_data[24 + i] = @truncate((entry_point >> @as(u6, @intCast(i * 8))) & 0xFF);
+        elf_data_temp[24 + i] = @truncate((entry_point >> @as(u6, @intCast(i * 8))) & 0xFF);
     }
     
     // phnum = 0 (no program headers)
-    elf_data[56] = 0;
-    elf_data[57] = 0;
+    elf_data_temp[56] = 0;
+    elf_data_temp[57] = 0;
+    
+    // Create const copy for Reader.
+    const elf_data: [64]u8 = elf_data_temp;
     
     // Create VM memory reader with captured ELF data (const copy).
     const Reader = struct {

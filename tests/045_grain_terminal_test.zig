@@ -4,7 +4,6 @@ const grain_terminal = @import("grain_terminal");
 const Terminal = grain_terminal.Terminal;
 const Renderer = grain_terminal.Renderer;
 
-/// Test terminal initialization.
 test "terminal init" {
     const terminal = Terminal.init(80, 24);
 

@@ -932,6 +932,10 @@
 - [x] Undo/redo history structure
 - [x] Comprehensive tests (`tests/048_grain_skate_core_test.zig`)
 - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
+- [x] Storage integration (`src/grain_skate/storage_integration.zig`)
+- [x] Block-to-object mapping (Grain Silo integration)
+- [x] Hot cache promotion/demotion (Grain Field SRAM integration)
+- [x] Persist/load blocks from Grain Silo
 - [ ] DAG integration - can leverage `src/dag_core.zig` for future graph visualization
 
 #### 8.3.2 UI Framework
@@ -1000,6 +1004,9 @@
 - Process Context Switching and Execution (Phase 3.14) ✅
 - Scheduler-Process Execution Integration (Phase 3.15) ✅
 - Grain Terminal Kernel Integration (Phase 3.16) ✅
+- Userspace Program Execution Improvements (Phase 3.17) ✅
+- Program Segment Loading (Phase 3.18) ✅
+- Actual Segment Data Loading (Phase 3.19) ✅
 - Userspace Program Execution Improvements (Phase 3.17) 🔄
 
 **In Progress**: 

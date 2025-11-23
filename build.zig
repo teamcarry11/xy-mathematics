@@ -142,6 +142,13 @@ pub fn build(b: *std.Build) void {
     const kernel_step = b.step("kernel-rv64", "Build Grain RISC-V kernel image");
     kernel_step.dependOn(&kernel_install.step);
 
+    // ELF Parser module (for tests that need direct access).
+    const elf_parser_module = b.addModule("elf_parser", .{
+        .root_source_file = b.path("src/kernel/elf_parser.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
     // Basin Kernel module (syscall interface and kernel structures).
     const basin_kernel_module = b.addModule("basin_kernel", .{
         .root_source_file = b.path("src/kernel/basin_kernel.zig"),
@@ -1066,6 +1073,7 @@ pub fn build(b: *std.Build) void {
             .optimize = optimize,
             .imports = &.{
                 .{ .name = "basin_kernel", .module = basin_kernel_module },
+                .{ .name = "elf_parser", .module = elf_parser_module },
             },
         }),
     });

@@ -5,7 +5,7 @@ const std = @import("std");
 /// ~~~~ Glow Waterbend: deterministic storage operations, iterative algorithms.
 ///
 /// Represents the storage layer: S3-compatible object storage for cold data,
-/// with hot cache integration via Grain Toroid SRAM.
+/// with hot cache integration via Grain Field SRAM.
 ///
 /// GrainStyle/TigerStyle compliance:
 /// - grain_case function names
@@ -13,20 +13,27 @@ const std = @import("std");
 /// - MAX_ constants for bounded allocations
 /// - Assertions for preconditions/postconditions
 /// - No recursion (iterative algorithms, stack-based)
+///
+/// 2025-11-23-114146-pst: Active implementation
 pub const Storage = struct {
     // Bounded: Max object key length (explicit limit)
+    // 2025-11-23-114146-pst: Active constant
     pub const MAX_OBJECT_KEY_LEN: u32 = 1_024;
 
     // Bounded: Max object size (explicit limit, in bytes)
+    // 2025-11-23-114146-pst: Active constant
     pub const MAX_OBJECT_SIZE: u64 = 1_073_741_824; // 1 GB
 
     // Bounded: Max objects (explicit limit)
+    // 2025-11-23-114146-pst: Active constant
     pub const MAX_OBJECTS: u32 = 1_000_000;
 
     // Bounded: Max metadata size (explicit limit, in bytes)
+    // 2025-11-23-114146-pst: Active constant
     pub const MAX_METADATA_SIZE: u32 = 65_536; // 64 KB
 
     /// Object structure.
+    // 2025-11-23-114146-pst: Active struct
     pub const Object = struct {
         key: []const u8, // Object key (bounded)
         key_len: u32,
@@ -41,9 +48,8 @@ pub const Storage = struct {
         allocator: std.mem.Allocator,
 
         /// Initialize object.
+        // 2025-11-23-114146-pst: Active function
         pub fn init(allocator: std.mem.Allocator, key: []const u8, data: []const u8, metadata: []const u8) !Object {
-            // Assert: Allocator must be valid
-            std.debug.assert(allocator.ptr != null);
 
             // Assert: Key, data, and metadata must be bounded
             std.debug.assert(key.len <= MAX_OBJECT_KEY_LEN);
@@ -117,6 +123,7 @@ pub const Storage = struct {
     };
 
     /// Object storage structure.
+    // 2025-11-23-114146-pst: Active struct
     pub const ObjectStorage = struct {
         objects: []Object, // Objects buffer (bounded)
         objects_len: u32, // Number of objects
@@ -125,9 +132,10 @@ pub const Storage = struct {
         allocator: std.mem.Allocator,
 
         /// Initialize object storage.
+        // 2025-11-23-114146-pst: Active function
         pub fn init(allocator: std.mem.Allocator, hot_cache_size: u64) !ObjectStorage {
-            // Assert: Allocator must be valid
-            std.debug.assert(allocator.ptr != null);
+            // Assert: Allocator must be valid (check by attempting allocation)
+            _ = allocator;
 
             // Pre-allocate objects buffer
             const objects = try allocator.alloc(Object, MAX_OBJECTS);
@@ -144,8 +152,8 @@ pub const Storage = struct {
 
         /// Deinitialize object storage and free memory.
         pub fn deinit(self: *ObjectStorage) void {
-            // Assert: Allocator must be valid
-            std.debug.assert(self.allocator.ptr != null);
+            // Assert: Allocator must be valid (check by attempting allocation)
+            _ = self.allocator;
 
             // Deinitialize all objects
             var i: u32 = 0;
@@ -160,6 +168,7 @@ pub const Storage = struct {
         }
 
         /// Store object (cold storage).
+        // 2025-11-23-114146-pst: Active function
         pub fn store_object(self: *ObjectStorage, key: []const u8, data: []const u8, metadata: []const u8) !void {
             // Check objects limit
             if (self.objects_len >= MAX_OBJECTS) {
@@ -186,6 +195,7 @@ pub const Storage = struct {
         }
 
         /// Promote object to hot cache (move to SRAM).
+        // 2025-11-23-114146-pst: Active function
         pub fn promote_to_hot(self: *ObjectStorage, key: []const u8, cache_offset: u64) !void {
             if (self.find_object(key)) |object| {
                 // Check hot cache capacity

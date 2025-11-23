@@ -5,7 +5,7 @@ const std = @import("std");
 /// ~~~~ Glow Waterbend: deterministic spatial computing, iterative algorithms.
 ///
 /// Represents the WSE compute layer: 44GB+ on-wafer SRAM, 900k cores,
-/// toroidal dataflow architecture for parallel execution.
+/// field topology (2D grid with wrap-around) for parallel execution.
 ///
 /// GrainStyle/TigerStyle compliance:
 /// - grain_case function names
@@ -13,32 +13,39 @@ const std = @import("std");
 /// - MAX_ constants for bounded allocations
 /// - Assertions for preconditions/postconditions
 /// - No recursion (iterative algorithms, stack-based)
+///
+/// 2025-11-23-114146-pst: Active implementation
 pub const Compute = struct {
     // Bounded: Max cores per field (explicit limit)
+    // 2025-11-23-114146-pst: Active constant
     pub const MAX_CORES: u32 = 1_000_000; // 900k cores + headroom
 
     // Bounded: Max SRAM capacity (explicit limit, in bytes)
+    // 2025-11-23-114146-pst: Active constant
     pub const MAX_SRAM_CAPACITY: u64 = 47_185_920_000; // 44GB + headroom (44 * 1024^3)
 
     // Bounded: Max parallel operations (explicit limit)
+    // 2025-11-23-114146-pst: Active constant
     pub const MAX_PARALLEL_OPS: u32 = 10_000;
 
+    /// Core state enumeration.
+    // 2025-11-23-114146-pst: Active enum
+    pub const CoreState = enum(u8) {
+        idle, // Core is idle
+        active, // Core is executing
+        waiting, // Core is waiting for data
+        error_state, // Core is in error state
+    };
+
     /// Field core structure.
+    // 2025-11-23-114146-pst: Active struct
     pub const Core = struct {
         id: u32, // Core ID (unique identifier)
         state: CoreState, // Core state
         sram_offset: u64, // SRAM offset for this core's data
         sram_size: u64, // SRAM size allocated to this core
-        neighbors: []u32, // Neighboring core IDs (toroidal topology)
+        neighbors: []u32, // Neighboring core IDs (field topology)
         neighbors_len: u32,
-    };
-
-    /// Core state enumeration.
-    pub const CoreState = enum(u8) {
-        idle, // Core is idle
-        active, // Core is executing
-        waiting, // Core is waiting for data
-        error, // Core is in error state
     };
 
     /// Field compute structure.
@@ -72,17 +79,17 @@ pub const Compute = struct {
         };
 
         /// Operation status enumeration.
+        // 2025-11-23-114146-pst: Active enum
         pub const OpStatus = enum(u8) {
             pending, // Operation pending
             executing, // Operation executing
             completed, // Operation completed
-            error, // Operation error
+            error_state, // Operation error
         };
 
         /// Initialize field compute.
+        // 2025-11-23-114146-pst: Active function
         pub fn init(allocator: std.mem.Allocator, sram_capacity: u64, core_count: u32) !FieldCompute {
-            // Assert: Allocator must be valid
-            std.debug.assert(allocator.ptr != null);
 
             // Assert: Capacity and core count must be bounded
             std.debug.assert(sram_capacity <= MAX_SRAM_CAPACITY);
@@ -190,6 +197,7 @@ pub const Compute = struct {
         }
 
         /// Execute parallel operation on field.
+        // 2025-11-23-114146-pst: Active function
         pub fn execute_parallel(self: *FieldCompute, op_type: OpType, core_ids: []const u32, data_offset: u64, data_size: u64) !u32 {
             // Assert: Core IDs must be valid
             var i: u32 = 0;

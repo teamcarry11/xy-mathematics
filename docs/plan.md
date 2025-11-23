@@ -291,7 +291,29 @@
    - ✅ Error codes documented (would_block, invalid_argument, etc.)
    - ✅ Runtime error fixes (RawIO.disable() for tests, SIGILL fixes)
 
-30. **Userspace Program Execution Improvements** 🔄 **IN PROGRESS**
+30. **Userspace Program Execution Improvements** ✅ **COMPLETE**
+   - ✅ Enhanced ELF parser (program header parsing - phoff, phentsize, phnum)
+   - ✅ Improved ELF validation (program header count limits, entry size validation)
+   - ✅ Better error handling in ELF parsing
+   - ✅ Test helpers updated for program header fields
+   - ✅ GrainStyle compliance (u32/u64 types, assertions, bounded operations)
+
+31. **Program Segment Loading** ✅ **COMPLETE**
+   - ✅ Program header parsing (`parse_program_header` function)
+   - ✅ Segment validation (PT_LOAD type, virtual address, size, alignment)
+   - ✅ Memory mapping creation for segments in `syscall_spawn`
+   - ✅ Segment flag conversion (PF_R/W/X to MapFlags)
+   - ✅ Page-aligned segment size calculation
+   - ✅ Comprehensive TigerStyle tests (tests/048_program_segment_loading_test.zig)
+   - ✅ GrainStyle compliance (u32/u64 types, assertions, bounded operations, max 16 segments)
+
+32. **Actual Segment Data Loading** ✅ **COMPLETE**
+   - ✅ VM memory writer callback (`vm_memory_writer` in kernel, `vm_memory_writer_wrapper` in integration)
+   - ✅ Segment data loading in `syscall_spawn` (read from ELF, write to VM memory)
+   - ✅ BSS zero-filling (zero-fill memory when memsz > filesz)
+   - ✅ Segment data size limits (max 1MB per segment)
+   - ✅ Comprehensive error handling (continue on read/write failures)
+   - ✅ GrainStyle compliance (u32/u64 types, assertions, bounded operations, static allocation)
    - 🔄 Enhanced ELF parser (program header parsing)
    - 🔄 Improved process execution error handling
    - 🔄 Better resource management for processes
@@ -848,6 +870,10 @@
 - ✅ Undo/redo history structure
 - ✅ Comprehensive tests (`tests/048_grain_skate_core_test.zig`)
 - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+- ✅ Storage integration (`src/grain_skate/storage_integration.zig`)
+- ✅ Block-to-object mapping (Grain Silo integration)
+- ✅ Hot cache promotion/demotion (Grain Field SRAM integration)
+- ✅ Persist/load blocks from Grain Silo
 - ⚠️ DAG integration - can leverage `src/dag_core.zig` for future graph visualization
 
 #### 8.3.2: UI Framework (PLANNED)
@@ -1068,6 +1094,10 @@
 - ✅ Undo/redo history structure
 - ✅ Comprehensive tests (`tests/048_grain_skate_core_test.zig`)
 - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+- ✅ Storage integration (`src/grain_skate/storage_integration.zig`)
+- ✅ Block-to-object mapping (Grain Silo integration)
+- ✅ Hot cache promotion/demotion (Grain Field SRAM integration)
+- ✅ Persist/load blocks from Grain Silo
 - ⚠️ DAG integration - can leverage `src/dag_core.zig` for future graph visualization
 
 #### 8.3.2: UI Framework (PLANNED)
@@ -1288,6 +1318,10 @@
 - ✅ Undo/redo history structure
 - ✅ Comprehensive tests (`tests/048_grain_skate_core_test.zig`)
 - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+- ✅ Storage integration (`src/grain_skate/storage_integration.zig`)
+- ✅ Block-to-object mapping (Grain Silo integration)
+- ✅ Hot cache promotion/demotion (Grain Field SRAM integration)
+- ✅ Persist/load blocks from Grain Silo
 - ⚠️ DAG integration - can leverage `src/dag_core.zig` for future graph visualization
 
 #### 8.3.2: UI Framework (PLANNED)

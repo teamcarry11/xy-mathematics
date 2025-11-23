@@ -1,5 +1,4 @@
 const std = @import("std");
-const DagCore = @import("../dag_core.zig").DagCore;
 
 /// Grain Skate Block: Text block with links in knowledge graph.
 /// ~<~ Glow Airbend: explicit block state, bounded block storage.
@@ -11,17 +10,23 @@ const DagCore = @import("../dag_core.zig").DagCore;
 /// - MAX_ constants for bounded allocations
 /// - Assertions for preconditions/postconditions
 /// - No recursion (iterative algorithms, stack-based)
+///
+/// 2025-11-23-114146-pst: Active implementation
 pub const Block = struct {
     // Bounded: Max block content length (explicit limit, in bytes)
+    // 2025-11-23-114146-pst: Active constant
     pub const MAX_BLOCK_CONTENT: u32 = 1_048_576; // 1 MB
 
     // Bounded: Max links per block (explicit limit)
+    // 2025-11-23-114146-pst: Active constant
     pub const MAX_LINKS_PER_BLOCK: u32 = 256;
 
     // Bounded: Max block title length (explicit limit)
+    // 2025-11-23-114146-pst: Active constant
     pub const MAX_BLOCK_TITLE: u32 = 512;
 
     /// Block structure.
+    // 2025-11-23-114146-pst: Active struct
     pub const BlockData = struct {
         id: u32, // Block ID (unique identifier)
         title: []const u8, // Block title (bounded)
@@ -38,9 +43,8 @@ pub const Block = struct {
         allocator: std.mem.Allocator,
 
         /// Initialize block data.
+        // 2025-11-23-114146-pst: Active function
         pub fn init(allocator: std.mem.Allocator, id: u32, title: []const u8, content: []const u8) !BlockData {
-            // Assert: Allocator must be valid
-            std.debug.assert(allocator.ptr != null);
 
             // Assert: Title and content must be bounded
             std.debug.assert(title.len <= MAX_BLOCK_TITLE);
@@ -226,6 +230,7 @@ pub const Block = struct {
     };
 
     /// Block storage manager.
+    // 2025-11-23-114146-pst: Active struct
     pub const BlockStorage = struct {
         // Bounded: Max blocks (explicit limit)
         pub const MAX_BLOCKS: u32 = 100_000;
@@ -236,9 +241,8 @@ pub const Block = struct {
         allocator: std.mem.Allocator,
 
         /// Initialize block storage.
+        // 2025-11-23-114146-pst: Active function
         pub fn init(allocator: std.mem.Allocator) !BlockStorage {
-            // Assert: Allocator must be valid
-            std.debug.assert(allocator.ptr != null);
 
             // Pre-allocate blocks buffer
             const blocks = try allocator.alloc(BlockData, MAX_BLOCKS);
@@ -270,6 +274,7 @@ pub const Block = struct {
         }
 
         /// Create new block.
+        // 2025-11-23-114146-pst: Active function
         pub fn create_block(self: *BlockStorage, title: []const u8, content: []const u8) !u32 {
             // Check blocks limit
             if (self.blocks_len >= MAX_BLOCKS) {
@@ -296,6 +301,7 @@ pub const Block = struct {
         }
 
         /// Link two blocks (bidirectional).
+        // 2025-11-23-114146-pst: Active function
         pub fn link_blocks(self: *BlockStorage, source_id: u32, target_id: u32) !void {
             if (self.find_block(source_id)) |source| {
                 if (self.find_block(target_id)) |target| {

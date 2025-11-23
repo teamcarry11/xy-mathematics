@@ -82,6 +82,64 @@ fn vm_memory_reader_wrapper(addr: u64, len: u32, buffer: []u8) ?u32 {
     return @as(u32, @intCast(len));
 }
 
+/// VM memory writer wrapper (called by kernel to write VM memory).
+/// Why: Bridge kernel memory write interface with VM memory access.
+/// Contract: global_vm_ptr must be set before this is called.
+/// Returns: Number of bytes written, or null if write fails.
+/// Grain Style: Explicit types, bounded operations, static allocation.
+fn vm_memory_writer_wrapper(addr: u64, len: u32, data: []const u8) ?u32 {
+    // Contract: global_vm_ptr must be set (precondition).
+    const vm = global_vm_ptr orelse {
+        return null; // VM not initialized
+    };
+    
+    // Contract: VM must be initialized.
+    const vm_addr = @intFromPtr(vm);
+    std.debug.assert(vm_addr != 0);
+    std.debug.assert(vm_addr % @alignOf(VM) == 0);
+    
+    // Contract: Address and length must be valid.
+    const VM_MEMORY_SIZE: u64 = 4 * 1024 * 1024; // 4MB default
+    if (addr >= VM_MEMORY_SIZE) {
+        return null; // Invalid address
+    }
+    if (len == 0) {
+        return null; // Invalid length
+    }
+    if (addr + @as(u64, len) > VM_MEMORY_SIZE) {
+        return null; // Address + length exceeds VM memory
+    }
+    
+    // Contract: Data buffer must be large enough.
+    if (data.len < len) {
+        return null; // Data buffer too small
+    }
+    
+    // Write memory to VM (use translate_address to handle address translation).
+    // Why: VM memory uses address translation, need to translate virtual to physical.
+    const write_len = @as(u64, len);
+    var i: u64 = 0;
+    while (i < write_len) : (i += 1) {
+        const virt_addr = addr + i;
+        const phys_offset = vm.translate_address(virt_addr) orelse {
+            return null; // Address not mapped
+        };
+        
+        // Contract: Physical offset must be within VM memory bounds.
+        if (phys_offset >= vm.memory_size) {
+            return null; // Invalid physical offset
+        }
+        
+        // Write byte to VM memory.
+        vm.memory[@intCast(phys_offset)] = data[@intCast(i)];
+    }
+    
+    // Assert: All bytes must be written (postcondition).
+    std.debug.assert(i == write_len);
+    
+    return @as(u32, @intCast(len));
+}
+
 /// Read VM memory buffer (helper for kernel syscalls that need VM memory access).
 /// Why: Kernel syscalls (like spawn) need to read VM memory but kernel doesn't have VM reference.
 /// Contract: global_vm_ptr must be set, addr and len must be valid, buffer must be large enough.
@@ -279,6 +337,12 @@ pub const Integration = struct {
         // Contract: vm_memory_reader_wrapper will access VM via global_vm_ptr.
         self.kernel.*.vm_memory_reader = vm_memory_reader_wrapper;
         self.kernel.*.vm_memory_reader_user_data = null;
+
+        // Register VM memory writer in kernel (for segment data loading in syscall_spawn).
+        // Why: Allow kernel to write VM memory for segment data loading.
+        // Contract: vm_memory_writer_wrapper will access VM via global_vm_ptr.
+        self.kernel.*.vm_memory_writer = vm_memory_writer_wrapper;
+        self.kernel.*.vm_memory_writer_user_data = null;
 
         // Initialize framebuffer from host-side (before kernel execution starts).
         // Why: Set up framebuffer with test pattern for visual verification.

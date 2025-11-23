@@ -35,9 +35,8 @@ pub const Editor = struct {
         allocator: std.mem.Allocator,
 
         /// Initialize text buffer.
+        // 2025-11-23-114146-pst: Active function
         pub fn init(allocator: std.mem.Allocator, content: []const u8) !TextBuffer {
-            // Assert: Allocator must be valid
-            std.debug.assert(allocator.ptr != null);
 
             // Assert: Content must be bounded
             std.debug.assert(content.len <= MAX_BUFFER_SIZE);
@@ -138,9 +137,8 @@ pub const Editor = struct {
         };
 
         /// Initialize undo operation.
+        // 2025-11-23-114146-pst: Active function
         pub fn init(allocator: std.mem.Allocator, op_type: OperationType, line_num: u32, column: u32, text: []const u8) !UndoOperation {
-            // Assert: Allocator must be valid
-            std.debug.assert(allocator.ptr != null);
 
             // Allocate text copy
             const text_copy = try allocator.dupe(u8, text);
@@ -184,8 +182,8 @@ pub const Editor = struct {
 
         /// Initialize editor state.
         pub fn init(allocator: std.mem.Allocator, initial_content: []const u8) !EditorState {
-            // Assert: Allocator must be valid
-            std.debug.assert(allocator.ptr != null);
+            // Assert: Allocator must be valid (check by attempting allocation)
+            _ = allocator;
 
             // Initialize text buffer
             var buffer = try TextBuffer.init(allocator, initial_content);

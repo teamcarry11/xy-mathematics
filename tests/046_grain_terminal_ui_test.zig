@@ -5,7 +5,6 @@ const Config = grain_terminal.Config;
 const Tab = grain_terminal.Tab;
 const Pane = grain_terminal.Pane;
 
-/// Test configuration initialization.
 test "config init" {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
@@ -19,7 +18,6 @@ test "config init" {
     try testing.expect(config.get_font_size_points() == 12);
 }
 
-/// Test configuration set/get.
 test "config set get" {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
@@ -40,7 +38,6 @@ test "config set get" {
     try testing.expect(std.mem.eql(u8, value2.?, "value2"));
 }
 
-/// Test configuration theme.
 test "config theme" {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
@@ -56,7 +53,6 @@ test "config theme" {
     try testing.expect(config.get_theme() == .solarized_dark);
 }
 
-/// Test configuration font size.
 test "config font size" {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
@@ -74,7 +70,6 @@ test "config font size" {
     try testing.expect(config.get_font_size_points() == 16);
 }
 
-/// Test tab initialization.
 test "tab init" {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
@@ -88,7 +83,6 @@ test "tab init" {
     try testing.expect(tab.get_state() == .inactive);
 }
 
-/// Test tab character processing.
 test "tab process char" {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
@@ -106,7 +100,6 @@ test "tab process char" {
     try testing.expect(cell.?.ch == 'H');
 }
 
-/// Test tab title update.
 test "tab set title" {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
@@ -119,7 +112,6 @@ test "tab set title" {
     try testing.expect(std.mem.eql(u8, tab.title, "New Title"));
 }
 
-/// Test pane initialization.
 test "pane init leaf" {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
@@ -136,7 +128,6 @@ test "pane init leaf" {
     try testing.expect(pane.is_leaf() == true);
 }
 
-/// Test pane split.
 test "pane split horizontal" {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
@@ -158,7 +149,6 @@ test "pane split horizontal" {
     try testing.expect(split_pane.children[1].width == 400);
 }
 
-/// Test pane split vertical.
 test "pane split vertical" {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
@@ -180,7 +170,6 @@ test "pane split vertical" {
     try testing.expect(split_pane.children[1].height == 300);
 }
 
-/// Test pane get pane at position.
 test "pane get pane at" {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();

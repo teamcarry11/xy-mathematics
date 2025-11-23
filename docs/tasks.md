@@ -550,8 +550,15 @@
   - [x] Pre-allocate ArrayList capacity in parseCss() (rules, declarations)
   - [x] All pre-allocations use conservative estimates based on MAX bounds
   - [x] Reduces reallocations in hot paths, improving performance
+- [x] Optimize rendering (60fps guaranteed) ✅ **COMPLETE**
+  - [x] Create DreamBrowserPerformance module (frame timing, metrics, FPS tracking)
+  - [x] Frame rate control (60fps target, frame timing, skip frame logic)
+  - [x] Performance monitoring (frame time, render time, layout time statistics)
+  - [x] Performance metrics (FPS, frame time, render time, layout time averages)
+  - [x] Frame history (circular buffer for performance analysis)
+  - [x] Integration with DreamBrowserRenderer (optional performance monitoring)
+  - [x] All functions follow GrainStyle/TigerStyle (u32 types, assertions, bounded allocations)
 - [ ] Profile and optimize hot paths
-- [ ] Optimize rendering (60fps guaranteed)
 - [ ] Optimize protocol (sub-millisecond latency)
 
 ### 5.2 Advanced Browser Features

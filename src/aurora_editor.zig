@@ -216,24 +216,24 @@ pub const Editor = struct {
 test "editor lifecycle" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
-    var editor = try Editor.init(
+    var editor = Editor.init(
         arena.allocator(),
         "file:///test.zig",
         "const std = @import(\"std\");\n",
-    );
+    ) catch unreachable;
     defer editor.deinit();
-    try editor.insert("pub fn main() void {}\n");
+    editor.insert("pub fn main() void {}\n") catch unreachable;
 }
 
 test "editor with ai provider" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     
-    var editor = try Editor.init(
+    var editor = Editor.init(
         arena.allocator(),
         "file:///test.zig",
         "const std = @import(\"std\");\n",
-    );
+    ) catch unreachable;
     defer editor.deinit();
     
     // Enable AI provider (GLM-4.6)
@@ -242,7 +242,7 @@ test "editor with ai provider" {
             .api_key = "test-api-key",
         },
     };
-    try editor.enable_ai_provider(.glm46, config);
+    editor.enable_ai_provider(.glm46, config) catch unreachable;
     
     // Assert: AI provider is enabled
     try std.testing.expect(editor.ai_provider != null);
@@ -253,11 +253,11 @@ test "editor request completions with ai provider" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     
-    var editor = try Editor.init(
+    var editor = Editor.init(
         arena.allocator(),
         "file:///test.zig",
         "const std = @import(\"std\");\n",
-    );
+    ) catch unreachable;
     defer editor.deinit();
     
     // Enable AI provider
@@ -266,7 +266,7 @@ test "editor request completions with ai provider" {
             .api_key = "test-api-key",
         },
     };
-    try editor.enable_ai_provider(.glm46, config);
+    editor.enable_ai_provider(.glm46, config) catch unreachable;
     
     // Set cursor position
     editor.moveCursor(0, 20);

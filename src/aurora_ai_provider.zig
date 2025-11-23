@@ -253,7 +253,7 @@ test "ai provider initialization" {
     };
     
     // Initialize AI provider (GLM-4.6)
-    var provider = try AiProvider.init(.glm46, arena.allocator(), config);
+    var provider = AiProvider.init(.glm46, arena.allocator(), config) catch unreachable;
     defer provider.deinit();
     
     // Assert: Provider type correct

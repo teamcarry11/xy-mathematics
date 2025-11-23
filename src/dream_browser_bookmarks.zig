@@ -28,7 +28,8 @@ pub const DreamBrowserBookmarks = struct {
         url: []const u8, // Bookmark URL
         title: []const u8, // Bookmark title
         folder: ?[]const u8 = null, // Folder name (optional)
-        tags: []const []const u8 = &.{}, // Tags (optional)
+        tags: []const []const u8, // Tags (optional, allocated array)
+        tags_len: u32, // Number of tags (to track which tags were allocated)
         created_at: u64, // Creation timestamp
         last_visited: u64, // Last visit timestamp
         visit_count: u32, // Number of visits
@@ -104,9 +105,9 @@ pub const DreamBrowserBookmarks = struct {
                 self.allocator.free(folder);
             }
             // Free tags (array is always allocated, but individual tags only if they exist)
-            // Only free individual tag strings if they were allocated (tags.len > 0 means tags were added)
-            if (bookmark.tags.len > 0) {
-                for (bookmark.tags) |tag| {
+            // Only free individual tag strings if they were allocated (tags_len > 0 means tags were added)
+            if (bookmark.tags_len > 0) {
+                for (bookmark.tags[0..bookmark.tags_len]) |tag| {
                     self.allocator.free(tag);
                 }
             }
@@ -182,6 +183,7 @@ pub const DreamBrowserBookmarks = struct {
             .title = title_copy,
             .folder = folder_copy,
             .tags = tags,
+            .tags_len = 0, // No tags added yet
             .created_at = get_current_timestamp(),
             .last_visited = get_current_timestamp(),
             .visit_count = 1,

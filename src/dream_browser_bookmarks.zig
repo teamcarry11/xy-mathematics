@@ -103,10 +103,13 @@ pub const DreamBrowserBookmarks = struct {
             if (bookmark.folder) |folder| {
                 self.allocator.free(folder);
             }
-            for (bookmark.tags) |tag| {
-                self.allocator.free(tag);
+            // Free tags only if allocated (not empty slice)
+            if (bookmark.tags.len > 0) {
+                for (bookmark.tags) |tag| {
+                    self.allocator.free(tag);
+                }
+                self.allocator.free(bookmark.tags);
             }
-            self.allocator.free(bookmark.tags);
         }
         
         // Free folders

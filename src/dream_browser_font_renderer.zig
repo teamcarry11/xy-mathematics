@@ -88,6 +88,7 @@ pub const DreamBrowserFontRenderer = struct {
         entries_index: u32, // Circular buffer index
     };
     
+    allocator: std.mem.Allocator,
     font_cache: FontCache,
     glyph_cache: GlyphCache,
     

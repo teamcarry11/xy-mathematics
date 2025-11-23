@@ -30,6 +30,14 @@ const SignalTable = @import("signal.zig").SignalTable;
 const Signal = @import("signal.zig").Signal;
 const SignalAction = @import("signal.zig").SignalAction;
 const elf_parser = @import("elf_parser.zig");
+const page_table = @import("page_table.zig");
+const PageTable = page_table.PageTable;
+const page_fault_stats = @import("page_fault_stats.zig");
+const PageFaultStats = page_fault_stats.PageFaultStats;
+const memory_stats = @import("memory_stats.zig");
+const MemoryStats = memory_stats.MemoryStats;
+const cow = @import("cow.zig");
+const CowTable = cow.CowTable;
 
 /// Basin Kernel syscall numbers.
 /// Why: Explicit syscall enumeration for type safety and clarity.
@@ -613,6 +621,36 @@ pub const BasinKernel = struct {
     /// Grain Style: Static allocation, initialized at kernel boot.
     memory_pool: MemoryPool,
     
+    /// Page table for memory protection.
+    /// Why: Track page-level memory permissions and mappings.
+    /// Grain Style: Static allocation, initialized at kernel boot.
+    page_table: PageTable,
+    
+    /// Page fault statistics.
+    /// Why: Track page fault types and frequencies for diagnostics.
+    /// Grain Style: Static allocation, initialized at kernel boot.
+    page_fault_stats: PageFaultStats,
+    
+    /// Memory usage statistics.
+    /// Why: Track memory usage, mapped pages, and allocation patterns.
+    /// Grain Style: Static allocation, initialized at kernel boot.
+    memory_stats: MemoryStats,
+    
+    /// Copy-on-Write (COW) table.
+    /// Why: Track reference counts and COW marking for shared memory pages.
+    /// Grain Style: Static allocation, initialized at kernel boot.
+    cow_table: CowTable,
+    
+    /// VM memory read callback (optional).
+    /// Why: Allow kernel to read VM memory for ELF parsing and process setup.
+    /// Note: Type-erased to avoid requiring VM import at module level.
+    /// Contract: Must be set by integration layer before use.
+    vm_memory_reader: ?*const fn (addr: u64, len: u32, buffer: []u8) ?u32 = null,
+    
+    /// User data for VM memory reader (optional).
+    /// Why: Pass context to memory reader (e.g., VM instance).
+    vm_memory_reader_user_data: ?*anyopaque = null,
+    
     /// Initialize Basin Kernel.
     /// Why: Explicit initialization, validate kernel state.
     pub fn init() BasinKernel {
@@ -625,6 +663,10 @@ pub const BasinKernel = struct {
             .keyboard = Keyboard.init(),
             .mouse = Mouse.init(),
             .memory_pool = MemoryPool.init(),
+            .page_table = PageTable.init(),
+            .page_fault_stats = PageFaultStats.init(),
+            .memory_stats = MemoryStats.init(),
+            .cow_table = CowTable.init(),
         };
         
         // Initialize default users (root and xy).
@@ -816,6 +858,33 @@ pub const BasinKernel = struct {
         Debug.kassert(match_count <= 1, "Duplicate mappings found", .{});
         
         return found_index;
+    }
+    
+    /// Check memory permissions for an address.
+    /// Why: Enforce memory protection by checking read/write/execute permissions.
+    /// Contract: Address must be valid, returns permissions if mapped, null if not mapped.
+    /// Returns: MapFlags with permissions, or null if address is not mapped.
+    /// Note: Kernel space (0x80000000+) and framebuffer (0x90000000+) are always readable/writable.
+    /// Uses page table for page-level granularity.
+    pub fn check_memory_permission(self: *const BasinKernel, addr: u64) ?MapFlags {
+        // Assert: self pointer must be valid (precondition).
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        // Use page table for page-level permission checking.
+        const page_flags = self.page_table.check_permission(addr) orelse {
+            return null;
+        };
+        
+        // Convert PageFlags to MapFlags (same structure).
+        return MapFlags{
+            .read = page_flags.read,
+            .write = page_flags.write,
+            .execute = page_flags.execute,
+            .shared = page_flags.shared,
+            ._padding = 0,
+        };
     }
     
     /// Check if address range overlaps with any existing mapping.
@@ -1024,7 +1093,11 @@ pub const BasinKernel = struct {
     // Syscall handlers (stubs for future implementation).
     // Why: Separate functions for each syscall, Grain Style function length limit.
     
-    fn syscall_spawn(
+    /// Spawn a new process from an ELF executable.
+    /// Why: Create a new process with ELF parsing and process context setup.
+    /// Contract: executable must be valid VM address, ELF must be valid format.
+    /// Note: Public for testing (tests need direct access).
+    pub fn syscall_spawn(
         self: *BasinKernel,
         executable: u64,
         args_ptr: u64,
@@ -1099,12 +1172,62 @@ pub const BasinKernel = struct {
         const process_id = self.next_process_id;
         self.next_process_id += 1;
         
+        // Parse ELF header to get entry point and validate executable.
+        // Why: Extract entry point for process setup, validate ELF format.
+        const ELF_HEADER_SIZE: u32 = 64;
+        var elf_header_buffer: [ELF_HEADER_SIZE]u8 = undefined;
+        
+        // Read ELF header from VM memory (if memory reader is available).
+        var entry_point: u64 = 0;
+        var executable_len: u64 = MIN_ELF_SIZE;
+        
+        if (self.vm_memory_reader) |reader| {
+            // Read ELF header from VM memory.
+            const bytes_read = reader(executable, ELF_HEADER_SIZE, &elf_header_buffer) orelse {
+                return BasinError.invalid_argument; // Failed to read ELF header
+            };
+            
+            // Assert: Must read full ELF header.
+            if (bytes_read < ELF_HEADER_SIZE) {
+                return BasinError.invalid_argument; // Incomplete ELF header
+            }
+            
+            // Parse ELF header to get entry point.
+            const elf_info = elf_parser.parse_elf_header(&elf_header_buffer);
+            if (!elf_info.valid) {
+                return BasinError.invalid_argument; // Invalid ELF format
+            }
+            
+            entry_point = elf_info.entry_point;
+            
+            // Try to read ELF program header to determine executable size.
+            // Why: Get actual executable size for better tracking.
+            // Note: For now, use minimum size; can be enhanced later.
+            executable_len = MIN_ELF_SIZE;
+        } else {
+            // No memory reader: use stub entry point (will be set by VM later).
+            // Why: Backward compatibility when memory reader is not available.
+            entry_point = executable; // Use executable pointer as stub entry point
+        }
+        
+        // Set up stack pointer (default stack location).
+        // Why: Process needs stack for execution.
+        const DEFAULT_STACK_POINTER: u64 = 0x3ff000; // Near end of 4MB VM memory
+        const stack_pointer = DEFAULT_STACK_POINTER;
+        
+        // Create process context with entry point and stack pointer.
+        // Why: Track process execution state (PC, SP, entry point).
+        const process_context = ProcessContext.init(entry_point, stack_pointer, entry_point);
+        
         // Create process entry.
         self.processes[idx].id = process_id;
         self.processes[idx].state = .running;
         self.processes[idx].exit_status = 0;
         self.processes[idx].executable_ptr = executable;
-        self.processes[idx].executable_len = MIN_ELF_SIZE; // Stub: use minimum size
+        self.processes[idx].executable_len = executable_len;
+        self.processes[idx].entry_point = entry_point;
+        self.processes[idx].stack_pointer = stack_pointer;
+        self.processes[idx].context = process_context;
         self.processes[idx].allocated = true;
         
         // Set as current running process in scheduler.
@@ -1114,6 +1237,14 @@ pub const BasinKernel = struct {
         Debug.kassert(self.processes[idx].allocated, "Process not allocated", .{});
         Debug.kassert(self.processes[idx].id == process_id, "Process ID mismatch", .{});
         Debug.kassert(self.processes[idx].state == .running, "Process not running", .{});
+        Debug.kassert(self.processes[idx].entry_point != 0, "Entry point is zero", .{});
+        Debug.kassert(self.processes[idx].stack_pointer != 0, "Stack pointer is zero", .{});
+        Debug.kassert(self.processes[idx].context != null, "Process context is null", .{});
+        if (self.processes[idx].context) |ctx| {
+            Debug.kassert(ctx.initialized, "Process context not initialized", .{});
+            Debug.kassert(ctx.pc == entry_point, "Process PC mismatch", .{});
+            Debug.kassert(ctx.sp == stack_pointer, "Process SP mismatch", .{});
+        }
         Debug.kassert(self.scheduler.is_current(process_id), "Process not current", .{});
         
         // Return process ID.
@@ -1388,6 +1519,21 @@ pub const BasinKernel = struct {
         mapping.flags = map_flags;
         mapping.allocated = true;
         
+        // Update page table (map pages with permissions).
+        // Convert MapFlags to PageFlags (same structure).
+        const page_flags = page_table.PageFlags{
+            .read = map_flags.read,
+            .write = map_flags.write,
+            .execute = map_flags.execute,
+            .shared = map_flags.shared,
+            ._padding = 0,
+        };
+        self.page_table.map_pages(mapping_addr, size, page_flags);
+        
+        // Update memory statistics.
+        self.memory_stats.update_from_page_table(@ptrCast(&self.page_table), VM_MEMORY_SIZE);
+        self.memory_stats.update_mapping_count(self.count_allocated_mappings());
+        
         // Assert: Mapping entry must be allocated correctly.
         Debug.kassert(mapping.allocated, "Mapping not allocated", .{});
         Debug.kassert(mapping.address == mapping_addr, "Mapping addr mismatch", .{});
@@ -1462,10 +1608,18 @@ pub const BasinKernel = struct {
         
         // Free mapping entry.
         var mapping = &self.mappings[mapping_idx];
+        const mapping_size = mapping.size;
         mapping.allocated = false;
         mapping.address = 0;
         mapping.size = 0;
         mapping.flags = MapFlags.init(.{});
+        
+        // Update page table (unmap pages).
+        self.page_table.unmap_pages(region, mapping_size);
+        
+        // Update memory statistics.
+        self.memory_stats.update_from_page_table(@ptrCast(&self.page_table), VM_MEMORY_SIZE);
+        self.memory_stats.update_mapping_count(self.count_allocated_mappings());
         
         // Assert: Mapping entry must be freed correctly.
         Debug.kassert(!mapping.allocated, "Mapping still allocated", .{});
@@ -1537,7 +1691,22 @@ pub const BasinKernel = struct {
         
         // Update mapping flags (permissions).
         var mapping = &self.mappings[mapping_idx];
+        const mapping_size = mapping.size;
         mapping.flags = map_flags;
+        
+        // Update page table (protect pages with new permissions).
+        // Convert MapFlags to PageFlags (same structure).
+        const page_flags = page_table.PageFlags{
+            .read = map_flags.read,
+            .write = map_flags.write,
+            .execute = map_flags.execute,
+            .shared = map_flags.shared,
+            ._padding = 0,
+        };
+        self.page_table.protect_pages(region, mapping_size, page_flags);
+        
+        // Update memory statistics.
+        self.memory_stats.update_from_page_table(@ptrCast(&self.page_table), VM_MEMORY_SIZE);
         
         // Assert: Mapping flags must be updated correctly.
         Debug.kassert(mapping.flags.read == map_flags.read, "Read flag mismatch", .{});
@@ -2895,6 +3064,7 @@ pub const basin_kernel = struct {
     pub const BasinKernel = @import("basin_kernel.zig").BasinKernel;
     pub const ProcessContext = @import("process.zig").ProcessContext;
     pub const Process = @import("basin_kernel.zig").Process;
+    pub const process_execution = @import("process_execution.zig");
     pub const Storage = @import("storage.zig").Storage;
     pub const FileEntry = @import("storage.zig").FileEntry;
     pub const DirectoryEntry = @import("storage.zig").DirectoryEntry;
@@ -2915,5 +3085,6 @@ pub const basin_kernel = struct {
     pub const BootPhase = @import("boot.zig").BootPhase;
     pub const boot_kernel = @import("boot.zig").boot_kernel;
     pub const ExceptionType = @import("trap.zig").ExceptionType;
+    pub const handle_exception = @import("trap.zig").handle_exception;
 };
 

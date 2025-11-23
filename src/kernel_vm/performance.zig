@@ -22,6 +22,7 @@
 //! GrainStyle: Comprehensive performance tracking, deterministic behavior, explicit limits
 
 const std = @import("std");
+const exception_stats_mod = @import("exception_stats.zig");
 
 /// Performance metrics for VM execution.
 /// Why: Track execution performance for monitoring and optimization.
@@ -229,10 +230,43 @@ pub const DiagnosticsSnapshot = struct {
     error_count: u32,
     /// Performance metrics snapshot.
     metrics: PerformanceMetrics,
+    /// Exception statistics snapshot.
+    /// Why: Capture exception statistics for debugging and analysis.
+    exception_stats: ExceptionStatsSnapshot,
+    
+    /// Exception statistics snapshot type.
+    /// Why: Explicit type for exception statistics in diagnostics.
+    pub const ExceptionStatsSnapshot = struct {
+        /// Exception counts by type (16 exception types).
+        exception_counts: [16]u64,
+        /// Total exception count.
+        total_count: u64,
+    };
     
     /// Create diagnostics snapshot from VM state.
     /// Why: Capture current VM state for inspection.
-    pub fn create(state: u32, pc: u64, sp: u64, memory_size: u64, memory_used: u64, jit_enabled: bool, error_count: u32, metrics: PerformanceMetrics) DiagnosticsSnapshot {
+    pub fn create(
+        state: u32,
+        pc: u64,
+        sp: u64,
+        memory_size: u64,
+        memory_used: u64,
+        jit_enabled: bool,
+        error_count: u32,
+        metrics: PerformanceMetrics,
+        exception_stats: exception_stats_mod.ExceptionStats,
+    ) DiagnosticsSnapshot {
+        // Capture exception statistics.
+        var exception_counts: [16]u64 = undefined;
+        var i: u32 = 0;
+        while (i < 16) : (i += 1) {
+            exception_counts[i] = exception_stats.exception_counts[i];
+        }
+        const exception_stats_snapshot: DiagnosticsSnapshot.ExceptionStatsSnapshot = .{
+            .exception_counts = exception_counts,
+            .total_count = exception_stats.total_count,
+        };
+        
         return DiagnosticsSnapshot{
             .state = state,
             .pc = pc,
@@ -242,6 +276,7 @@ pub const DiagnosticsSnapshot = struct {
             .jit_enabled = jit_enabled,
             .error_count = error_count,
             .metrics = metrics,
+            .exception_stats = exception_stats_snapshot,
         };
     }
     
@@ -257,6 +292,13 @@ pub const DiagnosticsSnapshot = struct {
         std.debug.print("JIT enabled: {}\n", .{self.jit_enabled});
         std.debug.print("Error count: {}\n", .{self.error_count});
         self.metrics.print_summary();
+        std.debug.print("Exception statistics:\n", .{});
+        std.debug.print("  Total exceptions: {}\n", .{self.exception_stats.total_count});
+        std.debug.print("  Illegal instruction: {}\n", .{self.exception_stats.exception_counts[2]});
+        std.debug.print("  Load address misaligned: {}\n", .{self.exception_stats.exception_counts[4]});
+        std.debug.print("  Store address misaligned: {}\n", .{self.exception_stats.exception_counts[6]});
+        std.debug.print("  Load access fault: {}\n", .{self.exception_stats.exception_counts[5]});
+        std.debug.print("  Store access fault: {}\n", .{self.exception_stats.exception_counts[7]});
         std.debug.print("================================\n", .{});
     }
 };

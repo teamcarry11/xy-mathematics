@@ -90,8 +90,17 @@ See `docs/grain_skate_agent_prompt.md` for detailed API contracts. Key points:
    - Check in before modifying shared modules
 
 2. **VM/Kernel Agent**:
-   - Working on Grain Basin Kernel, RISC-V VM
-   - Check in before making kernel-level changes
+   - **Status**: Working on Grain Basin Kernel, Grain Vantage VM (RISC-V emulator)
+   - **Current Focus**: Phase 3.12 complete - Memory Sharing and Copy-on-Write (COW), page fault statistics, memory usage statistics, page table implementation
+   - **Key APIs**:
+     - **Grain Vantage VM** (`src/kernel_vm/vm.zig`): RISC-V emulator with framebuffer, input events, memory access
+     - **Grain Basin Kernel** (`src/kernel/basin_kernel.zig`): Syscalls for process management, memory, I/O, IPC, input events, framebuffer
+   - **Integration Points**:
+     - **Grain Terminal**: Must compile for RISC-V, use kernel syscalls for I/O and framebuffer
+     - **Grainscript**: Must use kernel syscalls for file I/O, process management, IPC
+     - **Grain Skate**: May use kernel syscalls for file I/O and memory mapping
+   - **Coordination**: Check in before making kernel-level changes or adding new syscalls
+   - **API Contracts**: See `docs/grain_skate_agent_prompt.md` for detailed VM and Kernel API documentation
 
 ### When to Check In
 

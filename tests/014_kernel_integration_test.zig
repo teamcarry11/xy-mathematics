@@ -208,7 +208,7 @@ test "Stress Test: Long-running program execution" {
     
     // Assert: Initial register value must be valid (precondition).
     // x1 may be any value initially, so we just verify it's accessible.
-    _ = initial_x1;
+    // Note: initial_x1 is used implicitly by the test logic.
     
     while (vm.state == .running and step_count < STRESS_TEST_STEPS) : (step_count += 1) {
         vm.step() catch |err| {

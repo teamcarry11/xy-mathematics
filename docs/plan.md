@@ -262,6 +262,24 @@
    - ✅ Comprehensive TigerStyle tests (tests/038_cow_test.zig)
    - ✅ GrainStyle compliance (u32 types, assertions, bounded loops, static allocation)
 
+27. **Process Context Switching and Execution** ✅ **COMPLETE**
+   - ✅ Process context switching module (src/kernel/process_execution.zig)
+   - ✅ Switch to process context (set VM registers from ProcessContext)
+   - ✅ Save process context (save VM registers to ProcessContext)
+   - ✅ Execute process in VM (run VM until process exits or yields)
+   - ✅ Bounded execution (max steps limit for safety)
+   - ✅ Comprehensive TigerStyle tests (tests/041_process_execution_test.zig)
+   - ✅ GrainStyle compliance (u32 types, assertions, bounded operations, static allocation)
+   - ✅ Build system integration (process_execution_module added to build.zig)
+
+28. **Scheduler-Process Execution Integration** ✅ **COMPLETE**
+   - ✅ Integration layer functions (run_current_process, schedule_and_run_next)
+   - ✅ Run current process in VM (scheduler-process execution integration)
+   - ✅ Schedule and run next process (round-robin scheduling with process execution)
+   - ✅ Process state management (handle process exit, update scheduler)
+   - ✅ Comprehensive TigerStyle tests (tests/042_scheduler_integration_test.zig)
+   - ✅ GrainStyle compliance (u32 types, assertions, bounded operations, static allocation)
+
 ## 🚀 Architecture Overview
 
 ### Grain Aurora Stack
@@ -447,7 +465,7 @@
 - ✅ Toggle folding (keyboard shortcut ready)
 - ✅ Visual indicators (fold state tracking)
 
-#### 1.3: GLM-4.6 Integration ✅ **COMPLETE** (Foundation: code transformation features)
+#### 1.3: GLM-4.6 Integration ✅ **COMPLETE** (Foundation: code transformation features + AI provider abstraction)
 - ✅ Code completion (ghost text at 1,000 tps integrated)
 - ✅ Editor integration (GLM-4.6 client optional, falls back to LSP)
 - ✅ Code transformation (refactor, extract, inline) ✅ **COMPLETE**
@@ -460,8 +478,18 @@
   - ✅ File edit application (placeholder for applying edits)
   - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
   - ✅ Comprehensive tests for transformation operations
+- ✅ AI Provider Abstraction ✅ **COMPLETE**
+  - ✅ Create unified AI provider interface (`src/aurora_ai_provider.zig`)
+  - ✅ VTable-based polymorphism for pluggable providers
+  - ✅ GLM-4.6 provider implementation (`src/aurora_glm46_provider.zig`)
+  - ✅ Support for multiple provider types (future: Claude, GPT-4, etc.)
+  - ✅ Unified interfaces: CompletionRequest, TransformRequest, ToolCallRequest
+  - ✅ GrainStyle compliance (bounded allocations, assertions)
+  - ✅ Refactoring documentation (`docs/ai_provider_refactoring.md`)
 - 📋 Tool calling (run `zig build`, `jj status`) - pending
 - 📋 Multi-file edits (context-aware) - pending (Note: Foundation complete, full implementation pending)
+- 📋 Editor integration with AI provider (refactor `aurora_editor.zig` to use `AiProvider`) - pending
+- 📋 Transforms integration with AI provider (refactor `aurora_glm46_transforms.zig` to use `AiProvider`) - pending
 
 #### 1.4: Tree-sitter Integration ✅ **ENHANCED**
 - ✅ Foundation created (simple regex-based parser)
@@ -652,12 +680,20 @@
 - ✅ Iterative parsing (no recursion, stack-based precedence)
 - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 
-#### 8.1.3: Basic Command Execution
-- [ ] Command parsing and execution
-- [ ] Built-in commands (echo, cd, pwd, etc.)
-- [ ] External command execution
-- [ ] Exit code handling
-- [ ] Error handling
+#### 8.1.3: Basic Command Execution ✅ **COMPLETE**
+- ✅ Interpreter implementation (`src/grainscript/interpreter.zig`)
+- ✅ Runtime value system (integer, float, string, boolean, null)
+- ✅ Expression evaluation (arithmetic, comparison, logical, unary)
+- ✅ Statement execution (if, while, for, return, block)
+- ✅ Variable and constant declarations
+- ✅ Built-in commands (echo, cd, pwd, exit)
+- ✅ Exit code handling
+- ✅ Error handling (Interpreter.Error enum)
+- ✅ Bounded runtime state (MAX_VARIABLES: 1,000, MAX_FUNCTIONS: 256, MAX_CALL_STACK: 1,024)
+- ✅ Comprehensive tests (`tests/041_grainscript_interpreter_test.zig`)
+- ✅ Iterative evaluation (no recursion, stack-based)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+- ⚠️ External command execution (requires kernel syscall integration - Phase 8.1.4+)
 
 #### 8.1.4: Variable Handling
 - [ ] Variable declaration and assignment
@@ -805,12 +841,20 @@
 - ✅ Iterative parsing (no recursion, stack-based precedence)
 - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 
-#### 8.1.3: Basic Command Execution
-- [ ] Command parsing and execution
-- [ ] Built-in commands (echo, cd, pwd, etc.)
-- [ ] External command execution
-- [ ] Exit code handling
-- [ ] Error handling
+#### 8.1.3: Basic Command Execution ✅ **COMPLETE**
+- ✅ Interpreter implementation (`src/grainscript/interpreter.zig`)
+- ✅ Runtime value system (integer, float, string, boolean, null)
+- ✅ Expression evaluation (arithmetic, comparison, logical, unary)
+- ✅ Statement execution (if, while, for, return, block)
+- ✅ Variable and constant declarations
+- ✅ Built-in commands (echo, cd, pwd, exit)
+- ✅ Exit code handling
+- ✅ Error handling (Interpreter.Error enum)
+- ✅ Bounded runtime state (MAX_VARIABLES: 1,000, MAX_FUNCTIONS: 256, MAX_CALL_STACK: 1,024)
+- ✅ Comprehensive tests (`tests/041_grainscript_interpreter_test.zig`)
+- ✅ Iterative evaluation (no recursion, stack-based)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+- ⚠️ External command execution (requires kernel syscall integration - Phase 8.1.4+)
 
 #### 8.1.4: Variable Handling
 - [ ] Variable declaration and assignment
@@ -958,12 +1002,20 @@
 - ✅ Iterative parsing (no recursion, stack-based precedence)
 - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 
-#### 8.1.3: Basic Command Execution
-- [ ] Command parsing and execution
-- [ ] Built-in commands (echo, cd, pwd, etc.)
-- [ ] External command execution
-- [ ] Exit code handling
-- [ ] Error handling
+#### 8.1.3: Basic Command Execution ✅ **COMPLETE**
+- ✅ Interpreter implementation (`src/grainscript/interpreter.zig`)
+- ✅ Runtime value system (integer, float, string, boolean, null)
+- ✅ Expression evaluation (arithmetic, comparison, logical, unary)
+- ✅ Statement execution (if, while, for, return, block)
+- ✅ Variable and constant declarations
+- ✅ Built-in commands (echo, cd, pwd, exit)
+- ✅ Exit code handling
+- ✅ Error handling (Interpreter.Error enum)
+- ✅ Bounded runtime state (MAX_VARIABLES: 1,000, MAX_FUNCTIONS: 256, MAX_CALL_STACK: 1,024)
+- ✅ Comprehensive tests (`tests/041_grainscript_interpreter_test.zig`)
+- ✅ Iterative evaluation (no recursion, stack-based)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+- ⚠️ External command execution (requires kernel syscall integration - Phase 8.1.4+)
 
 #### 8.1.4: Variable Handling
 - [ ] Variable declaration and assignment

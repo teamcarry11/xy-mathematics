@@ -5,6 +5,7 @@ const jit_mod = @import("jit.zig");
 const error_log_mod = @import("error_log.zig");
 const performance_mod = @import("performance.zig");
 const state_snapshot_mod = @import("state_snapshot.zig");
+const exception_stats_mod = @import("exception_stats.zig");
 
 /// Pure Zig RISC-V64 emulator for kernel development.
 /// Grain Style: Static allocation where possible, comprehensive assertions,
@@ -261,6 +262,14 @@ pub const VM = struct {
     /// User data for syscall handler (optional).
     /// Why: Pass context to syscall handler (e.g., Basin Kernel instance).
     syscall_user_data: ?*anyopaque = null,
+    /// Memory permission check callback (optional).
+    /// Why: Enforce memory protection by checking read/write/execute permissions.
+    /// Note: Type-erased to avoid requiring basin_kernel import at module level.
+    /// Returns: u32 with permission bits (bit 0=read, bit 1=write, bit 2=execute), or 0 if not mapped.
+    permission_checker: ?*const fn (addr: u64) u32 = null,
+    /// User data for permission checker (optional).
+    /// Why: Pass context to permission checker (e.g., Basin Kernel instance).
+    permission_checker_user_data: ?*anyopaque = null,
     /// Serial output handler (for SBI console output).
     /// Why: Capture SBI console output (LEGACY_CONSOLE_PUTCHAR) for display.
     serial_output: ?*SerialOutput = null,
@@ -297,6 +306,10 @@ pub const VM = struct {
     /// Why: Monitor VM execution performance for optimization and diagnostics.
     /// GrainStyle: Static allocation, bounded counters, explicit types.
     performance: performance_mod.PerformanceMetrics = .{},
+    /// Exception statistics tracker.
+    /// Why: Track exception counts by type for debugging and monitoring.
+    /// GrainStyle: Static allocation, bounded counters, explicit types.
+    exception_stats: exception_stats_mod.ExceptionStats = .{},
 
     const Self = @This();
 
@@ -405,6 +418,28 @@ pub const VM = struct {
         unaligned_instruction,
         unaligned_memory_access,
     };
+    
+    /// Record exception in statistics (maps VMError to RISC-V exception code).
+    /// Why: Track exceptions for statistics when VM errors occur.
+    /// Contract: VM must be initialized.
+    fn record_vm_error(self: *Self, err: VMError) void {
+        // Assert: VM must be initialized (precondition).
+        std.debug.assert(self.memory_size > 0);
+        
+        // Map VMError to RISC-V exception code.
+        const exception_code: u32 = switch (err) {
+            .invalid_instruction => 2, // Illegal instruction
+            .invalid_memory_access => 5, // Load access fault (approximate)
+            .unaligned_instruction => 0, // Instruction address misaligned
+            .unaligned_memory_access => 4, // Load address misaligned (approximate)
+        };
+        
+        // Record exception in statistics.
+        self.exception_stats.record_exception(exception_code);
+        
+        // Assert: Exception must be recorded (postcondition).
+        std.debug.assert(self.exception_stats.get_count(exception_code) > 0);
+    }
 
     /// Initialize VM with kernel image loaded at address (GrainStyle: in-place initialization).
     /// Why: Explicit initialization ensures deterministic state. In-place initialization avoids stack overflow.
@@ -428,6 +463,7 @@ pub const VM = struct {
             .memory_size = VM_MEMORY_SIZE,
             .state = .halted,
             .last_error = null,
+            .exception_stats = exception_stats_mod.ExceptionStats.init(),
         };
 
         // Load kernel image into memory (if non-empty).
@@ -552,12 +588,14 @@ pub const VM = struct {
     }
     /// Read memory at address (little-endian, 8 bytes).
     /// Grain Style: Validate address, bounds checking, alignment.
-    pub fn read64(self: *const Self, addr: u64) VMError!u64 {
+    pub fn read64(self: *Self, addr: u64) VMError!u64 {
         // Assert: address must be within memory bounds.
         std.debug.assert(addr + 8 <= self.memory_size);
 
         // Assert: address must be 8-byte aligned (RISC-V64 requirement).
         if (addr % 8 != 0) {
+            // Record exception (load address misaligned, code 4).
+            self.exception_stats.record_exception(4);
             return VMError.unaligned_memory_access;
         }
 
@@ -576,6 +614,8 @@ pub const VM = struct {
 
         // Assert: address must be 8-byte aligned (RISC-V64 requirement).
         if (addr % 8 != 0) {
+            // Record exception (store address misaligned, code 6).
+            self.exception_stats.record_exception(6);
             return VMError.unaligned_memory_access;
         }
 
@@ -883,18 +923,40 @@ pub const VM = struct {
 
     /// Read instruction at PC (32-bit, little-endian).
     /// Grain Style: Validate PC, bounds checking, alignment.
-    pub fn fetch_instruction(self: *const Self) VMError!u32 {
+    pub fn fetch_instruction(self: *Self) VMError!u32 {
         const pc = self.regs.pc;
 
         // Assert: PC must be within memory bounds (need 4 bytes for instruction).
         // Note: PC can be at memory_size - 4, but not beyond.
         if (pc + 4 > self.memory_size) {
+            // Record exception (instruction access fault, code 1).
+            self.exception_stats.record_exception(1);
             return VMError.invalid_memory_access;
         }
 
         // Assert: PC must be 4-byte aligned (RISC-V instruction alignment).
         if (pc % 4 != 0) {
+            // Record exception (instruction address misaligned, code 0).
+            self.exception_stats.record_exception(0);
             return VMError.unaligned_instruction;
+        }
+
+        // Check memory permissions (if permission checker is set).
+        // Why: Enforce memory protection before allowing instruction fetch.
+        // Distinguish between page faults (unmapped) and access faults (permission violation).
+        if (self.permission_checker) |checker| {
+            const permissions = checker(pc);
+            if (permissions == 0) {
+                // Page not mapped: record page fault (instruction page fault, code 12).
+                self.exception_stats.record_exception(12);
+                return VMError.invalid_memory_access;
+            }
+            const has_execute = (permissions & 4) != 0;
+            if (!has_execute) {
+                // Page mapped but no execute permission: record access fault (instruction access fault, code 1).
+                self.exception_stats.record_exception(1);
+                return VMError.invalid_memory_access;
+            }
         }
 
         // Read 32-bit instruction (little-endian).
@@ -985,6 +1047,8 @@ pub const VM = struct {
                     std.debug.print("DEBUG vm.zig: Unsupported I-type variant: funct3=0b{b:0>3}\n", .{funct3});
                     self.state = .errored;
                     self.last_error = VMError.invalid_instruction;
+                    // Record exception (illegal instruction, code 2).
+                    self.exception_stats.record_exception(2);
                     return VMError.invalid_instruction;
                 }
             },
@@ -1058,6 +1122,8 @@ pub const VM = struct {
                         // Unsupported R-type instruction variant.
                         self.state = .errored;
                         self.last_error = VMError.invalid_instruction;
+                        // Record exception (illegal instruction, code 2).
+                        self.exception_stats.record_exception(2);
                         return VMError.invalid_instruction;
                     }
                 } else if (funct3 == 0b010) {
@@ -1068,6 +1134,8 @@ pub const VM = struct {
                         // Unsupported R-type instruction variant.
                         self.state = .errored;
                         self.last_error = VMError.invalid_instruction;
+                        // Record exception (illegal instruction, code 2).
+                        self.exception_stats.record_exception(2);
                         return VMError.invalid_instruction;
                     }
                 } else if (funct3 == 0b100) {
@@ -1078,6 +1146,8 @@ pub const VM = struct {
                         // Unsupported R-type instruction variant.
                         self.state = .errored;
                         self.last_error = VMError.invalid_instruction;
+                        // Record exception (illegal instruction, code 2).
+                        self.exception_stats.record_exception(2);
                         return VMError.invalid_instruction;
                     }
                 } else if (funct3 == 0b110) {
@@ -1088,6 +1158,8 @@ pub const VM = struct {
                         // Unsupported R-type instruction variant.
                         self.state = .errored;
                         self.last_error = VMError.invalid_instruction;
+                        // Record exception (illegal instruction, code 2).
+                        self.exception_stats.record_exception(2);
                         return VMError.invalid_instruction;
                     }
                 } else if (funct3 == 0b111) {
@@ -1098,6 +1170,8 @@ pub const VM = struct {
                         // Unsupported R-type instruction variant.
                         self.state = .errored;
                         self.last_error = VMError.invalid_instruction;
+                        // Record exception (illegal instruction, code 2).
+                        self.exception_stats.record_exception(2);
                         return VMError.invalid_instruction;
                     }
                 } else if (funct3 == 0b001) {
@@ -1125,6 +1199,8 @@ pub const VM = struct {
                         // Unsupported R-type instruction variant.
                         self.state = .errored;
                         self.last_error = VMError.invalid_instruction;
+                        // Record exception (illegal instruction, code 2).
+                        self.exception_stats.record_exception(2);
                         return VMError.invalid_instruction;
                     }
                 } else {
@@ -2120,6 +2196,20 @@ pub const VM = struct {
             return VMError.unaligned_memory_access;
         }
 
+        // Check memory permissions (if permission checker is set).
+        // Why: Enforce memory protection before allowing write access.
+        if (self.permission_checker) |checker| {
+            const permissions = checker(eff_addr);
+            const has_write = (permissions & 2) != 0;
+            if (!has_write) {
+                // Record exception (store access fault, code 7).
+                self.exception_stats.record_exception(7);
+                self.state = .errored;
+                self.last_error = VMError.invalid_memory_access;
+                return VMError.invalid_memory_access;
+            }
+        }
+        
         // Translate virtual address to physical offset
         const phys_offset = self.translate_address(eff_addr) orelse {
             self.state = .errored;
@@ -2162,8 +2252,32 @@ pub const VM = struct {
         const offset: u64 = @bitCast(imm64); // Use @bitCast to handle negative immediates correctly
         const eff_addr = base_addr +% offset;
 
+        // Check memory permissions (if permission checker is set).
+        // Why: Enforce memory protection before allowing read access.
+        // Distinguish between page faults (unmapped) and access faults (permission violation).
+        if (self.permission_checker) |checker| {
+            const permissions = checker(eff_addr);
+            if (permissions == 0) {
+                // Page not mapped: record page fault (load page fault, code 13).
+                self.exception_stats.record_exception(13);
+                self.state = .errored;
+                self.last_error = VMError.invalid_memory_access;
+                return VMError.invalid_memory_access;
+            }
+            const has_read = (permissions & 1) != 0;
+            if (!has_read) {
+                // Page mapped but no read permission: record access fault (load access fault, code 5).
+                self.exception_stats.record_exception(5);
+                self.state = .errored;
+                self.last_error = VMError.invalid_memory_access;
+                return VMError.invalid_memory_access;
+            }
+        }
+
         // Translate virtual address to physical offset
         const phys_offset = self.translate_address(eff_addr) orelse {
+            // Address translation failed: record page fault (load page fault, code 13).
+            self.exception_stats.record_exception(13);
             self.state = .errored;
             self.last_error = VMError.invalid_memory_access;
             return VMError.invalid_memory_access;
@@ -2214,8 +2328,32 @@ pub const VM = struct {
             return VMError.unaligned_memory_access;
         }
 
+        // Check memory permissions (if permission checker is set).
+        // Why: Enforce memory protection before allowing read access.
+        // Distinguish between page faults (unmapped) and access faults (permission violation).
+        if (self.permission_checker) |checker| {
+            const permissions = checker(eff_addr);
+            if (permissions == 0) {
+                // Page not mapped: record page fault (load page fault, code 13).
+                self.exception_stats.record_exception(13);
+                self.state = .errored;
+                self.last_error = VMError.invalid_memory_access;
+                return VMError.invalid_memory_access;
+            }
+            const has_read = (permissions & 1) != 0;
+            if (!has_read) {
+                // Page mapped but no read permission: record access fault (load access fault, code 5).
+                self.exception_stats.record_exception(5);
+                self.state = .errored;
+                self.last_error = VMError.invalid_memory_access;
+                return VMError.invalid_memory_access;
+            }
+        }
+
         // Translate virtual address to physical offset
         const phys_offset = self.translate_address(eff_addr) orelse {
+            // Address translation failed: record page fault (load page fault, code 13).
+            self.exception_stats.record_exception(13);
             self.state = .errored;
             self.last_error = VMError.invalid_memory_access;
             return VMError.invalid_memory_access;
@@ -2285,8 +2423,32 @@ pub const VM = struct {
             return VMError.unaligned_memory_access;
         }
 
+        // Check memory permissions (if permission checker is set).
+        // Why: Enforce memory protection before allowing read access.
+        // Distinguish between page faults (unmapped) and access faults (permission violation).
+        if (self.permission_checker) |checker| {
+            const permissions = checker(eff_addr);
+            if (permissions == 0) {
+                // Page not mapped: record page fault (load page fault, code 13).
+                self.exception_stats.record_exception(13);
+                self.state = .errored;
+                self.last_error = VMError.invalid_memory_access;
+                return VMError.invalid_memory_access;
+            }
+            const has_read = (permissions & 1) != 0;
+            if (!has_read) {
+                // Page mapped but no read permission: record access fault (load access fault, code 5).
+                self.exception_stats.record_exception(5);
+                self.state = .errored;
+                self.last_error = VMError.invalid_memory_access;
+                return VMError.invalid_memory_access;
+            }
+        }
+
         // Translate virtual address to physical offset
         const phys_offset = self.translate_address(eff_addr) orelse {
+            // Address translation failed: record page fault (load page fault, code 13).
+            self.exception_stats.record_exception(13);
             self.state = .errored;
             self.last_error = VMError.invalid_memory_access;
             return VMError.invalid_memory_access;
@@ -2329,8 +2491,32 @@ pub const VM = struct {
         const offset: u64 = @bitCast(imm64); // Use @bitCast to handle negative immediates correctly
         const eff_addr = base_addr +% offset;
 
+        // Check memory permissions (if permission checker is set).
+        // Why: Enforce memory protection before allowing read access.
+        // Distinguish between page faults (unmapped) and access faults (permission violation).
+        if (self.permission_checker) |checker| {
+            const permissions = checker(eff_addr);
+            if (permissions == 0) {
+                // Page not mapped: record page fault (load page fault, code 13).
+                self.exception_stats.record_exception(13);
+                self.state = .errored;
+                self.last_error = VMError.invalid_memory_access;
+                return VMError.invalid_memory_access;
+            }
+            const has_read = (permissions & 1) != 0;
+            if (!has_read) {
+                // Page mapped but no read permission: record access fault (load access fault, code 5).
+                self.exception_stats.record_exception(5);
+                self.state = .errored;
+                self.last_error = VMError.invalid_memory_access;
+                return VMError.invalid_memory_access;
+            }
+        }
+
         // Translate virtual address to physical offset
         const phys_offset = self.translate_address(eff_addr) orelse {
+            // Address translation failed: record page fault (load page fault, code 13).
+            self.exception_stats.record_exception(13);
             self.state = .errored;
             self.last_error = VMError.invalid_memory_access;
             return VMError.invalid_memory_access;
@@ -2379,8 +2565,32 @@ pub const VM = struct {
             return VMError.unaligned_memory_access;
         }
 
+        // Check memory permissions (if permission checker is set).
+        // Why: Enforce memory protection before allowing read access.
+        // Distinguish between page faults (unmapped) and access faults (permission violation).
+        if (self.permission_checker) |checker| {
+            const permissions = checker(eff_addr);
+            if (permissions == 0) {
+                // Page not mapped: record page fault (load page fault, code 13).
+                self.exception_stats.record_exception(13);
+                self.state = .errored;
+                self.last_error = VMError.invalid_memory_access;
+                return VMError.invalid_memory_access;
+            }
+            const has_read = (permissions & 1) != 0;
+            if (!has_read) {
+                // Page mapped but no read permission: record access fault (load access fault, code 5).
+                self.exception_stats.record_exception(5);
+                self.state = .errored;
+                self.last_error = VMError.invalid_memory_access;
+                return VMError.invalid_memory_access;
+            }
+        }
+
         // Translate virtual address to physical offset
         const phys_offset = self.translate_address(eff_addr) orelse {
+            // Address translation failed: record page fault (load page fault, code 13).
+            self.exception_stats.record_exception(13);
             self.state = .errored;
             self.last_error = VMError.invalid_memory_access;
             return VMError.invalid_memory_access;
@@ -2430,8 +2640,32 @@ pub const VM = struct {
             return VMError.unaligned_memory_access;
         }
 
+        // Check memory permissions (if permission checker is set).
+        // Why: Enforce memory protection before allowing read access.
+        // Distinguish between page faults (unmapped) and access faults (permission violation).
+        if (self.permission_checker) |checker| {
+            const permissions = checker(eff_addr);
+            if (permissions == 0) {
+                // Page not mapped: record page fault (load page fault, code 13).
+                self.exception_stats.record_exception(13);
+                self.state = .errored;
+                self.last_error = VMError.invalid_memory_access;
+                return VMError.invalid_memory_access;
+            }
+            const has_read = (permissions & 1) != 0;
+            if (!has_read) {
+                // Page mapped but no read permission: record access fault (load access fault, code 5).
+                self.exception_stats.record_exception(5);
+                self.state = .errored;
+                self.last_error = VMError.invalid_memory_access;
+                return VMError.invalid_memory_access;
+            }
+        }
+
         // Translate virtual address to physical offset
         const phys_offset = self.translate_address(eff_addr) orelse {
+            // Address translation failed: record page fault (load page fault, code 13).
+            self.exception_stats.record_exception(13);
             self.state = .errored;
             self.last_error = VMError.invalid_memory_access;
             return VMError.invalid_memory_access;
@@ -2496,6 +2730,20 @@ pub const VM = struct {
             }
         }
 
+        // Check memory permissions (if permission checker is set).
+        // Why: Enforce memory protection before allowing write access.
+        if (self.permission_checker) |checker| {
+            const permissions = checker(eff_addr);
+            const has_write = (permissions & 2) != 0;
+            if (!has_write) {
+                // Record exception (store access fault, code 7).
+                self.exception_stats.record_exception(7);
+                self.state = .errored;
+                self.last_error = VMError.invalid_memory_access;
+                return VMError.invalid_memory_access;
+            }
+        }
+
         // Translate virtual address to physical offset
         const phys_offset = self.translate_address(eff_addr) orelse {
             self.state = .errored;
@@ -2549,6 +2797,20 @@ pub const VM = struct {
             self.state = .errored;
             self.last_error = VMError.unaligned_memory_access;
             return VMError.unaligned_memory_access;
+        }
+
+        // Check memory permissions (if permission checker is set).
+        // Why: Enforce memory protection before allowing write access.
+        if (self.permission_checker) |checker| {
+            const permissions = checker(eff_addr);
+            const has_write = (permissions & 2) != 0;
+            if (!has_write) {
+                // Record exception (store access fault, code 7).
+                self.exception_stats.record_exception(7);
+                self.state = .errored;
+                self.last_error = VMError.invalid_memory_access;
+                return VMError.invalid_memory_access;
+            }
         }
 
         // Translate virtual address to physical offset
@@ -3313,6 +3575,7 @@ pub const VM = struct {
             self.jit_enabled,
             self.error_log.entry_count,
             self.performance,
+            self.exception_stats,
         );
     }
     

@@ -157,6 +157,146 @@ pub const UnifiedIde = struct {
 
 **Note**: These APIs are for reference. You should **not modify** them unless explicitly coordinated. If you need integration, propose API extensions rather than changing existing contracts.
 
+#### Grain Vantage VM API (`src/kernel_vm/vm.zig`)
+
+```zig
+pub const VM = struct {
+    pub const VM_MEMORY_SIZE: u64 = 8 * 1024 * 1024; // 8MB
+    
+    pub const VMState = enum {
+        running,
+        halted,
+        errored,
+    };
+    
+    pub const VMError = error{
+        invalid_instruction,
+        invalid_memory_access,
+        unaligned_instruction,
+        unaligned_memory_access,
+    };
+    
+    // VM execution methods
+    pub fn step(self: *VM) !void;
+    pub fn run(self: *VM, max_steps: u64) !void;
+    pub fn init(target: *VM, kernel_image: []const u8, load_address: u64) void;
+    
+    // Input event injection (for Grain Terminal)
+    pub fn inject_keyboard_event(self: *VM, kind: u8, key_code: u32, character: u32, modifiers: u8) void;
+    pub fn inject_mouse_event(self: *VM, kind: u8, button: u8, x: u32, y: u32, modifiers: u8) void;
+    
+    // Framebuffer access (for Grain Terminal rendering)
+    pub fn get_framebuffer_ptr(self: *VM) ?[*]u8;
+    pub fn get_framebuffer_size(self: *const VM) u64;
+    
+    // Memory access (for applications)
+    pub fn read8(self: *const VM, addr: u64) VMError!u8;
+    pub fn write8(self: *VM, addr: u64, value: u8) VMError!void;
+    
+    // Register access
+    pub const RegisterFile = struct {
+        pub fn get(self: *const RegisterFile, reg: u32) u64;
+        pub fn set(self: *RegisterFile, reg: u32, value: u64) void;
+    };
+};
+```
+
+#### Grain Basin Kernel Syscall API (`src/kernel/basin_kernel.zig`)
+
+```zig
+pub const Syscall = enum(u32) {
+    // Process & Thread Management
+    spawn = 1,
+    exit = 2,
+    yield = 3,
+    wait = 4,
+    
+    // Memory Management
+    map = 10,
+    unmap = 11,
+    protect = 12,
+    
+    // Inter-Process Communication
+    channel_create = 20,
+    channel_send = 21,
+    channel_recv = 22,
+    
+    // I/O Operations
+    open = 30,
+    read = 31,
+    write = 32,
+    close = 33,
+    unlink = 34,
+    rename = 35,
+    mkdir = 36,
+    opendir = 37,
+    readdir = 38,
+    closedir = 39,
+    
+    // Time & Scheduling
+    clock_gettime = 40,
+    sleep_until = 41,
+    
+    // System Information
+    sysinfo = 50,
+    
+    // Input Events (for Grain Terminal)
+    read_input_event = 60,
+    
+    // Framebuffer Operations (for Grain Terminal)
+    fb_clear = 70,
+    fb_draw_pixel = 71,
+    fb_draw_text = 72,
+    
+    // Signal Operations
+    kill = 80,
+    signal = 81,
+    sigaction = 82,
+};
+
+// Memory mapping flags (for Grain Terminal/Grainscript)
+pub const MapFlags = packed struct {
+    read: bool = false,
+    write: bool = false,
+    execute: bool = false,
+    shared: bool = false,
+    _padding: u28 = 0,
+};
+
+// File open flags (for Grainscript file I/O)
+pub const OpenFlags = packed struct {
+    read: bool = false,
+    write: bool = false,
+    create: bool = false,
+    truncate: bool = false,
+    _padding: u28 = 0,
+};
+```
+
+**How to Use Kernel Syscalls from RISC-V Code**:
+
+1. **Compile your application for RISC-V**: Use `zig build-exe` with `-target riscv64-linux` or similar
+2. **Make syscalls via ECALL instruction**: Set `a7` (x17) register to syscall number, `a0-a5` (x10-x15) for arguments
+3. **Return value in `a0`**: Kernel returns result in `a0` register (success value or error code)
+4. **Error handling**: Check return value; negative values indicate errors (see `BasinError` enum)
+
+**Example RISC-V Assembly for Syscall**:
+```asm
+# Example: syscall_map(addr, size, flags)
+li a7, 10        # Syscall number for 'map'
+li a0, 0x100000  # Address (arg1)
+li a1, 4096      # Size (arg2)
+li a2, 0b111     # Flags: read|write|execute (arg3)
+ecall            # Make syscall
+# Result in a0: 0 on success, error code on failure
+```
+
+**Important**: 
+- All syscalls must follow RISC-V calling convention
+- Memory addresses must be within VM memory bounds (0 to VM_MEMORY_SIZE)
+- File paths must be null-terminated strings in VM memory
+- All syscall arguments are validated by the kernel (bounds checking, permission checking)
+
 ---
 
 ## Grain Skate Project Specification
@@ -381,6 +521,82 @@ Grainscript must be able to represent and generate:
 
 ---
 
+## Context: VM/Kernel Work (Separate from Your Tasks)
+
+### What the VM/Kernel Agent Has Built
+
+The **VM/Kernel agent** has implemented:
+
+1. **Grain Vantage VM** (`src/kernel_vm/vm.zig`):
+   - RISC-V64 emulator for kernel development
+   - JIT compiler for performance (ARM64 native code generation)
+   - Framebuffer support (1024x768, 32-bit RGBA)
+   - Input event queue (keyboard and mouse events)
+   - Memory protection and address translation
+   - Exception statistics and error logging
+   - Performance monitoring and diagnostics
+   - State persistence (save/restore VM state)
+
+2. **Grain Basin Kernel** (`src/kernel/basin_kernel.zig`):
+   - Non-POSIX kernel for RISC-V64
+   - Process management (spawn, exit, wait, yield)
+   - Memory management (map, unmap, protect syscalls)
+   - Page table implementation (4KB pages, permissions)
+   - Copy-on-Write (COW) for memory sharing
+   - File I/O (open, read, write, close, unlink, rename, mkdir, opendir, readdir, closedir)
+   - IPC channels (channel_create, channel_send, channel_recv)
+   - Timer and scheduling (clock_gettime, sleep_until)
+   - Input events (read_input_event syscall)
+   - Framebuffer operations (fb_clear, fb_draw_pixel, fb_draw_text)
+   - Signal handling (kill, signal, sigaction)
+   - Exception handling and page fault statistics
+   - Memory usage statistics
+
+3. **Integration Layer** (`src/kernel_vm/integration.zig`):
+   - Bridges VM syscall interface with kernel syscall interface
+   - Memory permission checking
+   - ELF loading for userspace programs
+
+### How This Relates to Your Work
+
+**Your work is separate** but must integrate with:
+
+1. **Grain Terminal**:
+   - **MUST compile for RISC-V** and run in Grain Vantage VM
+   - **MUST use kernel syscalls** for I/O, framebuffer, and input events
+   - **MUST target Grain Basin Kernel** (not POSIX)
+   - Can use VM framebuffer API for rendering
+   - Can use kernel input event syscall for keyboard/mouse input
+   - Can use kernel file I/O syscalls for configuration and session management
+
+2. **Grainscript**:
+   - **MUST work with kernel syscalls** for file I/O, process management, IPC
+   - **MUST compile to RISC-V** for execution in Grain Vantage VM
+   - Can use kernel process management syscalls (spawn, exit, wait)
+   - Can use kernel file I/O syscalls (open, read, write, close)
+   - Can use kernel IPC syscalls (channel_create, channel_send, channel_recv)
+   - Should generate RISC-V assembly or use Zig's RISC-V codegen
+
+3. **Grain Skate**:
+   - **May use kernel file I/O** for persistence (if running in VM)
+   - **May use kernel memory mapping** for block storage (if running in VM)
+   - **May use kernel IPC** for synchronization (if running in VM)
+   - **Primary target**: Native macOS (not VM), but should be designed to work in VM if needed
+
+### API Contracts You Should Know
+
+See the detailed API documentation above in the "API Contracts You Should Know" section.
+
+**Key Points**:
+- All syscalls use RISC-V calling convention (a7 = syscall number, a0-a5 = arguments, a0 = return value)
+- Memory addresses must be within VM bounds (0 to VM_MEMORY_SIZE = 8MB)
+- File paths must be null-terminated strings in VM memory
+- All syscalls are validated by the kernel (bounds checking, permission checking)
+- Framebuffer is at address `0x90000000` (1024x768, 32-bit RGBA)
+- Input events are queued in VM and read via `read_input_event` syscall
+
+---
+
 ## Coordination with Other Agents
 
 ### Aurora IDE / Dream Browser Agent
@@ -395,13 +611,13 @@ Grainscript must be able to represent and generate:
 
 ### VM/Kernel Agent
 
-- **Status**: Working on Grain Basin Kernel, RISC-V VM, exception handling, memory protection
-- **Current Focus**: Page fault statistics, memory stats, COW (Copy-on-Write)
+- **Status**: Working on Grain Basin Kernel, Grain Vantage VM (RISC-V emulator), exception handling, memory protection, page tables, COW (Copy-on-Write)
+- **Current Focus**: Phase 3.12 complete - Memory Sharing and Copy-on-Write (COW), page fault statistics, memory usage statistics, page table implementation
 - **Integration Points**:
-  - Grain Terminal must target RISC-V and Grain Kernel
-  - Grainscript must work with kernel syscalls
-  - Grain Skate may use kernel features for persistence
-- **Coordination**: Check in before making kernel-level changes
+  - **Grain Terminal** must target RISC-V and Grain Kernel (compile for RISC-V, use kernel syscalls)
+  - **Grainscript** must work with kernel syscalls (file I/O, process management, IPC)
+  - **Grain Skate** may use kernel features for persistence (file I/O, memory mapping)
+- **Coordination**: Check in before making kernel-level changes or adding new syscalls
 
 ### When to Check In
 

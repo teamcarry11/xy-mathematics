@@ -13,4 +13,5 @@ pub const loadUserspaceELF = @import("integration.zig").loadUserspaceELF;
 pub const performance = @import("performance.zig");
 pub const error_log = @import("error_log.zig");
 pub const state_snapshot = @import("state_snapshot.zig");
+pub const exception_stats = @import("exception_stats.zig");
 

@@ -8,6 +8,8 @@ const basin_kernel = @import("basin_kernel");
 const BasinKernel = basin_kernel.BasinKernel;
 const BasinError = basin_kernel.BasinError;
 const SyscallResult = basin_kernel.SyscallResult;
+const ProcessContext = basin_kernel.ProcessContext;
+const process_execution = basin_kernel.process_execution;
 const loadKernel = @import("loader.zig").loadKernel;
 
 /// Module-level kernel pointer for syscall handler access.
@@ -21,6 +23,149 @@ var global_kernel_ptr: ?*BasinKernel = null;
 /// Contract: Must be set before syscall_handler_wrapper is called (set by Integration.finish_init).
 /// Note: Safe for single-threaded execution only.
 var global_vm_ptr: ?*VM = null;
+
+/// VM memory reader wrapper (called by kernel to read VM memory).
+/// Why: Bridge kernel memory read interface with VM memory access.
+/// Contract: global_vm_ptr must be set before this is called.
+/// Returns: Number of bytes read, or null if read fails.
+/// Grain Style: Explicit types, bounded operations, static allocation.
+fn vm_memory_reader_wrapper(addr: u64, len: u32, buffer: []u8) ?u32 {
+    // Contract: global_vm_ptr must be set (precondition).
+    const vm = global_vm_ptr orelse {
+        return null; // VM not initialized
+    };
+    
+    // Contract: VM must be initialized.
+    const vm_addr = @intFromPtr(vm);
+    std.debug.assert(vm_addr != 0);
+    std.debug.assert(vm_addr % @alignOf(VM) == 0);
+    
+    // Contract: Address and length must be valid.
+    const VM_MEMORY_SIZE: u64 = 4 * 1024 * 1024; // 4MB default
+    if (addr >= VM_MEMORY_SIZE) {
+        return null; // Invalid address
+    }
+    if (len == 0) {
+        return null; // Invalid length
+    }
+    if (addr + @as(u64, len) > VM_MEMORY_SIZE) {
+        return null; // Address + length exceeds VM memory
+    }
+    
+    // Contract: Buffer must be large enough.
+    if (buffer.len < len) {
+        return null; // Buffer too small
+    }
+    
+    // Read memory from VM (use translate_address to handle address translation).
+    // Why: VM memory uses address translation, need to translate virtual to physical.
+    const read_len = @as(u64, len);
+    var i: u64 = 0;
+    while (i < read_len) : (i += 1) {
+        const virt_addr = addr + i;
+        const phys_offset = vm.translate_address(virt_addr) orelse {
+            return null; // Address not mapped
+        };
+        
+        // Contract: Physical offset must be within VM memory bounds.
+        if (phys_offset >= vm.memory_size) {
+            return null; // Invalid physical offset
+        }
+        
+        // Read byte from VM memory.
+        buffer[@intCast(i)] = vm.memory[@intCast(phys_offset)];
+    }
+    
+    // Assert: All bytes must be read (postcondition).
+    std.debug.assert(i == read_len);
+    
+    return @as(u32, @intCast(len));
+}
+
+/// Read VM memory buffer (helper for kernel syscalls that need VM memory access).
+/// Why: Kernel syscalls (like spawn) need to read VM memory but kernel doesn't have VM reference.
+/// Contract: global_vm_ptr must be set, addr and len must be valid, buffer must be large enough.
+/// Returns: Number of bytes read, or error if read fails.
+/// Grain Style: Explicit types, bounded operations, static allocation.
+fn read_vm_memory(addr: u64, len: u32, buffer: []u8) !u32 {
+    // Contract: global_vm_ptr must be set (precondition).
+    const vm = global_vm_ptr orelse {
+        return error.VmNotInitialized;
+    };
+    
+    // Contract: VM must be initialized.
+    const vm_addr = @intFromPtr(vm);
+    std.debug.assert(vm_addr != 0);
+    std.debug.assert(vm_addr % @alignOf(VM) == 0);
+    
+    // Contract: Address and length must be valid.
+    const VM_MEMORY_SIZE: u64 = 4 * 1024 * 1024; // 4MB default
+    if (addr >= VM_MEMORY_SIZE) {
+        return error.InvalidAddress;
+    }
+    if (len == 0) {
+        return error.InvalidLength;
+    }
+    if (addr + @as(u64, len) > VM_MEMORY_SIZE) {
+        return error.InvalidAddress;
+    }
+    
+    // Contract: Buffer must be large enough.
+    if (buffer.len < len) {
+        return error.BufferTooSmall;
+    }
+    
+    // Read memory from VM (use translate_address to handle address translation).
+    // Why: VM memory uses address translation, need to translate virtual to physical.
+    const read_len = @as(u64, len);
+    var i: u64 = 0;
+    while (i < read_len) : (i += 1) {
+        const virt_addr = addr + i;
+        const phys_offset = vm.translate_address(virt_addr) orelse {
+            return error.InvalidAddress; // Address not mapped
+        };
+        
+        // Contract: Physical offset must be within VM memory bounds.
+        if (phys_offset >= vm.memory_size) {
+            return error.InvalidAddress;
+        }
+        
+        // Read byte from VM memory.
+        buffer[@intCast(i)] = vm.memory[@intCast(phys_offset)];
+    }
+    
+    // Assert: All bytes must be read (postcondition).
+    std.debug.assert(i == read_len);
+    
+    return @as(u32, @intCast(len));
+}
+
+/// Permission checker wrapper (called by VM to check memory permissions).
+/// Why: Bridge VM permission check interface with kernel permission check function.
+/// Contract: global_kernel_ptr must be set before this is called.
+/// Returns: u32 with permission bits (bit 0=read, bit 1=write, bit 2=execute), or 0 if not mapped.
+fn permission_checker_wrapper(addr: u64) u32 {
+    // Contract: global_kernel_ptr must be set (precondition).
+    const kernel = global_kernel_ptr orelse {
+        // No kernel: allow all access (backward compatibility).
+        return 0b111; // read, write, execute
+    };
+    
+    // Check memory permissions via kernel.
+    const permissions = kernel.check_memory_permission(addr);
+    
+    if (permissions) |flags| {
+        // Convert MapFlags to permission bits.
+        var result: u32 = 0;
+        if (flags.read) result |= 1; // bit 0 = read
+        if (flags.write) result |= 2; // bit 1 = write
+        if (flags.execute) result |= 4; // bit 2 = execute
+        return result;
+    } else {
+        // Address not mapped: return 0 (no permissions).
+        return 0;
+    }
+}
 
 /// VM-Kernel integration state.
 /// Why: Encapsulate VM and kernel instances, manage lifecycle.
@@ -123,6 +268,17 @@ pub const Integration = struct {
         // Register kernel as VM syscall handler.
         // Contract: syscall_handler_wrapper will access kernel via thread-local storage.
         self.vm.*.set_syscall_handler(syscall_handler_wrapper, null);
+        
+        // Register kernel as VM permission checker.
+        // Contract: permission_checker_wrapper will access kernel via thread-local storage.
+        self.vm.*.permission_checker = permission_checker_wrapper;
+        self.vm.*.permission_checker_user_data = null;
+        
+        // Register VM memory reader in kernel (for ELF parsing in syscall_spawn).
+        // Why: Allow kernel to read VM memory for process spawning.
+        // Contract: vm_memory_reader_wrapper will access VM via global_vm_ptr.
+        self.kernel.*.vm_memory_reader = vm_memory_reader_wrapper;
+        self.kernel.*.vm_memory_reader_user_data = null;
 
         // Initialize framebuffer from host-side (before kernel execution starts).
         // Why: Set up framebuffer with test pattern for visual verification.
@@ -158,6 +314,126 @@ pub const Integration = struct {
 
         // Reset initialization flag.
         self.initialized = false;
+    }
+
+    /// Run current process in VM (scheduler-process execution integration).
+    /// Why: Execute current process from scheduler using process execution module.
+    /// Contract: Integration must be initialized, current process must exist and have context.
+    /// Returns: true if process should continue (yield), false if process exited.
+    /// Grain Style: Explicit types, bounded execution, comprehensive assertions.
+    pub fn run_current_process(self: *Self, max_steps: u64) bool {
+        // Assert: Integration must be initialized (precondition).
+        std.debug.assert(self.initialized);
+        
+        // Assert: VM and kernel must be valid (precondition).
+        const vm_ptr = @intFromPtr(self.vm);
+        const kernel_ptr = @intFromPtr(self.kernel);
+        std.debug.assert(vm_ptr != 0);
+        std.debug.assert(kernel_ptr != 0);
+        
+        // Assert: Max steps must be reasonable (bounded execution).
+        const MAX_STEPS_LIMIT: u64 = 1_000_000_000; // 1 billion steps max
+        std.debug.assert(max_steps <= MAX_STEPS_LIMIT);
+        
+        // Get current process ID from scheduler.
+        // Why: Find which process should be executed.
+        const current_pid = self.kernel.scheduler.get_current();
+        
+        // Assert: Current PID must be non-zero (process must exist).
+        if (current_pid == 0) {
+            return false; // No process to run
+        }
+        
+        // Find process in process table.
+        // Why: Get process context for execution.
+        var process_idx: ?usize = null;
+        const MAX_PROCESSES: u32 = 16;
+        for (0..MAX_PROCESSES) |i| {
+            if (self.kernel.processes[i].allocated and self.kernel.processes[i].id == current_pid) {
+                process_idx = i;
+                break;
+            }
+        }
+        
+        // Assert: Process must be found (precondition).
+        if (process_idx == null) {
+            return false; // Process not found
+        }
+        
+        const idx = process_idx.?;
+        const process = &self.kernel.processes[idx];
+        
+        // Assert: Process must have context (precondition).
+        if (process.context == null) {
+            return false; // Process has no context
+        }
+        
+        const process_context = process.context.?;
+        
+        // Assert: Process context must be initialized (precondition).
+        std.debug.assert(process_context.initialized);
+        
+        // Execute process in VM using process execution module.
+        // Why: Run process until it exits or yields.
+        const should_continue = process_execution.execute_process(self.vm, process_context, max_steps);
+        
+        // Check if process exited (state changed to exited).
+        // Why: Update scheduler if process terminated.
+        if (process.state == .exited) {
+            // Clear from scheduler if it's the current process.
+            if (self.kernel.scheduler.is_current(current_pid)) {
+                self.kernel.scheduler.clear_current();
+            }
+            return false; // Process exited
+        }
+        
+        // Assert: Process state must be valid (postcondition).
+        std.debug.assert(process.state == .running or process.state == .exited);
+        
+        // Return whether process should continue (yield case).
+        return should_continue;
+    }
+    
+    /// Schedule and run next process (round-robin scheduling with process execution).
+    /// Why: Find next runnable process and execute it in VM.
+    /// Contract: Integration must be initialized.
+    /// Returns: true if a process was scheduled and run, false if no runnable process.
+    /// Grain Style: Explicit types, bounded execution, comprehensive assertions.
+    pub fn schedule_and_run_next(self: *Self, max_steps: u64) bool {
+        // Assert: Integration must be initialized (precondition).
+        std.debug.assert(self.initialized);
+        
+        // Assert: Max steps must be reasonable (bounded execution).
+        const MAX_STEPS_LIMIT: u64 = 1_000_000_000; // 1 billion steps max
+        std.debug.assert(max_steps <= MAX_STEPS_LIMIT);
+        
+        // Find next runnable process from scheduler.
+        // Why: Round-robin scheduling selects next process to execute.
+        const MAX_PROCESSES: u32 = 16;
+        const next_pid = self.kernel.scheduler.find_next_runnable(
+            &self.kernel.processes,
+            MAX_PROCESSES,
+        );
+        
+        // Check if no runnable process found.
+        if (next_pid == 0) {
+            return false; // No runnable process
+        }
+        
+        // Set as current process in scheduler.
+        // Why: Update scheduler state before execution.
+        self.kernel.scheduler.set_current(next_pid);
+        
+        // Run current process (which is now next_pid).
+        // Why: Execute the scheduled process.
+        const should_continue = self.run_current_process(max_steps);
+        
+        // Assert: Process execution must complete (postcondition).
+        // Note: should_continue indicates if process yielded (true) or exited (false).
+        _ = should_continue;
+        
+        // Return true if process was scheduled and run.
+        return true;
     }
 
     /// Run VM execution loop until halted or error.

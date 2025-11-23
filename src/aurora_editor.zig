@@ -45,6 +45,7 @@ pub const Editor = struct {
             .aurora = aurora,
             .lsp = lsp,
             .folding = folding,
+            .tree_sitter = tree_sitter,
             .file_uri = file_uri,
         };
     }

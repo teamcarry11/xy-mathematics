@@ -964,6 +964,34 @@ pub fn build(b: *std.Build) void {
     const trap_handler_tests_run = b.addRunArtifact(trap_handler_tests);
     test_step.dependOn(&trap_handler_tests_run.step);
 
+    const process_execution_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/041_process_execution_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "kernel_vm", .module = kernel_vm_module },
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+            },
+        }),
+    });
+    const process_execution_tests_run = b.addRunArtifact(process_execution_tests);
+    test_step.dependOn(&process_execution_tests_run.step);
+
+    const scheduler_integration_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/042_scheduler_integration_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "kernel_vm", .module = kernel_vm_module },
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+            },
+        }),
+    });
+    const scheduler_integration_tests_run = b.addRunArtifact(scheduler_integration_tests);
+    test_step.dependOn(&scheduler_integration_tests_run.step);
+
     // RISC-V Logo Display Program
     const riscv_logo_exe = b.addExecutable(.{
         .name = "riscv_logo",

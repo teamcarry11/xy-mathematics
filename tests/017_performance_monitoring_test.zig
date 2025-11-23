@@ -207,6 +207,9 @@ test "VM Diagnostics: Create diagnostics snapshot" {
     try testing.expect(snapshot.pc > 0);
     try testing.expect(snapshot.memory_size > 0);
     try testing.expect(snapshot.metrics.instructions_executed > 0);
+    
+    // Assert: Exception statistics must be captured (postcondition).
+    try testing.expect(snapshot.exception_stats.total_count == vm.exception_stats.get_total_count());
 }
 
 test "Performance Metrics: JIT tracking" {

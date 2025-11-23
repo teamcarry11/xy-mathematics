@@ -22,6 +22,30 @@
 
 const std = @import("std");
 const VM = @import("vm.zig").VM;
+const VMError = VM.VMError;
+
+/// Performance snapshot type.
+/// Why: Explicit type for performance metrics.
+pub const PerformanceSnapshot = struct {
+    instructions_executed: u64,
+    cycles_simulated: u64,
+    memory_reads: u64,
+    memory_writes: u64,
+    syscalls: u64,
+    jit_compilations: u64,
+    jit_cache_hits: u64,
+    jit_cache_misses: u64,
+    interpreter_fallbacks: u64,
+};
+
+/// Exception statistics snapshot type.
+/// Why: Explicit type for exception statistics in snapshot.
+pub const ExceptionStatsSnapshot = struct {
+    /// Exception counts by type (16 exception types).
+    exception_counts: [16]u64,
+    /// Total exception count.
+    total_count: u64,
+};
 
 /// VM state snapshot (complete VM state capture).
 /// Why: Enable state persistence, debugging, and reproducible execution.
@@ -50,22 +74,12 @@ pub const VMStateSnapshot = struct {
     /// Why: Capture performance state for analysis.
     performance: PerformanceSnapshot,
     
-    /// Performance snapshot type.
-    /// Why: Explicit type for performance metrics.
-    pub const PerformanceSnapshot = struct {
-        instructions_executed: u64,
-        cycles_simulated: u64,
-        memory_reads: u64,
-        memory_writes: u64,
-        syscalls: u64,
-        jit_compilations: u64,
-        jit_cache_hits: u64,
-        jit_cache_misses: u64,
-        interpreter_fallbacks: u64,
-    };
-    
     /// Error log entry count.
     error_count: u32,
+    
+    /// Exception statistics snapshot.
+    /// Why: Capture exception statistics for debugging and analysis.
+    exception_stats: ExceptionStatsSnapshot,
     
     /// JIT enabled flag.
     jit_enabled: bool,
@@ -110,7 +124,7 @@ pub const VMStateSnapshot = struct {
         
         // Capture performance metrics.
         const perf = vm.performance;
-        const performance_snapshot: VMStateSnapshot.PerformanceSnapshot = .{
+        const performance_snapshot: PerformanceSnapshot = .{
             .instructions_executed = perf.instructions_executed,
             .cycles_simulated = perf.cycles_simulated,
             .memory_reads = perf.memory_reads,
@@ -122,6 +136,18 @@ pub const VMStateSnapshot = struct {
             .interpreter_fallbacks = perf.interpreter_fallbacks,
         };
         
+        // Capture exception statistics.
+        const exc_stats = vm.exception_stats;
+        var exception_counts: [16]u64 = undefined;
+        var exc_i: u32 = 0;
+        while (exc_i < 16) : (exc_i += 1) {
+            exception_counts[exc_i] = exc_stats.exception_counts[exc_i];
+        }
+        const exception_stats_snapshot: ExceptionStatsSnapshot = .{
+            .exception_counts = exception_counts,
+            .total_count = exc_stats.total_count,
+        };
+        
         // Create snapshot.
         const snapshot = VMStateSnapshot{
             .regs = regs,
@@ -131,6 +157,7 @@ pub const VMStateSnapshot = struct {
             .memory_size = vm.memory_size,
             .performance = performance_snapshot,
             .error_count = vm.error_log.entry_count,
+            .exception_stats = exception_stats_snapshot,
             .jit_enabled = vm.jit_enabled,
         };
         
@@ -172,10 +199,10 @@ pub const VMStateSnapshot = struct {
         
         // Restore last error.
         vm.last_error = switch (self.last_error) {
-            0 => .invalid_instruction,
-            1 => .invalid_memory_access,
-            2 => .unaligned_instruction,
-            3 => .unaligned_memory_access,
+            0 => VMError.invalid_instruction,
+            1 => VMError.invalid_memory_access,
+            2 => VMError.unaligned_instruction,
+            3 => VMError.unaligned_memory_access,
             else => null, // No error.
         };
         
@@ -189,6 +216,13 @@ pub const VMStateSnapshot = struct {
         vm.performance.jit_cache_hits = self.performance.jit_cache_hits;
         vm.performance.jit_cache_misses = self.performance.jit_cache_misses;
         vm.performance.interpreter_fallbacks = self.performance.interpreter_fallbacks;
+        
+        // Restore exception statistics.
+        var exc_i: u32 = 0;
+        while (exc_i < 16) : (exc_i += 1) {
+            vm.exception_stats.exception_counts[exc_i] = self.exception_stats.exception_counts[exc_i];
+        }
+        vm.exception_stats.total_count = self.exception_stats.total_count;
         
         // Note: Error log and JIT state are not restored (can be recreated).
         // Why: Error log is for debugging, JIT can be recompiled.
@@ -225,4 +259,3 @@ pub const VMStateSnapshot = struct {
         return true;
     }
 };
-

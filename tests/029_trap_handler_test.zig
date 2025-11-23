@@ -6,11 +6,10 @@ const std = @import("std");
 const basin_kernel = @import("basin_kernel");
 const BasinKernel = basin_kernel.BasinKernel;
 const ExceptionType = basin_kernel.basin_kernel.ExceptionType;
-const trap_mod = @import("../src/kernel/trap.zig");
 
 // Test trap loop initialization.
 test "trap loop with kernel" {
-    var kernel = BasinKernel.init();
+    const kernel = BasinKernel.init();
     
     // Assert: Kernel must be initialized (precondition).
     try std.testing.expect(kernel.interrupt_controller.initialized);
@@ -43,7 +42,7 @@ test "handle exception illegal instruction" {
     // Handle illegal instruction exception.
     const exception_pc: u64 = 0x80000000;
     const exception_value: u64 = 0;
-    trap_mod.handle_exception(&kernel, .illegal_instruction, exception_pc, exception_value);
+    basin_kernel.basin_kernel.handle_exception(&kernel, .illegal_instruction, exception_pc, exception_value);
     
     // Assert: Exception must be handled (postcondition).
     // Note: handle_exception logs but doesn't modify kernel state.
@@ -60,7 +59,7 @@ test "handle exception misaligned access" {
     // Handle misaligned load exception.
     const exception_pc: u64 = 0x80000010;
     const exception_address: u64 = 0x80000001; // Misaligned address
-    trap.handle_exception(&kernel, .load_address_misaligned, exception_pc, exception_address);
+    basin_kernel.basin_kernel.handle_exception(&kernel, .load_address_misaligned, exception_pc, exception_address);
     
     // Assert: Exception must be handled (postcondition).
     try std.testing.expect(kernel.interrupt_controller.initialized);
@@ -76,7 +75,7 @@ test "handle exception access fault" {
     // Handle load access fault exception.
     const exception_pc: u64 = 0x80000020;
     const exception_address: u64 = 0xFFFFFFFF; // Invalid address
-    trap.handle_exception(&kernel, .load_access_fault, exception_pc, exception_address);
+    basin_kernel.basin_kernel.handle_exception(&kernel, .load_access_fault, exception_pc, exception_address);
     
     // Assert: Exception must be handled (postcondition).
     try std.testing.expect(kernel.interrupt_controller.initialized);
@@ -92,7 +91,7 @@ test "handle exception store access fault" {
     // Handle store access fault exception.
     const exception_pc: u64 = 0x80000030;
     const exception_address: u64 = 0xFFFFFFFF; // Invalid address
-    trap.handle_exception(&kernel, .store_access_fault, exception_pc, exception_address);
+    basin_kernel.basin_kernel.handle_exception(&kernel, .store_access_fault, exception_pc, exception_address);
     
     // Assert: Exception must be handled (postcondition).
     try std.testing.expect(kernel.interrupt_controller.initialized);
@@ -108,7 +107,7 @@ test "handle exception environment call" {
     // Handle environment call from U-mode (syscall).
     const exception_pc: u64 = 0x80000040;
     const exception_value: u64 = 0;
-    trap.handle_exception(&kernel, .environment_call_from_u_mode, exception_pc, exception_value);
+    basin_kernel.basin_kernel.handle_exception(&kernel, .environment_call_from_u_mode, exception_pc, exception_value);
     
     // Assert: Exception must be handled (postcondition).
     // Note: Environment calls are handled by VM, not trap loop.
@@ -125,7 +124,7 @@ test "handle exception unknown" {
     // Handle breakpoint exception (other category).
     const exception_pc: u64 = 0x80000050;
     const exception_value: u64 = 0;
-    trap.handle_exception(&kernel, .breakpoint, exception_pc, exception_value);
+    basin_kernel.basin_kernel.handle_exception(&kernel, .breakpoint, exception_pc, exception_value);
     
     // Assert: Exception must be handled (postcondition).
     try std.testing.expect(kernel.interrupt_controller.initialized);
@@ -142,19 +141,19 @@ test "handle exception all types" {
     const exception_pc: u64 = 0x80000000;
     const exception_value: u64 = 0;
     
-    trap.handle_exception(&kernel, .instruction_address_misaligned, exception_pc, exception_value);
-    trap.handle_exception(&kernel, .instruction_access_fault, exception_pc, exception_value);
-    trap_mod.handle_exception(&kernel, .illegal_instruction, exception_pc, exception_value);
-    trap.handle_exception(&kernel, .breakpoint, exception_pc, exception_value);
-    trap.handle_exception(&kernel, .load_address_misaligned, exception_pc, exception_value);
-    trap.handle_exception(&kernel, .load_access_fault, exception_pc, exception_value);
-    trap.handle_exception(&kernel, .store_address_misaligned, exception_pc, exception_value);
-    trap.handle_exception(&kernel, .store_access_fault, exception_pc, exception_value);
-    trap.handle_exception(&kernel, .environment_call_from_u_mode, exception_pc, exception_value);
-    trap.handle_exception(&kernel, .environment_call_from_s_mode, exception_pc, exception_value);
-    trap.handle_exception(&kernel, .instruction_page_fault, exception_pc, exception_value);
-    trap.handle_exception(&kernel, .load_page_fault, exception_pc, exception_value);
-    trap.handle_exception(&kernel, .store_page_fault, exception_pc, exception_value);
+    basin_kernel.basin_kernel.handle_exception(&kernel, .instruction_address_misaligned, exception_pc, exception_value);
+    basin_kernel.basin_kernel.handle_exception(&kernel, .instruction_access_fault, exception_pc, exception_value);
+    basin_kernel.basin_kernel.handle_exception(&kernel, .illegal_instruction, exception_pc, exception_value);
+    basin_kernel.basin_kernel.handle_exception(&kernel, .breakpoint, exception_pc, exception_value);
+    basin_kernel.basin_kernel.handle_exception(&kernel, .load_address_misaligned, exception_pc, exception_value);
+    basin_kernel.basin_kernel.handle_exception(&kernel, .load_access_fault, exception_pc, exception_value);
+    basin_kernel.basin_kernel.handle_exception(&kernel, .store_address_misaligned, exception_pc, exception_value);
+    basin_kernel.basin_kernel.handle_exception(&kernel, .store_access_fault, exception_pc, exception_value);
+    basin_kernel.basin_kernel.handle_exception(&kernel, .environment_call_from_u_mode, exception_pc, exception_value);
+    basin_kernel.basin_kernel.handle_exception(&kernel, .environment_call_from_s_mode, exception_pc, exception_value);
+    basin_kernel.basin_kernel.handle_exception(&kernel, .instruction_page_fault, exception_pc, exception_value);
+    basin_kernel.basin_kernel.handle_exception(&kernel, .load_page_fault, exception_pc, exception_value);
+    basin_kernel.basin_kernel.handle_exception(&kernel, .store_page_fault, exception_pc, exception_value);
     
     // Assert: All exceptions must be handled (postcondition).
     try std.testing.expect(kernel.interrupt_controller.initialized);
@@ -172,7 +171,7 @@ test "handle exception different PCs" {
     const exception_value: u64 = 0;
     
     for (pcs) |pc| {
-        trap.handle_exception(&kernel, .illegal_instruction, pc, exception_value);
+        basin_kernel.basin_kernel.handle_exception(&kernel, .illegal_instruction, pc, exception_value);
     }
     
     // Assert: All exceptions must be handled (postcondition).
@@ -191,7 +190,7 @@ test "handle exception different addresses" {
     const addresses = [_]u64{ 0x80000001, 0x80000003, 0xFFFFFFFF, 0x00000000 };
     
     for (addresses) |addr| {
-        trap.handle_exception(&kernel, .load_address_misaligned, exception_pc, addr);
+        basin_kernel.basin_kernel.handle_exception(&kernel, .load_address_misaligned, exception_pc, addr);
     }
     
     // Assert: All exceptions must be handled (postcondition).

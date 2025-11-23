@@ -61,6 +61,9 @@ test "State Snapshot: Create snapshot" {
     try testing.expect(snapshot.is_valid());
     try testing.expect(snapshot.regs[32] == vm.regs.pc);
     try testing.expect(snapshot.regs[1] == 42);
+    
+    // Assert: Exception statistics must be captured (postcondition).
+    try testing.expect(snapshot.exception_stats.total_count == vm.exception_stats.get_total_count());
 }
 
 test "State Snapshot: Restore state" {
@@ -105,6 +108,9 @@ test "State Snapshot: Restore state" {
     // Assert: VM state must be restored (postcondition).
     try testing.expect(vm.regs.pc == original_pc);
     try testing.expect(vm.regs.get(1) == original_x1);
+    
+    // Assert: Exception statistics must be restored (postcondition).
+    try testing.expect(vm.exception_stats.get_total_count() == snapshot.exception_stats.total_count);
 }
 
 test "State Snapshot: Snapshot validation" {

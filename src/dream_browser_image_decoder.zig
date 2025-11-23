@@ -115,6 +115,9 @@ pub const DreamBrowserImageDecoder = struct {
         std.debug.assert(data.len > 0);
         std.debug.assert(data.len <= MAX_IMAGE_SIZE);
         
+        // Self not used in placeholder implementation (will be used in full implementation)
+        _ = self;
+        
         // TODO: Implement full PNG decoder
         // For now, return error (placeholder)
         return error.PngNotImplemented;

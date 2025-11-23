@@ -103,10 +103,12 @@ pub const DreamBrowserBookmarks = struct {
             if (bookmark.folder) |folder| {
                 self.allocator.free(folder);
             }
-            // Free tags (array is always allocated, even if empty)
-            // Only free individual tags if they exist
-            for (bookmark.tags) |tag| {
-                self.allocator.free(tag);
+            // Free tags (array is always allocated, but individual tags only if they exist)
+            // Only free individual tag strings if they were allocated (tags.len > 0 means tags were added)
+            if (bookmark.tags.len > 0) {
+                for (bookmark.tags) |tag| {
+                    self.allocator.free(tag);
+                }
             }
             // Free tags array (always allocated in add_bookmark)
             self.allocator.free(bookmark.tags);

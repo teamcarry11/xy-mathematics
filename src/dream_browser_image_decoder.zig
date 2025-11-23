@@ -137,10 +137,10 @@ pub const DreamBrowserImageDecoder = struct {
     ) !DecodedImage {
         // Assert: Data must be non-empty
         std.debug.assert(data.len > 0);
-        // Self and data not used in placeholder implementation (will be used in full implementation)
-        _ = self;
-        _ = data;
         std.debug.assert(data.len <= MAX_IMAGE_SIZE);
+        
+        // Self not used in placeholder implementation (will be used in full implementation)
+        _ = self;
         
         // TODO: Implement full JPEG decoder
         // For now, return error (placeholder)

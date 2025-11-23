@@ -203,6 +203,7 @@ pub const DreamBrowserBookmarks = struct {
         if (bookmark.folder) |folder| {
             self.allocator.free(folder);
         }
+        // Free tags (array is always allocated, even if empty)
         for (bookmark.tags) |tag| {
             self.allocator.free(tag);
         }

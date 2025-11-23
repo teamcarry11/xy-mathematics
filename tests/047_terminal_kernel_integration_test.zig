@@ -158,19 +158,23 @@ test "spawn syscall creates processes" {
     @memcpy(vm.memory[@intCast(executable_ptr)..][0..64], &elf_header);
     
     // Spawn process.
-    const spawn_result = kernel.syscall_spawn(executable_ptr, 0, 0, 0) catch |err| {
+    const spawn_result = kernel.syscall_spawn(executable_ptr, 0, 0, 0);
+    
+    // Assert: Process must be spawned successfully.
+    const result = spawn_result catch |err| {
         _ = err;
         try testing.expect(false); // Spawn should not fail
         return;
     };
-    
-    // Assert: Process must be spawned successfully.
-    try testing.expect(spawn_result == .success);
-    const pid = spawn_result.success;
+    try testing.expect(result == .success);
+    const pid = result.success;
     try testing.expect(pid != 0);
     
     // Assert: Process must be in scheduler.
     try testing.expect(kernel.scheduler.get_current() == pid);
+    
+    // Note: Integration is used for VM access.
+    _ = integration;
 }
 
 // Test: read_input_event returns would_block when no events.

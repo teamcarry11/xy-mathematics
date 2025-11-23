@@ -1,7 +1,7 @@
 const std = @import("std");
-const Glm46Client = @import("aurora_glm46.zig").Glm46Client;
+const AiProvider = @import("aurora_ai_provider.zig").AiProvider;
 
-/// GLM-4.6 Code Transformations: Refactor, extract, inline operations.
+/// AI Provider Code Transformations: Refactor, extract, inline operations.
 /// ~<~ Glow Airbend: explicit transformation state, bounded edits.
 /// ~~~~ Glow Waterbend: transformations flow deterministically through DAG.
 ///
@@ -10,9 +10,11 @@ const Glm46Client = @import("aurora_glm46.zig").Glm46Client;
 /// - Extract function (extract selected code into new function)
 /// - Inline function (inline function call at call site)
 /// - Multi-file edits (context-aware transformations across files)
-pub const Glm46Transforms = struct {
+///
+/// Uses AI provider abstraction for pluggable AI models (GLM-4.6, future: Claude, GPT-4, etc.).
+pub const AiTransforms = struct {
     allocator: std.mem.Allocator,
-    client: *Glm46Client,
+    provider: *AiProvider,
     
     // Bounded: Max 100 transformation operations
     pub const MAX_TRANSFORMATIONS: u32 = 100;
@@ -286,7 +288,7 @@ pub const Glm46Transforms = struct {
     }
     
     /// Apply file edits to files (placeholder - actual implementation would modify files).
-    pub fn apply_edits(self: *Glm46Transforms, edits: []const FileEdit) !void {
+    pub fn apply_edits(self: *AiTransforms, edits: []const FileEdit) !void {
         _ = self;
         
         // Assert: Edits must be valid

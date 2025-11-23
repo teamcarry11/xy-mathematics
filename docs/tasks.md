@@ -280,6 +280,14 @@
   - [x] Statistics reset capability
   - [x] Comprehensive TigerStyle tests (`tests/030_exception_stats_test.zig`)
   - [x] GrainStyle compliance (u32 types, assertions, bounded counters)
+- [x] Exception Statistics in State Snapshot ✅ **COMPLETE**
+  - [x] Exception statistics snapshot type (ExceptionStatsSnapshot struct)
+  - [x] Exception statistics capture in VM state snapshot
+  - [x] Exception statistics restoration from snapshot
+  - [x] Exception statistics persistence (save/restore complete state)
+  - [x] Enhanced state persistence tests (exception statistics verification)
+  - [x] Comprehensive TigerStyle tests (`tests/031_exception_stats_snapshot_test.zig`)
+  - [x] GrainStyle compliance (u32 types, assertions, bounded arrays)
 
 ### 3.3 Userspace Support
 - [x] ELF loader ✅ **COMPLETE**
@@ -531,11 +539,18 @@
 - [ ] Optimize protocol (sub-millisecond latency)
 
 ### 5.2 Advanced Browser Features
+- [x] Scrolling and navigation ✅ **COMPLETE**
+  - [x] Viewport state management (scroll position, dimensions, content size)
+  - [x] Scrolling (relative `scroll_by`, absolute `scroll_to`)
+  - [x] Navigation history (back/forward, history entries with scroll positions)
+  - [x] Bounds checking (prevent out-of-bounds scrolling)
+  - [x] Integration with UnifiedIde (viewport per browser tab)
+  - [x] Scrolling and navigation methods for browser tabs
+  - [x] Comprehensive tests for viewport functionality
 - [ ] Image decoding (PNG, JPEG)
 - [ ] Font rendering (TTF/OTF)
-- [ ] Scrolling and navigation
-- [ ] Bookmarks and history
-- [ ] Tab management
+- [ ] Bookmarks and history UI
+- [ ] Tab management enhancements
 
 ### 5.3 WSE Hardware Integration (Future)
 - [ ] RAM-only storage (44GB SRAM)

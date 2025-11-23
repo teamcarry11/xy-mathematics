@@ -4,12 +4,12 @@ const GrainAurora = @import("grain_aurora.zig").GrainAurora;
 const GrainBuffer = @import("grain_buffer.zig").GrainBuffer;
 
 /// Dream Browser Renderer: Layout engine and Grain Aurora rendering.
-/// ~<~ Glow Airbend: explicit layout, bounded rendering.
+/// ~<~ Glow Airbend: explicit layout, bounded rendering, iterative algorithms.
 /// ~~~~ Glow Waterbend: rendering flows deterministically through DAG.
 ///
 /// This implements:
-/// - Layout engine (block/inline flow)
-/// - Render to Grain Aurora components
+/// - Layout engine (block/inline flow, iterative stack-based)
+/// - Render to Grain Aurora components (iterative stack-based)
 /// - Readonly spans for metadata (event ID, timestamp)
 /// - Editable spans for content
 pub const DreamBrowserRenderer = struct {
@@ -20,6 +20,9 @@ pub const DreamBrowserRenderer = struct {
     
     // Bounded: Max 10,000 pixels width/height
     pub const MAX_DIMENSION: u32 = 10_000;
+    
+    // Bounded: Max 100 stack depth for iterative algorithms
+    pub const MAX_STACK_DEPTH: u32 = 100;
     
     /// Layout box (for block/inline flow).
     pub const LayoutBox = struct {
@@ -34,7 +37,24 @@ pub const DreamBrowserRenderer = struct {
     /// Display type (block or inline).
     pub const DisplayType = enum {
         block, // Block-level element (div, p, etc.)
-        inline, // Inline element (span, a, etc.)
+        inline_element, // Inline element (span, a, etc.)
+    };
+    
+    /// Stack frame for iterative layout (replaces recursion).
+    const LayoutStackFrame = struct {
+        node: *const DreamBrowserParser.HtmlNode,
+        x: u32,
+        y: u32,
+        available_width: u32,
+        available_height: u32,
+        child_index: u32, // Current child being processed
+    };
+    
+    /// Stack frame for iterative rendering (replaces recursion).
+    const RenderStackFrame = struct {
+        node: *const DreamBrowserParser.HtmlNode,
+        child_index: u32, // Current child being processed
+        children_list: *std.ArrayList(GrainAurora.Node), // Accumulated children
     };
     
     /// Initialize renderer.
@@ -67,10 +87,10 @@ pub const DreamBrowserRenderer = struct {
         }
         
         // Inline elements (default)
-        return .inline;
+        return .inline_element;
     }
     
-    /// Layout HTML tree (block/inline flow).
+    /// Layout HTML tree (block/inline flow, iterative stack-based).
     pub fn layout(
         self: *DreamBrowserRenderer,
         root: *const DreamBrowserParser.HtmlNode,
@@ -85,75 +105,95 @@ pub const DreamBrowserRenderer = struct {
         std.debug.assert(viewport_width > 0);
         std.debug.assert(viewport_height > 0);
         
-        var boxes = std.ArrayList(LayoutBox).init(self.allocator);
-        defer boxes.deinit();
+        var boxes = std.ArrayList(LayoutBox){ .items = &.{}, .capacity = 0 };
+        errdefer boxes.deinit(self.allocator);
         
-        // Layout root node
-        try self.layoutNode(root, 0, 0, viewport_width, viewport_height, &boxes);
+        // Iterative stack-based layout (replaces recursion)
+        var stack = std.ArrayList(LayoutStackFrame){ .items = &.{}, .capacity = 0 };
+        errdefer stack.deinit(self.allocator);
         
-        // Assert: Box count must be within bounds
-        std.debug.assert(boxes.items.len <= MAX_LAYOUT_BOXES);
+        // Push root node onto stack
+        try stack.append(self.allocator, LayoutStackFrame{
+            .node = root,
+            .x = 0,
+            .y = 0,
+            .available_width = viewport_width,
+            .available_height = viewport_height,
+            .child_index = 0,
+        });
         
-        return try boxes.toOwnedSlice();
-    }
-    
-    /// Layout a single HTML node (recursive).
-    fn layoutNode(
-        self: *DreamBrowserRenderer,
-        node: *const DreamBrowserParser.HtmlNode,
-        x: u32,
-        y: u32,
-        available_width: u32,
-        available_height: u32,
-        boxes: *std.ArrayList(LayoutBox),
-    ) !void {
-        // Assert: Node must be valid
-        std.debug.assert(node.tag_name.len > 0);
-        
-        // Determine display type
-        const display = self.getDisplayType(node);
-        
-        // Calculate box dimensions (simple: full width for block, content width for inline)
-        var box_width: u32 = available_width;
-        var box_height: u32 = 0;
-        
-        if (display == .block) {
-            // Block-level: full width, height based on content
-            box_width = available_width;
-            box_height = if (node.text_content.len > 0) 20 else 0; // Simple height calculation
-        } else {
-            // Inline: width based on content, height based on line height
-            box_width = @as(u32, @intCast(node.text_content.len * 8)); // Simple: 8px per char
-            box_height = 20; // Simple: 20px line height
-        }
-        
-        // Create layout box
-        const box = LayoutBox{
-            .x = x,
-            .y = y,
-            .width = box_width,
-            .height = box_height,
-            .display = display,
-            .node = node,
-        };
-        
-        try boxes.append(box);
-        
-        // Layout children (recursive)
-        var child_y = y + box_height;
-        for (node.children) |child| {
-            const child_display = self.getDisplayType(&child);
-            const child_x = if (child_display == .block) x else x + box_width;
+        // Process stack iteratively
+        while (stack.items.len > 0) {
+            // Assert: Stack depth must be within bounds
+            std.debug.assert(stack.items.len <= MAX_STACK_DEPTH);
             
-            try self.layoutNode(&child, child_x, child_y, available_width, available_height, boxes);
+            const frame = &stack.items[stack.items.len - 1];
+            const node = frame.node;
             
-            if (child_display == .block) {
-                child_y += box.height; // Stack block elements vertically
+            // Determine display type
+            const display = self.getDisplayType(node);
+            
+            // Calculate box dimensions (simple: full width for block, content width for inline)
+            var box_width: u32 = frame.available_width;
+            var box_height: u32 = 0;
+            
+            if (display == .block) {
+                // Block-level: full width, height based on content
+                box_width = frame.available_width;
+                box_height = if (node.text_content.len > 0) 20 else 0; // Simple height calculation
+            } else {
+                // Inline_element: width based on content, height based on line height
+                box_width = @as(u32, @intCast(node.text_content.len * 8)); // Simple: 8px per char
+                box_height = 20; // Simple: 20px line height
+            }
+            
+            // Create layout box
+            const box = LayoutBox{
+                .x = frame.x,
+                .y = frame.y,
+                .width = box_width,
+                .height = box_height,
+                .display = display,
+                .node = node,
+            };
+            
+            try boxes.append(self.allocator, box);
+            
+            // Assert: Box count must be within bounds
+            std.debug.assert(boxes.items.len <= MAX_LAYOUT_BOXES);
+            
+            // Process children iteratively
+            if (frame.child_index < node.children.len) {
+                const child = &node.children[frame.child_index];
+                const child_display = self.getDisplayType(child);
+                const child_x = if (child_display == .block) frame.x else frame.x + box_width;
+                const child_y = if (frame.child_index == 0) frame.y + box_height else frame.y;
+                
+                // Push child onto stack
+                try stack.append(self.allocator, LayoutStackFrame{
+                    .node = child,
+                    .x = child_x,
+                    .y = child_y,
+                    .available_width = frame.available_width,
+                    .available_height = frame.available_height,
+                    .child_index = 0,
+                });
+                
+                // Increment child index for current frame
+                frame.child_index += 1;
+            } else {
+                // All children processed, pop frame
+                _ = stack.pop();
             }
         }
+        
+        // Assert: Stack must be empty after processing
+        std.debug.assert(stack.items.len == 0);
+        
+        return try boxes.toOwnedSlice(self.allocator);
     }
     
-    /// Render HTML node to Grain Aurora component.
+    /// Render HTML node to Grain Aurora component (iterative stack-based).
     pub fn renderToAurora(
         self: *DreamBrowserRenderer,
         node: *const DreamBrowserParser.HtmlNode,
@@ -167,65 +207,109 @@ pub const DreamBrowserRenderer = struct {
         defer parser.deinit();
         const styles = try parser.computeStyles(node, css_rules);
         defer self.allocator.free(styles);
+        _ = styles; // Styles computed but not used in simplified rendering
         
-        // Determine display type
-        const display = self.getDisplayType(node);
+        // Iterative stack-based rendering (replaces recursion)
+        var stack = std.ArrayList(RenderStackFrame){ .items = &.{}, .capacity = 0 };
+        errdefer stack.deinit(self.allocator);
         
-        // Render based on display type
-        if (display == .block) {
-            // Block-level: render as column (vertical stack)
-            var children = std.ArrayList(GrainAurora.Node).init(self.allocator);
-            defer children.deinit();
+        // Root children list
+        var root_children = std.ArrayList(GrainAurora.Node){ .items = &.{}, .capacity = 0 };
+        errdefer root_children.deinit(self.allocator);
+        
+        // Push root node onto stack
+        try stack.append(self.allocator, RenderStackFrame{
+            .node = node,
+            .child_index = 0,
+            .children_list = &root_children,
+        });
+        
+        // Process stack iteratively
+        while (stack.items.len > 0) {
+            // Assert: Stack depth must be within bounds
+            std.debug.assert(stack.items.len <= MAX_STACK_DEPTH);
             
-            // Add text content if present
-            if (node.text_content.len > 0) {
-                const text_node = GrainAurora.Node{ .text = node.text_content };
-                try children.append(text_node);
-            }
+            const frame = &stack.items[stack.items.len - 1];
+            const current_node = frame.node;
             
-            // Render children recursively
-            for (node.children) |child| {
-                const child_node = try self.renderToAurora(&child, css_rules);
-                try children.append(child_node);
-            }
-            
-            return GrainAurora.Node{
-                .column = GrainAurora.Column{
-                    .children = try children.toOwnedSlice(),
-                },
-            };
-        } else {
-            // Inline: render as row (horizontal stack) or text
-            if (node.children.len == 0) {
-                // Leaf node: render as text
-                return GrainAurora.Node{ .text = node.text_content };
+            // Process current node's children
+            if (frame.child_index < current_node.children.len) {
+                const child = &current_node.children[frame.child_index];
+                
+                // Create child children list
+                var child_children = std.ArrayList(GrainAurora.Node){ .items = &.{}, .capacity = 0 };
+                errdefer child_children.deinit(self.allocator);
+                
+                // Push child onto stack
+                try stack.append(self.allocator, RenderStackFrame{
+                    .node = child,
+                    .child_index = 0,
+                    .children_list = &child_children,
+                });
+                
+                // Increment child index for current frame
+                frame.child_index += 1;
             } else {
-                // Has children: render as row
-                var children = std.ArrayList(GrainAurora.Node).init(self.allocator);
-                defer children.deinit();
+                // All children processed, create node and add to parent
+                const current_display_type = self.getDisplayType(current_node);
+                var child_node: GrainAurora.Node = undefined;
                 
-                // Add text content if present
-                if (node.text_content.len > 0) {
-                    const text_node = GrainAurora.Node{ .text = node.text_content };
-                    try children.append(text_node);
+                if (current_display_type == .block) {
+                    // Block-level: render as column (vertical stack)
+                    // Add text content if present
+                    if (current_node.text_content.len > 0) {
+                        try frame.children_list.append(self.allocator, GrainAurora.Node{ .text = current_node.text_content });
+                    }
+                    
+                    // Add processed children
+                    const children_slice = try frame.children_list.toOwnedSlice(self.allocator);
+                    child_node = GrainAurora.Node{
+                        .column = GrainAurora.Column{
+                            .children = children_slice,
+                        },
+                    };
+                } else {
+                    // Inline_element: render as row (horizontal stack) or text
+                    if (current_node.children.len == 0) {
+                        // Leaf node: render as text
+                        child_node = GrainAurora.Node{ .text = current_node.text_content };
+                    } else {
+                        // Has children: render as row
+                        // Add text content if present
+                        if (current_node.text_content.len > 0) {
+                            try frame.children_list.append(self.allocator, GrainAurora.Node{ .text = current_node.text_content });
+                        }
+                        
+                        // Add processed children
+                        const children_slice = try frame.children_list.toOwnedSlice(self.allocator);
+                        child_node = GrainAurora.Node{
+                            .row = GrainAurora.Row{
+                                .children = children_slice,
+                            },
+                        };
+                    }
                 }
                 
-                // Render children recursively
-                for (node.children) |child| {
-                    const child_node = try self.renderToAurora(&child, css_rules);
-                    try children.append(child_node);
-                }
+                // Pop current frame
+                _ = stack.pop();
                 
-                return GrainAurora.Node{
-                    .row = GrainAurora.Row{
-                        .children = try children.toOwnedSlice(),
-                    },
-                };
+                // Add child node to parent (if not root)
+                if (stack.items.len > 0) {
+                    const parent_frame = &stack.items[stack.items.len - 1];
+                    try parent_frame.children_list.append(self.allocator, child_node);
+                } else {
+                    // Root node: return result
+                    return child_node;
+                }
             }
         }
+        
+        // Assert: Should not reach here (root node should be returned above)
+        std.debug.assert(false);
+        unreachable;
     }
     
-    /// Create readonly spans for metadata (event ID, timestamp).
+    /// Create readonly spans for metadata (event ID, timestamp, iterative).
     pub fn createReadonlySpans(
         self: *DreamBrowserRenderer,
         node: *const DreamBrowserParser.HtmlNode,
@@ -234,45 +318,64 @@ pub const DreamBrowserRenderer = struct {
         // Assert: Node and buffer must be valid
         std.debug.assert(node.tag_name.len > 0);
         
-        var readonly_spans = std.ArrayList(GrainBuffer.Segment).init(self.allocator);
-        defer readonly_spans.deinit();
+        var readonly_spans = std.ArrayList(GrainBuffer.Segment){ .items = &.{}, .capacity = 0 };
+        errdefer readonly_spans.deinit(self.allocator);
         
-        // Check for metadata attributes (Nostr event ID, timestamp, author)
-        for (node.attributes) |attr| {
-            if (std.mem.eql(u8, attr.name, "data-event-id") or
-                std.mem.eql(u8, attr.name, "data-timestamp") or
-                std.mem.eql(u8, attr.name, "data-author"))
-            {
-                // Find attribute value in buffer text
-                const buffer_text = buffer.textSlice();
-                if (std.mem.indexOf(u8, buffer_text, attr.value)) |start| {
-                    const end = start + attr.value.len;
-                    
-                    // Mark as readonly span
-                    try buffer.markReadOnly(start, end);
-                    
-                    // Add to readonly spans list
-                    const readonly_segments = buffer.getReadonlySpans();
-                    for (readonly_segments) |segment| {
-                        if (segment.start == start and segment.end == end) {
-                            try readonly_spans.append(segment);
-                            break;
+        // Iterative stack-based processing (replaces recursion)
+        var stack = std.ArrayList(*const DreamBrowserParser.HtmlNode){ .items = &.{}, .capacity = 0 };
+        errdefer stack.deinit(self.allocator);
+        
+        // Push root node onto stack
+        try stack.append(self.allocator, node);
+        
+        // Process stack iteratively
+        while (stack.items.len > 0) {
+            // Assert: Stack depth must be within bounds
+            std.debug.assert(stack.items.len <= MAX_STACK_DEPTH);
+            
+            const current_node = stack.pop();
+            
+            // Check for metadata attributes (Nostr event ID, timestamp, author)
+            for (current_node.attributes) |attr| {
+                if (std.mem.eql(u8, attr.name, "data-event-id") or
+                    std.mem.eql(u8, attr.name, "data-timestamp") or
+                    std.mem.eql(u8, attr.name, "data-author"))
+                {
+                    // Find attribute value in buffer text
+                    const buffer_text = buffer.textSlice();
+                    if (std.mem.indexOf(u8, buffer_text, attr.value)) |start| {
+                        const end_pos = start + @as(u32, @intCast(attr.value.len));
+                        
+                        // Mark as readonly span
+                        try buffer.markReadOnly(start, end_pos);
+                        
+                        // Add to readonly spans list
+                        const readonly_segments = buffer.getReadonlySpans();
+                        for (readonly_segments) |segment| {
+                            if (segment.start == start and segment.end == end_pos) {
+                                try readonly_spans.append(self.allocator, segment);
+                                break;
+                            }
                         }
                     }
                 }
             }
+            
+            // Push children onto stack (in reverse order for correct processing)
+            var i: u32 = current_node.children.len;
+            while (i > 0) {
+                i -= 1;
+                try stack.append(self.allocator, &current_node.children[i]);
+            }
         }
         
-        // Recursively process children
-        for (node.children) |child| {
-            const child_spans = try self.createReadonlySpans(&child, buffer);
-            try readonly_spans.appendSlice(child_spans);
-        }
+        // Assert: Stack must be empty after processing
+        std.debug.assert(stack.items.len == 0);
         
-        return try readonly_spans.toOwnedSlice();
+        return try readonly_spans.toOwnedSlice(self.allocator);
     }
     
-    /// Create editable spans for content (non-metadata text).
+    /// Create editable spans for content (non-metadata text, iterative).
     pub fn createEditableSpans(
         self: *DreamBrowserRenderer,
         node: *const DreamBrowserParser.HtmlNode,
@@ -281,24 +384,44 @@ pub const DreamBrowserRenderer = struct {
         // Assert: Node and buffer must be valid
         std.debug.assert(node.tag_name.len > 0);
         
-        // Text content is editable by default (unless marked readonly)
-        if (node.text_content.len > 0) {
-            const buffer_text = buffer.textSlice();
-            if (std.mem.indexOf(u8, buffer_text, node.text_content)) |start| {
-                const end = start + node.text_content.len;
-                
-                // Check if this span is already readonly
-                if (!buffer.isReadOnly(start)) {
-                    // Content is editable (no action needed, editable by default)
-                    // But we could mark it explicitly if needed
+        // Iterative stack-based processing (replaces recursion)
+        var stack = std.ArrayList(*const DreamBrowserParser.HtmlNode){ .items = &.{}, .capacity = 0 };
+        errdefer stack.deinit(self.allocator);
+        
+        // Push root node onto stack
+        try stack.append(self.allocator, node);
+        
+        // Process stack iteratively
+        while (stack.items.len > 0) {
+            // Assert: Stack depth must be within bounds
+            std.debug.assert(stack.items.len <= MAX_STACK_DEPTH);
+            
+            const current_node = stack.pop();
+            
+            // Text content is editable by default (unless marked readonly)
+            if (current_node.text_content.len > 0) {
+                const buffer_text = buffer.textSlice();
+                if (std.mem.indexOf(u8, buffer_text, current_node.text_content)) |start| {
+                    const end = start + @as(u32, @intCast(current_node.text_content.len));
+                    
+                    // Check if this span is already readonly
+                    if (!buffer.isReadOnly(start)) {
+                        // Content is editable (no action needed, editable by default)
+                        // But we could mark it explicitly if needed
+                    }
                 }
+            }
+            
+            // Push children onto stack (in reverse order for correct processing)
+            var i: u32 = current_node.children.len;
+            while (i > 0) {
+                i -= 1;
+                try stack.append(self.allocator, &current_node.children[i]);
             }
         }
         
-        // Recursively process children
-        for (node.children) |child| {
-            try self.createEditableSpans(&child, buffer);
-        }
+        // Assert: Stack must be empty after processing
+        std.debug.assert(stack.items.len == 0);
     }
     
     /// Render complete page (HTML + CSS → Grain Aurora + readonly spans).

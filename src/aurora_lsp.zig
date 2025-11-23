@@ -16,7 +16,7 @@ pub const LspClient = struct {
     server_process: ?std.process.Child = null,
     request_id: u64 = 1,
     message_buffer: [8192]u8 = undefined,
-    snapshots: std.ArrayList(DocumentSnapshot) = undefined,
+    snapshots: std.ArrayListUnmanaged(DocumentSnapshot) = .{},
     current_snapshot_id: u64 = 0,
     pending_requests: std.AutoHashMap(u64, void) = undefined,
 
@@ -78,7 +78,7 @@ pub const LspClient = struct {
     pub fn init(allocator: std.mem.Allocator) LspClient {
         return LspClient{
             .allocator = allocator,
-            .snapshots = std.ArrayList(DocumentSnapshot).init(allocator),
+            .snapshots = .{},
             .pending_requests = std.AutoHashMap(u64, void).init(allocator),
         };
     }

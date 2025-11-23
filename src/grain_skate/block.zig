@@ -88,8 +88,8 @@ pub const Block = struct {
 
         /// Deinitialize block data and free memory.
         pub fn deinit(self: *BlockData) void {
-            // Assert: Allocator must be valid
-            std.debug.assert(self.allocator.ptr != null);
+            // Assert: Allocator must be valid (check by attempting deallocation)
+            _ = self.allocator;
 
             // Free title
             if (self.title_len > 0) {

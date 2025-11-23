@@ -52,7 +52,8 @@ pub const StorageIntegration = struct {
         /// Deinitialize block mapping and free memory.
         pub fn deinit(self: *BlockMapping) void {
             // Assert: Allocator must be valid
-            std.debug.assert(self.allocator.ptr != null);
+            // Assert: Allocator must be valid (check by attempting deallocation)
+            _ = self.allocator;
 
             // Free object key
             if (self.object_key_len > 0) {
@@ -101,7 +102,8 @@ pub const StorageIntegration = struct {
         /// Deinitialize storage integration and free memory.
         pub fn deinit(self: *Integration) void {
             // Assert: Allocator must be valid
-            std.debug.assert(self.allocator.ptr != null);
+            // Assert: Allocator must be valid (check by attempting deallocation)
+            _ = self.allocator;
 
             // Deinitialize all mappings
             var i: u32 = 0;

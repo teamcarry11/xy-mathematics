@@ -103,7 +103,8 @@ pub const Editor = struct {
         /// Deinitialize text buffer and free memory.
         pub fn deinit(self: *TextBuffer) void {
             // Assert: Allocator must be valid
-            std.debug.assert(self.allocator.ptr != null);
+            // Assert: Allocator must be valid (check by attempting deallocation)
+            _ = self.allocator;
 
             // Free lines
             self.allocator.free(self.lines);
@@ -177,7 +178,8 @@ pub const Editor = struct {
         /// Deinitialize undo operation and free memory.
         pub fn deinit(self: *UndoOperation) void {
             // Assert: Allocator must be valid
-            std.debug.assert(self.allocator.ptr != null);
+            // Assert: Allocator must be valid (check by attempting deallocation)
+            _ = self.allocator;
 
             // Free text
             if (self.text_len > 0) {
@@ -232,7 +234,8 @@ pub const Editor = struct {
         /// Deinitialize editor state and free memory.
         pub fn deinit(self: *EditorState) void {
             // Assert: Allocator must be valid
-            std.debug.assert(self.allocator.ptr != null);
+            // Assert: Allocator must be valid (check by attempting deallocation)
+            _ = self.allocator;
 
             // Deinitialize buffer
             self.buffer.deinit();

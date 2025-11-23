@@ -17,8 +17,10 @@ This document provides a **summary message** for the new third agent working on 
 You are the **third agent** responsible for:
 
 1. **Grain Terminal**: A Wezterm-level terminal application for Grain OS (RISC-V target)
-2. **Grainscript**: A Zig-implemented scripting language to replace Bash/Zsh/Fish (`.gr` files)
+2. **Grainscript**: A Zig-implemented unified scripting/configuration language to replace Bash/Zsh/Fish and all config/data file formats (`.gr` files)
 3. **Grain Skate**: A native macOS knowledge graph application with social threading
+
+**Grainscript Vision**: Unify all configuration and data file formats (JSON, YAML, EDN, Dockerfiles, Terraform, Kubernetes, dotfiles, SSH configs, Git configs, GPG configs, Makefiles, boot scripts, etc.) into a single statically-typed, explicitly-allocated, GrainStyle/TigerStyle-compliant DSL.
 
 **Your work is separate** from the Aurora IDE and Dream Browser, but you may reference and integrate with existing components.
 

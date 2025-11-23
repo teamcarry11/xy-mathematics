@@ -279,6 +279,8 @@ pub const UnifiedIde = struct {
 
 **Grainscript** is a general-purpose Zig-implemented Zig scripting language/DSL to replace Bash, Zsh, and Fish. Files use `.gr` extension.
 
+**Core Vision**: Grainscript unifies all configuration and data file formats into a single, statically-typed, explicitly-allocated, GrainStyle/TigerStyle-compliant DSL. It replaces not just shell scripts, but also configuration files, data formats, and build systems with one unified language.
+
 ### Core Requirements
 
 - **Zig-like syntax**: Familiar to Zig developers
@@ -286,6 +288,45 @@ pub const UnifiedIde = struct {
 - **Type safety**: Leverage Zig's type system
 - **Performance**: Fast startup and execution
 - **Integration**: Works with Grain Terminal
+- **Unified configuration format**: Replace all config/data file formats
+
+### Unified Format Goals
+
+Grainscript must be able to represent and generate:
+
+1. **Data Formats**:
+   - Clojure `.edn` data files
+   - JSON
+   - YAML
+   - TOML
+
+2. **Configuration Files**:
+   - Dockerfiles
+   - AWS Terraform for EKS configs
+   - Kubernetes configs (with TigerBeetle-style general-purpose GrainDB research for distributed database on WSE chips)
+   - `.gitignore`, `.cursorignore`, `.claude` files/folders
+   - Dotfiles generally (`.zshrc`, `.bashrc`, `.vimrc`, `.emacs`, etc.)
+   - SSH configs (`~/.ssh/config`)
+   - Global Git configs (`~/.gitconfig`)
+   - GPG configs (`~/.gnupg/gpg.conf`)
+
+3. **Build Systems**:
+   - Makefiles
+   - Build scripts
+   - Boot scripts
+   - Systemd unit files
+
+4. **Any kind of data/parameters/configurations**: Grainscript should be expressive enough to represent any structured or semi-structured data format.
+
+### Design Principles
+
+- **Static typing**: All values must have explicit types (no `any` types)
+- **Explicit allocation**: All memory allocation must be explicit (GrainStyle/TigerStyle)
+- **Zero hidden allocations**: No implicit allocations in hot paths
+- **Bounded structures**: All data structures must have `MAX_` constants
+- **Deterministic**: Same input always produces same output
+- **Composable**: Can embed Grainscript in Grainscript (recursive structures)
+- **Serializable**: Can serialize to/from any target format (JSON, YAML, etc.)
 
 ### Technical Specifications
 
@@ -293,6 +334,7 @@ pub const UnifiedIde = struct {
 - **Target Language**: Grainscript (`.gr` files)
 - **Architecture**: TigerBeetle TigerStyle + GrainStyle modifications
 - **Parser**: May use Tree-sitter (similar to Aurora IDE)
+- **Memory Model**: Explicit allocation, bounded structures, static allocation preferred
 
 ### Implementation Priorities
 
@@ -302,6 +344,7 @@ pub const UnifiedIde = struct {
 - Basic command execution
 - Variable handling
 - Control flow
+- Type system (explicit types, no `any`)
 
 #### Phase 2: Shell Features
 
@@ -309,13 +352,32 @@ pub const UnifiedIde = struct {
 - Background jobs
 - Signal handling
 - Environment variables
+- File I/O (explicit, bounded)
 
-#### Phase 3: Advanced Features
+#### Phase 3: Configuration Format
+
+- Data structure representation (JSON-like, YAML-like, EDN-like)
+- Serialization to target formats (JSON, YAML, TOML, etc.)
+- Deserialization from target formats
+- Configuration validation (type checking)
+
+#### Phase 4: Advanced Features
 
 - Functions and modules
-- Type system
 - Standard library
 - Integration with Grain Terminal
+- Format converters (`.gr` → JSON, YAML, etc.)
+- Format importers (JSON → `.gr`, YAML → `.gr`, etc.)
+
+#### Phase 5: Specialized Formats
+
+- Dockerfile generation
+- Kubernetes config generation
+- Terraform config generation
+- Dotfile management
+- SSH config management
+- Git config management
+- GPG config management
 
 ---
 

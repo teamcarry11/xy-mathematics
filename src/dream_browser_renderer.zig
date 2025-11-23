@@ -1,6 +1,7 @@
 const std = @import("std");
 const DreamBrowserParser = @import("dream_browser_parser.zig").DreamBrowserParser;
 const DreamBrowserPerformance = @import("dream_browser_performance.zig").DreamBrowserPerformance;
+const DreamBrowserProfiler = @import("dream_browser_profiler.zig").DreamBrowserProfiler;
 const GrainAurora = @import("grain_aurora.zig").GrainAurora;
 const GrainBuffer = @import("grain_buffer.zig").GrainBuffer;
 
@@ -74,13 +75,35 @@ pub const DreamBrowserRenderer = struct {
         allocator: std.mem.Allocator,
         performance: *DreamBrowserPerformance,
     ) DreamBrowserRenderer {
-        // Assert: Allocator and performance monitor must be valid
-        std.debug.assert(allocator.ptr != null);
-        std.debug.assert(performance.allocator.ptr != null);
-        
         return DreamBrowserRenderer{
             .allocator = allocator,
             .performance = performance,
+            .profiler = null,
+        };
+    }
+    
+    /// Initialize renderer with profiler (for hot path identification).
+    pub fn init_with_profiler(
+        allocator: std.mem.Allocator,
+        profiler: *DreamBrowserProfiler,
+    ) DreamBrowserRenderer {
+        return DreamBrowserRenderer{
+            .allocator = allocator,
+            .performance = null,
+            .profiler = profiler,
+        };
+    }
+    
+    /// Initialize renderer with both performance monitor and profiler.
+    pub fn init_with_performance_and_profiler(
+        allocator: std.mem.Allocator,
+        performance: *DreamBrowserPerformance,
+        profiler: *DreamBrowserProfiler,
+    ) DreamBrowserRenderer {
+        return DreamBrowserRenderer{
+            .allocator = allocator,
+            .performance = performance,
+            .profiler = profiler,
         };
     }
     

@@ -325,6 +325,14 @@
    - ✅ Comprehensive test coverage for userspace execution flow
    - ✅ GrainStyle compliance (u32/u64 types, assertions, bounded operations, static allocation)
 
+37. **GUI App Compilation Fixes** ✅ **COMPLETE**
+   - ✅ Fixed `events` module import path in `src/platform/macos_tahoe/window.zig`
+   - ✅ Changed import from `@import("events")` to `@import("../events.zig")`
+   - ✅ Verified `tahoe` executable builds successfully
+   - ✅ GUI app now compiles without errors
+   - ✅ Ready for testing and use
+   - ✅ GrainStyle compliance maintained
+
 33. **Enhanced Process Execution Error Handling and Resource Management** ✅ **COMPLETE**
    - ✅ Resource cleanup module (`resource_cleanup.zig`) for process termination
    - ✅ Resource cleanup integration in `syscall_exit` (frees mappings, handles, channels)

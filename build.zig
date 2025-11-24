@@ -194,11 +194,21 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    // Events module for platform events (needed by window module)
+    const events_module = b.addModule("events", .{
+        .root_source_file = b.path("src/platform/events.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
     // Window module (macos_tahoe, for grain_terminal) - use different name to avoid conflict
     const window_module_for_terminal = b.addModule("macos_window_terminal", .{
         .root_source_file = b.path("src/platform/macos_tahoe/window.zig"),
         .target = target,
         .optimize = optimize,
+        .imports = &.{
+            .{ .name = "events", .module = events_module },
+        },
     });
 
     // Grain Terminal module
@@ -996,13 +1006,6 @@ pub fn build(b: *std.Build) void {
     // Memory module for memory allocator tests
     const memory_module = b.addModule("memory", .{
         .root_source_file = b.path("src/kernel/memory.zig"),
-        .target = target,
-        .optimize = optimize,
-    });
-    
-    // Events module for platform events
-    const events_module = b.addModule("events", .{
-        .root_source_file = b.path("src/platform/events.zig"),
         .target = target,
         .optimize = optimize,
     });

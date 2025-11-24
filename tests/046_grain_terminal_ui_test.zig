@@ -141,7 +141,7 @@ test "pane split horizontal" {
     defer pane.deinit();
 
     var pane_mut = pane;
-    const split_pane = try pane_mut.split(allocator, .horizontal, 400);
+    var split_pane = try pane_mut.split(allocator, .horizontal, 400);
     defer split_pane.deinit();
 
     try testing.expect(split_pane.is_leaf() == false);
@@ -163,7 +163,7 @@ test "pane split vertical" {
     defer pane.deinit();
 
     var pane_mut = pane;
-    const split_pane = try pane_mut.split(allocator, .vertical, 300);
+    var split_pane = try pane_mut.split(allocator, .vertical, 300);
     defer split_pane.deinit();
 
     try testing.expect(split_pane.is_leaf() == false);

@@ -226,7 +226,7 @@ test "complete ELF program execution with multiple segments" {
 
     // Write ELF to VM memory.
     const executable_addr: u64 = 0x1000;
-    @memcpy(vm_memory[@intCast(executable_addr)..][0..elf_data.len], elf_data);
+    @memcpy(vm_memory[@intCast(executable_addr)..][0..elf_data.len], &elf_data);
 
     // Spawn process.
     const result = try kernel.syscall_spawn(executable_addr, 0, 0, 0);

@@ -1507,7 +1507,7 @@ pub const BasinKernel = struct {
         return BasinError.would_block; // Process still running (would block)
     }
     
-    fn syscall_map(
+    pub fn syscall_map(
         self: *BasinKernel,
         addr: u64,
         size: u64,

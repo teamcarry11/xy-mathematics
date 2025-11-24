@@ -236,7 +236,7 @@ pub const Editor = struct {
     }
 
     /// Render editor view: buffer content + LSP diagnostics overlay.
-    /// Includes readonly spans for visual distinction.
+    /// Includes readonly spans and ghost text for visual distinction.
     pub fn render(self: *Editor) !GrainAurora.RenderResult {
         const text = self.buffer.textSlice();
         const readonly_spans = self.buffer.getReadonlySpans();
@@ -256,9 +256,38 @@ pub const Editor = struct {
             });
         }
         
+        // Calculate ghost text span (if pending completion exists)
+        var ghost_spans: []const AuroraSpan = &.{};
+        if (self.pending_completion) |completion| {
+            // Assert: Completion must be bounded
+            std.debug.assert(completion.len <= 10 * 1024); // Max 10KB ghost text
+            
+            // Calculate cursor position in text (simplified: line * 80 + char)
+            const cursor_pos = self.cursor_line * 80 + self.cursor_char;
+            
+            // Assert: Cursor position must be within bounds
+            std.debug.assert(cursor_pos <= text.len);
+            
+            // Create ghost text span (starts at cursor, extends for completion length)
+            const ghost_start = cursor_pos;
+            const ghost_end = cursor_pos + @as(usize, @intCast(completion.len));
+            
+            // Assert: Ghost span must be within bounds
+            std.debug.assert(ghost_end <= text.len + completion.len);
+            
+            // Allocate ghost span
+            const ghost_span = try self.allocator.alloc(AuroraSpan, 1);
+            ghost_span[0] = AuroraSpan{
+                .start = ghost_start,
+                .end = ghost_end,
+            };
+            ghost_spans = ghost_span;
+        }
+        
         return GrainAurora.RenderResult{
             .root = .{ .text = text },
             .readonly_spans = try spans.toOwnedSlice(),
+            .ghost_spans = ghost_spans,
         };
     }
     

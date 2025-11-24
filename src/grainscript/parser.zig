@@ -257,8 +257,7 @@ pub const Parser = struct {
 
     /// Initialize parser with lexer.
     pub fn init(allocator: std.mem.Allocator, lexer: *const Lexer) !Parser {
-        // Assert: Allocator must be valid
-        std.debug.assert(allocator.ptr != null);
+        // Assert: Allocator must be valid (allocator is used below)
 
         // Assert: Lexer must be valid
         std.debug.assert(lexer.get_token_count() > 0);
@@ -286,7 +285,7 @@ pub const Parser = struct {
     /// Deinitialize parser and free memory.
     pub fn deinit(self: *Parser) void {
         // Assert: Parser must be valid
-        std.debug.assert(self.allocator.ptr != null);
+        _ = self.allocator; // Allocator is used below
 
         // Free node buffer
         self.allocator.free(self.nodes);
@@ -327,7 +326,7 @@ pub const Parser = struct {
     }
 
     /// Parse declaration or statement.
-    fn parse_declaration_or_statement(self: *Parser) !?u32 {
+    fn parse_declaration_or_statement(self: *Parser) ParserError!?u32 {
         // Assert: Token index must be valid
         std.debug.assert(self.token_index < self.tokens.len);
 
@@ -353,7 +352,7 @@ pub const Parser = struct {
     }
 
     /// Parse function declaration.
-    fn parse_function_declaration(self: *Parser) !u32 {
+    fn parse_function_declaration(self: *Parser) ParserError!u32 {
         // Assert: Current token must be 'fn'
         std.debug.assert(self.get_current_token().token_type == .kw_fn);
 
@@ -374,9 +373,9 @@ pub const Parser = struct {
         }
         self.advance(); // Skip '('
 
-        var params = std.ArrayList(u32).init(self.allocator);
-        defer params.deinit();
-        try params.ensureTotalCapacity(MAX_FN_PARAMS);
+        var params = std.ArrayListUnmanaged(u32){};
+        defer params.deinit(self.allocator);
+        try params.ensureTotalCapacity(self.allocator, MAX_FN_PARAMS);
 
         // Parse parameter list
         while (self.get_current_token().token_type != .punc_rparen) {
@@ -415,7 +414,7 @@ pub const Parser = struct {
                 param_name_token.column,
                 .{ .identifier = .{ .name = self.source[param_name_token.start..param_name_token.end], .name_len = param_name_token.end - param_name_token.start } },
             );
-            try params.append(param_node);
+            try params.append(self.allocator, param_node);
         }
 
         self.advance(); // Skip ')'
@@ -452,7 +451,7 @@ pub const Parser = struct {
     }
 
     /// Parse variable declaration.
-    fn parse_variable_declaration(self: *Parser) !u32 {
+    fn parse_variable_declaration(self: *Parser) ParserError!u32 {
         // Assert: Current token must be 'var'
         std.debug.assert(self.get_current_token().token_type == .kw_var);
 
@@ -498,7 +497,7 @@ pub const Parser = struct {
     }
 
     /// Parse constant declaration.
-    fn parse_constant_declaration(self: *Parser) !u32 {
+    fn parse_constant_declaration(self: *Parser) ParserError!u32 {
         // Assert: Current token must be 'const'
         std.debug.assert(self.get_current_token().token_type == .kw_const);
 
@@ -544,7 +543,7 @@ pub const Parser = struct {
     }
 
     /// Parse statement.
-    fn parse_statement(self: *Parser) !?u32 {
+    fn parse_statement(self: *Parser) ParserError!?u32 {
         // Assert: Token index must be valid
         std.debug.assert(self.token_index < self.tokens.len);
 
@@ -604,7 +603,7 @@ pub const Parser = struct {
     }
 
     /// Parse if statement.
-    fn parse_if_statement(self: *Parser) !u32 {
+    fn parse_if_statement(self: *Parser) ParserError!u32 {
         // Assert: Current token must be 'if'
         std.debug.assert(self.get_current_token().token_type == .kw_if);
 
@@ -648,7 +647,7 @@ pub const Parser = struct {
     }
 
     /// Parse while statement.
-    fn parse_while_statement(self: *Parser) !u32 {
+    fn parse_while_statement(self: *Parser) ParserError!u32 {
         // Assert: Current token must be 'while'
         std.debug.assert(self.get_current_token().token_type == .kw_while);
 
@@ -684,7 +683,7 @@ pub const Parser = struct {
     }
 
     /// Parse for statement.
-    fn parse_for_statement(self: *Parser) !u32 {
+    fn parse_for_statement(self: *Parser) ParserError!u32 {
         // Assert: Current token must be 'for'
         std.debug.assert(self.get_current_token().token_type == .kw_for);
 
@@ -743,7 +742,7 @@ pub const Parser = struct {
     }
 
     /// Parse return statement.
-    fn parse_return_statement(self: *Parser) !u32 {
+    fn parse_return_statement(self: *Parser) ParserError!u32 {
         // Assert: Current token must be 'return'
         std.debug.assert(self.get_current_token().token_type == .kw_return);
 
@@ -775,7 +774,7 @@ pub const Parser = struct {
     }
 
     /// Parse break statement.
-    fn parse_break_statement(self: *Parser) !u32 {
+    fn parse_break_statement(self: *Parser) ParserError!u32 {
         // Assert: Current token must be 'break'
         std.debug.assert(self.get_current_token().token_type == .kw_break);
 
@@ -798,7 +797,7 @@ pub const Parser = struct {
     }
 
     /// Parse continue statement.
-    fn parse_continue_statement(self: *Parser) !u32 {
+    fn parse_continue_statement(self: *Parser) ParserError!u32 {
         // Assert: Current token must be 'continue'
         std.debug.assert(self.get_current_token().token_type == .kw_continue);
 
@@ -821,7 +820,7 @@ pub const Parser = struct {
     }
 
     /// Parse block statement.
-    fn parse_block(self: *Parser) !u32 {
+    fn parse_block(self: *Parser) ParserError!u32 {
         // Assert: Current token must be '{'
         std.debug.assert(self.get_current_token().token_type == .punc_lbrace);
 
@@ -833,9 +832,9 @@ pub const Parser = struct {
         self.depth += 1;
         defer self.depth -= 1;
 
-        var statements = std.ArrayList(u32).init(self.allocator);
-        defer statements.deinit();
-        try statements.ensureTotalCapacity(MAX_STMT_LIST);
+        var statements = std.ArrayListUnmanaged(u32){};
+        defer statements.deinit(self.allocator);
+        try statements.ensureTotalCapacity(self.allocator, MAX_STMT_LIST);
 
         // Parse statements until '}'
         while (self.get_current_token().token_type != .punc_rbrace) {
@@ -854,7 +853,7 @@ pub const Parser = struct {
 
             // Parse statement
             if (try self.parse_statement()) |stmt| {
-                try statements.append(stmt);
+                try statements.append(self.allocator, stmt);
             }
         }
 
@@ -878,7 +877,7 @@ pub const Parser = struct {
     }
 
     /// Parse expression (iterative, precedence-based).
-    fn parse_expression(self: *Parser) !u32 {
+    fn parse_expression(self: *Parser) ParserError!u32 {
         // Assert: Token index must be valid
         std.debug.assert(self.token_index < self.tokens.len);
 
@@ -935,7 +934,7 @@ pub const Parser = struct {
     }
 
     /// Parse expression with precedence (iterative, stack-based).
-    fn parse_expression_precedence(self: *Parser, min_precedence: u32) !u32 {
+    fn parse_expression_precedence(self: *Parser, min_precedence: u32) ParserError!u32 {
         // Assert: Token index must be valid
         std.debug.assert(self.token_index < self.tokens.len);
 
@@ -983,7 +982,7 @@ pub const Parser = struct {
     }
 
     /// Parse unary expression.
-    fn parse_unary_expression(self: *Parser) !u32 {
+    fn parse_unary_expression(self: *Parser) ParserError!u32 {
         // Assert: Token index must be valid
         std.debug.assert(self.token_index < self.tokens.len);
 
@@ -1016,7 +1015,7 @@ pub const Parser = struct {
     }
 
     /// Parse primary expression.
-    fn parse_primary_expression(self: *Parser) !u32 {
+    fn parse_primary_expression(self: *Parser) ParserError!u32 {
         // Assert: Token index must be valid
         std.debug.assert(self.token_index < self.tokens.len);
 
@@ -1075,7 +1074,7 @@ pub const Parser = struct {
     }
 
     /// Parse literal expression.
-    fn parse_literal(self: *Parser) !u32 {
+    fn parse_literal(self: *Parser) ParserError!u32 {
         // Assert: Current token must be a literal
         std.debug.assert(is_literal_token(self.get_current_token().token_type));
 
@@ -1110,7 +1109,7 @@ pub const Parser = struct {
     }
 
     /// Parse function call.
-    fn parse_function_call(self: *Parser, callee_token: Lexer.Token) !u32 {
+    fn parse_function_call(self: *Parser, callee_token: Lexer.Token) ParserError!u32 {
         // Assert: Current token must be '('
         std.debug.assert(self.get_current_token().token_type == .punc_lparen);
 
@@ -1131,9 +1130,9 @@ pub const Parser = struct {
             } },
         );
 
-        var args = std.ArrayList(u32).init(self.allocator);
-        defer args.deinit();
-        try args.ensureTotalCapacity(MAX_EXPR_OPERANDS);
+        var args = std.ArrayListUnmanaged(u32){};
+        defer args.deinit(self.allocator);
+        try args.ensureTotalCapacity(self.allocator, MAX_EXPR_OPERANDS);
 
         // Parse argument list
         while (self.get_current_token().token_type != .punc_rparen) {
@@ -1151,7 +1150,7 @@ pub const Parser = struct {
 
             // Parse argument expression
             const arg = try self.parse_expression();
-            try args.append(arg);
+            try args.append(self.allocator, arg);
         }
 
         self.advance(); // Skip ')'
@@ -1175,7 +1174,7 @@ pub const Parser = struct {
     }
 
     /// Parse type.
-    fn parse_type(self: *Parser) !u32 {
+    fn parse_type(self: *Parser) ParserError!u32 {
         // Assert: Token index must be valid
         std.debug.assert(self.token_index < self.tokens.len);
 
@@ -1316,5 +1315,6 @@ pub const ParserError = error{
     InvalidOperator,
     InvalidLiteral,
     InvalidNode,
+    OutOfMemory,
 };
 

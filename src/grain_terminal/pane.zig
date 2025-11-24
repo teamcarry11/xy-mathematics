@@ -166,7 +166,7 @@ pub const Pane = struct {
     }
 
     /// Get pane at position (for mouse clicks) - iterative implementation.
-    pub fn get_pane_at(self: *Pane, x: u32, y: u32) ?*Pane {
+    pub fn get_pane_at(self: *const Pane, x: u32, y: u32) ?*Pane {
         // Assert: Position must be valid
         std.debug.assert(x < 0xFFFFFFFF);
         std.debug.assert(y < 0xFFFFFFFF);
@@ -175,8 +175,8 @@ pub const Pane = struct {
         var stack: [MAX_PANES]*Pane = undefined;
         var stack_len: u32 = 0;
 
-        // Start with root pane
-        stack[stack_len] = self;
+        // Start with root pane (cast const to mutable for return type)
+        stack[stack_len] = @constCast(self);
         stack_len += 1;
 
         // Iterative search
@@ -189,9 +189,9 @@ pub const Pane = struct {
                 continue;
             }
 
-            // If leaf, return it
+            // If leaf, return it (cast const to mutable for return type)
             if (current.is_leaf()) {
-                return current;
+                return @constCast(current);
             }
 
             // Add children to stack (search in reverse order for depth-first)

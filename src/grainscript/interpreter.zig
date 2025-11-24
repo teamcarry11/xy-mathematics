@@ -55,14 +55,14 @@ pub const Interpreter = struct {
         }
 
         /// Create string value (bounded).
-        pub fn from_string(allocator: std.mem.Allocator, str: []const u8) !Value {
+        pub fn from_string(allocator: std.mem.Allocator, str: []const u8) Error!Value {
             // Assert: String length must be bounded
             if (str.len > MAX_STRING_LEN) {
                 return Error.string_too_long;
             }
 
             // Allocate bounded string
-            const string_copy = try allocator.dupe(u8, str);
+            const string_copy = allocator.dupe(u8, str) catch return Error.OutOfMemory;
             errdefer allocator.free(string_copy);
 
             return Value{ .string = string_copy };
@@ -162,6 +162,7 @@ pub const Interpreter = struct {
         too_many_functions,
         too_many_call_args,
         runtime_error,
+        OutOfMemory,
     };
 
     /// Interpreter state.
@@ -180,9 +181,6 @@ pub const Interpreter = struct {
 
     /// Initialize interpreter with parser.
     pub fn init(allocator: std.mem.Allocator, parser: *const Parser) !Interpreter {
-        // Assert: Allocator must be valid
-        std.debug.assert(allocator.ptr != null);
-
         // Assert: Parser must be valid
         std.debug.assert(parser.get_node_count() > 0);
 
@@ -226,7 +224,7 @@ pub const Interpreter = struct {
     /// Deinitialize interpreter and free memory.
     pub fn deinit(self: *Interpreter) void {
         // Assert: Interpreter must be valid
-        std.debug.assert(self.allocator.ptr != null);
+        _ = self.allocator; // Allocator is used below
 
         // Free all variable string values and type names
         var i: u32 = 0;
@@ -1025,7 +1023,7 @@ pub const Interpreter = struct {
             .string => |l| switch (right) {
                 .string => |r| {
                     // Concatenate strings
-                    const combined = try std.fmt.allocPrint(self.allocator, "{s}{s}", .{ l, r });
+                    const combined = std.fmt.allocPrint(self.allocator, "{s}{s}", .{ l, r }) catch return Error.OutOfMemory;
                     errdefer self.allocator.free(combined);
                     return try Value.from_string(self.allocator, combined);
                 },

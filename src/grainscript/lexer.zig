@@ -638,4 +638,9 @@ pub const Lexer = struct {
     pub fn get_source(self: *const Lexer) []const u8 {
         return self.source;
     }
+
+    /// Get all tokens (slice of tokens).
+    pub fn get_tokens(self: *const Lexer) []const Token {
+        return self.tokens[0..self.tokens_len];
+    }
 };

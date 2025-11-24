@@ -45,10 +45,11 @@ pub const RenderContext = struct {
     route: []const u8,
 };
 
-/// Render result: root node and readonly spans.
+/// Render result: root node, readonly spans, and ghost text spans.
 pub const RenderResult = struct {
     root: AuroraNode,
     readonly_spans: []const Span,
+    ghost_spans: []const Span = &.{}, // Ghost text spans (AI completions)
 };
 
 /// Span: start and end indices for readonly regions.

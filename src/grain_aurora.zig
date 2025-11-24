@@ -38,6 +38,7 @@ pub const GrainAurora = struct {
     pub const RenderResult = struct {
         root: Node,
         readonly_spans: []const Span,
+        ghost_spans: []const Span = &.{}, // Ghost text spans (AI completions)
     };
 
     pub const Span = struct {

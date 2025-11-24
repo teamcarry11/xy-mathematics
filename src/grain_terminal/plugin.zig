@@ -42,8 +42,7 @@ pub const Plugin = struct {
 
         /// Initialize plugin data.
         pub fn init(allocator: std.mem.Allocator, id: u32, name: []const u8, path: []const u8, version: u32) !PluginData {
-            // Assert: Allocator must be valid
-            std.debug.assert(allocator.ptr != null);
+            // Assert: Allocator must be valid (allocator is used below)
 
             // Assert: Name and path must be bounded
             std.debug.assert(name.len <= MAX_PLUGIN_NAME_LEN);
@@ -71,8 +70,8 @@ pub const Plugin = struct {
 
         /// Deinitialize plugin data and free memory.
         pub fn deinit(self: *PluginData) void {
-            // Assert: Allocator must be valid
-            std.debug.assert(self.allocator.ptr != null);
+            // Assert: Allocator must be valid (allocator is used below)
+            _ = self.allocator;
 
             // Free name
             if (self.name_len > 0) {
@@ -133,14 +132,14 @@ pub const Plugin = struct {
 
     /// Deinitialize plugin manager and free memory.
     pub fn deinit(self: *Plugin) void {
-        // Assert: Allocator must be valid
-        std.debug.assert(self.allocator.ptr != null);
+        // Assert: Allocator must be valid (allocator is used below)
+        _ = self.allocator;
 
         // Unload and deinitialize all plugins
         var i: u32 = 0;
         while (i < self.plugins_len) : (i += 1) {
             if (self.plugins[i].state == .loaded) {
-                _ = self.unload_plugin(self.plugins[i].id);
+                _ = self.unload_plugin(self.plugins[i].id) catch {};
             }
             self.plugins[i].deinit();
         }

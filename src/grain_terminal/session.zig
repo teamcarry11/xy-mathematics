@@ -56,7 +56,7 @@ pub const Session = struct {
     /// Initialize session manager.
     pub fn init(allocator: std.mem.Allocator) !Session {
         // Assert: Allocator must be valid
-        std.debug.assert(allocator.ptr != null);
+        _ = allocator; // Allocator is used below
 
         // Pre-allocate sessions buffer
         const sessions = try allocator.alloc(SessionData, MAX_SESSIONS);

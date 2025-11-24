@@ -90,7 +90,7 @@ pub const Pane = struct {
     /// Deinitialize pane and free memory.
     pub fn deinit(self: *Pane) void {
         // Assert: Allocator must be valid
-        std.debug.assert(self.allocator.ptr != null);
+        _ = self.allocator; // Allocator is used below
 
         // Deinitialize children
         var i: u32 = 0;

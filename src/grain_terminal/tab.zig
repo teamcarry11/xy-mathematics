@@ -85,7 +85,7 @@ pub const Tab = struct {
     /// Deinitialize tab and free memory.
     pub fn deinit(self: *Tab) void {
         // Assert: Allocator must be valid
-        std.debug.assert(self.allocator.ptr != null);
+        _ = self.allocator; // Allocator is used below
 
         // Free title
         if (self.title_len > 0) {

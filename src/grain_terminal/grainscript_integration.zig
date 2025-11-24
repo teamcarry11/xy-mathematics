@@ -197,7 +197,7 @@ pub const GrainscriptIntegration = struct {
         errdefer capture.deinit();
 
         // Create lexer
-        var lexer = Lexer.init(allocator, source);
+        var lexer = try Lexer.init(allocator, source);
         defer lexer.deinit();
 
         // Tokenize
@@ -246,4 +246,5 @@ pub const GrainscriptIntegration = struct {
         return execute_command(allocator, source);
     }
 };
+
 

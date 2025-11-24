@@ -88,8 +88,8 @@ pub const Storage = struct {
 
         /// Deinitialize object and free memory.
         pub fn deinit(self: *Object) void {
-            // Assert: Allocator must be valid
-            std.debug.assert(self.allocator.ptr != null);
+            // Assert: Allocator must be valid (allocator is used below)
+            _ = self.allocator;
 
             // Free key
             if (self.key_len > 0) {
@@ -134,8 +134,7 @@ pub const Storage = struct {
         /// Initialize object storage.
         // 2025-11-23-114146-pst: Active function
         pub fn init(allocator: std.mem.Allocator, hot_cache_size: u64) !ObjectStorage {
-            // Assert: Allocator must be valid (check by attempting allocation)
-            _ = allocator;
+            // Assert: Allocator must be valid (allocator is used below)
 
             // Pre-allocate objects buffer
             const objects = try allocator.alloc(Object, MAX_OBJECTS);

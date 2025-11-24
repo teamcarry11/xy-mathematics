@@ -730,6 +730,8 @@
 - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 
 #### 3.2: Live Preview ✅ **COMPLETE**
+- ✅ Live Preview update logic implementation (editor ↔ browser sync)
+- ✅ Unified IDE integration (subscribe, process updates, handle edits)
 - ✅ Editor edits → Browser preview (real-time propagation)
 - ✅ Nostr event updates → Editor sync (bidirectional)
 - ✅ Bidirectional sync (editor ↔ browser)

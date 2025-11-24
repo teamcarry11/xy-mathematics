@@ -1128,6 +1128,19 @@ pub fn build(b: *std.Build) void {
     const channel_send_recv_tests_run = b.addRunArtifact(channel_send_recv_tests);
     test_step.dependOn(&channel_send_recv_tests_run.step);
 
+    const comprehensive_userspace_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/051_comprehensive_userspace_execution_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+            },
+        }),
+    });
+    const comprehensive_userspace_tests_run = b.addRunArtifact(comprehensive_userspace_tests);
+    test_step.dependOn(&comprehensive_userspace_tests_run.step);
+
     const terminal_kernel_integration_tests = b.addTest(.{
         .root_module = b.createModule(.{
             .root_source_file = b.path("tests/047_terminal_kernel_integration_test.zig"),

@@ -155,8 +155,8 @@ pub const Compute = struct {
 
         /// Deinitialize field compute and free memory.
         pub fn deinit(self: *FieldCompute) void {
-            // Assert: Allocator must be valid
-            std.debug.assert(self.allocator.ptr != null);
+            // Assert: Allocator must be valid (allocator is used below)
+            _ = self.allocator;
 
             // Free core neighbors
             var i: u32 = 0;

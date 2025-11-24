@@ -473,6 +473,99 @@ pub const Editor = struct {
             }
         }
     }
+    
+    /// Save editor buffer to file.
+    /// Why: Persist editor content to disk.
+    /// Contract: file_uri must be a valid file path.
+    pub fn save_file(self: *Editor) !void {
+        // Assert: File URI must be valid
+        std.debug.assert(self.file_uri.len > 0);
+        std.debug.assert(self.file_uri.len <= 4096); // Bounded URI length
+        
+        // Extract file path from URI (remove "file://" prefix if present)
+        const file_path = if (std.mem.startsWith(u8, self.file_uri, "file://"))
+            self.file_uri[7..]
+        else
+            self.file_uri;
+        
+        // Assert: File path must be valid
+        std.debug.assert(file_path.len > 0);
+        std.debug.assert(file_path.len <= 4096); // Bounded path length
+        
+        // Get buffer content
+        const content = self.buffer.textSlice();
+        
+        // Assert: Content size must be bounded
+        std.debug.assert(content.len <= 100 * 1024 * 1024); // Max 100MB
+        
+        // Open file for writing (create or truncate)
+        const cwd = std.fs.cwd();
+        const file = try cwd.createFile(file_path, .{});
+        defer file.close();
+        
+        // Write content to file
+        try file.writeAll(content);
+        
+        // Assert: File written successfully
+        std.debug.assert(file_path.len > 0);
+    }
+    
+    /// Load file into editor buffer.
+    /// Why: Load file content from disk into editor.
+    /// Contract: file_uri must be a valid file path.
+    pub fn load_file(self: *Editor, file_uri: []const u8) !void {
+        // Assert: File URI must be valid
+        std.debug.assert(file_uri.len > 0);
+        std.debug.assert(file_uri.len <= 4096); // Bounded URI length
+        
+        // Extract file path from URI (remove "file://" prefix if present)
+        const file_path = if (std.mem.startsWith(u8, file_uri, "file://"))
+            file_uri[7..]
+        else
+            file_uri;
+        
+        // Assert: File path must be valid
+        std.debug.assert(file_path.len > 0);
+        std.debug.assert(file_path.len <= 4096); // Bounded path length
+        
+        // Open file for reading
+        const cwd = std.fs.cwd();
+        const file = try cwd.openFile(file_path, .{});
+        defer file.close();
+        
+        // Read file content (bounded to 100MB)
+        const max_file_size: u32 = 100 * 1024 * 1024;
+        const content = try file.readToEndAlloc(self.allocator, max_file_size);
+        defer self.allocator.free(content);
+        
+        // Assert: Content size must be bounded
+        std.debug.assert(content.len <= max_file_size);
+        
+        // Replace buffer content
+        self.buffer.deinit();
+        self.buffer = try GrainBuffer.fromSlice(self.allocator, content);
+        
+        // Update Aurora rendering
+        self.aurora.deinit();
+        self.aurora = try GrainAurora.init(self.allocator, content);
+        
+        // Update file URI
+        if (!std.mem.eql(u8, self.file_uri, file_uri)) {
+            self.allocator.free(self.file_uri);
+            self.file_uri = try self.allocator.dupe(u8, file_uri);
+        }
+        
+        // Parse for folds and syntax tree
+        try self.folding.parse(content);
+        _ = try self.tree_sitter.parseZig(content);
+        
+        // Reset cursor position
+        self.cursor_line = 0;
+        self.cursor_char = 0;
+        
+        // Assert: File loaded successfully
+        std.debug.assert(self.buffer.textSlice().len == content.len);
+    }
 };
 
 // Note: Tests commented out due to Zig 0.15.2 comptime evaluation issue

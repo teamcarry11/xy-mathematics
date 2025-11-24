@@ -501,6 +501,8 @@
   - [x] Add LSP hover request support (requestHover method)
   - [x] Integrate hover requests into moveCursor
   - [x] Implement ghost text storage for AI completions
+  - [x] Implement ghost text rendering (ghost_spans in RenderResult)
+  - [x] Calculate ghost text span position (after cursor)
   - [x] Fix didChange range calculation for insertions
   - [x] All three editor TODOs now complete
   - [x] GrainStyle compliant: explicit types, bounded operations, assertions

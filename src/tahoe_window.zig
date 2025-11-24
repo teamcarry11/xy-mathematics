@@ -316,7 +316,13 @@ pub const TahoeSandbox = struct {
             // Cmd+Q: Quit application.
             if (event.modifiers.command and event.key_code == 12) { // 'Q' key code
                 std.debug.print("[tahoe_window] Quit command (Cmd+Q) received.\n", .{});
-                // TODO: Implement clean shutdown.
+                // Stop animation loop and clean up.
+                sandbox.stop_animation_loop();
+                // Quit via platform window (calls NSApplication terminate:).
+                const window_impl = @as(*anyopaque, @ptrCast(sandbox.platform.impl));
+                const Window = @import("platform/macos_tahoe/window.zig").Window;
+                const window: *Window = @ptrCast(@alignCast(window_impl));
+                window.quit();
                 return true;
             }
             

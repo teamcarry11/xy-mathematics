@@ -248,6 +248,16 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    // Grain OS module
+    const grain_os_module = b.addModule("grain_os", .{
+        .root_source_file = b.path("src/grain_os/root.zig"),
+        .target = target,
+        .optimize = optimize,
+        .imports = &.{
+            .{ .name = "basin_kernel", .module = basin_kernel_module },
+        },
+    });
+
     // Kernel VM test executable (for testing VM functionality).
     const kernel_vm_test_exe = b.addExecutable(.{
         .name = "kernel_vm_test",
@@ -1255,6 +1265,19 @@ pub fn build(b: *std.Build) void {
     });
     const grain_silo_tests_run = b.addRunArtifact(grain_silo_tests);
     test_step.dependOn(&grain_silo_tests_run.step);
+
+    const grain_os_compositor_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/052_grain_os_compositor_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_os", .module = grain_os_module },
+            },
+        }),
+    });
+    const grain_os_compositor_tests_run = b.addRunArtifact(grain_os_compositor_tests);
+    test_step.dependOn(&grain_os_compositor_tests_run.step);
 
     // RISC-V Logo Display Program
     const riscv_logo_exe = b.addExecutable(.{

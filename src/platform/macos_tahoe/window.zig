@@ -2,7 +2,7 @@ const std = @import("std");
 const c = @import("objc_runtime.zig").c;
 const cg = @import("objc_runtime.zig").cg;
 const cocoa = @import("cocoa_bridge.zig");
-const events = @import("events");
+const events = @import("../events.zig");
 
 // C helper function to create NSImage from CGImage.
 extern fn createNSImageFromCGImage(cgImage: *anyopaque, width: f64, height: f64) ?*c.objc_object;
@@ -716,6 +716,34 @@ pub const Window = struct {
         
         self.tick_callback = null;
         self.tick_user_data = null;
+    }
+    
+    /// Quit application: terminates NSApplication cleanly.
+    /// Grain Style: validate pointers, ensure proper cleanup.
+    /// Why: Clean shutdown for Cmd+Q keyboard shortcut.
+    pub fn quit(self: *Self) void {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        std.debug.assert(self_ptr != 0);
+        if (self_ptr < 0x1000) {
+            std.debug.panic("Window.quit: self pointer is suspiciously small: 0x{x}", .{self_ptr});
+        }
+        
+        // Stop animation loop before quitting (cleanup).
+        self.stopAnimationLoop();
+        
+        // Terminate NSApplication if available.
+        if (self.ns_app) |app| {
+            const terminateSel = c.sel_getUid("terminate:");
+            std.debug.assert(terminateSel != null);
+            // Note: terminate: takes sender argument (can be nil, but Zig requires non-null pointer).
+            // Pass self as sender (valid in Objective-C, sender is just for logging/debugging).
+            const sender: *const anyopaque = @ptrCast(self);
+            cocoa.objc_msgSendVoid1(@ptrCast(app), terminateSel, sender);
+            std.debug.print("[window] Application quit requested (NSApplication terminate:).\n", .{});
+        } else {
+            std.debug.print("[window] Application quit requested (no NSApplication instance).\n", .{});
+        }
         
         std.debug.print("[window] Animation loop stopped.\n", .{});
     }

@@ -614,6 +614,7 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 
 ### Phase 1: Dream Editor Core ✅ **COMPLETE**
 - ✅ File save/load functionality (save_file, load_file methods)
+- ✅ Undo/redo functionality (undo, redo, delete methods, bounded history)
 
 **Objective**: Matklad-inspired editor with GLM-4.6 integration.
 

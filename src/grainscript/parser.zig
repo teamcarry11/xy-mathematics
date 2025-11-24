@@ -734,7 +734,7 @@ pub const Parser = struct {
             start_token.line,
             start_token.column,
             .{ .for_stmt = .{
-                .init = init_expr,
+                .init = init_stmt,
                 .condition = condition,
                 .update = update,
                 .body = body,

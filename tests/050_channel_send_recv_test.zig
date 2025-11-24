@@ -85,8 +85,9 @@ test "syscall_channel_recv receives message from channel" {
     const VmAccess = struct {
         threadlocal var mem: *[4 * 1024 * 1024]u8 = undefined;
         fn read(addr: u64, len: u32, buffer: []u8) ?u32 {
-            if (addr + len > VmAccess.mem.len) return null;
-            @memcpy(buffer[0..len], VmAccess.mem[@intCast(addr)..][0..len]);
+            const mem_ptr = mem;
+            if (addr + len > mem_ptr.len) return null;
+            @memcpy(buffer[0..len], mem_ptr[@intCast(addr)..][0..len]);
             return len;
         }
         fn write(addr: u64, len: u32, data: []const u8) ?u32 {
@@ -133,7 +134,7 @@ test "syscall_channel_recv receives message from channel" {
 
     // Verify message data in VM memory.
     var received_message: [4096]u8 = undefined;
-    @memcpy(&received_message, vm_memory[@intCast(buffer_ptr)..][0..message.len]);
+    @memcpy(received_message[0..message.len], vm_memory[@intCast(buffer_ptr)..][0..message.len]);
     try testing.expect(std.mem.eql(u8, received_message[0..message.len], message));
 }
 
@@ -150,8 +151,9 @@ test "syscall_channel_recv returns 0 when channel is empty" {
     const VmAccess = struct {
         threadlocal var mem: *[4 * 1024 * 1024]u8 = undefined;
         fn read(addr: u64, len: u32, buffer: []u8) ?u32 {
-            if (addr + len > VmAccess.mem.len) return null;
-            @memcpy(buffer[0..len], VmAccess.mem[@intCast(addr)..][0..len]);
+            const mem_ptr = mem;
+            if (addr + len > mem_ptr.len) return null;
+            @memcpy(buffer[0..len], mem_ptr[@intCast(addr)..][0..len]);
             return len;
         }
         fn write(addr: u64, len: u32, data: []const u8) ?u32 {
@@ -231,5 +233,5 @@ test "syscall_channel_send returns error when channel not found" {
     const send_num = @intFromEnum(Syscall.channel_send);
     const send_result = kernel.handle_syscall(send_num, invalid_channel_id, data_ptr, message.len, 0);
     try testing.expect(send_result == .err);
-    try testing.expect(send_result.err == BasinError.not_found);
+    try testing.expect(send_result.err.? == BasinError.not_found);
 }

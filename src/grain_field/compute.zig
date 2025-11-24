@@ -173,7 +173,7 @@ pub const Compute = struct {
         }
 
         /// Allocate SRAM for core.
-        pub fn allocate_sram(self: *ToroidCompute, core_id: u32, size: u64) !u64 {
+        pub fn allocate_sram(self: *FieldCompute, core_id: u32, size: u64) !u64 {
             // Assert: Core ID must be valid
             std.debug.assert(core_id < self.cores_len);
 

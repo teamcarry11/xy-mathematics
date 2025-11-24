@@ -15,20 +15,20 @@ const GrainBuffer = @import("grain_buffer.zig").GrainBuffer;
 /// ~<~ Glow Airbend: explicit tab management, bounded tabs.
 /// ~~~~ Glow Waterbend: editor and browser share unified state through DAG.
 pub const UnifiedIde = struct {
+    // Bounded: Max 100 editor tabs
+    pub const MAX_EDITOR_TABS: u32 = 100;
+    
+    // Bounded: Max 100 browser tabs
+    pub const MAX_BROWSER_TABS: u32 = 100;
+    
     allocator: std.mem.Allocator,
     layout: Layout,
     shared_aurora: GrainAurora,
     dag: DagCore,
     grainbank: AuroraGrainBank,
     live_preview: LivePreview,
-    
-    // Bounded: Max 100 editor tabs
-    pub const MAX_EDITOR_TABS: u32 = 100;
     editor_tabs: std.ArrayList(EditorTab) = undefined,
     current_editor_tab: u32 = 0,
-    
-    // Bounded: Max 100 browser tabs
-    pub const MAX_BROWSER_TABS: u32 = 100;
     browser_tabs: std.ArrayList(BrowserTab) = undefined,
     current_browser_tab: u32 = 0,
     

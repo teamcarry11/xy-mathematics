@@ -634,6 +634,12 @@
   - [x] Browser update → Editor: replace editor buffer with new content
   - [x] Add EditorInstance and BrowserRendererInstance for update processing
   - [x] Update process_updates to accept editor/browser instances
+- [x] Unified IDE integration
+  - [x] Add LivePreview instance to UnifiedIde
+  - [x] Add subscribe_live_preview method
+  - [x] Add process_live_preview_updates method
+  - [x] Add handle_editor_edit method
+  - [x] Add handle_browser_update method
 - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
 
 #### 4.3.3 GrainBank Integration ✅ **COMPLETE**

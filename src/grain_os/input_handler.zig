@@ -13,6 +13,9 @@ pub const MAX_EVENT_SIZE: u32 = 32;
 // Syscall number (matching kernel/basin_kernel.zig).
 const SYSCALL_READ_INPUT_EVENT: u32 = 60;
 
+// Syscall function type.
+const SyscallFn = *const fn (u32, u64, u64, u64, u64) i64;
+
 // Input event types (matching kernel_vm/vm.zig).
 pub const EventType = enum(u8) {
     mouse = 0,
@@ -85,7 +88,7 @@ pub const InputEvent = struct {
 // Input handler: reads and processes input events.
 pub const InputHandler = struct {
     // Syscall function pointer (set by kernel integration).
-    syscall_fn: ?*const fn (u32, u64, u64, u64, u64) i64 = null,
+    syscall_fn: ?SyscallFn = null,
     // Event buffer for reading events.
     event_buf: [MAX_EVENT_SIZE]u8,
 
@@ -103,7 +106,7 @@ pub const InputHandler = struct {
 
     pub fn set_syscall_fn(
         self: *InputHandler,
-        fn_ptr: *const fn (u32, u64, u64, u64, u64) i64,
+        fn_ptr: SyscallFn,
     ) void {
         std.debug.assert(@intFromPtr(fn_ptr) != 0);
         self.syscall_fn = fn_ptr;

@@ -1304,6 +1304,32 @@ pub fn build(b: *std.Build) void {
     const grain_os_layout_tests_run = b.addRunArtifact(grain_os_layout_tests);
     test_step.dependOn(&grain_os_layout_tests_run.step);
 
+    const grain_os_framebuffer_renderer_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/054_grain_os_framebuffer_renderer_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_os", .module = grain_os_module },
+            },
+        }),
+    });
+    const grain_os_framebuffer_renderer_tests_run = b.addRunArtifact(grain_os_framebuffer_renderer_tests);
+    test_step.dependOn(&grain_os_framebuffer_renderer_tests_run.step);
+
+    const grain_os_input_handler_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/055_grain_os_input_handler_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_os", .module = grain_os_module },
+            },
+        }),
+    });
+    const grain_os_input_handler_tests_run = b.addRunArtifact(grain_os_input_handler_tests);
+    test_step.dependOn(&grain_os_input_handler_tests_run.step);
+
     // RISC-V Logo Display Program
     const riscv_logo_exe = b.addExecutable(.{
         .name = "riscv_logo",

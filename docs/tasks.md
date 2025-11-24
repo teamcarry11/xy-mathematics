@@ -507,13 +507,24 @@
   - [x] Fix didChange range calculation for insertions
   - [x] All three editor TODOs now complete
   - [x] GrainStyle compliant: explicit types, bounded operations, assertions
-- [x] File Save/Load Functionality ✅ **COMPLETE**
+  - [x] File Save/Load Functionality ✅ **COMPLETE**
   - [x] save_file method (persist editor buffer to disk)
   - [x] load_file method (load file from disk into editor)
   - [x] Handle file:// URI prefix (strip for file path)
   - [x] Bounded file size (max 100MB)
   - [x] Update buffer, Aurora, folding, syntax tree on load
   - [x] Reset cursor position after load
+  - [x] GrainStyle compliant: explicit types, assertions, bounded operations
+- [x] Undo/Redo Functionality ✅ **COMPLETE**
+  - [x] Undo history tracking (bounded: MAX_UNDO_HISTORY: 1024)
+  - [x] Redo history tracking (bounded: MAX_REDO_HISTORY: 1024)
+  - [x] Record insert operations in undo history
+  - [x] Record delete operations in undo history
+  - [x] undo() method (undo last operation)
+  - [x] redo() method (redo last undone operation)
+  - [x] Clear redo history on new edit
+  - [x] Update cursor position on undo/redo
+  - [x] Notify LSP of changes on undo/redo
   - [x] GrainStyle compliant: explicit types, assertions, bounded operations
 
 #### 4.1.4 Tree-sitter Integration ✅ **ENHANCED**
@@ -1081,7 +1092,7 @@
 - GUI App Runtime Improvements (Phase 3.25) ✅
 - Grain OS Agent Proposal (Phase 4.0) ✅
 - River Compositor Study & Planning (Phase 2.1) ✅
-- Grain OS Wayland Foundation (Phase 2.1-2.2) ✅
+- Grain OS Wayland Foundation (Phase 2) ✅ **COMPLETE**
   - ✅ Wayland protocol core structures (`src/grain_os/wayland/protocol.zig`)
   - ✅ Basic Wayland compositor (`src/grain_os/compositor.zig`)
   - ✅ Window management (create, get, title management)
@@ -1089,20 +1100,26 @@
   - ✅ Tag system (bitmask-based, 32 tags max)
   - ✅ Container-based layout system (horizontal/vertical/stack splits)
   - ✅ Iterative layout calculation (stack-based, no recursion)
-  - ✅ Comprehensive tests (`tests/052_grain_os_compositor_test.zig`, `tests/053_grain_os_tiling_test.zig`)
+  - ✅ Layout generators (built-in layouts: tall, wide, grid, monocle in `src/grain_os/layout.zig`)
+  - ✅ Framebuffer rendering integration (`src/grain_os/framebuffer_renderer.zig`)
+    - ✅ Kernel framebuffer syscall integration (fb_clear, fb_draw_pixel, fb_draw_rect)
+    - ✅ Compositor rendering integration
+    - ✅ Comprehensive tests (`tests/054_grain_os_framebuffer_renderer_test.zig`)
+  - ✅ Input event handling (`src/grain_os/input_handler.zig`)
+    - ✅ Keyboard and mouse event parsing
+    - ✅ Syscall-based input reading (read_input_event)
+    - ✅ Event type and kind enums (matching kernel_vm/vm.zig)
+    - ✅ Comprehensive tests (`tests/055_grain_os_input_handler_test.zig`)
+  - ✅ Comprehensive tests (`tests/052_grain_os_compositor_test.zig`, `tests/053_grain_os_tiling_test.zig`, `tests/053_grain_os_layout_test.zig`)
   - ✅ Build system integration (grain_os module added)
   - ✅ River study setup (River 0.3.12 mirrored for architecture reference)
   - ✅ River-inspired features design (`docs/grain_os_river_inspired_design.md`)
-  - [ ] Layout generators (built-in layouts: tall, wide, grid, monocle) - Phase 2.2
-  - [ ] Workspace management (Phase 2.3)
-  - [ ] Runtime configuration (riverctl-like, Phase 2.4)
-    - 📋 Layout generator interface (Phase 2.5)
-    - 📋 Runtime configuration (Phase 2.6)
-    - 📋 Input handling (Phase 2.7)
+  - [ ] Workspace management (Phase 3)
+  - [ ] Runtime configuration (riverctl-like, Phase 3)
 
 **In Progress**: 
 - Dream Editor Core - GLM-4.6 Integration (Phase 4.1.3) 🔄
-- Grain OS - Wayland Foundation (Phase 2) 🔄
+- Grain OS - Wayland Foundation (Phase 2) ✅ **COMPLETE**
 
 **Next Up**: 
 - Userspace program execution (IDE/Browser in Grain Vantage)

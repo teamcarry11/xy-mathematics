@@ -71,8 +71,8 @@ pub const Editor = struct {
         try folding.parse(initial_text);
         _ = try tree_sitter.parseZig(initial_text);
 
-        var undo_history = std.ArrayList(UndoEntry).init(allocator);
-        var redo_history = std.ArrayList(UndoEntry).init(allocator);
+        const undo_history = std.ArrayList(UndoEntry).init(allocator);
+        const redo_history = std.ArrayList(UndoEntry).init(allocator);
 
         return Editor{
             .allocator = allocator,
@@ -90,6 +90,18 @@ pub const Editor = struct {
     pub fn deinit(self: *Editor) void {
         // Reject any pending completion (cleanup)
         self.reject_completion();
+        
+        // Free undo history
+        for (self.undo_history.items) |*entry| {
+            entry.deinit(self.allocator);
+        }
+        self.undo_history.deinit();
+        
+        // Free redo history
+        for (self.redo_history.items) |*entry| {
+            entry.deinit(self.allocator);
+        }
+        self.redo_history.deinit();
         
         if (self.ai_provider) |*provider| {
             provider.deinit();
@@ -225,7 +237,7 @@ pub const Editor = struct {
     }
 
     /// Insert text at cursor; triggers LSP didChange notification.
-    /// Prevents insertion into readonly spans.
+    /// Prevents insertion into readonly spans. Records operation in undo history.
     pub fn insert(self: *Editor, text: []const u8) !void {
         const pos = self.cursor_line * 80 + self.cursor_char;
         
@@ -240,11 +252,32 @@ pub const Editor = struct {
         // Store cursor position before insertion for LSP notification
         const insert_char = self.cursor_char;
         
+        // Clear redo history on new edit
+        for (self.redo_history.items) |*entry| {
+            entry.deinit(self.allocator);
+        }
+        self.redo_history.clearRetainingCapacity();
+        
+        // Record undo entry (bounded)
+        if (self.undo_history.items.len >= MAX_UNDO_HISTORY) {
+            const oldest = self.undo_history.orderedRemove(0);
+            oldest.deinit(self.allocator);
+        }
+        
+        const text_copy = try self.allocator.dupe(u8, text);
+        errdefer self.allocator.free(text_copy);
+        
+        try self.undo_history.append(UndoEntry{
+            .operation_type = .insert,
+            .position = pos,
+            .text = text_copy,
+            .text_len = @as(u32, @intCast(text_copy.len)),
+        });
+        
         try self.buffer.insert(pos, text);
         self.cursor_char += @as(u32, @intCast(text.len));
         
         // Send textDocument/didChange to LSP (incremental edit)
-        // Range is from insertion point to insertion point (empty range = insertion)
         const change = LspClient.TextDocumentChange{
             .range = LspClient.Range{
                 .start = LspClient.Position{
@@ -259,6 +292,184 @@ pub const Editor = struct {
             .text = text,
         };
         try self.lsp.didChange(self.file_uri, &.{change});
+    }
+    
+    /// Delete text at cursor position.
+    /// Records operation in undo history.
+    pub fn delete(self: *Editor, len: u32) !void {
+        const pos = self.cursor_line * 80 + self.cursor_char;
+        const buffer_text = self.buffer.textSlice();
+        
+        // Assert: Position and length must be valid
+        std.debug.assert(pos <= buffer_text.len);
+        std.debug.assert(len > 0);
+        std.debug.assert(pos + len <= buffer_text.len);
+        
+        // Check if position is in readonly span
+        if (self.buffer.isReadOnly(pos)) {
+            return error.ReadOnlyViolation;
+        }
+        
+        // Get text to delete (for undo)
+        const deleted_text = buffer_text[pos..pos + len];
+        
+        // Clear redo history on new edit
+        for (self.redo_history.items) |*entry| {
+            entry.deinit(self.allocator);
+        }
+        self.redo_history.clearRetainingCapacity();
+        
+        // Record undo entry (bounded)
+        if (self.undo_history.items.len >= MAX_UNDO_HISTORY) {
+            const oldest = self.undo_history.orderedRemove(0);
+            oldest.deinit(self.allocator);
+        }
+        
+        const text_copy = try self.allocator.dupe(u8, deleted_text);
+        errdefer self.allocator.free(text_copy);
+        
+        try self.undo_history.append(UndoEntry{
+            .operation_type = .delete,
+            .position = pos,
+            .text = text_copy,
+            .text_len = @as(u32, @intCast(text_copy.len)),
+        });
+        
+        // Delete from buffer
+        try self.buffer.erase(pos, len);
+        
+        // Notify LSP of change
+        try self.lsp.didChange(self.file_uri, &.{});
+    }
+    
+    /// Undo last operation.
+    pub fn undo(self: *Editor) !void {
+        if (self.undo_history.items.len == 0) {
+            return; // Nothing to undo
+        }
+        
+        const entry = self.undo_history.pop();
+        defer entry.deinit(self.allocator);
+        
+        // Record in redo history (bounded)
+        if (self.redo_history.items.len >= MAX_REDO_HISTORY) {
+            const oldest = self.redo_history.orderedRemove(0);
+            oldest.deinit(self.allocator);
+        }
+        
+        const text_copy = try self.allocator.dupe(u8, entry.text);
+        errdefer self.allocator.free(text_copy);
+        
+        switch (entry.operation_type) {
+            .insert => {
+                // Undo insert: delete the inserted text
+                try self.buffer.erase(entry.position, entry.text_len);
+                
+                // Update cursor position
+                const cursor_pos = self.cursor_line * 80 + self.cursor_char;
+                if (entry.position < cursor_pos) {
+                    if (cursor_pos >= entry.position + entry.text_len) {
+                        self.cursor_char -= entry.text_len;
+                    } else {
+                        self.cursor_char = 0;
+                    }
+                }
+                
+                // Record in redo history
+                try self.redo_history.append(UndoEntry{
+                    .operation_type = .insert,
+                    .position = entry.position,
+                    .text = text_copy,
+                    .text_len = entry.text_len,
+                });
+            },
+            .delete => {
+                // Undo delete: reinsert the deleted text
+                try self.buffer.insert(entry.position, entry.text);
+                
+                // Update cursor position
+                const cursor_pos = self.cursor_line * 80 + self.cursor_char;
+                if (entry.position <= cursor_pos) {
+                    self.cursor_char += entry.text_len;
+                }
+                
+                // Record in redo history
+                try self.redo_history.append(UndoEntry{
+                    .operation_type = .delete,
+                    .position = entry.position,
+                    .text = text_copy,
+                    .text_len = entry.text_len,
+                });
+            },
+        }
+        
+        // Notify LSP of change
+        try self.lsp.didChange(self.file_uri, &.{});
+    }
+    
+    /// Redo last undone operation.
+    pub fn redo(self: *Editor) !void {
+        if (self.redo_history.items.len == 0) {
+            return; // Nothing to redo
+        }
+        
+        const entry = self.redo_history.pop();
+        defer entry.deinit(self.allocator);
+        
+        // Record in undo history (bounded)
+        if (self.undo_history.items.len >= MAX_UNDO_HISTORY) {
+            const oldest = self.undo_history.orderedRemove(0);
+            oldest.deinit(self.allocator);
+        }
+        
+        const text_copy = try self.allocator.dupe(u8, entry.text);
+        errdefer self.allocator.free(text_copy);
+        
+        switch (entry.operation_type) {
+            .insert => {
+                // Redo insert: insert the text again
+                try self.buffer.insert(entry.position, entry.text);
+                
+                // Update cursor position
+                const cursor_pos = self.cursor_line * 80 + self.cursor_char;
+                if (entry.position <= cursor_pos) {
+                    self.cursor_char += entry.text_len;
+                }
+                
+                // Record in undo history
+                try self.undo_history.append(UndoEntry{
+                    .operation_type = .insert,
+                    .position = entry.position,
+                    .text = text_copy,
+                    .text_len = entry.text_len,
+                });
+            },
+            .delete => {
+                // Redo delete: delete the text again
+                try self.buffer.erase(entry.position, entry.text_len);
+                
+                // Update cursor position
+                const cursor_pos = self.cursor_line * 80 + self.cursor_char;
+                if (entry.position < cursor_pos) {
+                    if (cursor_pos >= entry.position + entry.text_len) {
+                        self.cursor_char -= entry.text_len;
+                    } else {
+                        self.cursor_char = 0;
+                    }
+                }
+                
+                // Record in undo history
+                try self.undo_history.append(UndoEntry{
+                    .operation_type = .delete,
+                    .position = entry.position,
+                    .text = text_copy,
+                    .text_len = entry.text_len,
+                });
+            },
+        }
+        
+        // Notify LSP of change
+        try self.lsp.didChange(self.file_uri, &.{});
     }
 
     /// Move cursor; may trigger hover requests.

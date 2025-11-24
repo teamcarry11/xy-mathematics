@@ -27,11 +27,13 @@ const SYSCALL_FB_CLEAR: u32 = 70;
 const SYSCALL_FB_DRAW_PIXEL: u32 = 71;
 const SYSCALL_FB_DRAW_TEXT: u32 = 72;
 
+// Syscall function type.
+const SyscallFn = *const fn (u32, u64, u64, u64, u64) i64;
+
 // Framebuffer renderer: renders windows to kernel framebuffer.
 pub const FramebufferRenderer = struct {
     // Syscall function pointer (set by kernel integration).
     syscall_fn: ?SyscallFn = null,
-    const SyscallFn = *const fn (u32, u64, u64, u64, u64) i64;
 
     pub fn init() FramebufferRenderer {
         return FramebufferRenderer{
@@ -39,7 +41,7 @@ pub const FramebufferRenderer = struct {
         };
     }
 
-    pub fn set_syscall_fn(self: *FramebufferRenderer, fn_ptr: *const fn (u32, u64, u64, u64, u64) i64) void {
+    pub fn set_syscall_fn(self: *FramebufferRenderer, fn_ptr: SyscallFn) void {
         std.debug.assert(@intFromPtr(fn_ptr) != 0);
         self.syscall_fn = fn_ptr;
         std.debug.assert(self.syscall_fn != null);

@@ -6,4 +6,5 @@
 
 pub const wayland = @import("wayland/protocol.zig");
 pub const compositor = @import("compositor.zig");
+pub const tiling = @import("tiling.zig");
 

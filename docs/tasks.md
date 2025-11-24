@@ -1081,6 +1081,12 @@
   - ✅ Window management (create, get, title management)
   - ✅ Comprehensive tests (`tests/052_grain_os_compositor_test.zig`)
   - ✅ Build system integration (grain_os module added)
+  - 📋 River-inspired features design (`docs/grain_os_river_inspired_design.md`)
+    - 📋 Workspace management (Phase 2.3)
+    - 📋 Basic tiling layout (Phase 2.4)
+    - 📋 Layout generator interface (Phase 2.5)
+    - 📋 Runtime configuration (Phase 2.6)
+    - 📋 Input handling (Phase 2.7)
 
 **In Progress**: 
 - Dream Editor Core - GLM-4.6 Integration (Phase 4.1.3) 🔄

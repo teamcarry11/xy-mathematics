@@ -797,6 +797,8 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 #### 3.1: HTML/CSS Parser ✅ **COMPLETE**
 - ✅ HTML parser (subset of HTML5, `src/dream_browser_parser.zig`)
 - ✅ CSS parser (subset of CSS3, basic rule parsing)
+- ✅ Enhanced error handling and validation (HTML size, tag name, attributes)
+- ✅ Bounded operations (MAX_HTML_SIZE, MAX_TAG_NAME_LEN, MAX_ATTRIBUTES, etc.)
 - ✅ DOM tree construction (bounded depth, explicit nodes)
 - ✅ Style computation (cascade, specificity - basic implementation)
 - ✅ DAG integration (HTML node → DOM node conversion)

@@ -372,11 +372,21 @@ Create a fourth agent dedicated to **Grain OS** - a Zig-Wayland implemented GNOM
 
 1. **Phase 1**: Study and Analysis (ravynOS architecture) ✅ **COMPLETE**
 2. **Phase 2**: Wayland Foundation (compositor, protocol) 🔄 **IN PROGRESS**
+   - ✅ Basic Wayland compositor structure (`src/grain_os/compositor.zig`)
+   - ✅ Wayland protocol structures (`src/grain_os/wayland/protocol.zig`)
+   - ✅ Window management (create, get, title management)
+   - ✅ River compositor study (River 0.3.12 mirrored for architecture study)
+   - ✅ River-inspired features plan (permissive licensing approach)
+   - [ ] Dynamic tiling algorithm (River-inspired, iterative implementation)
+   - [ ] Layout generators (built-in layouts first)
+   - [ ] Input event handling
+   - [ ] Framebuffer rendering integration
    - ✅ Wayland protocol core structures (Object, Surface, Output, Seat, Registry)
    - ✅ Basic Wayland compositor (window management, surface management)
    - ✅ Comprehensive tests (tests/052_grain_os_compositor_test.zig)
    - 📋 Kernel framebuffer integration (pending)
    - 📋 Input event handling (pending)
+   - 📋 River-inspired features (clean-room implementation, see `docs/grain_os_river_inspired_design.md`)
 3. **Phase 3**: Desktop Shell (window manager, launcher)
 4. **Phase 4**: Application Framework (API, loader, `~/Applications/`)
 5. **Phase 5**: Integration (Grain Kernel syscalls, VM testing)

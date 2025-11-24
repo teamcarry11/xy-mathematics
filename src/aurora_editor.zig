@@ -55,11 +55,14 @@ pub const Editor = struct {
     }
 
     pub fn deinit(self: *Editor) void {
+        // Reject any pending completion (cleanup)
+        self.reject_completion();
+        
         if (self.ai_provider) |*provider| {
             provider.deinit();
         }
-        if (self.pending_completion) |completion| {
-            self.allocator.free(completion);
+        if (self.ai_transforms) |*transforms| {
+            transforms.deinit();
         }
         self.tree_sitter.deinit();
         self.folding.deinit();

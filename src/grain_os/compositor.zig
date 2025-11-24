@@ -8,6 +8,7 @@ const std = @import("std");
 const wayland = @import("wayland/protocol.zig");
 const basin_kernel = @import("basin_kernel");
 const tiling = @import("tiling.zig");
+const framebuffer_renderer = @import("framebuffer_renderer.zig");
 
 // Bounded: Max number of windows.
 pub const MAX_WINDOWS: u32 = 256;
@@ -52,7 +53,10 @@ pub const Window = struct {
             .visible = true,
             .focused = false,
         };
-        @memset(&window.title, 0);
+        var j: u32 = 0;
+        while (j < MAX_TITLE_LEN) : (j += 1) {
+            window.title[j] = 0;
+        }
         std.debug.assert(window.id > 0);
         return window;
     }
@@ -167,6 +171,69 @@ pub const Compositor = struct {
             }
         }
         return null;
+    }
+
+    pub fn remove_window(self: *Compositor, window_id: u32) bool {
+        std.debug.assert(window_id > 0);
+        // Find and remove window from array.
+        var i: u32 = 0;
+        var found: bool = false;
+        while (i < self.windows_len) : (i += 1) {
+            if (self.windows[i].id == window_id) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            return false;
+        }
+        // Remove from tiling tree.
+        _ = self.tiling_tree.remove_window(window_id);
+        // Shift remaining windows left.
+        while (i < self.windows_len - 1) : (i += 1) {
+            self.windows[i] = self.windows[i + 1];
+        }
+        self.windows_len -= 1;
+        // Recalculate layout.
+        self.tiling_tree.calculate_layout(
+            0,
+            0,
+            self.output.width,
+            self.output.height,
+        );
+        // Update remaining window positions.
+        var j: u32 = 0;
+        while (j < self.windows_len) : (j += 1) {
+            const win_id = self.windows[j].id;
+            if (self.tiling_tree.get_window_bounds(win_id)) |bounds| {
+                self.windows[j].x = bounds.x;
+                self.windows[j].y = bounds.y;
+                self.windows[j].width = bounds.width;
+                self.windows[j].height = bounds.height;
+            }
+        }
+        return true;
+    }
+
+    pub fn recalculate_layout(self: *Compositor) void {
+        // Recalculate tiling layout for all windows.
+        self.tiling_tree.calculate_layout(
+            0,
+            0,
+            self.output.width,
+            self.output.height,
+        );
+        // Update window positions.
+        var i: u32 = 0;
+        while (i < self.windows_len) : (i += 1) {
+            const win_id = self.windows[i].id;
+            if (self.tiling_tree.get_window_bounds(win_id)) |bounds| {
+                self.windows[i].x = bounds.x;
+                self.windows[i].y = bounds.y;
+                self.windows[i].width = bounds.width;
+                self.windows[i].height = bounds.height;
+            }
+        }
     }
 
     pub fn render_to_framebuffer(self: *Compositor) void {

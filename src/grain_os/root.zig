@@ -8,4 +8,5 @@ pub const wayland = @import("wayland/protocol.zig");
 pub const compositor = @import("compositor.zig");
 pub const tiling = @import("tiling.zig");
 pub const layout = @import("layout.zig");
+pub const framebuffer_renderer = @import("framebuffer_renderer.zig");
 

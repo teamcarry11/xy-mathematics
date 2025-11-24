@@ -5,7 +5,6 @@
 //! GrainStyle: grain_case, u32/u64, bounded allocations, assertions.
 
 const std = @import("std");
-const compositor = @import("compositor.zig");
 
 // Bounded: Max tree depth for tiling splits.
 pub const MAX_TREE_DEPTH: u32 = 32;

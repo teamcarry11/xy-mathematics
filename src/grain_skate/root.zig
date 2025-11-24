@@ -7,4 +7,5 @@ pub const StorageIntegration = @import("storage_integration.zig").StorageIntegra
 pub const Social = @import("social.zig").Social;
 pub const SkateWindow = @import("window.zig").SkateWindow;
 pub const ModalEditor = @import("modal_editor.zig").ModalEditor;
+pub const GraphVisualization = @import("graph_viz.zig").GraphVisualization;
 

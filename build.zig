@@ -228,6 +228,10 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/grain_skate/root.zig"),
         .target = target,
         .optimize = optimize,
+        .imports = &.{
+            .{ .name = "macos_window", .module = window_module_for_terminal },
+            .{ .name = "events", .module = events_module },
+        },
     });
 
     // Grain Field module

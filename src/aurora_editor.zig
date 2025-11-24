@@ -22,6 +22,7 @@ pub const Editor = struct {
     cursor_line: u32 = 0,
     cursor_char: u32 = 0,
     pending_completion: ?[]const u8 = null, // Ghost text (AI completion)
+    ghost_text_buffer: ?[]u8 = null, // Buffer for rendered text with ghost text
 
     pub fn init(
         allocator: std.mem.Allocator,
@@ -271,6 +272,11 @@ pub const Editor = struct {
             // Assert: Cursor position must be within bounds
             std.debug.assert(cursor_pos <= text.len);
             
+            // Free old ghost text buffer if it exists
+            if (self.ghost_text_buffer) |old_buffer| {
+                self.allocator.free(old_buffer);
+            }
+            
             // Append ghost text to rendered text (for display)
             var text_with_ghost = try std.ArrayList(u8).initCapacity(
                 self.allocator,
@@ -285,8 +291,9 @@ pub const Editor = struct {
             // Add text after cursor
             try text_with_ghost.appendSlice(text[cursor_pos..]);
             
-            rendered_text = try text_with_ghost.toOwnedSlice();
-            defer self.allocator.free(rendered_text);
+            // Store in editor for lifetime management
+            self.ghost_text_buffer = try text_with_ghost.toOwnedSlice();
+            rendered_text = self.ghost_text_buffer.?;
             
             // Create ghost text span (starts at cursor, extends for completion length)
             const ghost_start = cursor_pos;
@@ -299,6 +306,12 @@ pub const Editor = struct {
                 .end = ghost_end,
             };
             ghost_spans = ghost_span;
+        } else {
+            // Clear ghost text buffer if no completion
+            if (self.ghost_text_buffer) |old_buffer| {
+                self.allocator.free(old_buffer);
+                self.ghost_text_buffer = null;
+            }
         }
         
         return GrainAurora.RenderResult{

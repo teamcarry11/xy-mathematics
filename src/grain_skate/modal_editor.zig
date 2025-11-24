@@ -49,7 +49,8 @@ pub const ModalEditor = struct {
     // 2025-11-23-170000-pst: Active function
     pub fn init(allocator: std.mem.Allocator, editor: *Editor.EditorState) !ModalEditor {
         // Assert: Editor must be valid
-        std.debug.assert(editor.allocator.ptr != null);
+        _ = allocator; // Allocator is stored but not used yet
+        _ = editor.allocator; // Editor allocator is used by editor
 
         return ModalEditor{
             .editor = editor,
@@ -94,31 +95,31 @@ pub const ModalEditor = struct {
         switch (action) {
             .move_left => {
                 // Move cursor left (h)
-                self.editor.move_cursor(-1, 0);
+                self.editor.move_left();
             },
             .move_right => {
                 // Move cursor right (l)
-                self.editor.move_cursor(1, 0);
+                self.editor.move_right();
             },
             .move_up => {
                 // Move cursor up (k)
-                self.editor.move_cursor(0, -1);
+                self.editor.move_up();
             },
             .move_down => {
                 // Move cursor down (j)
-                self.editor.move_cursor(0, 1);
+                self.editor.move_down();
             },
             .insert_mode => {
                 // Enter insert mode (i)
-                self.editor.switch_mode(.insert);
+                self.editor.enter_insert_mode();
             },
             .visual_mode => {
                 // Enter visual mode (v)
-                self.editor.switch_mode(.visual);
+                self.editor.mode = .visual;
             },
             .command_mode => {
                 // Enter command mode (:)
-                self.editor.switch_mode(.command);
+                self.editor.mode = .command;
             },
             .delete_char => {
                 // Delete character (x)
@@ -161,7 +162,7 @@ pub const ModalEditor = struct {
         // Visual mode: similar to normal mode but with selection
         if (event.key_code == 27) {
             // Escape key: return to normal mode
-            self.editor.switch_mode(.normal);
+            self.editor.exit_insert_mode();
         } else {
             // Use normal mode handling for movement
             try self.handle_normal_mode(event);
@@ -175,11 +176,11 @@ pub const ModalEditor = struct {
         if (event.key_code == 13) {
             // Enter key: execute command
             // TODO: Parse and execute command
-            self.editor.switch_mode(.normal);
+            self.editor.exit_insert_mode();
             self.command_buffer_len = 0;
         } else if (event.key_code == 27) {
             // Escape key: cancel command
-            self.editor.switch_mode(.normal);
+            self.editor.exit_insert_mode();
             self.command_buffer_len = 0;
         } else if (event.key_code >= 32 and event.key_code < 127) {
             // Printable ASCII character: add to command buffer

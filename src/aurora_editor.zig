@@ -21,6 +21,7 @@ pub const Editor = struct {
     file_uri: []const u8,
     cursor_line: u32 = 0,
     cursor_char: u32 = 0,
+    pending_completion: ?[]const u8 = null, // Ghost text (AI completion)
 
     pub fn init(
         allocator: std.mem.Allocator,
@@ -256,8 +257,10 @@ pub const Editor = struct {
             });
         }
         
-        // Calculate ghost text span (if pending completion exists)
+        // Build rendered text with ghost text appended (if pending completion exists)
+        var rendered_text = text;
         var ghost_spans: []const AuroraSpan = &.{};
+        
         if (self.pending_completion) |completion| {
             // Assert: Completion must be bounded
             std.debug.assert(completion.len <= 10 * 1024); // Max 10KB ghost text
@@ -268,12 +271,26 @@ pub const Editor = struct {
             // Assert: Cursor position must be within bounds
             std.debug.assert(cursor_pos <= text.len);
             
+            // Append ghost text to rendered text (for display)
+            var text_with_ghost = try std.ArrayList(u8).initCapacity(
+                self.allocator,
+                text.len + completion.len,
+            );
+            defer text_with_ghost.deinit();
+            
+            // Add text before cursor
+            try text_with_ghost.appendSlice(text[0..cursor_pos]);
+            // Add ghost text
+            try text_with_ghost.appendSlice(completion);
+            // Add text after cursor
+            try text_with_ghost.appendSlice(text[cursor_pos..]);
+            
+            rendered_text = try text_with_ghost.toOwnedSlice();
+            defer self.allocator.free(rendered_text);
+            
             // Create ghost text span (starts at cursor, extends for completion length)
             const ghost_start = cursor_pos;
             const ghost_end = cursor_pos + @as(usize, @intCast(completion.len));
-            
-            // Assert: Ghost span must be within bounds
-            std.debug.assert(ghost_end <= text.len + completion.len);
             
             // Allocate ghost span
             const ghost_span = try self.allocator.alloc(AuroraSpan, 1);
@@ -285,7 +302,7 @@ pub const Editor = struct {
         }
         
         return GrainAurora.RenderResult{
-            .root = .{ .text = text },
+            .root = .{ .text = rendered_text },
             .readonly_spans = try spans.toOwnedSlice(),
             .ghost_spans = ghost_spans,
         };

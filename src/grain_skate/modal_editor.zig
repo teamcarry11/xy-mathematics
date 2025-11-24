@@ -49,8 +49,7 @@ pub const ModalEditor = struct {
     // 2025-11-23-170000-pst: Active function
     pub fn init(allocator: std.mem.Allocator, editor: *Editor.EditorState) !ModalEditor {
         // Assert: Editor must be valid
-        _ = allocator; // Allocator is stored but not used yet
-        _ = editor.allocator; // Editor allocator is used by editor
+        // Parameters are used in struct initialization below
 
         return ModalEditor{
             .editor = editor,

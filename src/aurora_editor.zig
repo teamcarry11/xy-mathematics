@@ -86,9 +86,9 @@ pub const Editor = struct {
             std.debug.assert(text.len <= AiProvider.MAX_MESSAGE_SIZE);
             
             const user_content = try std.fmt.allocPrint(
-                self.allocator,
-                "Complete this code at line {d}, char {d}:\n{s}",
-                .{ self.cursor_line, self.cursor_char, text },
+                    self.allocator,
+                    "Complete this code at line {d}, char {d}:\n{s}",
+                    .{ self.cursor_line, self.cursor_char, text },
             );
             defer self.allocator.free(user_content);
             

@@ -989,9 +989,9 @@
 - [x] Persist/load blocks from Grain Silo
 - [ ] DAG integration - can leverage `src/dag_core.zig` for future graph visualization
 
-#### 8.3.2 UI Framework
-- [ ] Native macOS window management
-- [ ] Modal editing system (Vim/Kakoune keybindings)
+#### 8.3.2 UI Framework (IN PROGRESS)
+- ✅ Native macOS window management (`src/grain_skate/window.zig`)
+- ✅ Modal editing system (Vim/Kakoune keybindings) (`src/grain_skate/modal_editor.zig`)
 - [ ] Graph visualization
 
 #### 8.3.3 Social Features ✅ **COMPLETE**
@@ -1072,6 +1072,7 @@
 - IPC Channel Send/Receive Implementation (Phase 3.22) ✅
 - Comprehensive Userspace Execution Tests (Phase 3.23) ✅
 - GUI App Compilation Fixes (Phase 3.24) ✅
+- Grain OS Agent Proposal (Phase 4.0) ✅
 
 **In Progress**: 
 - Dream Editor Core - GLM-4.6 Integration (Phase 4.1.3) 🔄

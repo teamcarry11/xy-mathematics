@@ -333,6 +333,51 @@
    - ✅ Ready for testing and use
    - ✅ GrainStyle compliance maintained
 
+## 🎯 Fourth Agent: Grain OS (Proposed)
+
+**Status**: Proposal Created - Ready for Implementation  
+**Agent Name**: Grain OS  
+**Grainorder Prefix**: zyxspl
+
+### Overview
+
+Create a fourth agent dedicated to **Grain OS** - a Zig-Wayland implemented GNOME-like operating system environment. Port ravynOS functionality entirely to Zig, creating a complete desktop environment that runs on Grain Kernel (RISC-V) via Grain Vantage VM.
+
+### Key Goals
+
+1. **Wayland Implementation**: Zig-native Wayland compositor and protocol support
+2. **Desktop Environment**: GNOME-like window manager and desktop shell
+3. **Application Framework**: GUI application loader for Aurora, Dream, Skate, Terminal
+4. **Application Store**: `~/Applications/` equivalent directory structure
+5. **RISC-V Port**: Adapt ravynOS (x86_64) to RISC-V architecture
+6. **Grain Style**: Full compliance with Grain Style guidelines
+
+### Inspiration: ravynOS
+
+- **Source**: https://ravynos.com/ (macOS-like open-source OS)
+- **Version**: v0.6.1 "Hyperpop Hyena"
+- **Repository**: https://github.com/ravynsoft/ravynos
+- **Study Location**: `grainstore/github/ravynsoft/ravynos` (mirrored for study)
+
+### Implementation Phases
+
+1. **Phase 1**: Study and Analysis (ravynOS architecture)
+2. **Phase 2**: Wayland Foundation (compositor, protocol)
+3. **Phase 3**: Desktop Shell (window manager, launcher)
+4. **Phase 4**: Application Framework (API, loader, `~/Applications/`)
+5. **Phase 5**: Integration (Grain Kernel syscalls, VM testing)
+6. **Phase 6**: Applications (Aurora, Dream, Skate, Terminal ports)
+
+### Proposal Document
+
+See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
+
+### Coordination
+
+- **Vantage Basin**: Syscall interface, VM capabilities
+- **Aurora Dream**: Application integration, GUI framework
+- **Grain Skate/Silo/Field**: Application integration, system integration
+
 33. **Enhanced Process Execution Error Handling and Resource Management** ✅ **COMPLETE**
    - ✅ Resource cleanup module (`resource_cleanup.zig`) for process termination
    - ✅ Resource cleanup integration in `syscall_exit` (frees mappings, handles, channels)

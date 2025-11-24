@@ -7,6 +7,7 @@
 const std = @import("std");
 const wayland = @import("wayland/protocol.zig");
 const basin_kernel = @import("basin_kernel");
+const tiling = @import("tiling.zig");
 
 // Bounded: Max number of windows.
 pub const MAX_WINDOWS: u32 = 256;
@@ -83,6 +84,7 @@ pub const Compositor = struct {
     output: wayland.Output,
     seat: wayland.Seat,
     framebuffer_base: u64,
+    tiling_tree: tiling.TilingTree,
 
     pub fn init(allocator: std.mem.Allocator) Compositor {
         std.debug.assert(@intFromPtr(allocator.ptr) != 0);
@@ -96,6 +98,7 @@ pub const Compositor = struct {
             .output = wayland.Output.init(2, 1024, 768, 1024, 768),
             .seat = wayland.Seat.init(3),
             .framebuffer_base = 0x90000000,
+            .tiling_tree = tiling.TilingTree.init(),
         };
         var i: u32 = 0;
         while (i < MAX_WINDOWS) : (i += 1) {
@@ -129,6 +132,26 @@ pub const Compositor = struct {
         );
         self.windows[self.windows_len] = window;
         self.windows_len += 1;
+        // Add window to tiling tree.
+        self.tiling_tree.add_window(window_id) catch {
+            return error.OutOfMemory;
+        };
+        // Calculate layout with current output dimensions.
+        self.tiling_tree.calculate_layout(
+            0,
+            0,
+            self.output.width,
+            self.output.height,
+        );
+        // Update window position from tiling tree.
+        if (self.tiling_tree.get_window_bounds(window_id)) |bounds| {
+            if (self.get_window(window_id)) |win| {
+                win.x = bounds.x;
+                win.y = bounds.y;
+                win.width = bounds.width;
+                win.height = bounds.height;
+            }
+        }
         std.debug.assert(self.windows_len <= MAX_WINDOWS);
         std.debug.assert(window_id > 0);
         return window_id;
@@ -150,7 +173,7 @@ pub const Compositor = struct {
         std.debug.assert(self.framebuffer_base > 0);
         // Placeholder: actual rendering will use kernel framebuffer syscalls.
         // This will be implemented when integrating with kernel syscalls.
-        _ = self;
+        _ = self.framebuffer_base;
     }
 };
 

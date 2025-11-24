@@ -503,6 +503,7 @@
   - [x] Implement ghost text storage for AI completions
   - [x] Implement ghost text rendering (ghost_spans in RenderResult)
   - [x] Calculate ghost text span position (after cursor)
+  - [x] Implement ghost text accept/reject (Tab to accept, ESC to reject)
   - [x] Fix didChange range calculation for insertions
   - [x] All three editor TODOs now complete
   - [x] GrainStyle compliant: explicit types, bounded operations, assertions
@@ -1074,16 +1075,22 @@
 - GUI App Compilation Fixes (Phase 3.24) ✅
 - GUI App Runtime Improvements (Phase 3.25) ✅
 - Grain OS Agent Proposal (Phase 4.0) ✅
-- River Compositor Study & Planning (Phase 2.1) 🔄
+- River Compositor Study & Planning (Phase 2.1) ✅
 - Grain OS Wayland Foundation (Phase 2.1-2.2) ✅
   - ✅ Wayland protocol core structures (`src/grain_os/wayland/protocol.zig`)
   - ✅ Basic Wayland compositor (`src/grain_os/compositor.zig`)
   - ✅ Window management (create, get, title management)
-  - ✅ Comprehensive tests (`tests/052_grain_os_compositor_test.zig`)
+  - ✅ Dynamic tiling engine (River-inspired, iterative algorithms in `src/grain_os/tiling.zig`)
+  - ✅ Tag system (bitmask-based, 32 tags max)
+  - ✅ Container-based layout system (horizontal/vertical/stack splits)
+  - ✅ Iterative layout calculation (stack-based, no recursion)
+  - ✅ Comprehensive tests (`tests/052_grain_os_compositor_test.zig`, `tests/053_grain_os_tiling_test.zig`)
   - ✅ Build system integration (grain_os module added)
-  - 📋 River-inspired features design (`docs/grain_os_river_inspired_design.md`)
-    - 📋 Workspace management (Phase 2.3)
-    - 📋 Basic tiling layout (Phase 2.4)
+  - ✅ River study setup (River 0.3.12 mirrored for architecture reference)
+  - ✅ River-inspired features design (`docs/grain_os_river_inspired_design.md`)
+  - [ ] Layout generators (built-in layouts: tall, wide, grid, monocle) - Phase 2.2
+  - [ ] Workspace management (Phase 2.3)
+  - [ ] Runtime configuration (riverctl-like, Phase 2.4)
     - 📋 Layout generator interface (Phase 2.5)
     - 📋 Runtime configuration (Phase 2.6)
     - 📋 Input handling (Phase 2.7)

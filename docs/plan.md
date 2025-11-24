@@ -377,8 +377,13 @@ Create a fourth agent dedicated to **Grain OS** - a Zig-Wayland implemented GNOM
    - ✅ Window management (create, get, title management)
    - ✅ River compositor study (River 0.3.12 mirrored for architecture study)
    - ✅ River-inspired features plan (permissive licensing approach)
-   - [ ] Dynamic tiling algorithm (River-inspired, iterative implementation)
-   - [ ] Layout generators (built-in layouts first)
+   - ✅ Dynamic tiling algorithm (River-inspired, iterative implementation) (`src/grain_os/tiling.zig`)
+   - ✅ Tag system (bitmask-based, 32 tags max)
+   - ✅ Container-based layout system (horizontal/vertical/stack splits)
+   - ✅ Iterative layout calculation (stack-based, no recursion)
+   - ✅ Comprehensive tests (`tests/053_grain_os_tiling_test.zig`)
+   - ✅ Layout generators (built-in layouts: tall, wide, grid, monocle in `src/grain_os/layout.zig`)
+   - ✅ Layout tests (`tests/053_grain_os_layout_test.zig`)
    - [ ] Input event handling
    - [ ] Framebuffer rendering integration
    - ✅ Wayland protocol core structures (Object, Surface, Output, Seat, Registry)

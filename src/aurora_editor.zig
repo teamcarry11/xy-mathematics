@@ -237,6 +237,43 @@ pub const Editor = struct {
         };
     }
 
+    /// Accept ghost text completion (Tab key).
+    /// Inserts pending completion into buffer and clears ghost text.
+    pub fn accept_completion(self: *Editor) !void {
+        if (self.pending_completion) |completion| {
+            // Assert: Completion must be bounded
+            std.debug.assert(completion.len <= 10 * 1024); // Max 10KB ghost text
+            
+            // Insert completion text at cursor
+            try self.insert(completion);
+            
+            // Clear ghost text
+            self.allocator.free(completion);
+            self.pending_completion = null;
+            
+            // Clear ghost text buffer
+            if (self.ghost_text_buffer) |buffer| {
+                self.allocator.free(buffer);
+                self.ghost_text_buffer = null;
+            }
+        }
+    }
+
+    /// Reject ghost text completion (ESC key).
+    /// Clears pending completion without inserting.
+    pub fn reject_completion(self: *Editor) void {
+        if (self.pending_completion) |completion| {
+            self.allocator.free(completion);
+            self.pending_completion = null;
+        }
+        
+        // Clear ghost text buffer
+        if (self.ghost_text_buffer) |buffer| {
+            self.allocator.free(buffer);
+            self.ghost_text_buffer = null;
+        }
+    }
+
     /// Render editor view: buffer content + LSP diagnostics overlay.
     /// Includes readonly spans and ghost text for visual distinction.
     pub fn render(self: *Editor) !GrainAurora.RenderResult {

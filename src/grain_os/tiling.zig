@@ -1,331 +1,324 @@
-//! Grain OS Tiling: Dynamic tiling engine for window management.
+//! Grain OS Tiling: Dynamic window tiling layout.
 //!
-//! Why: River-inspired dynamic tiling with clean-room implementation.
-//! Architecture: View/container tree, iterative layout calculation.
+//! Why: Arrange windows in tiled layouts (master-stack, grid, etc.).
+//! Architecture: Iterative algorithms (no recursion, Grain Style requirement).
 //! GrainStyle: grain_case, u32/u64, bounded allocations, assertions.
-//!
-//! 2025-11-23-170000-pst: Active implementation
 
 const std = @import("std");
-const wayland = @import("wayland/protocol.zig");
+const compositor = @import("compositor.zig");
 
-// Bounded: Max number of views (windows) in tiling system.
-// 2025-11-23-170000-pst: Active constant
-pub const MAX_VIEWS: u32 = 1024;
+// Bounded: Max tree depth for tiling splits.
+pub const MAX_TREE_DEPTH: u32 = 32;
 
-// Bounded: Max number of children per container.
-// 2025-11-23-170000-pst: Active constant
-pub const MAX_CONTAINER_CHILDREN: u32 = 256;
+// Bounded: Max windows per layout.
+pub const MAX_LAYOUT_WINDOWS: u32 = 256;
 
-// Bounded: Max number of tags (bitmask-based, u32 = 32 tags).
-// 2025-11-23-170000-pst: Active constant
-pub const MAX_TAGS: u32 = 32;
-
-// Bounded: Max tag name length.
-// 2025-11-23-170000-pst: Active constant
-pub const MAX_TAG_NAME_LEN: u32 = 64;
-
-// Tag bitmask type (32 tags max).
-// 2025-11-23-170000-pst: Active type
-pub const TagMask = u32;
-
-// Container type enumeration.
-// 2025-11-23-170000-pst: Active enum
-pub const ContainerType = enum(u8) {
-    horizontal, // Horizontal split (left/right)
-    vertical, // Vertical split (top/bottom)
-    stack, // Stacked views (overlapping)
+// Split direction: vertical or horizontal.
+pub const SplitDirection = enum {
+    vertical,
+    horizontal,
 };
 
-// View: represents a window/view in the tiling system.
-// 2025-11-23-170000-pst: Active struct
-pub const View = struct {
-    id: u32, // View ID (unique identifier)
-    surface_id: wayland.ObjectId, // Wayland surface ID
-    x: i32, // X position (calculated by layout)
-    y: i32, // Y position (calculated by layout)
-    width: u32, // Width (calculated by layout)
-    height: u32, // Height (calculated by layout)
-    tags: TagMask, // Tag bitmask (multiple tags per view)
-    focused: bool, // Focus state
-    visible: bool, // Visibility state
+// Tiling node: represents a split or window in the tiling tree.
+pub const TilingNode = struct {
+    // Node type: split or window.
+    node_type: NodeType,
+    // Split direction (if split node).
+    split_dir: SplitDirection,
+    // Split ratio (0.0 to 1.0, if split node).
+    split_ratio: f64,
+    // Window ID (if window node).
+    window_id: u32,
+    // Child indices (if split node).
+    left_child: u32,
+    right_child: u32,
+    // Parent index (for traversal).
+    parent: u32,
+    // Bounding box (x, y, width, height).
+    x: i32,
+    y: i32,
+    width: u32,
+    height: u32,
+    // Node index in tree array.
+    index: u32,
 
-    /// Initialize view.
-    // 2025-11-23-170000-pst: Active function
-    pub fn init(id: u32, surface_id: wayland.ObjectId) View {
-        std.debug.assert(id > 0);
-        std.debug.assert(surface_id > 0);
-        const view = View{
-            .id = id,
-            .surface_id = surface_id,
+    const NodeType = enum {
+        split,
+        window,
+    };
+
+    pub fn init_split(
+        index: u32,
+        split_dir: SplitDirection,
+        split_ratio: f64,
+        left_child: u32,
+        right_child: u32,
+    ) TilingNode {
+        std.debug.assert(index < MAX_LAYOUT_WINDOWS);
+        std.debug.assert(split_ratio >= 0.0);
+        std.debug.assert(split_ratio <= 1.0);
+        std.debug.assert(left_child < MAX_LAYOUT_WINDOWS);
+        std.debug.assert(right_child < MAX_LAYOUT_WINDOWS);
+        return TilingNode{
+            .node_type = .split,
+            .split_dir = split_dir,
+            .split_ratio = split_ratio,
+            .window_id = 0,
+            .left_child = left_child,
+            .right_child = right_child,
+            .parent = MAX_LAYOUT_WINDOWS, // Invalid parent (root has no parent).
             .x = 0,
             .y = 0,
             .width = 0,
             .height = 0,
-            .tags = 0,
-            .focused = false,
-            .visible = true,
+            .index = index,
         };
-        std.debug.assert(view.id > 0);
-        return view;
     }
 
-    /// Add tag to view.
-    // 2025-11-23-170000-pst: Active function
-    pub fn add_tag(self: *View, tag_index: u32) void {
-        std.debug.assert(tag_index < MAX_TAGS);
-        self.tags |= @as(TagMask, 1) << tag_index;
-        std.debug.assert(tag_index < MAX_TAGS);
-    }
-
-    /// Remove tag from view.
-    // 2025-11-23-170000-pst: Active function
-    pub fn remove_tag(self: *View, tag_index: u32) void {
-        std.debug.assert(tag_index < MAX_TAGS);
-        self.tags &= ~(@as(TagMask, 1) << tag_index);
-    }
-
-    /// Check if view has tag.
-    // 2025-11-23-170000-pst: Active function
-    pub fn has_tag(self: *const View, tag_index: u32) bool {
-        std.debug.assert(tag_index < MAX_TAGS);
-        return (self.tags & (@as(TagMask, 1) << tag_index)) != 0;
-    }
-};
-
-// Container: represents a tiling container (split, stack, etc.).
-// 2025-11-23-170000-pst: Active struct
-pub const Container = struct {
-    id: u32, // Container ID (unique identifier)
-    container_type: ContainerType, // Container type
-    x: i32, // X position (calculated by layout)
-    y: i32, // Y position (calculated by layout)
-    width: u32, // Width (calculated by layout)
-    height: u32, // Height (calculated by layout)
-    children: [MAX_CONTAINER_CHILDREN]u32, // Child view/container IDs
-    children_len: u32, // Number of children
-    is_view: bool, // True if child is a view, false if container
-
-    /// Initialize container.
-    // 2025-11-23-170000-pst: Active function
-    pub fn init(id: u32, container_type: ContainerType) Container {
-        std.debug.assert(id > 0);
-        var container = Container{
-            .id = id,
-            .container_type = container_type,
+    pub fn init_window(
+        index: u32,
+        window_id: u32,
+    ) TilingNode {
+        std.debug.assert(index < MAX_LAYOUT_WINDOWS);
+        std.debug.assert(window_id > 0);
+        return TilingNode{
+            .node_type = .window,
+            .split_dir = .vertical, // Unused for window nodes.
+            .split_ratio = 0.0, // Unused for window nodes.
+            .window_id = window_id,
+            .left_child = MAX_LAYOUT_WINDOWS, // Invalid (no children).
+            .right_child = MAX_LAYOUT_WINDOWS, // Invalid (no children).
+            .parent = MAX_LAYOUT_WINDOWS, // Will be set when added to tree.
             .x = 0,
             .y = 0,
             .width = 0,
             .height = 0,
-            .children = undefined,
-            .children_len = 0,
-            .is_view = true, // Default: children are views
+            .index = index,
         };
-        var i: u32 = 0;
-        while (i < MAX_CONTAINER_CHILDREN) : (i += 1) {
-            container.children[i] = 0;
-        }
-        std.debug.assert(container.id > 0);
-        return container;
     }
 
-    /// Add child view/container to container.
-    // 2025-11-23-170000-pst: Active function
-    pub fn add_child(self: *Container, child_id: u32) void {
-        std.debug.assert(child_id > 0);
-        std.debug.assert(self.children_len < MAX_CONTAINER_CHILDREN);
-        self.children[self.children_len] = child_id;
-        self.children_len += 1;
-        std.debug.assert(self.children_len <= MAX_CONTAINER_CHILDREN);
+    pub fn set_bounds(self: *TilingNode, x: i32, y: i32, width: u32, height: u32) void {
+        std.debug.assert(width > 0);
+        std.debug.assert(height > 0);
+        self.x = x;
+        self.y = y;
+        self.width = width;
+        self.height = height;
     }
 };
 
-// Tiling engine: manages views and containers, calculates layouts.
-// 2025-11-23-170000-pst: Active struct
-pub const TilingEngine = struct {
-    views: [MAX_VIEWS]View, // All views
-    views_len: u32, // Number of views
-    containers: [MAX_VIEWS]Container, // All containers (bounded by MAX_VIEWS)
-    containers_len: u32, // Number of containers
-    root_container_id: u32, // Root container ID (0 = no root)
-    next_view_id: u32, // Next view ID to assign
-    next_container_id: u32, // Next container ID to assign
-    allocator: std.mem.Allocator,
+// Tiling tree: manages window tiling layout.
+pub const TilingTree = struct {
+    nodes: [MAX_LAYOUT_WINDOWS]TilingNode,
+    nodes_len: u32,
+    root_index: u32,
+    next_node_index: u32,
 
-    /// Initialize tiling engine.
-    // 2025-11-23-170000-pst: Active function
-    pub fn init(allocator: std.mem.Allocator) TilingEngine {
-        var engine = TilingEngine{
-            .views = undefined,
-            .views_len = 0,
-            .containers = undefined,
-            .containers_len = 0,
-            .root_container_id = 0,
-            .next_view_id = 1,
-            .next_container_id = 1,
-            .allocator = allocator,
+    pub fn init() TilingTree {
+        var tree = TilingTree{
+            .nodes = undefined,
+            .nodes_len = 0,
+            .root_index = MAX_LAYOUT_WINDOWS, // Invalid (no root yet).
+            .next_node_index = 0,
         };
         var i: u32 = 0;
-        while (i < MAX_VIEWS) : (i += 1) {
-            engine.views[i] = View.init(0, 0);
-            engine.containers[i] = Container.init(0, .horizontal);
+        while (i < MAX_LAYOUT_WINDOWS) : (i += 1) {
+            tree.nodes[i] = TilingNode.init_window(i, 0);
         }
-        std.debug.assert(engine.next_view_id > 0);
-        std.debug.assert(engine.next_container_id > 0);
-        return engine;
+        std.debug.assert(tree.nodes_len == 0);
+        return tree;
     }
 
-    /// Create view.
-    // 2025-11-23-170000-pst: Active function
-    pub fn create_view(self: *TilingEngine, surface_id: wayland.ObjectId) !u32 {
-        std.debug.assert(surface_id > 0);
-        std.debug.assert(self.views_len < MAX_VIEWS);
-        const view_id = self.next_view_id;
-        self.next_view_id += 1;
-        const view = View.init(view_id, surface_id);
-        self.views[self.views_len] = view;
-        self.views_len += 1;
-        std.debug.assert(self.views_len <= MAX_VIEWS);
-        std.debug.assert(view_id > 0);
-        return view_id;
+    pub fn add_window(self: *TilingTree, window_id: u32) !void {
+        std.debug.assert(window_id > 0);
+        std.debug.assert(self.nodes_len < MAX_LAYOUT_WINDOWS);
+        const node_index = self.next_node_index;
+        self.next_node_index += 1;
+        self.nodes[node_index] = TilingNode.init_window(node_index, window_id);
+        self.nodes_len += 1;
+        if (self.root_index == MAX_LAYOUT_WINDOWS) {
+            // First window: set as root.
+            self.root_index = node_index;
+            self.nodes[node_index].parent = MAX_LAYOUT_WINDOWS;
+        } else {
+            // Add as split: create new split with old root and new window.
+            const old_root = self.root_index;
+            const split_index = self.next_node_index;
+            self.next_node_index += 1;
+            std.debug.assert(self.nodes_len < MAX_LAYOUT_WINDOWS);
+            self.nodes_len += 1;
+            // Create vertical split (main on left, new window on right).
+            self.nodes[split_index] = TilingNode.init_split(
+                split_index,
+                .vertical,
+                0.6, // 60% main, 40% new window.
+                old_root,
+                node_index,
+            );
+            self.nodes[old_root].parent = split_index;
+            self.nodes[node_index].parent = split_index;
+            self.root_index = split_index;
+            self.nodes[split_index].parent = MAX_LAYOUT_WINDOWS;
+        }
+        std.debug.assert(self.nodes_len <= MAX_LAYOUT_WINDOWS);
+        std.debug.assert(self.root_index < MAX_LAYOUT_WINDOWS);
     }
 
-    /// Get view by ID.
-    // 2025-11-23-170000-pst: Active function
-    pub fn get_view(self: *TilingEngine, view_id: u32) ?*View {
-        std.debug.assert(view_id > 0);
+    pub fn remove_window(self: *TilingTree, window_id: u32) bool {
+        std.debug.assert(window_id > 0);
+        // Find window node.
         var i: u32 = 0;
-        while (i < self.views_len) : (i += 1) {
-            if (self.views[i].id == view_id) {
-                return &self.views[i];
+        var window_index: u32 = MAX_LAYOUT_WINDOWS;
+        while (i < self.nodes_len) : (i += 1) {
+            if (self.nodes[i].node_type == .window and
+                self.nodes[i].window_id == window_id)
+            {
+                window_index = i;
+                break;
             }
         }
-        return null;
-    }
-
-    /// Create container.
-    // 2025-11-23-170000-pst: Active function
-    pub fn create_container(self: *TilingEngine, container_type: ContainerType) !u32 {
-        std.debug.assert(self.containers_len < MAX_VIEWS);
-        const container_id = self.next_container_id;
-        self.next_container_id += 1;
-        const container = Container.init(container_id, container_type);
-        self.containers[self.containers_len] = container;
-        self.containers_len += 1;
-        std.debug.assert(self.containers_len <= MAX_VIEWS);
-        std.debug.assert(container_id > 0);
-        return container_id;
-    }
-
-    /// Get container by ID.
-    // 2025-11-23-170000-pst: Active function
-    pub fn get_container(self: *TilingEngine, container_id: u32) ?*Container {
-        std.debug.assert(container_id > 0);
-        var i: u32 = 0;
-        while (i < self.containers_len) : (i += 1) {
-            if (self.containers[i].id == container_id) {
-                return &self.containers[i];
-            }
+        if (window_index == MAX_LAYOUT_WINDOWS) {
+            return false; // Window not found.
         }
-        return null;
+        // Remove window node and update tree.
+        const parent_index = self.nodes[window_index].parent;
+        if (parent_index == MAX_LAYOUT_WINDOWS) {
+            // Window is root: clear tree.
+            self.root_index = MAX_LAYOUT_WINDOWS;
+            self.nodes_len = 0;
+            self.next_node_index = 0;
+            return true;
+        }
+        // Replace parent split with sibling.
+        const parent = &self.nodes[parent_index];
+        const sibling_index = if (parent.left_child == window_index)
+            parent.right_child
+        else
+            parent.left_child;
+        std.debug.assert(sibling_index < MAX_LAYOUT_WINDOWS);
+        const grandparent_index = parent.parent;
+        if (grandparent_index == MAX_LAYOUT_WINDOWS) {
+            // Parent is root: sibling becomes root.
+            self.root_index = sibling_index;
+            self.nodes[sibling_index].parent = MAX_LAYOUT_WINDOWS;
+        } else {
+            // Replace parent with sibling in grandparent.
+            const grandparent = &self.nodes[grandparent_index];
+            if (grandparent.left_child == parent_index) {
+                grandparent.left_child = sibling_index;
+            } else {
+                grandparent.right_child = sibling_index;
+            }
+            self.nodes[sibling_index].parent = grandparent_index;
+        }
+        // Note: We don't actually remove nodes from array (just mark as unused).
+        // This is acceptable for Grain Style (bounded array, no dynamic allocation).
+        return true;
     }
 
-    /// Calculate layout for container tree (iterative, no recursion).
-    // 2025-11-23-170000-pst: Active function
+    // Calculate window positions using iterative algorithm (no recursion).
     pub fn calculate_layout(
-        self: *TilingEngine,
-        container_id: u32,
+        self: *TilingTree,
+        output_x: i32,
+        output_y: i32,
+        output_width: u32,
+        output_height: u32,
+    ) void {
+        std.debug.assert(output_width > 0);
+        std.debug.assert(output_height > 0);
+        if (self.root_index == MAX_LAYOUT_WINDOWS) {
+            return; // Empty tree.
+        }
+        // Set root bounds.
+        self.nodes[self.root_index].set_bounds(
+            output_x,
+            output_y,
+            output_width,
+            output_height,
+        );
+        // Iterative traversal: use stack to traverse tree.
+        var stack: [MAX_TREE_DEPTH]u32 = undefined;
+        var stack_len: u32 = 0;
+        stack[stack_len] = self.root_index;
+        stack_len += 1;
+        while (stack_len > 0) {
+            stack_len -= 1;
+            const node_index = stack[stack_len];
+            const node = &self.nodes[node_index];
+            if (node.node_type == .split) {
+                // Calculate child bounds based on split.
+                const parent_x = node.x;
+                const parent_y = node.y;
+                const parent_width = node.width;
+                const parent_height = node.height;
+                if (node.split_dir == .vertical) {
+                    // Vertical split: left and right.
+                    const left_width = @as(u32, @intFromFloat(@as(f64, @floatFromInt(parent_width)) * node.split_ratio));
+                    const right_width = parent_width - left_width;
+                    std.debug.assert(left_width > 0);
+                    std.debug.assert(right_width > 0);
+                    self.nodes[node.left_child].set_bounds(
+                        parent_x,
+                        parent_y,
+                        left_width,
+                        parent_height,
+                    );
+                    self.nodes[node.right_child].set_bounds(
+                        parent_x + @as(i32, @intCast(left_width)),
+                        parent_y,
+                        right_width,
+                        parent_height,
+                    );
+                } else {
+                    // Horizontal split: top and bottom.
+                    const top_height = @as(u32, @intFromFloat(@as(f64, @floatFromInt(parent_height)) * node.split_ratio));
+                    const bottom_height = parent_height - top_height;
+                    std.debug.assert(top_height > 0);
+                    std.debug.assert(bottom_height > 0);
+                    self.nodes[node.left_child].set_bounds(
+                        parent_x,
+                        parent_y,
+                        parent_width,
+                        top_height,
+                    );
+                    self.nodes[node.right_child].set_bounds(
+                        parent_x,
+                        parent_y + @as(i32, @intCast(top_height)),
+                        parent_width,
+                        bottom_height,
+                    );
+                }
+                // Push children onto stack.
+                std.debug.assert(stack_len + 2 <= MAX_TREE_DEPTH);
+                stack[stack_len] = node.right_child;
+                stack_len += 1;
+                stack[stack_len] = node.left_child;
+                stack_len += 1;
+            }
+        }
+    }
+
+    // Get window bounds for a specific window ID.
+    pub fn get_window_bounds(self: *TilingTree, window_id: u32) ?struct {
         x: i32,
         y: i32,
         width: u32,
         height: u32,
-    ) void {
-        std.debug.assert(container_id > 0);
-        std.debug.assert(width > 0);
-        std.debug.assert(height > 0);
-
-        // Stack-based traversal (no recursion)
-        var stack: [MAX_VIEWS]struct {
-            container_id: u32,
-            x: i32,
-            y: i32,
-            width: u32,
-            height: u32,
-        } = undefined;
-        var stack_len: u32 = 0;
-
-        // Push root container
-        stack[stack_len] = .{
-            .container_id = container_id,
-            .x = x,
-            .y = y,
-            .width = width,
-            .height = height,
-        };
-        stack_len += 1;
-
-        // Iterative traversal
-        while (stack_len > 0) {
-            stack_len -= 1;
-            const current = stack[stack_len];
-            const container = self.get_container(current.container_id) orelse continue;
-
-            // Set container position/size
-            container.x = current.x;
-            container.y = current.y;
-            container.width = current.width;
-            container.height = current.height;
-
-            // Calculate layout for children
-            if (container.children_len == 0) {
-                continue;
-            }
-
-            // Simple split layout (equal sizes)
-            const child_width = if (container.container_type == .horizontal)
-                current.width / container.children_len
-            else
-                current.width;
-            const child_height = if (container.container_type == .vertical)
-                current.height / container.children_len
-            else
-                current.height;
-
-            var child_x = current.x;
-            var child_y = current.y;
-            var i: u32 = 0;
-            while (i < container.children_len) : (i += 1) {
-                const child_id = container.children[i];
-                if (container.is_view) {
-                    // Child is a view: set position/size
-                    if (self.get_view(child_id)) |view| {
-                        view.x = child_x;
-                        view.y = child_y;
-                        view.width = child_width;
-                        view.height = child_height;
-                    }
-                } else {
-                    // Child is a container: push to stack
-                    if (stack_len < MAX_VIEWS) {
-                        stack[stack_len] = .{
-                            .container_id = child_id,
-                            .x = child_x,
-                            .y = child_y,
-                            .width = child_width,
-                            .height = child_height,
-                        };
-                        stack_len += 1;
-                    }
-                }
-
-                // Update position for next child
-                if (container.container_type == .horizontal) {
-                    child_x += @as(i32, @intCast(child_width));
-                } else if (container.container_type == .vertical) {
-                    child_y += @as(i32, @intCast(child_height));
-                }
+    } {
+        std.debug.assert(window_id > 0);
+        var i: u32 = 0;
+        while (i < self.nodes_len) : (i += 1) {
+            if (self.nodes[i].node_type == .window and
+                self.nodes[i].window_id == window_id)
+            {
+                return .{
+                    .x = self.nodes[i].x,
+                    .y = self.nodes[i].y,
+                    .width = self.nodes[i].width,
+                    .height = self.nodes[i].height,
+                };
             }
         }
+        return null;
     }
 };
-

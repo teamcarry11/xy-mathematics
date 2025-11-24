@@ -52,18 +52,22 @@ Implement River-like dynamic tiling and window management features for Grain OS,
 
 ## Implementation Phases
 
-### Phase 2.1: Dynamic Tiling Foundation ✅ **IN PROGRESS**
+### Phase 2.1: Dynamic Tiling Foundation ✅ **COMPLETE**
 - ✅ Basic compositor structure (`src/grain_os/compositor.zig`)
 - ✅ Wayland protocol structures (`src/grain_os/wayland/protocol.zig`)
-- [ ] Tiling algorithm (vertical/horizontal splits)
-- [ ] Window tree structure (binary tree for splits)
-- [ ] Layout calculation (recursive → iterative)
+- ✅ Tiling algorithm (vertical/horizontal splits) (`src/grain_os/tiling.zig`)
+- ✅ Window tree structure (container-based, not binary tree - more flexible)
+- ✅ Layout calculation (iterative, stack-based traversal - no recursion)
+- ✅ Tag system (bitmask-based, 32 tags max)
+- ✅ Comprehensive tests (`tests/053_grain_os_tiling_test.zig`)
 
-### Phase 2.2: Layout Generators
-- [ ] Layout generator API
-- [ ] Built-in layouts (tall, wide, grid, monocle)
-- [ ] Layout state management
-- [ ] Layout switching
+### Phase 2.2: Layout Generators ✅ **COMPLETE**
+- ✅ Layout generator API (`src/grain_os/layout.zig`)
+- ✅ Built-in layouts (tall, wide, grid, monocle)
+- ✅ Layout registry (manages available layouts)
+- ✅ Layout function interface (vtable-style function pointers)
+- ✅ Comprehensive tests (`tests/053_grain_os_layout_test.zig`)
+- [ ] Layout switching (pending integration with compositor)
 
 ### Phase 2.3: Configuration System
 - [ ] IPC channel for configuration

@@ -1279,6 +1279,32 @@ pub fn build(b: *std.Build) void {
     const grain_os_compositor_tests_run = b.addRunArtifact(grain_os_compositor_tests);
     test_step.dependOn(&grain_os_compositor_tests_run.step);
 
+    const grain_os_tiling_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/053_grain_os_tiling_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_os", .module = grain_os_module },
+            },
+        }),
+    });
+    const grain_os_tiling_tests_run = b.addRunArtifact(grain_os_tiling_tests);
+    test_step.dependOn(&grain_os_tiling_tests_run.step);
+
+    const grain_os_layout_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/053_grain_os_layout_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_os", .module = grain_os_module },
+            },
+        }),
+    });
+    const grain_os_layout_tests_run = b.addRunArtifact(grain_os_layout_tests);
+    test_step.dependOn(&grain_os_layout_tests_run.step);
+
     // RISC-V Logo Display Program
     const riscv_logo_exe = b.addExecutable(.{
         .name = "riscv_logo",

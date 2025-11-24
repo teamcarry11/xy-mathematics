@@ -1276,9 +1276,6 @@ pub fn build(b: *std.Build) void {
             },
         }),
     });
-    const grain_os_compositor_tests_run = b.addRunArtifact(grain_os_compositor_tests);
-    test_step.dependOn(&grain_os_compositor_tests_run.step);
-
     const grain_os_tiling_tests = b.addTest(.{
         .root_module = b.createModule(.{
             .root_source_file = b.path("tests/053_grain_os_tiling_test.zig"),
@@ -1289,6 +1286,8 @@ pub fn build(b: *std.Build) void {
             },
         }),
     });
+    const grain_os_compositor_tests_run = b.addRunArtifact(grain_os_compositor_tests);
+    test_step.dependOn(&grain_os_compositor_tests_run.step);
     const grain_os_tiling_tests_run = b.addRunArtifact(grain_os_tiling_tests);
     test_step.dependOn(&grain_os_tiling_tests_run.step);
 

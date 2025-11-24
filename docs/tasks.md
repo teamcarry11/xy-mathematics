@@ -990,10 +990,15 @@
 - [x] Persist/load blocks from Grain Silo
 - [ ] DAG integration - can leverage `src/dag_core.zig` for future graph visualization
 
-#### 8.3.2 UI Framework (IN PROGRESS)
+#### 8.3.2 UI Framework ✅ **COMPLETE**
 - ✅ Native macOS window management (`src/grain_skate/window.zig`)
 - ✅ Modal editing system (Vim/Kakoune keybindings) (`src/grain_skate/modal_editor.zig`)
-- [ ] Graph visualization
+- ✅ Graph visualization (`src/grain_skate/graph_viz.zig`)
+  - ✅ Force-directed layout algorithm (iterative, no recursion)
+  - ✅ Node and edge management (MAX_NODES: 1024, MAX_EDGES: 4096)
+  - ✅ View controls (pan, zoom, select)
+  - ✅ Comprehensive tests (`tests/054_grain_skate_graph_viz_test.zig`)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, max 70 lines per function)
 
 #### 8.3.3 Social Features ✅ **COMPLETE**
 - [x] Link-based reply system (`src/grain_skate/social.zig`)

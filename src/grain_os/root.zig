@@ -9,4 +9,5 @@ pub const compositor = @import("compositor.zig");
 pub const tiling = @import("tiling.zig");
 pub const layout = @import("layout.zig");
 pub const framebuffer_renderer = @import("framebuffer_renderer.zig");
+pub const input_handler = @import("input_handler.zig");
 

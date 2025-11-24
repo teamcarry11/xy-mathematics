@@ -89,6 +89,7 @@ pub const Compositor = struct {
     seat: wayland.Seat,
     framebuffer_base: u64,
     tiling_tree: tiling.TilingTree,
+    renderer: framebuffer_renderer.FramebufferRenderer,
 
     pub fn init(allocator: std.mem.Allocator) Compositor {
         std.debug.assert(@intFromPtr(allocator.ptr) != 0);
@@ -103,6 +104,7 @@ pub const Compositor = struct {
             .seat = wayland.Seat.init(3),
             .framebuffer_base = 0x90000000,
             .tiling_tree = tiling.TilingTree.init(),
+            .renderer = framebuffer_renderer.FramebufferRenderer.init(),
         };
         var i: u32 = 0;
         while (i < MAX_WINDOWS) : (i += 1) {
@@ -238,9 +240,30 @@ pub const Compositor = struct {
 
     pub fn render_to_framebuffer(self: *Compositor) void {
         std.debug.assert(self.framebuffer_base > 0);
-        // Placeholder: actual rendering will use kernel framebuffer syscalls.
-        // This will be implemented when integrating with kernel syscalls.
-        _ = self.framebuffer_base;
+        // Clear framebuffer to background color.
+        self.renderer.clear(framebuffer_renderer.COLOR_DARK_BG);
+        // Render each visible window.
+        var i: u32 = 0;
+        while (i < self.windows_len) : (i += 1) {
+            const win = &self.windows[i];
+            if (win.visible) {
+                // Draw window background (simple rectangle for now).
+                self.renderer.draw_rect(
+                    win.x,
+                    win.y,
+                    win.width,
+                    win.height,
+                    framebuffer_renderer.COLOR_WHITE,
+                );
+            }
+        }
+    }
+
+    pub fn set_syscall_fn(
+        self: *Compositor,
+        fn_ptr: *const fn (u32, u64, u64, u64, u64) i64,
+    ) void {
+        self.renderer.set_syscall_fn(fn_ptr);
     }
 };
 

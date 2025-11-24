@@ -151,79 +151,96 @@ pub const GraphVisualization = struct {
 
         var iter: u32 = 0;
         while (iter < iterations) : (iter += 1) {
-            // Reset velocities
-            var i: u32 = 0;
-            while (i < self.nodes_len) : (i += 1) {
-                self.nodes[i].position.vx = 0.0;
-                self.nodes[i].position.vy = 0.0;
-            }
+            self.reset_velocities();
+            self.calculate_repulsion_forces(repulsion);
+            self.calculate_attraction_forces(k);
+            self.update_positions(damping);
+        }
+    }
 
-            // Calculate repulsion forces (all pairs)
-            i = 0;
-            while (i < self.nodes_len) : (i += 1) {
-                var j: u32 = i + 1;
-                while (j < self.nodes_len) : (j += 1) {
-                    const dx = self.nodes[j].position.x - self.nodes[i].position.x;
-                    const dy = self.nodes[j].position.y - self.nodes[i].position.y;
-                    const dist_sq = (dx * dx) + (dy * dy);
-                    if (dist_sq < 0.0001) {
-                        continue; // Avoid division by zero
-                    }
-                    const dist = std.math.sqrt(dist_sq);
-                    const force = repulsion / dist_sq;
-                    const fx = (dx / dist) * force;
-                    const fy = (dy / dist) * force;
-                    self.nodes[i].position.vx -= fx;
-                    self.nodes[i].position.vy -= fy;
-                    self.nodes[j].position.vx += fx;
-                    self.nodes[j].position.vy += fy;
-                }
-            }
+    /// Reset all node velocities.
+    // 2025-11-24-110000-pst: Active function
+    fn reset_velocities(self: *GraphVisualization) void {
+        var i: u32 = 0;
+        while (i < self.nodes_len) : (i += 1) {
+            self.nodes[i].position.vx = 0.0;
+            self.nodes[i].position.vy = 0.0;
+        }
+    }
 
-            // Calculate attraction forces (edges)
-            var e: u32 = 0;
-            while (e < self.edges_len) : (e += 1) {
-                const from_node = self.find_node(self.edges[e].from_block_id);
-                const to_node = self.find_node(self.edges[e].to_block_id);
-                if (from_node == null or to_node == null) {
-                    continue;
-                }
-                const from_idx = from_node.?;
-                const to_idx = to_node.?;
-                const dx = self.nodes[to_idx].position.x - self.nodes[from_idx].position.x;
-                const dy = self.nodes[to_idx].position.y - self.nodes[from_idx].position.y;
+    /// Calculate repulsion forces between all node pairs.
+    // 2025-11-24-110000-pst: Active function
+    fn calculate_repulsion_forces(self: *GraphVisualization, repulsion: f32) void {
+        var i: u32 = 0;
+        while (i < self.nodes_len) : (i += 1) {
+            var j: u32 = i + 1;
+            while (j < self.nodes_len) : (j += 1) {
+                const dx = self.nodes[j].position.x - self.nodes[i].position.x;
+                const dy = self.nodes[j].position.y - self.nodes[i].position.y;
                 const dist_sq = (dx * dx) + (dy * dy);
                 if (dist_sq < 0.0001) {
-                    continue;
+                    continue; // Avoid division by zero
                 }
                 const dist = std.math.sqrt(dist_sq);
-                const force = k * dist;
+                const force = repulsion / dist_sq;
                 const fx = (dx / dist) * force;
                 const fy = (dy / dist) * force;
-                self.nodes[from_idx].position.vx += fx;
-                self.nodes[from_idx].position.vy += fy;
-                self.nodes[to_idx].position.vx -= fx;
-                self.nodes[to_idx].position.vy -= fy;
+                self.nodes[i].position.vx -= fx;
+                self.nodes[i].position.vy -= fy;
+                self.nodes[j].position.vx += fx;
+                self.nodes[j].position.vy += fy;
             }
+        }
+    }
 
-            // Update positions (with damping)
-            i = 0;
-            while (i < self.nodes_len) : (i += 1) {
-                self.nodes[i].position.x += self.nodes[i].position.vx * damping;
-                self.nodes[i].position.y += self.nodes[i].position.vy * damping;
-                // Clamp to bounds
-                if (self.nodes[i].position.x < 0.0) {
-                    self.nodes[i].position.x = 0.0;
-                }
-                if (self.nodes[i].position.x > 1.0) {
-                    self.nodes[i].position.x = 1.0;
-                }
-                if (self.nodes[i].position.y < 0.0) {
-                    self.nodes[i].position.y = 0.0;
-                }
-                if (self.nodes[i].position.y > 1.0) {
-                    self.nodes[i].position.y = 1.0;
-                }
+    /// Calculate attraction forces along edges.
+    // 2025-11-24-110000-pst: Active function
+    fn calculate_attraction_forces(self: *GraphVisualization, k: f32) void {
+        var e: u32 = 0;
+        while (e < self.edges_len) : (e += 1) {
+            const from_node = self.find_node(self.edges[e].from_block_id);
+            const to_node = self.find_node(self.edges[e].to_block_id);
+            if (from_node == null or to_node == null) {
+                continue;
+            }
+            const from_idx = from_node.?;
+            const to_idx = to_node.?;
+            const dx = self.nodes[to_idx].position.x - self.nodes[from_idx].position.x;
+            const dy = self.nodes[to_idx].position.y - self.nodes[from_idx].position.y;
+            const dist_sq = (dx * dx) + (dy * dy);
+            if (dist_sq < 0.0001) {
+                continue;
+            }
+            const dist = std.math.sqrt(dist_sq);
+            const force = k * dist;
+            const fx = (dx / dist) * force;
+            const fy = (dy / dist) * force;
+            self.nodes[from_idx].position.vx += fx;
+            self.nodes[from_idx].position.vy += fy;
+            self.nodes[to_idx].position.vx -= fx;
+            self.nodes[to_idx].position.vy -= fy;
+        }
+    }
+
+    /// Update node positions with damping and bounds clamping.
+    // 2025-11-24-110000-pst: Active function
+    fn update_positions(self: *GraphVisualization, damping: f32) void {
+        var i: u32 = 0;
+        while (i < self.nodes_len) : (i += 1) {
+            self.nodes[i].position.x += self.nodes[i].position.vx * damping;
+            self.nodes[i].position.y += self.nodes[i].position.vy * damping;
+            // Clamp to bounds
+            if (self.nodes[i].position.x < 0.0) {
+                self.nodes[i].position.x = 0.0;
+            }
+            if (self.nodes[i].position.x > 1.0) {
+                self.nodes[i].position.x = 1.0;
+            }
+            if (self.nodes[i].position.y < 0.0) {
+                self.nodes[i].position.y = 0.0;
+            }
+            if (self.nodes[i].position.y > 1.0) {
+                self.nodes[i].position.y = 1.0;
             }
         }
     }

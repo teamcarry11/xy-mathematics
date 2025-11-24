@@ -30,7 +30,8 @@ const SYSCALL_FB_DRAW_TEXT: u32 = 72;
 // Framebuffer renderer: renders windows to kernel framebuffer.
 pub const FramebufferRenderer = struct {
     // Syscall function pointer (set by kernel integration).
-    syscall_fn: ?*const fn (u32, u64, u64, u64, u64) i64 = null,
+    syscall_fn: ?SyscallFn = null,
+    const SyscallFn = *const fn (u32, u64, u64, u64, u64) i64;
 
     pub fn init() FramebufferRenderer {
         return FramebufferRenderer{

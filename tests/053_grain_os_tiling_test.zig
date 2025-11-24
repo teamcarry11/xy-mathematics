@@ -7,7 +7,7 @@ const tiling = @import("grain_os").tiling;
 const compositor = @import("grain_os").compositor;
 
 test "tiling tree initialization" {
-    var tree = tiling.TilingTree.init();
+    const tree = tiling.TilingTree.init();
     try testing.expect(tree.nodes_len == 0);
     try testing.expect(tree.root_index == tiling.MAX_LAYOUT_WINDOWS);
     try testing.expect(tree.next_node_index == 0);

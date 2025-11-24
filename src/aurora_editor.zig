@@ -10,6 +10,12 @@ const TreeSitter = @import("aurora_tree_sitter.zig").TreeSitter;
 /// Aurora code editor: integrates GrainBuffer, GrainAurora, LSP, folding, and AI provider.
 /// ~<~ Glow Waterbend: editor state flows deterministically through LSP diagnostics.
 pub const Editor = struct {
+    // Bounded: Max undo history entries.
+    pub const MAX_UNDO_HISTORY: u32 = 1024;
+    
+    // Bounded: Max redo history entries.
+    pub const MAX_REDO_HISTORY: u32 = 1024;
+    
     allocator: std.mem.Allocator,
     buffer: GrainBuffer,
     aurora: GrainAurora,
@@ -23,6 +29,28 @@ pub const Editor = struct {
     cursor_char: u32 = 0,
     pending_completion: ?[]const u8 = null, // Ghost text (AI completion)
     ghost_text_buffer: ?[]u8 = null, // Buffer for rendered text with ghost text
+    undo_history: std.ArrayList(UndoEntry),
+    redo_history: std.ArrayList(UndoEntry),
+    
+    /// Undo entry: tracks a single edit operation.
+    pub const UndoEntry = struct {
+        operation_type: OperationType,
+        position: u32, // Position in buffer (line * 80 + char)
+        text: []const u8, // Text inserted/deleted
+        text_len: u32,
+        
+        pub const OperationType = enum(u8) {
+            insert, // Text was inserted
+            delete, // Text was deleted
+        };
+        
+        pub fn deinit(self: *UndoEntry, allocator: std.mem.Allocator) void {
+            if (self.text_len > 0) {
+                allocator.free(self.text);
+            }
+            self.* = undefined;
+        }
+    };
 
     pub fn init(
         allocator: std.mem.Allocator,
@@ -43,6 +71,9 @@ pub const Editor = struct {
         try folding.parse(initial_text);
         _ = try tree_sitter.parseZig(initial_text);
 
+        var undo_history = std.ArrayList(UndoEntry).init(allocator);
+        var redo_history = std.ArrayList(UndoEntry).init(allocator);
+
         return Editor{
             .allocator = allocator,
             .buffer = buffer,
@@ -51,6 +82,8 @@ pub const Editor = struct {
             .folding = folding,
             .tree_sitter = tree_sitter,
             .file_uri = file_uri,
+            .undo_history = undo_history,
+            .redo_history = redo_history,
         };
     }
 

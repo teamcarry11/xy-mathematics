@@ -386,8 +386,11 @@ Create a fourth agent dedicated to **Grain OS** - a Zig-Wayland implemented GNOM
    - ✅ Tag system (bitmask-based, 32 tags max)
    - ✅ Container-based layout system (horizontal/vertical/stack splits)
    - ✅ Comprehensive tests (`tests/053_grain_os_tiling_test.zig`)
-   - ✅ Layout generators (built-in layouts: tall, wide, grid, monocle in `src/grain_os/layout.zig`)
-   - ✅ Layout tests (`tests/053_grain_os_layout_test.zig`)
+   - ✅ Layout generator interface (Phase 2.5) (`src/grain_os/layout_generator.zig`)
+     - ✅ Layout function interface (tall, wide, grid, monocle)
+     - ✅ Layout registry for managing available layouts
+     - ✅ Compositor integration with layout switching
+     - ✅ Comprehensive tests (tests/056_grain_os_layout_generator_test.zig)
    - ✅ Framebuffer rendering integration (`src/grain_os/framebuffer_renderer.zig`)
      - ✅ Kernel framebuffer syscall integration (fb_clear, fb_draw_pixel, fb_draw_rect)
      - ✅ Compositor rendering integration
@@ -401,10 +404,17 @@ Create a fourth agent dedicated to **Grain OS** - a Zig-Wayland implemented GNOM
    - ✅ Basic Wayland compositor (window management, surface management)
    - ✅ Comprehensive tests (tests/052_grain_os_compositor_test.zig)
    - 📋 River-inspired features (clean-room implementation, see `docs/grain_os_river_inspired_design.md`)
-3. **Phase 3**: Desktop Shell (window manager, launcher)
-4. **Phase 4**: Application Framework (API, loader, `~/Applications/`)
-5. **Phase 5**: Integration (Grain Kernel syscalls, VM testing)
-6. **Phase 6**: Applications (Aurora, Dream, Skate, Terminal ports)
+3. **Phase 3**: Input Routing & Focus Management ✅ **COMPLETE**
+   - ✅ Input handler integration with compositor
+   - ✅ Window focus management (focus/unfocus on mouse click)
+   - ✅ Hit testing (find window at mouse position)
+   - ✅ Input event routing (mouse clicks focus windows)
+   - ✅ Keyboard event routing (placeholder for focused window)
+   - ✅ Comprehensive tests (`tests/056_grain_os_input_routing_test.zig`)
+4. **Phase 4**: Desktop Shell (window manager, launcher)
+5. **Phase 5**: Application Framework (API, loader, `~/Applications/`)
+6. **Phase 6**: Integration (Grain Kernel syscalls, VM testing)
+7. **Phase 7**: Applications (Aurora, Dream, Skate, Terminal ports)
 
 ### Proposal Document
 
@@ -1052,243 +1062,14 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 - ✅ Comprehensive tests (`tests/051_grain_skate_social_test.zig`)
 - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 
-## 👥 Parallel Development Opportunities
-
-**Current Agent Focuses**:
-1. **VM/Kernel Agent**: Grain Vantage & Kernel Boot Integration (`src/kernel_vm/`, `src/kernel/`, `src/platform/macos_tahoe/`)
-2. **Dream Editor/Browser Agent**: Foundation components (`src/aurora_*.zig`, `src/dream_*.zig`)
-3. **Grain Skate Agent**: Grainscript (`src/grainscript/`), Grain Terminal, Grain Skate
-
-**Available for Parallel Work** (see `docs/agent_work_summary.md` and `docs/dream_editor_agent_summary.md`):
-- **Dream Editor/Browser** (`src/aurora_*.zig`, `src/dream_*.zig`) - 🔄 Active (Phase 0)
-- **Userspace Tools** (`src/userspace/`) - Core utilities, browser engine, build tools
-- **Grain Ecosystem** (`src/graincard/`, `grainseed*.zig`) - Graincard, seed system
-- **TLS/Networking** (`src/grain_tls/`, `nostr.zig`) - TLS client, protocols
-- **Platform Implementations** (`src/platform/riscv/`) - Native RISC-V platform
-- **Kernel Advanced Features** - Memory management, process scheduling (design in parallel)
-- **Documentation** (`docs/learning-course/`) - Course content, tutorials
-
-**See**: 
-- `docs/agent_work_summary.md` - VM/Kernel agent work
-- `docs/dream_editor_agent_summary.md` - Dream Editor/Browser agent work
-- `docs/grain_skate_agent_acknowledgment.md` - Grain Skate/Terminal/Script agent acknowledgment and plan
-
-## 🔗 References
-
-- **Framework 13 RISC-V**: https://frame.work/products/deep-computing-risc-v-mainboard
-- **DeepComputing DC-ROMA**: https://deepcomputing.io/product/dc-roma-risc-v-mainboard/
-- **Daylight Computer**: https://daylightcomputer.com
-- **JIT Architecture**: `docs/zyx/jit_architecture.md`
-- **Tasks**: `docs/tasks.md`
-- **Agent Work Summary**: `docs/agent_work_summary.md`
-- **Development Strategy**: `docs/zyx/development_strategy_2025.md`
-
-- ✅ Contract management (create, execute actions: mint, burn, transfer, collect_tax)
-- ✅ Payment processing (batch processing, deterministic execution)
-- ✅ DAG integration (contracts and payments as DAG events)
-- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
-
-#### 3.4: GrainBank Browser Integration ✅ **COMPLETE**
-- ✅ Integrate GrainBank into unified IDE
-- ✅ Browser tabs can have associated GrainBank contracts
-- ✅ Automatic micropayments triggered when viewing paid content
-- ✅ Payment detection from URL/content (Nostr event parsing)
-- ✅ Enable/disable payments per tab
-- ✅ Associate contracts with browser tabs
-- ✅ Process payments via deterministic state machine
-- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
-
-**See**: `docs/dream_implementation_roadmap.md` for complete roadmap
-
-## 🌾 Phase 8: Grain Skate / Terminal / Script
-
-**Status**: ✅ Grainscript Phase 8.1.1 (Lexer) COMPLETE | ✅ Grainscript Phase 8.1.2 (Parser) COMPLETE | ✅ Grainscript Phase 8.1.3 (Basic Command Execution) COMPLETE | ✅ Grainscript Phase 8.1.4 (Variable Handling) COMPLETE | ✅ Grainscript Phase 8.1.5 (Control Flow) COMPLETE | ✅ Grainscript Phase 8.1.6 (Type System) COMPLETE
-
-**Vision**: Three complementary projects for Grain OS:
-1. **Grain Terminal**: Wezterm-level terminal for Grain OS (RISC-V target)
-2. **Grainscript**: Unified scripting/configuration language to replace Bash/Zsh/Fish and all config/data file formats (`.gr` files)
-3. **Grain Skate**: Native macOS knowledge graph application with social threading
-
-### 8.1 Grainscript: Unified Scripting/Configuration Language
-
-#### 8.1.1: Lexer ✅ **COMPLETE**
-- ✅ Tokenizer implementation (`src/grainscript/lexer.zig`)
-- ✅ Token types (identifiers, keywords, literals, operators, punctuation)
-- ✅ Number parsing (integer, float, hex, binary)
-- ✅ String literal parsing (single/double quotes, escape sequences)
-- ✅ Comment parsing (single-line `//`, multi-line `/* */`)
-- ✅ Keyword recognition (if, else, while, for, fn, var, const, return, etc.)
-- ✅ Operator recognition (arithmetic, comparison, logical, assignment)
-- ✅ Line/column tracking for error reporting
-- ✅ Bounded allocations (MAX_TOKENS: 10,000, MAX_TOKEN_LEN: 1,024)
-- ✅ Comprehensive tests (`tests/039_grainscript_lexer_test.zig`)
-- ✅ GrainStyle compliance (u32 types, assertions, iterative algorithms, no recursion)
-
-#### 8.1.2: Parser ✅ **COMPLETE**
-- ✅ AST node types (expressions, statements, declarations, `src/grainscript/parser.zig`)
-- ✅ Expression parsing (arithmetic, comparison, logical, precedence-based)
-- ✅ Statement parsing (if, while, for, return, break, continue)
-- ✅ Declaration parsing (var, const, fn)
-- ✅ Type parsing (explicit types, no `any`)
-- ✅ Error recovery and reporting (ParserError enum)
-- ✅ Bounded AST depth (MAX_AST_DEPTH: 100, prevents stack overflow)
-- ✅ Comprehensive tests (`tests/040_grainscript_parser_test.zig`)
-- ✅ Iterative parsing (no recursion, stack-based precedence)
-- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
-
-#### 8.1.3: Basic Command Execution ✅ **COMPLETE**
-- ✅ Interpreter implementation (`src/grainscript/interpreter.zig`)
-- ✅ Runtime value system (integer, float, string, boolean, null)
-- ✅ Expression evaluation (arithmetic, comparison, logical, unary)
-- ✅ Statement execution (if, while, for, return, block)
-- ✅ Variable and constant declarations
-- ✅ Built-in commands (echo, cd, pwd, exit)
-- ✅ Exit code handling
-- ✅ Error handling (Interpreter.Error enum)
-- ✅ Bounded runtime state (MAX_VARIABLES: 1,000, MAX_FUNCTIONS: 256, MAX_CALL_STACK: 1,024)
-- ✅ Comprehensive tests (`tests/041_grainscript_interpreter_test.zig`)
-- ✅ Iterative evaluation (no recursion, stack-based)
-- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
-- ⚠️ External command execution (requires kernel syscall integration - Phase 8.1.4+)
-
-#### 8.1.4: Variable Handling ✅ **COMPLETE**
-- ✅ Assignment operator parsing (`expr_assign` node type)
-- ✅ Assignment expression evaluation
-- ✅ Variable scope management (local vs global, scope depth tracking)
-- ✅ Variable lookup with scope resolution (local to global search)
-- ✅ Type checking for variable assignments (type compatibility)
-- ✅ Constant protection (cannot assign to constants)
-- ✅ Scope cleanup (automatic cleanup of local variables on block exit)
-- ✅ Comprehensive tests (`tests/042_grainscript_variable_handling_test.zig`)
-- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
-
-#### 8.1.5: Control Flow ✅ **COMPLETE**
-- ✅ If/else statements (already implemented in Phase 8.1.3)
-- ✅ While loops (already implemented in Phase 8.1.3)
-- ✅ For loops (already implemented in Phase 8.1.3)
-- ✅ Break and continue statements (control flow signal system)
-- ✅ Return statements (already implemented in Phase 8.1.3)
-- ✅ Control flow signal propagation (break/continue propagate through blocks)
-- ✅ Nested loop support (break/continue work in nested loops)
-- ✅ Comprehensive tests (`tests/043_grainscript_control_flow_test.zig`)
-- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
-
-#### 8.1.6: Type System ✅ **COMPLETE**
-- ✅ Explicit type annotations (no `any` types, supports i32/i64/int, f32/f64/float, string/str, bool/boolean)
-- ✅ Type checking (variable declarations, assignments, type compatibility)
-- ✅ Type inference (infers type from initializer when not explicitly declared)
-- ✅ Type error reporting (type_mismatch error for incompatible types)
-- ✅ Variable type tracking (stores declared/inferred types with variables)
-- ✅ Type aliases support (int/i32/i64, float/f32/f64, str/string, bool/boolean)
-- ✅ Numeric type compatibility (integer and float are compatible)
-- ✅ Comprehensive tests (`tests/044_grainscript_type_system_test.zig`)
-- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
-
-### 8.2 Grain Terminal: Terminal Application (PLANNED)
-
-**Objective**: Wezterm-level terminal for Grain OS running in Grain Vantage VM.
-
-#### 8.2.1: Terminal Core ✅ **IN PROGRESS**
-- ✅ Terminal emulation (VT100/VT220 subset, `src/grain_terminal/terminal.zig`)
-- ✅ Character cell grid management (Cell struct, CellAttributes)
-- ✅ Escape sequence handling (ESC, CSI, OSC sequences)
-- ✅ Cursor movement (up, down, forward, backward, position)
-- ✅ Text attributes (bold, italic, underline, blink, reverse video)
-- ✅ ANSI color support (16-color palette)
-- ✅ Scrollback buffer tracking
-- ✅ Character cell rendering (`src/grain_terminal/renderer.zig`)
-- ✅ Framebuffer integration (renders cells to framebuffer)
-- ✅ Comprehensive tests (`tests/045_grain_terminal_test.zig`)
-- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
-- ⚠️ Input handling (keyboard, mouse) - requires kernel syscall integration
-- ⚠️ RISC-V compilation target - ready for integration
-- ⚠️ Grain Kernel syscall integration - requires coordination with VM/Kernel agent
-
-#### 8.2.2: UI Features ✅ **COMPLETE**
-- ✅ Tab management (`src/grain_terminal/tab.zig`)
-- ✅ Pane management (`src/grain_terminal/pane.zig`)
-- ✅ Split windows (horizontal and vertical splits)
-- ✅ Configuration management (`src/grain_terminal/config.zig`)
-- ✅ Themes support (dark, light, solarized, gruvbox)
-- ✅ Font size management (small, medium, large, xlarge)
-- ✅ Configuration key-value storage
-- ✅ Pane position and hit testing (iterative, no recursion)
-- ✅ Comprehensive tests (`tests/046_grain_terminal_ui_test.zig`)
-- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
-- ⚠️ Grain Aurora rendering integration - requires coordination with Dream Editor/Browser agent
-
-#### 8.2.3: Advanced Features ✅ **COMPLETE**
-- ✅ Session management (`src/grain_terminal/session.zig`)
-- ✅ Session save/restore functionality
-- ✅ Tab management in sessions
-- ✅ Configuration snapshots for sessions
-- ✅ Grainscript integration (`src/grain_terminal/grainscript_integration.zig`)
-- ✅ Command execution with output capture
-- ✅ Script execution from files
-- ✅ REPL state management (command history)
-- ✅ Plugin system (`src/grain_terminal/plugin.zig`)
-- ✅ Plugin loading/unloading
-- ✅ Plugin API definition (hooks for terminal events)
-- ✅ Comprehensive tests (`tests/047_grain_terminal_advanced_test.zig`)
-- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
-
-### 8.3 Grain Skate: Knowledge Graph Application
-
-**Objective**: Native macOS knowledge graph with social threading, powered by Grain Field (WSE compute) and Grain Silo (object storage).
-
-#### 8.3.0: Storage & Compute Foundation ✅ **COMPLETE**
-- ✅ Grain Field (`src/grain_field/compute.zig`) - WSE RAM-only spatial computing abstraction
-- ✅ Field topology (2D grid with wrap-around) (2D grid with wrap-around)
-- ✅ SRAM allocation and management (44GB+ capacity)
-- ✅ Parallel operations (vector search, full-text search, matrix multiply)
-- ✅ Core state management (idle, active, waiting, error)
-- ✅ Grain Silo (`src/grain_silo/storage.zig`) - Object storage abstraction (Turbopuffer replacement)
-- ✅ Hot/cold data separation (SRAM cache vs object storage)
-- ✅ Object storage with metadata
-- ✅ Hot cache promotion/demotion
-- ✅ Comprehensive tests (`tests/049_grain_field_test.zig`, `tests/050_grain_silo_test.zig`)
-- ✅ GrainStyle compliance (u32/u64 types, assertions, bounded allocations)
-
-#### 8.3.1: Core Engine ✅ **COMPLETE**
-- ✅ Block storage (`src/grain_skate/block.zig`)
-- ✅ Block linking system (bidirectional links and backlinks)
-- ✅ Block content and title management
-- ✅ Text editor with Vim bindings (`src/grain_skate/editor.zig`)
-- ✅ Editor modes (normal, insert, visual, command)
-- ✅ Cursor movement (h, j, k, l)
-- ✅ Text buffer management
-- ✅ Undo/redo history structure
-- ✅ Comprehensive tests (`tests/048_grain_skate_core_test.zig`)
-- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
-- ✅ Storage integration (`src/grain_skate/storage_integration.zig`)
-- ✅ Block-to-object mapping (Grain Silo integration)
-- ✅ Hot cache promotion/demotion (Grain Field SRAM integration)
-- ✅ Persist/load blocks from Grain Silo
-- ⚠️ DAG integration - can leverage `src/dag_core.zig` for future graph visualization
-
-#### 8.3.2: UI Framework ✅ **COMPLETE**
-- ✅ Native macOS window management (`src/grain_skate/window.zig`)
-- ✅ Modal editing system (Vim/Kakoune keybindings) (`src/grain_skate/modal_editor.zig`)
-- ✅ Graph visualization (`src/grain_skate/graph_viz.zig`)
-  - ✅ Force-directed layout algorithm (iterative, no recursion)
-  - ✅ Node and edge management (MAX_NODES: 1024, MAX_EDGES: 4096)
-  - ✅ View controls (pan, zoom, select)
-  - ✅ Comprehensive tests (`tests/054_grain_skate_graph_viz_test.zig`)
-  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, max 70 lines per function)
-
-#### 8.3.3: Social Features ✅ **COMPLETE**
-- ✅ Link-based reply system (`src/grain_skate/social.zig`)
-- ✅ Reply threading with depth calculation (iterative, no recursion)
-- ✅ Transclusion engine (block embedding with depth tracking)
-- ✅ Transcluded content expansion
-- ✅ Export/import capabilities (JSON and Markdown formats)
-  - ✅ Full JSON export with all block fields (id, title, content, timestamps, links)
-  - ✅ JSON string escaping (quotes, newlines, tabs, etc.)
-  - ✅ Enhanced Markdown export with links and frontmatter
-  - ✅ JSON import with iterative parser (no recursion)
-  - ✅ Link restoration on import
-- ✅ Comprehensive tests (`tests/051_grain_skate_social_test.zig`)
-- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+#### 8.3.4: Application Integration ✅ **COMPLETE**
+- ✅ Main application structure (`src/grain_skate/app.zig`)
+- ✅ Component integration (window, editor, graph, blocks, social)
+- ✅ Block-to-graph synchronization
+- ✅ Block editing workflow
+- ✅ Graph layout updates on block changes
+- ✅ Comprehensive tests (`tests/055_grain_skate_app_test.zig`)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, max 70 lines per function)
 
 ## 👥 Parallel Development Opportunities
 
@@ -1527,6 +1308,262 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
   - ✅ Link restoration on import
 - ✅ Comprehensive tests (`tests/051_grain_skate_social_test.zig`)
 - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+
+#### 8.3.4: Application Integration ✅ **COMPLETE**
+- ✅ Main application structure (`src/grain_skate/app.zig`)
+- ✅ Component integration (window, editor, graph, blocks, social)
+- ✅ Block-to-graph synchronization
+- ✅ Block editing workflow
+- ✅ Graph layout updates on block changes
+- ✅ Comprehensive tests (`tests/055_grain_skate_app_test.zig`)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, max 70 lines per function)
+
+## 👥 Parallel Development Opportunities
+
+**Current Agent Focuses**:
+1. **VM/Kernel Agent**: Grain Vantage & Kernel Boot Integration (`src/kernel_vm/`, `src/kernel/`, `src/platform/macos_tahoe/`)
+2. **Dream Editor/Browser Agent**: Foundation components (`src/aurora_*.zig`, `src/dream_*.zig`)
+3. **Grain Skate Agent**: Grainscript (`src/grainscript/`), Grain Terminal, Grain Skate
+
+**Available for Parallel Work** (see `docs/agent_work_summary.md` and `docs/dream_editor_agent_summary.md`):
+- **Dream Editor/Browser** (`src/aurora_*.zig`, `src/dream_*.zig`) - 🔄 Active (Phase 0)
+- **Userspace Tools** (`src/userspace/`) - Core utilities, browser engine, build tools
+- **Grain Ecosystem** (`src/graincard/`, `grainseed*.zig`) - Graincard, seed system
+- **TLS/Networking** (`src/grain_tls/`, `nostr.zig`) - TLS client, protocols
+- **Platform Implementations** (`src/platform/riscv/`) - Native RISC-V platform
+- **Kernel Advanced Features** - Memory management, process scheduling (design in parallel)
+- **Documentation** (`docs/learning-course/`) - Course content, tutorials
+
+**See**: 
+- `docs/agent_work_summary.md` - VM/Kernel agent work
+- `docs/dream_editor_agent_summary.md` - Dream Editor/Browser agent work
+- `docs/grain_skate_agent_acknowledgment.md` - Grain Skate/Terminal/Script agent acknowledgment and plan
+
+## 🔗 References
+
+- **Framework 13 RISC-V**: https://frame.work/products/deep-computing-risc-v-mainboard
+- **DeepComputing DC-ROMA**: https://deepcomputing.io/product/dc-roma-risc-v-mainboard/
+- **Daylight Computer**: https://daylightcomputer.com
+- **JIT Architecture**: `docs/zyx/jit_architecture.md`
+- **Tasks**: `docs/tasks.md`
+- **Agent Work Summary**: `docs/agent_work_summary.md`
+- **Development Strategy**: `docs/zyx/development_strategy_2025.md`
+
+- ✅ Contract management (create, execute actions: mint, burn, transfer, collect_tax)
+- ✅ Payment processing (batch processing, deterministic execution)
+- ✅ DAG integration (contracts and payments as DAG events)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+
+#### 3.4: GrainBank Browser Integration ✅ **COMPLETE**
+- ✅ Integrate GrainBank into unified IDE
+- ✅ Browser tabs can have associated GrainBank contracts
+- ✅ Automatic micropayments triggered when viewing paid content
+- ✅ Payment detection from URL/content (Nostr event parsing)
+- ✅ Enable/disable payments per tab
+- ✅ Associate contracts with browser tabs
+- ✅ Process payments via deterministic state machine
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+
+**See**: `docs/dream_implementation_roadmap.md` for complete roadmap
+
+## 🌾 Phase 8: Grain Skate / Terminal / Script
+
+**Status**: ✅ Grainscript Phase 8.1.1 (Lexer) COMPLETE | ✅ Grainscript Phase 8.1.2 (Parser) COMPLETE | ✅ Grainscript Phase 8.1.3 (Basic Command Execution) COMPLETE | ✅ Grainscript Phase 8.1.4 (Variable Handling) COMPLETE | ✅ Grainscript Phase 8.1.5 (Control Flow) COMPLETE | ✅ Grainscript Phase 8.1.6 (Type System) COMPLETE
+
+**Vision**: Three complementary projects for Grain OS:
+1. **Grain Terminal**: Wezterm-level terminal for Grain OS (RISC-V target)
+2. **Grainscript**: Unified scripting/configuration language to replace Bash/Zsh/Fish and all config/data file formats (`.gr` files)
+3. **Grain Skate**: Native macOS knowledge graph application with social threading
+
+### 8.1 Grainscript: Unified Scripting/Configuration Language
+
+#### 8.1.1: Lexer ✅ **COMPLETE**
+- ✅ Tokenizer implementation (`src/grainscript/lexer.zig`)
+- ✅ Token types (identifiers, keywords, literals, operators, punctuation)
+- ✅ Number parsing (integer, float, hex, binary)
+- ✅ String literal parsing (single/double quotes, escape sequences)
+- ✅ Comment parsing (single-line `//`, multi-line `/* */`)
+- ✅ Keyword recognition (if, else, while, for, fn, var, const, return, etc.)
+- ✅ Operator recognition (arithmetic, comparison, logical, assignment)
+- ✅ Line/column tracking for error reporting
+- ✅ Bounded allocations (MAX_TOKENS: 10,000, MAX_TOKEN_LEN: 1,024)
+- ✅ Comprehensive tests (`tests/039_grainscript_lexer_test.zig`)
+- ✅ GrainStyle compliance (u32 types, assertions, iterative algorithms, no recursion)
+
+#### 8.1.2: Parser ✅ **COMPLETE**
+- ✅ AST node types (expressions, statements, declarations, `src/grainscript/parser.zig`)
+- ✅ Expression parsing (arithmetic, comparison, logical, precedence-based)
+- ✅ Statement parsing (if, while, for, return, break, continue)
+- ✅ Declaration parsing (var, const, fn)
+- ✅ Type parsing (explicit types, no `any`)
+- ✅ Error recovery and reporting (ParserError enum)
+- ✅ Bounded AST depth (MAX_AST_DEPTH: 100, prevents stack overflow)
+- ✅ Comprehensive tests (`tests/040_grainscript_parser_test.zig`)
+- ✅ Iterative parsing (no recursion, stack-based precedence)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+
+#### 8.1.3: Basic Command Execution ✅ **COMPLETE**
+- ✅ Interpreter implementation (`src/grainscript/interpreter.zig`)
+- ✅ Runtime value system (integer, float, string, boolean, null)
+- ✅ Expression evaluation (arithmetic, comparison, logical, unary)
+- ✅ Statement execution (if, while, for, return, block)
+- ✅ Variable and constant declarations
+- ✅ Built-in commands (echo, cd, pwd, exit)
+- ✅ Exit code handling
+- ✅ Error handling (Interpreter.Error enum)
+- ✅ Bounded runtime state (MAX_VARIABLES: 1,000, MAX_FUNCTIONS: 256, MAX_CALL_STACK: 1,024)
+- ✅ Comprehensive tests (`tests/041_grainscript_interpreter_test.zig`)
+- ✅ Iterative evaluation (no recursion, stack-based)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+- ⚠️ External command execution (requires kernel syscall integration - Phase 8.1.4+)
+
+#### 8.1.4: Variable Handling ✅ **COMPLETE**
+- ✅ Assignment operator parsing (`expr_assign` node type)
+- ✅ Assignment expression evaluation
+- ✅ Variable scope management (local vs global, scope depth tracking)
+- ✅ Variable lookup with scope resolution (local to global search)
+- ✅ Type checking for variable assignments (type compatibility)
+- ✅ Constant protection (cannot assign to constants)
+- ✅ Scope cleanup (automatic cleanup of local variables on block exit)
+- ✅ Comprehensive tests (`tests/042_grainscript_variable_handling_test.zig`)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+
+#### 8.1.5: Control Flow ✅ **COMPLETE**
+- ✅ If/else statements (already implemented in Phase 8.1.3)
+- ✅ While loops (already implemented in Phase 8.1.3)
+- ✅ For loops (already implemented in Phase 8.1.3)
+- ✅ Break and continue statements (control flow signal system)
+- ✅ Return statements (already implemented in Phase 8.1.3)
+- ✅ Control flow signal propagation (break/continue propagate through blocks)
+- ✅ Nested loop support (break/continue work in nested loops)
+- ✅ Comprehensive tests (`tests/043_grainscript_control_flow_test.zig`)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+
+#### 8.1.6: Type System ✅ **COMPLETE**
+- ✅ Explicit type annotations (no `any` types, supports i32/i64/int, f32/f64/float, string/str, bool/boolean)
+- ✅ Type checking (variable declarations, assignments, type compatibility)
+- ✅ Type inference (infers type from initializer when not explicitly declared)
+- ✅ Type error reporting (type_mismatch error for incompatible types)
+- ✅ Variable type tracking (stores declared/inferred types with variables)
+- ✅ Type aliases support (int/i32/i64, float/f32/f64, str/string, bool/boolean)
+- ✅ Numeric type compatibility (integer and float are compatible)
+- ✅ Comprehensive tests (`tests/044_grainscript_type_system_test.zig`)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+
+### 8.2 Grain Terminal: Terminal Application (PLANNED)
+
+**Objective**: Wezterm-level terminal for Grain OS running in Grain Vantage VM.
+
+#### 8.2.1: Terminal Core ✅ **IN PROGRESS**
+- ✅ Terminal emulation (VT100/VT220 subset, `src/grain_terminal/terminal.zig`)
+- ✅ Character cell grid management (Cell struct, CellAttributes)
+- ✅ Escape sequence handling (ESC, CSI, OSC sequences)
+- ✅ Cursor movement (up, down, forward, backward, position)
+- ✅ Text attributes (bold, italic, underline, blink, reverse video)
+- ✅ ANSI color support (16-color palette)
+- ✅ Scrollback buffer tracking
+- ✅ Character cell rendering (`src/grain_terminal/renderer.zig`)
+- ✅ Framebuffer integration (renders cells to framebuffer)
+- ✅ Comprehensive tests (`tests/045_grain_terminal_test.zig`)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+- ⚠️ Input handling (keyboard, mouse) - requires kernel syscall integration
+- ⚠️ RISC-V compilation target - ready for integration
+- ⚠️ Grain Kernel syscall integration - requires coordination with VM/Kernel agent
+
+#### 8.2.2: UI Features ✅ **COMPLETE**
+- ✅ Tab management (`src/grain_terminal/tab.zig`)
+- ✅ Pane management (`src/grain_terminal/pane.zig`)
+- ✅ Split windows (horizontal and vertical splits)
+- ✅ Configuration management (`src/grain_terminal/config.zig`)
+- ✅ Themes support (dark, light, solarized, gruvbox)
+- ✅ Font size management (small, medium, large, xlarge)
+- ✅ Configuration key-value storage
+- ✅ Pane position and hit testing (iterative, no recursion)
+- ✅ Comprehensive tests (`tests/046_grain_terminal_ui_test.zig`)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+- ⚠️ Grain Aurora rendering integration - requires coordination with Dream Editor/Browser agent
+
+#### 8.2.3: Advanced Features ✅ **COMPLETE**
+- ✅ Session management (`src/grain_terminal/session.zig`)
+- ✅ Session save/restore functionality
+- ✅ Tab management in sessions
+- ✅ Configuration snapshots for sessions
+- ✅ Grainscript integration (`src/grain_terminal/grainscript_integration.zig`)
+- ✅ Command execution with output capture
+- ✅ Script execution from files
+- ✅ REPL state management (command history)
+- ✅ Plugin system (`src/grain_terminal/plugin.zig`)
+- ✅ Plugin loading/unloading
+- ✅ Plugin API definition (hooks for terminal events)
+- ✅ Comprehensive tests (`tests/047_grain_terminal_advanced_test.zig`)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+
+### 8.3 Grain Skate: Knowledge Graph Application
+
+**Objective**: Native macOS knowledge graph with social threading, powered by Grain Field (WSE compute) and Grain Silo (object storage).
+
+#### 8.3.0: Storage & Compute Foundation ✅ **COMPLETE**
+- ✅ Grain Field (`src/grain_field/compute.zig`) - WSE RAM-only spatial computing abstraction
+- ✅ Field topology (2D grid with wrap-around) (2D grid with wrap-around)
+- ✅ SRAM allocation and management (44GB+ capacity)
+- ✅ Parallel operations (vector search, full-text search, matrix multiply)
+- ✅ Core state management (idle, active, waiting, error)
+- ✅ Grain Silo (`src/grain_silo/storage.zig`) - Object storage abstraction (Turbopuffer replacement)
+- ✅ Hot/cold data separation (SRAM cache vs object storage)
+- ✅ Object storage with metadata
+- ✅ Hot cache promotion/demotion
+- ✅ Comprehensive tests (`tests/049_grain_field_test.zig`, `tests/050_grain_silo_test.zig`)
+- ✅ GrainStyle compliance (u32/u64 types, assertions, bounded allocations)
+
+#### 8.3.1: Core Engine ✅ **COMPLETE**
+- ✅ Block storage (`src/grain_skate/block.zig`)
+- ✅ Block linking system (bidirectional links and backlinks)
+- ✅ Block content and title management
+- ✅ Text editor with Vim bindings (`src/grain_skate/editor.zig`)
+- ✅ Editor modes (normal, insert, visual, command)
+- ✅ Cursor movement (h, j, k, l)
+- ✅ Text buffer management
+- ✅ Undo/redo history structure
+- ✅ Comprehensive tests (`tests/048_grain_skate_core_test.zig`)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+- ✅ Storage integration (`src/grain_skate/storage_integration.zig`)
+- ✅ Block-to-object mapping (Grain Silo integration)
+- ✅ Hot cache promotion/demotion (Grain Field SRAM integration)
+- ✅ Persist/load blocks from Grain Silo
+- ⚠️ DAG integration - can leverage `src/dag_core.zig` for future graph visualization
+
+#### 8.3.2: UI Framework ✅ **COMPLETE**
+- ✅ Native macOS window management (`src/grain_skate/window.zig`)
+- ✅ Modal editing system (Vim/Kakoune keybindings) (`src/grain_skate/modal_editor.zig`)
+- ✅ Graph visualization (`src/grain_skate/graph_viz.zig`)
+  - ✅ Force-directed layout algorithm (iterative, no recursion)
+  - ✅ Node and edge management (MAX_NODES: 1024, MAX_EDGES: 4096)
+  - ✅ View controls (pan, zoom, select)
+  - ✅ Comprehensive tests (`tests/054_grain_skate_graph_viz_test.zig`)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, max 70 lines per function)
+
+#### 8.3.3: Social Features ✅ **COMPLETE**
+- ✅ Link-based reply system (`src/grain_skate/social.zig`)
+- ✅ Reply threading with depth calculation (iterative, no recursion)
+- ✅ Transclusion engine (block embedding with depth tracking)
+- ✅ Transcluded content expansion
+- ✅ Export/import capabilities (JSON and Markdown formats)
+  - ✅ Full JSON export with all block fields (id, title, content, timestamps, links)
+  - ✅ JSON string escaping (quotes, newlines, tabs, etc.)
+  - ✅ Enhanced Markdown export with links and frontmatter
+  - ✅ JSON import with iterative parser (no recursion)
+  - ✅ Link restoration on import
+- ✅ Comprehensive tests (`tests/051_grain_skate_social_test.zig`)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+
+#### 8.3.4: Application Integration ✅ **COMPLETE**
+- ✅ Main application structure (`src/grain_skate/app.zig`)
+- ✅ Component integration (window, editor, graph, blocks, social)
+- ✅ Block-to-graph synchronization
+- ✅ Block editing workflow
+- ✅ Graph layout updates on block changes
+- ✅ Comprehensive tests (`tests/055_grain_skate_app_test.zig`)
+- ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, max 70 lines per function)
 
 ## 👥 Parallel Development Opportunities
 

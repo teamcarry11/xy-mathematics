@@ -50,8 +50,8 @@ pub const FramebufferRenderer = struct {
     // Clear framebuffer to background color.
     pub fn clear(self: *const FramebufferRenderer, color: u32) void {
         std.debug.assert(self.syscall_fn != null);
-        if (self.syscall_fn) |fn| {
-            const result = fn(SYSCALL_FB_CLEAR, color, 0, 0, 0);
+        if (self.syscall_fn) |syscall| {
+            const result = syscall(SYSCALL_FB_CLEAR, color, 0, 0, 0);
             std.debug.assert(result == 0);
         }
     }
@@ -66,8 +66,8 @@ pub const FramebufferRenderer = struct {
         std.debug.assert(x < FRAMEBUFFER_WIDTH);
         std.debug.assert(y < FRAMEBUFFER_HEIGHT);
         std.debug.assert(self.syscall_fn != null);
-        if (self.syscall_fn) |fn| {
-            const result = fn(SYSCALL_FB_DRAW_PIXEL, x, y, color, 0);
+        if (self.syscall_fn) |syscall| {
+            const result = syscall(SYSCALL_FB_DRAW_PIXEL, x, y, color, 0);
             std.debug.assert(result == 0);
         }
     }
@@ -107,23 +107,19 @@ pub const FramebufferRenderer = struct {
     // Draw text string.
     pub fn draw_text(
         self: *const FramebufferRenderer,
-        text: []const u8,
-        x: u32,
-        y: u32,
-        fg_color: u32,
+        _text: []const u8,
+        _x: u32,
+        _y: u32,
+        _fg_color: u32,
     ) void {
-        std.debug.assert(text.len > 0);
-        std.debug.assert(text.len <= MAX_TEXT_LEN);
-        std.debug.assert(x < FRAMEBUFFER_WIDTH);
-        std.debug.assert(y < FRAMEBUFFER_HEIGHT);
+        std.debug.assert(_text.len > 0);
+        std.debug.assert(_text.len <= MAX_TEXT_LEN);
+        std.debug.assert(_x < FRAMEBUFFER_WIDTH);
+        std.debug.assert(_y < FRAMEBUFFER_HEIGHT);
         std.debug.assert(self.syscall_fn != null);
         // Note: In real implementation, text would be in VM memory.
         // For now, this is a placeholder that will be implemented
         // when we have VM memory access.
-        _ = text;
-        _ = x;
-        _ = y;
-        _ = fg_color;
     }
 };
 

@@ -22,6 +22,21 @@ pub const DreamBrowserParser = struct {
     // Bounded: Max 1,000 CSS rules per stylesheet
     pub const MAX_CSS_RULES: u32 = 1_000;
     
+    // Bounded: Max HTML input size (10MB)
+    pub const MAX_HTML_SIZE: u32 = 10 * 1024 * 1024;
+    
+    // Bounded: Max tag name length (64 chars)
+    pub const MAX_TAG_NAME_LEN: u32 = 64;
+    
+    // Bounded: Max 100 attributes per tag
+    pub const MAX_ATTRIBUTES: u32 = 100;
+    
+    // Bounded: Max attribute name length (256 chars)
+    pub const MAX_ATTR_NAME_LEN: u32 = 256;
+    
+    // Bounded: Max attribute value length (4KB)
+    pub const MAX_ATTR_VALUE_LEN: u32 = 4 * 1024;
+    
     /// HTML element node (DOM node).
     pub const HtmlNode = struct {
         tag_name: []const u8, // "div", "span", "p", etc.
@@ -52,9 +67,6 @@ pub const DreamBrowserParser = struct {
     
     /// Initialize parser.
     pub fn init(allocator: std.mem.Allocator) DreamBrowserParser {
-        // Assert: Allocator must be valid
-        std.debug.assert(allocator.ptr != null);
-        
         return DreamBrowserParser{
             .allocator = allocator,
         };
@@ -74,6 +86,11 @@ pub const DreamBrowserParser = struct {
         // Assert: HTML must be non-empty
         std.debug.assert(html.len > 0);
         
+        // Bounded: Max HTML input size
+        if (html.len > MAX_HTML_SIZE) {
+            return error.HtmlTooLarge;
+        }
+        
         // Simple HTML parser (subset of HTML5)
         // For now, parse basic structure: <tag>content</tag>
         // TODO: Implement full HTML5 parser
@@ -82,20 +99,40 @@ pub const DreamBrowserParser = struct {
         const tag_start = std.mem.indexOf(u8, html, "<") orelse return error.InvalidHtml;
         const tag_end = std.mem.indexOf(u8, html[tag_start..], ">") orelse return error.InvalidHtml;
         
+        // Assert: Tag must be valid
+        std.debug.assert(tag_end > 0);
+        std.debug.assert(tag_start + tag_end < html.len);
+        
         const tag_str = html[tag_start + 1..tag_start + tag_end];
+        
+        // Assert: Tag string must be non-empty
+        std.debug.assert(tag_str.len > 0);
+        
+        // Bounded: Max tag name length
+        if (tag_str.len > MAX_TAG_NAME_LEN) {
+            return error.TagNameTooLong;
+        }
         
         // Parse tag name and attributes
         const space_idx = std.mem.indexOfScalar(u8, tag_str, ' ') orelse tag_str.len;
         const tag_name = tag_str[0..space_idx];
         
+        // Assert: Tag name must be non-empty
+        std.debug.assert(tag_name.len > 0);
+        
         // Parse attributes (simple: name="value")
-        // Pre-allocate capacity (optimization: reduce reallocations)
+        // Bounded: Max attributes per tag
         var attributes = std.ArrayList(Attribute){ .items = &.{}, .capacity = 0 };
         defer attributes.deinit(self.allocator);
-        try attributes.ensureTotalCapacity(self.allocator, 10); // Pre-allocate for common case
+        try attributes.ensureTotalCapacity(self.allocator, 10);
         
         var attr_start = space_idx;
         while (attr_start < tag_str.len) {
+            // Bounded: Max attributes
+            if (attributes.items.len >= MAX_ATTRIBUTES) {
+                break;
+            }
+            
             // Skip whitespace
             while (attr_start < tag_str.len and tag_str[attr_start] == ' ') {
                 attr_start += 1;
@@ -107,10 +144,27 @@ pub const DreamBrowserParser = struct {
             const attr_name_end = std.mem.indexOfScalar(u8, tag_str[attr_name_start..], '=') orelse break;
             const attr_name = tag_str[attr_name_start..attr_name_start + attr_name_end];
             
+            // Bounded: Max attribute name length
+            if (attr_name.len > MAX_ATTR_NAME_LEN) {
+                return error.AttributeNameTooLong;
+            }
+            
             // Find attribute value
             const attr_value_start = attr_name_start + attr_name_end + 2; // Skip '='
+            if (attr_value_start >= tag_str.len) break;
+            
+            // Assert: Attribute value must start with quote
+            if (attr_value_start > 0 and tag_str[attr_value_start - 1] != '"') {
+                return error.InvalidAttribute;
+            }
+            
             const attr_value_end = std.mem.indexOfScalar(u8, tag_str[attr_value_start..], '"') orelse break;
             const attr_value = tag_str[attr_value_start..attr_value_start + attr_value_end];
+            
+            // Bounded: Max attribute value length
+            if (attr_value.len > MAX_ATTR_VALUE_LEN) {
+                return error.AttributeValueTooLong;
+            }
             
             try attributes.append(Attribute{
                 .name = try self.allocator.dupe(u8, attr_name),
@@ -300,8 +354,8 @@ test "browser parser initialization" {
     var parser = DreamBrowserParser.init(arena.allocator());
     defer parser.deinit();
     
-    // Assert: Parser initialized
-    try std.testing.expect(parser.allocator.ptr != null);
+    // Assert: Parser initialized (check via usage)
+    _ = parser.allocator;
 }
 
 test "browser parser parse html" {

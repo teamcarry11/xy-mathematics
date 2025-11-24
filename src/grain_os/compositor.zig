@@ -9,6 +9,8 @@ const wayland = @import("wayland/protocol.zig");
 const basin_kernel = @import("basin_kernel");
 const tiling = @import("tiling.zig");
 const framebuffer_renderer = @import("framebuffer_renderer.zig");
+const layout_generator = @import("layout_generator.zig");
+const input_handler = @import("input_handler.zig");
 
 // Bounded: Max number of windows.
 pub const MAX_WINDOWS: u32 = 256;
@@ -90,6 +92,9 @@ pub const Compositor = struct {
     framebuffer_base: u64,
     tiling_tree: tiling.TilingTree,
     renderer: framebuffer_renderer.FramebufferRenderer,
+    layout_registry: layout_generator.LayoutRegistry,
+    input: input_handler.InputHandler,
+    focused_window_id: u32,
 
     pub fn init(allocator: std.mem.Allocator) Compositor {
         std.debug.assert(@intFromPtr(allocator.ptr) != 0);
@@ -105,6 +110,9 @@ pub const Compositor = struct {
             .framebuffer_base = 0x90000000,
             .tiling_tree = tiling.TilingTree.init(),
             .renderer = framebuffer_renderer.FramebufferRenderer.init(),
+            .layout_registry = layout_generator.LayoutRegistry.init(),
+            .input = input_handler.InputHandler.init(),
+            .focused_window_id = 0,
         };
         var i: u32 = 0;
         while (i < MAX_WINDOWS) : (i += 1) {
@@ -142,10 +150,9 @@ pub const Compositor = struct {
         self.tiling_tree.add_window(window_id) catch {
             return error.OutOfMemory;
         };
-        // Calculate layout with current output dimensions.
-        self.tiling_tree.calculate_layout(
-            0,
-            0,
+        // Calculate layout with current layout generator.
+        self.layout_registry.apply_layout(
+            &self.tiling_tree,
             self.output.width,
             self.output.height,
         );
@@ -196,10 +203,9 @@ pub const Compositor = struct {
             self.windows[i] = self.windows[i + 1];
         }
         self.windows_len -= 1;
-        // Recalculate layout.
-        self.tiling_tree.calculate_layout(
-            0,
-            0,
+        // Recalculate layout with current layout generator.
+        self.layout_registry.apply_layout(
+            &self.tiling_tree,
             self.output.width,
             self.output.height,
         );
@@ -218,10 +224,9 @@ pub const Compositor = struct {
     }
 
     pub fn recalculate_layout(self: *Compositor) void {
-        // Recalculate tiling layout for all windows.
-        self.tiling_tree.calculate_layout(
-            0,
-            0,
+        // Recalculate tiling layout with current layout generator.
+        self.layout_registry.apply_layout(
+            &self.tiling_tree,
             self.output.width,
             self.output.height,
         );
@@ -236,6 +241,34 @@ pub const Compositor = struct {
                 self.windows[i].height = bounds.height;
             }
         }
+    }
+
+    pub fn set_layout(self: *Compositor, layout_type: layout_generator.LayoutType) bool {
+        std.debug.assert(@intFromEnum(layout_type) < 4);
+        const success = self.layout_registry.set_current_layout(layout_type);
+        if (success) {
+            self.layout_registry.apply_layout(
+                &self.tiling_tree,
+                self.output.width,
+                self.output.height,
+            );
+            // Update window positions from tiling tree.
+            var i: u32 = 0;
+            while (i < self.windows_len) : (i += 1) {
+                const win_id = self.windows[i].id;
+                if (self.tiling_tree.get_window_bounds(win_id)) |bounds| {
+                    self.windows[i].x = bounds.x;
+                    self.windows[i].y = bounds.y;
+                    self.windows[i].width = bounds.width;
+                    self.windows[i].height = bounds.height;
+                }
+            }
+        }
+        return success;
+    }
+
+    pub fn get_current_layout(self: *const Compositor) layout_generator.LayoutType {
+        return self.layout_registry.current_layout;
     }
 
     pub fn render_to_framebuffer(self: *Compositor) void {
@@ -264,6 +297,90 @@ pub const Compositor = struct {
         fn_ptr: *const fn (u32, u64, u64, u64, u64) i64,
     ) void {
         self.renderer.set_syscall_fn(fn_ptr);
+        self.input.set_syscall_fn(fn_ptr);
+    }
+
+    // Find window at mouse position (hit testing).
+    pub fn find_window_at(self: *const Compositor, x: u32, y: u32) ?u32 {
+        std.debug.assert(x < self.output.width);
+        std.debug.assert(y < self.output.height);
+        // Check windows in reverse order (top to bottom).
+        var i: u32 = self.windows_len;
+        while (i > 0) {
+            i -= 1;
+            const win = &self.windows[i];
+            if (win.visible) {
+                const win_x = @as(u32, @intCast(win.x));
+                const win_y = @as(u32, @intCast(win.y));
+                if (x >= win_x and x < win_x + win.width and
+                    y >= win_y and y < win_y + win.height)
+                {
+                    return win.id;
+                }
+            }
+        }
+        return null;
+    }
+
+    // Focus window by ID.
+    pub fn focus_window(self: *Compositor, window_id: u32) bool {
+        std.debug.assert(window_id > 0);
+        // Unfocus current window.
+        if (self.focused_window_id > 0) {
+            if (self.get_window(self.focused_window_id)) |win| {
+                win.focused = false;
+            }
+        }
+        // Focus new window.
+        if (self.get_window(window_id)) |win| {
+            win.focused = true;
+            self.focused_window_id = window_id;
+            return true;
+        }
+        return false;
+    }
+
+    // Unfocus all windows.
+    pub fn unfocus_all(self: *Compositor) void {
+        if (self.focused_window_id > 0) {
+            if (self.get_window(self.focused_window_id)) |win| {
+                win.focused = false;
+            }
+            self.focused_window_id = 0;
+        }
+    }
+
+    // Process input events and route to windows.
+    pub fn process_input(self: *Compositor) !void {
+        const event_opt = try self.input.read_event();
+        if (event_opt) |event| {
+            if (event.event_type == .mouse) {
+                // Handle mouse events.
+                if (event.mouse.kind == .down) {
+                    // Mouse click: focus window at click position.
+                    const window_id_opt = self.find_window_at(
+                        event.mouse.x,
+                        event.mouse.y,
+                    );
+                    if (window_id_opt) |window_id| {
+                        _ = self.focus_window(window_id);
+                    } else {
+                        self.unfocus_all();
+                    }
+                }
+            } else if (event.event_type == .keyboard) {
+                // Handle keyboard events (route to focused window).
+                if (self.focused_window_id > 0) {
+                    // TODO: Route keyboard event to focused window.
+                    _ = event.keyboard;
+                }
+            }
+        }
+    }
+
+    // Get focused window ID.
+    pub fn get_focused_window_id(self: *const Compositor) u32 {
+        return self.focused_window_id;
     }
 };
 

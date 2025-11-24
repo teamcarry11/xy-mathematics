@@ -116,9 +116,9 @@ pub const InputHandler = struct {
     // Read next input event (non-blocking).
     pub fn read_event(self: *InputHandler) !?InputEvent {
         std.debug.assert(self.syscall_fn != null);
-        if (self.syscall_fn) |fn| {
+        if (self.syscall_fn) |syscall| {
             const event_ptr = @intFromPtr(&self.event_buf);
-            const result = fn(
+            const result = syscall(
                 SYSCALL_READ_INPUT_EVENT,
                 event_ptr,
                 0,

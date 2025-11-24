@@ -1025,6 +1025,15 @@
 - [x] Comprehensive tests (`tests/051_grain_skate_social_test.zig`)
 - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
 
+#### 8.3.4 Application Integration ✅ **COMPLETE**
+- [x] Main application structure (`src/grain_skate/app.zig`)
+- [x] Component integration (window, editor, graph, blocks, social)
+- [x] Block-to-graph synchronization
+- [x] Block editing workflow
+- [x] Graph layout updates on block changes
+- [x] Comprehensive tests (`tests/055_grain_skate_app_test.zig`)
+- [x] GrainStyle compliance (u32 types, assertions, bounded allocations, max 70 lines per function)
+
 ## 🚀 Phase 7: Production
 
 ### 7.1 Performance
@@ -1114,8 +1123,14 @@
   - ✅ Build system integration (grain_os module added)
   - ✅ River study setup (River 0.3.12 mirrored for architecture reference)
   - ✅ River-inspired features design (`docs/grain_os_river_inspired_design.md`)
-  - [ ] Workspace management (Phase 3)
-  - [ ] Runtime configuration (riverctl-like, Phase 3)
+  - ✅ Input routing & focus management (Phase 3) ✅ **COMPLETE**
+    - ✅ Input handler integration with compositor
+    - ✅ Window focus management (focus/unfocus on mouse click)
+    - ✅ Hit testing (find window at mouse position)
+    - ✅ Input event routing (mouse clicks focus windows)
+    - ✅ Comprehensive tests (`tests/056_grain_os_input_routing_test.zig`)
+  - [ ] Workspace management (Phase 4)
+  - [ ] Runtime configuration (riverctl-like, Phase 4)
 
 **In Progress**: 
 - Dream Editor Core - GLM-4.6 Integration (Phase 4.1.3) 🔄

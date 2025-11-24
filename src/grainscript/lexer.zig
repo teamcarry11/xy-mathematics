@@ -110,8 +110,7 @@ pub const Lexer = struct {
 
     /// Initialize lexer with source code.
     pub fn init(allocator: std.mem.Allocator, source: []const u8) !Lexer {
-        // Assert: Allocator must be valid
-        std.debug.assert(allocator.ptr != null);
+        // Assert: Allocator must be valid (allocator is used below)
 
         // Assert: Source must be valid
         std.debug.assert(source.len <= std.math.maxInt(u32));
@@ -134,7 +133,7 @@ pub const Lexer = struct {
     /// Deinitialize lexer and free memory.
     pub fn deinit(self: *Lexer) void {
         // Assert: Lexer must be valid
-        std.debug.assert(self.allocator.ptr != null);
+        _ = self.allocator; // Allocator is used below
 
         self.allocator.free(self.tokens);
         self.* = undefined;

@@ -55,8 +55,7 @@ pub const Session = struct {
 
     /// Initialize session manager.
     pub fn init(allocator: std.mem.Allocator) !Session {
-        // Assert: Allocator must be valid
-        _ = allocator; // Allocator is used below
+        // Assert: Allocator must be valid (allocator is used below)
 
         // Pre-allocate sessions buffer
         const sessions = try allocator.alloc(SessionData, MAX_SESSIONS);
@@ -73,7 +72,7 @@ pub const Session = struct {
     /// Deinitialize session manager and free memory.
     pub fn deinit(self: *Session) void {
         // Assert: Allocator must be valid
-        std.debug.assert(self.allocator.ptr != null);
+        _ = self.allocator; // Allocator is used below
 
         // Deinitialize all sessions
         var i: u32 = 0;

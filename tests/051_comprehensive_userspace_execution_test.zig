@@ -160,11 +160,13 @@ fn create_multi_segment_elf(
 
     // Code segment data (at offset 176)
     const code_data_val: u8 = 0xAA;
-    @memset(elf[176..][0..@intCast(code_size)], code_data_val);
+    const code_start: u32 = 176;
+    @memset(elf[code_start..][0..@intCast(code_size)], code_data_val);
 
     // Data segment data (at offset data_offset)
     const data_data_val: u8 = 0xBB;
-    @memset(elf[@intCast(data_offset)..][0..@intCast(data_size)], data_data_val);
+    const data_start: u32 = @intCast(data_offset);
+    @memset(elf[data_start..][0..@intCast(data_size)], data_data_val);
 
     return elf;
 }
@@ -316,8 +318,8 @@ test "multiple processes executing simultaneously" {
     kernel.scheduler.set_current(1);
 
     // Write ELFs to VM memory.
-    @memcpy(vm_memory[0x1000..][0..elf1.len], elf1);
-    @memcpy(vm_memory[0x2000..][0..elf2.len], elf2);
+    @memcpy(vm_memory[0x1000..][0..elf1.len], &elf1);
+    @memcpy(vm_memory[0x2000..][0..elf2.len], &elf2);
 
     // Spawn first process.
     const result1 = try kernel.syscall_spawn(0x1000, 0, 0, 0);

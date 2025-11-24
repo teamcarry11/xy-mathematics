@@ -118,7 +118,6 @@ pub const Plugin = struct {
     /// Initialize plugin manager.
     pub fn init(allocator: std.mem.Allocator) !Plugin {
         // Assert: Allocator must be valid (allocator is used below)
-        _ = allocator;
 
         // Pre-allocate plugins buffer
         const plugins = try allocator.alloc(PluginData, MAX_PLUGINS);

@@ -504,6 +504,14 @@
   - [x] Fix didChange range calculation for insertions
   - [x] All three editor TODOs now complete
   - [x] GrainStyle compliant: explicit types, bounded operations, assertions
+- [x] File Save/Load Functionality ✅ **COMPLETE**
+  - [x] save_file method (persist editor buffer to disk)
+  - [x] load_file method (load file from disk into editor)
+  - [x] Handle file:// URI prefix (strip for file path)
+  - [x] Bounded file size (max 100MB)
+  - [x] Update buffer, Aurora, folding, syntax tree on load
+  - [x] Reset cursor position after load
+  - [x] GrainStyle compliant: explicit types, assertions, bounded operations
 
 #### 4.1.4 Tree-sitter Integration ✅ **ENHANCED**
 - [x] Foundation created (simple regex-based parser)

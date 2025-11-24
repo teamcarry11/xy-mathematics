@@ -629,6 +629,11 @@
 - [x] DAG-based event propagation (HashDAG-style ordering)
 - [x] Streaming updates (Hyperfiddle-style, TigerBeetle state machine)
 - [x] Update queue with bounded allocations (max 1,000 updates/second)
+- [x] Implement actual update logic (replace placeholders)
+  - [x] Editor edit → Browser: parse HTML and re-render browser
+  - [x] Browser update → Editor: replace editor buffer with new content
+  - [x] Add EditorInstance and BrowserRendererInstance for update processing
+  - [x] Update process_updates to accept editor/browser instances
 - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
 
 #### 4.3.3 GrainBank Integration ✅ **COMPLETE**
@@ -1048,6 +1053,7 @@
 - Actual Segment Data Loading (Phase 3.19) ✅
 - Enhanced Process Execution Error Handling and Resource Management (Phase 3.20) ✅
 - Owner Process ID Tracking for Resource Cleanup (Phase 3.21) ✅
+- IPC Channel Send/Receive Implementation (Phase 3.22) ✅
 
 **In Progress**: 
 - Dream Editor Core - GLM-4.6 Integration (Phase 4.1.3) 🔄

@@ -143,11 +143,16 @@ pub fn build(b: *std.Build) void {
     kernel_step.dependOn(&kernel_install.step);
 
     // ELF Parser module (for tests that need direct access).
-    // Note: elf_parser.zig is imported as a file by basin_kernel.zig and segment_loader.zig
-    // It's not a separate module to avoid module conflicts.
-    // Tests that need elf_parser can import it via basin_kernel or use relative imports.
+    // ELF Parser module (for kernel and tests).
+    const elf_parser_module = b.addModule("elf_parser", .{
+        .root_source_file = b.path("src/kernel/elf_parser.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
 
     // Basin Kernel module (syscall interface and kernel structures).
+    // Note: basin_kernel.zig imports elf_parser.zig as a file (same directory).
+    // Tests can import elf_parser as a module separately.
     const basin_kernel_module = b.addModule("basin_kernel", .{
         .root_source_file = b.path("src/kernel/basin_kernel.zig"),
         .target = target,
@@ -1090,6 +1095,7 @@ pub fn build(b: *std.Build) void {
             .optimize = optimize,
             .imports = &.{
                 .{ .name = "basin_kernel", .module = basin_kernel_module },
+                .{ .name = "elf_parser", .module = elf_parser_module },
             },
         }),
     });

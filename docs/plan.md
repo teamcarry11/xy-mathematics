@@ -338,6 +338,15 @@
    - ✅ Comprehensive tests for owner_process_id tracking and cleanup
    - ✅ GrainStyle compliance (u32/u64 types, assertions, bounded operations, static allocation)
 
+35. **IPC Channel Send/Receive Implementation** ✅ **COMPLETE**
+   - ✅ Implemented `syscall_channel_send` to use `ChannelTable.send()` with VM memory access
+   - ✅ Implemented `syscall_channel_recv` to use `ChannelTable.receive()` with VM memory access
+   - ✅ Added VM memory reader callback usage for reading data from VM memory
+   - ✅ Added VM memory writer callback usage for writing data to VM memory
+   - ✅ Error handling for channel not found, queue full, and empty queue cases
+   - ✅ Comprehensive tests for channel send/receive (tests/050_channel_send_recv_test.zig)
+   - ✅ GrainStyle compliance (u32/u64 types, assertions, bounded operations, static allocation, max 4KB messages)
+
 ## 🚀 Architecture Overview
 
 ### Grain Aurora Stack

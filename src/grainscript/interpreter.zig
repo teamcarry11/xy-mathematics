@@ -1008,8 +1008,9 @@ pub const Interpreter = struct {
     }
 
     /// Binary addition.
+    // 2025-11-23-160254-pst: Active function
     fn binary_add(self: *Interpreter, left: Value, right: Value) Error!Value {
-        _ = self;
+        // self will be used in full implementation for context
         return switch (left) {
             .integer => |l| switch (right) {
                 .integer => |r| Value.from_integer(l + r),
@@ -1022,7 +1023,7 @@ pub const Interpreter = struct {
                 else => Error.type_mismatch,
             },
             .string => |l| switch (right) {
-                .string => |r| blk: {
+                .string => |r| {
                     // Concatenate strings
                     const combined = try std.fmt.allocPrint(self.allocator, "{s}{s}", .{ l, r });
                     errdefer self.allocator.free(combined);

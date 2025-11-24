@@ -19,24 +19,27 @@ test "syscall_channel_send sends message to channel" {
     var vm_memory: [4 * 1024 * 1024]u8 = [_]u8{0} ** (4 * 1024 * 1024);
     var kernel = BasinKernel.init();
 
-    // Create VM memory reader/writer.
+    // Create VM memory reader/writer using threadlocal pattern.
+    // Why: Need mutable access to vm_memory for read/write operations.
     const VmAccess = struct {
-        mem: *[4 * 1024 * 1024]u8,
-        fn read_fn(addr: u64, len: u32, buffer: []u8) ?u32 {
-            if (addr + len > VmAccess.mem.len) return null;
-            @memcpy(buffer[0..len], VmAccess.mem[@intCast(addr)..][0..len]);
+        threadlocal var mem: *[4 * 1024 * 1024]u8 = undefined;
+        fn read(addr: u64, len: u32, buffer: []u8) ?u32 {
+            const mem_ptr = mem;
+            if (addr + len > mem_ptr.len) return null;
+            @memcpy(buffer[0..len], mem_ptr[@intCast(addr)..][0..len]);
             return len;
         }
-        fn write_fn(addr: u64, len: u32, data: []const u8) ?u32 {
-            if (addr + len > VmAccess.mem.len) return null;
-            @memcpy(VmAccess.mem[@intCast(addr)..][0..len], data[0..len]);
+        fn write(addr: u64, len: u32, data: []const u8) ?u32 {
+            const mem_ptr = mem;
+            if (addr + len > mem_ptr.len) return null;
+            @memcpy(mem_ptr[@intCast(addr)..][0..len], data[0..len]);
             return len;
         }
     };
-    var vm_access = VmAccess{ .mem = &vm_memory };
+    VmAccess.mem = &vm_memory;
 
-    kernel.vm_memory_reader = vm_access.read_fn;
-    kernel.vm_memory_writer = vm_access.write_fn;
+    kernel.vm_memory_reader = VmAccess.read;
+    kernel.vm_memory_writer = VmAccess.write;
 
     // Create a process and channel.
     const process_id: u64 = 1;
@@ -78,24 +81,25 @@ test "syscall_channel_recv receives message from channel" {
     var vm_memory: [4 * 1024 * 1024]u8 = [_]u8{0} ** (4 * 1024 * 1024);
     var kernel = BasinKernel.init();
 
-    // Create VM memory reader/writer.
+    // Create VM memory reader/writer using threadlocal pattern.
     const VmAccess = struct {
-        mem: *[4 * 1024 * 1024]u8,
-        fn read_fn(addr: u64, len: u32, buffer: []u8) ?u32 {
+        threadlocal var mem: *[4 * 1024 * 1024]u8 = undefined;
+        fn read(addr: u64, len: u32, buffer: []u8) ?u32 {
             if (addr + len > VmAccess.mem.len) return null;
             @memcpy(buffer[0..len], VmAccess.mem[@intCast(addr)..][0..len]);
             return len;
         }
-        fn write_fn(addr: u64, len: u32, data: []const u8) ?u32 {
-            if (addr + len > VmAccess.mem.len) return null;
-            @memcpy(VmAccess.mem[@intCast(addr)..][0..len], data[0..len]);
+        fn write(addr: u64, len: u32, data: []const u8) ?u32 {
+            const mem_ptr = mem;
+            if (addr + len > mem_ptr.len) return null;
+            @memcpy(mem_ptr[@intCast(addr)..][0..len], data[0..len]);
             return len;
         }
     };
-    var vm_access = VmAccess{ .mem = &vm_memory };
+    VmAccess.mem = &vm_memory;
 
-    kernel.vm_memory_reader = vm_access.read_fn;
-    kernel.vm_memory_writer = vm_access.write_fn;
+    kernel.vm_memory_reader = VmAccess.read;
+    kernel.vm_memory_writer = VmAccess.write;
 
     // Create a process and channel.
     const process_id: u64 = 1;
@@ -142,24 +146,25 @@ test "syscall_channel_recv returns 0 when channel is empty" {
     var vm_memory: [4 * 1024 * 1024]u8 = [_]u8{0} ** (4 * 1024 * 1024);
     var kernel = BasinKernel.init();
 
-    // Create VM memory reader/writer.
+    // Create VM memory reader/writer using threadlocal pattern.
     const VmAccess = struct {
-        mem: *[4 * 1024 * 1024]u8,
-        fn read_fn(addr: u64, len: u32, buffer: []u8) ?u32 {
+        threadlocal var mem: *[4 * 1024 * 1024]u8 = undefined;
+        fn read(addr: u64, len: u32, buffer: []u8) ?u32 {
             if (addr + len > VmAccess.mem.len) return null;
             @memcpy(buffer[0..len], VmAccess.mem[@intCast(addr)..][0..len]);
             return len;
         }
-        fn write_fn(addr: u64, len: u32, data: []const u8) ?u32 {
-            if (addr + len > VmAccess.mem.len) return null;
-            @memcpy(VmAccess.mem[@intCast(addr)..][0..len], data[0..len]);
+        fn write(addr: u64, len: u32, data: []const u8) ?u32 {
+            const mem_ptr = mem;
+            if (addr + len > mem_ptr.len) return null;
+            @memcpy(mem_ptr[@intCast(addr)..][0..len], data[0..len]);
             return len;
         }
     };
-    var vm_access = VmAccess{ .mem = &vm_memory };
+    VmAccess.mem = &vm_memory;
 
-    kernel.vm_memory_reader = vm_access.read_fn;
-    kernel.vm_memory_writer = vm_access.write_fn;
+    kernel.vm_memory_reader = VmAccess.read;
+    kernel.vm_memory_writer = VmAccess.write;
 
     // Create a process and channel.
     const process_id: u64 = 1;
@@ -194,18 +199,19 @@ test "syscall_channel_send returns error when channel not found" {
     var vm_memory: [4 * 1024 * 1024]u8 = [_]u8{0} ** (4 * 1024 * 1024);
     var kernel = BasinKernel.init();
 
-    // Create VM memory reader.
+    // Create VM memory reader using threadlocal pattern.
     const VmAccess = struct {
-        mem: *[4 * 1024 * 1024]u8,
-        fn read_fn(addr: u64, len: u32, buffer: []u8) ?u32 {
-            if (addr + len > VmAccess.mem.len) return null;
-            @memcpy(buffer[0..len], VmAccess.mem[@intCast(addr)..][0..len]);
+        threadlocal var mem: *[4 * 1024 * 1024]u8 = undefined;
+        fn read(addr: u64, len: u32, buffer: []u8) ?u32 {
+            const mem_ptr = mem;
+            if (addr + len > mem_ptr.len) return null;
+            @memcpy(buffer[0..len], mem_ptr[@intCast(addr)..][0..len]);
             return len;
         }
     };
-    var vm_access = VmAccess{ .mem = &vm_memory };
+    VmAccess.mem = &vm_memory;
 
-    kernel.vm_memory_reader = vm_access.read_fn;
+    kernel.vm_memory_reader = VmAccess.read;
 
     // Create a process.
     const process_id: u64 = 1;

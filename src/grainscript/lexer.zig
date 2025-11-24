@@ -87,7 +87,7 @@ pub const Lexer = struct {
         newline, // \n
         whitespace, // Space, tab
         comment, // // comment, /* comment */
-        error, // Invalid token
+        error_token, // Invalid token
     };
 
     /// Token structure.
@@ -729,7 +729,7 @@ pub const Lexer = struct {
         newline, // \n
         whitespace, // Space, tab
         comment, // // comment, /* comment */
-        error, // Invalid token
+        error_token, // Invalid token
     };
 
     /// Token structure.
@@ -1371,7 +1371,7 @@ pub const Lexer = struct {
         newline, // \n
         whitespace, // Space, tab
         comment, // // comment, /* comment */
-        error, // Invalid token
+        error_token, // Invalid token
     };
 
     /// Token structure.

@@ -8,6 +8,8 @@ const GrainAurora = @import("grain_aurora.zig").GrainAurora;
 const AuroraGrainBank = @import("aurora_grainbank.zig").AuroraGrainBank;
 const DagCore = @import("dag_core.zig").DagCore;
 const BrowserDagIntegration = @import("dream_browser_dag_integration.zig").BrowserDagIntegration;
+const LivePreview = @import("aurora_live_preview.zig").LivePreview;
+const GrainBuffer = @import("grain_buffer.zig").GrainBuffer;
 
 /// Unified IDE: integrates Dream Editor and Dream Browser in multi-pane layout.
 /// ~<~ Glow Airbend: explicit tab management, bounded tabs.
@@ -18,6 +20,7 @@ pub const UnifiedIde = struct {
     shared_aurora: GrainAurora,
     dag: DagCore,
     grainbank: AuroraGrainBank,
+    live_preview: LivePreview,
     
     // Bounded: Max 100 editor tabs
     pub const MAX_EDITOR_TABS: u32 = 100;
@@ -69,12 +72,16 @@ pub const UnifiedIde = struct {
         var grainbank = try AuroraGrainBank.init(allocator, &dag);
         errdefer grainbank.deinit();
         
+        var live_preview = try LivePreview.init(allocator);
+        errdefer live_preview.deinit();
+        
         return UnifiedIde{
             .allocator = allocator,
             .layout = layout,
             .shared_aurora = shared_aurora,
             .dag = dag,
             .grainbank = grainbank,
+            .live_preview = live_preview,
             .editor_tabs = std.ArrayList(EditorTab).init(allocator),
             .browser_tabs = std.ArrayList(BrowserTab).init(allocator),
         };
@@ -99,6 +106,7 @@ pub const UnifiedIde = struct {
         }
         self.browser_tabs.deinit(self.allocator);
         
+        self.live_preview.deinit();
         self.grainbank.deinit();
         self.dag.deinit();
         self.shared_aurora.deinit();
@@ -507,6 +515,105 @@ pub const UnifiedIde = struct {
     /// Switch workspace (River-style workspace switching).
     pub fn switch_workspace(self: *UnifiedIde, workspace_id: u32) !void {
         try self.layout.switch_workspace(workspace_id);
+    }
+    
+    /// Subscribe editor tab to browser tab for live preview.
+    pub fn subscribe_live_preview(
+        self: *UnifiedIde,
+        editor_tab_id: u32,
+        browser_tab_id: u32,
+        direction: LivePreview.SyncDirection,
+    ) !void {
+        // Assert: Tab IDs must be valid
+        std.debug.assert(editor_tab_id < self.editor_tabs.items.len);
+        std.debug.assert(browser_tab_id < self.browser_tabs.items.len);
+        
+        try self.live_preview.subscribe(editor_tab_id, browser_tab_id, direction);
+    }
+    
+    /// Process live preview updates (call periodically to sync editor and browser).
+    pub fn process_live_preview_updates(self: *UnifiedIde) !void {
+        // Build editor instances array
+        var editor_instances = std.ArrayList(LivePreview.EditorInstance).init(self.allocator);
+        defer editor_instances.deinit();
+        
+        for (self.editor_tabs.items) |*tab| {
+            try editor_instances.append(LivePreview.EditorInstance{
+                .tab_id = tab.id,
+                .editor = &tab.editor,
+            });
+        }
+        
+        // Build browser renderer instances array
+        var browser_renderers = std.ArrayList(LivePreview.BrowserRendererInstance).init(self.allocator);
+        defer browser_renderers.deinit();
+        
+        for (self.browser_tabs.items) |*tab| {
+            // Create buffer for renderer (temporary, would be managed by renderer in full implementation)
+            var buffer = try GrainBuffer.fromSlice(self.allocator, "");
+            errdefer buffer.deinit();
+            
+            try browser_renderers.append(LivePreview.BrowserRendererInstance{
+                .tab_id = tab.id,
+                .renderer = &tab.renderer,
+                .buffer = &buffer,
+            });
+        }
+        
+        // Process updates with editor and browser instances
+        try self.live_preview.process_updates(
+            editor_instances.items,
+            browser_renderers.items,
+        );
+    }
+    
+    /// Handle editor edit and propagate to live preview.
+    pub fn handle_editor_edit(
+        self: *UnifiedIde,
+        editor_tab_id: u32,
+        old_text: []const u8,
+        new_text: []const u8,
+    ) !void {
+        // Assert: Editor tab ID must be valid
+        std.debug.assert(editor_tab_id < self.editor_tabs.items.len);
+        std.debug.assert(old_text.len <= 100 * 1024 * 1024); // Bounded text size
+        std.debug.assert(new_text.len <= 100 * 1024 * 1024); // Bounded text size
+        
+        const tab = &self.editor_tabs.items[editor_tab_id];
+        
+        // Determine edit type (simplified: always insertion for now)
+        const edit_type: @import("aurora_dag_integration.zig").EditorDagIntegration.EditType = .insert;
+        
+        // Propagate to live preview
+        try self.live_preview.handle_editor_edit(
+            editor_tab_id,
+            tab.file_uri,
+            old_text,
+            new_text,
+            edit_type,
+        );
+    }
+    
+    /// Handle browser content update and propagate to live preview.
+    pub fn handle_browser_update(
+        self: *UnifiedIde,
+        browser_tab_id: u32,
+        event_content: []const u8,
+        event_id: []const u8,
+    ) !void {
+        // Assert: Browser tab ID must be valid
+        std.debug.assert(browser_tab_id < self.browser_tabs.items.len);
+        std.debug.assert(event_content.len > 0);
+        std.debug.assert(event_content.len <= 10 * 1024 * 1024); // Bounded content size
+        std.debug.assert(event_id.len > 0);
+        std.debug.assert(event_id.len <= 64); // Bounded event ID length
+        
+        // Propagate to live preview
+        try self.live_preview.handle_nostr_event(
+            browser_tab_id,
+            event_content,
+            event_id,
+        );
     }
 };
 

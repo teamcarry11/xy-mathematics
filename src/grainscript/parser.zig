@@ -156,7 +156,7 @@ pub const Parser = struct {
         ge, // >=
         // Logical
         and_op, // &&
-        or, // ||
+        or_op, // ||
     };
 
     /// Unary expression data.
@@ -475,10 +475,10 @@ pub const Parser = struct {
         }
 
         // Parse initializer (optional)
-        var init: ?u32 = null;
+        var init_expr: ?u32 = null;
         if (self.get_current_token().token_type == .op_assign) {
             self.advance(); // Skip '='
-            init = try self.parse_expression();
+            init_expr = try self.parse_expression();
         }
 
         // Create variable declaration node
@@ -492,7 +492,7 @@ pub const Parser = struct {
                 .name = name,
                 .name_len = @as(u32, @intCast(name.len)),
                 .type_node = type_node,
-                .init = init,
+                .init = init_expr,
             } },
         );
     }
@@ -525,7 +525,7 @@ pub const Parser = struct {
             return error.ExpectedAssign;
         }
         self.advance(); // Skip '='
-        const init = try self.parse_expression();
+        const init_expr = try self.parse_expression();
 
         // Create constant declaration node
         return try self.create_node(
@@ -538,7 +538,7 @@ pub const Parser = struct {
                 .name = name,
                 .name_len = @as(u32, @intCast(name.len)),
                 .type_node = type_node,
-                .init = init,
+                .init = init_expr,
             } },
         );
     }
@@ -698,9 +698,9 @@ pub const Parser = struct {
         self.advance(); // Skip '('
 
         // Parse initializer (optional)
-        var init: ?u32 = null;
+        var init_stmt: ?u32 = null;
         if (self.get_current_token().token_type != .punc_semicolon) {
-            init = try self.parse_statement();
+            init_stmt = try self.parse_statement();
         }
 
         // Parse condition (optional)
@@ -734,7 +734,7 @@ pub const Parser = struct {
             start_token.line,
             start_token.column,
             .{ .for_stmt = .{
-                .init = init,
+                .init = init_expr,
                 .condition = condition,
                 .update = update,
                 .body = body,

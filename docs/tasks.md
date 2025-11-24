@@ -1109,7 +1109,7 @@
   - ✅ Tag system (bitmask-based, 32 tags max)
   - ✅ Container-based layout system (horizontal/vertical/stack splits)
   - ✅ Iterative layout calculation (stack-based, no recursion)
-  - ✅ Layout generators (built-in layouts: tall, wide, grid, monocle in `src/grain_os/layout.zig`)
+  - ✅ Layout generator interface (Phase 2.5) - Layout function interface, registry, compositor integration (`src/grain_os/layout_generator.zig`)
   - ✅ Framebuffer rendering integration (`src/grain_os/framebuffer_renderer.zig`)
     - ✅ Kernel framebuffer syscall integration (fb_clear, fb_draw_pixel, fb_draw_rect)
     - ✅ Compositor rendering integration

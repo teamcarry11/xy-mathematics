@@ -1074,9 +1074,17 @@
 - GUI App Compilation Fixes (Phase 3.24) ✅
 - GUI App Runtime Improvements (Phase 3.25) ✅
 - Grain OS Agent Proposal (Phase 4.0) ✅
+- River Compositor Study & Planning (Phase 2.1) 🔄
+- Grain OS Wayland Foundation (Phase 2.1-2.2) ✅
+  - ✅ Wayland protocol core structures (`src/grain_os/wayland/protocol.zig`)
+  - ✅ Basic Wayland compositor (`src/grain_os/compositor.zig`)
+  - ✅ Window management (create, get, title management)
+  - ✅ Comprehensive tests (`tests/052_grain_os_compositor_test.zig`)
+  - ✅ Build system integration (grain_os module added)
 
 **In Progress**: 
 - Dream Editor Core - GLM-4.6 Integration (Phase 4.1.3) 🔄
+- Grain OS - Wayland Foundation (Phase 2) 🔄
 
 **Next Up**: 
 - Userspace program execution (IDE/Browser in Grain Vantage)

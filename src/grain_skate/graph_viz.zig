@@ -307,5 +307,60 @@ pub const GraphVisualization = struct {
         }
         std.debug.assert(self.zoom > 0.0);
     }
+
+    /// Find node at pixel coordinates (hit testing).
+    // 2025-11-24-172500-pst: Active function
+    pub fn find_node_at_pixel(self: *const GraphVisualization, pixel_x: u32, pixel_y: u32, buffer_width: u32, buffer_height: u32) ?u32 {
+        std.debug.assert(pixel_x < buffer_width);
+        std.debug.assert(pixel_y < buffer_height);
+        std.debug.assert(buffer_width > 0);
+        std.debug.assert(buffer_height > 0);
+
+        // Transform pixel coordinates to normalized coordinates
+        const normalized_x = self.pixel_to_normalized_x(pixel_x, buffer_width);
+        const normalized_y = self.pixel_to_normalized_y(pixel_y, buffer_height);
+
+        // Check each node (reverse order for top-to-bottom hit testing)
+        var i: u32 = self.nodes_len;
+        while (i > 0) : (i -= 1) {
+            const node_idx = i - 1;
+            if (!self.nodes[node_idx].visible) {
+                continue;
+            }
+
+            const node_x = self.nodes[node_idx].position.x;
+            const node_y = self.nodes[node_idx].position.y;
+            const node_radius = self.nodes[node_idx].radius * self.zoom;
+
+            // Calculate distance from click to node center
+            const dx = normalized_x - node_x;
+            const dy = normalized_y - node_y;
+            const dist_sq = (dx * dx) + (dy * dy);
+            const radius_sq = node_radius * node_radius;
+
+            // Check if click is within node radius
+            if (dist_sq <= radius_sq) {
+                return self.nodes[node_idx].block_id;
+            }
+        }
+
+        return null;
+    }
+
+    /// Transform pixel X coordinate to normalized coordinate.
+    // 2025-11-24-172500-pst: Active function
+    fn pixel_to_normalized_x(self: *const GraphVisualization, pixel_x: u32, buffer_width: u32) f32 {
+        const offset_x = (@as(f32, @floatFromInt(pixel_x)) - (@as(f32, @floatFromInt(buffer_width)) * 0.5)) / self.zoom;
+        const normalized_x = self.center_x + (offset_x / @as(f32, @floatFromInt(buffer_width)));
+        return std.math.clamp(normalized_x, 0.0, 1.0);
+    }
+
+    /// Transform pixel Y coordinate to normalized coordinate.
+    // 2025-11-24-172500-pst: Active function
+    fn pixel_to_normalized_y(self: *const GraphVisualization, pixel_y: u32, buffer_height: u32) f32 {
+        const offset_y = (@as(f32, @floatFromInt(pixel_y)) - (@as(f32, @floatFromInt(buffer_height)) * 0.5)) / self.zoom;
+        const normalized_y = self.center_y + (offset_y / @as(f32, @floatFromInt(buffer_height)));
+        return std.math.clamp(normalized_y, 0.0, 1.0);
+    }
 };
 

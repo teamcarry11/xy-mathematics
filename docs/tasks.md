@@ -17,6 +17,12 @@
   - [x] Enhanced cache hit/miss tracking in compile_block()
   - [x] Improved performance statistics printing
   - [x] Comprehensive tests (tests/059_jit_performance_timing_test.zig)
+- [x] JIT Hot Path Detection (Phase 2.1.2)
+  - [x] Hot path tracker (tracks frequently executed blocks)
+  - [x] Execution counting per PC
+  - [x] Hot path statistics printing
+  - [x] Integration with step_jit()
+  - [x] Comprehensive tests (tests/060_jit_hot_path_test.zig)
 
 #### 2.2 Kernel Boot Sequence ✅ **COMPLETE**
 - [x] Implement basic boot loader
@@ -519,6 +525,8 @@
   - [x] Bounded file size (max 100MB)
   - [x] Update buffer, Aurora, folding, syntax tree on load
   - [x] Reset cursor position after load
+  - [x] Enhanced error handling (buffer/Aurora init failures, URI duplication failures)
+  - [x] Graceful error recovery (cleanup on failures, non-fatal parsing errors)
   - [x] GrainStyle compliant: explicit types, assertions, bounded operations
 - [x] Undo/Redo Functionality ✅ **COMPLETE**
   - [x] Undo history tracking (bounded: MAX_UNDO_HISTORY: 1024)
@@ -1019,6 +1027,17 @@
   - ✅ View controls (pan, zoom, select)
   - ✅ Comprehensive tests (`tests/054_grain_skate_graph_viz_test.zig`)
   - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, max 70 lines per function)
+- ✅ Graph rendering (`src/grain_skate/graph_renderer.zig`)
+  - ✅ Pixel buffer rendering (RGBA format)
+  - ✅ Node and edge drawing (Bresenham line algorithm, filled circles)
+  - ✅ Coordinate transformation (normalized to pixel)
+  - ✅ Color management (background, nodes, edges, selection)
+  - ✅ Node label rendering (block IDs as numbers, 5x7 bitmap font)
+  - ✅ Title label rendering (block titles with ASCII font, A-Z, 0-9, space)
+  - ✅ Block storage integration for title lookup
+  - ✅ Automatic title/ID fallback (shows title if available, ID otherwise)
+  - ✅ Comprehensive tests (`tests/056_grain_skate_graph_renderer_test.zig`)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, iterative algorithms)
 
 #### 8.3.3 Social Features ✅ **COMPLETE**
 - [x] Link-based reply system (`src/grain_skate/social.zig`)

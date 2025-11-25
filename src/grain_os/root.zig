@@ -15,4 +15,6 @@ pub const workspace = @import("workspace.zig");
 pub const window_actions = @import("window_actions.zig");
 pub const keyboard_shortcuts = @import("keyboard_shortcuts.zig");
 pub const runtime_config = @import("runtime_config.zig");
+pub const desktop_shell = @import("desktop_shell.zig");
+pub const application = @import("application.zig");
 

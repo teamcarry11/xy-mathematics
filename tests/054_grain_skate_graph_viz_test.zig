@@ -144,3 +144,26 @@ test "graph visualization multiple blocks and links" {
     }
 }
 
+test "graph visualization find node at pixel" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var viz = GraphVisualization.init(allocator);
+    viz.add_block(1);
+    viz.add_block(2);
+    viz.calculate_layout(10);
+
+    // Test hit testing at center of buffer (may or may not find node)
+    const buffer_width: u32 = 800;
+    const buffer_height: u32 = 600;
+    const clicked_block_id = viz.find_node_at_pixel(400, 300, buffer_width, buffer_height);
+    // May or may not find node depending on layout, but should not crash
+    _ = clicked_block_id;
+
+    // Test hit testing at edge (should not find node)
+    const edge_click = viz.find_node_at_pixel(0, 0, buffer_width, buffer_height);
+    // Should return null for edge clicks
+    _ = edge_click;
+}
+

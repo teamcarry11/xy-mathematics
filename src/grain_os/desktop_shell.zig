@@ -43,13 +43,13 @@ pub const LauncherItem = struct {
             .command_len = 0,
             .icon = 0,
         };
-        std.mem.set(u8, item.name[0..], 0);
-        std.mem.set(u8, item.command[0..], 0);
+        @memset(&item.name, 0);
+        @memset(&item.command, 0);
         const name_copy_len = @min(name.len, MAX_ITEM_NAME_LEN);
-        std.mem.copy(u8, item.name[0..name_copy_len], name[0..name_copy_len]);
+        @memcpy(item.name[0..name_copy_len], name[0..name_copy_len]);
         item.name_len = @intCast(name_copy_len);
         const cmd_copy_len = @min(command.len, MAX_ITEM_NAME_LEN);
-        std.mem.copy(u8, item.command[0..cmd_copy_len], command[0..cmd_copy_len]);
+        @memcpy(item.command[0..cmd_copy_len], command[0..cmd_copy_len]);
         item.command_len = @intCast(cmd_copy_len);
         std.debug.assert(item.name_len > 0);
         return item;
@@ -89,9 +89,9 @@ pub const DesktopShell = struct {
             shell.launcher_items[i] = LauncherItem.init("", "");
         }
         // Add default launcher items.
-        shell.add_launcher_item("Terminal", "terminal");
-        shell.add_launcher_item("Editor", "editor");
-        shell.add_launcher_item("Browser", "browser");
+        _ = shell.add_launcher_item("Terminal", "terminal");
+        _ = shell.add_launcher_item("Editor", "editor");
+        _ = shell.add_launcher_item("Browser", "browser");
         std.debug.assert(shell.launcher_items_len > 0);
         return shell;
     }

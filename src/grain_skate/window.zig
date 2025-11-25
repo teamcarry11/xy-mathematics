@@ -155,5 +155,31 @@ pub const SkateWindow = struct {
         // Present window buffer
         try self.window.present();
     }
+
+    /// Handle mouse click event (find node at click position).
+    // 2025-11-24-172500-pst: Active function
+    pub fn handle_mouse_click(self: *SkateWindow, x: f64, y: f64) ?u32 {
+        if (self.graph_renderer == null) {
+            return null;
+        }
+
+        const graph_viz = self.graph_renderer.?.graph_viz;
+        const buffer_width = self.graph_renderer.?.buffer_width;
+        const buffer_height = self.graph_renderer.?.buffer_height;
+
+        // Convert window coordinates to buffer coordinates
+        // Window coordinates: 0,0 is bottom-left (macOS convention)
+        // Buffer coordinates: 0,0 is top-left
+        const buffer_x = @as(u32, @intFromFloat(x));
+        const buffer_y = @as(u32, @intFromFloat(@as(f64, @floatFromInt(buffer_height)) - y));
+
+        // Bounds check
+        if (buffer_x >= buffer_width or buffer_y >= buffer_height) {
+            return null;
+        }
+
+        // Find node at click position
+        return graph_viz.find_node_at_pixel(buffer_x, buffer_y, buffer_width, buffer_height);
+    }
 };
 

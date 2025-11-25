@@ -21,6 +21,12 @@
      - ✅ Enhanced cache hit/miss tracking in compile_block()
      - ✅ Improved performance statistics printing (execution time, compile time, averages)
      - ✅ Comprehensive tests (tests/059_jit_performance_timing_test.zig)
+   - ✅ JIT Hot Path Detection (Phase 2.1.2)
+     - ✅ Hot path tracker (tracks frequently executed blocks, MAX_HOT_PATHS: 32)
+     - ✅ Execution counting per PC (tracks execution frequency)
+     - ✅ Hot path statistics printing (execution counts, percentages)
+     - ✅ Integration with step_jit() (automatic hot path tracking)
+     - ✅ Comprehensive tests (tests/060_jit_hot_path_test.zig)
 
 2. **Kernel Boot Sequence**
    - Implement basic boot loader
@@ -450,7 +456,14 @@ Create a fourth agent dedicated to **Grain OS** - a Zig-Wayland implemented GNOM
    - ✅ Compositor integration (init_runtime_config, process_config_command)
    - ✅ IPC channel support (channel_id-based configuration)
    - ✅ Comprehensive tests (`tests/060_grain_os_runtime_config_test.zig`)
-7. **Phase 7**: Desktop Shell (window manager, launcher)
+7. **Phase 7**: Desktop Shell ✅ **COMPLETE**
+   - ✅ Desktop shell module (`src/grain_os/desktop_shell.zig`)
+   - ✅ Status bar rendering (workspace indicator, background)
+   - ✅ Launcher system (application menu with items)
+   - ✅ Launcher toggle functionality
+   - ✅ Compositor integration (renders on top of windows)
+   - ✅ Workspace indicator in status bar
+   - ✅ Comprehensive tests (`tests/061_grain_os_desktop_shell_test.zig`)
 8. **Phase 8**: Application Framework (API, loader, `~/Applications/`)
 7. **Phase 7**: Integration (Grain Kernel syscalls, VM testing)
 8. **Phase 8**: Applications (Aurora, Dream, Skate, Terminal ports)
@@ -663,6 +676,7 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 
 ### Phase 1: Dream Editor Core ✅ **COMPLETE**
 - ✅ File save/load functionality (save_file, load_file methods)
+- ✅ Enhanced error handling (buffer/Aurora init failures, URI duplication failures, graceful recovery)
 - ✅ Undo/redo functionality (undo, redo, delete methods, bounded history)
 
 **Objective**: Matklad-inspired editor with GLM-4.6 integration.
@@ -1102,6 +1116,16 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
   - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, iterative algorithms)
   - ✅ Node label rendering (block IDs as numbers, 5x7 bitmap font)
   - ✅ Label positioning (below nodes with offset)
+  - ✅ Title label rendering (block titles with ASCII font, A-Z, 0-9, space)
+  - ✅ Block storage integration for title lookup
+  - ✅ Automatic title/ID fallback (shows title if available, ID otherwise)
+- ✅ Interactive graph features (`src/grain_skate/graph_viz.zig`, `src/grain_skate/window.zig`)
+  - ✅ Hit testing (find node at pixel coordinates)
+  - ✅ Click handling (open block when node clicked)
+  - ✅ Coordinate transformation (pixel to normalized, normalized to pixel)
+  - ✅ App integration (handle_graph_click method)
+  - ✅ Comprehensive tests (`tests/054_grain_skate_graph_viz_test.zig`, `tests/055_grain_skate_app_test.zig`, `tests/057_grain_skate_window_graph_test.zig`)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, iterative algorithms)
 - ✅ Window graph rendering integration (`src/grain_skate/window.zig`)
   - ✅ Graph renderer integration with window buffer
   - ✅ `set_graph_viz()` method for graph visualization setup
@@ -1366,6 +1390,16 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
   - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, iterative algorithms)
   - ✅ Node label rendering (block IDs as numbers, 5x7 bitmap font)
   - ✅ Label positioning (below nodes with offset)
+  - ✅ Title label rendering (block titles with ASCII font, A-Z, 0-9, space)
+  - ✅ Block storage integration for title lookup
+  - ✅ Automatic title/ID fallback (shows title if available, ID otherwise)
+- ✅ Interactive graph features (`src/grain_skate/graph_viz.zig`, `src/grain_skate/window.zig`)
+  - ✅ Hit testing (find node at pixel coordinates)
+  - ✅ Click handling (open block when node clicked)
+  - ✅ Coordinate transformation (pixel to normalized, normalized to pixel)
+  - ✅ App integration (handle_graph_click method)
+  - ✅ Comprehensive tests (`tests/054_grain_skate_graph_viz_test.zig`, `tests/055_grain_skate_app_test.zig`, `tests/057_grain_skate_window_graph_test.zig`)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, iterative algorithms)
 - ✅ Window graph rendering integration (`src/grain_skate/window.zig`)
   - ✅ Graph renderer integration with window buffer
   - ✅ `set_graph_viz()` method for graph visualization setup
@@ -1630,6 +1664,16 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
   - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, iterative algorithms)
   - ✅ Node label rendering (block IDs as numbers, 5x7 bitmap font)
   - ✅ Label positioning (below nodes with offset)
+  - ✅ Title label rendering (block titles with ASCII font, A-Z, 0-9, space)
+  - ✅ Block storage integration for title lookup
+  - ✅ Automatic title/ID fallback (shows title if available, ID otherwise)
+- ✅ Interactive graph features (`src/grain_skate/graph_viz.zig`, `src/grain_skate/window.zig`)
+  - ✅ Hit testing (find node at pixel coordinates)
+  - ✅ Click handling (open block when node clicked)
+  - ✅ Coordinate transformation (pixel to normalized, normalized to pixel)
+  - ✅ App integration (handle_graph_click method)
+  - ✅ Comprehensive tests (`tests/054_grain_skate_graph_viz_test.zig`, `tests/055_grain_skate_app_test.zig`, `tests/057_grain_skate_window_graph_test.zig`)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, iterative algorithms)
 - ✅ Window graph rendering integration (`src/grain_skate/window.zig`)
   - ✅ Graph renderer integration with window buffer
   - ✅ `set_graph_viz()` method for graph visualization setup

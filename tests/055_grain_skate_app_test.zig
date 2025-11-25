@@ -140,3 +140,25 @@ test "grain skate app update current block" {
     try testing.expect(std.mem.eql(u8, block.content, "Updated"));
 }
 
+test "grain skate app handle graph click" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var block_storage = try Block.BlockStorage.init(allocator);
+    defer block_storage.deinit();
+
+    var window = try SkateWindow.init(allocator, "Test", 800, 600);
+    defer window.deinit();
+
+    var app = try GrainSkateApp.init(allocator, &block_storage, &window);
+    defer app.deinit();
+
+    const block_id = try app.create_block("Test Block", "Content");
+    app.load_blocks_to_graph();
+
+    // Click on graph (may or may not find node depending on layout)
+    app.handle_graph_click(400.0, 400.0);
+    // Should not crash
+}
+

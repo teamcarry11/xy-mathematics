@@ -183,5 +183,17 @@ pub const GrainSkateApp = struct {
     pub fn get_social(self: *const GrainSkateApp) *Social.SocialManager {
         return self.social_manager;
     }
+
+    /// Handle mouse click on graph (open block if node clicked).
+    // 2025-11-24-172500-pst: Active function
+    pub fn handle_graph_click(self: *GrainSkateApp, x: f64, y: f64) void {
+        if (self.window.handle_mouse_click(x, y)) |block_id| {
+            // Open block if node was clicked
+            self.open_block(block_id) catch |err| {
+                // Ignore errors (block might not exist)
+                _ = err;
+            };
+        }
+    }
 };
 

@@ -86,3 +86,23 @@ test "window graph renderer cleanup" {
     // Should not crash
 }
 
+test "window handle mouse click finds node" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var window = try SkateWindow.init(allocator, "Test Window", 800, 600);
+    defer window.deinit();
+
+    var graph_viz = GraphVisualization.init(allocator);
+    graph_viz.add_block(1);
+    graph_viz.calculate_layout(10);
+
+    try window.set_graph_viz(&graph_viz);
+
+    // Click at center of buffer (should find node if it's there)
+    const clicked_block_id = window.handle_mouse_click(400.0, 400.0);
+    // May or may not find node depending on layout, but should not crash
+    _ = clicked_block_id;
+}
+

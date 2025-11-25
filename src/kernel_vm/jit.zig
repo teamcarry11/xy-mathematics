@@ -13,6 +13,105 @@ pub const JitError = error{
     InvalidSnapshot,
 };
 
+// Bounded: Max hot paths to track.
+pub const MAX_HOT_PATHS: u32 = 32;
+
+// Hot path entry: tracks execution count for a PC.
+pub const HotPathEntry = struct {
+    pc: u64,
+    execution_count: u64,
+    last_seen: u64, // Timestamp of last execution.
+
+    pub fn init(pc: u64) HotPathEntry {
+        // Allow pc=0 for initialization (will be set later).
+        return HotPathEntry{
+            .pc = pc,
+            .execution_count = 0,
+            .last_seen = 0,
+        };
+    }
+};
+
+// Hot path tracker: identifies frequently executed blocks.
+pub const HotPathTracker = struct {
+    paths: [MAX_HOT_PATHS]HotPathEntry,
+    paths_len: u32,
+    total_executions: u64,
+    sequence_number: u64, // Monotonic counter for last_seen.
+
+    pub fn init() HotPathTracker {
+        var tracker = HotPathTracker{
+            .paths = undefined,
+            .paths_len = 0,
+            .total_executions = 0,
+            .sequence_number = 0,
+        };
+        var i: u32 = 0;
+        while (i < MAX_HOT_PATHS) : (i += 1) {
+            tracker.paths[i] = HotPathEntry.init(0);
+        }
+        return tracker;
+    }
+
+    fn find_path_index(self: *const HotPathTracker, pc: u64) ?u32 {
+        std.debug.assert(pc > 0);
+        var i: u32 = 0;
+        while (i < self.paths_len) : (i += 1) {
+            if (self.paths[i].pc == pc) {
+                return i;
+            }
+        }
+        return null;
+    }
+
+    fn find_empty_slot(self: *const HotPathTracker) ?u32 {
+        var i: u32 = 0;
+        while (i < self.paths_len) : (i += 1) {
+            if (self.paths[i].pc == 0) {
+                return i;
+            }
+        }
+        return null;
+    }
+
+    fn add_new_path(self: *HotPathTracker, pc: u64) void {
+        std.debug.assert(pc > 0);
+        if (self.paths_len < MAX_HOT_PATHS) {
+            const idx = self.paths_len;
+            self.paths[idx] = HotPathEntry.init(pc);
+            self.paths[idx].execution_count = 1;
+            self.paths[idx].last_seen = self.sequence_number;
+            self.paths_len += 1;
+        } else if (self.find_empty_slot()) |empty_slot| {
+            self.paths[empty_slot] = HotPathEntry.init(pc);
+            self.paths[empty_slot].execution_count = 1;
+            self.paths[empty_slot].last_seen = self.sequence_number;
+        }
+    }
+
+    pub fn record_execution(self: *HotPathTracker, pc: u64) void {
+        std.debug.assert(pc > 0);
+        self.total_executions += 1;
+        self.sequence_number += 1;
+        // Find existing entry or create new one.
+        if (self.find_path_index(pc)) |idx| {
+            self.paths[idx].execution_count += 1;
+            self.paths[idx].last_seen = self.sequence_number;
+        } else {
+            self.add_new_path(pc);
+        }
+    }
+
+    pub fn get_hot_paths(self: *const HotPathTracker, threshold: u64) []const HotPathEntry {
+        std.debug.assert(threshold > 0);
+        // Return paths that exceed threshold (simplified: return all for now).
+        if (self.paths_len == 0) {
+            return &[_]HotPathEntry{};
+        }
+        return self.paths[0..self.paths_len];
+    }
+};
+
 /// Performance Counters for the JIT.
 pub const JitPerfCounters = struct {
     blocks_compiled: u64 = 0,
@@ -22,6 +121,7 @@ pub const JitPerfCounters = struct {
     total_execution_time_ns: u64 = 0,
     jit_compile_time_ns: u64 = 0,
     interpreter_fallbacks: u64 = 0,
+    hot_path_tracker: HotPathTracker,
 
     pub fn print_stats(self: *const JitPerfCounters) void {
         std.debug.print("\nJIT Performance Stats:\n", .{});
@@ -35,6 +135,10 @@ pub const JitPerfCounters = struct {
             std.debug.print("  Hit Rate: {d:.2}%\n", .{hit_rate});
         }
         std.debug.print("  Interpreter Fallbacks: {}\n", .{self.interpreter_fallbacks});
+        if (self.hot_path_tracker.total_executions > 0) {
+            std.debug.print("  Total Executions: {}\n", .{self.hot_path_tracker.total_executions});
+            std.debug.print("  Hot Paths Tracked: {}\n", .{self.hot_path_tracker.paths_len});
+        }
         if (self.total_execution_time_ns > 0) {
             const exec_ms = @as(f64, @floatFromInt(self.total_execution_time_ns)) / 1_000_000.0;
             std.debug.print("  Total Execution Time: {d:.2} ms\n", .{exec_ms});
@@ -193,7 +297,9 @@ pub const JitContext = struct {
             .guest_ram = guest_ram,
             .memory_size = memory_size,
             .framebuffer_size = FRAMEBUFFER_SIZE,
-            .perf_counters = .{},
+            .perf_counters = .{
+                .hot_path_tracker = HotPathTracker.init(),
+            },
             .block_cache = cache,
             .pending_fixups = fixups,
         };

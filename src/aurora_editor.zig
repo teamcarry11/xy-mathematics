@@ -803,16 +803,28 @@ pub const Editor = struct {
         if (current_file_edits.items.len > 0) {
             // Apply edits using AiTransforms
             if (self.ai_transforms) |*transforms| {
-                const modified_content = try transforms.apply_edits(file_content, current_file_edits.items);
+                const modified_content = transforms.apply_edits(file_content, current_file_edits.items) catch |err| {
+                    // If edit application fails, return error
+                    return err;
+                };
                 defer self.allocator.free(modified_content);
                 
                 // Replace buffer content
                 self.buffer.deinit();
-                self.buffer = try GrainBuffer.fromSlice(self.allocator, modified_content);
+                self.buffer = GrainBuffer.fromSlice(self.allocator, modified_content) catch |err| {
+                    // If buffer creation fails, free content and return error
+                    self.allocator.free(modified_content);
+                    return err;
+                };
                 
                 // Update Aurora
                 self.aurora.deinit();
-                self.aurora = try GrainAurora.init(self.allocator, modified_content);
+                self.aurora = GrainAurora.init(self.allocator, modified_content) catch |err| {
+                    // If Aurora init fails, free buffer and content, then return error
+                    self.buffer.deinit();
+                    self.allocator.free(modified_content);
+                    return err;
+                };
             }
         }
     }
@@ -886,21 +898,36 @@ pub const Editor = struct {
         
         // Replace buffer content
         self.buffer.deinit();
-        self.buffer = try GrainBuffer.fromSlice(self.allocator, content);
+        self.buffer = GrainBuffer.fromSlice(self.allocator, content) catch |err| {
+            // If buffer creation fails, free content and return error
+            self.allocator.free(content);
+            return err;
+        };
         
         // Update Aurora rendering
         self.aurora.deinit();
-        self.aurora = try GrainAurora.init(self.allocator, content);
+        self.aurora = GrainAurora.init(self.allocator, content) catch |err| {
+            // If Aurora init fails, free buffer and content, then return error
+            self.buffer.deinit();
+            self.allocator.free(content);
+            return err;
+        };
         
         // Update file URI
         if (!std.mem.eql(u8, self.file_uri, file_uri)) {
             self.allocator.free(self.file_uri);
-            self.file_uri = try self.allocator.dupe(u8, file_uri);
+            self.file_uri = self.allocator.dupe(u8, file_uri) catch |err| {
+                // If URI duplication fails, clean up and return error
+                self.buffer.deinit();
+                self.aurora.deinit();
+                self.allocator.free(content);
+                return err;
+            };
         }
         
-        // Parse for folds and syntax tree
-        try self.folding.parse(content);
-        _ = try self.tree_sitter.parseZig(content);
+        // Parse for folds and syntax tree (errors are non-fatal, continue if they fail)
+        self.folding.parse(content) catch {};
+        _ = self.tree_sitter.parseZig(content) catch {};
         
         // Reset cursor position
         self.cursor_line = 0;

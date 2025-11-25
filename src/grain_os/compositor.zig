@@ -15,6 +15,7 @@ const workspace = @import("workspace.zig");
 const keyboard_shortcuts = @import("keyboard_shortcuts.zig");
 const runtime_config = @import("runtime_config.zig");
 const desktop_shell = @import("desktop_shell.zig");
+const application = @import("application.zig");
 
 // Bounded: Max number of windows.
 pub const MAX_WINDOWS: u32 = 256;
@@ -113,6 +114,8 @@ pub const Compositor = struct {
     shortcut_registry: keyboard_shortcuts.ShortcutRegistry,
     config_manager: ?runtime_config.RuntimeConfig,
     shell: desktop_shell.DesktopShell,
+    app_registry: application.ApplicationRegistry,
+    app_launcher: application.ApplicationLauncher,
 
     pub fn init(allocator: std.mem.Allocator) Compositor {
         std.debug.assert(@intFromPtr(allocator.ptr) != 0);
@@ -139,12 +142,17 @@ pub const Compositor = struct {
                 compositor.output.width,
                 compositor.output.height,
             ),
+            .app_registry = application.ApplicationRegistry.init(),
+            .app_launcher = undefined,
         };
         var i: u32 = 0;
         while (i < MAX_WINDOWS) : (i += 1) {
             compositor.windows[i] = Window.init(0, 0, 0, 0, 0, 0);
         }
         compositor.next_object_id = 4;
+        compositor.app_launcher = application.ApplicationLauncher.init(
+            &compositor.app_registry,
+        );
         std.debug.assert(compositor.windows_len == 0);
         std.debug.assert(compositor.next_window_id > 0);
         return compositor;

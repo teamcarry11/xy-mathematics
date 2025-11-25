@@ -2,6 +2,7 @@ const std = @import("std");
 const testing = std.testing;
 const GraphVisualization = @import("grain_skate").GraphVisualization;
 const GraphRenderer = @import("grain_skate").GraphRenderer;
+const Block = @import("grain_skate").Block;
 
 test "graph renderer init" {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};

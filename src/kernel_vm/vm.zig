@@ -554,6 +554,9 @@ pub const VM = struct {
             jit_ctx.perf_counters.total_execution_time_ns += @intCast(exec_time);
         }
         
+        // Record hot path execution.
+        jit_ctx.perf_counters.hot_path_tracker.record_execution(pc);
+        
         // Sync back to VM.
         self.regs.regs = guest_state.regs;
         self.regs.pc = guest_state.pc;

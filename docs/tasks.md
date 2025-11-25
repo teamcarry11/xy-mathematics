@@ -66,8 +66,16 @@
   - [x] Branch outcome tracking (taken/not taken)
   - [x] Branch taken rate calculation
   - [x] Branch statistics printing
-  - [x] Integration with all branch instructions (BEQ, BNE, BLT, BGE, BLTU, BGEU)
+  - [x] Integration with execute_beq() and execute_bne()
   - [x] Comprehensive tests (tests/067_vm_branch_stats_test.zig)
+- [x] VM Register Usage Statistics (Phase 2.1.10)
+  - [x] Register read/write tracking per register
+  - [x] Total read/write counts
+  - [x] Register usage percentage calculation
+  - [x] Top register statistics printing
+  - [x] Integration with instruction execution (ADD, ADDI, LUI)
+  - [x] Statistics aggregator integration
+  - [x] Comprehensive tests (tests/068_vm_register_stats_test.zig)
 
 #### 2.2 Kernel Boot Sequence ✅ **COMPLETE**
 - [x] Implement basic boot loader
@@ -595,6 +603,39 @@
   - [x] Support tab size and insert spaces options
   - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
   - [x] GrainStyle compliant: explicit types, bounded operations, assertions
+- [x] Editor Range Formatting Support ✅ **COMPLETE**
+  - [x] Add `requestRangeFormatting` method to LspClient
+  - [x] Parse range formatting result (array of text edits)
+  - [x] Add `format_range` method to Editor
+  - [x] Support range selection (start/end line and character)
+  - [x] Support tab size and insert spaces options
+  - [x] Reuse `apply_text_edits` for applying range formatting
+  - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
+- [x] Editor Code Actions Support ✅ **COMPLETE**
+  - [x] Add `requestCodeActions` method to LspClient
+  - [x] Add `CodeAction`, `CodeActionCommand`, `WorkspaceEdit`, `TextDocumentEdit`, and `CodeActionContext` structs
+  - [x] Parse code actions result (array of actions with title, command, edit)
+  - [x] Support diagnostics context for code actions
+  - [x] Add `get_code_actions` method to Editor
+  - [x] Add `apply_workspace_edit` method to Editor
+  - [x] Support range selection and diagnostics context
+  - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
+- [x] Editor Symbol Rename Support ✅ **COMPLETE**
+  - [x] Add `requestRename` method to LspClient
+  - [x] Parse rename result (workspace edit with changes to all files)
+  - [x] Support new name parameter
+  - [x] Add `rename_symbol` method to Editor
+  - [x] Reuse `apply_workspace_edit` for applying rename edits
+  - [x] Support multi-file renames (workspace edit)
+  - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
+- [x] Editor Workspace Symbols Support ✅ **COMPLETE**
+  - [x] Add `requestWorkspaceSymbols` method to LspClient
+  - [x] Add `SymbolInformation` struct (name, kind, uri, range, container_name)
+  - [x] Parse workspace symbols result (array of symbol information)
+  - [x] Support query parameter (bounded to 1024 characters)
+  - [x] Add `search_workspace_symbols` method to Editor
+  - [x] Support optional fields (kind, container_name)
+  - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
 - [x] File Save/Load Functionality ✅ **COMPLETE**
   - [x] save_file method (persist editor buffer to disk)
   - [x] load_file method (load file from disk into editor)
@@ -969,6 +1010,7 @@
 - [x] Built-in string functions (len, substr, trim, indexOf, replace, toUpper, toLower, startsWith, endsWith, charAt, repeat)
 - [x] Built-in math functions (abs, min, max, floor, ceil, round)
 - [x] Built-in type conversion functions (toString, toInt, toFloat)
+- [x] Built-in type checking functions (isNull, isEmpty, isNumber, isString, isBoolean)
 - [x] Exit code handling
 - [x] Error handling (Interpreter.Error enum)
 - [x] Bounded runtime state (MAX_VARIABLES: 1,000, MAX_FUNCTIONS: 256, MAX_CALL_STACK: 1,024)
@@ -1387,6 +1429,25 @@
     - ✅ Set/get window opacity methods
     - ✅ Opacity clamping and validation
     - ✅ Comprehensive tests (`tests/071_grain_os_window_opacity_test.zig`)
+  - ✅ Window animations (Phase 18) ✅ **COMPLETE**
+    - ✅ Window animation module (`src/grain_os/window_animation.zig`)
+    - ✅ Animation types (move, resize, minimize, maximize, opacity)
+    - ✅ Animation state management (start, update, remove)
+    - ✅ Linear interpolation (lerp) for smooth transitions
+    - ✅ Compositor integration (animation updates in render loop)
+    - ✅ Animate move/resize methods
+    - ✅ Animation duration configuration (200ms default)
+    - ✅ Comprehensive tests (`tests/072_grain_os_window_animation_test.zig`)
+  - ✅ Window decorations (Phase 19) ✅ **COMPLETE**
+    - ✅ Window decorations module (`src/grain_os/window_decorations.zig`)
+    - ✅ Button types (close, minimize, maximize)
+    - ✅ Button bounds calculation (position and size)
+    - ✅ Button hit testing (is_in_close/minimize/maximize_button)
+    - ✅ Button color management (hover, press states)
+    - ✅ Compositor integration (button rendering and click handling)
+    - ✅ Title bar button rendering
+    - ✅ Button click handling (close, minimize, maximize/unmaximize)
+    - ✅ Comprehensive tests (`tests/073_grain_os_window_decorations_test.zig`)
 
 **In Progress**: 
 - Dream Editor Core - GLM-4.6 Integration (Phase 4.1.3) 🔄

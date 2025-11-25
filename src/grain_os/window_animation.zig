@@ -171,10 +171,11 @@ pub const AnimationManager = struct {
 
     // Calculate interpolation progress (0.0 to 1.0).
     pub fn calc_progress(
-        self: *const AnimationManager,
+        _self: *const AnimationManager,
         anim: *const AnimationState,
         current_time: u64,
     ) f32 {
+        _ = _self;
         if (current_time < anim.start_time) {
             return 0.0;
         }
@@ -203,33 +204,33 @@ pub const AnimationManager = struct {
             const progress = self.calc_progress(anim, current_time);
             const done = (progress >= 1.0);
             // Interpolate values.
-            const x = @as(i32, @intFromFloat(self.lerp(
+            const x = @as(i32, @intFromFloat(AnimationManager.lerp(
                 @as(f32, @floatFromInt(anim.start_x)),
                 @as(f32, @floatFromInt(anim.target_x)),
                 progress,
             )));
-            const y = @as(i32, @intFromFloat(self.lerp(
+            const y = @as(i32, @intFromFloat(AnimationManager.lerp(
                 @as(f32, @floatFromInt(anim.start_y)),
                 @as(f32, @floatFromInt(anim.target_y)),
                 progress,
             )));
-            const width = @as(u32, @intFromFloat(self.lerp(
+            const width = @as(u32, @intFromFloat(AnimationManager.lerp(
                 @as(f32, @floatFromInt(anim.start_width)),
                 @as(f32, @floatFromInt(anim.target_width)),
                 progress,
             )));
-            const height = @as(u32, @intFromFloat(self.lerp(
+            const height = @as(u32, @intFromFloat(AnimationManager.lerp(
                 @as(f32, @floatFromInt(anim.start_height)),
                 @as(f32, @floatFromInt(anim.target_height)),
                 progress,
             )));
-            const opacity = @as(u8, @intFromFloat(self.lerp(
+            const opacity = @as(u8, @intFromFloat(AnimationManager.lerp(
                 @as(f32, @floatFromInt(anim.start_opacity)),
                 @as(f32, @floatFromInt(anim.target_opacity)),
                 progress,
             )));
             if (done) {
-                self.remove_animation(window_id);
+                _ = self.remove_animation(window_id);
             }
             return .{ .x = x, .y = y, .width = width, .height = height, .opacity = opacity, .done = done };
         }

@@ -399,6 +399,44 @@ pub const Editor = struct {
         }
     }
     
+    /// Rename symbol at current cursor position.
+    /// Why: Rename a symbol across all references for refactoring.
+    /// Contract: Cursor must be positioned on a symbol, new_name must be valid.
+    /// Returns: Workspace edit with changes to all files, or null if rename not available.
+    /// Note: Caller must free the returned workspace edit and all strings within.
+    pub fn rename_symbol(self: *Editor, new_name: []const u8) !?LspClient.WorkspaceEdit {
+        // Assert: New name must be valid
+        std.debug.assert(new_name.len > 0);
+        std.debug.assert(new_name.len <= 1024); // Bounded name length
+        
+        // Request rename from LSP server
+        const edit = try self.lsp.requestRename(
+            self.file_uri,
+            self.cursor_line,
+            self.cursor_char,
+            new_name,
+        );
+        
+        // Return workspace edit (caller must free)
+        return edit;
+    }
+    
+    /// Search for symbols in workspace.
+    /// Why: Search for symbols across the entire workspace for navigation.
+    /// Contract: query must be valid.
+    /// Returns: Array of symbol information, or null if no symbols found.
+    /// Note: Caller must free the returned symbols array and all strings within.
+    pub fn search_workspace_symbols(self: *Editor, query: []const u8) !?[]LspClient.SymbolInformation {
+        // Assert: Query must be valid
+        std.debug.assert(query.len <= 1024); // Bounded query length
+        
+        // Request workspace symbols from LSP server
+        const symbols = try self.lsp.requestWorkspaceSymbols(query);
+        
+        // Return symbols array (caller must free)
+        return symbols;
+    }
+    
     /// Apply text edits to editor buffer.
     /// Why: Apply formatting edits or other text transformations.
     /// Contract: edits array must be valid and sorted by position.

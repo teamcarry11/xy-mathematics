@@ -25,4 +25,6 @@ pub const window_visual = @import("window_visual.zig");
 pub const window_stacking = @import("window_stacking.zig");
 pub const window_opacity = @import("window_opacity.zig");
 pub const window_animation = @import("window_animation.zig");
+pub const window_decorations = @import("window_decorations.zig");
+pub const window_constraints = @import("window_constraints.zig");
 

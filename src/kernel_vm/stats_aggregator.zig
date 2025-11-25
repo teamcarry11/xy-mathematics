@@ -95,6 +95,16 @@ pub const VMStatsAggregator = struct {
         flow.print_stats();
     }
 
+    fn print_register_summary(self: *const VMStatsAggregator) void {
+        const reg = &self.vm.register_stats;
+        const total_ops = reg.total_reads + reg.total_writes;
+        if (total_ops == 0) {
+            return;
+        }
+        std.debug.print("\n=== Register Statistics ===\n", .{});
+        reg.print_stats();
+    }
+
     pub fn print_all_stats(self: *const VMStatsAggregator) void {
         std.debug.print("\n", .{});
         std.debug.print("╔══════════════════════════════════════════════════════╗\n", .{});
@@ -106,6 +116,7 @@ pub const VMStatsAggregator = struct {
         self.print_instruction_summary();
         self.print_syscall_summary();
         self.print_execution_flow_summary();
+        self.print_register_summary();
         std.debug.print("\n", .{});
     }
 
@@ -116,6 +127,7 @@ pub const VMStatsAggregator = struct {
         self.vm.instruction_stats.reset();
         self.vm.syscall_stats.reset();
         self.vm.execution_flow.reset();
+        self.vm.register_stats.reset();
     }
 };
 

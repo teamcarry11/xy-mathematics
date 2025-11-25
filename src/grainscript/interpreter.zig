@@ -328,6 +328,8 @@ pub const Interpreter = struct {
         try self.register_math_functions();
         // Register type conversion functions
         try self.register_type_conversion_functions();
+        // Register type checking functions
+        try self.register_type_checking_functions();
     }
 
     /// Register string manipulation built-in functions.
@@ -1088,6 +1090,62 @@ pub const Interpreter = struct {
             .boolean => |v| Value.from_float(if (v) 1.0 else 0.0),
             .null => Error.type_mismatch,
         };
+    }
+
+    /// Built-in isNull function: Check if value is null.
+    // 2025-11-24-211500-pst: Active function
+    fn builtin_isnull(interpreter: *Interpreter, args: []const Value) Error!Value {
+        _ = interpreter;
+        if (args.len != 1) {
+            return Error.invalid_argument;
+        }
+        return Value.from_boolean(args[0] == .null);
+    }
+
+    /// Built-in isEmpty function: Check if string is empty.
+    // 2025-11-24-211500-pst: Active function
+    fn builtin_isempty(interpreter: *Interpreter, args: []const Value) Error!Value {
+        _ = interpreter;
+        if (args.len != 1) {
+            return Error.invalid_argument;
+        }
+        return switch (args[0]) {
+            .string => |v| Value.from_boolean(v.len == 0),
+            else => Value.from_boolean(false),
+        };
+    }
+
+    /// Built-in isNumber function: Check if value is number.
+    // 2025-11-24-211500-pst: Active function
+    fn builtin_isnumber(interpreter: *Interpreter, args: []const Value) Error!Value {
+        _ = interpreter;
+        if (args.len != 1) {
+            return Error.invalid_argument;
+        }
+        return switch (args[0]) {
+            .integer, .float => Value.from_boolean(true),
+            else => Value.from_boolean(false),
+        };
+    }
+
+    /// Built-in isString function: Check if value is string.
+    // 2025-11-24-211500-pst: Active function
+    fn builtin_isstring(interpreter: *Interpreter, args: []const Value) Error!Value {
+        _ = interpreter;
+        if (args.len != 1) {
+            return Error.invalid_argument;
+        }
+        return Value.from_boolean(args[0] == .string);
+    }
+
+    /// Built-in isBoolean function: Check if value is boolean.
+    // 2025-11-24-211500-pst: Active function
+    fn builtin_isboolean(interpreter: *Interpreter, args: []const Value) Error!Value {
+        _ = interpreter;
+        if (args.len != 1) {
+            return Error.invalid_argument;
+        }
+        return Value.from_boolean(args[0] == .boolean);
     }
 
     /// Execute AST (evaluate all top-level statements).

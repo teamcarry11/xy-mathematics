@@ -71,6 +71,14 @@
      - ✅ Branch statistics printing (total, taken/not taken, top 10 branches)
      - ✅ Integration with all branch instructions (BEQ, BNE, BLT, BGE, BLTU, BGEU)
      - ✅ Comprehensive tests (tests/067_vm_branch_stats_test.zig)
+   - ✅ VM Register Usage Statistics (Phase 2.1.10)
+     - ✅ Register read/write tracking per register (NUM_REGISTERS: 32)
+     - ✅ Total read/write counts
+     - ✅ Register usage percentage calculation
+     - ✅ Top register statistics printing
+     - ✅ Integration with instruction execution (ADD, ADDI, LUI, etc.)
+     - ✅ Statistics aggregator integration
+     - ✅ Comprehensive tests (tests/068_vm_register_stats_test.zig)
 
 2. **Kernel Boot Sequence**
    - Implement basic boot loader
@@ -572,8 +580,52 @@ Create a fourth agent dedicated to **Grain OS** - a Zig-Wayland implemented GNOM
    - ✅ Visual state management (shadow, glow, hover)
    - ✅ Compositor integration (automatic shadow/glow rendering)
    - ✅ Comprehensive tests (`tests/069_grain_os_window_visual_test.zig`)
-16. **Phase 16**: Integration (Grain Kernel syscalls, VM testing)
-17. **Phase 17**: Applications (Aurora, Dream, Skate, Terminal ports)
+16. **Phase 16**: Window Stacking Order ✅ **COMPLETE**
+   - ✅ Window stacking module (`src/grain_os/window_stacking.zig`)
+   - ✅ Window stack structure (z-order management)
+   - ✅ Raise/lower window operations
+   - ✅ Compositor integration (stacking order for rendering and hit testing)
+   - ✅ Automatic raise on focus
+   - ✅ Comprehensive tests (`tests/070_grain_os_window_stacking_test.zig`)
+17. **Phase 17**: Window Opacity/Transparency ✅ **COMPLETE**
+   - ✅ Window opacity module (`src/grain_os/window_opacity.zig`)
+   - ✅ Opacity value management (0-255 range)
+   - ✅ Alpha blending functions (apply opacity to color, blend colors)
+   - ✅ Compositor integration (opacity applied to window rendering)
+   - ✅ Set/get window opacity methods
+   - ✅ Opacity clamping and validation
+   - ✅ Comprehensive tests (`tests/071_grain_os_window_opacity_test.zig`)
+18. **Phase 18**: Window Animations ✅ **COMPLETE**
+   - ✅ Window animation module (`src/grain_os/window_animation.zig`)
+   - ✅ Animation types (move, resize, minimize, maximize, opacity)
+   - ✅ Animation state management (start, update, remove)
+   - ✅ Linear interpolation (lerp) for smooth transitions
+   - ✅ Compositor integration (animation updates in render loop)
+   - ✅ Animate move/resize methods
+   - ✅ Animation duration configuration (200ms default)
+   - ✅ Comprehensive tests (`tests/072_grain_os_window_animation_test.zig`)
+19. **Phase 19**: Window Decorations (Title Bar Buttons) ✅ **COMPLETE**
+   - ✅ Window decorations module (`src/grain_os/window_decorations.zig`)
+   - ✅ Button types (close, minimize, maximize)
+   - ✅ Button bounds calculation (position and size)
+   - ✅ Button hit testing (is_in_close/minimize/maximize_button)
+   - ✅ Button color management (hover, press states)
+   - ✅ Compositor integration (button rendering and click handling)
+   - ✅ Title bar button rendering
+   - ✅ Button click handling (close, minimize, maximize/unmaximize)
+   - ✅ Comprehensive tests (`tests/073_grain_os_window_decorations_test.zig`)
+20. **Phase 20**: Window Constraints ✅ **COMPLETE**
+   - ✅ Window constraints module (`src/grain_os/window_constraints.zig`)
+   - ✅ Minimum size constraints (default 100x100)
+   - ✅ Maximum size constraints (unlimited by default)
+   - ✅ Aspect ratio constraints (width/height ratio)
+   - ✅ Constraint application (apply to window size)
+   - ✅ Constraint validation (is_valid_size check)
+   - ✅ Compositor integration (constraints applied during resize)
+   - ✅ Set/get window constraints methods
+   - ✅ Comprehensive tests (`tests/074_grain_os_window_constraints_test.zig`)
+21. **Phase 21**: Integration (Grain Kernel syscalls, VM testing)
+22. **Phase 22**: Applications (Aurora, Dream, Skate, Terminal ports)
 
 ### Proposal Document
 
@@ -850,6 +902,8 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
   - ✅ Add LSP find references support (requestReferences method, find_references in Editor)
   - ✅ Add LSP document formatting support (requestFormatting method, format_document in Editor)
   - ✅ Add LSP range formatting support (requestRangeFormatting method, format_range in Editor)
+  - ✅ Add LSP code actions support (requestCodeActions method, get_code_actions in Editor)
+  - ✅ Add LSP symbol rename support (requestRename method, rename_symbol in Editor)
   - ✅ Integrate hover requests into moveCursor
   - ✅ Implement ghost text storage for AI completions
   - ✅ Fix didChange range calculation for insertions
@@ -1157,6 +1211,7 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 - ✅ Escape sequence handling (ESC, CSI, OSC sequences)
 - ✅ Cursor movement (up, down, forward, backward, position, next line, previous line, horizontal absolute, vertical absolute)
 - ✅ Insert/delete operations (insert/delete character, insert/delete line)
+- ✅ Scrolling region support (DECSTBM, CSI r)
 - ✅ Text attributes (bold, italic, underline, blink, reverse video)
 - ✅ ANSI color support (16-color palette)
 - ✅ 256-color support (CSI 38;5;n, 48;5;n)
@@ -1467,6 +1522,7 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 - ✅ Escape sequence handling (ESC, CSI, OSC sequences)
 - ✅ Cursor movement (up, down, forward, backward, position, next line, previous line, horizontal absolute, vertical absolute)
 - ✅ Insert/delete operations (insert/delete character, insert/delete line)
+- ✅ Scrolling region support (DECSTBM, CSI r)
 - ✅ Text attributes (bold, italic, underline, blink, reverse video)
 - ✅ ANSI color support (16-color palette)
 - ✅ 256-color support (CSI 38;5;n, 48;5;n)
@@ -1777,6 +1833,7 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 - ✅ Escape sequence handling (ESC, CSI, OSC sequences)
 - ✅ Cursor movement (up, down, forward, backward, position, next line, previous line, horizontal absolute, vertical absolute)
 - ✅ Insert/delete operations (insert/delete character, insert/delete line)
+- ✅ Scrolling region support (DECSTBM, CSI r)
 - ✅ Text attributes (bold, italic, underline, blink, reverse video)
 - ✅ ANSI color support (16-color palette)
 - ✅ 256-color support (CSI 38;5;n, 48;5;n)

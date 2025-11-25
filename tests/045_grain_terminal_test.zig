@@ -591,3 +591,81 @@ test "terminal true color background" {
     }
 }
 
+test "terminal csi scrolling region" {
+    var terminal = Terminal.init(80, 24);
+    var cells: [80 * 24]Terminal.Cell = undefined;
+    terminal.clear(&cells);
+
+    // Set scrolling region to lines 2-22 (1-based: 2;22)
+    terminal.process_char(0x1B, &cells); // ESC
+    terminal.process_char('[', &cells);
+    terminal.process_char('2', &cells);
+    terminal.process_char(';', &cells);
+    terminal.process_char('2', &cells);
+    terminal.process_char('2', &cells);
+    terminal.process_char('r', &cells);
+
+    // Check scrolling region bounds (0-based: 1-22)
+    try testing.expect(terminal.scroll_top == 1);
+    try testing.expect(terminal.scroll_bottom == 22);
+    // Cursor should be at top of scrolling region
+    try testing.expect(terminal.cursor_x == 0);
+    try testing.expect(terminal.cursor_y == 1);
+}
+
+test "terminal scrolling region scroll" {
+    var terminal = Terminal.init(80, 24);
+    var cells: [80 * 24]Terminal.Cell = undefined;
+    terminal.clear(&cells);
+
+    // Set scrolling region to lines 2-22
+    terminal.process_char(0x1B, &cells); // ESC
+    terminal.process_char('[', &cells);
+    terminal.process_char('2', &cells);
+    terminal.process_char(';', &cells);
+    terminal.process_char('2', &cells);
+    terminal.process_char('2', &cells);
+    terminal.process_char('r', &cells);
+
+    // Write text at bottom of scrolling region
+    terminal.cursor_y = 21; // Bottom of region (0-based: 21)
+    terminal.cursor_x = 0;
+    terminal.process_char('A', &cells);
+
+    // Move cursor down to trigger scroll
+    terminal.process_char('\n', &cells);
+
+    // Check that text was scrolled up (should be at line 20 now)
+    const cell = terminal.get_cell(0, 20, &cells).?;
+    try testing.expect(cell.ch == 'A');
+    // Cursor should be at bottom of scrolling region
+    try testing.expect(terminal.cursor_y == 21);
+}
+
+test "terminal scrolling region reset" {
+    var terminal = Terminal.init(80, 24);
+    var cells: [80 * 24]Terminal.Cell = undefined;
+    terminal.clear(&cells);
+
+    // Set scrolling region
+    terminal.process_char(0x1B, &cells); // ESC
+    terminal.process_char('[', &cells);
+    terminal.process_char('2', &cells);
+    terminal.process_char(';', &cells);
+    terminal.process_char('2', &cells);
+    terminal.process_char('2', &cells);
+    terminal.process_char('r', &cells);
+
+    try testing.expect(terminal.scroll_top == 1);
+    try testing.expect(terminal.scroll_bottom == 22);
+
+    // Reset scrolling region (empty params)
+    terminal.process_char(0x1B, &cells); // ESC
+    terminal.process_char('[', &cells);
+    terminal.process_char('r', &cells);
+
+    // Should reset to full screen
+    try testing.expect(terminal.scroll_top == 0);
+    try testing.expect(terminal.scroll_bottom == 24);
+}
+

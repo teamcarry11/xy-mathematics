@@ -11,6 +11,7 @@ const instruction_stats_mod = @import("instruction_stats.zig");
 const syscall_stats_mod = @import("syscall_stats.zig");
 const execution_flow_mod = @import("execution_flow.zig");
 const branch_stats_mod = @import("branch_stats.zig");
+const register_stats_mod = @import("register_stats.zig");
 
 /// Pure Zig RISC-V64 emulator for kernel development.
 /// Grain Style: Static allocation where possible, comprehensive assertions,
@@ -196,6 +197,7 @@ pub const RegisterFile = struct {
 
     /// Get register value (x0 always returns 0).
     /// Grain Style: Validate register index, ensure x0 behavior.
+    /// Note: Register statistics tracking is done in VM methods that call this.
     pub fn get(self: *const RegisterFile, reg: u5) u64 {
         // Assert: register index must be valid (0-31).
         std.debug.assert(reg < 32);
@@ -335,6 +337,10 @@ pub const VM = struct {
     /// Why: Track branch instruction outcomes for branch prediction analysis.
     /// GrainStyle: Static allocation, bounded counters, explicit types.
     branch_stats: branch_stats_mod.VMBranchStats = .{},
+    /// Register usage statistics tracker.
+    /// Why: Track register read/write frequency for register usage analysis.
+    /// GrainStyle: Static allocation, bounded counters, explicit types.
+    register_stats: register_stats_mod.VMRegisterStats = .{},
 
     const Self = @This();
 
@@ -1812,7 +1818,9 @@ pub const VM = struct {
 
         // Read source register values.
         const rs1_value = self.regs.get(rs1);
+        self.register_stats.record_read(rs1);
         const rs2_value = self.regs.get(rs2);
+        self.register_stats.record_read(rs2);
 
         // Add: rd = rs1 + rs2 (wrapping addition).
         // Why: RISC-V uses wrapping arithmetic (no overflow exceptions).
@@ -1820,6 +1828,7 @@ pub const VM = struct {
 
         // Write result to rd.
         self.regs.set(rd, result);
+        self.register_stats.record_write(rd);
 
         // Assert: result must be written correctly (unless x0).
         if (rd != 0) {

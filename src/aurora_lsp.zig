@@ -1024,6 +1024,276 @@ pub const LspClient = struct {
         new_text: []const u8, // New text to insert
     };
     
+    /// Request textDocument/rename (rename symbol at position).
+    /// Why: Rename a symbol across all references for refactoring.
+    /// Contract: uri, position, and new_name must be valid.
+    /// Returns: Workspace edit with changes to all files, or null if rename not available.
+    pub fn requestRename(
+        self: *LspClient,
+        uri: []const u8,
+        line: u32,
+        character: u32,
+        new_name: []const u8,
+    ) !?WorkspaceEdit {
+        // Assert: URI, position, and new name must be valid
+        std.debug.assert(uri.len > 0);
+        std.debug.assert(uri.len <= 4096); // Bounded URI length
+        std.debug.assert(new_name.len > 0);
+        std.debug.assert(new_name.len <= 1024); // Bounded name length
+        
+        var params_obj = std.json.ObjectMap.init(self.allocator);
+        defer params_obj.deinit();
+        
+        var text_doc_obj = std.json.ObjectMap.init(self.allocator);
+        defer text_doc_obj.deinit();
+        try text_doc_obj.put("uri", std.json.Value{ .string = uri });
+        try params_obj.put("textDocument", std.json.Value{ .object = text_doc_obj });
+        
+        // Add position
+        var position_obj = std.json.ObjectMap.init(self.allocator);
+        defer position_obj.deinit();
+        try position_obj.put("line", std.json.Value{ .integer = @intCast(line) });
+        try position_obj.put("character", std.json.Value{ .integer = @intCast(character) });
+        try params_obj.put("position", std.json.Value{ .object = position_obj });
+        
+        // Add new name
+        try params_obj.put("newName", std.json.Value{ .string = new_name });
+        
+        const params = std.json.Value{ .object = params_obj };
+        const response = try self.sendRequest("textDocument/rename", params);
+        
+        // Parse workspace edit from response.result
+        if (response.result) |result| {
+            if (result == .object) {
+                const obj = result.object;
+                
+                // Parse changes (map of URI to TextEdit[])
+                var changes = std.ArrayList(TextDocumentEdit).init(self.allocator);
+                errdefer {
+                    for (changes.items) |*change| {
+                        for (change.edits.items) |*text_edit| {
+                            self.allocator.free(text_edit.new_text);
+                        }
+                        change.edits.deinit(self.allocator);
+                        self.allocator.free(change.uri);
+                    }
+                    changes.deinit();
+                }
+                
+                if (obj.get("changes")) |changes_val| {
+                    if (changes_val == .object) {
+                        var changes_it = changes_val.object.iterator();
+                        while (changes_it.next()) |entry| {
+                            const uri_str = entry.key_ptr.*;
+                            const edits_val = entry.value_ptr.*;
+                            
+                            if (edits_val == .array) {
+                                var edits = std.ArrayList(TextEdit).init(self.allocator);
+                                errdefer {
+                                    for (edits.items) |*text_edit| {
+                                        self.allocator.free(text_edit.new_text);
+                                    }
+                                    edits.deinit();
+                                }
+                                
+                                for (edits_val.array.items) |edit_item| {
+                                    if (edit_item == .object) {
+                                        const edit_item_obj = edit_item.object;
+                                        
+                                        // Parse range
+                                        const range_val = edit_item_obj.get("range") orelse continue;
+                                        if (range_val != .object) continue;
+                                        const edit_range_obj = range_val.object;
+                                        
+                                        const start_val = edit_range_obj.get("start") orelse continue;
+                                        const end_val = edit_range_obj.get("end") orelse continue;
+                                        if (start_val != .object or end_val != .object) continue;
+                                        
+                                        const edit_start_obj = start_val.object;
+                                        const edit_end_obj = end_val.object;
+                                        
+                                        const start_line_val = edit_start_obj.get("line") orelse continue;
+                                        const start_char_val = edit_start_obj.get("character") orelse continue;
+                                        const end_line_val = edit_end_obj.get("line") orelse continue;
+                                        const end_char_val = edit_end_obj.get("character") orelse continue;
+                                        
+                                        if (start_line_val != .integer or start_char_val != .integer or
+                                            end_line_val != .integer or end_char_val != .integer) continue;
+                                        
+                                        const start_line = @as(u32, @intCast(start_line_val.integer));
+                                        const start_char = @as(u32, @intCast(start_char_val.integer));
+                                        const end_line = @as(u32, @intCast(end_line_val.integer));
+                                        const end_char = @as(u32, @intCast(end_char_val.integer));
+                                        
+                                        // Parse newText
+                                        const new_text_val = edit_item_obj.get("newText") orelse continue;
+                                        if (new_text_val != .string) continue;
+                                        const new_text_str = new_text_val.string;
+                                        
+                                        const new_text_copy = try self.allocator.dupe(u8, new_text_str);
+                                        errdefer self.allocator.free(new_text_copy);
+                                        
+                                        try edits.append(TextEdit{
+                                            .range = Range{
+                                                .start = Position{ .line = start_line, .character = start_char },
+                                                .end = Position{ .line = end_line, .character = end_char },
+                                            },
+                                            .new_text = new_text_copy,
+                                        });
+                                    }
+                                }
+                                
+                                const uri_copy = try self.allocator.dupe(u8, uri_str);
+                                errdefer self.allocator.free(uri_copy);
+                                
+                                try changes.append(TextDocumentEdit{
+                                    .uri = uri_copy,
+                                    .edits = edits,
+                                });
+                            }
+                        }
+                    }
+                }
+                
+                const changes_slice = try changes.toOwnedSlice(self.allocator);
+                return WorkspaceEdit{
+                    .changes = std.ArrayList(TextDocumentEdit).fromOwnedSlice(self.allocator, changes_slice),
+                };
+            }
+        }
+        return null;
+    }
+    
+    /// Request workspace/symbol (search for symbols in workspace).
+    /// Why: Search for symbols across the entire workspace for navigation.
+    /// Contract: query must be valid.
+    /// Returns: Array of symbol information, or null if no symbols found.
+    pub fn requestWorkspaceSymbols(
+        self: *LspClient,
+        query: []const u8,
+    ) !?[]SymbolInformation {
+        // Assert: Query must be valid
+        std.debug.assert(query.len <= 1024); // Bounded query length
+        
+        var params_obj = std.json.ObjectMap.init(self.allocator);
+        defer params_obj.deinit();
+        
+        try params_obj.put("query", std.json.Value{ .string = query });
+        
+        const params = std.json.Value{ .object = params_obj };
+        const response = try self.sendRequest("workspace/symbol", params);
+        
+        // Parse symbol information array from response.result
+        if (response.result) |result| {
+            if (result == .array) {
+                const items = result.array.items;
+                var symbols = std.ArrayList(SymbolInformation).init(self.allocator);
+                errdefer {
+                    // Free any allocated strings on error
+                    for (symbols.items) |*symbol| {
+                        self.allocator.free(symbol.name);
+                        self.allocator.free(symbol.uri);
+                        if (symbol.container_name) |container| {
+                            self.allocator.free(container);
+                        }
+                    }
+                    symbols.deinit();
+                }
+                
+                for (items) |item| {
+                    if (item == .object) {
+                        const obj = item.object;
+                        
+                        // Parse name
+                        const name_val = obj.get("name") orelse continue;
+                        if (name_val != .string) continue;
+                        const name_str = name_val.string;
+                        
+                        const name_copy = try self.allocator.dupe(u8, name_str);
+                        errdefer self.allocator.free(name_copy);
+                        
+                        // Parse kind (optional)
+                        const kind: ?u32 = if (obj.get("kind")) |k|
+                            if (k == .integer) @as(u32, @intCast(k.integer)) else null
+                        else
+                            null;
+                        
+                        // Parse location
+                        const location_val = obj.get("location") orelse continue;
+                        if (location_val != .object) continue;
+                        const location_obj = location_val.object;
+                        
+                        const location_uri = location_obj.get("uri") orelse continue;
+                        if (location_uri != .string) continue;
+                        const uri_str = location_uri.string;
+                        
+                        const uri_copy = try self.allocator.dupe(u8, uri_str);
+                        errdefer self.allocator.free(uri_copy);
+                        
+                        // Parse range
+                        const range_val = location_obj.get("range") orelse continue;
+                        if (range_val != .object) continue;
+                        const range_obj = range_val.object;
+                        
+                        const start_val = range_obj.get("start") orelse continue;
+                        const end_val = range_obj.get("end") orelse continue;
+                        if (start_val != .object or end_val != .object) continue;
+                        
+                        const start_obj = start_val.object;
+                        const end_obj = end_val.object;
+                        
+                        const start_line_val = start_obj.get("line") orelse continue;
+                        const start_char_val = start_obj.get("character") orelse continue;
+                        const end_line_val = end_obj.get("line") orelse continue;
+                        const end_char_val = end_obj.get("character") orelse continue;
+                        
+                        if (start_line_val != .integer or start_char_val != .integer or
+                            end_line_val != .integer or end_char_val != .integer) continue;
+                        
+                        const start_line = @as(u32, @intCast(start_line_val.integer));
+                        const start_char = @as(u32, @intCast(start_char_val.integer));
+                        const end_line = @as(u32, @intCast(end_line_val.integer));
+                        const end_char = @as(u32, @intCast(end_char_val.integer));
+                        
+                        // Parse containerName (optional)
+                        var container_name: ?[]const u8 = null;
+                        if (obj.get("containerName")) |container_val| {
+                            if (container_val == .string) {
+                                const container_str = container_val.string;
+                                const container_copy = try self.allocator.dupe(u8, container_str);
+                                errdefer self.allocator.free(container_copy);
+                                container_name = container_copy;
+                            }
+                        }
+                        
+                        try symbols.append(SymbolInformation{
+                            .name = name_copy,
+                            .kind = kind,
+                            .uri = uri_copy,
+                            .range = Range{
+                                .start = Position{ .line = start_line, .character = start_char },
+                                .end = Position{ .line = end_line, .character = end_char },
+                            },
+                            .container_name = container_name,
+                        });
+                    }
+                }
+                
+                return try symbols.toOwnedSlice();
+            }
+        }
+        return null;
+    }
+    
+    /// Symbol information from workspace symbol search.
+    pub const SymbolInformation = struct {
+        name: []const u8, // Symbol name
+        kind: ?u32 = null, // Symbol kind (function, class, etc.)
+        uri: []const u8, // File URI where symbol is located
+        range: Range, // Range of the symbol
+        container_name: ?[]const u8 = null, // Optional container name (e.g., class name)
+    };
+    
     /// Formatting options for document formatting.
     pub const FormattingOptions = struct {
         tab_size: u32, // Number of spaces per tab

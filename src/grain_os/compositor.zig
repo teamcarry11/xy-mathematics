@@ -20,6 +20,9 @@ const window_visual = @import("window_visual.zig");
 const window_stacking = @import("window_stacking.zig");
 const window_opacity = @import("window_opacity.zig");
 const window_animation = @import("window_animation.zig");
+const window_decorations = @import("window_decorations.zig");
+const window_constraints = @import("window_constraints.zig");
+const window_grouping = @import("window_grouping.zig");
 const keyboard_shortcuts = @import("keyboard_shortcuts.zig");
 
 // Bounded: Max number of windows.
@@ -86,6 +89,7 @@ pub const Window = struct {
     minimized: bool,
     maximized: bool,
     opacity: u8, // Window opacity (0 = transparent, 255 = opaque).
+    constraints: window_constraints.WindowConstraints,
     drag_state: DragState,
     resize_state: ResizeState,
 
@@ -115,6 +119,7 @@ pub const Window = struct {
             .minimized = false,
             .maximized = false,
             .opacity = window_opacity.OPACITY_DEFAULT,
+            .constraints = window_constraints.WindowConstraints.init(),
             .drag_state = DragState{
                 .active = false,
                 .start_x = 0,
@@ -184,6 +189,7 @@ pub const Compositor = struct {
     preview_manager: window_preview.PreviewManager,
     window_stack: window_stacking.WindowStack,
     animation_manager: window_animation.AnimationManager,
+    group_manager: window_grouping.WindowGroupManager,
 
     pub fn init(allocator: std.mem.Allocator) Compositor {
         std.debug.assert(@intFromPtr(allocator.ptr) != 0);
@@ -530,6 +536,8 @@ pub const Compositor = struct {
             TITLE_BAR_HEIGHT,
             title_bar_color,
         );
+        // Draw title bar buttons.
+        self.render_title_bar_buttons(win);
         // Draw window content area (background, apply opacity).
         const content_y = @as(i32, @intCast(win.y)) + @as(i32, @intCast(BORDER_WIDTH + TITLE_BAR_HEIGHT));
         const content_height = win.height - (BORDER_WIDTH * 2) - TITLE_BAR_HEIGHT;
@@ -701,11 +709,27 @@ pub const Compositor = struct {
                         if (self.get_resize_handle(window_id, event.mouse.x, event.mouse.y)) |handle| {
                             if (handle != ResizeHandle.none) {
                                 self.start_resize(window_id, handle, event.mouse.x, event.mouse.y);
-                            } else if (self.is_in_title_bar(window_id, event.mouse.x, event.mouse.y)) {
-                                self.start_drag(window_id, event.mouse.x, event.mouse.y);
-                            } else if (self.is_in_close_button(window_id, event.mouse.x, event.mouse.y)) {
-                                _ = self.remove_window(window_id);
                             } else {
+                                const button_type = window_decorations.get_button_at(
+                                    win.x,
+                                    win.y,
+                                    win.width,
+                                    event.mouse.x,
+                                    event.mouse.y,
+                                );
+                                if (button_type == window_decorations.ButtonType.close) {
+                                    _ = self.remove_window(window_id);
+                                } else if (button_type == window_decorations.ButtonType.minimize) {
+                                    _ = self.minimize_window(window_id);
+                                } else if (button_type == window_decorations.ButtonType.maximize) {
+                                    if (win.maximized) {
+                                        _ = self.unmaximize_window(window_id);
+                                    } else {
+                                        _ = self.maximize_window(window_id);
+                                    }
+                                } else if (self.is_in_title_bar(window_id, event.mouse.x, event.mouse.y)) {
+                                    self.start_drag(window_id, event.mouse.x, event.mouse.y);
+                                } else {
                                 _ = self.focus_window(window_id);
                             }
                         } else {
@@ -1072,6 +1096,132 @@ pub const Compositor = struct {
         return false;
     }
 
+    // Check if point is in title bar.
+    pub fn is_in_title_bar(
+        self: *Compositor,
+        window_id: u32,
+        x: u32,
+        y: u32,
+    ) bool {
+        std.debug.assert(window_id > 0);
+        if (self.get_window(window_id)) |win| {
+            const title_bar_x = win.x + @as(i32, @intCast(BORDER_WIDTH));
+            const title_bar_y = win.y + @as(i32, @intCast(BORDER_WIDTH));
+            const title_bar_width = win.width - (BORDER_WIDTH * 2);
+            const x_i32 = @as(i32, @intCast(x));
+            const y_i32 = @as(i32, @intCast(y));
+            return (x_i32 >= title_bar_x and x_i32 < title_bar_x + @as(i32, @intCast(title_bar_width)) and
+                y_i32 >= title_bar_y and y_i32 < title_bar_y + @as(i32, @intCast(TITLE_BAR_HEIGHT)));
+        }
+        return false;
+    }
+
+    // Render title bar buttons.
+    fn render_title_bar_buttons(self: *Compositor, win: *Window) void {
+        std.debug.assert(win.width > 0);
+        // Render close button.
+        const close_bounds = window_decorations.get_close_button_bounds(
+            win.x,
+            win.y,
+            win.width,
+        );
+        const close_color = window_decorations.get_button_color(
+            window_decorations.ButtonType.close,
+            false, // hovered (would track in full impl)
+            false, // pressed (would track in full impl)
+            win.focused,
+        );
+        const close_color_opacity = window_opacity.apply_opacity_to_color(
+            close_color,
+            win.opacity,
+        );
+        self.renderer.draw_rect(
+            close_bounds.x,
+            close_bounds.y,
+            close_bounds.width,
+            close_bounds.height,
+            close_color_opacity,
+        );
+        // Render minimize button.
+        const minimize_bounds = window_decorations.get_minimize_button_bounds(
+            win.x,
+            win.y,
+            win.width,
+        );
+        const minimize_color = window_decorations.get_button_color(
+            window_decorations.ButtonType.minimize,
+            false,
+            false,
+            win.focused,
+        );
+        const minimize_color_opacity = window_opacity.apply_opacity_to_color(
+            minimize_color,
+            win.opacity,
+        );
+        self.renderer.draw_rect(
+            minimize_bounds.x,
+            minimize_bounds.y,
+            minimize_bounds.width,
+            minimize_bounds.height,
+            minimize_color_opacity,
+        );
+        // Render maximize button.
+        const maximize_bounds = window_decorations.get_maximize_button_bounds(
+            win.x,
+            win.y,
+            win.width,
+        );
+        const maximize_color = window_decorations.get_button_color(
+            window_decorations.ButtonType.maximize,
+            false,
+            false,
+            win.focused,
+        );
+        const maximize_color_opacity = window_opacity.apply_opacity_to_color(
+            maximize_color,
+            win.opacity,
+        );
+        self.renderer.draw_rect(
+            maximize_bounds.x,
+            maximize_bounds.y,
+            maximize_bounds.width,
+            maximize_bounds.height,
+            maximize_color_opacity,
+        );
+    }
+
+    // Set window constraints.
+    pub fn set_window_constraints(
+        self: *Compositor,
+        window_id: u32,
+        min_width: u32,
+        min_height: u32,
+        max_width: u32,
+        max_height: u32,
+        aspect_ratio: f32,
+    ) bool {
+        std.debug.assert(window_id > 0);
+        if (self.get_window(window_id)) |win| {
+            win.constraints.set_min_size(min_width, min_height);
+            win.constraints.set_max_size(max_width, max_height);
+            win.constraints.set_aspect_ratio(aspect_ratio);
+            return true;
+        }
+        return false;
+    }
+
+    // Get window constraints.
+    pub fn get_window_constraints(
+        self: *const Compositor,
+        window_id: u32,
+    ) ?window_constraints.WindowConstraints {
+        std.debug.assert(window_id > 0);
+        if (self.get_window(window_id)) |win| {
+            return win.constraints;
+        }
+        return null;
+    }
+
     // Get resize handle at mouse position.
     pub fn get_resize_handle(
         self: *Compositor,
@@ -1276,6 +1426,10 @@ pub const Compositor = struct {
             },
             .none => {},
         }
+        // Apply window constraints.
+        const constrained = win.constraints.apply_constraints(win.width, win.height);
+        win.width = constrained.width;
+        win.height = constrained.height;
         // Clamp window to screen bounds.
         const max_width = self.output.width - (BORDER_WIDTH * 2);
         const max_height = self.output.height - (BORDER_WIDTH * 2) - TITLE_BAR_HEIGHT - desktop_shell.STATUS_BAR_HEIGHT;

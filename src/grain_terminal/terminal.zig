@@ -62,6 +62,8 @@ pub const Terminal = struct {
     escape_len: u32, // Escape sequence length
     scrollback_lines: u32, // Number of scrollback lines
     scrollback_offset: u32, // Current scrollback offset (0 = at bottom, showing latest)
+    scroll_top: u32, // Top margin of scrolling region (0-based)
+    scroll_bottom: u32, // Bottom margin of scrolling region (0-based, exclusive)
     default_fg: u8, // Default foreground color
     default_bg: u8, // Default background color
     current_attrs: CellAttributes, // Current cell attributes
@@ -86,6 +88,8 @@ pub const Terminal = struct {
             .escape_len = 0,
             .scrollback_lines = 0,
             .scrollback_offset = 0,
+            .scroll_top = 0,
+            .scroll_bottom = height,
             .default_fg = 7, // Default: white foreground
             .default_bg = 0, // Default: black background
             .window_title = [_]u8{0} ** 256,
@@ -123,9 +127,9 @@ pub const Terminal = struct {
                     self.cursor_x = 0;
                 } else if (ch == '\n') { // Line feed
                     self.cursor_y += 1;
-                    if (self.cursor_y >= self.height) {
-                        self.scroll_up(cells);
-                        self.cursor_y = self.height - 1;
+                    if (self.cursor_y >= self.scroll_bottom) {
+                        self.scroll_up_region(cells);
+                        self.cursor_y = self.scroll_bottom - 1;
                     }
                 } else if (ch == '\t') { // Tab
                     self.cursor_x = (self.cursor_x + 8) & ~@as(u32, 7); // Round to next tab stop
@@ -140,9 +144,9 @@ pub const Terminal = struct {
                     if (self.cursor_x >= self.width) {
                         self.cursor_x = 0;
                         self.cursor_y += 1;
-                        if (self.cursor_y >= self.height) {
-                            self.scroll_up(cells);
-                            self.cursor_y = self.height - 1;
+                        if (self.cursor_y >= self.scroll_bottom) {
+                            self.scroll_up_region(cells);
+                            self.cursor_y = self.scroll_bottom - 1;
                         }
                     }
                 }
@@ -199,6 +203,43 @@ pub const Terminal = struct {
             .ch = ch,
             .attrs = self.current_attrs,
         };
+    }
+
+    /// Scroll scrolling region up (add new line at bottom of region).
+    // 2025-11-24-212700-pst: Active function
+    fn scroll_up_region(self: *Terminal, cells: []Cell) void {
+        // Assert: Cells buffer must be valid
+        std.debug.assert(cells.len >= self.width * self.height);
+
+        // Scroll lines within scrolling region
+        var y: u32 = self.scroll_top;
+        while (y < self.scroll_bottom - 1) : (y += 1) {
+            const src_line_start = (y + 1) * self.width;
+            const dst_line_start = y * self.width;
+            var x: u32 = 0;
+            while (x < self.width) : (x += 1) {
+                const src_idx = src_line_start + x;
+                const dst_idx = dst_line_start + x;
+                cells[dst_idx] = cells[src_idx];
+            }
+        }
+
+        // Clear bottom line of scrolling region
+        const bottom_line_start = (self.scroll_bottom - 1) * self.width;
+        var x: u32 = 0;
+        while (x < self.width) : (x += 1) {
+            const idx = bottom_line_start + x;
+            cells[idx] = Cell{
+                .ch = ' ',
+                .attrs = self.current_attrs,
+            };
+        }
+
+        // Update scrollback
+        self.scrollback_lines += 1;
+        if (self.scrollback_lines > MAX_SCROLLBACK) {
+            self.scrollback_lines = MAX_SCROLLBACK;
+        }
     }
 
     /// Scroll terminal up (add new line at bottom).
@@ -511,6 +552,10 @@ pub const Terminal = struct {
                 const n = self.parse_csi_param(params, 1);
                 self.delete_lines(n, cells);
             },
+            'r' => {
+                // Set Scrolling Region (DECSTBM) - CSI <top> ; <bottom> r
+                self.set_scrolling_region(params);
+            },
             else => {
                 // Unknown CSI sequence, ignore
             },
@@ -566,6 +611,71 @@ pub const Terminal = struct {
             self.window_title_len = copy_len;
         }
         // Icon name (1) is ignored for now
+    }
+
+    /// Set scrolling region (DECSTBM).
+    // 2025-11-24-212700-pst: Active function
+    fn set_scrolling_region(self: *Terminal, params: []const u8) void {
+        // Parse parameters: CSI <top> ; <bottom> r
+        // Default: top = 1, bottom = height
+        if (params.len == 0) {
+            // Reset to full screen
+            self.scroll_top = 0;
+            self.scroll_bottom = self.height;
+            return;
+        }
+
+        // Parse parameters (handle semicolon-separated)
+        var params_list: [2]u32 = undefined;
+        var params_count: u32 = 0;
+        var params_iter = std.mem.splitScalar(u8, params, ';');
+        while (params_iter.next()) |param_str| {
+            if (params_count >= 2) {
+                break; // Bounded: max 2 parameters
+            }
+            const code = self.parse_number(param_str, 0);
+            params_list[params_count] = code;
+            params_count += 1;
+        }
+
+        // Set scrolling region (1-based to 0-based conversion)
+        if (params_count >= 1) {
+            const top = params_list[0];
+            if (top > 0) {
+                self.scroll_top = top - 1;
+            } else {
+                self.scroll_top = 0;
+            }
+        } else {
+            self.scroll_top = 0;
+        }
+
+        if (params_count >= 2) {
+            const bottom = params_list[1];
+            if (bottom > 0) {
+                self.scroll_bottom = bottom;
+            } else {
+                self.scroll_bottom = self.height;
+            }
+        } else {
+            self.scroll_bottom = self.height;
+        }
+
+        // Bounds checking
+        if (self.scroll_top >= self.height) {
+            self.scroll_top = self.height - 1;
+        }
+        if (self.scroll_bottom > self.height) {
+            self.scroll_bottom = self.height;
+        }
+        if (self.scroll_top >= self.scroll_bottom) {
+            self.scroll_top = 0;
+            self.scroll_bottom = self.height;
+        }
+
+        // Move cursor to home position (top-left of scrolling region)
+        self.cursor_x = 0;
+        self.cursor_y = self.scroll_top;
     }
 
     /// Handle bell character (BEL, 0x07).

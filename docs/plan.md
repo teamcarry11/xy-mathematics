@@ -970,6 +970,7 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
   - ✅ Add LSP signature help support (requestSignatureHelp method, get_signature_help in Editor)
   - ✅ Add LSP completion item resolve support (resolveCompletionItem method, resolve_completion_item in Editor)
   - ✅ Add LSP did save/close notification support (didSave, didClose methods, integrated into save_file and deinit)
+  - ✅ Add LSP will save support (requestWillSave, requestWillSaveWaitUntil methods, integrated into save_file)
   - ✅ Integrate hover requests into moveCursor
   - ✅ Implement ghost text storage for AI completions
   - ✅ Fix didChange range calculation for insertions

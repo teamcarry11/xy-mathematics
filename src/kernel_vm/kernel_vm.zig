@@ -21,4 +21,5 @@ pub const execution_flow = @import("execution_flow.zig");
 pub const stats_aggregator = @import("stats_aggregator.zig");
 pub const branch_stats = @import("branch_stats.zig");
 pub const register_stats = @import("register_stats.zig");
+pub const instruction_perf = @import("instruction_perf.zig");
 

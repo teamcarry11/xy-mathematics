@@ -105,6 +105,15 @@ pub const VMStatsAggregator = struct {
         reg.print_stats();
     }
 
+    fn print_instruction_perf_summary(self: *const VMStatsAggregator) void {
+        const perf = &self.vm.instruction_perf;
+        if (perf.total_profiling_time_ns == 0) {
+            return;
+        }
+        std.debug.print("\n=== Instruction Performance ===\n", .{});
+        perf.print_stats();
+    }
+
     pub fn print_all_stats(self: *const VMStatsAggregator) void {
         std.debug.print("\n", .{});
         std.debug.print("╔══════════════════════════════════════════════════════╗\n", .{});
@@ -117,6 +126,7 @@ pub const VMStatsAggregator = struct {
         self.print_syscall_summary();
         self.print_execution_flow_summary();
         self.print_register_summary();
+        self.print_instruction_perf_summary();
         std.debug.print("\n", .{});
     }
 
@@ -128,6 +138,7 @@ pub const VMStatsAggregator = struct {
         self.vm.syscall_stats.reset();
         self.vm.execution_flow.reset();
         self.vm.register_stats.reset();
+        self.vm.instruction_perf.reset();
     }
 };
 

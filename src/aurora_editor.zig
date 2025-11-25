@@ -437,6 +437,19 @@ pub const Editor = struct {
         return symbols;
     }
     
+    /// Get document symbols (outline) for current file.
+    /// Why: Get outline of document (functions, classes, etc.) for navigation.
+    /// Contract: File must be open and LSP server must be running.
+    /// Returns: Array of document symbols, or null if no symbols found.
+    /// Note: Caller must free the returned symbols array and all strings within.
+    pub fn get_document_symbols(self: *Editor) !?[]LspClient.DocumentSymbol {
+        // Request document symbols from LSP server
+        const symbols = try self.lsp.requestDocumentSymbols(self.file_uri);
+        
+        // Return symbols array (caller must free)
+        return symbols;
+    }
+    
     /// Apply text edits to editor buffer.
     /// Why: Apply formatting edits or other text transformations.
     /// Contract: edits array must be valid and sorted by position.

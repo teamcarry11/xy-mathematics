@@ -64,6 +64,11 @@ pub const Terminal = struct {
     scrollback_offset: u32, // Current scrollback offset (0 = at bottom, showing latest)
     scroll_top: u32, // Top margin of scrolling region (0-based)
     scroll_bottom: u32, // Bottom margin of scrolling region (0-based, exclusive)
+    dec_ckm: bool, // DEC Cursor Keys Mode (application vs cursor keys)
+    dec_om: bool, // DEC Origin Mode (relative vs absolute origin)
+    dec_awm: bool, // DEC Auto Wrap Mode (wrap vs truncate)
+    dec_tcem: bool, // DEC Text Cursor Enable Mode (show vs hide cursor)
+    tab_stops: [256]bool, // Tab stops (one per column, bounded by MAX_WIDTH)
     default_fg: u8, // Default foreground color
     default_bg: u8, // Default background color
     current_attrs: CellAttributes, // Current cell attributes
@@ -90,6 +95,10 @@ pub const Terminal = struct {
             .scrollback_offset = 0,
             .scroll_top = 0,
             .scroll_bottom = height,
+            .dec_ckm = false,
+            .dec_om = false,
+            .dec_awm = true,
+            .dec_tcem = true,
             .default_fg = 7, // Default: white foreground
             .default_bg = 0, // Default: black background
             .window_title = [_]u8{0} ** 256,
@@ -142,11 +151,17 @@ pub const Terminal = struct {
                     self.write_char(ch, cells);
                     self.cursor_x += 1;
                     if (self.cursor_x >= self.width) {
-                        self.cursor_x = 0;
-                        self.cursor_y += 1;
-                        if (self.cursor_y >= self.scroll_bottom) {
-                            self.scroll_up_region(cells);
-                            self.cursor_y = self.scroll_bottom - 1;
+                        if (self.dec_awm) {
+                            // Auto wrap: move to next line
+                            self.cursor_x = 0;
+                            self.cursor_y += 1;
+                            if (self.cursor_y >= self.scroll_bottom) {
+                                self.scroll_up_region(cells);
+                                self.cursor_y = self.scroll_bottom - 1;
+                            }
+                        } else {
+                            // No wrap: stay at right margin
+                            self.cursor_x = self.width - 1;
                         }
                     }
                 }
@@ -556,6 +571,24 @@ pub const Terminal = struct {
                 // Set Scrolling Region (DECSTBM) - CSI <top> ; <bottom> r
                 self.set_scrolling_region(params);
             },
+            'g' => {
+                // Tab Clear (TBC) - clear tab stop
+                // 0: clear tab stop at current column
+                // 3: clear all tab stops
+                const n = self.parse_csi_param(params, 0);
+                if (n == 0) {
+                    // Clear tab stop at current column
+                    if (self.cursor_x < MAX_WIDTH) {
+                        self.tab_stops[self.cursor_x] = false;
+                    }
+                } else if (n == 3) {
+                    // Clear all tab stops
+                    var i: u32 = 0;
+                    while (i < MAX_WIDTH) : (i += 1) {
+                        self.tab_stops[i] = false;
+                    }
+                }
+            },
             else => {
                 // Unknown CSI sequence, ignore
             },
@@ -676,6 +709,210 @@ pub const Terminal = struct {
         // Move cursor to home position (top-left of scrolling region)
         self.cursor_x = 0;
         self.cursor_y = self.scroll_top;
+    }
+
+    /// Handle Set Mode (SM) - CSI ? <n> h (DEC private modes).
+    // 2025-11-24-214900-pst: Active function
+    fn handle_set_mode(self: *Terminal, params: []const u8) void {
+        // Parse parameters (handle semicolon-separated)
+        var params_list: [16]u32 = undefined;
+        var params_count: u32 = 0;
+        var params_iter = std.mem.splitScalar(u8, params, ';');
+        while (params_iter.next()) |param_str| {
+            if (params_count >= 16) {
+                break; // Bounded: max 16 parameters
+            }
+            const code = self.parse_number(param_str, 0);
+            params_list[params_count] = code;
+            params_count += 1;
+        }
+
+        // Process parameters
+        var i: u32 = 0;
+        while (i < params_count) : (i += 1) {
+            const code = params_list[i];
+            // Check if DEC private mode (starts with ?)
+            if (i == 0 and params.len > 0 and params[0] == '?') {
+                // DEC private modes
+                switch (code) {
+                    1 => {
+                        // DECCKM - Cursor Keys Mode (application keys)
+                        self.dec_ckm = true;
+                    },
+                    6 => {
+                        // DECOM - Origin Mode (relative origin)
+                        self.dec_om = true;
+                    },
+                    7 => {
+                        // DECAWM - Auto Wrap Mode (wrap at right margin)
+                        self.dec_awm = true;
+                    },
+                    25 => {
+                        // DECTCEM - Text Cursor Enable Mode (show cursor)
+                        self.dec_tcem = true;
+                    },
+                    else => {
+                        // Unknown DEC private mode, ignore
+                    },
+                }
+            } else {
+                // ANSI modes (not implemented yet)
+                _ = code;
+            }
+        }
+    }
+
+    /// Handle Reset Mode (RM) - CSI ? <n> l (DEC private modes).
+    // 2025-11-24-214900-pst: Active function
+    fn handle_reset_mode(self: *Terminal, params: []const u8) void {
+        // Parse parameters (handle semicolon-separated)
+        var params_list: [16]u32 = undefined;
+        var params_count: u32 = 0;
+        var params_iter = std.mem.splitScalar(u8, params, ';');
+        while (params_iter.next()) |param_str| {
+            if (params_count >= 16) {
+                break; // Bounded: max 16 parameters
+            }
+            const code = self.parse_number(param_str, 0);
+            params_list[params_count] = code;
+            params_count += 1;
+        }
+
+        // Process parameters
+        var i: u32 = 0;
+        while (i < params_count) : (i += 1) {
+            const code = params_list[i];
+            // Check if DEC private mode (starts with ?)
+            if (i == 0 and params.len > 0 and params[0] == '?') {
+                // DEC private modes
+                switch (code) {
+                    1 => {
+                        // DECCKM - Cursor Keys Mode (cursor keys)
+                        self.dec_ckm = false;
+                    },
+                    6 => {
+                        // DECOM - Origin Mode (absolute origin)
+                        self.dec_om = false;
+                    },
+                    7 => {
+                        // DECAWM - Auto Wrap Mode (truncate at right margin)
+                        self.dec_awm = false;
+                    },
+                    25 => {
+                        // DECTCEM - Text Cursor Enable Mode (hide cursor)
+                        self.dec_tcem = false;
+                    },
+                    else => {
+                        // Unknown DEC private mode, ignore
+                    },
+                }
+            } else {
+                // ANSI modes (not implemented yet)
+                _ = code;
+            }
+        }
+    }
+
+    /// Handle Set Mode (SM) - CSI ? <n> h (DEC private modes).
+    // 2025-11-24-214900-pst: Active function
+    fn handle_set_mode(self: *Terminal, params: []const u8) void {
+        // Parse parameters (handle semicolon-separated)
+        var params_list: [16]u32 = undefined;
+        var params_count: u32 = 0;
+        var params_iter = std.mem.splitScalar(u8, params, ';');
+        while (params_iter.next()) |param_str| {
+            if (params_count >= 16) {
+                break; // Bounded: max 16 parameters
+            }
+            const code = self.parse_number(param_str, 0);
+            params_list[params_count] = code;
+            params_count += 1;
+        }
+
+        // Process parameters
+        var i: u32 = 0;
+        while (i < params_count) : (i += 1) {
+            const code = params_list[i];
+            // Check if DEC private mode (starts with ?)
+            if (i == 0 and params.len > 0 and params[0] == '?') {
+                // DEC private modes
+                switch (code) {
+                    1 => {
+                        // DECCKM - Cursor Keys Mode (application keys)
+                        self.dec_ckm = true;
+                    },
+                    6 => {
+                        // DECOM - Origin Mode (relative origin)
+                        self.dec_om = true;
+                    },
+                    7 => {
+                        // DECAWM - Auto Wrap Mode (wrap at right margin)
+                        self.dec_awm = true;
+                    },
+                    25 => {
+                        // DECTCEM - Text Cursor Enable Mode (show cursor)
+                        self.dec_tcem = true;
+                    },
+                    else => {
+                        // Unknown DEC private mode, ignore
+                    },
+                }
+            } else {
+                // ANSI modes (not implemented yet)
+                _ = code;
+            }
+        }
+    }
+
+    /// Handle Reset Mode (RM) - CSI ? <n> l (DEC private modes).
+    // 2025-11-24-214900-pst: Active function
+    fn handle_reset_mode(self: *Terminal, params: []const u8) void {
+        // Parse parameters (handle semicolon-separated)
+        var params_list: [16]u32 = undefined;
+        var params_count: u32 = 0;
+        var params_iter = std.mem.splitScalar(u8, params, ';');
+        while (params_iter.next()) |param_str| {
+            if (params_count >= 16) {
+                break; // Bounded: max 16 parameters
+            }
+            const code = self.parse_number(param_str, 0);
+            params_list[params_count] = code;
+            params_count += 1;
+        }
+
+        // Process parameters
+        var i: u32 = 0;
+        while (i < params_count) : (i += 1) {
+            const code = params_list[i];
+            // Check if DEC private mode (starts with ?)
+            if (i == 0 and params.len > 0 and params[0] == '?') {
+                // DEC private modes
+                switch (code) {
+                    1 => {
+                        // DECCKM - Cursor Keys Mode (cursor keys)
+                        self.dec_ckm = false;
+                    },
+                    6 => {
+                        // DECOM - Origin Mode (absolute origin)
+                        self.dec_om = false;
+                    },
+                    7 => {
+                        // DECAWM - Auto Wrap Mode (truncate at right margin)
+                        self.dec_awm = false;
+                    },
+                    25 => {
+                        // DECTCEM - Text Cursor Enable Mode (hide cursor)
+                        self.dec_tcem = false;
+                    },
+                    else => {
+                        // Unknown DEC private mode, ignore
+                    },
+                }
+            } else {
+                // ANSI modes (not implemented yet)
+                _ = code;
+            }
+        }
     }
 
     /// Handle bell character (BEL, 0x07).

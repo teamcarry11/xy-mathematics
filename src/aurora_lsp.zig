@@ -1294,6 +1294,268 @@ pub const LspClient = struct {
         container_name: ?[]const u8 = null, // Optional container name (e.g., class name)
     };
     
+    /// Request textDocument/documentSymbol (get symbols in document).
+    /// Why: Get outline of document (functions, classes, etc.) for navigation.
+    /// Contract: uri must be valid.
+    /// Returns: Array of document symbols, or null if no symbols found.
+    pub fn requestDocumentSymbols(
+        self: *LspClient,
+        uri: []const u8,
+    ) !?[]DocumentSymbol {
+        // Assert: URI must be valid
+        std.debug.assert(uri.len > 0);
+        std.debug.assert(uri.len <= 4096); // Bounded URI length
+        
+        var params_obj = std.json.ObjectMap.init(self.allocator);
+        defer params_obj.deinit();
+        
+        var text_doc_obj = std.json.ObjectMap.init(self.allocator);
+        defer text_doc_obj.deinit();
+        try text_doc_obj.put("uri", std.json.Value{ .string = uri });
+        try params_obj.put("textDocument", std.json.Value{ .object = text_doc_obj });
+        
+        const params = std.json.Value{ .object = params_obj };
+        const response = try self.sendRequest("textDocument/documentSymbol", params);
+        
+        // Parse document symbols array from response.result
+        if (response.result) |result| {
+            if (result == .array) {
+                const items = result.array.items;
+                var symbols = std.ArrayList(DocumentSymbol).init(self.allocator);
+                errdefer {
+                    // Free any allocated strings on error
+                    for (symbols.items) |*symbol| {
+                        self.allocator.free(symbol.name);
+                        if (symbol.detail) |detail| {
+                            self.allocator.free(detail);
+                        }
+                        if (symbol.children) |children| {
+                            for (children.items) |*child| {
+                                self.allocator.free(child.name);
+                                if (child.detail) |d| {
+                                    self.allocator.free(d);
+                                }
+                            }
+                            children.deinit(self.allocator);
+                            self.allocator.free(children.items);
+                        }
+                    }
+                    symbols.deinit();
+                }
+                
+                for (items) |item| {
+                    if (item == .object) {
+                        const obj = item.object;
+                        
+                        // Parse name
+                        const name_val = obj.get("name") orelse continue;
+                        if (name_val != .string) continue;
+                        const name_str = name_val.string;
+                        
+                        const name_copy = try self.allocator.dupe(u8, name_str);
+                        errdefer self.allocator.free(name_copy);
+                        
+                        // Parse kind (optional)
+                        const kind: ?u32 = if (obj.get("kind")) |k|
+                            if (k == .integer) @as(u32, @intCast(k.integer)) else null
+                        else
+                            null;
+                        
+                        // Parse range
+                        const range_val = obj.get("range") orelse continue;
+                        if (range_val != .object) continue;
+                        const range_obj = range_val.object;
+                        
+                        const start_val = range_obj.get("start") orelse continue;
+                        const end_val = range_obj.get("end") orelse continue;
+                        if (start_val != .object or end_val != .object) continue;
+                        
+                        const start_obj = start_val.object;
+                        const end_obj = end_val.object;
+                        
+                        const start_line_val = start_obj.get("line") orelse continue;
+                        const start_char_val = start_obj.get("character") orelse continue;
+                        const end_line_val = end_obj.get("line") orelse continue;
+                        const end_char_val = end_obj.get("character") orelse continue;
+                        
+                        if (start_line_val != .integer or start_char_val != .integer or
+                            end_line_val != .integer or end_char_val != .integer) continue;
+                        
+                        const start_line = @as(u32, @intCast(start_line_val.integer));
+                        const start_char = @as(u32, @intCast(start_char_val.integer));
+                        const end_line = @as(u32, @intCast(end_line_val.integer));
+                        const end_char = @as(u32, @intCast(end_char_val.integer));
+                        
+                        // Parse selectionRange (optional, defaults to range)
+                        var selection_range = Range{
+                            .start = Position{ .line = start_line, .character = start_char },
+                            .end = Position{ .line = end_line, .character = end_char },
+                        };
+                        if (obj.get("selectionRange")) |sel_range_val| {
+                            if (sel_range_val == .object) {
+                                const sel_range_obj = sel_range_val.object;
+                                const sel_start_val = sel_range_obj.get("start");
+                                const sel_end_val = sel_range_obj.get("end");
+                                if (sel_start_val != null and sel_end_val != null) {
+                                    if (sel_start_val.? == .object and sel_end_val.? == .object) {
+                                        const sel_start_obj = sel_start_val.?.object;
+                                        const sel_end_obj = sel_end_val.?.object;
+                                        
+                                        const sel_start_line_val = sel_start_obj.get("line");
+                                        const sel_start_char_val = sel_start_obj.get("character");
+                                        const sel_end_line_val = sel_end_obj.get("line");
+                                        const sel_end_char_val = sel_end_obj.get("character");
+                                        
+                                        if (sel_start_line_val != null and sel_start_char_val != null and
+                                            sel_end_line_val != null and sel_end_char_val != null) {
+                                            if (sel_start_line_val.? == .integer and sel_start_char_val.? == .integer and
+                                                sel_end_line_val.? == .integer and sel_end_char_val.? == .integer) {
+                                                selection_range = Range{
+                                                    .start = Position{
+                                                        .line = @as(u32, @intCast(sel_start_line_val.?.integer)),
+                                                        .character = @as(u32, @intCast(sel_start_char_val.?.integer)),
+                                                    },
+                                                    .end = Position{
+                                                        .line = @as(u32, @intCast(sel_end_line_val.?.integer)),
+                                                        .character = @as(u32, @intCast(sel_end_char_val.?.integer)),
+                                                    },
+                                                };
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Parse detail (optional)
+                        var detail: ?[]const u8 = null;
+                        if (obj.get("detail")) |detail_val| {
+                            if (detail_val == .string) {
+                                const detail_str = detail_val.string;
+                                const detail_copy = try self.allocator.dupe(u8, detail_str);
+                                errdefer self.allocator.free(detail_copy);
+                                detail = detail_copy;
+                            }
+                        }
+                        
+                        // Parse children (optional, recursive)
+                        var children: ?std.ArrayList(DocumentSymbol) = null;
+                        if (obj.get("children")) |children_val| {
+                            if (children_val == .array) {
+                                children = std.ArrayList(DocumentSymbol).init(self.allocator);
+                                errdefer {
+                                    if (children) |*ch| {
+                                        for (ch.items) |*child| {
+                                            self.allocator.free(child.name);
+                                            if (child.detail) |d| {
+                                                self.allocator.free(d);
+                                            }
+                                        }
+                                        ch.deinit();
+                                    }
+                                }
+                                
+                                // Note: For simplicity, we only parse one level of children
+                                // Full recursive parsing would require more complex error handling
+                                for (children_val.array.items) |child_item| {
+                                    if (child_item == .object) {
+                                        const child_obj = child_item.object;
+                                        
+                                        const child_name_val = child_obj.get("name") orelse continue;
+                                        if (child_name_val != .string) continue;
+                                        const child_name_str = child_name_val.string;
+                                        
+                                        const child_name_copy = try self.allocator.dupe(u8, child_name_str);
+                                        errdefer self.allocator.free(child_name_copy);
+                                        
+                                        const child_kind: ?u32 = if (child_obj.get("kind")) |k|
+                                            if (k == .integer) @as(u32, @intCast(k.integer)) else null
+                                        else
+                                            null;
+                                        
+                                        const child_range_val = child_obj.get("range") orelse continue;
+                                        if (child_range_val != .object) continue;
+                                        const child_range_obj = child_range_val.object;
+                                        
+                                        const child_start_val = child_range_obj.get("start") orelse continue;
+                                        const child_end_val = child_range_obj.get("end") orelse continue;
+                                        if (child_start_val != .object or child_end_val != .object) continue;
+                                        
+                                        const child_start_obj = child_start_val.object;
+                                        const child_end_obj = child_end_val.object;
+                                        
+                                        const child_start_line_val = child_start_obj.get("line") orelse continue;
+                                        const child_start_char_val = child_start_obj.get("character") orelse continue;
+                                        const child_end_line_val = child_end_obj.get("line") orelse continue;
+                                        const child_end_char_val = child_end_obj.get("character") orelse continue;
+                                        
+                                        if (child_start_line_val != .integer or child_start_char_val != .integer or
+                                            child_end_line_val != .integer or child_end_char_val != .integer) continue;
+                                        
+                                        const child_start_line = @as(u32, @intCast(child_start_line_val.integer));
+                                        const child_start_char = @as(u32, @intCast(child_start_char_val.integer));
+                                        const child_end_line = @as(u32, @intCast(child_end_line_val.integer));
+                                        const child_end_char = @as(u32, @intCast(child_end_char_val.integer));
+                                        
+                                        var child_detail: ?[]const u8 = null;
+                                        if (child_obj.get("detail")) |d_val| {
+                                            if (d_val == .string) {
+                                                const child_detail_str = d_val.string;
+                                                const child_detail_copy = try self.allocator.dupe(u8, child_detail_str);
+                                                errdefer self.allocator.free(child_detail_copy);
+                                                child_detail = child_detail_copy;
+                                            }
+                                        }
+                                        
+                                        try children.?.append(DocumentSymbol{
+                                            .name = child_name_copy,
+                                            .kind = child_kind,
+                                            .range = Range{
+                                                .start = Position{ .line = child_start_line, .character = child_start_char },
+                                                .end = Position{ .line = child_end_line, .character = child_end_char },
+                                            },
+                                            .selection_range = Range{
+                                                .start = Position{ .line = child_start_line, .character = child_start_char },
+                                                .end = Position{ .line = child_end_line, .character = child_end_char },
+                                            },
+                                            .detail = child_detail,
+                                            .children = null, // Only one level for now
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                        
+                        try symbols.append(DocumentSymbol{
+                            .name = name_copy,
+                            .kind = kind,
+                            .range = Range{
+                                .start = Position{ .line = start_line, .character = start_char },
+                                .end = Position{ .line = end_line, .character = end_char },
+                            },
+                            .selection_range = selection_range,
+                            .detail = detail,
+                            .children = children,
+                        });
+                    }
+                }
+                
+                return try symbols.toOwnedSlice();
+            }
+        }
+        return null;
+    }
+    
+    /// Document symbol (for outline view).
+    pub const DocumentSymbol = struct {
+        name: []const u8, // Symbol name
+        kind: ?u32 = null, // Symbol kind (function, class, etc.)
+        range: Range, // Full range of symbol
+        selection_range: Range, // Range that should be selected when navigating
+        detail: ?[]const u8 = null, // Optional detail (e.g., function signature)
+        children: ?std.ArrayList(DocumentSymbol) = null, // Optional child symbols
+    };
+    
     /// Formatting options for document formatting.
     pub const FormattingOptions = struct {
         tab_size: u32, // Number of spaces per tab

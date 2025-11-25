@@ -626,8 +626,17 @@ Create a fourth agent dedicated to **Grain OS** - a Zig-Wayland implemented GNOM
    - ✅ Create/add/remove window group methods
    - ✅ Find window group method
    - ✅ Comprehensive tests (`tests/075_grain_os_window_grouping_test.zig`)
-22. **Phase 22**: Integration (Grain Kernel syscalls, VM testing)
-23. **Phase 23**: Applications (Aurora, Dream, Skate, Terminal ports)
+22. **Phase 22**: Window Focus Management ✅ **COMPLETE**
+   - ✅ Window focus module (`src/grain_os/window_focus.zig`)
+   - ✅ Focus policies (click-to-focus, focus-follows-mouse, sloppy-focus)
+   - ✅ Focus history tracking (up to 64 entries)
+   - ✅ Previous focus retrieval
+   - ✅ Compositor integration (focus history, focus-follows-mouse)
+   - ✅ Set/get focus policy methods
+   - ✅ Get previous focused window method
+   - ✅ Comprehensive tests (`tests/076_grain_os_window_focus_test.zig`)
+23. **Phase 23**: Integration (Grain Kernel syscalls, VM testing)
+24. **Phase 24**: Applications (Aurora, Dream, Skate, Terminal ports)
 
 ### Proposal Document
 
@@ -907,6 +916,7 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
   - ✅ Add LSP code actions support (requestCodeActions method, get_code_actions in Editor)
   - ✅ Add LSP symbol rename support (requestRename method, rename_symbol in Editor)
   - ✅ Add LSP workspace symbols support (requestWorkspaceSymbols method, search_workspace_symbols in Editor)
+  - ✅ Add LSP document symbols support (requestDocumentSymbols method, get_document_symbols in Editor)
   - ✅ Integrate hover requests into moveCursor
   - ✅ Implement ghost text storage for AI completions
   - ✅ Fix didChange range calculation for insertions

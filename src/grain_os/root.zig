@@ -28,4 +28,6 @@ pub const window_animation = @import("window_animation.zig");
 pub const window_decorations = @import("window_decorations.zig");
 pub const window_constraints = @import("window_constraints.zig");
 pub const window_grouping = @import("window_grouping.zig");
+pub const window_focus = @import("window_focus.zig");
+pub const window_effects = @import("window_effects.zig");
 

@@ -76,6 +76,14 @@
   - [x] Integration with instruction execution (ADD, ADDI, LUI)
   - [x] Statistics aggregator integration
   - [x] Comprehensive tests (tests/068_vm_register_stats_test.zig)
+- [x] VM Instruction Performance Profiling (Phase 2.1.11)
+  - [x] Execution time tracking per opcode
+  - [x] Execution count tracking per opcode
+  - [x] Average execution time calculation
+  - [x] Total profiling time tracking
+  - [x] Top instruction performance statistics printing
+  - [x] Statistics aggregator integration
+  - [x] Comprehensive tests (tests/069_vm_instruction_perf_test.zig)
 
 #### 2.2 Kernel Boot Sequence ✅ **COMPLETE**
 - [x] Implement basic boot loader
@@ -636,6 +644,14 @@
   - [x] Add `search_workspace_symbols` method to Editor
   - [x] Support optional fields (kind, container_name)
   - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
+- [x] Editor Document Symbols Support ✅ **COMPLETE**
+  - [x] Add `requestDocumentSymbols` method to LspClient
+  - [x] Add `DocumentSymbol` struct (name, kind, range, selection_range, detail, children)
+  - [x] Parse document symbols result (array of document symbols)
+  - [x] Support optional fields (kind, detail, selection_range, children)
+  - [x] Support one level of child symbols (nested symbols)
+  - [x] Add `get_document_symbols` method to Editor
+  - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
 - [x] File Save/Load Functionality ✅ **COMPLETE**
   - [x] save_file method (persist editor buffer to disk)
   - [x] load_file method (load file from disk into editor)
@@ -1070,6 +1086,8 @@
 - [x] Escape sequence handling (ESC, CSI, OSC sequences)
 - [x] Cursor movement (up, down, forward, backward, position, next line, previous line, horizontal absolute, vertical absolute)
 - [x] Insert/delete operations (CSI @/P for insert/delete character, CSI L/M for insert/delete line)
+- [x] Scrolling region support (DECSTBM, CSI r)
+- [x] DEC private mode support (DECCKM, DECOM, DECAWM, DECTCEM)
 - [x] Text attributes (bold, italic, underline, blink, reverse video)
 - [x] ANSI color support (16-color palette)
 - [x] 256-color support (CSI 38;5;n for foreground, CSI 48;5;n for background)
@@ -1449,6 +1467,26 @@
     - ✅ Title bar button rendering
     - ✅ Button click handling (close, minimize, maximize/unmaximize)
     - ✅ Comprehensive tests (`tests/073_grain_os_window_decorations_test.zig`)
+  - ✅ Window constraints (Phase 20) ✅ **COMPLETE**
+    - ✅ Window constraints module (`src/grain_os/window_constraints.zig`)
+    - ✅ Minimum size constraints (default 100x100)
+    - ✅ Maximum size constraints (unlimited by default)
+    - ✅ Aspect ratio constraints (width/height ratio)
+    - ✅ Constraint application (apply to window size)
+    - ✅ Constraint validation (is_valid_size check)
+    - ✅ Compositor integration (constraints applied during resize)
+    - ✅ Set/get window constraints methods
+    - ✅ Comprehensive tests (`tests/074_grain_os_window_constraints_test.zig`)
+  - ✅ Window grouping (Phase 21) ✅ **COMPLETE**
+    - ✅ Window grouping module (`src/grain_os/window_grouping.zig`)
+    - ✅ Window group structure (collection of windows)
+    - ✅ Group management (create, delete, add/remove windows)
+    - ✅ Find group for window
+    - ✅ Group name management
+    - ✅ Compositor integration (automatic cleanup on window removal)
+    - ✅ Create/add/remove window group methods
+    - ✅ Find window group method
+    - ✅ Comprehensive tests (`tests/075_grain_os_window_grouping_test.zig`)
 
 **In Progress**: 
 - Dream Editor Core - GLM-4.6 Integration (Phase 4.1.3) 🔄

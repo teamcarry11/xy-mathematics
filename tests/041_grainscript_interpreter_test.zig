@@ -710,3 +710,185 @@ test "interpreter builtin round" {
 
     try testing.expect(interpreter.get_exit_code() == 0);
 }
+
+/// Test interpreter with built-in isNull function.
+test "interpreter builtin isNull" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const source = "var x = isNull(null); var y = isNull(42);";
+
+    var lexer = try Lexer.init(allocator, source);
+    defer lexer.deinit();
+
+    try lexer.tokenize();
+
+    var parser = try Parser.init(allocator, &lexer);
+    defer parser.deinit();
+
+    try parser.parse();
+
+    var interpreter = try Interpreter.init(allocator, &parser);
+    defer interpreter.deinit();
+
+    try interpreter.execute();
+
+    try testing.expect(interpreter.get_exit_code() == 0);
+}
+
+/// Test interpreter with built-in isEmpty function.
+test "interpreter builtin isEmpty" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const source = "var x = isEmpty(\"\"); var y = isEmpty(\"hello\");";
+
+    var lexer = try Lexer.init(allocator, source);
+    defer lexer.deinit();
+
+    try lexer.tokenize();
+
+    var parser = try Parser.init(allocator, &lexer);
+    defer parser.deinit();
+
+    try parser.parse();
+
+    var interpreter = try Interpreter.init(allocator, &parser);
+    defer interpreter.deinit();
+
+    try interpreter.execute();
+
+    try testing.expect(interpreter.get_exit_code() == 0);
+}
+
+/// Test interpreter with built-in isNumber function.
+test "interpreter builtin isNumber" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const source = "var x = isNumber(42); var y = isNumber(3.14); var z = isNumber(\"hello\");";
+
+    var lexer = try Lexer.init(allocator, source);
+    defer lexer.deinit();
+
+    try lexer.tokenize();
+
+    var parser = try Parser.init(allocator, &lexer);
+    defer parser.deinit();
+
+    try parser.parse();
+
+    var interpreter = try Interpreter.init(allocator, &parser);
+    defer interpreter.deinit();
+
+    try interpreter.execute();
+
+    try testing.expect(interpreter.get_exit_code() == 0);
+}
+
+/// Test interpreter with built-in isString function.
+test "interpreter builtin isString" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const source = "var x = isString(\"hello\"); var y = isString(42);";
+
+    var lexer = try Lexer.init(allocator, source);
+    defer lexer.deinit();
+
+    try lexer.tokenize();
+
+    var parser = try Parser.init(allocator, &lexer);
+    defer parser.deinit();
+
+    try parser.parse();
+
+    var interpreter = try Interpreter.init(allocator, &parser);
+    defer interpreter.deinit();
+
+    try interpreter.execute();
+
+    try testing.expect(interpreter.get_exit_code() == 0);
+}
+
+/// Test interpreter with built-in isBoolean function.
+test "interpreter builtin isBoolean" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const source = "var x = isBoolean(true); var y = isBoolean(42);";
+
+    var lexer = try Lexer.init(allocator, source);
+    defer lexer.deinit();
+
+    try lexer.tokenize();
+
+    var parser = try Parser.init(allocator, &lexer);
+    defer parser.deinit();
+
+    try parser.parse();
+
+    var interpreter = try Interpreter.init(allocator, &parser);
+    defer interpreter.deinit();
+
+    try interpreter.execute();
+
+    try testing.expect(interpreter.get_exit_code() == 0);
+}
+
+/// Test interpreter with built-in split function.
+test "interpreter builtin split" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const source = "var x = split(\"hello,world\", \",\");";
+
+    var lexer = try Lexer.init(allocator, source);
+    defer lexer.deinit();
+
+    try lexer.tokenize();
+
+    var parser = try Parser.init(allocator, &lexer);
+    defer parser.deinit();
+
+    try parser.parse();
+
+    var interpreter = try Interpreter.init(allocator, &parser);
+    defer interpreter.deinit();
+
+    try interpreter.execute();
+
+    try testing.expect(interpreter.get_exit_code() == 0);
+}
+
+/// Test interpreter with built-in join function.
+test "interpreter builtin join" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const source = "var x = join(\"hello\", \",\");";
+
+    var lexer = try Lexer.init(allocator, source);
+    defer lexer.deinit();
+
+    try lexer.tokenize();
+
+    var parser = try Parser.init(allocator, &lexer);
+    defer parser.deinit();
+
+    try parser.parse();
+
+    var interpreter = try Interpreter.init(allocator, &parser);
+    defer interpreter.deinit();
+
+    try interpreter.execute();
+
+    try testing.expect(interpreter.get_exit_code() == 0);
+}

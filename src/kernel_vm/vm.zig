@@ -12,6 +12,7 @@ const syscall_stats_mod = @import("syscall_stats.zig");
 const execution_flow_mod = @import("execution_flow.zig");
 const branch_stats_mod = @import("branch_stats.zig");
 const register_stats_mod = @import("register_stats.zig");
+const instruction_perf_mod = @import("instruction_perf.zig");
 
 /// Pure Zig RISC-V64 emulator for kernel development.
 /// Grain Style: Static allocation where possible, comprehensive assertions,
@@ -341,6 +342,10 @@ pub const VM = struct {
     /// Why: Track register read/write frequency for register usage analysis.
     /// GrainStyle: Static allocation, bounded counters, explicit types.
     register_stats: register_stats_mod.VMRegisterStats = register_stats_mod.VMRegisterStats.init(),
+    /// Instruction performance profiler.
+    /// Why: Track execution time per instruction type for performance analysis.
+    /// GrainStyle: Static allocation, bounded counters, explicit types.
+    instruction_perf: instruction_perf_mod.VMInstructionPerf = instruction_perf_mod.VMInstructionPerf.init(),
 
     const Self = @This();
 

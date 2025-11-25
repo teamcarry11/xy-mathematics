@@ -23,6 +23,8 @@ const window_animation = @import("window_animation.zig");
 const window_decorations = @import("window_decorations.zig");
 const window_constraints = @import("window_constraints.zig");
 const window_grouping = @import("window_grouping.zig");
+const window_focus = @import("window_focus.zig");
+const window_effects = @import("window_effects.zig");
 const keyboard_shortcuts = @import("keyboard_shortcuts.zig");
 
 // Bounded: Max number of windows.
@@ -190,6 +192,7 @@ pub const Compositor = struct {
     window_stack: window_stacking.WindowStack,
     animation_manager: window_animation.AnimationManager,
     group_manager: window_grouping.WindowGroupManager,
+    focus_manager: window_focus.FocusManager,
 
     pub fn init(allocator: std.mem.Allocator) Compositor {
         std.debug.assert(@intFromPtr(allocator.ptr) != 0);
@@ -224,6 +227,7 @@ pub const Compositor = struct {
             .window_stack = window_stacking.WindowStack.init(),
             .animation_manager = window_animation.AnimationManager.init(),
             .group_manager = window_grouping.WindowGroupManager.init(),
+            .focus_manager = window_focus.FocusManager.init(),
         };
         var i: u32 = 0;
         while (i < MAX_WINDOWS) : (i += 1) {
@@ -663,6 +667,8 @@ pub const Compositor = struct {
         if (self.get_window(window_id)) |win| {
             win.focused = true;
             self.focused_window_id = window_id;
+            // Add to focus history.
+            self.focus_manager.add_focus_history(window_id, 0); // Would use actual timestamp.
             // Move to front of switch order.
             self.switch_order.move_to_front(window_id);
             // Raise to top of stacking order.
@@ -742,8 +748,18 @@ pub const Compositor = struct {
                         self.unfocus_all();
                     }
                 } else if (event.mouse.kind == .move) {
-                    // Handle mouse move (dragging/resizing).
+                    // Handle mouse move (dragging/resizing, focus-follows-mouse).
                     self.handle_mouse_move(event.mouse.x, event.mouse.y);
+                    // Focus-follows-mouse: focus window under cursor.
+                    if (self.focus_manager.should_focus_on_mouse_move()) {
+                        if (self.find_window_at(event.mouse.x, event.mouse.y)) |window_id| {
+                            if (window_id != self.focused_window_id) {
+                                _ = self.focus_window(window_id);
+                            }
+                        } else if (self.focus_manager.should_unfocus_on_mouse_leave()) {
+                            self.unfocus_all();
+                        }
+                    }
                 } else if (event.mouse.kind == .up) {
                     // Handle mouse release (end drag/resize).
                     self.end_drag();
@@ -1262,6 +1278,21 @@ pub const Compositor = struct {
     pub fn delete_window_group(self: *Compositor, group_id: u32) bool {
         std.debug.assert(group_id > 0);
         return self.group_manager.delete_group(group_id);
+    }
+
+    // Set focus policy.
+    pub fn set_focus_policy(self: *Compositor, policy: window_focus.FocusPolicy) void {
+        self.focus_manager.set_policy(policy);
+    }
+
+    // Get focus policy.
+    pub fn get_focus_policy(self: *const Compositor) window_focus.FocusPolicy {
+        return self.focus_manager.get_policy();
+    }
+
+    // Get previous focused window.
+    pub fn get_previous_focused_window(self: *Compositor) ?u32 {
+        return self.focus_manager.get_previous_focus();
     }
 
     // Get resize handle at mouse position.

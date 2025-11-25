@@ -669,3 +669,53 @@ test "terminal scrolling region reset" {
     try testing.expect(terminal.scroll_bottom == 24);
 }
 
+test "terminal dec private mode auto wrap" {
+    var terminal = Terminal.init(80, 24);
+    var cells: [80 * 24]Terminal.Cell = undefined;
+    terminal.clear(&cells);
+
+    // Disable auto wrap mode: ESC[?7l
+    terminal.process_char(0x1B, &cells); // ESC
+    terminal.process_char('[', &cells);
+    terminal.process_char('?', &cells);
+    terminal.process_char('7', &cells);
+    terminal.process_char('l', &cells);
+
+    try testing.expect(terminal.dec_awm == false);
+
+    // Enable auto wrap mode: ESC[?7h
+    terminal.process_char(0x1B, &cells); // ESC
+    terminal.process_char('[', &cells);
+    terminal.process_char('?', &cells);
+    terminal.process_char('7', &cells);
+    terminal.process_char('h', &cells);
+
+    try testing.expect(terminal.dec_awm == true);
+}
+
+test "terminal dec private mode cursor enable" {
+    var terminal = Terminal.init(80, 24);
+    var cells: [80 * 24]Terminal.Cell = undefined;
+    terminal.clear(&cells);
+
+    // Hide cursor: ESC[?25l
+    terminal.process_char(0x1B, &cells); // ESC
+    terminal.process_char('[', &cells);
+    terminal.process_char('?', &cells);
+    terminal.process_char('2', &cells);
+    terminal.process_char('5', &cells);
+    terminal.process_char('l', &cells);
+
+    try testing.expect(terminal.dec_tcem == false);
+
+    // Show cursor: ESC[?25h
+    terminal.process_char(0x1B, &cells); // ESC
+    terminal.process_char('[', &cells);
+    terminal.process_char('?', &cells);
+    terminal.process_char('2', &cells);
+    terminal.process_char('5', &cells);
+    terminal.process_char('h', &cells);
+
+    try testing.expect(terminal.dec_tcem == true);
+}
+

@@ -101,6 +101,15 @@
      - ✅ Watchpoint trigger detection (check watchpoints in read64/write64())
      - ✅ Integration with step(), read64(), write64()
      - ✅ Comprehensive tests (tests/071_vm_debug_interface_test.zig)
+   - ✅ VM State Inspection (Phase 2.1.14)
+     - ✅ Register state inspection (read all 32 registers + PC)
+     - ✅ Memory inspection (read memory at specific addresses, MAX_DUMP_SIZE: 1KB)
+     - ✅ Stack inspection (read stack region, MAX_STACK_SIZE: 1KB)
+     - ✅ Memory dump (bounded buffer for memory inspection)
+     - ✅ Register state snapshot
+     - ✅ Memory read helpers (read_memory_u64, read_memory_u32)
+     - ✅ State printing helpers (print_register_state, print_memory_dump)
+     - ✅ Comprehensive tests (tests/072_vm_state_inspection_test.zig)
 
 2. **Kernel Boot Sequence**
    - Implement basic boot loader
@@ -960,6 +969,7 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
   - ✅ Add LSP on-type formatting support (requestOnTypeFormatting method, format_on_type in Editor)
   - ✅ Add LSP signature help support (requestSignatureHelp method, get_signature_help in Editor)
   - ✅ Add LSP completion item resolve support (resolveCompletionItem method, resolve_completion_item in Editor)
+  - ✅ Add LSP did save/close notification support (didSave, didClose methods, integrated into save_file and deinit)
   - ✅ Integrate hover requests into moveCursor
   - ✅ Implement ghost text storage for AI completions
   - ✅ Fix didChange range calculation for insertions

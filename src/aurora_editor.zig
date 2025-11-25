@@ -91,6 +91,11 @@ pub const Editor = struct {
         // Reject any pending completion (cleanup)
         self.reject_completion();
         
+        // Notify LSP server that file was closed (non-blocking, ignore errors)
+        _ = self.lsp.didClose(self.file_uri) catch {
+            // LSP server may not be running or may have already closed - ignore
+        };
+        
         // Free undo history
         for (self.undo_history.items) |*entry| {
             entry.deinit(self.allocator);
@@ -1217,6 +1222,31 @@ pub const Editor = struct {
         std.debug.assert(self.file_uri.len > 0);
         std.debug.assert(self.file_uri.len <= 4096); // Bounded URI length
         
+        // Request will save wait until (get text edits before save)
+        // Reason: 1 = Manual (user explicitly saved)
+        const will_save_edits = try self.lsp.requestWillSaveWaitUntil(self.file_uri, 1);
+        defer if (will_save_edits) |edits| {
+            // Free edits if they were returned
+            for (edits) |*edit| {
+                self.allocator.free(edit.new_text);
+            }
+            self.allocator.free(edits);
+        };
+        
+        // Apply will save edits if any
+        if (will_save_edits) |edits| {
+            if (edits.len > 0) {
+                try self.apply_text_edits(edits);
+            }
+        }
+        
+        // Request will save (check if save should proceed)
+        const should_save = try self.lsp.requestWillSave(self.file_uri, 1);
+        if (!should_save) {
+            // Save was cancelled by LSP server
+            return error.SaveCancelled;
+        }
+        
         // Extract file path from URI (remove "file://" prefix if present)
         const file_path = if (std.mem.startsWith(u8, self.file_uri, "file://"))
             self.file_uri[7..]
@@ -1227,7 +1257,7 @@ pub const Editor = struct {
         std.debug.assert(file_path.len > 0);
         std.debug.assert(file_path.len <= 4096); // Bounded path length
         
-        // Get buffer content
+        // Get buffer content (may have been modified by will save edits)
         const content = self.buffer.textSlice();
         
         // Assert: Content size must be bounded

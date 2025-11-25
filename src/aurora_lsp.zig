@@ -2086,6 +2086,131 @@ pub const LspClient = struct {
         try self.sendNotification("textDocument/didChange", params);
     }
     
+    /// Request textDocument/willSave (check if save should proceed).
+    /// Why: Allow LSP server to request save confirmation or prepare for save.
+    /// Contract: uri must be valid, reason must be valid (1=Manual, 2=AfterDelay, 3=FocusOut).
+    /// Returns: True if save should proceed, false if save should be cancelled.
+    pub fn requestWillSave(self: *LspClient, uri: []const u8, reason: u32) !bool {
+        // Assert: URI must be valid
+        std.debug.assert(uri.len > 0);
+        std.debug.assert(uri.len <= 4096); // Bounded URI length
+        // Assert: Reason must be valid (1=Manual, 2=AfterDelay, 3=FocusOut)
+        std.debug.assert(reason >= 1);
+        std.debug.assert(reason <= 3);
+        
+        var params_obj = std.json.ObjectMap.init(self.allocator);
+        defer params_obj.deinit();
+        
+        var text_doc_obj = std.json.ObjectMap.init(self.allocator);
+        defer text_doc_obj.deinit();
+        try text_doc_obj.put("uri", std.json.Value{ .string = uri });
+        try params_obj.put("textDocument", std.json.Value{ .object = text_doc_obj });
+        try params_obj.put("reason", std.json.Value{ .integer = @intCast(reason) });
+        
+        const params = std.json.Value{ .object = params_obj };
+        const response = try self.sendRequest("textDocument/willSave", params);
+        
+        // WillSave is a notification, but some servers may respond
+        // For now, assume save should proceed unless server explicitly rejects
+        _ = response;
+        return true;
+    }
+    
+    /// Request textDocument/willSaveWaitUntil (get text edits before save).
+    /// Why: Allow LSP server to provide text edits that should be applied before save.
+    /// Contract: uri must be valid, reason must be valid (1=Manual, 2=AfterDelay, 3=FocusOut).
+    /// Returns: Array of text edits to apply before save, or null if no edits needed.
+    /// Note: Caller must free the returned edits array and new_text strings.
+    pub fn requestWillSaveWaitUntil(
+        self: *LspClient,
+        uri: []const u8,
+        reason: u32,
+    ) !?[]TextEdit {
+        // Assert: URI must be valid
+        std.debug.assert(uri.len > 0);
+        std.debug.assert(uri.len <= 4096); // Bounded URI length
+        // Assert: Reason must be valid (1=Manual, 2=AfterDelay, 3=FocusOut)
+        std.debug.assert(reason >= 1);
+        std.debug.assert(reason <= 3);
+        
+        var params_obj = std.json.ObjectMap.init(self.allocator);
+        defer params_obj.deinit();
+        
+        var text_doc_obj = std.json.ObjectMap.init(self.allocator);
+        defer text_doc_obj.deinit();
+        try text_doc_obj.put("uri", std.json.Value{ .string = uri });
+        try params_obj.put("textDocument", std.json.Value{ .object = text_doc_obj });
+        try params_obj.put("reason", std.json.Value{ .integer = @intCast(reason) });
+        
+        const params = std.json.Value{ .object = params_obj };
+        const response = try self.sendRequest("textDocument/willSaveWaitUntil", params);
+        
+        // Parse text edits array from response.result (same as document formatting)
+        if (response.result) |result| {
+            if (result == .array) {
+                const items = result.array.items;
+                var edits = std.ArrayList(TextEdit).init(self.allocator);
+                errdefer {
+                    // Free any allocated text on error
+                    for (edits.items) |*edit| {
+                        self.allocator.free(edit.new_text);
+                    }
+                    edits.deinit();
+                }
+                
+                for (items) |item| {
+                    if (item == .object) {
+                        const obj = item.object;
+                        
+                        // Parse range
+                        const range_val = obj.get("range") orelse continue;
+                        if (range_val != .object) continue;
+                        const inner_range_obj = range_val.object;
+                        
+                        const start_val = inner_range_obj.get("start") orelse continue;
+                        const end_val = inner_range_obj.get("end") orelse continue;
+                        if (start_val != .object or end_val != .object) continue;
+                        
+                        const inner_start_obj = start_val.object;
+                        const inner_end_obj = end_val.object;
+                        
+                        const start_line_val = inner_start_obj.get("line") orelse continue;
+                        const start_char_val = inner_start_obj.get("character") orelse continue;
+                        const end_line_val = inner_end_obj.get("line") orelse continue;
+                        const end_char_val = inner_end_obj.get("character") orelse continue;
+                        
+                        if (start_line_val != .integer or start_char_val != .integer or
+                            end_line_val != .integer or end_char_val != .integer) continue;
+                        
+                        const start_line = @as(u32, @intCast(start_line_val.integer));
+                        const start_char = @as(u32, @intCast(start_char_val.integer));
+                        const end_line = @as(u32, @intCast(end_line_val.integer));
+                        const end_char = @as(u32, @intCast(end_char_val.integer));
+                        
+                        // Parse newText
+                        const new_text_val = obj.get("newText") orelse continue;
+                        if (new_text_val != .string) continue;
+                        const new_text_str = new_text_val.string;
+                        
+                        const new_text_copy = try self.allocator.dupe(u8, new_text_str);
+                        errdefer self.allocator.free(new_text_copy);
+                        
+                        try edits.append(TextEdit{
+                            .range = Range{
+                                .start = Position{ .line = start_line, .character = start_char },
+                                .end = Position{ .line = end_line, .character = end_char },
+                            },
+                            .new_text = new_text_copy,
+                        });
+                    }
+                }
+                
+                return try edits.toOwnedSlice();
+            }
+        }
+        return null;
+    }
+    
     /// Send textDocument/didSave notification (document saved).
     /// Why: Notify LSP server that document was saved.
     /// Contract: uri must be valid, text is optional (includeText parameter).

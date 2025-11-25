@@ -67,6 +67,7 @@ pub const DesktopShell = struct {
     launcher_visible: bool,
     current_workspace_id: u32,
     app_registry: ?*application.ApplicationRegistry,
+    current_time_seconds: u64, // Current time in seconds since epoch
 
     pub fn init(
         renderer: *const framebuffer_renderer.FramebufferRenderer,
@@ -85,6 +86,7 @@ pub const DesktopShell = struct {
             .launcher_visible = false,
             .current_workspace_id = 1,
             .app_registry = null,
+            .current_time_seconds = 0, // Will be updated by update_time
         };
         // Initialize launcher items array.
         var i: u32 = 0;
@@ -199,7 +201,114 @@ pub const DesktopShell = struct {
             workspace_height,
             framebuffer_renderer.COLOR_BLUE,
         );
-        // TODO: Draw time and other status bar elements.
+        // Draw time (right-aligned).
+        self.draw_time(status_y);
+    }
+
+    // Update current time (called periodically).
+    // 2025-11-25-005738-pst: Active function
+    pub fn update_time(self: *DesktopShell, time_seconds: u64) void {
+        self.current_time_seconds = time_seconds;
+    }
+
+    // Draw time in status bar (right-aligned).
+    // 2025-11-25-005738-pst: Active function
+    fn draw_time(self: *const DesktopShell, status_y: u32) void {
+        // Format time as HH:MM:SS.
+        const hours = @as(u32, @intCast((self.current_time_seconds / 3600) % 24));
+        const minutes = @as(u32, @intCast((self.current_time_seconds / 60) % 60));
+        const seconds = @as(u32, @intCast(self.current_time_seconds % 60));
+        // Simple time display: draw rectangles for digits (placeholder).
+        // In a real implementation, this would use a font renderer.
+        const time_x = self.output_width - 100; // Right-aligned
+        const time_y = status_y + 8;
+        // Draw time background rectangle.
+        self.renderer.draw_rect(
+            @as(i32, @intCast(time_x)),
+            @as(i32, @intCast(time_y)),
+            90,
+            16,
+            framebuffer_renderer.COLOR_DARK_BG,
+        );
+        // Draw time digits as simple rectangles (placeholder rendering).
+        // Hours.
+        self.draw_digit(time_x, time_y, hours / 10);
+        self.draw_digit(time_x + 12, time_y, hours % 10);
+        // Colon.
+        self.renderer.draw_rect(
+            @as(i32, @intCast(time_x + 24)),
+            @as(i32, @intCast(time_y + 4)),
+            2,
+            2,
+            framebuffer_renderer.COLOR_WHITE,
+        );
+        self.renderer.draw_rect(
+            @as(i32, @intCast(time_x + 24)),
+            @as(i32, @intCast(time_y + 10)),
+            2,
+            2,
+            framebuffer_renderer.COLOR_WHITE,
+        );
+        // Minutes.
+        self.draw_digit(time_x + 30, time_y, minutes / 10);
+        self.draw_digit(time_x + 42, time_y, minutes % 10);
+        // Colon.
+        self.renderer.draw_rect(
+            @as(i32, @intCast(time_x + 54)),
+            @as(i32, @intCast(time_y + 4)),
+            2,
+            2,
+            framebuffer_renderer.COLOR_WHITE,
+        );
+        self.renderer.draw_rect(
+            @as(i32, @intCast(time_x + 54)),
+            @as(i32, @intCast(time_y + 10)),
+            2,
+            2,
+            framebuffer_renderer.COLOR_WHITE,
+        );
+        // Seconds.
+        self.draw_digit(time_x + 60, time_y, seconds / 10);
+        self.draw_digit(time_x + 72, time_y, seconds % 10);
+    }
+
+    // Draw a single digit (0-9) as simple rectangles.
+    // 2025-11-25-005738-pst: Active function
+    fn draw_digit(self: *const DesktopShell, x: u32, y: u32, digit: u32) void {
+        std.debug.assert(digit < 10);
+        // Simple 7-segment style: draw segments as rectangles.
+        const segment_width: u32 = 8;
+        const segment_height: u32 = 2;
+        // Top segment.
+        if (digit != 1 and digit != 4) {
+            self.renderer.draw_rect(
+                @as(i32, @intCast(x + 1)),
+                @as(i32, @intCast(y)),
+                segment_width,
+                segment_height,
+                framebuffer_renderer.COLOR_WHITE,
+            );
+        }
+        // Middle segment.
+        if (digit != 0 and digit != 1 and digit != 7) {
+            self.renderer.draw_rect(
+                @as(i32, @intCast(x + 1)),
+                @as(i32, @intCast(y + 6)),
+                segment_width,
+                segment_height,
+                framebuffer_renderer.COLOR_WHITE,
+            );
+        }
+        // Bottom segment.
+        if (digit != 1 and digit != 4 and digit != 7) {
+            self.renderer.draw_rect(
+                @as(i32, @intCast(x + 1)),
+                @as(i32, @intCast(y + 12)),
+                segment_width,
+                segment_height,
+                framebuffer_renderer.COLOR_WHITE,
+            );
+        }
     }
 
     // Render launcher.
@@ -225,7 +334,44 @@ pub const DesktopShell = struct {
             2,
             framebuffer_renderer.COLOR_WHITE,
         );
-        // TODO: Draw launcher items.
+        // Draw launcher items.
+        self.draw_launcher_items(launcher_x, launcher_y);
+    }
+
+    // Draw launcher items list.
+    // 2025-11-25-005738-pst: Active function
+    fn draw_launcher_items(self: *const DesktopShell, launcher_x: u32, launcher_y: u32) void {
+        const item_height: u32 = 32;
+        const item_padding: u32 = 8;
+        var y_offset: u32 = item_padding + 2; // Start below border
+        var i: u32 = 0;
+        while (i < self.launcher_items_len and y_offset + item_height < LAUNCHER_HEIGHT) : (i += 1) {
+            const item = self.launcher_items[i];
+            if (item.name_len == 0) continue;
+            // Draw item background (highlight on hover would go here).
+            const item_y = launcher_y + y_offset;
+            self.renderer.draw_rect(
+                @as(i32, @intCast(launcher_x + item_padding)),
+                @as(i32, @intCast(item_y)),
+                LAUNCHER_WIDTH - (item_padding * 2),
+                item_height,
+                framebuffer_renderer.COLOR_DARK_BG,
+            );
+            // Draw item name (simple text rendering as rectangles for now).
+            // In a real implementation, this would use a font renderer.
+            const name_x = launcher_x + item_padding + 4;
+            const name_y = item_y + 8;
+            // Draw item name as simple rectangles (placeholder).
+            // For now, just draw a rectangle representing text.
+            self.renderer.draw_rect(
+                @as(i32, @intCast(name_x)),
+                @as(i32, @intCast(name_y)),
+                @min(item.name_len * 6, LAUNCHER_WIDTH - (item_padding * 2) - 8),
+                12,
+                framebuffer_renderer.COLOR_WHITE,
+            );
+            y_offset += item_height + item_padding;
+        }
     }
 
     // Render desktop shell (status bar and launcher).

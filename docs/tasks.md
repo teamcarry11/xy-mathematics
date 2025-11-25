@@ -98,6 +98,15 @@
   - [x] Watchpoint trigger detection
   - [x] Integration with step(), read64(), write64()
   - [x] Comprehensive tests (tests/071_vm_debug_interface_test.zig)
+- [x] VM State Inspection (Phase 2.1.14)
+  - [x] Register state inspection (read all 32 registers + PC)
+  - [x] Memory inspection (read memory at specific addresses)
+  - [x] Stack inspection (read stack region)
+  - [x] Memory dump (bounded buffer, MAX_DUMP_SIZE: 1KB)
+  - [x] Register state snapshot
+  - [x] Memory read helpers (read_memory_u64, read_memory_u32)
+  - [x] State printing helpers (print_register_state, print_memory_dump)
+  - [x] Comprehensive tests (tests/072_vm_state_inspection_test.zig)
 
 #### 2.2 Kernel Boot Sequence ✅ **COMPLETE**
 - [x] Implement basic boot loader
@@ -689,6 +698,14 @@
   - [x] Support optional fields (kind, detail, documentation)
   - [x] Support MarkupContent documentation format (object with kind and value)
   - [x] Add `resolve_completion_item` method to Editor
+  - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
+- [x] Editor LSP Did Save/Close Support ✅ **COMPLETE**
+  - [x] Add `didSave` method to LspClient
+  - [x] Add `didClose` method to LspClient
+  - [x] Support optional text parameter in didSave (includeText)
+  - [x] Clean up snapshots and diagnostics on didClose
+  - [x] Integrate didSave into save_file method
+  - [x] Integrate didClose into deinit method
   - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
 - [x] File Save/Load Functionality ✅ **COMPLETE**
   - [x] save_file method (persist editor buffer to disk)

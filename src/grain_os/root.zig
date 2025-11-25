@@ -33,4 +33,5 @@ pub const window_effects = @import("window_effects.zig");
 pub const window_drag_drop = @import("window_drag_drop.zig");
 pub const tiling_config = @import("tiling_config.zig");
 pub const window_rules = @import("window_rules.zig");
+pub const window_events = @import("window_events.zig");
 

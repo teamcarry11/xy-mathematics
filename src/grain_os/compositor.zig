@@ -26,9 +26,13 @@ const window_grouping = @import("window_grouping.zig");
 const window_focus = @import("window_focus.zig");
 const window_effects = @import("window_effects.zig");
 const window_drag_drop = @import("window_drag_drop.zig");
+const window_rules = @import("window_rules.zig");
+const window_events = @import("window_events.zig");
 const keyboard_shortcuts = @import("keyboard_shortcuts.zig");
 const desktop_shell = @import("desktop_shell.zig");
 const runtime_config = @import("runtime_config.zig");
+const application = @import("application.zig");
+const tiling_config = @import("tiling_config.zig");
 
 // Bounded: Max number of windows.
 pub const MAX_WINDOWS: u32 = 256;
@@ -197,7 +201,8 @@ pub const Compositor = struct {
     group_manager: window_grouping.WindowGroupManager,
     focus_manager: window_focus.FocusManager,
     drop_zone_manager: window_drag_drop.DropZoneManager,
-    tiling_config: tiling_config.TilingConfig,
+    rule_manager: window_rules.WindowRuleManager,
+    event_manager: window_events.EventManager,
     border_width: u32, // Configurable border width
     title_bar_height: u32, // Configurable title bar height
 
@@ -237,6 +242,7 @@ pub const Compositor = struct {
             .focus_manager = window_focus.FocusManager.init(),
             .drop_zone_manager = window_drag_drop.DropZoneManager.init(),
             .rule_manager = window_rules.WindowRuleManager.init(),
+            .event_manager = window_events.EventManager.init(),
             .border_width = BORDER_WIDTH, // Default border width
             .title_bar_height = TITLE_BAR_HEIGHT, // Default title bar height
         };

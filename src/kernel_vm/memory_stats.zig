@@ -101,20 +101,14 @@ pub const VMMemoryStats = struct {
     }
 
     pub fn record_read(self: *VMMemoryStats, addr: u64, size: u64) void {
-        // Allow tracking even if address is out of bounds (for testing).
-        if (addr + size > self.total_memory_bytes) {
-            return;
-        }
+        // Track reads regardless of bounds (virtual addresses may exceed physical memory).
         self.total_reads += 1;
         self.total_bytes_read += size;
         self.update_region_access(addr, size, true);
     }
 
     pub fn record_write(self: *VMMemoryStats, addr: u64, size: u64) void {
-        // Allow tracking even if address is out of bounds (for testing).
-        if (addr + size > self.total_memory_bytes) {
-            return;
-        }
+        // Track writes regardless of bounds (virtual addresses may exceed physical memory).
         self.total_writes += 1;
         self.total_bytes_written += size;
         self.update_region_access(addr, size, false);

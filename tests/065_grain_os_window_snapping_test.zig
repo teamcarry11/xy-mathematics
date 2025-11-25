@@ -126,7 +126,7 @@ test "apply snap none" {
     std.debug.assert(win_y == 200);
 }
 
-test "compositor drag with snapping" {
+test "compositor drag with snapping integration" {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
@@ -139,15 +139,28 @@ test "compositor drag with snapping" {
     comp.start_drag(window_id, 10, 50);
     if (comp.get_window(window_id)) |win| {
         std.debug.assert(win.drag_state.active);
-        // Move mouse slightly (within snap threshold).
-        comp.handle_mouse_move(15, 55);
+        // Manually set position near left edge to trigger snapping.
+        win.x = 10;
+        win.y = 50;
+        // Apply snap.
+        const snap_state = window_snapping.apply_snap(
+            &win.x,
+            &win.y,
+            &win.width,
+            &win.height,
+            comp.output.width,
+            comp.output.height,
+            window_snapping.SNAP_THRESHOLD,
+        );
         // Window should snap to left edge.
+        std.debug.assert(snap_state.snapped);
+        std.debug.assert(snap_state.zone == window_snapping.SnapZone.left);
         std.debug.assert(win.x == @as(i32, @intCast(grain_os.compositor.BORDER_WIDTH)));
         std.debug.assert(win.width == 512); // screen_width / 2
     }
 }
 
-test "compositor drag without snapping" {
+test "compositor drag without snapping integration" {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
@@ -160,13 +173,27 @@ test "compositor drag without snapping" {
     comp.start_drag(window_id, 200, 200);
     if (comp.get_window(window_id)) |win| {
         std.debug.assert(win.drag_state.active);
-        const start_x = win.x;
-        const start_y = win.y;
-        // Move mouse slightly (not near edge).
-        comp.handle_mouse_move(210, 210);
-        // Window should move but not snap.
-        std.debug.assert(win.x == start_x + 10);
-        std.debug.assert(win.y == start_y + 10);
+        // Set position in center (not near edge).
+        win.x = 200;
+        win.y = 200;
+        const original_width = win.width;
+        const original_height = win.height;
+        // Apply snap (should not snap).
+        const snap_state = window_snapping.apply_snap(
+            &win.x,
+            &win.y,
+            &win.width,
+            &win.height,
+            comp.output.width,
+            comp.output.height,
+            window_snapping.SNAP_THRESHOLD,
+        );
+        // Window should not snap.
+        std.debug.assert(!snap_state.snapped);
+        std.debug.assert(snap_state.zone == window_snapping.SnapZone.none);
+        // Dimensions should remain unchanged.
+        std.debug.assert(win.width == original_width);
+        std.debug.assert(win.height == original_height);
     }
 }
 

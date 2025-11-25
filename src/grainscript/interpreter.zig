@@ -136,7 +136,7 @@ pub const Interpreter = struct {
     /// Call stack frame (for function calls).
     pub const CallFrame = struct {
         function_name: []const u8, // Function name (for debugging)
-        return_node: ?u32, // Return statement node index (if any)
+        return_value: ?Value, // Return value (if function returned)
         local_vars_start: u32, // Start index in variables array
         local_vars_count: u32, // Number of local variables
     };
@@ -756,6 +756,7 @@ pub const Interpreter = struct {
     }
 
     /// Execute return statement.
+    // 2025-11-24-183000-pst: Active function
     fn execute_return_statement(self: *Interpreter, node: Parser.Node) Error!Value {
         // Assert: Node must be return statement
         std.debug.assert(node.node_type == .stmt_return);
@@ -763,12 +764,25 @@ pub const Interpreter = struct {
         const stmt_data = node.data.return_stmt;
 
         // Evaluate return value (if any)
+        var return_value: Value = Value.from_null();
         if (stmt_data.value) |value_node_idx| {
             const value_node = self.parser.get_node(value_node_idx) orelse return Error.runtime_error;
-            return self.evaluate_expression(value_node);
+            return_value = try self.evaluate_expression(value_node);
         }
 
-        return Value.from_null();
+        // Store return value in current call frame (if in function)
+        if (self.call_stack_len > 0) {
+            const frame_idx = self.call_stack_len - 1;
+            // Copy return value (for strings, allocate new copy)
+            if (return_value == .string) {
+                const return_val_copy = try Value.from_string(self.allocator, return_value.string);
+                self.call_stack[frame_idx].return_value = return_val_copy;
+            } else {
+                self.call_stack[frame_idx].return_value = return_value;
+            }
+        }
+
+        return return_value;
     }
 
     /// Execute break statement.
@@ -810,6 +824,14 @@ pub const Interpreter = struct {
                 break;
             }
 
+            // Check for return value in call frame (function returned)
+            if (self.call_stack_len > 0) {
+                const frame_idx = self.call_stack_len - 1;
+                if (self.call_stack[frame_idx].return_value != null) {
+                    break; // Function returned, stop executing
+                }
+            }
+
             const stmt_node_idx = stmt_data.statements[i];
             const stmt_node = self.parser.get_node(stmt_node_idx) orelse return Error.runtime_error;
             _ = try self.execute_statement_or_declaration(stmt_node);
@@ -817,6 +839,14 @@ pub const Interpreter = struct {
             // Check for break/continue signal after statement
             if (self.control_flow_signal != .none) {
                 break;
+            }
+
+            // Check for return value after statement
+            if (self.call_stack_len > 0) {
+                const frame_idx = self.call_stack_len - 1;
+                if (self.call_stack[frame_idx].return_value != null) {
+                    break; // Function returned, stop executing
+                }
             }
         }
 
@@ -1284,9 +1314,192 @@ pub const Interpreter = struct {
                 return Error.runtime_error;
             }
         } else {
-            // TODO: Implement user-defined function calls
+            // User-defined function call
+            return self.call_user_function(function, args[0..args_len]);
+        }
+    }
+
+    /// Call user-defined function.
+    // 2025-11-24-183000-pst: Active function
+    fn call_user_function(self: *Interpreter, function: *const Function, args: []const Value) Error!Value {
+        // Assert: Function must be user-defined
+        std.debug.assert(!function.is_builtin);
+        std.debug.assert(function.body_node != null);
+
+        // Check call stack depth
+        if (self.call_stack_len >= MAX_CALL_STACK) {
+            return Error.call_stack_overflow;
+        }
+
+        // Check argument count matches parameter count
+        if (args.len != function.param_count) {
+            return Error.invalid_argument;
+        }
+
+        // Get function declaration node to access parameters
+        const fn_decl_node_idx = self.find_function_decl_node(function.name) orelse return Error.runtime_error;
+        const fn_decl_node = self.parser.get_node(fn_decl_node_idx) orelse return Error.runtime_error;
+        if (fn_decl_node.node_type != .decl_fn) {
             return Error.runtime_error;
         }
+        const fn_decl_data = fn_decl_node.data.fn_decl;
+
+        // Push call frame
+        const frame_start = self.call_stack_len;
+        self.call_stack[frame_start] = CallFrame{
+            .function_name = function.name,
+            .return_value = null,
+            .local_vars_start = self.variables_len,
+            .local_vars_count = 0,
+        };
+        self.call_stack_len += 1;
+
+        // Create local variables for parameters
+        var param_idx: u32 = 0;
+        while (param_idx < fn_decl_data.params_len) : (param_idx += 1) {
+            const param_node_idx = fn_decl_data.params[param_idx];
+            const param_node = self.parser.get_node(param_node_idx) orelse {
+                // Clean up call frame
+                self.call_stack_len -= 1;
+                return Error.runtime_error;
+            };
+
+            // Parameter should be identifier (parameter name)
+            if (param_node.node_type != .expr_identifier) {
+                self.call_stack_len -= 1;
+                return Error.runtime_error;
+            }
+
+            const param_name = param_node.data.identifier.name;
+            const arg_value = args[param_idx];
+
+            // Create local variable for parameter
+            if (self.variables_len >= MAX_VARIABLES) {
+                self.call_stack_len -= 1;
+                return Error.too_many_variables;
+            }
+
+            const param_name_copy = try self.allocator.dupe(u8, param_name);
+            errdefer self.allocator.free(param_name_copy);
+
+            // Copy argument value (for strings, allocate new copy)
+            var param_value = arg_value;
+            if (arg_value == .string) {
+                param_value = try Value.from_string(self.allocator, arg_value.string);
+            }
+
+            self.variables[self.variables_len] = Variable{
+                .name = param_name_copy,
+                .name_len = @as(u32, @intCast(param_name_copy.len)),
+                .value = param_value,
+                .is_const = false,
+                .scope = .local,
+                .scope_depth = self.scope_depth + 1,
+                .var_type = null,
+            };
+            self.variables_len += 1;
+            self.call_stack[frame_start].local_vars_count += 1;
+        }
+
+        // Increment scope depth
+        const old_scope_depth = self.scope_depth;
+        self.scope_depth += 1;
+
+        // Execute function body
+        const body_node_idx = function.body_node.?;
+        const body_node = self.parser.get_node(body_node_idx) orelse {
+            // Clean up
+            self.cleanup_call_frame(frame_start);
+            self.scope_depth = old_scope_depth;
+            return Error.runtime_error;
+        };
+
+        // Execute function body
+        if (body_node.node_type == .stmt_block) {
+            // Execute block (may contain return statement)
+            _ = self.execute_block_statement(body_node) catch |err| {
+                // Clean up on error
+                self.cleanup_call_frame(frame_start);
+                self.scope_depth = old_scope_depth;
+                return err;
+            };
+        } else {
+            // Single statement body (could be return statement)
+            _ = self.execute_statement(body_node) catch |err| {
+                self.cleanup_call_frame(frame_start);
+                self.scope_depth = old_scope_depth;
+                return err;
+            };
+        }
+
+        // Restore scope depth
+        self.scope_depth = old_scope_depth;
+
+        // Get return value from call frame (if set by return statement)
+        const frame_return = self.call_stack[frame_start].return_value;
+
+        // Clean up call frame (free local variables)
+        self.cleanup_call_frame(frame_start);
+
+        // Return value (or null if no return statement)
+        if (frame_return) |val| {
+            return val;
+        } else {
+            return Value.from_null();
+        }
+    }
+
+    /// Find function declaration node by name.
+    // 2025-11-24-183000-pst: Active function
+    fn find_function_decl_node(self: *const Interpreter, name: []const u8) ?u32 {
+        // Search through parser nodes for function declaration
+        var i: u32 = 0;
+        while (i < self.parser.get_node_count()) : (i += 1) {
+            const node = self.parser.get_node(i) orelse continue;
+            if (node.node_type == .decl_fn) {
+                const fn_decl_data = node.data.fn_decl;
+                if (std.mem.eql(u8, fn_decl_data.name, name)) {
+                    return i;
+                }
+            }
+        }
+        return null;
+    }
+
+    /// Clean up call frame (free local variables).
+    // 2025-11-24-183000-pst: Active function
+    fn cleanup_call_frame(self: *Interpreter, frame_idx: u32) void {
+        std.debug.assert(frame_idx < self.call_stack_len);
+        const frame = &self.call_stack[frame_idx];
+
+        // Free local variables
+        var i: u32 = 0;
+        while (i < frame.local_vars_count) : (i += 1) {
+            const var_idx = frame.local_vars_start + i;
+            if (var_idx < self.variables_len) {
+                const variable = &self.variables[var_idx];
+                // Free variable name
+                self.allocator.free(variable.name);
+                // Free variable value (if string)
+                variable.value.deinit(self.allocator);
+            }
+        }
+
+        // Remove variables from array (shift remaining variables)
+        const vars_to_remove = frame.local_vars_count;
+        if (vars_to_remove > 0 and frame.local_vars_start + vars_to_remove < self.variables_len) {
+            const remaining_count = self.variables_len - (frame.local_vars_start + vars_to_remove);
+            var j: u32 = 0;
+            while (j < remaining_count) : (j += 1) {
+                const src_idx = frame.local_vars_start + vars_to_remove + j;
+                const dst_idx = frame.local_vars_start + j;
+                self.variables[dst_idx] = self.variables[src_idx];
+            }
+        }
+        self.variables_len -= vars_to_remove;
+
+        // Pop call frame
+        self.call_stack_len -= 1;
     }
 
     /// Evaluate group expression.

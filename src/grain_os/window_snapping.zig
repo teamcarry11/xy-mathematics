@@ -107,6 +107,97 @@ pub fn detect_snap_zone(
     return SnapZone.none;
 }
 
+// Calculate snapped position for left edge.
+fn calc_snap_left(screen_width: u32, content_height: u32) struct { x: i32, y: i32, width: u32, height: u32 } {
+    const border_width = compositor.BORDER_WIDTH;
+    const title_bar_height = compositor.TITLE_BAR_HEIGHT;
+    return .{
+        .x = @as(i32, @intCast(border_width)),
+        .y = @as(i32, @intCast(border_width + title_bar_height)),
+        .width = screen_width / 2,
+        .height = content_height,
+    };
+}
+
+// Calculate snapped position for right edge.
+fn calc_snap_right(screen_width: u32, content_height: u32) struct { x: i32, y: i32, width: u32, height: u32 } {
+    const border_width = compositor.BORDER_WIDTH;
+    const title_bar_height = compositor.TITLE_BAR_HEIGHT;
+    return .{
+        .x = @as(i32, @intCast(screen_width / 2)),
+        .y = @as(i32, @intCast(border_width + title_bar_height)),
+        .width = screen_width / 2,
+        .height = content_height,
+    };
+}
+
+// Calculate snapped position for top edge.
+fn calc_snap_top(screen_width: u32, content_height: u32) struct { x: i32, y: i32, width: u32, height: u32 } {
+    const border_width = compositor.BORDER_WIDTH;
+    const title_bar_height = compositor.TITLE_BAR_HEIGHT;
+    return .{
+        .x = @as(i32, @intCast(border_width)),
+        .y = @as(i32, @intCast(border_width + title_bar_height)),
+        .width = screen_width - (border_width * 2),
+        .height = content_height / 2,
+    };
+}
+
+// Calculate snapped position for bottom edge.
+fn calc_snap_bottom(screen_width: u32, content_height: u32) struct { x: i32, y: i32, width: u32, height: u32 } {
+    const border_width = compositor.BORDER_WIDTH;
+    const title_bar_height = compositor.TITLE_BAR_HEIGHT;
+    return .{
+        .x = @as(i32, @intCast(border_width)),
+        .y = @as(i32, @intCast(border_width + title_bar_height + content_height / 2)),
+        .width = screen_width - (border_width * 2),
+        .height = content_height / 2,
+    };
+}
+
+// Calculate snapped position for corner zones.
+fn calc_snap_corner(zone: SnapZone, screen_width: u32, content_height: u32) struct { x: i32, y: i32, width: u32, height: u32 } {
+    const border_width = compositor.BORDER_WIDTH;
+    const title_bar_height = compositor.TITLE_BAR_HEIGHT;
+    const half_width = screen_width / 2;
+    const half_height = content_height / 2;
+    switch (zone) {
+        .top_left => {
+            return .{
+                .x = @as(i32, @intCast(border_width)),
+                .y = @as(i32, @intCast(border_width + title_bar_height)),
+                .width = half_width,
+                .height = half_height,
+            };
+        },
+        .top_right => {
+            return .{
+                .x = @as(i32, @intCast(half_width)),
+                .y = @as(i32, @intCast(border_width + title_bar_height)),
+                .width = half_width,
+                .height = half_height,
+            };
+        },
+        .bottom_left => {
+            return .{
+                .x = @as(i32, @intCast(border_width)),
+                .y = @as(i32, @intCast(border_width + title_bar_height + half_height)),
+                .width = half_width,
+                .height = half_height,
+            };
+        },
+        .bottom_right => {
+            return .{
+                .x = @as(i32, @intCast(half_width)),
+                .y = @as(i32, @intCast(border_width + title_bar_height + half_height)),
+                .width = half_width,
+                .height = half_height,
+            };
+        },
+        else => unreachable,
+    }
+}
+
 // Calculate snapped position for window.
 pub fn calculate_snap_position(
     zone: SnapZone,
@@ -124,72 +215,14 @@ pub fn calculate_snap_position(
     const status_bar_height: u32 = 24;
     const content_height = screen_height - (border_width * 2) - title_bar_height - status_bar_height;
     switch (zone) {
-        .left => {
-            return .{
-                .x = @as(i32, @intCast(border_width)),
-                .y = @as(i32, @intCast(border_width + title_bar_height)),
-                .width = screen_width / 2,
-                .height = content_height,
-            };
-        },
-        .right => {
-            return .{
-                .x = @as(i32, @intCast(screen_width / 2)),
-                .y = @as(i32, @intCast(border_width + title_bar_height)),
-                .width = screen_width / 2,
-                .height = content_height,
-            };
-        },
-        .top => {
-            return .{
-                .x = @as(i32, @intCast(border_width)),
-                .y = @as(i32, @intCast(border_width + title_bar_height)),
-                .width = screen_width - (border_width * 2),
-                .height = content_height / 2,
-            };
-        },
-        .bottom => {
-            return .{
-                .x = @as(i32, @intCast(border_width)),
-                .y = @as(i32, @intCast(border_width + title_bar_height + content_height / 2)),
-                .width = screen_width - (border_width * 2),
-                .height = content_height / 2,
-            };
-        },
-        .top_left => {
-            return .{
-                .x = @as(i32, @intCast(border_width)),
-                .y = @as(i32, @intCast(border_width + title_bar_height)),
-                .width = screen_width / 2,
-                .height = content_height / 2,
-            };
-        },
-        .top_right => {
-            return .{
-                .x = @as(i32, @intCast(screen_width / 2)),
-                .y = @as(i32, @intCast(border_width + title_bar_height)),
-                .width = screen_width / 2,
-                .height = content_height / 2,
-            };
-        },
-        .bottom_left => {
-            return .{
-                .x = @as(i32, @intCast(border_width)),
-                .y = @as(i32, @intCast(border_width + title_bar_height + content_height / 2)),
-                .width = screen_width / 2,
-                .height = content_height / 2,
-            };
-        },
-        .bottom_right => {
-            return .{
-                .x = @as(i32, @intCast(screen_width / 2)),
-                .y = @as(i32, @intCast(border_width + title_bar_height + content_height / 2)),
-                .width = screen_width / 2,
-                .height = content_height / 2,
-            };
+        .left => return calc_snap_left(screen_width, content_height),
+        .right => return calc_snap_right(screen_width, content_height),
+        .top => return calc_snap_top(screen_width, content_height),
+        .bottom => return calc_snap_bottom(screen_width, content_height),
+        .top_left, .top_right, .bottom_left, .bottom_right => {
+            return calc_snap_corner(zone, screen_width, content_height);
         },
         .center, .none => {
-            // No snapping, return original dimensions.
             return .{
                 .x = 0,
                 .y = @as(i32, @intCast(border_width + title_bar_height)),

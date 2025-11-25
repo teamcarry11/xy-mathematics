@@ -39,7 +39,6 @@
      - ✅ Memory statistics printing (usage, access counts, region stats)
      - ✅ Integration with read64/write64 (automatic tracking)
      - ✅ Comprehensive tests (tests/062_vm_memory_stats_test.zig)
-     - ✅ Fixed initialization and bounds checking issues
 
 2. **Kernel Boot Sequence**
    - Implement basic boot loader
@@ -969,6 +968,13 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 - ✅ Enable/disable payments per tab
 - ✅ Associate contracts with browser tabs
 - ✅ Process payments via deterministic state machine
+
+#### 3.5: Window Management Integration ✅ **COMPLETE**
+- ✅ Window resize handling (handle_window_resize method)
+- ✅ Browser viewport updates on window resize
+- ✅ Layout updates on window resize
+- ✅ Viewport dimension clamping (prevents overflow)
+- ✅ No Ctrl+Alt keybinding interception (compositor handles window management)
 - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 
 **See**: `docs/dream_implementation_roadmap.md` for complete roadmap
@@ -1255,6 +1261,13 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 - ✅ Enable/disable payments per tab
 - ✅ Associate contracts with browser tabs
 - ✅ Process payments via deterministic state machine
+
+#### 3.5: Window Management Integration ✅ **COMPLETE**
+- ✅ Window resize handling (handle_window_resize method)
+- ✅ Browser viewport updates on window resize
+- ✅ Layout updates on window resize
+- ✅ Viewport dimension clamping (prevents overflow)
+- ✅ No Ctrl+Alt keybinding interception (compositor handles window management)
 - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 
 **See**: `docs/dream_implementation_roadmap.md` for complete roadmap
@@ -1541,6 +1554,13 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 - ✅ Enable/disable payments per tab
 - ✅ Associate contracts with browser tabs
 - ✅ Process payments via deterministic state machine
+
+#### 3.5: Window Management Integration ✅ **COMPLETE**
+- ✅ Window resize handling (handle_window_resize method)
+- ✅ Browser viewport updates on window resize
+- ✅ Layout updates on window resize
+- ✅ Viewport dimension clamping (prevents overflow)
+- ✅ No Ctrl+Alt keybinding interception (compositor handles window management)
 - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 
 **See**: `docs/dream_implementation_roadmap.md` for complete roadmap

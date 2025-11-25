@@ -1250,6 +1250,13 @@
     - ✅ Comprehensive tests (`tests/064_grain_os_window_resize_drag_test.zig`)
     - ✅ Window management keybindings documentation (`docs/grain_os_window_management_keybindings.md`)
     - ✅ Agent integration prompts (`docs/agent_prompts_window_management.md`)
+  - ✅ Window snapping (Phase 11) ✅ **COMPLETE**
+    - ✅ Window snapping module (`src/grain_os/window_snapping.zig`)
+    - ✅ Snap zone detection (left, right, top, bottom, corners)
+    - ✅ Snap position calculation (half-screen, quarter-screen zones)
+    - ✅ Snap threshold configuration (SNAP_THRESHOLD: 20 pixels)
+    - ✅ Compositor integration (automatic snapping during drag)
+    - ✅ Comprehensive tests (`tests/065_grain_os_window_snapping_test.zig`)
 
 **In Progress**: 
 - Dream Editor Core - GLM-4.6 Integration (Phase 4.1.3) 🔄

@@ -72,9 +72,6 @@ pub const DreamBrowserNostr = struct {
         browser_dag: *BrowserDagIntegration,
         renderer: *DreamBrowserRenderer,
     ) DreamBrowserNostr {
-        // Assert: Allocator must be valid (precondition).
-        std.debug.assert(allocator.ptr != null);
-        
         // Assert: Browser DAG must be initialized (precondition).
         std.debug.assert(browser_dag.dag.nodes_len <= BrowserDagIntegration.MAX_DOM_NODES_PER_PAGE);
         
@@ -96,7 +93,14 @@ pub const DreamBrowserNostr = struct {
     /// Contract: url must be valid Nostr URL, returns parsed URL.
     pub fn parseNostrUrl(self: *DreamBrowserNostr, url: []const u8) !NostrUrl {
         // Assert: URL must be non-empty (precondition).
-        std.debug.assert(url.len > 0);
+        if (url.len == 0) {
+            return error.InvalidNostrUrl;
+        }
+        
+        // Assert: URL must be within bounds (precondition).
+        if (url.len > MAX_URL_LENGTH) {
+            return error.UrlTooLong;
+        }
         
         // Assert: URL must start with "nostr:" (precondition).
         if (!std.mem.startsWith(u8, url, "nostr:")) {
@@ -105,6 +109,11 @@ pub const DreamBrowserNostr = struct {
         
         // Extract identifier (after "nostr:").
         const identifier = url[6..]; // Skip "nostr:"
+        
+        // Assert: Identifier must be within bounds (precondition).
+        if (identifier.len > MAX_IDENTIFIER_LENGTH) {
+            return error.IdentifierTooLong;
+        }
         
         // Determine URL type based on prefix.
         var url_type: NostrUrlType = undefined;

@@ -81,6 +81,7 @@ pub const Terminal = struct {
             .escape_buffer = [_]u8{0} ** MAX_ESCAPE_SEQ,
             .escape_len = 0,
             .scrollback_lines = 0,
+            .scrollback_offset = 0,
             .default_fg = 7, // Default: white foreground
             .default_bg = 0, // Default: black background
             .current_attrs = CellAttributes{
@@ -228,6 +229,48 @@ pub const Terminal = struct {
         if (self.scrollback_lines < MAX_SCROLLBACK) {
             self.scrollback_lines += 1;
         }
+        // Reset scrollback offset when new content is added
+        self.scrollback_offset = 0;
+    }
+
+    /// Scroll up in scrollback (view older content).
+    // 2025-11-24-174000-pst: Active function
+    pub fn scrollback_up(self: *Terminal) void {
+        if (self.scrollback_offset < self.scrollback_lines) {
+            self.scrollback_offset += 1;
+        }
+    }
+
+    /// Scroll down in scrollback (view newer content).
+    // 2025-11-24-174000-pst: Active function
+    pub fn scrollback_down(self: *Terminal) void {
+        if (self.scrollback_offset > 0) {
+            self.scrollback_offset -= 1;
+        }
+    }
+
+    /// Jump to top of scrollback (oldest content).
+    // 2025-11-24-174000-pst: Active function
+    pub fn scrollback_to_top(self: *Terminal) void {
+        self.scrollback_offset = self.scrollback_lines;
+    }
+
+    /// Jump to bottom of scrollback (latest content).
+    // 2025-11-24-174000-pst: Active function
+    pub fn scrollback_to_bottom(self: *Terminal) void {
+        self.scrollback_offset = 0;
+    }
+
+    /// Get current scrollback offset.
+    // 2025-11-24-174000-pst: Active function
+    pub fn get_scrollback_offset(self: *const Terminal) u32 {
+        return self.scrollback_offset;
+    }
+
+    /// Get total scrollback lines.
+    // 2025-11-24-174000-pst: Active function
+    pub fn get_scrollback_lines(self: *const Terminal) u32 {
+        return self.scrollback_lines;
     }
 
     /// Handle single-character escape sequence.
@@ -327,6 +370,54 @@ pub const Terminal = struct {
                 if (self.cursor_x >= self.width) {
                     self.cursor_x = self.width - 1;
                 }
+            },
+            'f' => {
+                // Cursor Position (same as 'H')
+                var params_iter = std.mem.splitScalar(u8, params, ';');
+                const row_str = params_iter.next() orelse "1";
+                const col_str = params_iter.next() orelse "1";
+                const row = self.parse_number(row_str, 1);
+                const col = self.parse_number(col_str, 1);
+                self.cursor_y = if (row > 0) row - 1 else 0;
+                self.cursor_x = if (col > 0) col - 1 else 0;
+                if (self.cursor_y >= self.height) {
+                    self.cursor_y = self.height - 1;
+                }
+                if (self.cursor_x >= self.width) {
+                    self.cursor_x = self.width - 1;
+                }
+            },
+            's' => {
+                // Save cursor position (DEC)
+                self.saved_cursor_x = self.cursor_x;
+                self.saved_cursor_y = self.cursor_y;
+            },
+            'u' => {
+                // Restore cursor position (DEC)
+                self.cursor_x = self.saved_cursor_x;
+                self.cursor_y = self.saved_cursor_y;
+                if (self.cursor_x >= self.width) {
+                    self.cursor_x = self.width - 1;
+                }
+                if (self.cursor_y >= self.height) {
+                    self.cursor_y = self.height - 1;
+                }
+            },
+            'n' => {
+                // Device Status Report (DSR) - respond with cursor position
+                // Format: ESC [ row ; col R
+                // For now, we ignore (would need output mechanism)
+                _ = params;
+            },
+            'h' => {
+                // Set Mode (SM) - enable terminal features
+                // For now, we ignore most modes
+                _ = params;
+            },
+            'l' => {
+                // Reset Mode (RM) - disable terminal features
+                // For now, we ignore most modes
+                _ = params;
             },
             'J' => {
                 // Erase in Display
@@ -589,6 +680,7 @@ pub const Terminal = struct {
         self.cursor_x = 0;
         self.cursor_y = 0;
         self.scrollback_lines = 0;
+        self.scrollback_offset = 0;
     }
 };
 

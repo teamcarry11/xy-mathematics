@@ -23,6 +23,11 @@
   - [x] Hot path statistics printing
   - [x] Integration with step_jit()
   - [x] Comprehensive tests (tests/060_jit_hot_path_test.zig)
+- [x] JIT Code Size Tracking (Phase 2.1.3)
+  - [x] Code size tracking per block
+  - [x] Code size statistics printing
+  - [x] Integration with compile_block()
+  - [x] Comprehensive tests (tests/061_jit_code_size_test.zig)
 
 #### 2.2 Kernel Boot Sequence ✅ **COMPLETE**
 - [x] Implement basic boot loader
@@ -933,6 +938,8 @@
 - [x] Text attributes (bold, italic, underline, blink, reverse video)
 - [x] ANSI color support (16-color palette)
 - [x] Scrollback buffer tracking
+- [x] Scrollback navigation (scroll up/down, jump to top/bottom)
+- [x] Enhanced escape sequences (cursor position 'f', save/restore 's'/'u', device status report 'n', set/reset mode 'h'/'l')
 - [x] Character cell rendering (`src/grain_terminal/renderer.zig`)
 - [x] Framebuffer integration (renders cells to framebuffer)
 - [x] Comprehensive tests (`tests/045_grain_terminal_test.zig`)
@@ -1192,6 +1199,20 @@
     - ✅ Compositor integration (init_runtime_config, process_config_command)
     - ✅ IPC channel support (channel_id-based configuration)
     - ✅ Comprehensive tests (`tests/060_grain_os_runtime_config_test.zig`)
+  - ✅ Application framework (Phase 8) ✅ **COMPLETE**
+    - ✅ Application framework module (`src/grain_os/application.zig`)
+    - ✅ Application registry (register, get by ID/name, get visible)
+    - ✅ Application launcher (launch by ID/name via kernel spawn)
+    - ✅ Compositor integration (register_application, launch_application)
+    - ✅ Syscall integration (spawn syscall for launching)
+    - ✅ Comprehensive tests (`tests/062_grain_os_application_test.zig`)
+  - ✅ Launcher-application integration (Phase 9) ✅ **COMPLETE**
+    - ✅ Launcher integration with application registry
+    - ✅ Launcher item click handling (launches applications)
+    - ✅ Automatic launcher item sync with registered applications
+    - ✅ Launcher item hit testing (get item at mouse position)
+    - ✅ Compositor input handling for launcher clicks
+    - ✅ Comprehensive tests (`tests/063_grain_os_launcher_integration_test.zig`)
 
 **In Progress**: 
 - Dream Editor Core - GLM-4.6 Integration (Phase 4.1.3) 🔄

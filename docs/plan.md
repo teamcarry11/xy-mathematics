@@ -27,6 +27,11 @@
      - ✅ Hot path statistics printing (execution counts, percentages)
      - ✅ Integration with step_jit() (automatic hot path tracking)
      - ✅ Comprehensive tests (tests/060_jit_hot_path_test.zig)
+   - ✅ JIT Code Size Tracking (Phase 2.1.3)
+     - ✅ Code size tracking per block (total, min, max, average)
+     - ✅ Code size statistics printing (KB, bytes/block, min/max)
+     - ✅ Integration with compile_block() (automatic size tracking)
+     - ✅ Comprehensive tests (tests/061_jit_code_size_test.zig)
 
 2. **Kernel Boot Sequence**
    - Implement basic boot loader
@@ -464,9 +469,22 @@ Create a fourth agent dedicated to **Grain OS** - a Zig-Wayland implemented GNOM
    - ✅ Compositor integration (renders on top of windows)
    - ✅ Workspace indicator in status bar
    - ✅ Comprehensive tests (`tests/061_grain_os_desktop_shell_test.zig`)
-8. **Phase 8**: Application Framework (API, loader, `~/Applications/`)
-7. **Phase 7**: Integration (Grain Kernel syscalls, VM testing)
-8. **Phase 8**: Applications (Aurora, Dream, Skate, Terminal ports)
+8. **Phase 8**: Application Framework ✅ **COMPLETE**
+   - ✅ Application framework module (`src/grain_os/application.zig`)
+   - ✅ Application registry (register, get by ID/name, get visible)
+   - ✅ Application launcher (launch by ID/name via kernel spawn)
+   - ✅ Compositor integration (register_application, launch_application)
+   - ✅ Syscall integration (spawn syscall for launching)
+   - ✅ Comprehensive tests (`tests/062_grain_os_application_test.zig`)
+9. **Phase 9**: Launcher-Application Integration ✅ **COMPLETE**
+   - ✅ Launcher integration with application registry
+   - ✅ Launcher item click handling (launches applications)
+   - ✅ Automatic launcher item sync with registered applications
+   - ✅ Launcher item hit testing (get item at mouse position)
+   - ✅ Compositor input handling for launcher clicks
+   - ✅ Comprehensive tests (`tests/063_grain_os_launcher_integration_test.zig`)
+10. **Phase 10**: Integration (Grain Kernel syscalls, VM testing)
+11. **Phase 11**: Applications (Aurora, Dream, Skate, Terminal ports)
 
 ### Proposal Document
 
@@ -1028,6 +1046,8 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 - ✅ Text attributes (bold, italic, underline, blink, reverse video)
 - ✅ ANSI color support (16-color palette)
 - ✅ Scrollback buffer tracking
+- ✅ Scrollback navigation (scroll up/down, jump to top/bottom)
+- ✅ Enhanced escape sequences (cursor position 'f', save/restore 's'/'u', device status report 'n', set/reset mode 'h'/'l')
 - ✅ Character cell rendering (`src/grain_terminal/renderer.zig`)
 - ✅ Framebuffer integration (renders cells to framebuffer)
 - ✅ Comprehensive tests (`tests/045_grain_terminal_test.zig`)
@@ -1302,6 +1322,8 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 - ✅ Text attributes (bold, italic, underline, blink, reverse video)
 - ✅ ANSI color support (16-color palette)
 - ✅ Scrollback buffer tracking
+- ✅ Scrollback navigation (scroll up/down, jump to top/bottom)
+- ✅ Enhanced escape sequences (cursor position 'f', save/restore 's'/'u', device status report 'n', set/reset mode 'h'/'l')
 - ✅ Character cell rendering (`src/grain_terminal/renderer.zig`)
 - ✅ Framebuffer integration (renders cells to framebuffer)
 - ✅ Comprehensive tests (`tests/045_grain_terminal_test.zig`)
@@ -1576,6 +1598,8 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 - ✅ Text attributes (bold, italic, underline, blink, reverse video)
 - ✅ ANSI color support (16-color palette)
 - ✅ Scrollback buffer tracking
+- ✅ Scrollback navigation (scroll up/down, jump to top/bottom)
+- ✅ Enhanced escape sequences (cursor position 'f', save/restore 's'/'u', device status report 'n', set/reset mode 'h'/'l')
 - ✅ Character cell rendering (`src/grain_terminal/renderer.zig`)
 - ✅ Framebuffer integration (renders cells to framebuffer)
 - ✅ Comprehensive tests (`tests/045_grain_terminal_test.zig`)

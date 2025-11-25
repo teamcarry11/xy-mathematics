@@ -184,3 +184,94 @@ test "renderer char pattern" {
     try testing.expect(a_pattern != 0);
 }
 
+test "terminal scrollback navigation" {
+    var terminal = Terminal.init(80, 24);
+    var cells: [80 * 24]Terminal.Cell = undefined;
+
+    try testing.expect(terminal.get_scrollback_offset() == 0);
+    try testing.expect(terminal.get_scrollback_lines() == 0);
+
+    // Scroll up (should stay at 0 when no scrollback)
+    terminal.scrollback_up();
+    try testing.expect(terminal.get_scrollback_offset() == 0);
+
+    // Scroll down (should stay at 0)
+    terminal.scrollback_down();
+    try testing.expect(terminal.get_scrollback_offset() == 0);
+
+    // Jump to top/bottom
+    terminal.scrollback_to_top();
+    try testing.expect(terminal.get_scrollback_offset() == 0);
+    terminal.scrollback_to_bottom();
+    try testing.expect(terminal.get_scrollback_offset() == 0);
+
+    // Create some scrollback
+    terminal.cursor_y = terminal.height - 1;
+    terminal.process_char('A', &cells);
+    terminal.process_char('\n', &cells);
+
+    // Now we have scrollback
+    try testing.expect(terminal.get_scrollback_lines() > 0);
+    try testing.expect(terminal.get_scrollback_offset() == 0);
+
+    // Scroll up
+    terminal.scrollback_up();
+    try testing.expect(terminal.get_scrollback_offset() == 1);
+
+    // Scroll down
+    terminal.scrollback_down();
+    try testing.expect(terminal.get_scrollback_offset() == 0);
+
+    // Jump to top
+    terminal.scrollback_to_top();
+    try testing.expect(terminal.get_scrollback_offset() == terminal.get_scrollback_lines());
+
+    // Jump to bottom
+    terminal.scrollback_to_bottom();
+    try testing.expect(terminal.get_scrollback_offset() == 0);
+}
+
+test "terminal csi cursor position f" {
+    var terminal = Terminal.init(80, 24);
+    var cells: [80 * 24]Terminal.Cell = undefined;
+
+    // Move cursor to position 5, 10 using 'f' (same as 'H')
+    terminal.process_char(0x1B, &cells); // ESC
+    terminal.process_char('[', &cells);
+    terminal.process_char('1', &cells);
+    terminal.process_char('1', &cells);
+    terminal.process_char(';', &cells);
+    terminal.process_char('6', &cells);
+    terminal.process_char('f', &cells);
+
+    try testing.expect(terminal.cursor_y == 10);
+    try testing.expect(terminal.cursor_x == 5);
+}
+
+test "terminal csi save restore cursor" {
+    var terminal = Terminal.init(80, 24);
+    var cells: [80 * 24]Terminal.Cell = undefined;
+
+    // Move cursor
+    terminal.cursor_x = 10;
+    terminal.cursor_y = 5;
+
+    // Save cursor using CSI 's'
+    terminal.process_char(0x1B, &cells); // ESC
+    terminal.process_char('[', &cells);
+    terminal.process_char('s', &cells);
+    try testing.expect(terminal.saved_cursor_x == 10);
+    try testing.expect(terminal.saved_cursor_y == 5);
+
+    // Move cursor
+    terminal.cursor_x = 20;
+    terminal.cursor_y = 10;
+
+    // Restore cursor using CSI 'u'
+    terminal.process_char(0x1B, &cells); // ESC
+    terminal.process_char('[', &cells);
+    terminal.process_char('u', &cells);
+    try testing.expect(terminal.cursor_x == 10);
+    try testing.expect(terminal.cursor_y == 5);
+}
+

@@ -7,6 +7,7 @@
 const std = @import("std");
 const framebuffer_renderer = @import("framebuffer_renderer.zig");
 const workspace = @import("workspace.zig");
+const application = @import("application.zig");
 
 // Bounded: Status bar height.
 pub const STATUS_BAR_HEIGHT: u32 = 32;
@@ -65,6 +66,7 @@ pub const DesktopShell = struct {
     launcher_items_len: u32,
     launcher_visible: bool,
     current_workspace_id: u32,
+    app_registry: ?*application.ApplicationRegistry,
 
     pub fn init(
         renderer: *const framebuffer_renderer.FramebufferRenderer,
@@ -82,6 +84,7 @@ pub const DesktopShell = struct {
             .launcher_items_len = 0,
             .launcher_visible = false,
             .current_workspace_id = 1,
+            .app_registry = null,
         };
         // Initialize launcher items array.
         var i: u32 = 0;
@@ -116,6 +119,59 @@ pub const DesktopShell = struct {
     pub fn set_current_workspace(self: *DesktopShell, workspace_id: u32) void {
         std.debug.assert(workspace_id > 0);
         self.current_workspace_id = workspace_id;
+    }
+
+    // Set application registry for launcher integration.
+    pub fn set_app_registry(self: *DesktopShell, registry: *application.ApplicationRegistry) void {
+        std.debug.assert(@intFromPtr(registry) != 0);
+        self.app_registry = registry;
+        // Sync launcher items with registered applications.
+        self.sync_launcher_items();
+    }
+
+    // Sync launcher items with registered applications.
+    fn sync_launcher_items(self: *DesktopShell) void {
+        if (self.app_registry) |registry| {
+            self.launcher_items_len = 0;
+            const visible_apps = registry.get_visible_applications();
+            var i: u32 = 0;
+            while (i < visible_apps.len and self.launcher_items_len < MAX_LAUNCHER_ITEMS) : (i += 1) {
+                const app = visible_apps.apps[i];
+                const name_slice = app.name[0..app.name_len];
+                const cmd_slice = app.command[0..app.command_len];
+                self.launcher_items[self.launcher_items_len] = LauncherItem.init(name_slice, cmd_slice);
+                self.launcher_items_len += 1;
+            }
+            std.debug.assert(self.launcher_items_len <= MAX_LAUNCHER_ITEMS);
+        }
+    }
+
+    // Check if point is in launcher item area.
+    pub fn get_launcher_item_at(
+        self: *const DesktopShell,
+        x: u32,
+        y: u32,
+    ) ?u32 {
+        if (!self.launcher_visible) return null;
+        std.debug.assert(x < self.output_width);
+        std.debug.assert(y < self.output_height);
+        const launcher_x = (self.output_width - LAUNCHER_WIDTH) / 2;
+        const launcher_y = (self.output_height - LAUNCHER_HEIGHT) / 2;
+        // Check if point is within launcher bounds.
+        if (x < launcher_x or x >= launcher_x + LAUNCHER_WIDTH or
+            y < launcher_y or y >= launcher_y + LAUNCHER_HEIGHT)
+        {
+            return null;
+        }
+        // Calculate item index from y position.
+        const item_height: u32 = 32;
+        const relative_y = y - launcher_y - 40; // Account for launcher border/title.
+        if (relative_y < 0) return null;
+        const item_index = relative_y / item_height;
+        if (item_index < self.launcher_items_len) {
+            return item_index;
+        }
+        return null;
     }
 
     // Render status bar.

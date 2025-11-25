@@ -122,6 +122,9 @@ pub const JitPerfCounters = struct {
     jit_compile_time_ns: u64 = 0,
     interpreter_fallbacks: u64 = 0,
     hot_path_tracker: HotPathTracker,
+    total_code_size_bytes: u64 = 0,
+    max_code_size_bytes: u64 = 0,
+    min_code_size_bytes: u64 = 0,
 
     pub fn print_stats(self: *const JitPerfCounters) void {
         std.debug.print("\nJIT Performance Stats:\n", .{});
@@ -138,6 +141,20 @@ pub const JitPerfCounters = struct {
         if (self.hot_path_tracker.total_executions > 0) {
             std.debug.print("  Total Executions: {}\n", .{self.hot_path_tracker.total_executions});
             std.debug.print("  Hot Paths Tracked: {}\n", .{self.hot_path_tracker.paths_len});
+        }
+        if (self.total_code_size_bytes > 0) {
+            const code_size_kb = @as(f64, @floatFromInt(self.total_code_size_bytes)) / 1024.0;
+            std.debug.print("  Total Code Size: {d:.2} KB\n", .{code_size_kb});
+            if (self.blocks_compiled > 0) {
+                const avg_size = self.total_code_size_bytes / self.blocks_compiled;
+                std.debug.print("  Avg Code Size: {} bytes/block\n", .{avg_size});
+            }
+            if (self.max_code_size_bytes > 0) {
+                std.debug.print("  Max Code Size: {} bytes\n", .{self.max_code_size_bytes});
+            }
+            if (self.min_code_size_bytes > 0) {
+                std.debug.print("  Min Code Size: {} bytes\n", .{self.min_code_size_bytes});
+            }
         }
         if (self.total_execution_time_ns > 0) {
             const exec_ms = @as(f64, @floatFromInt(self.total_execution_time_ns)) / 1_000_000.0;
@@ -1242,6 +1259,17 @@ pub const JitContext = struct {
 
         try self.block_cache.put(guest_pc, start_offset);
         self.perf_counters.blocks_compiled += 1;
+        
+        // Track code size for this block.
+        const block_size: u32 = self.cursor - start_offset;
+        const block_size_u64: u64 = @intCast(block_size);
+        self.perf_counters.total_code_size_bytes += block_size_u64;
+        if (self.perf_counters.max_code_size_bytes == 0 or block_size_u64 > self.perf_counters.max_code_size_bytes) {
+            self.perf_counters.max_code_size_bytes = block_size_u64;
+        }
+        if (self.perf_counters.min_code_size_bytes == 0 or block_size_u64 < self.perf_counters.min_code_size_bytes) {
+            self.perf_counters.min_code_size_bytes = block_size_u64;
+        }
 
         self.flush_cache(start_offset, self.cursor - start_offset);
 

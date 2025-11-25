@@ -153,6 +153,7 @@ pub const Compositor = struct {
         compositor.app_launcher = application.ApplicationLauncher.init(
             &compositor.app_registry,
         );
+        compositor.shell.set_app_registry(&compositor.app_registry);
         std.debug.assert(compositor.windows_len == 0);
         std.debug.assert(compositor.next_window_id > 0);
         return compositor;
@@ -500,6 +501,20 @@ pub const Compositor = struct {
             if (event.event_type == .mouse) {
                 // Handle mouse events.
                 if (event.mouse.kind == .down) {
+                    // Check for launcher item click first.
+                    if (self.shell.launcher_visible) {
+                        if (self.shell.get_launcher_item_at(
+                            event.mouse.x,
+                            event.mouse.y,
+                        )) |item_index| {
+                            if (item_index < self.shell.launcher_items_len) {
+                                const item = &self.shell.launcher_items[item_index];
+                                const cmd_slice = item.command[0..item.command_len];
+                                _ = self.launch_application(cmd_slice);
+                            }
+                            return;
+                        }
+                    }
                     // Check for close button click.
                     const window_id_opt = self.find_window_at(
                         event.mouse.x,
@@ -608,6 +623,29 @@ pub const Compositor = struct {
             return config.process_command(cmd_str);
         }
         return false;
+    }
+
+    // Toggle launcher visibility.
+    pub fn toggle_launcher(self: *Compositor) void {
+        self.shell.toggle_launcher();
+    }
+
+    // Register application.
+    pub fn register_application(
+        self: *Compositor,
+        name: []const u8,
+        path: []const u8,
+        command: []const u8,
+    ) ?u32 {
+        const app_id = self.app_registry.register_application(name, path, command);
+        // Sync launcher items after registration.
+        self.shell.sync_launcher_items();
+        return app_id;
+    }
+
+    // Launch application by name.
+    pub fn launch_application(self: *Compositor, name: []const u8) bool {
+        return self.app_launcher.launch_application_by_name(name);
     }
 };
 

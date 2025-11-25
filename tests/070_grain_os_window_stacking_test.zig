@@ -127,7 +127,7 @@ test "compositor lower window" {
     const allocator = gpa.allocator();
 
     var comp = Compositor.init(allocator);
-    const win1 = try comp.create_window(800, 600);
+    const _win1 = try comp.create_window(800, 600);
     const win2 = try comp.create_window(900, 700);
     const result = comp.lower_window(win2);
     std.debug.assert(result);

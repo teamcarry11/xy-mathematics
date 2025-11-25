@@ -316,6 +316,9 @@ pub const JitContext = struct {
             .framebuffer_size = FRAMEBUFFER_SIZE,
             .perf_counters = .{
                 .hot_path_tracker = HotPathTracker.init(),
+                .total_code_size_bytes = 0,
+                .max_code_size_bytes = 0,
+                .min_code_size_bytes = 0,
             },
             .block_cache = cache,
             .pending_fixups = fixups,

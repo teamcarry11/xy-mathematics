@@ -60,7 +60,7 @@ test "VM memory stats integration" {
     
     // Initialize VM.
     var vm: vm_mod.VM = undefined;
-    try vm.init(allocator, &program, 0x80000000);
+    vm.init(&program, 0x80000000);
     
     // Verify memory stats are initialized.
     try testing.expect(vm.memory_stats.total_memory_bytes > 0);

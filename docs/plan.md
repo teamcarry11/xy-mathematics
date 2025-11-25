@@ -616,8 +616,18 @@ Create a fourth agent dedicated to **Grain OS** - a Zig-Wayland implemented GNOM
    - ✅ Compositor integration (constraints applied during resize)
    - ✅ Set/get window constraints methods
    - ✅ Comprehensive tests (`tests/074_grain_os_window_constraints_test.zig`)
-21. **Phase 21**: Integration (Grain Kernel syscalls, VM testing)
-22. **Phase 22**: Applications (Aurora, Dream, Skate, Terminal ports)
+21. **Phase 21**: Window Grouping ✅ **COMPLETE**
+   - ✅ Window grouping module (`src/grain_os/window_grouping.zig`)
+   - ✅ Window group structure (collection of windows)
+   - ✅ Group management (create, delete, add/remove windows)
+   - ✅ Find group for window
+   - ✅ Group name management
+   - ✅ Compositor integration (automatic cleanup on window removal)
+   - ✅ Create/add/remove window group methods
+   - ✅ Find window group method
+   - ✅ Comprehensive tests (`tests/075_grain_os_window_grouping_test.zig`)
+22. **Phase 22**: Integration (Grain Kernel syscalls, VM testing)
+23. **Phase 23**: Applications (Aurora, Dream, Skate, Terminal ports)
 
 ### Proposal Document
 

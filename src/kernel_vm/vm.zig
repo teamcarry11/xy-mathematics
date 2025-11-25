@@ -340,7 +340,7 @@ pub const VM = struct {
     /// Register usage statistics tracker.
     /// Why: Track register read/write frequency for register usage analysis.
     /// GrainStyle: Static allocation, bounded counters, explicit types.
-    register_stats: register_stats_mod.VMRegisterStats = .{},
+    register_stats: register_stats_mod.VMRegisterStats = register_stats_mod.VMRegisterStats.init(),
 
     const Self = @This();
 

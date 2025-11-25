@@ -12,10 +12,6 @@ const framebuffer_renderer = @import("framebuffer_renderer.zig");
 const layout_generator = @import("layout_generator.zig");
 const input_handler = @import("input_handler.zig");
 const workspace = @import("workspace.zig");
-const keyboard_shortcuts = @import("keyboard_shortcuts.zig");
-const runtime_config = @import("runtime_config.zig");
-const desktop_shell = @import("desktop_shell.zig");
-const application = @import("application.zig");
 
 // Bounded: Max number of windows.
 pub const MAX_WINDOWS: u32 = 256;
@@ -28,6 +24,43 @@ pub const TITLE_BAR_HEIGHT: u32 = 24;
 
 // Bounded: Window border width.
 pub const BORDER_WIDTH: u32 = 2;
+
+// Bounded: Resize handle size.
+pub const RESIZE_HANDLE_SIZE: u32 = 8;
+
+// Window drag state.
+pub const DragState = struct {
+    active: bool,
+    start_x: i32,
+    start_y: i32,
+    window_start_x: i32,
+    window_start_y: i32,
+};
+
+// Window resize state.
+pub const ResizeState = struct {
+    active: bool,
+    handle: ResizeHandle,
+    start_x: i32,
+    start_y: i32,
+    window_start_width: u32,
+    window_start_height: u32,
+    window_start_x: i32,
+    window_start_y: i32,
+};
+
+// Resize handle type.
+pub const ResizeHandle = enum(u8) {
+    none,
+    top_left,
+    top,
+    top_right,
+    right,
+    bottom_right,
+    bottom,
+    bottom_left,
+    left,
+};
 
 // Window state: represents a window in the compositor.
 pub const Window = struct {
@@ -43,6 +76,8 @@ pub const Window = struct {
     focused: bool,
     minimized: bool,
     maximized: bool,
+    drag_state: DragState,
+    resize_state: ResizeState,
 
     pub fn init(
         id: u32,
@@ -69,6 +104,23 @@ pub const Window = struct {
             .focused = false,
             .minimized = false,
             .maximized = false,
+            .drag_state = DragState{
+                .active = false,
+                .start_x = 0,
+                .start_y = 0,
+                .window_start_x = 0,
+                .window_start_y = 0,
+            },
+            .resize_state = ResizeState{
+                .active = false,
+                .handle = ResizeHandle.none,
+                .start_x = 0,
+                .start_y = 0,
+                .window_start_width = 0,
+                .window_start_height = 0,
+                .window_start_x = 0,
+                .window_start_y = 0,
+            },
         };
         var j: u32 = 0;
         while (j < MAX_TITLE_LEN) : (j += 1) {
@@ -515,20 +567,35 @@ pub const Compositor = struct {
                             return;
                         }
                     }
-                    // Check for close button click.
+                    // Check for window resize handle.
                     const window_id_opt = self.find_window_at(
                         event.mouse.x,
                         event.mouse.y,
                     );
                     if (window_id_opt) |window_id| {
-                        if (self.is_in_close_button(window_id, event.mouse.x, event.mouse.y)) {
-                            _ = self.remove_window(window_id);
+                        if (self.get_resize_handle(window_id, event.mouse.x, event.mouse.y)) |handle| {
+                            if (handle != ResizeHandle.none) {
+                                self.start_resize(window_id, handle, event.mouse.x, event.mouse.y);
+                            } else if (self.is_in_title_bar(window_id, event.mouse.x, event.mouse.y)) {
+                                self.start_drag(window_id, event.mouse.x, event.mouse.y);
+                            } else if (self.is_in_close_button(window_id, event.mouse.x, event.mouse.y)) {
+                                _ = self.remove_window(window_id);
+                            } else {
+                                _ = self.focus_window(window_id);
+                            }
                         } else {
-                            _ = self.focus_window(window_id);
+                            self.unfocus_all();
                         }
                     } else {
                         self.unfocus_all();
                     }
+                } else if (event.mouse.kind == .move) {
+                    // Handle mouse move (dragging/resizing).
+                    self.handle_mouse_move(event.mouse.x, event.mouse.y);
+                } else if (event.mouse.kind == .up) {
+                    // Handle mouse release (end drag/resize).
+                    self.end_drag();
+                    self.end_resize();
                 }
             } else if (event.event_type == .keyboard) {
                 // Handle keyboard shortcuts for window management.
@@ -646,6 +713,223 @@ pub const Compositor = struct {
     // Launch application by name.
     pub fn launch_application(self: *Compositor, name: []const u8) bool {
         return self.app_launcher.launch_application_by_name(name);
+    }
+
+    // Get resize handle at mouse position.
+    pub fn get_resize_handle(
+        self: *Compositor,
+        window_id: u32,
+        x: u32,
+        y: u32,
+    ) ?ResizeHandle {
+        std.debug.assert(window_id > 0);
+        if (self.get_window(window_id)) |win| {
+            if (win.maximized) return ResizeHandle.none;
+            const win_x = @as(u32, @intCast(win.x));
+            const win_y = @as(u32, @intCast(win.y));
+            const handle_size = RESIZE_HANDLE_SIZE;
+            // Check corners first.
+            if (x >= win_x and x < win_x + handle_size and
+                y >= win_y and y < win_y + handle_size)
+            {
+                return ResizeHandle.top_left;
+            }
+            if (x >= win_x + win.width - handle_size and x < win_x + win.width and
+                y >= win_y and y < win_y + handle_size)
+            {
+                return ResizeHandle.top_right;
+            }
+            if (x >= win_x and x < win_x + handle_size and
+                y >= win_y + win.height - handle_size and y < win_y + win.height)
+            {
+                return ResizeHandle.bottom_left;
+            }
+            if (x >= win_x + win.width - handle_size and x < win_x + win.width and
+                y >= win_y + win.height - handle_size and y < win_y + win.height)
+            {
+                return ResizeHandle.bottom_right;
+            }
+            // Check edges.
+            if (x >= win_x and x < win_x + handle_size) {
+                return ResizeHandle.left;
+            }
+            if (x >= win_x + win.width - handle_size and x < win_x + win.width) {
+                return ResizeHandle.right;
+            }
+            if (y >= win_y and y < win_y + handle_size) {
+                return ResizeHandle.top;
+            }
+            if (y >= win_y + win.height - handle_size and y < win_y + win.height) {
+                return ResizeHandle.bottom;
+            }
+        }
+        return ResizeHandle.none;
+    }
+
+    // Start window drag.
+    pub fn start_drag(self: *Compositor, window_id: u32, x: u32, y: u32) void {
+        std.debug.assert(window_id > 0);
+        if (self.get_window(window_id)) |win| {
+            if (win.maximized) return;
+            win.drag_state.active = true;
+            win.drag_state.start_x = @as(i32, @intCast(x));
+            win.drag_state.start_y = @as(i32, @intCast(y));
+            win.drag_state.window_start_x = win.x;
+            win.drag_state.window_start_y = win.y;
+            _ = self.focus_window(window_id);
+        }
+    }
+
+    // Handle mouse move during drag/resize.
+    fn handle_mouse_move(self: *Compositor, x: u32, y: u32) void {
+        // Handle dragging.
+        if (self.focused_window_id > 0) {
+            if (self.get_window(self.focused_window_id)) |win| {
+                if (win.drag_state.active) {
+                    const dx = @as(i32, @intCast(x)) - win.drag_state.start_x;
+                    const dy = @as(i32, @intCast(y)) - win.drag_state.start_y;
+                    win.x = win.drag_state.window_start_x + dx;
+                    win.y = win.drag_state.window_start_y + dy;
+                    // Clamp to screen bounds.
+                    const min_x: i32 = 0;
+                    const min_y: i32 = @as(i32, @intCast(BORDER_WIDTH + TITLE_BAR_HEIGHT));
+                    const max_x: i32 = @as(i32, @intCast(self.output.width)) - @as(i32, @intCast(win.width));
+                    const max_y: i32 = @as(i32, @intCast(self.output.height)) - @as(i32, @intCast(win.height)) - @as(i32, @intCast(desktop_shell.STATUS_BAR_HEIGHT));
+                    win.x = std.math.clamp(win.x, min_x, max_x);
+                    win.y = std.math.clamp(win.y, min_y, max_y);
+                }
+            }
+        }
+        // Handle resizing.
+        var i: u32 = 0;
+        while (i < self.windows_len) : (i += 1) {
+            const win = &self.windows[i];
+            if (win.resize_state.active) {
+                self.update_resize(win, x, y);
+            }
+        }
+    }
+
+    // Start window resize.
+    pub fn start_resize(
+        self: *Compositor,
+        window_id: u32,
+        handle: ResizeHandle,
+        x: u32,
+        y: u32,
+    ) void {
+        std.debug.assert(window_id > 0);
+        if (self.get_window(window_id)) |win| {
+            if (win.maximized) return;
+            win.resize_state.active = true;
+            win.resize_state.handle = handle;
+            win.resize_state.start_x = @as(i32, @intCast(x));
+            win.resize_state.start_y = @as(i32, @intCast(y));
+            win.resize_state.window_start_width = win.width;
+            win.resize_state.window_start_height = win.height;
+            win.resize_state.window_start_x = win.x;
+            win.resize_state.window_start_y = win.y;
+            _ = self.focus_window(window_id);
+        }
+    }
+
+    // Update window resize.
+    fn update_resize(self: *Compositor, win: *Window, x: u32, y: u32) void {
+        _ = self;
+        std.debug.assert(win.resize_state.active);
+        const dx = @as(i32, @intCast(x)) - win.resize_state.start_x;
+        const dy = @as(i32, @intCast(y)) - win.resize_state.start_y;
+        const min_size: u32 = 100;
+        switch (win.resize_state.handle) {
+            .top_left => {
+                const new_width = if (win.resize_state.window_start_width > @as(u32, @intCast(-dx)))
+                    win.resize_state.window_start_width - @as(u32, @intCast(-dx))
+                else
+                    min_size;
+                const new_height = if (win.resize_state.window_start_height > @as(u32, @intCast(-dy)))
+                    win.resize_state.window_start_height - @as(u32, @intCast(-dy))
+                else
+                    min_size;
+                win.width = if (new_width < min_size) min_size else new_width;
+                win.height = if (new_height < min_size) min_size else new_height;
+                win.x = win.resize_state.window_start_x + dx;
+                win.y = win.resize_state.window_start_y + dy;
+            },
+            .top => {
+                const new_height = if (win.resize_state.window_start_height > @as(u32, @intCast(-dy)))
+                    win.resize_state.window_start_height - @as(u32, @intCast(-dy))
+                else
+                    min_size;
+                win.height = if (new_height < min_size) min_size else new_height;
+                win.y = win.resize_state.window_start_y + dy;
+            },
+            .top_right => {
+                const new_width = win.resize_state.window_start_width + @as(u32, @intCast(dx));
+                const new_height = if (win.resize_state.window_start_height > @as(u32, @intCast(-dy)))
+                    win.resize_state.window_start_height - @as(u32, @intCast(-dy))
+                else
+                    min_size;
+                win.width = if (new_width < min_size) min_size else new_width;
+                win.height = if (new_height < min_size) min_size else new_height;
+                win.y = win.resize_state.window_start_y + dy;
+            },
+            .right => {
+                const new_width = win.resize_state.window_start_width + @as(u32, @intCast(dx));
+                win.width = if (new_width < min_size) min_size else new_width;
+            },
+            .bottom_right => {
+                const new_width = win.resize_state.window_start_width + @as(u32, @intCast(dx));
+                const new_height = win.resize_state.window_start_height + @as(u32, @intCast(dy));
+                win.width = if (new_width < min_size) min_size else new_width;
+                win.height = if (new_height < min_size) min_size else new_height;
+            },
+            .bottom => {
+                const new_height = win.resize_state.window_start_height + @as(u32, @intCast(dy));
+                win.height = if (new_height < min_size) min_size else new_height;
+            },
+            .bottom_left => {
+                const new_width = if (win.resize_state.window_start_width > @as(u32, @intCast(-dx)))
+                    win.resize_state.window_start_width - @as(u32, @intCast(-dx))
+                else
+                    min_size;
+                const new_height = win.resize_state.window_start_height + @as(u32, @intCast(dy));
+                win.width = if (new_width < min_size) min_size else new_width;
+                win.height = if (new_height < min_size) min_size else new_height;
+                win.x = win.resize_state.window_start_x + dx;
+            },
+            .left => {
+                const new_width = if (win.resize_state.window_start_width > @as(u32, @intCast(-dx)))
+                    win.resize_state.window_start_width - @as(u32, @intCast(-dx))
+                else
+                    min_size;
+                win.width = if (new_width < min_size) min_size else new_width;
+                win.x = win.resize_state.window_start_x + dx;
+            },
+            .none => {},
+        }
+        // Clamp window to screen bounds.
+        const max_width = self.output.width - (BORDER_WIDTH * 2);
+        const max_height = self.output.height - (BORDER_WIDTH * 2) - TITLE_BAR_HEIGHT - desktop_shell.STATUS_BAR_HEIGHT;
+        win.width = std.math.min(win.width, max_width);
+        win.height = std.math.min(win.height, max_height);
+    }
+
+    // End window drag.
+    pub fn end_drag(self: *Compositor) void {
+        if (self.focused_window_id > 0) {
+            if (self.get_window(self.focused_window_id)) |win| {
+                win.drag_state.active = false;
+            }
+        }
+    }
+
+    // End window resize.
+    pub fn end_resize(self: *Compositor) void {
+        var i: u32 = 0;
+        while (i < self.windows_len) : (i += 1) {
+            self.windows[i].resize_state.active = false;
+            self.windows[i].resize_state.handle = ResizeHandle.none;
+        }
     }
 };
 

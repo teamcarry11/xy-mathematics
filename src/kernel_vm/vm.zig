@@ -6,6 +6,7 @@ const error_log_mod = @import("error_log.zig");
 const performance_mod = @import("performance.zig");
 const state_snapshot_mod = @import("state_snapshot.zig");
 const exception_stats_mod = @import("exception_stats.zig");
+const memory_stats_mod = @import("memory_stats.zig");
 
 /// Pure Zig RISC-V64 emulator for kernel development.
 /// Grain Style: Static allocation where possible, comprehensive assertions,
@@ -310,6 +311,10 @@ pub const VM = struct {
     /// Why: Track exception counts by type for debugging and monitoring.
     /// GrainStyle: Static allocation, bounded counters, explicit types.
     exception_stats: exception_stats_mod.ExceptionStats = .{},
+    /// Memory statistics tracker.
+    /// Why: Track memory usage, access patterns, and allocation metrics.
+    /// GrainStyle: Static allocation, bounded counters, explicit types.
+    memory_stats: memory_stats_mod.VMMemoryStats = undefined,
 
     const Self = @This();
 
@@ -617,6 +622,9 @@ pub const VM = struct {
         const bytes = self.memory[@intCast(addr)..][0..8];
         const value = std.mem.readInt(u64, bytes, .little);
 
+        // Track memory read.
+        self.memory_stats.record_read(addr, 8);
+
         return value;
     }
 
@@ -636,6 +644,9 @@ pub const VM = struct {
         // Write 8 bytes (little-endian).
         const bytes = self.memory[@intCast(addr)..][0..8];
         std.mem.writeInt(u64, bytes, value, .little);
+
+        // Track memory write (before read check to avoid double counting).
+        self.memory_stats.record_write(addr, 8);
 
         // Assert: value must be written correctly.
         const read_back = try self.read64(addr);

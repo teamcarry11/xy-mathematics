@@ -275,3 +275,39 @@ test "terminal csi save restore cursor" {
     try testing.expect(terminal.cursor_y == 5);
 }
 
+test "terminal bell character" {
+    var terminal = Terminal.init(80, 24);
+    var cells: [80 * 24]Terminal.Cell = undefined;
+
+    // Process BEL character (should not crash)
+    terminal.process_char(0x07, &cells);
+    // Bell is handled (no visible effect in test, but should not crash)
+}
+
+test "terminal osc window title" {
+    var terminal = Terminal.init(80, 24);
+    var cells: [80 * 24]Terminal.Cell = undefined;
+
+    // Set window title via OSC 0 (window title and icon name)
+    terminal.process_char(0x1B, &cells); // ESC
+    terminal.process_char(']', &cells);
+    terminal.process_char('0', &cells);
+    terminal.process_char(';', &cells);
+    terminal.process_char('T', &cells);
+    terminal.process_char('e', &cells);
+    terminal.process_char('s', &cells);
+    terminal.process_char('t', &cells);
+    terminal.process_char(' ', &cells);
+    terminal.process_char('T', &cells);
+    terminal.process_char('i', &cells);
+    terminal.process_char('t', &cells);
+    terminal.process_char('l', &cells);
+    terminal.process_char('e', &cells);
+    terminal.process_char(0x07, &cells); // BEL
+
+    // Check window title was set
+    const title = terminal.get_window_title();
+    try testing.expect(title.len > 0);
+    try testing.expect(std.mem.eql(u8, title, "Test Title"));
+}
+

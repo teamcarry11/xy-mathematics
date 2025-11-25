@@ -41,6 +41,18 @@ pub const DreamBrowserNostr = struct {
     /// Why: Limit event buffer size, prevent memory growth.
     pub const MAX_EVENTS_PER_SUBSCRIPTION: u32 = 1_000;
     
+    /// Bounded: Max URL length (4KB).
+    /// Why: Prevent unbounded URL parsing, ensure deterministic behavior.
+    pub const MAX_URL_LENGTH: u32 = 4 * 1024;
+    
+    /// Bounded: Max identifier length (256 chars).
+    /// Why: Limit identifier size, prevent memory growth.
+    pub const MAX_IDENTIFIER_LENGTH: u32 = 256;
+    
+    /// Bounded: Max relay URLs per subscription (10).
+    /// Why: Limit relay count, prevent memory growth.
+    pub const MAX_RELAYS_PER_URL: u32 = 10;
+    
     /// Nostr URL type.
     pub const NostrUrlType = enum(u8) {
         note, // nostr:note1... (event ID)
@@ -137,6 +149,7 @@ pub const DreamBrowserNostr = struct {
         // Parse relays (if present in URL, e.g., "nostr:note1...?relay=wss://...").
         var relays = std.ArrayList([]const u8).init(self.allocator);
         defer relays.deinit();
+        try relays.ensureTotalCapacity(self.allocator, MAX_RELAYS_PER_URL);
         
         // Check for query parameters.
         if (std.mem.indexOfScalar(u8, identifier, '?')) |query_start| {
@@ -144,10 +157,23 @@ pub const DreamBrowserNostr = struct {
             
             // Parse relay parameters (simple: "relay=wss://...").
             var query_it = std.mem.splitScalar(u8, query, '&');
+            var relay_count: u32 = 0;
             while (query_it.next()) |param| {
+                // Assert: Relay count must be within bounds.
+                if (relay_count >= MAX_RELAYS_PER_URL) {
+                    break; // Stop parsing if max relays reached
+                }
+                
                 if (std.mem.startsWith(u8, param, "relay=")) {
                     const relay_url = param[6..]; // Skip "relay="
+                    
+                    // Assert: Relay URL must be non-empty.
+                    if (relay_url.len == 0) {
+                        continue; // Skip empty relay URLs
+                    }
+                    
                     try relays.append(try self.allocator.dupe(u8, relay_url));
+                    relay_count += 1;
                 }
             }
         }
@@ -171,10 +197,19 @@ pub const DreamBrowserNostr = struct {
         relay_url: []const u8,
     ) ![]const u8 {
         // Assert: URL must be valid (precondition).
-        std.debug.assert(url.identifier.len > 0);
+        if (url.identifier.len == 0) {
+            return error.InvalidNostrUrl;
+        }
         
         // Assert: Relay URL must be non-empty (precondition).
-        std.debug.assert(relay_url.len > 0);
+        if (relay_url.len == 0) {
+            return error.InvalidNostrUrl;
+        }
+        
+        // Assert: Relay URL must be within bounds (precondition).
+        if (relay_url.len > MAX_URL_LENGTH) {
+            return error.UrlTooLong;
+        }
         
         // Connect to relay if not connected.
         if (self.protocol.state != .connected) {
@@ -243,10 +278,19 @@ pub const DreamBrowserNostr = struct {
         subscription_id: []const u8,
     ) ![]DreamProtocol.Event {
         // Assert: Subscription ID must be valid (precondition).
-        std.debug.assert(subscription_id.len > 0);
+        if (subscription_id.len == 0) {
+            return error.InvalidNostrUrl;
+        }
+        
+        // Assert: Subscription ID must be within bounds (precondition).
+        if (subscription_id.len > MAX_IDENTIFIER_LENGTH) {
+            return error.IdentifierTooLong;
+        }
         
         // Assert: Protocol must be connected (precondition).
-        std.debug.assert(self.protocol.state == .connected);
+        if (self.protocol.state != .connected) {
+            return error.ProtocolNotConnected;
+        }
         
         // TODO: Read events from WebSocket stream.
         // For now, return empty array (stub).

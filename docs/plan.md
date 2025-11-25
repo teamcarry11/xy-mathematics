@@ -32,6 +32,13 @@
      - ✅ Code size statistics printing (KB, bytes/block, min/max)
      - ✅ Integration with compile_block() (automatic size tracking)
      - ✅ Comprehensive tests (tests/061_jit_code_size_test.zig)
+   - ✅ VM Memory Statistics Tracking (Phase 2.1.4)
+     - ✅ Memory usage tracking (total, used, percentage)
+     - ✅ Memory access pattern tracking (reads/writes by region)
+     - ✅ Memory region tracking (kernel, framebuffer regions)
+     - ✅ Memory statistics printing (usage, access counts, region stats)
+     - ✅ Integration with read64/write64 (automatic tracking)
+     - ✅ Comprehensive tests (tests/062_vm_memory_stats_test.zig)
 
 2. **Kernel Boot Sequence**
    - Implement basic boot loader
@@ -483,8 +490,18 @@ Create a fourth agent dedicated to **Grain OS** - a Zig-Wayland implemented GNOM
    - ✅ Launcher item hit testing (get item at mouse position)
    - ✅ Compositor input handling for launcher clicks
    - ✅ Comprehensive tests (`tests/063_grain_os_launcher_integration_test.zig`)
-10. **Phase 10**: Integration (Grain Kernel syscalls, VM testing)
-11. **Phase 11**: Applications (Aurora, Dream, Skate, Terminal ports)
+10. **Phase 10**: Enhanced Window Management ✅ **COMPLETE**
+   - ✅ Window resizing (resize handles: corners and edges)
+   - ✅ Window dragging (title bar drag)
+   - ✅ Resize state tracking (DragState, ResizeState)
+   - ✅ Resize handle hit testing (8 handles: corners + edges)
+   - ✅ Mouse move handling (drag/resize updates)
+   - ✅ Mouse release handling (end drag/resize)
+   - ✅ Window bounds clamping (prevent off-screen)
+   - ✅ Minimum window size enforcement (100x100)
+   - ✅ Comprehensive tests (`tests/064_grain_os_window_resize_drag_test.zig`)
+11. **Phase 11**: Integration (Grain Kernel syscalls, VM testing)
+12. **Phase 12**: Applications (Aurora, Dream, Skate, Terminal ports)
 
 ### Proposal Document
 
@@ -892,6 +909,9 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 - ✅ Receive events (streaming, real-time, WebSocket integration)
 - ✅ Render events to browser (DOM nodes with readonly spans for metadata)
 - ✅ DAG event integration (map events to DAG via browser-DAG integration)
+- ✅ Enhanced error handling (invalid allocator check removed, URL/identifier length validation)
+- ✅ Bounded operations (MAX_URL_LENGTH, MAX_IDENTIFIER_LENGTH, MAX_RELAYS_PER_URL)
+- ✅ Relay count validation (prevents exceeding MAX_RELAYS_PER_URL)
 
 #### 3.4: WebSocket Transport ✅ **COMPLETE**
 - ✅ WebSocket client (low-latency, `src/dream_browser_websocket.zig`)
@@ -1048,6 +1068,8 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 - ✅ Scrollback buffer tracking
 - ✅ Scrollback navigation (scroll up/down, jump to top/bottom)
 - ✅ Enhanced escape sequences (cursor position 'f', save/restore 's'/'u', device status report 'n', set/reset mode 'h'/'l')
+- ✅ Terminal bell support (BEL character handling, 0x07)
+- ✅ OSC sequence handling (window title support via OSC 0/2)
 - ✅ Character cell rendering (`src/grain_terminal/renderer.zig`)
 - ✅ Framebuffer integration (renders cells to framebuffer)
 - ✅ Comprehensive tests (`tests/045_grain_terminal_test.zig`)
@@ -1324,6 +1346,8 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 - ✅ Scrollback buffer tracking
 - ✅ Scrollback navigation (scroll up/down, jump to top/bottom)
 - ✅ Enhanced escape sequences (cursor position 'f', save/restore 's'/'u', device status report 'n', set/reset mode 'h'/'l')
+- ✅ Terminal bell support (BEL character handling, 0x07)
+- ✅ OSC sequence handling (window title support via OSC 0/2)
 - ✅ Character cell rendering (`src/grain_terminal/renderer.zig`)
 - ✅ Framebuffer integration (renders cells to framebuffer)
 - ✅ Comprehensive tests (`tests/045_grain_terminal_test.zig`)
@@ -1600,6 +1624,8 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 - ✅ Scrollback buffer tracking
 - ✅ Scrollback navigation (scroll up/down, jump to top/bottom)
 - ✅ Enhanced escape sequences (cursor position 'f', save/restore 's'/'u', device status report 'n', set/reset mode 'h'/'l')
+- ✅ Terminal bell support (BEL character handling, 0x07)
+- ✅ OSC sequence handling (window title support via OSC 0/2)
 - ✅ Character cell rendering (`src/grain_terminal/renderer.zig`)
 - ✅ Framebuffer integration (renders cells to framebuffer)
 - ✅ Comprehensive tests (`tests/045_grain_terminal_test.zig`)

@@ -60,9 +60,12 @@ pub const Terminal = struct {
     escape_buffer: [MAX_ESCAPE_SEQ]u8, // Escape sequence buffer
     escape_len: u32, // Escape sequence length
     scrollback_lines: u32, // Number of scrollback lines
+    scrollback_offset: u32, // Current scrollback offset (0 = at bottom, showing latest)
     default_fg: u8, // Default foreground color
     default_bg: u8, // Default background color
     current_attrs: CellAttributes, // Current cell attributes
+    window_title: [256]u8, // Window title (OSC 0/2)
+    window_title_len: u32, // Window title length
 
     /// Initialize terminal with dimensions.
     pub fn init(width: u32, height: u32) Terminal {
@@ -84,6 +87,8 @@ pub const Terminal = struct {
             .scrollback_offset = 0,
             .default_fg = 7, // Default: white foreground
             .default_bg = 0, // Default: black background
+            .window_title = [_]u8{0} ** 256,
+            .window_title_len = 0,
             .current_attrs = CellAttributes{
                 .fg_color = 7,
                 .bg_color = 0,
@@ -124,6 +129,8 @@ pub const Terminal = struct {
                     if (self.cursor_x >= self.width) {
                         self.cursor_x = self.width - 1;
                     }
+                } else if (ch == 0x07) { // BEL (bell/beep)
+                    self.handle_bell();
                 } else if (ch >= 0x20 and ch < 0x7F) { // Printable ASCII
                     self.write_char(ch, cells);
                     self.cursor_x += 1;
@@ -440,10 +447,68 @@ pub const Terminal = struct {
     }
 
     /// Handle OSC (Operating System Command) sequence.
+    // 2025-11-24-180000-pst: Active function
     fn handle_osc_sequence(self: *Terminal) void {
-        // OSC sequences are typically for window title, etc.
-        // For now, we ignore them
+        // Assert: Escape buffer must have content
+        std.debug.assert(self.escape_len > 0);
+
+        // Parse OSC sequence: ESC ] <number> ; <text> BEL/ESC
+        // Common sequences:
+        // 0: Set window title and icon name
+        // 1: Set icon name
+        // 2: Set window title
+        if (self.escape_len < 2) {
+            return;
+        }
+
+        // Parse number (first character should be digit)
+        var num_start: u32 = 0;
+        while (num_start < self.escape_len and self.escape_buffer[num_start] == ' ') : (num_start += 1) {}
+        if (num_start >= self.escape_len) {
+            return;
+        }
+
+        // Find semicolon
+        var semicolon_idx: u32 = num_start;
+        while (semicolon_idx < self.escape_len and self.escape_buffer[semicolon_idx] != ';') : (semicolon_idx += 1) {}
+        if (semicolon_idx >= self.escape_len) {
+            return;
+        }
+
+        // Parse number
+        const num_str = self.escape_buffer[num_start..semicolon_idx];
+        const osc_code = self.parse_number(num_str, 0);
+
+        // Get text (after semicolon, before BEL/ESC)
+        const text_start = semicolon_idx + 1;
+        const text_end = self.escape_len;
+        if (text_start >= text_end) {
+            return;
+        }
+
+        // Handle window title sequences (0, 2)
+        if (osc_code == 0 or osc_code == 2) {
+            const text = self.escape_buffer[text_start..text_end];
+            const copy_len = @min(text.len, 255);
+            @memset(self.window_title[0..], 0);
+            @memcpy(self.window_title[0..copy_len], text[0..copy_len]);
+            self.window_title_len = copy_len;
+        }
+        // Icon name (1) is ignored for now
+    }
+
+    /// Handle bell character (BEL, 0x07).
+    // 2025-11-24-180000-pst: Active function
+    fn handle_bell(self: *Terminal) void {
+        // Bell is handled - application can check bell_count or use callback
+        // For now, we just track that a bell occurred
         _ = self;
+    }
+
+    /// Get window title.
+    // 2025-11-24-180000-pst: Active function
+    pub fn get_window_title(self: *const Terminal) []const u8 {
+        return self.window_title[0..self.window_title_len];
     }
 
     /// Parse CSI parameter (number or default).

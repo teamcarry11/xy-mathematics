@@ -28,6 +28,13 @@
   - [x] Code size statistics printing
   - [x] Integration with compile_block()
   - [x] Comprehensive tests (tests/061_jit_code_size_test.zig)
+- [x] VM Memory Statistics Tracking (Phase 2.1.4)
+  - [x] Memory usage tracking
+  - [x] Memory access pattern tracking
+  - [x] Memory region tracking
+  - [x] Memory statistics printing
+  - [x] Integration with read64/write64()
+  - [x] Comprehensive tests (tests/062_vm_memory_stats_test.zig)
 
 #### 2.2 Kernel Boot Sequence ✅ **COMPLETE**
 - [x] Implement basic boot loader
@@ -940,6 +947,8 @@
 - [x] Scrollback buffer tracking
 - [x] Scrollback navigation (scroll up/down, jump to top/bottom)
 - [x] Enhanced escape sequences (cursor position 'f', save/restore 's'/'u', device status report 'n', set/reset mode 'h'/'l')
+- [x] Terminal bell support (BEL character handling, 0x07)
+- [x] OSC sequence handling (window title support via OSC 0/2)
 - [x] Character cell rendering (`src/grain_terminal/renderer.zig`)
 - [x] Framebuffer integration (renders cells to framebuffer)
 - [x] Comprehensive tests (`tests/045_grain_terminal_test.zig`)
@@ -1213,6 +1222,16 @@
     - ✅ Launcher item hit testing (get item at mouse position)
     - ✅ Compositor input handling for launcher clicks
     - ✅ Comprehensive tests (`tests/063_grain_os_launcher_integration_test.zig`)
+  - ✅ Enhanced window management (Phase 10) ✅ **COMPLETE**
+    - ✅ Window resizing (resize handles: corners and edges)
+    - ✅ Window dragging (title bar drag)
+    - ✅ Resize state tracking (DragState, ResizeState)
+    - ✅ Resize handle hit testing (8 handles: corners + edges)
+    - ✅ Mouse move handling (drag/resize updates)
+    - ✅ Mouse release handling (end drag/resize)
+    - ✅ Window bounds clamping (prevent off-screen)
+    - ✅ Minimum window size enforcement (100x100)
+    - ✅ Comprehensive tests (`tests/064_grain_os_window_resize_drag_test.zig`)
 
 **In Progress**: 
 - Dream Editor Core - GLM-4.6 Integration (Phase 4.1.3) 🔄

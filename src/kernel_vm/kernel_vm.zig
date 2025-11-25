@@ -23,4 +23,5 @@ pub const branch_stats = @import("branch_stats.zig");
 pub const register_stats = @import("register_stats.zig");
 pub const instruction_perf = @import("instruction_perf.zig");
 pub const stats_export = @import("stats_export.zig");
+pub const debug_interface = @import("debug_interface.zig");
 

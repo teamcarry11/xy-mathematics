@@ -179,11 +179,32 @@ pub const Editor = struct {
         }
         
         // Fall back to LSP
-        _ = try self.lsp.requestCompletion(
+        const completions = try self.lsp.requestCompletion(
             self.file_uri,
             self.cursor_line,
             self.cursor_char,
         );
+        
+        // Note: In full implementation, completions would be displayed in a popup
+        // and user could select one, which would then trigger resolveCompletionItem
+        // to get full documentation
+        _ = completions;
+    }
+    
+    /// Resolve completion item (get full details and documentation).
+    /// Why: Get complete information about a completion item after user selects it.
+    /// Contract: completion_item must be valid (must have label at minimum).
+    /// Returns: Resolved completion item with full details, or null if not available.
+    /// Note: Caller must free the returned completion item and all strings within.
+    pub fn resolve_completion_item(
+        self: *Editor,
+        completion_item: LspClient.CompletionItem,
+    ) !?LspClient.CompletionItem {
+        // Request completion item resolve from LSP server
+        const resolved = try self.lsp.resolveCompletionItem(completion_item);
+        
+        // Return resolved completion item (caller must free)
+        return resolved;
     }
     
     /// Enable AI provider for code completion and transformations.

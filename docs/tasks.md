@@ -84,6 +84,20 @@
   - [x] Top instruction performance statistics printing
   - [x] Statistics aggregator integration
   - [x] Comprehensive tests (tests/069_vm_instruction_perf_test.zig)
+- [x] VM Statistics Export (Phase 2.1.12)
+  - [x] JSON export format for all VM statistics
+  - [x] Bounded JSON buffer (MAX_JSON_SIZE: 1MB)
+  - [x] Export all statistics modules (performance, exceptions, memory, instructions, syscalls, flow, registers, branches, perf)
+  - [x] Statistics aggregator integration
+  - [x] Comprehensive tests (tests/070_vm_stats_export_test.zig)
+- [x] VM Debugging Interface (Phase 2.1.13)
+  - [x] Breakpoint management (set/remove breakpoints at PC addresses)
+  - [x] Watchpoint management (watch memory addresses for read/write)
+  - [x] Step debugging mode (execute one instruction at a time)
+  - [x] Breakpoint hit detection
+  - [x] Watchpoint trigger detection
+  - [x] Integration with step(), read64(), write64()
+  - [x] Comprehensive tests (tests/071_vm_debug_interface_test.zig)
 
 #### 2.2 Kernel Boot Sequence ✅ **COMPLETE**
 - [x] Implement basic boot loader
@@ -668,6 +682,13 @@
   - [x] Support optional fields (documentation, parameters, active signature/parameter)
   - [x] Add `get_signature_help` method to Editor
   - [x] Integrate with `moveCursor` method (auto-trigger on cursor movement)
+  - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
+- [x] Editor Completion Item Resolve Support ✅ **COMPLETE**
+  - [x] Add `resolveCompletionItem` method to LspClient
+  - [x] Parse completion item resolve result (full details and documentation)
+  - [x] Support optional fields (kind, detail, documentation)
+  - [x] Support MarkupContent documentation format (object with kind and value)
+  - [x] Add `resolve_completion_item` method to Editor
   - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
 - [x] File Save/Load Functionality ✅ **COMPLETE**
   - [x] save_file method (persist editor buffer to disk)
@@ -1533,6 +1554,17 @@
     - ✅ Drop handling on drag end
     - ✅ Can drag/drop validation
     - ✅ Comprehensive tests (`tests/078_grain_os_window_drag_drop_test.zig`)
+  - ✅ Tiling configuration (Phase 25) ✅ **COMPLETE**
+    - ✅ Tiling configuration module (`src/grain_os/tiling_config.zig`)
+    - ✅ Window gap configuration (default 4px)
+    - ✅ Split ratio configuration (default 0.5, range 0.1-0.9)
+    - ✅ Default layout selection (tall, wide, grid, monocle)
+    - ✅ Auto-tile setting (enable/disable automatic tiling)
+    - ✅ Smart gaps setting (hide gaps when only one window)
+    - ✅ Effective gap calculation (with smart gaps)
+    - ✅ Split ratio clamping (enforce valid range)
+    - ✅ Compositor integration (set/get tiling config methods)
+    - ✅ Comprehensive tests (`tests/079_grain_os_tiling_config_test.zig`)
 
 **In Progress**: 
 - Dream Editor Core - GLM-4.6 Integration (Phase 4.1.3) 🔄

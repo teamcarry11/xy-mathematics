@@ -214,6 +214,102 @@ pub const LspClient = struct {
         return null;
     }
     
+    /// Request completionItem/resolve (get additional details for completion item).
+    /// Why: Get full documentation and details for a completion item after selection.
+    /// Contract: completion_item must be valid (must have label at minimum).
+    /// Returns: Resolved completion item with full details, or null if not available.
+    pub fn resolveCompletionItem(
+        self: *LspClient,
+        completion_item: CompletionItem,
+    ) !?CompletionItem {
+        // Assert: Completion item must have label
+        std.debug.assert(completion_item.label.len > 0);
+        std.debug.assert(completion_item.label.len <= 1024); // Bounded label length
+        
+        var params_obj = std.json.ObjectMap.init(self.allocator);
+        defer params_obj.deinit();
+        
+        // Build completion item object
+        var item_obj = std.json.ObjectMap.init(self.allocator);
+        try item_obj.put("label", std.json.Value{ .string = completion_item.label });
+        
+        if (completion_item.kind) |kind| {
+            try item_obj.put("kind", std.json.Value{ .integer = @intCast(kind) });
+        }
+        if (completion_item.detail) |detail| {
+            try item_obj.put("detail", std.json.Value{ .string = detail });
+        }
+        if (completion_item.documentation) |doc| {
+            try item_obj.put("documentation", std.json.Value{ .string = doc });
+        }
+        
+        try params_obj.put("item", std.json.Value{ .object = item_obj });
+        
+        const params = std.json.Value{ .object = params_obj };
+        const response = try self.sendRequest("completionItem/resolve", params);
+        
+        // Parse resolved completion item from response.result
+        if (response.result) |result| {
+            if (result == .object) {
+                const obj = result.object;
+                
+                // Parse label (required)
+                const label_val = obj.get("label") orelse return null;
+                if (label_val != .string) return null;
+                const label_str = label_val.string;
+                
+                const label_copy = try self.allocator.dupe(u8, label_str);
+                errdefer self.allocator.free(label_copy);
+                
+                // Parse kind (optional)
+                const kind: ?u32 = if (obj.get("kind")) |k|
+                    if (k == .integer) @as(u32, @intCast(k.integer)) else null
+                else
+                    null;
+                
+                // Parse detail (optional)
+                var detail: ?[]const u8 = null;
+                if (obj.get("detail")) |detail_val| {
+                    if (detail_val == .string) {
+                        const detail_str = detail_val.string;
+                        const detail_copy = try self.allocator.dupe(u8, detail_str);
+                        errdefer self.allocator.free(detail_copy);
+                        detail = detail_copy;
+                    }
+                }
+                
+                // Parse documentation (optional)
+                var documentation: ?[]const u8 = null;
+                if (obj.get("documentation")) |doc_val| {
+                    if (doc_val == .string) {
+                        const doc_str = doc_val.string;
+                        const doc_copy = try self.allocator.dupe(u8, doc_str);
+                        errdefer self.allocator.free(doc_copy);
+                        documentation = doc_copy;
+                    } else if (doc_val == .object) {
+                        // Documentation can be MarkupContent (object with kind and value)
+                        if (doc_val.object.get("value")) |value| {
+                            if (value == .string) {
+                                const doc_str = value.string;
+                                const doc_copy = try self.allocator.dupe(u8, doc_str);
+                                errdefer self.allocator.free(doc_copy);
+                                documentation = doc_copy;
+                            }
+                        }
+                    }
+                }
+                
+                return CompletionItem{
+                    .label = label_copy,
+                    .kind = kind,
+                    .detail = detail,
+                    .documentation = documentation,
+                };
+            }
+        }
+        return null;
+    }
+    
     /// Request textDocument/signatureHelp (get function signature at position).
     /// Why: Show function signatures and parameter hints as user types.
     /// Contract: uri, line, and character must be valid.

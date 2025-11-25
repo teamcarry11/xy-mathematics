@@ -27,6 +27,9 @@ const window_focus = @import("window_focus.zig");
 const window_effects = @import("window_effects.zig");
 const window_drag_drop = @import("window_drag_drop.zig");
 const keyboard_shortcuts = @import("keyboard_shortcuts.zig");
+const runtime_config = @import("runtime_config.zig");
+const desktop_shell = @import("desktop_shell.zig");
+const runtime_config = @import("runtime_config.zig");
 
 // Bounded: Max number of windows.
 pub const MAX_WINDOWS: u32 = 256;
@@ -195,6 +198,7 @@ pub const Compositor = struct {
     group_manager: window_grouping.WindowGroupManager,
     focus_manager: window_focus.FocusManager,
     drop_zone_manager: window_drag_drop.DropZoneManager,
+    tiling_config: tiling_config.TilingConfig,
     border_width: u32, // Configurable border width
     title_bar_height: u32, // Configurable title bar height
 
@@ -233,6 +237,7 @@ pub const Compositor = struct {
             .group_manager = window_grouping.WindowGroupManager.init(),
             .focus_manager = window_focus.FocusManager.init(),
             .drop_zone_manager = window_drag_drop.DropZoneManager.init(),
+            .rule_manager = window_rules.WindowRuleManager.init(),
             .border_width = BORDER_WIDTH, // Default border width
             .title_bar_height = TITLE_BAR_HEIGHT, // Default title bar height
         };
@@ -550,25 +555,25 @@ pub const Compositor = struct {
             win.opacity,
         );
         self.renderer.draw_rect(
-            @as(i32, @intCast(win.x)) + @as(i32, @intCast(BORDER_WIDTH)),
-            @as(i32, @intCast(win.y)) + @as(i32, @intCast(BORDER_WIDTH)),
-            win.width - (BORDER_WIDTH * 2),
-            TITLE_BAR_HEIGHT,
+            @as(i32, @intCast(win.x)) + @as(i32, @intCast(self.border_width)),
+            @as(i32, @intCast(win.y)) + @as(i32, @intCast(self.border_width)),
+            win.width - (self.border_width * 2),
+            self.title_bar_height,
             title_bar_color,
         );
         // Draw title bar buttons.
         self.render_title_bar_buttons(win);
         // Draw window content area (background, apply opacity).
-        const content_y = @as(i32, @intCast(win.y)) + @as(i32, @intCast(BORDER_WIDTH + TITLE_BAR_HEIGHT));
-        const content_height = win.height - (BORDER_WIDTH * 2) - TITLE_BAR_HEIGHT;
+        const content_y = @as(i32, @intCast(win.y)) + @as(i32, @intCast(self.border_width + self.title_bar_height));
+        const content_height = win.height - (self.border_width * 2) - self.title_bar_height;
         const content_color = window_opacity.apply_opacity_to_color(
             framebuffer_renderer.COLOR_WHITE,
             win.opacity,
         );
         self.renderer.draw_rect(
-            @as(i32, @intCast(win.x)) + @as(i32, @intCast(BORDER_WIDTH)),
+            @as(i32, @intCast(win.x)) + @as(i32, @intCast(self.border_width)),
             content_y,
-            win.width - (BORDER_WIDTH * 2),
+            win.width - (self.border_width * 2),
             content_height,
             content_color,
         );
@@ -752,7 +757,8 @@ pub const Compositor = struct {
                                 } else if (self.is_in_title_bar(window_id, event.mouse.x, event.mouse.y)) {
                                     self.start_drag(window_id, event.mouse.x, event.mouse.y);
                                 } else {
-                                _ = self.focus_window(window_id);
+                                    _ = self.focus_window(window_id);
+                                }
                             }
                         } else {
                             self.unfocus_all();
@@ -826,9 +832,9 @@ pub const Compositor = struct {
         if (self.get_window(window_id)) |win| {
             win.maximized = true;
             win.x = 0;
-            win.y = @as(i32, @intCast(BORDER_WIDTH + TITLE_BAR_HEIGHT));
+            win.y = @as(i32, @intCast(self.border_width + self.title_bar_height));
             win.width = self.output.width;
-            win.height = self.output.height - (BORDER_WIDTH * 2) - TITLE_BAR_HEIGHT;
+            win.height = self.output.height - (self.border_width * 2) - self.title_bar_height;
             self.recalculate_layout();
             return true;
         }
@@ -1137,13 +1143,13 @@ pub const Compositor = struct {
     ) bool {
         std.debug.assert(window_id > 0);
         if (self.get_window(window_id)) |win| {
-            const title_bar_x = win.x + @as(i32, @intCast(BORDER_WIDTH));
-            const title_bar_y = win.y + @as(i32, @intCast(BORDER_WIDTH));
-            const title_bar_width = win.width - (BORDER_WIDTH * 2);
+            const title_bar_x = win.x + @as(i32, @intCast(self.border_width));
+            const title_bar_y = win.y + @as(i32, @intCast(self.border_width));
+            const title_bar_width = win.width - (self.border_width * 2);
             const x_i32 = @as(i32, @intCast(x));
             const y_i32 = @as(i32, @intCast(y));
             return (x_i32 >= title_bar_x and x_i32 < title_bar_x + @as(i32, @intCast(title_bar_width)) and
-                y_i32 >= title_bar_y and y_i32 < title_bar_y + @as(i32, @intCast(TITLE_BAR_HEIGHT)));
+                y_i32 >= title_bar_y and y_i32 < title_bar_y + @as(i32, @intCast(self.title_bar_height)));
         }
         return false;
     }
@@ -1396,7 +1402,7 @@ pub const Compositor = struct {
                     // If not snapped, clamp to screen bounds.
                     if (!snap_state.snapped) {
                         const min_x: i32 = 0;
-                        const min_y: i32 = @as(i32, @intCast(BORDER_WIDTH + TITLE_BAR_HEIGHT));
+                        const min_y: i32 = @as(i32, @intCast(self.border_width + self.title_bar_height));
                         const max_x: i32 = @as(i32, @intCast(self.output.width)) - @as(i32, @intCast(win.width));
                         const max_y: i32 = @as(i32, @intCast(self.output.height)) - @as(i32, @intCast(win.height)) - @as(i32, @intCast(desktop_shell.STATUS_BAR_HEIGHT));
                         win.x = std.math.clamp(win.x, min_x, max_x);
@@ -1517,8 +1523,8 @@ pub const Compositor = struct {
         win.width = constrained.width;
         win.height = constrained.height;
         // Clamp window to screen bounds.
-        const max_width = self.output.width - (BORDER_WIDTH * 2);
-        const max_height = self.output.height - (BORDER_WIDTH * 2) - TITLE_BAR_HEIGHT - desktop_shell.STATUS_BAR_HEIGHT;
+        const max_width = self.output.width - (self.border_width * 2);
+        const max_height = self.output.height - (self.border_width * 2) - self.title_bar_height - desktop_shell.STATUS_BAR_HEIGHT;
         win.width = std.math.min(win.width, max_width);
         win.height = std.math.min(win.height, max_height);
     }

@@ -13,6 +13,7 @@ const execution_flow_mod = @import("execution_flow.zig");
 const branch_stats_mod = @import("branch_stats.zig");
 const register_stats_mod = @import("register_stats.zig");
 const instruction_perf_mod = @import("instruction_perf.zig");
+const debug_interface_mod = @import("debug_interface.zig");
 
 /// Pure Zig RISC-V64 emulator for kernel development.
 /// Grain Style: Static allocation where possible, comprehensive assertions,

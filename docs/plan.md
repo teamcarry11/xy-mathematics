@@ -93,6 +93,14 @@
      - ✅ Export all statistics modules (performance, exceptions, memory, instructions, syscalls, flow, registers, branches, perf)
      - ✅ Statistics aggregator integration
      - ✅ Comprehensive tests (tests/070_vm_stats_export_test.zig)
+   - ✅ VM Debugging Interface (Phase 2.1.13)
+     - ✅ Breakpoint management (set/remove breakpoints at PC addresses, MAX_BREAKPOINTS: 32)
+     - ✅ Watchpoint management (watch memory addresses for read/write, MAX_WATCHPOINTS: 32)
+     - ✅ Step debugging mode (execute one instruction at a time)
+     - ✅ Breakpoint hit detection (check breakpoints in step())
+     - ✅ Watchpoint trigger detection (check watchpoints in read64/write64())
+     - ✅ Integration with step(), read64(), write64()
+     - ✅ Comprehensive tests (tests/071_vm_debug_interface_test.zig)
 
 2. **Kernel Boot Sequence**
    - Implement basic boot loader
@@ -951,6 +959,7 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
   - ✅ Add LSP document symbols support (requestDocumentSymbols method, get_document_symbols in Editor)
   - ✅ Add LSP on-type formatting support (requestOnTypeFormatting method, format_on_type in Editor)
   - ✅ Add LSP signature help support (requestSignatureHelp method, get_signature_help in Editor)
+  - ✅ Add LSP completion item resolve support (resolveCompletionItem method, resolve_completion_item in Editor)
   - ✅ Integrate hover requests into moveCursor
   - ✅ Implement ghost text storage for AI completions
   - ✅ Fix didChange range calculation for insertions

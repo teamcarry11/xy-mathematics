@@ -106,8 +106,7 @@ pub const RuntimeConfig = struct {
                 if (split_result.len >= 2) {
                     const width = self.parse_u32(split_result.parts[1]);
                     if (width) |w| {
-                        // TODO: Set border width in compositor.
-                        _ = w;
+                        self.compositor_ptr.set_border_width(w);
                         return true;
                     }
                 }
@@ -119,8 +118,7 @@ pub const RuntimeConfig = struct {
                 if (split_result.len >= 2) {
                     const height = self.parse_u32(split_result.parts[1]);
                     if (height) |h| {
-                        // TODO: Set title bar height in compositor.
-                        _ = h;
+                        self.compositor_ptr.set_title_bar_height(h);
                         return true;
                     }
                 }

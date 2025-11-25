@@ -500,6 +500,8 @@ Create a fourth agent dedicated to **Grain OS** - a Zig-Wayland implemented GNOM
    - ✅ Window bounds clamping (prevent off-screen)
    - ✅ Minimum window size enforcement (100x100)
    - ✅ Comprehensive tests (`tests/064_grain_os_window_resize_drag_test.zig`)
+   - ✅ Window management keybindings documentation (`docs/grain_os_window_management_keybindings.md`)
+   - ✅ Agent integration prompts (`docs/agent_prompts_window_management.md`)
 11. **Phase 11**: Integration (Grain Kernel syscalls, VM testing)
 12. **Phase 12**: Applications (Aurora, Dream, Skate, Terminal ports)
 
@@ -1168,6 +1170,14 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
   - ✅ App integration (handle_graph_click method)
   - ✅ Comprehensive tests (`tests/054_grain_skate_graph_viz_test.zig`, `tests/055_grain_skate_app_test.zig`, `tests/057_grain_skate_window_graph_test.zig`)
   - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, iterative algorithms)
+- ✅ Window resize handling (`src/grain_skate/window.zig`, `src/grain_skate/app.zig`)
+  - ✅ Window resize handler (handle_resize method)
+  - ✅ Graph renderer update on resize (recreates renderer with new dimensions)
+  - ✅ Dynamic buffer dimensions (uses window width/height instead of fixed)
+  - ✅ App integration (handle_window_resize method)
+  - ✅ Grain OS window management integration (responds to compositor resize events)
+  - ✅ Comprehensive tests (`tests/055_grain_skate_app_test.zig`)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 - ✅ Window graph rendering integration (`src/grain_skate/window.zig`)
   - ✅ Graph renderer integration with window buffer
   - ✅ `set_graph_viz()` method for graph visualization setup
@@ -1446,6 +1456,14 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
   - ✅ App integration (handle_graph_click method)
   - ✅ Comprehensive tests (`tests/054_grain_skate_graph_viz_test.zig`, `tests/055_grain_skate_app_test.zig`, `tests/057_grain_skate_window_graph_test.zig`)
   - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, iterative algorithms)
+- ✅ Window resize handling (`src/grain_skate/window.zig`, `src/grain_skate/app.zig`)
+  - ✅ Window resize handler (handle_resize method)
+  - ✅ Graph renderer update on resize (recreates renderer with new dimensions)
+  - ✅ Dynamic buffer dimensions (uses window width/height instead of fixed)
+  - ✅ App integration (handle_window_resize method)
+  - ✅ Grain OS window management integration (responds to compositor resize events)
+  - ✅ Comprehensive tests (`tests/055_grain_skate_app_test.zig`)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 - ✅ Window graph rendering integration (`src/grain_skate/window.zig`)
   - ✅ Graph renderer integration with window buffer
   - ✅ `set_graph_viz()` method for graph visualization setup
@@ -1724,6 +1742,14 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
   - ✅ App integration (handle_graph_click method)
   - ✅ Comprehensive tests (`tests/054_grain_skate_graph_viz_test.zig`, `tests/055_grain_skate_app_test.zig`, `tests/057_grain_skate_window_graph_test.zig`)
   - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, iterative algorithms)
+- ✅ Window resize handling (`src/grain_skate/window.zig`, `src/grain_skate/app.zig`)
+  - ✅ Window resize handler (handle_resize method)
+  - ✅ Graph renderer update on resize (recreates renderer with new dimensions)
+  - ✅ Dynamic buffer dimensions (uses window width/height instead of fixed)
+  - ✅ App integration (handle_window_resize method)
+  - ✅ Grain OS window management integration (responds to compositor resize events)
+  - ✅ Comprehensive tests (`tests/055_grain_skate_app_test.zig`)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 - ✅ Window graph rendering integration (`src/grain_skate/window.zig`)
   - ✅ Graph renderer integration with window buffer
   - ✅ `set_graph_viz()` method for graph visualization setup

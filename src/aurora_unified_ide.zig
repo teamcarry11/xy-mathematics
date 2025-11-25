@@ -411,6 +411,9 @@ pub const UnifiedIde = struct {
     }
     
     /// Resize unified IDE layout.
+    /// Why: Update layout and viewports when window is resized by compositor.
+    /// Contract: width and height must be valid window dimensions.
+    /// Note: This is called by the compositor when window management keybindings resize the window.
     pub fn resize(self: *UnifiedIde, width: u32, height: u32) !void {
         // Assert: Dimensions must be valid
         std.debug.assert(width > 0);
@@ -418,7 +421,43 @@ pub const UnifiedIde = struct {
         std.debug.assert(width <= 16384); // Bounded width
         std.debug.assert(height <= 16384); // Bounded height
         
+        // Update layout dimensions
         try self.layout.resize(width, height);
+        
+        // Update browser viewports to match new window dimensions
+        // Clamp to viewport max dimensions to prevent overflow
+        const viewport_width = @min(width, DreamBrowserViewport.MAX_VIEWPORT_DIMENSION);
+        const viewport_height = @min(height, DreamBrowserViewport.MAX_VIEWPORT_DIMENSION);
+        
+        for (self.browser_tabs.items) |*tab| {
+            // Update viewport dimensions (viewport will clamp to valid bounds)
+            tab.viewport.set_viewport_size(viewport_width, viewport_height);
+        }
+        
+        // Assert: Layout resized successfully
+        std.debug.assert(self.layout.root != null);
+    }
+    
+    /// Handle window resize event from compositor.
+    /// Why: Respond to window management keybindings that resize the window.
+    /// Contract: width and height are new window dimensions from compositor.
+    /// Note: This is called automatically when the compositor resizes the window.
+    /// Note: Does not intercept Ctrl+Alt keybindings (compositor handles them).
+    pub fn handle_window_resize(self: *UnifiedIde, width: u32, height: u32) !void {
+        // Assert: Dimensions must be valid
+        if (width == 0 or height == 0) {
+            return; // Ignore invalid dimensions
+        }
+        
+        if (width > 16384 or height > 16384) {
+            return; // Ignore dimensions that exceed bounds
+        }
+        
+        // Resize unified IDE (updates layout and viewports)
+        try self.resize(width, height);
+        
+        // Assert: Window resized successfully
+        std.debug.assert(self.layout.root != null);
     }
     
     /// Extract title from file URI (e.g., "file:///path/to/file.zig" -> "file.zig").

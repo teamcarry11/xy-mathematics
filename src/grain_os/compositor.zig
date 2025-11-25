@@ -12,6 +12,7 @@ const framebuffer_renderer = @import("framebuffer_renderer.zig");
 const layout_generator = @import("layout_generator.zig");
 const input_handler = @import("input_handler.zig");
 const workspace = @import("workspace.zig");
+const window_snapping = @import("window_snapping.zig");
 
 // Bounded: Max number of windows.
 pub const MAX_WINDOWS: u32 = 256;
@@ -790,13 +791,25 @@ pub const Compositor = struct {
                     const dy = @as(i32, @intCast(y)) - win.drag_state.start_y;
                     win.x = win.drag_state.window_start_x + dx;
                     win.y = win.drag_state.window_start_y + dy;
-                    // Clamp to screen bounds.
-                    const min_x: i32 = 0;
-                    const min_y: i32 = @as(i32, @intCast(BORDER_WIDTH + TITLE_BAR_HEIGHT));
-                    const max_x: i32 = @as(i32, @intCast(self.output.width)) - @as(i32, @intCast(win.width));
-                    const max_y: i32 = @as(i32, @intCast(self.output.height)) - @as(i32, @intCast(win.height)) - @as(i32, @intCast(desktop_shell.STATUS_BAR_HEIGHT));
-                    win.x = std.math.clamp(win.x, min_x, max_x);
-                    win.y = std.math.clamp(win.y, min_y, max_y);
+                    // Apply window snapping if near edges/corners.
+                    const snap_state = window_snapping.apply_snap(
+                        &win.x,
+                        &win.y,
+                        &win.width,
+                        &win.height,
+                        self.output.width,
+                        self.output.height,
+                        window_snapping.SNAP_THRESHOLD,
+                    );
+                    // If not snapped, clamp to screen bounds.
+                    if (!snap_state.snapped) {
+                        const min_x: i32 = 0;
+                        const min_y: i32 = @as(i32, @intCast(BORDER_WIDTH + TITLE_BAR_HEIGHT));
+                        const max_x: i32 = @as(i32, @intCast(self.output.width)) - @as(i32, @intCast(win.width));
+                        const max_y: i32 = @as(i32, @intCast(self.output.height)) - @as(i32, @intCast(win.height)) - @as(i32, @intCast(desktop_shell.STATUS_BAR_HEIGHT));
+                        win.x = std.math.clamp(win.x, min_x, max_x);
+                        win.y = std.math.clamp(win.y, min_y, max_y);
+                    }
                 }
             }
         }

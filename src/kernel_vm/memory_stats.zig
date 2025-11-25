@@ -49,6 +49,10 @@ pub const MemoryRegion = struct {
     }
 
     pub fn contains(self: *const MemoryRegion, addr: u64) bool {
+        // Handle uninitialized regions (start_addr == 0 and end_addr == 0).
+        if (self.start_addr == 0 and self.end_addr == 0) {
+            return false;
+        }
         return addr >= self.start_addr and addr < self.end_addr;
     }
 };

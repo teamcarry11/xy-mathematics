@@ -1061,6 +1061,14 @@
   - ✅ App integration (handle_graph_click method)
   - ✅ Comprehensive tests (`tests/054_grain_skate_graph_viz_test.zig`, `tests/055_grain_skate_app_test.zig`, `tests/057_grain_skate_window_graph_test.zig`)
   - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, iterative algorithms)
+- ✅ Window resize handling (`src/grain_skate/window.zig`, `src/grain_skate/app.zig`)
+  - ✅ Window resize handler (handle_resize method)
+  - ✅ Graph renderer update on resize (recreates renderer with new dimensions)
+  - ✅ Dynamic buffer dimensions (uses window width/height instead of fixed)
+  - ✅ App integration (handle_window_resize method)
+  - ✅ Grain OS window management integration (responds to compositor resize events)
+  - ✅ Comprehensive tests (`tests/055_grain_skate_app_test.zig`)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 
 #### 8.3.3 Social Features ✅ **COMPLETE**
 - [x] Link-based reply system (`src/grain_skate/social.zig`)
@@ -1232,6 +1240,8 @@
     - ✅ Window bounds clamping (prevent off-screen)
     - ✅ Minimum window size enforcement (100x100)
     - ✅ Comprehensive tests (`tests/064_grain_os_window_resize_drag_test.zig`)
+    - ✅ Window management keybindings documentation (`docs/grain_os_window_management_keybindings.md`)
+    - ✅ Agent integration prompts (`docs/agent_prompts_window_management.md`)
 
 **In Progress**: 
 - Dream Editor Core - GLM-4.6 Integration (Phase 4.1.3) 🔄

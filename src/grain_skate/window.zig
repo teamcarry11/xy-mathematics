@@ -122,12 +122,37 @@ pub const SkateWindow = struct {
             self.allocator.destroy(renderer);
             self.graph_renderer = null;
         }
-        // Create new renderer
-        const buffer_width = 1024; // Fixed buffer width from MacWindow
-        const buffer_height = 768; // Fixed buffer height from MacWindow
+        // Create new renderer with current window dimensions
+        const buffer_width = self.window.width;
+        const buffer_height = self.window.height;
         const renderer = try self.allocator.create(GraphRenderer);
         renderer.* = GraphRenderer.init(graph_viz, buffer_width, buffer_height);
         self.graph_renderer = renderer;
+    }
+
+    /// Handle window resize event (update renderer and layout).
+    // 2025-11-24-181000-pst: Active function
+    pub fn handle_resize(self: *SkateWindow, new_width: u32, new_height: u32) !void {
+        std.debug.assert(new_width > 0 and new_width <= MAX_WIDTH);
+        std.debug.assert(new_height > 0 and new_height <= MAX_HEIGHT);
+
+        // Update window dimensions
+        self.window.width = new_width;
+        self.window.height = new_height;
+
+        // Update graph renderer if present
+        if (self.graph_renderer) |renderer| {
+            // Recreate renderer with new dimensions
+            const graph_viz = renderer.graph_viz;
+            const block_storage = if (renderer.block_storage) |bs| bs else null;
+            self.allocator.destroy(renderer);
+            const new_renderer = try self.allocator.create(GraphRenderer);
+            new_renderer.* = GraphRenderer.init(graph_viz, new_width, new_height);
+            if (block_storage) |bs| {
+                new_renderer.set_block_storage(bs);
+            }
+            self.graph_renderer = new_renderer;
+        }
     }
 
     /// Set block storage for title rendering.

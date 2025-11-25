@@ -162,3 +162,28 @@ test "grain skate app handle graph click" {
     // Should not crash
 }
 
+test "grain skate app handle window resize" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var block_storage = try Block.BlockStorage.init(allocator);
+    defer block_storage.deinit();
+
+    var window = try SkateWindow.init(allocator, "Test", 800, 600);
+    defer window.deinit();
+
+    var app = try GrainSkateApp.init(allocator, &block_storage, &window);
+    defer app.deinit();
+
+    const block_id = try app.create_block("Test Block", "Content");
+    app.load_blocks_to_graph();
+
+    // Resize window
+    try app.handle_window_resize(1024, 768);
+
+    // Verify window dimensions updated
+    try testing.expect(window.window.width == 1024);
+    try testing.expect(window.window.height == 768);
+}
+

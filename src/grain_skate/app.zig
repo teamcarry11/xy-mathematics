@@ -195,5 +195,13 @@ pub const GrainSkateApp = struct {
             };
         }
     }
+
+    /// Handle window resize event (update graph renderer and layout).
+    // 2025-11-24-181000-pst: Active function
+    pub fn handle_window_resize(self: *GrainSkateApp, new_width: u32, new_height: u32) !void {
+        // Update window and renderer
+        try self.window.handle_resize(new_width, new_height);
+        // Graph visualization layout will adapt automatically on next render
+    }
 };
 

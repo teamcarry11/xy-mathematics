@@ -1253,6 +1253,20 @@ pub fn build(b: *std.Build) void {
     const grain_skate_graph_viz_tests_run = b.addRunArtifact(grain_skate_graph_viz_tests);
     test_step.dependOn(&grain_skate_graph_viz_tests_run.step);
 
+    const grain_skate_modal_editor_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/058_grain_skate_modal_editor_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_skate", .module = grain_skate_module },
+                .{ .name = "events", .module = events_module },
+            },
+        }),
+    });
+    const grain_skate_modal_editor_tests_run = b.addRunArtifact(grain_skate_modal_editor_tests);
+    test_step.dependOn(&grain_skate_modal_editor_tests_run.step);
+
     const grain_skate_app_tests = b.addTest(.{
         .root_module = b.createModule(.{
             .root_source_file = b.path("tests/055_grain_skate_app_test.zig"),
@@ -1451,6 +1465,18 @@ pub fn build(b: *std.Build) void {
     });
     const vm_syscall_stats_tests_run = b.addRunArtifact(vm_syscall_stats_tests);
     test_step.dependOn(&vm_syscall_stats_tests_run.step);
+    const vm_execution_flow_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/065_vm_execution_flow_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "kernel_vm", .module = kernel_vm_module },
+            },
+        }),
+    });
+    const vm_execution_flow_tests_run = b.addRunArtifact(vm_execution_flow_tests);
+    test_step.dependOn(&vm_execution_flow_tests_run.step);
 
     const grain_os_layout_tests = b.addTest(.{
         .root_module = b.createModule(.{
@@ -1646,6 +1672,19 @@ pub fn build(b: *std.Build) void {
     });
     const grain_os_window_preview_tests_run = b.addRunArtifact(grain_os_window_preview_tests);
     test_step.dependOn(&grain_os_window_preview_tests_run.step);
+
+    const grain_os_window_visual_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/069_grain_os_window_visual_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_os", .module = grain_os_module },
+            },
+        }),
+    });
+    const grain_os_window_visual_tests_run = b.addRunArtifact(grain_os_window_visual_tests);
+    test_step.dependOn(&grain_os_window_visual_tests_run.step);
 
     // RISC-V Logo Display Program
     const riscv_logo_exe = b.addExecutable(.{

@@ -21,4 +21,5 @@ pub const window_snapping = @import("window_snapping.zig");
 pub const window_switching = @import("window_switching.zig");
 pub const window_state = @import("window_state.zig");
 pub const window_preview = @import("window_preview.zig");
+pub const window_visual = @import("window_visual.zig");
 

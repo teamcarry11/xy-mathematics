@@ -9,6 +9,7 @@ const exception_stats_mod = @import("exception_stats.zig");
 const memory_stats_mod = @import("memory_stats.zig");
 const instruction_stats_mod = @import("instruction_stats.zig");
 const syscall_stats_mod = @import("syscall_stats.zig");
+const execution_flow_mod = @import("execution_flow.zig");
 
 /// Pure Zig RISC-V64 emulator for kernel development.
 /// Grain Style: Static allocation where possible, comprehensive assertions,
@@ -325,6 +326,10 @@ pub const VM = struct {
     /// Why: Track syscall execution frequency and patterns.
     /// GrainStyle: Static allocation, bounded counters, explicit types.
     syscall_stats: syscall_stats_mod.VMSyscallStats = .{},
+    /// Execution flow tracker.
+    /// Why: Track PC sequences to identify execution patterns, loops, and control flow.
+    /// GrainStyle: Static allocation, bounded buffers, explicit types.
+    execution_flow: execution_flow_mod.VMExecutionFlow = .{},
 
     const Self = @This();
 

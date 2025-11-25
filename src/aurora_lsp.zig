@@ -302,6 +302,210 @@ pub const LspClient = struct {
         return null;
     }
     
+    /// Request textDocument/references at a position (find all references).
+    /// Why: Find all references to a symbol for code navigation and refactoring.
+    /// Contract: uri, line, and character must be valid.
+    /// Returns: Array of locations where the symbol is referenced.
+    pub fn requestReferences(
+        self: *LspClient,
+        uri: []const u8,
+        line: u32,
+        character: u32,
+        include_declaration: bool,
+    ) !?[]Location {
+        // Assert: URI and position must be valid
+        std.debug.assert(uri.len > 0);
+        std.debug.assert(uri.len <= 4096); // Bounded URI length
+        
+        var params_obj = std.json.ObjectMap.init(self.allocator);
+        defer params_obj.deinit();
+        
+        var text_doc_obj = std.json.ObjectMap.init(self.allocator);
+        defer text_doc_obj.deinit();
+        try text_doc_obj.put("uri", std.json.Value{ .string = uri });
+        try params_obj.put("textDocument", std.json.Value{ .object = text_doc_obj });
+        
+        var position_obj = std.json.ObjectMap.init(self.allocator);
+        defer position_obj.deinit();
+        try position_obj.put("line", std.json.Value{ .integer = @intCast(line) });
+        try position_obj.put("character", std.json.Value{ .integer = @intCast(character) });
+        try params_obj.put("position", std.json.Value{ .object = position_obj });
+        
+        // Set includeDeclaration in context
+        var context_obj = std.json.ObjectMap.init(self.allocator);
+        try context_obj.put("includeDeclaration", std.json.Value{ .bool = include_declaration });
+        try params_obj.put("context", std.json.Value{ .object = context_obj });
+        
+        const params = std.json.Value{ .object = params_obj };
+        const response = try self.sendRequest("textDocument/references", params);
+        
+        // Parse locations array from response.result
+        if (response.result) |result| {
+            if (result == .array) {
+                const items = result.array.items;
+                var locations = std.ArrayList(Location).init(self.allocator);
+                errdefer {
+                    // Free any allocated URIs on error
+                    for (locations.items) |*loc| {
+                        self.allocator.free(loc.uri);
+                    }
+                    locations.deinit();
+                }
+                
+                for (items) |item| {
+                    if (item == .object) {
+                        const obj = item.object;
+                        const location_uri = obj.get("uri") orelse continue;
+                        if (location_uri != .string) continue;
+                        const uri_str = location_uri.string;
+                        
+                        const range_val = obj.get("range") orelse continue;
+                        if (range_val != .object) continue;
+                        const range_obj = range_val.object;
+                        
+                        const start_val = range_obj.get("start") orelse continue;
+                        const end_val = range_obj.get("end") orelse continue;
+                        if (start_val != .object or end_val != .object) continue;
+                        
+                        const start_obj = start_val.object;
+                        const end_obj = end_val.object;
+                        
+                        const start_line_val = start_obj.get("line") orelse continue;
+                        const start_char_val = start_obj.get("character") orelse continue;
+                        const end_line_val = end_obj.get("line") orelse continue;
+                        const end_char_val = end_obj.get("character") orelse continue;
+                        
+                        if (start_line_val != .integer or start_char_val != .integer or
+                            end_line_val != .integer or end_char_val != .integer) continue;
+                        
+                        const start_line = @as(u32, @intCast(start_line_val.integer));
+                        const start_char = @as(u32, @intCast(start_char_val.integer));
+                        const end_line = @as(u32, @intCast(end_line_val.integer));
+                        const end_char = @as(u32, @intCast(end_char_val.integer));
+                        
+                        const uri_copy = try self.allocator.dupe(u8, uri_str);
+                        errdefer self.allocator.free(uri_copy);
+                        
+                        try locations.append(Location{
+                            .uri = uri_copy,
+                            .range = Range{
+                                .start = Position{ .line = start_line, .character = start_char },
+                                .end = Position{ .line = end_line, .character = end_char },
+                            },
+                        });
+                    }
+                }
+                
+                return try locations.toOwnedSlice();
+            }
+        }
+        return null;
+    }
+    
+    /// Request textDocument/definition at a position (go-to-definition).
+    /// Why: Navigate to symbol definition for code navigation.
+    /// Contract: uri, line, and character must be valid.
+    pub fn requestDefinition(
+        self: *LspClient,
+        uri: []const u8,
+        line: u32,
+        character: u32,
+    ) !?Location {
+        // Assert: URI and position must be valid
+        std.debug.assert(uri.len > 0);
+        std.debug.assert(uri.len <= 4096); // Bounded URI length
+        
+        var params_obj = std.json.ObjectMap.init(self.allocator);
+        defer params_obj.deinit();
+        
+        var text_doc_obj = std.json.ObjectMap.init(self.allocator);
+        defer text_doc_obj.deinit();
+        try text_doc_obj.put("uri", std.json.Value{ .string = uri });
+        try params_obj.put("textDocument", std.json.Value{ .object = text_doc_obj });
+        
+        var position_obj = std.json.ObjectMap.init(self.allocator);
+        defer position_obj.deinit();
+        try position_obj.put("line", std.json.Value{ .integer = @intCast(line) });
+        try position_obj.put("character", std.json.Value{ .integer = @intCast(character) });
+        try params_obj.put("position", std.json.Value{ .object = position_obj });
+        
+        const params = std.json.Value{ .object = params_obj };
+        const response = try self.sendRequest("textDocument/definition", params);
+        
+        // Parse location from response.result
+        // LSP can return either a single Location or an array of Locations
+        if (response.result) |result| {
+            if (result == .object) {
+                // Single location
+                const obj = result.object;
+                const location_uri = if (obj.get("uri")) |u| u.string else return null;
+                const range_val = obj.get("range") orelse return null;
+                
+                if (range_val == .object) {
+                    const range_obj = range_val.object;
+                    const start_val = range_obj.get("start") orelse return null;
+                    const end_val = range_obj.get("end") orelse return null;
+                    
+                    if (start_val == .object and end_val == .object) {
+                        const start_obj = start_val.object;
+                        const end_obj = end_val.object;
+                        
+                        const start_line = if (start_obj.get("line")) |l| @as(u32, @intCast(l.integer)) else return null;
+                        const start_char = if (start_obj.get("character")) |c| @as(u32, @intCast(c.integer)) else return null;
+                        const end_line = if (end_obj.get("line")) |l| @as(u32, @intCast(l.integer)) else return null;
+                        const end_char = if (end_obj.get("character")) |c| @as(u32, @intCast(c.integer)) else return null;
+                        
+                        const uri_copy = try self.allocator.dupe(u8, location_uri);
+                        return Location{
+                            .uri = uri_copy,
+                            .range = Range{
+                                .start = Position{ .line = start_line, .character = start_char },
+                                .end = Position{ .line = end_line, .character = end_char },
+                            },
+                        };
+                    }
+                }
+            } else if (result == .array) {
+                // Array of locations (take first one)
+                const items = result.array.items;
+                if (items.len > 0) {
+                    const first_item = items[0];
+                    if (first_item == .object) {
+                        const obj = first_item.object;
+                        const location_uri = if (obj.get("uri")) |u| u.string else return null;
+                        const range_val = obj.get("range") orelse return null;
+                        
+                        if (range_val == .object) {
+                            const range_obj = range_val.object;
+                            const start_val = range_obj.get("start") orelse return null;
+                            const end_val = range_obj.get("end") orelse return null;
+                            
+                            if (start_val == .object and end_val == .object) {
+                                const start_obj = start_val.object;
+                                const end_obj = end_val.object;
+                                
+                                const start_line = if (start_obj.get("line")) |l| @as(u32, @intCast(l.integer)) else return null;
+                                const start_char = if (start_obj.get("character")) |c| @as(u32, @intCast(c.integer)) else return null;
+                                const end_line = if (end_obj.get("line")) |l| @as(u32, @intCast(l.integer)) else return null;
+                                const end_char = if (end_obj.get("character")) |c| @as(u32, @intCast(c.integer)) else return null;
+                                
+                                const uri_copy = try self.allocator.dupe(u8, location_uri);
+                                return Location{
+                                    .uri = uri_copy,
+                                    .range = Range{
+                                        .start = Position{ .line = start_line, .character = start_char },
+                                        .end = Position{ .line = end_line, .character = end_char },
+                                    },
+                                };
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
+    
     /// Send textDocument/didOpen notification (document opened).
     pub fn didOpen(self: *LspClient, uri: []const u8, text: []const u8) !void {
         // Assert: URI and text must be valid

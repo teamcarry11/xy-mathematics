@@ -415,6 +415,7 @@ pub const Terminal = struct {
                 // Format: ESC [ row ; col R
                 // For now, we ignore (would need output mechanism)
                 _ = params;
+                _ = self;
             },
             'h' => {
                 // Set Mode (SM) - enable terminal features

@@ -628,11 +628,11 @@ pub const Interpreter = struct {
         return switch (a) {
             .integer => |av| {
                 const bv = b.integer;
-                Value.from_integer(if (av < bv) av else bv)
+                return Value.from_integer(if (av < bv) av else bv);
             },
             .float => |av| {
                 const bv = b.float;
-                Value.from_float(if (av < bv) av else bv)
+                return Value.from_float(if (av < bv) av else bv);
             },
             else => Error.type_mismatch,
         };
@@ -653,11 +653,11 @@ pub const Interpreter = struct {
         return switch (a) {
             .integer => |av| {
                 const bv = b.integer;
-                Value.from_integer(if (av > bv) av else bv)
+                return Value.from_integer(if (av > bv) av else bv);
             },
             .float => |av| {
                 const bv = b.float;
-                Value.from_float(if (av > bv) av else bv)
+                return Value.from_float(if (av > bv) av else bv);
             },
             else => Error.type_mismatch,
         };

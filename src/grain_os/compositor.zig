@@ -15,6 +15,8 @@ const workspace = @import("workspace.zig");
 const window_snapping = @import("window_snapping.zig");
 const window_switching = @import("window_switching.zig");
 const window_state = @import("window_state.zig");
+const window_preview = @import("window_preview.zig");
+const window_visual = @import("window_visual.zig");
 const keyboard_shortcuts = @import("keyboard_shortcuts.zig");
 
 // Bounded: Max number of windows.
@@ -445,6 +447,14 @@ pub const Compositor = struct {
     fn render_window_decorations(self: *Compositor, win: *Window) void {
         std.debug.assert(win.width > 0);
         std.debug.assert(win.height > 0);
+        // Render shadow if enabled.
+        if (window_visual.should_render_shadow(win.minimized)) {
+            self.render_window_shadow(win);
+        }
+        // Render focus glow if focused.
+        if (window_visual.should_render_focus_glow(win.focused)) {
+            self.render_focus_glow(win);
+        }
         // Draw window border.
         const border_color = if (win.focused)
             framebuffer_renderer.COLOR_BLUE
@@ -503,6 +513,69 @@ pub const Compositor = struct {
             win.width - (BORDER_WIDTH * 2),
             content_height,
             framebuffer_renderer.COLOR_WHITE,
+        );
+    }
+
+    // Render window shadow.
+    fn render_window_shadow(self: *Compositor, win: *Window) void {
+        std.debug.assert(win.width > 0);
+        std.debug.assert(win.height > 0);
+        const shadow_x = win.x + window_visual.SHADOW_OFFSET_X;
+        const shadow_y = win.y + window_visual.SHADOW_OFFSET_Y;
+        const shadow_color = window_visual.calc_shadow_color(
+            framebuffer_renderer.COLOR_BLACK,
+            window_visual.SHADOW_ALPHA,
+        );
+        // Draw shadow rectangle (simplified: solid shadow).
+        self.renderer.draw_rect(
+            shadow_x,
+            shadow_y,
+            win.width,
+            win.height,
+            shadow_color,
+        );
+    }
+
+    // Render focus glow around window.
+    fn render_focus_glow(self: *Compositor, win: *Window) void {
+        std.debug.assert(win.width > 0);
+        std.debug.assert(win.height > 0);
+        const glow_size = window_visual.FOCUS_GLOW_SIZE;
+        const glow_color = window_visual.calc_focus_glow_color(
+            framebuffer_renderer.COLOR_BLUE,
+        );
+        // Draw glow rectangles around window border.
+        // Top glow.
+        self.renderer.draw_rect(
+            win.x - @as(i32, @intCast(glow_size)),
+            win.y - @as(i32, @intCast(glow_size)),
+            win.width + (glow_size * 2),
+            glow_size,
+            glow_color,
+        );
+        // Bottom glow.
+        self.renderer.draw_rect(
+            win.x - @as(i32, @intCast(glow_size)),
+            @as(i32, @intCast(win.y)) + @as(i32, @intCast(win.height)),
+            win.width + (glow_size * 2),
+            glow_size,
+            glow_color,
+        );
+        // Left glow.
+        self.renderer.draw_rect(
+            win.x - @as(i32, @intCast(glow_size)),
+            win.y,
+            glow_size,
+            win.height,
+            glow_color,
+        );
+        // Right glow.
+        self.renderer.draw_rect(
+            @as(i32, @intCast(win.x)) + @as(i32, @intCast(win.width)),
+            win.y,
+            glow_size,
+            win.height,
+            glow_color,
         );
     }
 

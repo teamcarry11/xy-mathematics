@@ -546,6 +546,13 @@
   - [x] Add `get_diagnostics` method to Editor
   - [x] Bounded diagnostics storage (MAX_DIAGNOSTICS_PER_DOCUMENT: 1000)
   - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
+- [x] Editor Find References Support ✅ **COMPLETE**
+  - [x] Add `requestReferences` method to LspClient
+  - [x] Parse references result (array of locations)
+  - [x] Support includeDeclaration parameter
+  - [x] Add `find_references` method to Editor
+  - [x] Return array of reference locations
+  - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
   - [x] GrainStyle compliant: explicit types, bounded operations, assertions
 - [x] File Save/Load Functionality ✅ **COMPLETE**
   - [x] save_file method (persist editor buffer to disk)
@@ -1073,6 +1080,11 @@
 #### 8.3.2 UI Framework ✅ **COMPLETE**
 - ✅ Native macOS window management (`src/grain_skate/window.zig`)
 - ✅ Modal editing system (Vim/Kakoune keybindings) (`src/grain_skate/modal_editor.zig`)
+  - ✅ Command mode parsing and execution (w, q, wq, q!, x commands)
+  - ✅ Command buffer management (backspace, escape to cancel)
+  - ✅ Command result enumeration (save, quit, save_quit, force_quit)
+  - ✅ Comprehensive tests (`tests/058_grain_skate_modal_editor_test.zig`)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 - ✅ Graph visualization (`src/grain_skate/graph_viz.zig`)
   - ✅ Force-directed layout algorithm (iterative, no recursion)
   - ✅ Node and edge management (MAX_NODES: 1024, MAX_EDGES: 4096)
@@ -1309,6 +1321,13 @@
     - ✅ Generate all windows previews method
     - ✅ Automatic preview removal on window deletion
     - ✅ Comprehensive tests (`tests/068_grain_os_window_preview_test.zig`)
+  - ✅ Window visual enhancements (Phase 15) ✅ **COMPLETE**
+    - ✅ Window visual module (`src/grain_os/window_visual.zig`)
+    - ✅ Shadow rendering (offset, blur, alpha)
+    - ✅ Focus glow rendering (glow size, color)
+    - ✅ Visual state management (shadow, glow, hover)
+    - ✅ Compositor integration (automatic shadow/glow rendering)
+    - ✅ Comprehensive tests (`tests/069_grain_os_window_visual_test.zig`)
 
 **In Progress**: 
 - Dream Editor Core - GLM-4.6 Integration (Phase 4.1.3) 🔄

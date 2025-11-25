@@ -187,11 +187,11 @@ pub const ModalEditor = struct {
             // Enter key: execute command
             const result = self.parse_and_execute_command();
             _ = result; // Result can be used by caller to handle save/quit
-            self.editor.switch_mode(.normal);
+            self.editor.mode = .normal;
             self.command_buffer_len = 0;
         } else if (event.key_code == 27) {
             // Escape key: cancel command
-            self.editor.switch_mode(.normal);
+            self.editor.mode = .normal;
             self.command_buffer_len = 0;
         } else if (event.key_code == 8) {
             // Backspace: remove last character

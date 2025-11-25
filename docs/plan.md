@@ -533,8 +533,15 @@ Create a fourth agent dedicated to **Grain OS** - a Zig-Wayland implemented GNOM
    - ✅ Generate all windows previews method
    - ✅ Automatic preview removal on window deletion
    - ✅ Comprehensive tests (`tests/068_grain_os_window_preview_test.zig`)
-15. **Phase 15**: Integration (Grain Kernel syscalls, VM testing)
-16. **Phase 16**: Applications (Aurora, Dream, Skate, Terminal ports)
+15. **Phase 15**: Window Visual Enhancements ✅ **COMPLETE**
+   - ✅ Window visual module (`src/grain_os/window_visual.zig`)
+   - ✅ Shadow rendering (offset, blur, alpha)
+   - ✅ Focus glow rendering (glow size, color)
+   - ✅ Visual state management (shadow, glow, hover)
+   - ✅ Compositor integration (automatic shadow/glow rendering)
+   - ✅ Comprehensive tests (`tests/069_grain_os_window_visual_test.zig`)
+16. **Phase 16**: Integration (Grain Kernel syscalls, VM testing)
+17. **Phase 17**: Applications (Aurora, Dream, Skate, Terminal ports)
 
 ### Proposal Document
 
@@ -808,6 +815,7 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
   - ✅ Add LSP hover request support (requestHover method)
   - ✅ Add LSP go-to-definition support (requestDefinition method, go_to_definition in Editor)
   - ✅ Add LSP diagnostics support (handle_publish_diagnostics, get_diagnostics methods)
+  - ✅ Add LSP find references support (requestReferences method, find_references in Editor)
   - ✅ Integrate hover requests into moveCursor
   - ✅ Implement ghost text storage for AI completions
   - ✅ Fix didChange range calculation for insertions
@@ -1194,6 +1202,11 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 #### 8.3.2: UI Framework ✅ **COMPLETE**
 - ✅ Native macOS window management (`src/grain_skate/window.zig`)
 - ✅ Modal editing system (Vim/Kakoune keybindings) (`src/grain_skate/modal_editor.zig`)
+  - ✅ Command mode parsing and execution (w, q, wq, q!, x commands)
+  - ✅ Command buffer management (backspace, escape to cancel)
+  - ✅ Command result enumeration (save, quit, save_quit, force_quit)
+  - ✅ Comprehensive tests (`tests/058_grain_skate_modal_editor_test.zig`)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 - ✅ Graph visualization (`src/grain_skate/graph_viz.zig`)
   - ✅ Force-directed layout algorithm (iterative, no recursion)
   - ✅ Node and edge management (MAX_NODES: 1024, MAX_EDGES: 4096)
@@ -1496,6 +1509,11 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 #### 8.3.2: UI Framework ✅ **COMPLETE**
 - ✅ Native macOS window management (`src/grain_skate/window.zig`)
 - ✅ Modal editing system (Vim/Kakoune keybindings) (`src/grain_skate/modal_editor.zig`)
+  - ✅ Command mode parsing and execution (w, q, wq, q!, x commands)
+  - ✅ Command buffer management (backspace, escape to cancel)
+  - ✅ Command result enumeration (save, quit, save_quit, force_quit)
+  - ✅ Comprehensive tests (`tests/058_grain_skate_modal_editor_test.zig`)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 - ✅ Graph visualization (`src/grain_skate/graph_viz.zig`)
   - ✅ Force-directed layout algorithm (iterative, no recursion)
   - ✅ Node and edge management (MAX_NODES: 1024, MAX_EDGES: 4096)
@@ -1798,6 +1816,11 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 #### 8.3.2: UI Framework ✅ **COMPLETE**
 - ✅ Native macOS window management (`src/grain_skate/window.zig`)
 - ✅ Modal editing system (Vim/Kakoune keybindings) (`src/grain_skate/modal_editor.zig`)
+  - ✅ Command mode parsing and execution (w, q, wq, q!, x commands)
+  - ✅ Command buffer management (backspace, escape to cancel)
+  - ✅ Command result enumeration (save, quit, save_quit, force_quit)
+  - ✅ Comprehensive tests (`tests/058_grain_skate_modal_editor_test.zig`)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 - ✅ Graph visualization (`src/grain_skate/graph_viz.zig`)
   - ✅ Force-directed layout algorithm (iterative, no recursion)
   - ✅ Node and edge management (MAX_NODES: 1024, MAX_EDGES: 4096)

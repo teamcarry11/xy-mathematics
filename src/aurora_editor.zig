@@ -260,6 +260,24 @@ pub const Editor = struct {
         
         return null;
     }
+    
+    /// Find all references to symbol at current cursor position.
+    /// Why: Find all usages of a symbol for code navigation and refactoring.
+    /// Contract: Cursor must be positioned on a symbol.
+    /// Returns: Array of locations where the symbol is referenced, or null if not found.
+    /// Note: Caller must free the returned locations array and URI strings.
+    pub fn find_references(self: *Editor, include_declaration: bool) !?[]LspClient.Location {
+        // Request references from LSP server
+        const locations = try self.lsp.requestReferences(
+            self.file_uri,
+            self.cursor_line,
+            self.cursor_char,
+            include_declaration,
+        );
+        
+        // Return locations array (caller must free)
+        return locations;
+    }
 
     /// Insert text at cursor; triggers LSP didChange notification.
     /// Prevents insertion into readonly spans. Records operation in undo history.

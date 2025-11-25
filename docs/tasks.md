@@ -1038,6 +1038,13 @@
   - ✅ Automatic title/ID fallback (shows title if available, ID otherwise)
   - ✅ Comprehensive tests (`tests/056_grain_skate_graph_renderer_test.zig`)
   - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, iterative algorithms)
+- ✅ Interactive graph features (`src/grain_skate/graph_viz.zig`, `src/grain_skate/window.zig`)
+  - ✅ Hit testing (find node at pixel coordinates)
+  - ✅ Click handling (open block when node clicked)
+  - ✅ Coordinate transformation (pixel to normalized, normalized to pixel)
+  - ✅ App integration (handle_graph_click method)
+  - ✅ Comprehensive tests (`tests/054_grain_skate_graph_viz_test.zig`, `tests/055_grain_skate_app_test.zig`, `tests/057_grain_skate_window_graph_test.zig`)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, iterative algorithms)
 
 #### 8.3.3 Social Features ✅ **COMPLETE**
 - [x] Link-based reply system (`src/grain_skate/social.zig`)

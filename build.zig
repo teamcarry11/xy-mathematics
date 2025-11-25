@@ -1609,6 +1609,19 @@ pub fn build(b: *std.Build) void {
     const grain_os_window_switching_tests_run = b.addRunArtifact(grain_os_window_switching_tests);
     test_step.dependOn(&grain_os_window_switching_tests_run.step);
 
+    const grain_os_window_state_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/067_grain_os_window_state_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_os", .module = grain_os_module },
+            },
+        }),
+    });
+    const grain_os_window_state_tests_run = b.addRunArtifact(grain_os_window_state_tests);
+    test_step.dependOn(&grain_os_window_state_tests_run.step);
+
     // RISC-V Logo Display Program
     const riscv_logo_exe = b.addExecutable(.{
         .name = "riscv_logo",

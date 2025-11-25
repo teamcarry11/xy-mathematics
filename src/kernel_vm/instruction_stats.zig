@@ -110,37 +110,45 @@ pub const VMInstructionStats = struct {
         }
     }
 
+    fn get_category_string(category: InstructionCategory) []const u8 {
+        return switch (category) {
+            .arithmetic => "arithmetic",
+            .memory => "memory",
+            .control_flow => "control_flow",
+            .system => "system",
+            .other => "other",
+        };
+    }
+
+    fn print_top_instructions(self: *const VMInstructionStats) void {
+        if (self.total_instructions == 0 or self.entries_len == 0) {
+            return;
+        }
+        std.debug.print("  Top Instructions:\n", .{});
+        var top_count: u32 = 0;
+        var i: u32 = 0;
+        while (i < self.entries_len and top_count < 10) : (i += 1) {
+            const entry = self.entries[i];
+            if (entry.execution_count > 0) {
+                const percentage = @as(f64, @floatFromInt(entry.execution_count)) /
+                    @as(f64, @floatFromInt(self.total_instructions)) * 100.0;
+                const category_str = get_category_string(entry.category);
+                std.debug.print("    0x{x:02X}: {} ({d:.2}%) [{}]\n", .{
+                    entry.opcode,
+                    entry.execution_count,
+                    percentage,
+                    category_str,
+                });
+                top_count += 1;
+            }
+        }
+    }
+
     pub fn print_stats(self: *const VMInstructionStats) void {
         std.debug.print("\nVM Instruction Statistics:\n", .{});
         std.debug.print("  Total Instructions: {}\n", .{self.total_instructions});
         std.debug.print("  Unique Opcodes: {}\n", .{self.entries_len});
-        if (self.total_instructions > 0 and self.entries_len > 0) {
-            std.debug.print("  Top Instructions:\n", .{});
-            // Print top 10 instructions by execution count.
-            var top_count: u32 = 0;
-            var i: u32 = 0;
-            while (i < self.entries_len and top_count < 10) : (i += 1) {
-                const entry = self.entries[i];
-                if (entry.execution_count > 0) {
-                    const percentage = @as(f64, @floatFromInt(entry.execution_count)) /
-                        @as(f64, @floatFromInt(self.total_instructions)) * 100.0;
-                    const category_str = switch (entry.category) {
-                        .arithmetic => "arithmetic",
-                        .memory => "memory",
-                        .control_flow => "control_flow",
-                        .system => "system",
-                        .other => "other",
-                    };
-                    std.debug.print("    0x{x:02X}: {} ({d:.2}%) [{}]\n", .{
-                        entry.opcode,
-                        entry.execution_count,
-                        percentage,
-                        category_str,
-                    });
-                    top_count += 1;
-                }
-            }
-        }
+        self.print_top_instructions();
     }
 
     pub fn reset(self: *VMInstructionStats) void {

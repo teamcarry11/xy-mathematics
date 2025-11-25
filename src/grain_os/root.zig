@@ -19,4 +19,5 @@ pub const desktop_shell = @import("desktop_shell.zig");
 pub const application = @import("application.zig");
 pub const window_snapping = @import("window_snapping.zig");
 pub const window_switching = @import("window_switching.zig");
+pub const window_state = @import("window_state.zig");
 

@@ -1283,6 +1283,14 @@
     - ✅ Keyboard shortcuts (Alt+Tab forward, Alt+Shift+Tab backward)
     - ✅ Compositor integration (automatic order management)
     - ✅ Comprehensive tests (`tests/066_grain_os_window_switching_test.zig`)
+  - ✅ Window state persistence (Phase 13) ✅ **COMPLETE**
+    - ✅ Window state module (`src/grain_os/window_state.zig`)
+    - ✅ Window state entry structure (position, size, state, workspace, title)
+    - ✅ Window state manager (save, restore, remove, clear)
+    - ✅ Compositor integration (save/restore window states)
+    - ✅ Save all windows state method
+    - ✅ Automatic state removal on window deletion
+    - ✅ Comprehensive tests (`tests/067_grain_os_window_state_test.zig`)
 
 **In Progress**: 
 - Dream Editor Core - GLM-4.6 Integration (Phase 4.1.3) 🔄

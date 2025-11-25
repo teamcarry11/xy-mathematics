@@ -1541,6 +1541,19 @@ pub fn build(b: *std.Build) void {
     const vm_stats_export_tests_run = b.addRunArtifact(vm_stats_export_tests);
     test_step.dependOn(&vm_stats_export_tests_run.step);
 
+    const vm_state_inspection_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/072_vm_state_inspection_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "kernel_vm", .module = kernel_vm_module },
+            },
+        }),
+    });
+    const vm_state_inspection_tests_run = b.addRunArtifact(vm_state_inspection_tests);
+    test_step.dependOn(&vm_state_inspection_tests_run.step);
+
     const grain_os_layout_tests = b.addTest(.{
         .root_module = b.createModule(.{
             .root_source_file = b.path("tests/053_grain_os_layout_test.zig"),

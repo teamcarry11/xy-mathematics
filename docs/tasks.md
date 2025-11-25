@@ -1110,6 +1110,7 @@
   - ✅ Container-based layout system (horizontal/vertical/stack splits)
   - ✅ Iterative layout calculation (stack-based, no recursion)
   - ✅ Layout generator interface (Phase 2.5) - Layout function interface, registry, compositor integration (`src/grain_os/layout_generator.zig`)
+  - ✅ Workspace management (Phase 4) - Workspace switching, window assignment, state tracking (`src/grain_os/workspace.zig`)
   - ✅ Framebuffer rendering integration (`src/grain_os/framebuffer_renderer.zig`)
     - ✅ Kernel framebuffer syscall integration (fb_clear, fb_draw_pixel, fb_draw_rect)
     - ✅ Compositor rendering integration
@@ -1129,8 +1130,14 @@
     - ✅ Hit testing (find window at mouse position)
     - ✅ Input event routing (mouse clicks focus windows)
     - ✅ Comprehensive tests (`tests/056_grain_os_input_routing_test.zig`)
-  - [ ] Workspace management (Phase 4)
-  - [ ] Runtime configuration (riverctl-like, Phase 4)
+  - ✅ Workspace management (Phase 4) ✅ **COMPLETE**
+    - ✅ Workspace management module (`src/grain_os/workspace.zig`)
+    - ✅ Window assignment to workspaces
+    - ✅ Workspace switching (hide/show windows)
+    - ✅ Compositor integration (automatic window assignment)
+    - ✅ Window visibility management per workspace
+    - ✅ Comprehensive tests (`tests/057_grain_os_workspace_test.zig`)
+  - [ ] Runtime configuration (riverctl-like, Phase 5)
 
 **In Progress**: 
 - Dream Editor Core - GLM-4.6 Integration (Phase 4.1.3) 🔄

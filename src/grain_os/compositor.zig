@@ -11,6 +11,7 @@ const tiling = @import("tiling.zig");
 const framebuffer_renderer = @import("framebuffer_renderer.zig");
 const layout_generator = @import("layout_generator.zig");
 const input_handler = @import("input_handler.zig");
+const workspace = @import("workspace.zig");
 
 // Bounded: Max number of windows.
 pub const MAX_WINDOWS: u32 = 256;
@@ -93,6 +94,7 @@ pub const Compositor = struct {
     tiling_tree: tiling.TilingTree,
     renderer: framebuffer_renderer.FramebufferRenderer,
     layout_registry: layout_generator.LayoutRegistry,
+    workspace_manager: workspace.WorkspaceManager,
     input: input_handler.InputHandler,
     focused_window_id: u32,
 
@@ -111,6 +113,7 @@ pub const Compositor = struct {
             .tiling_tree = tiling.TilingTree.init(),
             .renderer = framebuffer_renderer.FramebufferRenderer.init(),
             .layout_registry = layout_generator.LayoutRegistry.init(),
+            .workspace_manager = workspace.WorkspaceManager.init(),
             .input = input_handler.InputHandler.init(),
             .focused_window_id = 0,
         };
@@ -146,6 +149,13 @@ pub const Compositor = struct {
         );
         self.windows[self.windows_len] = window;
         self.windows_len += 1;
+        // Assign window to current workspace.
+        if (self.workspace_manager.get_current_workspace()) |current_ws| {
+            _ = self.workspace_manager.assign_window_to_workspace(
+                window_id,
+                current_ws.id,
+            );
+        }
         // Add window to tiling tree.
         self.tiling_tree.add_window(window_id) catch {
             return error.OutOfMemory;
@@ -198,6 +208,10 @@ pub const Compositor = struct {
         }
         // Remove from tiling tree.
         _ = self.tiling_tree.remove_window(window_id);
+        // Remove from workspace.
+        if (self.workspace_manager.get_current_workspace()) |ws| {
+            _ = ws.remove_window(window_id);
+        }
         // Shift remaining windows left.
         while (i < self.windows_len - 1) : (i += 1) {
             self.windows[i] = self.windows[i + 1];
@@ -269,6 +283,43 @@ pub const Compositor = struct {
 
     pub fn get_current_layout(self: *const Compositor) layout_generator.LayoutType {
         return self.layout_registry.current_layout;
+    }
+
+    pub fn switch_workspace(self: *Compositor, workspace_id: u32) bool {
+        std.debug.assert(workspace_id > 0);
+        return self.workspace_manager.switch_workspace(workspace_id);
+    }
+
+    pub fn get_current_workspace_id(self: *const Compositor) u32 {
+        return self.workspace_manager.current_workspace_id;
+    }
+
+    pub fn create_workspace(self: *Compositor, name: []const u8) ?u32 {
+        std.debug.assert(name.len <= 32);
+        return self.workspace_manager.create_workspace(name);
+    }
+
+    pub fn assign_window_to_workspace(
+        self: *Compositor,
+        window_id: u32,
+        workspace_id: u32,
+    ) bool {
+        std.debug.assert(window_id > 0);
+        std.debug.assert(workspace_id > 0);
+        const assigned = self.workspace_manager.assign_window_to_workspace(
+            window_id,
+            workspace_id,
+        );
+        if (assigned) {
+            // Update window visibility.
+            if (self.get_window(window_id)) |win| {
+                const is_current = (workspace_id == self.workspace_manager.current_workspace_id);
+                win.visible = is_current;
+            }
+            // Recalculate layout.
+            self.recalculate_layout();
+        }
+        return assigned;
     }
 
     pub fn render_to_framebuffer(self: *Compositor) void {

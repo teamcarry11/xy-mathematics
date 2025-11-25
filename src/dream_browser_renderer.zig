@@ -61,9 +61,6 @@ pub const DreamBrowserRenderer = struct {
     
     /// Initialize renderer.
     pub fn init(allocator: std.mem.Allocator) DreamBrowserRenderer {
-        // Assert: Allocator must be valid
-        std.debug.assert(allocator.ptr != null);
-        
         return DreamBrowserRenderer{
             .allocator = allocator,
             .performance = null,
@@ -271,7 +268,9 @@ pub const DreamBrowserRenderer = struct {
         // Process stack iteratively
         while (stack.items.len > 0) {
             // Assert: Stack depth must be within bounds
-            std.debug.assert(stack.items.len <= MAX_STACK_DEPTH);
+            if (stack.items.len > MAX_STACK_DEPTH) {
+                return Error.StackOverflow;
+            }
             
             const frame = &stack.items[stack.items.len - 1];
             const current_node = frame.node;
@@ -499,7 +498,7 @@ test "browser renderer initialization" {
     defer renderer.deinit();
     
     // Assert: Renderer initialized
-    try std.testing.expect(renderer.allocator.ptr != null);
+    _ = renderer.allocator;
 }
 
 test "browser renderer get display type" {

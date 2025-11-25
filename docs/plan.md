@@ -400,6 +400,13 @@ Create a fourth agent dedicated to **Grain OS** - a Zig-Wayland implemented GNOM
      - ✅ Syscall-based input reading (read_input_event)
      - ✅ Event type and kind enums (matching kernel_vm/vm.zig)
      - ✅ Comprehensive tests (`tests/055_grain_os_input_handler_test.zig`)
+   - ✅ Workspace management (Phase 4) (`src/grain_os/workspace.zig`)
+     - ✅ Workspace manager with multiple workspaces (MAX_WORKSPACES: 10)
+     - ✅ Workspace switching
+     - ✅ Window assignment to workspaces
+     - ✅ Workspace state tracking (visible, focused window)
+     - ✅ Compositor integration
+     - ✅ Comprehensive tests (tests/057_grain_os_workspace_test.zig)
    - ✅ Wayland protocol core structures (Object, Surface, Output, Seat, Registry)
    - ✅ Basic Wayland compositor (window management, surface management)
    - ✅ Comprehensive tests (tests/052_grain_os_compositor_test.zig)
@@ -411,10 +418,17 @@ Create a fourth agent dedicated to **Grain OS** - a Zig-Wayland implemented GNOM
    - ✅ Input event routing (mouse clicks focus windows)
    - ✅ Keyboard event routing (placeholder for focused window)
    - ✅ Comprehensive tests (`tests/056_grain_os_input_routing_test.zig`)
-4. **Phase 4**: Desktop Shell (window manager, launcher)
-5. **Phase 5**: Application Framework (API, loader, `~/Applications/`)
-6. **Phase 6**: Integration (Grain Kernel syscalls, VM testing)
-7. **Phase 7**: Applications (Aurora, Dream, Skate, Terminal ports)
+4. **Phase 4**: Workspace Management ✅ **COMPLETE**
+   - ✅ Workspace management module (`src/grain_os/workspace.zig`)
+   - ✅ Window assignment to workspaces
+   - ✅ Workspace switching (hide/show windows)
+   - ✅ Compositor integration (automatic window assignment)
+   - ✅ Window visibility management per workspace
+   - ✅ Comprehensive tests (`tests/057_grain_os_workspace_test.zig`)
+5. **Phase 5**: Desktop Shell (window manager, launcher)
+6. **Phase 6**: Application Framework (API, loader, `~/Applications/`)
+7. **Phase 7**: Integration (Grain Kernel syscalls, VM testing)
+8. **Phase 8**: Applications (Aurora, Dream, Skate, Terminal ports)
 
 ### Proposal Document
 
@@ -1049,6 +1063,13 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
   - ✅ View controls (pan, zoom, select)
   - ✅ Comprehensive tests (`tests/054_grain_skate_graph_viz_test.zig`)
   - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, max 70 lines per function)
+- ✅ Graph rendering (`src/grain_skate/graph_renderer.zig`)
+  - ✅ Pixel buffer rendering (RGBA format)
+  - ✅ Node and edge drawing (Bresenham line algorithm, filled circles)
+  - ✅ Coordinate transformation (normalized to pixel)
+  - ✅ Color management (background, nodes, edges, selection)
+  - ✅ Comprehensive tests (`tests/056_grain_skate_graph_renderer_test.zig`)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, iterative algorithms)
 
 #### 8.3.3: Social Features ✅ **COMPLETE**
 - ✅ Link-based reply system (`src/grain_skate/social.zig`)
@@ -1296,6 +1317,13 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
   - ✅ View controls (pan, zoom, select)
   - ✅ Comprehensive tests (`tests/054_grain_skate_graph_viz_test.zig`)
   - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, max 70 lines per function)
+- ✅ Graph rendering (`src/grain_skate/graph_renderer.zig`)
+  - ✅ Pixel buffer rendering (RGBA format)
+  - ✅ Node and edge drawing (Bresenham line algorithm, filled circles)
+  - ✅ Coordinate transformation (normalized to pixel)
+  - ✅ Color management (background, nodes, edges, selection)
+  - ✅ Comprehensive tests (`tests/056_grain_skate_graph_renderer_test.zig`)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, iterative algorithms)
 
 #### 8.3.3: Social Features ✅ **COMPLETE**
 - ✅ Link-based reply system (`src/grain_skate/social.zig`)
@@ -1543,6 +1571,13 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
   - ✅ View controls (pan, zoom, select)
   - ✅ Comprehensive tests (`tests/054_grain_skate_graph_viz_test.zig`)
   - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, max 70 lines per function)
+- ✅ Graph rendering (`src/grain_skate/graph_renderer.zig`)
+  - ✅ Pixel buffer rendering (RGBA format)
+  - ✅ Node and edge drawing (Bresenham line algorithm, filled circles)
+  - ✅ Coordinate transformation (normalized to pixel)
+  - ✅ Color management (background, nodes, edges, selection)
+  - ✅ Comprehensive tests (`tests/056_grain_skate_graph_renderer_test.zig`)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, iterative algorithms)
 
 #### 8.3.3: Social Features ✅ **COMPLETE**
 - ✅ Link-based reply system (`src/grain_skate/social.zig`)

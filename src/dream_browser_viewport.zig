@@ -51,9 +51,6 @@ pub const DreamBrowserViewport = struct {
     
     /// Initialize viewport.
     pub fn init(allocator: std.mem.Allocator) DreamBrowserViewport {
-        // Assert: Allocator must be valid
-        std.debug.assert(allocator.ptr != null);
-        
         // Initialize viewport state
         const initial_state = ViewportState{
             .scroll_x = 0,
@@ -261,7 +258,10 @@ pub const DreamBrowserViewport = struct {
         
         // Get current timestamp (non-negative)
         const timestamp_raw = std.time.timestamp();
-        const timestamp = @as(u64, @intCast(@max(timestamp_raw, 0)));
+        const timestamp = if (timestamp_raw < 0)
+            @as(u64, 0)
+        else
+            @as(u64, @intCast(timestamp_raw));
         
         // If we're not at the end of history, truncate future entries
         if (self.history.current_index < self.history.entries_len) {

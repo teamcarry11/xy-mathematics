@@ -50,8 +50,6 @@ test "VM memory stats region tracking" {
 }
 
 test "VM memory stats integration" {
-    const allocator = testing.allocator;
-    
     // Simple program: ADDI x1, x0, 42; RET
     const program = [_]u8{
         0x93, 0x00, 0xA0, 0x02, // ADDI x1, x0, 42

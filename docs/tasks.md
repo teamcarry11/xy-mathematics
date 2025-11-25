@@ -936,6 +936,7 @@
 - [x] Built-in commands (echo, cd, pwd, exit)
 - [x] Built-in string functions (len, substr, trim, indexOf, replace, toUpper, toLower, startsWith, endsWith, charAt, repeat)
 - [x] Built-in math functions (abs, min, max, floor, ceil, round)
+- [x] Built-in type conversion functions (toString, toInt, toFloat)
 - [x] Exit code handling
 - [x] Error handling (Interpreter.Error enum)
 - [x] Bounded runtime state (MAX_VARIABLES: 1,000, MAX_FUNCTIONS: 256, MAX_CALL_STACK: 1,024)
@@ -1345,6 +1346,14 @@
     - ✅ Compositor integration (stacking order for rendering and hit testing)
     - ✅ Automatic raise on focus
     - ✅ Comprehensive tests (`tests/070_grain_os_window_stacking_test.zig`)
+  - ✅ Window opacity/transparency (Phase 17) ✅ **COMPLETE**
+    - ✅ Window opacity module (`src/grain_os/window_opacity.zig`)
+    - ✅ Opacity value management (0-255 range)
+    - ✅ Alpha blending functions (apply opacity to color, blend colors)
+    - ✅ Compositor integration (opacity applied to window rendering)
+    - ✅ Set/get window opacity methods
+    - ✅ Opacity clamping and validation
+    - ✅ Comprehensive tests (`tests/071_grain_os_window_opacity_test.zig`)
 
 **In Progress**: 
 - Dream Editor Core - GLM-4.6 Integration (Phase 4.1.3) 🔄

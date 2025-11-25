@@ -1023,6 +1023,73 @@ pub const Interpreter = struct {
         return Value{ .string = result };
     }
 
+    /// Built-in toString function: Convert value to string.
+    // 2025-11-24-204000-pst: Active function
+    fn builtin_tostring(interpreter: *Interpreter, args: []const Value) Error!Value {
+        if (args.len != 1) {
+            return Error.invalid_argument;
+        }
+        const arg = args[0];
+        return switch (arg) {
+            .integer => |v| {
+                var buf: [32]u8 = undefined;
+                const str = std.fmt.bufPrint(&buf, "{}", .{v}) catch return Error.runtime_error;
+                return try Value.from_string(interpreter.allocator, str);
+            },
+            .float => |v| {
+                var buf: [64]u8 = undefined;
+                const str = std.fmt.bufPrint(&buf, "{d}", .{v}) catch return Error.runtime_error;
+                return try Value.from_string(interpreter.allocator, str);
+            },
+            .string => |v| try Value.from_string(interpreter.allocator, v),
+            .boolean => |v| {
+                const str = if (v) "true" else "false";
+                return try Value.from_string(interpreter.allocator, str);
+            },
+            .null => try Value.from_string(interpreter.allocator, "null"),
+        };
+    }
+
+    /// Built-in toInt function: Convert value to integer.
+    // 2025-11-24-204000-pst: Active function
+    fn builtin_toint(interpreter: *Interpreter, args: []const Value) Error!Value {
+        _ = interpreter;
+        if (args.len != 1) {
+            return Error.invalid_argument;
+        }
+        const arg = args[0];
+        return switch (arg) {
+            .integer => |v| Value.from_integer(v),
+            .float => |v| Value.from_integer(@as(i64, @intFromFloat(v))),
+            .string => |v| {
+                const int_val = std.fmt.parseInt(i64, v, 10) catch return Error.type_mismatch;
+                return Value.from_integer(int_val);
+            },
+            .boolean => |v| Value.from_integer(if (v) 1 else 0),
+            .null => Error.type_mismatch,
+        };
+    }
+
+    /// Built-in toFloat function: Convert value to float.
+    // 2025-11-24-204000-pst: Active function
+    fn builtin_tofloat(interpreter: *Interpreter, args: []const Value) Error!Value {
+        _ = interpreter;
+        if (args.len != 1) {
+            return Error.invalid_argument;
+        }
+        const arg = args[0];
+        return switch (arg) {
+            .integer => |v| Value.from_float(@as(f64, @floatFromInt(v))),
+            .float => |v| Value.from_float(v),
+            .string => |v| {
+                const float_val = std.fmt.parseFloat(f64, v) catch return Error.type_mismatch;
+                return Value.from_float(float_val);
+            },
+            .boolean => |v| Value.from_float(if (v) 1.0 else 0.0),
+            .null => Error.type_mismatch,
+        };
+    }
+
     /// Execute AST (evaluate all top-level statements).
     pub fn execute(self: *Interpreter) Error!void {
         // Assert: Interpreter must be initialized

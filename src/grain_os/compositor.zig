@@ -166,7 +166,7 @@ pub const Compositor = struct {
     workspace_manager: workspace.WorkspaceManager,
     input: input_handler.InputHandler,
     focused_window_id: u32,
-    shortcut_registry: keyboard_shortcuts.ShortcutRegistry,
+    shortcut_registry: keyboard_shortcuts_mod.ShortcutRegistry,
     config_manager: ?runtime_config.RuntimeConfig,
     shell: desktop_shell.DesktopShell,
     app_registry: application.ApplicationRegistry,

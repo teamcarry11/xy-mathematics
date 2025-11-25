@@ -950,6 +950,7 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
   - ✅ Add LSP workspace symbols support (requestWorkspaceSymbols method, search_workspace_symbols in Editor)
   - ✅ Add LSP document symbols support (requestDocumentSymbols method, get_document_symbols in Editor)
   - ✅ Add LSP on-type formatting support (requestOnTypeFormatting method, format_on_type in Editor)
+  - ✅ Add LSP signature help support (requestSignatureHelp method, get_signature_help in Editor)
   - ✅ Integrate hover requests into moveCursor
   - ✅ Implement ghost text storage for AI completions
   - ✅ Fix didChange range calculation for insertions

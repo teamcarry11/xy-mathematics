@@ -195,6 +195,8 @@ pub const Compositor = struct {
     group_manager: window_grouping.WindowGroupManager,
     focus_manager: window_focus.FocusManager,
     drop_zone_manager: window_drag_drop.DropZoneManager,
+    border_width: u32, // Configurable border width
+    title_bar_height: u32, // Configurable title bar height
 
     pub fn init(allocator: std.mem.Allocator) Compositor {
         std.debug.assert(@intFromPtr(allocator.ptr) != 0);
@@ -231,6 +233,8 @@ pub const Compositor = struct {
             .group_manager = window_grouping.WindowGroupManager.init(),
             .focus_manager = window_focus.FocusManager.init(),
             .drop_zone_manager = window_drag_drop.DropZoneManager.init(),
+            .border_width = BORDER_WIDTH, // Default border width
+            .title_bar_height = TITLE_BAR_HEIGHT, // Default title bar height
         };
         var i: u32 = 0;
         while (i < MAX_WINDOWS) : (i += 1) {

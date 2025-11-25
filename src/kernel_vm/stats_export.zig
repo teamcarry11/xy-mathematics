@@ -181,13 +181,13 @@ pub const VMStatsExporter = struct {
         const json = std.fmt.bufPrint(&buf,
             \\"branches": {{
             \\  "total_branches": {},
-            \\  "branches_taken": {},
-            \\  "branches_not_taken": {}
+            \\  "total_taken": {},
+            \\  "total_not_taken": {}
             \\}},
         , .{
             branch.total_branches,
-            branch.branches_taken,
-            branch.branches_not_taken,
+            branch.total_taken,
+            branch.total_not_taken,
         }) catch return;
         self.append_json(json);
     }

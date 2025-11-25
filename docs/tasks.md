@@ -84,12 +84,6 @@
   - [x] Top instruction performance statistics printing
   - [x] Statistics aggregator integration
   - [x] Comprehensive tests (tests/069_vm_instruction_perf_test.zig)
-- [x] VM Statistics Export (Phase 2.1.12)
-  - [x] JSON export format for all VM statistics
-  - [x] Bounded JSON buffer (MAX_JSON_SIZE: 1MB)
-  - [x] Export all statistics modules (performance, exceptions, memory, instructions, syscalls, flow, registers, branches, perf)
-  - [x] Statistics aggregator integration
-  - [x] Comprehensive tests (tests/070_vm_stats_export_test.zig)
 
 #### 2.2 Kernel Boot Sequence ✅ **COMPLETE**
 - [x] Implement basic boot loader
@@ -666,6 +660,14 @@
   - [x] Add `format_on_type` method to Editor
   - [x] Integrate with `insert` method (auto-trigger on ';', '}', '\n')
   - [x] Reuse `apply_text_edits` for applying on-type formatting
+  - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
+- [x] Editor Signature Help Support ✅ **COMPLETE**
+  - [x] Add `requestSignatureHelp` method to LspClient
+  - [x] Add `SignatureHelp`, `SignatureInformation`, and `ParameterInformation` structs
+  - [x] Parse signature help result (signatures array, active signature, active parameter)
+  - [x] Support optional fields (documentation, parameters, active signature/parameter)
+  - [x] Add `get_signature_help` method to Editor
+  - [x] Integrate with `moveCursor` method (auto-trigger on cursor movement)
   - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
 - [x] File Save/Load Functionality ✅ **COMPLETE**
   - [x] save_file method (persist editor buffer to disk)

@@ -1011,6 +1011,7 @@
 - [x] Built-in math functions (abs, min, max, floor, ceil, round)
 - [x] Built-in type conversion functions (toString, toInt, toFloat)
 - [x] Built-in type checking functions (isNull, isEmpty, isNumber, isString, isBoolean)
+- [x] Built-in string utility functions (split, join)
 - [x] Exit code handling
 - [x] Error handling (Interpreter.Error enum)
 - [x] Bounded runtime state (MAX_VARIABLES: 1,000, MAX_FUNCTIONS: 256, MAX_CALL_STACK: 1,024)

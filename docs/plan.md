@@ -71,14 +71,6 @@
      - ✅ Branch statistics printing (total, taken/not taken, top 10 branches)
      - ✅ Integration with all branch instructions (BEQ, BNE, BLT, BGE, BLTU, BGEU)
      - ✅ Comprehensive tests (tests/067_vm_branch_stats_test.zig)
-   - ✅ VM Register Usage Statistics (Phase 2.1.10)
-     - ✅ Register read/write tracking per register (NUM_REGISTERS: 32)
-     - ✅ Total read/write counts
-     - ✅ Register usage percentage calculation
-     - ✅ Top register statistics printing
-     - ✅ Integration with instruction execution (ADD, ADDI, LUI, etc.)
-     - ✅ Statistics aggregator integration
-     - ✅ Comprehensive tests (tests/068_vm_register_stats_test.zig)
 
 2. **Kernel Boot Sequence**
    - Implement basic boot loader
@@ -904,6 +896,7 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
   - ✅ Add LSP range formatting support (requestRangeFormatting method, format_range in Editor)
   - ✅ Add LSP code actions support (requestCodeActions method, get_code_actions in Editor)
   - ✅ Add LSP symbol rename support (requestRename method, rename_symbol in Editor)
+  - ✅ Add LSP workspace symbols support (requestWorkspaceSymbols method, search_workspace_symbols in Editor)
   - ✅ Integrate hover requests into moveCursor
   - ✅ Implement ghost text storage for AI completions
   - ✅ Fix didChange range calculation for insertions

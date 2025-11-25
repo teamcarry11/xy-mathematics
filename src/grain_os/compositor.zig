@@ -223,6 +223,7 @@ pub const Compositor = struct {
             .preview_manager = window_preview.PreviewManager.init(),
             .window_stack = window_stacking.WindowStack.init(),
             .animation_manager = window_animation.AnimationManager.init(),
+            .group_manager = window_grouping.WindowGroupManager.init(),
         };
         var i: u32 = 0;
         while (i < MAX_WINDOWS) : (i += 1) {
@@ -335,6 +336,8 @@ pub const Compositor = struct {
         _ = self.state_manager.remove_window(window_id);
         // Remove from preview manager.
         _ = self.preview_manager.remove_preview(window_id);
+        // Remove from all groups.
+        self.group_manager.remove_window_from_all_groups(window_id);
         // Shift remaining windows left.
         while (i < self.windows_len - 1) : (i += 1) {
             self.windows[i] = self.windows[i + 1];
@@ -1220,6 +1223,45 @@ pub const Compositor = struct {
             return win.constraints;
         }
         return null;
+    }
+
+    // Create window group.
+    pub fn create_window_group(self: *Compositor) ?u32 {
+        return self.group_manager.create_group();
+    }
+
+    // Add window to group.
+    pub fn add_window_to_group(
+        self: *Compositor,
+        window_id: u32,
+        group_id: u32,
+    ) bool {
+        std.debug.assert(window_id > 0);
+        std.debug.assert(group_id > 0);
+        return self.group_manager.add_window_to_group(window_id, group_id);
+    }
+
+    // Remove window from group.
+    pub fn remove_window_from_group(
+        self: *Compositor,
+        window_id: u32,
+        group_id: u32,
+    ) bool {
+        std.debug.assert(window_id > 0);
+        std.debug.assert(group_id > 0);
+        return self.group_manager.remove_window_from_group(window_id, group_id);
+    }
+
+    // Find group for window.
+    pub fn find_window_group(self: *Compositor, window_id: u32) ?u32 {
+        std.debug.assert(window_id > 0);
+        return self.group_manager.find_group_for_window(window_id);
+    }
+
+    // Delete window group.
+    pub fn delete_window_group(self: *Compositor, group_id: u32) bool {
+        std.debug.assert(group_id > 0);
+        return self.group_manager.delete_group(group_id);
     }
 
     // Get resize handle at mouse position.

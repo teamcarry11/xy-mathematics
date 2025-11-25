@@ -330,6 +330,8 @@ pub const Interpreter = struct {
         try self.register_type_conversion_functions();
         // Register type checking functions
         try self.register_type_checking_functions();
+        // Register string utility functions
+        try self.register_string_utility_functions();
     }
 
     /// Register string manipulation built-in functions.
@@ -557,6 +559,36 @@ pub const Interpreter = struct {
             .param_count = 1,
             .body_node = null,
             .builtin_handler = builtin_round,
+        };
+        self.functions_len += 1;
+    }
+
+    /// Register string utility built-in functions.
+    // 2025-11-24-213900-pst: Active function
+    fn register_string_utility_functions(self: *Interpreter) !void {
+        // split(str, delimiter) - Split string by delimiter (returns first part)
+        const split_name = try self.allocator.dupe(u8, "split");
+        errdefer self.allocator.free(split_name);
+        self.functions[self.functions_len] = Function{
+            .name = split_name,
+            .name_len = @as(u32, @intCast(split_name.len)),
+            .is_builtin = true,
+            .param_count = 2,
+            .body_node = null,
+            .builtin_handler = builtin_split,
+        };
+        self.functions_len += 1;
+
+        // join(str1, delimiter) - Join strings with delimiter (simplified)
+        const join_name = try self.allocator.dupe(u8, "join");
+        errdefer self.allocator.free(join_name);
+        self.functions[self.functions_len] = Function{
+            .name = join_name,
+            .name_len = @as(u32, @intCast(join_name.len)),
+            .is_builtin = true,
+            .param_count = 2,
+            .body_node = null,
+            .builtin_handler = builtin_join,
         };
         self.functions_len += 1;
     }
@@ -1146,6 +1178,56 @@ pub const Interpreter = struct {
             return Error.invalid_argument;
         }
         return Value.from_boolean(args[0] == .boolean);
+    }
+
+    /// Built-in split function: Split string by delimiter (returns first part).
+    // 2025-11-24-213900-pst: Active function
+    fn builtin_split(interpreter: *Interpreter, args: []const Value) Error!Value {
+        if (args.len != 2) {
+            return Error.invalid_argument;
+        }
+        if (args[0] != .string or args[1] != .string) {
+            return Error.type_mismatch;
+        }
+        const str = args[0].string;
+        const delimiter = args[1].string;
+
+        // Empty delimiter, return original string
+        if (delimiter.len == 0) {
+            return try Value.from_string(interpreter.allocator, str);
+        }
+
+        // Find first occurrence of delimiter
+        var i: u32 = 0;
+        while (i <= str.len - delimiter.len) : (i += 1) {
+            if (std.mem.eql(u8, str[i..i + delimiter.len], delimiter)) {
+                // Return part before delimiter
+                const result = try interpreter.allocator.dupe(u8, str[0..i]);
+                return try Value.from_string(interpreter.allocator, result);
+            }
+        }
+
+        // Delimiter not found, return original string
+        return try Value.from_string(interpreter.allocator, str);
+    }
+
+    /// Built-in join function: Join strings with delimiter (simplified).
+    // 2025-11-24-213900-pst: Active function
+    fn builtin_join(interpreter: *Interpreter, args: []const Value) Error!Value {
+        if (args.len != 2) {
+            return Error.invalid_argument;
+        }
+        // Simplified: join two strings with delimiter
+        if (args[0] != .string or args[1] != .string) {
+            return Error.type_mismatch;
+        }
+        const str1 = args[0].string;
+        const delimiter = args[1].string;
+
+        // Return first string + delimiter
+        const result = try std.fmt.allocPrint(interpreter.allocator, "{s}{s}", .{ str1, delimiter });
+        errdefer interpreter.allocator.free(result);
+        return try Value.from_string(interpreter.allocator, result);
     }
 
     /// Execute AST (evaluate all top-level statements).

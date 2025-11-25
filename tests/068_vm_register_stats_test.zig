@@ -9,7 +9,7 @@ const testing = std.testing;
 const kernel_vm = @import("kernel_vm");
 
 test "VM register stats initialization" {
-    var stats = kernel_vm.register_stats.VMRegisterStats.init();
+    const stats = kernel_vm.register_stats.VMRegisterStats.init();
     try testing.expect(stats.total_reads == 0);
     try testing.expect(stats.total_writes == 0);
     var i: u32 = 0;
@@ -74,7 +74,8 @@ test "VM register stats reset" {
 test "VM register stats integration" {
     const kernel_vm_mod = @import("kernel_vm");
     var program = [_]u8{0} ** 1024;
-    var vm = kernel_vm_mod.VM.init(&program, 0x80000000);
+    var vm = kernel_vm_mod.VM{};
+    vm.init(&program, 0x80000000);
     try testing.expect(vm.register_stats.total_reads == 0);
     try testing.expect(vm.register_stats.total_writes == 0);
     vm.register_stats.record_read(1);

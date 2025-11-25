@@ -469,7 +469,14 @@ pub const VM = struct {
             .state = .halted,
             .last_error = null,
             .exception_stats = exception_stats_mod.ExceptionStats.init(),
+            .memory_stats = memory_stats_mod.VMMemoryStats.init(VM_MEMORY_SIZE),
         };
+        
+        // Add default memory regions (kernel, framebuffer).
+        target.memory_stats.add_region(0x80000000, 0x80000000 + VM_MEMORY_SIZE);
+        const framebuffer_start: u64 = 0x90000000;
+        const framebuffer_size: u64 = 1024 * 768 * 4; // 3MB
+        target.memory_stats.add_region(framebuffer_start, framebuffer_start + framebuffer_size);
 
         // Load kernel image into memory (if non-empty).
         // Why: Copy kernel bytes to VM memory at load address.

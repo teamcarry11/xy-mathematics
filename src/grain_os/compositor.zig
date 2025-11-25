@@ -27,8 +27,8 @@ const window_focus = @import("window_focus.zig");
 const window_effects = @import("window_effects.zig");
 const window_drag_drop = @import("window_drag_drop.zig");
 const keyboard_shortcuts = @import("keyboard_shortcuts.zig");
-const runtime_config = @import("runtime_config.zig");
 const desktop_shell = @import("desktop_shell.zig");
+const runtime_config = @import("runtime_config.zig");
 const runtime_config = @import("runtime_config.zig");
 
 // Bounded: Max number of windows.

@@ -2086,6 +2086,84 @@ pub const LspClient = struct {
         try self.sendNotification("textDocument/didChange", params);
     }
     
+    /// Send textDocument/didSave notification (document saved).
+    /// Why: Notify LSP server that document was saved.
+    /// Contract: uri must be valid, text is optional (includeText parameter).
+    pub fn didSave(self: *LspClient, uri: []const u8, text: ?[]const u8) !void {
+        // Assert: URI must be valid
+        std.debug.assert(uri.len > 0);
+        std.debug.assert(uri.len <= 4096); // Bounded URI length
+        if (text) |t| {
+            std.debug.assert(t.len <= 100 * 1024 * 1024); // Bounded text size (100MB)
+        }
+        
+        var params_obj = std.json.ObjectMap.init(self.allocator);
+        defer params_obj.deinit();
+        
+        var text_doc_obj = std.json.ObjectMap.init(self.allocator);
+        defer text_doc_obj.deinit();
+        try text_doc_obj.put("uri", std.json.Value{ .string = uri });
+        try params_obj.put("textDocument", std.json.Value{ .object = text_doc_obj });
+        
+        // Include text if provided
+        if (text) |t| {
+            try params_obj.put("text", std.json.Value{ .string = t });
+        }
+        
+        const params = std.json.Value{ .object = params_obj };
+        try self.sendNotification("textDocument/didSave", params);
+    }
+    
+    /// Send textDocument/didClose notification (document closed).
+    /// Why: Notify LSP server that document was closed.
+    /// Contract: uri must be valid.
+    pub fn didClose(self: *LspClient, uri: []const u8) !void {
+        // Assert: URI must be valid
+        std.debug.assert(uri.len > 0);
+        std.debug.assert(uri.len <= 4096); // Bounded URI length
+        
+        var params_obj = std.json.ObjectMap.init(self.allocator);
+        defer params_obj.deinit();
+        
+        var text_doc_obj = std.json.ObjectMap.init(self.allocator);
+        defer text_doc_obj.deinit();
+        try text_doc_obj.put("uri", std.json.Value{ .string = uri });
+        try params_obj.put("textDocument", std.json.Value{ .object = text_doc_obj });
+        
+        const params = std.json.Value{ .object = params_obj };
+        try self.sendNotification("textDocument/didClose", params);
+        
+        // Remove snapshot for closed document
+        var snapshot_idx: ?u32 = null;
+        for (self.snapshots.items, 0..) |*snapshot, i| {
+            if (std.mem.eql(u8, snapshot.uri, uri)) {
+                // Assert: Index fits in u32
+                std.debug.assert(i <= std.math.maxInt(u32));
+                snapshot_idx = @intCast(i);
+                break;
+            }
+        }
+        
+        if (snapshot_idx) |idx| {
+            const snapshot = &self.snapshots.items[idx];
+            self.allocator.free(snapshot.uri);
+            self.allocator.free(snapshot.text);
+            _ = self.snapshots.swapRemove(idx);
+        }
+        
+        // Remove diagnostics for closed document
+        if (self.diagnostics.get(uri)) |diags| {
+            for (diags.items) |*diag| {
+                self.allocator.free(diag.message);
+                if (diag.source) |source| {
+                    self.allocator.free(source);
+                }
+            }
+            diags.deinit(self.allocator);
+            _ = self.diagnostics.remove(uri);
+        }
+    }
+    
     /// Cancel a pending request.
     pub fn cancelRequest(self: *LspClient, request_id: u64) !void {
         // Assert: Request must be pending

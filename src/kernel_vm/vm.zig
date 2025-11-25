@@ -1041,6 +1041,12 @@ pub const VM = struct {
         // Store PC before instruction execution (for branch detection).
         const pc_before = self.regs.pc;
 
+        // Check for breakpoint at current PC.
+        if (self.debug_interface.check_breakpoint(pc_before)) {
+            // Breakpoint hit: stop execution (caller should check breakpoint_hit flag).
+            return;
+        }
+
         // Assert: PC must be 4-byte aligned (RISC-V instruction alignment).
         std.debug.assert(pc_before % 4 == 0);
 

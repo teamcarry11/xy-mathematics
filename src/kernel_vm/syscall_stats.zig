@@ -71,8 +71,7 @@ pub const VMSyscallStats = struct {
         return stats;
     }
 
-    fn get_category_for_syscall(self: *const VMSyscallStats, syscall_number: u32) SyscallCategory {
-        _ = self;
+    fn get_category_for_syscall(syscall_number: u32) SyscallCategory {
         // Categorize kernel syscalls.
         switch (syscall_number) {
             0, 1, 2, 3 => return .process, // spawn, exit, yield, wait

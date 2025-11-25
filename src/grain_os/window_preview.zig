@@ -130,12 +130,14 @@ pub const PreviewManager = struct {
         _screen_height: u32,
     ) bool {
         std.debug.assert(window_id > 0);
+        // Discard unused parameters (for future framebuffer sampling).
+        _ = _win_x;
+        _ = _win_y;
+        _ = _win_width;
+        _ = _win_height;
+        _ = _screen_width;
+        _ = _screen_height;
         if (self.get_preview(window_id)) |preview| {
-            // Calculate scale factors (for future framebuffer sampling).
-            _ = @as(f32, @floatFromInt(_win_width)) /
-                @as(f32, @floatFromInt(PREVIEW_WIDTH));
-            _ = @as(f32, @floatFromInt(_win_height)) /
-                @as(f32, @floatFromInt(PREVIEW_HEIGHT));
             // Generate downscaled preview (simplified: solid color for now).
             // In full implementation, would sample from framebuffer.
             const bg_color: u32 = 0xFFCCCCCC; // Light gray.

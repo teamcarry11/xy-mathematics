@@ -168,19 +168,36 @@ pub const ModalEditor = struct {
         }
     }
 
+    /// Command execution result.
+    // 2025-11-24-193000-pst: Active enum
+    pub const CommandResult = enum(u8) {
+        none, // No action needed
+        save, // Save block (w, wq)
+        quit, // Quit (q, q!)
+        save_quit, // Save and quit (wq)
+        force_quit, // Force quit without saving (q!)
+        error, // Command error
+    };
+
     /// Handle command mode key event.
-    // 2025-11-23-170000-pst: Active function
+    // 2025-11-24-193000-pst: Active function
     fn handle_command_mode(self: *ModalEditor, event: events.KeyboardEvent) !void {
         // Command mode: collect command string
         if (event.key_code == 13) {
             // Enter key: execute command
-            // TODO: Parse and execute command
-            self.editor.exit_insert_mode();
+            const result = self.parse_and_execute_command();
+            _ = result; // Result can be used by caller to handle save/quit
+            self.editor.switch_mode(.normal);
             self.command_buffer_len = 0;
         } else if (event.key_code == 27) {
             // Escape key: cancel command
-            self.editor.exit_insert_mode();
+            self.editor.switch_mode(.normal);
             self.command_buffer_len = 0;
+        } else if (event.key_code == 8) {
+            // Backspace: remove last character
+            if (self.command_buffer_len > 0) {
+                self.command_buffer_len -= 1;
+            }
         } else if (event.key_code >= 32 and event.key_code < 127) {
             // Printable ASCII character: add to command buffer
             if (self.command_buffer_len < MAX_COMMAND_BUFFER - 1) {
@@ -189,6 +206,76 @@ pub const ModalEditor = struct {
                 self.command_buffer_len += 1;
             }
         }
+    }
+
+    /// Parse and execute command from buffer.
+    // 2025-11-24-193000-pst: Active function
+    fn parse_and_execute_command(self: *ModalEditor) CommandResult {
+        if (self.command_buffer_len == 0) {
+            return .none;
+        }
+
+        // Get command string (trim whitespace)
+        const cmd_start = self.find_command_start();
+        const cmd_end = self.find_command_end(cmd_start);
+        if (cmd_start >= cmd_end) {
+            return .error;
+        }
+
+        const cmd = self.command_buffer[cmd_start..cmd_end];
+
+        // Parse command (simple string matching for common Vim commands)
+        if (std.mem.eql(u8, cmd, "w")) {
+            // Write (save)
+            return .save;
+        } else if (std.mem.eql(u8, cmd, "q")) {
+            // Quit
+            return .quit;
+        } else if (std.mem.eql(u8, cmd, "wq")) {
+            // Write and quit
+            return .save_quit;
+        } else if (std.mem.eql(u8, cmd, "q!")) {
+            // Force quit without saving
+            return .force_quit;
+        } else if (std.mem.eql(u8, cmd, "x")) {
+            // Write and quit (same as wq)
+            return .save_quit;
+        } else {
+            // Unknown command
+            return .error;
+        }
+    }
+
+    /// Find start of command (skip leading whitespace).
+    // 2025-11-24-193000-pst: Active function
+    fn find_command_start(self: *const ModalEditor) u32 {
+        var i: u32 = 0;
+        while (i < self.command_buffer_len) : (i += 1) {
+            const ch = self.command_buffer[i];
+            if (ch != ' ' and ch != '\t') {
+                return i;
+            }
+        }
+        return self.command_buffer_len;
+    }
+
+    /// Find end of command (find first whitespace or end of buffer).
+    // 2025-11-24-193000-pst: Active function
+    fn find_command_end(self: *const ModalEditor, start: u32) u32 {
+        var i: u32 = start;
+        while (i < self.command_buffer_len) : (i += 1) {
+            const ch = self.command_buffer[i];
+            if (ch == ' ' or ch == '\t') {
+                return i;
+            }
+        }
+        return self.command_buffer_len;
+    }
+
+    /// Get current command string (for display).
+    // 2025-11-24-193000-pst: Active function
+    pub fn get_command_string(self: *const ModalEditor) []const u8 {
+        return self.command_buffer[0..self.command_buffer_len];
     }
 
     /// Map key code to action.

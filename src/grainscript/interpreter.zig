@@ -369,6 +369,58 @@ pub const Interpreter = struct {
             .builtin_handler = builtin_trim,
         };
         self.functions_len += 1;
+
+        // indexOf(str, substr) - Find substring position
+        const indexof_name = try self.allocator.dupe(u8, "indexOf");
+        errdefer self.allocator.free(indexof_name);
+        self.functions[self.functions_len] = Function{
+            .name = indexof_name,
+            .name_len = @as(u32, @intCast(indexof_name.len)),
+            .is_builtin = true,
+            .param_count = 2,
+            .body_node = null,
+            .builtin_handler = builtin_indexof,
+        };
+        self.functions_len += 1;
+
+        // replace(str, old, new) - Replace substring
+        const replace_name = try self.allocator.dupe(u8, "replace");
+        errdefer self.allocator.free(replace_name);
+        self.functions[self.functions_len] = Function{
+            .name = replace_name,
+            .name_len = @as(u32, @intCast(replace_name.len)),
+            .is_builtin = true,
+            .param_count = 3,
+            .body_node = null,
+            .builtin_handler = builtin_replace,
+        };
+        self.functions_len += 1;
+
+        // toUpper(str) - Convert to uppercase
+        const toupper_name = try self.allocator.dupe(u8, "toUpper");
+        errdefer self.allocator.free(toupper_name);
+        self.functions[self.functions_len] = Function{
+            .name = toupper_name,
+            .name_len = @as(u32, @intCast(toupper_name.len)),
+            .is_builtin = true,
+            .param_count = 1,
+            .body_node = null,
+            .builtin_handler = builtin_toupper,
+        };
+        self.functions_len += 1;
+
+        // toLower(str) - Convert to lowercase
+        const tolower_name = try self.allocator.dupe(u8, "toLower");
+        errdefer self.allocator.free(tolower_name);
+        self.functions[self.functions_len] = Function{
+            .name = tolower_name,
+            .name_len = @as(u32, @intCast(tolower_name.len)),
+            .is_builtin = true,
+            .param_count = 1,
+            .body_node = null,
+            .builtin_handler = builtin_tolower,
+        };
+        self.functions_len += 1;
     }
 
     /// Register math built-in functions.
@@ -706,6 +758,125 @@ pub const Interpreter = struct {
             .float => |v| Value.from_float(@round(v)),
             else => Error.type_mismatch,
         };
+    }
+
+    /// Built-in indexOf function: Find substring position.
+    // 2025-11-24-201000-pst: Active function
+    fn builtin_indexof(interpreter: *Interpreter, args: []const Value) Error!Value {
+        _ = interpreter;
+        if (args.len != 2) {
+            return Error.invalid_argument;
+        }
+        if (args[0] != .string or args[1] != .string) {
+            return Error.type_mismatch;
+        }
+        const str = args[0].string;
+        const substr = args[1].string;
+        if (substr.len == 0) {
+            return Value.from_integer(0);
+        }
+        if (substr.len > str.len) {
+            return Value.from_integer(-1);
+        }
+        var i: u32 = 0;
+        while (i <= str.len - substr.len) : (i += 1) {
+            if (std.mem.eql(u8, str[i..i + substr.len], substr)) {
+                return Value.from_integer(@as(i64, @intCast(i)));
+            }
+        }
+        return Value.from_integer(-1);
+    }
+
+    /// Built-in replace function: Replace substring.
+    // 2025-11-24-201000-pst: Active function
+    fn builtin_replace(interpreter: *Interpreter, args: []const Value) Error!Value {
+        if (args.len != 3) {
+            return Error.invalid_argument;
+        }
+        if (args[0] != .string or args[1] != .string or args[2] != .string) {
+            return Error.type_mismatch;
+        }
+        const str = args[0].string;
+        const old_str = args[1].string;
+        const new_str = args[2].string;
+        if (old_str.len == 0) {
+            return try Value.from_string(interpreter.allocator, str);
+        }
+        // Find first occurrence
+        var found_idx: ?u32 = null;
+        var i: u32 = 0;
+        while (i <= str.len - old_str.len) : (i += 1) {
+            if (std.mem.eql(u8, str[i..i + old_str.len], old_str)) {
+                found_idx = i;
+                break;
+            }
+        }
+        if (found_idx == null) {
+            return try Value.from_string(interpreter.allocator, str);
+        }
+        const idx = found_idx.?;
+        // Build result string (before + new + after)
+        const before_len = idx;
+        const after_start = idx + old_str.len;
+        const after_len = str.len - after_start;
+        const result_len = before_len + new_str.len + after_len;
+        if (result_len > MAX_STRING_LEN) {
+            return Error.string_too_long;
+        }
+        var result = try interpreter.allocator.alloc(u8, result_len);
+        errdefer interpreter.allocator.free(result);
+        @memcpy(result[0..before_len], str[0..before_len]);
+        @memcpy(result[before_len..before_len + new_str.len], new_str);
+        @memcpy(result[before_len + new_str.len..], str[after_start..]);
+        return Value{ .string = result };
+    }
+
+    /// Built-in toUpper function: Convert string to uppercase.
+    // 2025-11-24-201000-pst: Active function
+    fn builtin_toupper(interpreter: *Interpreter, args: []const Value) Error!Value {
+        if (args.len != 1) {
+            return Error.invalid_argument;
+        }
+        if (args[0] != .string) {
+            return Error.type_mismatch;
+        }
+        const str = args[0].string;
+        var result = try interpreter.allocator.alloc(u8, str.len);
+        errdefer interpreter.allocator.free(result);
+        var i: u32 = 0;
+        while (i < str.len) : (i += 1) {
+            const ch = str[i];
+            if (ch >= 'a' and ch <= 'z') {
+                result[i] = ch - 32;
+            } else {
+                result[i] = ch;
+            }
+        }
+        return Value{ .string = result };
+    }
+
+    /// Built-in toLower function: Convert string to lowercase.
+    // 2025-11-24-201000-pst: Active function
+    fn builtin_tolower(interpreter: *Interpreter, args: []const Value) Error!Value {
+        if (args.len != 1) {
+            return Error.invalid_argument;
+        }
+        if (args[0] != .string) {
+            return Error.type_mismatch;
+        }
+        const str = args[0].string;
+        var result = try interpreter.allocator.alloc(u8, str.len);
+        errdefer interpreter.allocator.free(result);
+        var i: u32 = 0;
+        while (i < str.len) : (i += 1) {
+            const ch = str[i];
+            if (ch >= 'A' and ch <= 'Z') {
+                result[i] = ch + 32;
+            } else {
+                result[i] = ch;
+            }
+        }
+        return Value{ .string = result };
     }
 
     /// Execute AST (evaluate all top-level statements).

@@ -278,6 +278,70 @@ pub const Editor = struct {
         // Return locations array (caller must free)
         return locations;
     }
+    
+    /// Format entire document using LSP server.
+    /// Why: Format code according to language server formatting rules.
+    /// Contract: File must be open and LSP server must be running.
+    /// Returns: Array of text edits to apply, or null if formatting not available.
+    /// Note: Caller must free the returned edits array and new_text strings.
+    pub fn format_document(
+        self: *Editor,
+        tab_size: u32,
+        insert_spaces: bool,
+    ) !?[]LspClient.TextEdit {
+        // Request formatting from LSP server
+        const options = LspClient.FormattingOptions{
+            .tab_size = tab_size,
+            .insert_spaces = insert_spaces,
+        };
+        const edits = try self.lsp.requestFormatting(self.file_uri, options);
+        
+        // Return edits array (caller must free)
+        return edits;
+    }
+    
+    /// Apply text edits to editor buffer.
+    /// Why: Apply formatting edits or other text transformations.
+    /// Contract: edits array must be valid and sorted by position.
+    /// Note: Edits are applied in reverse order to maintain positions.
+    pub fn apply_text_edits(self: *Editor, edits: []const LspClient.TextEdit) !void {
+        // Assert: Edits must be valid
+        std.debug.assert(edits.len <= 1000); // Bounded edits count
+        
+        // Apply edits in reverse order (from end to start) to maintain positions
+        var i: u32 = @intCast(edits.len);
+        while (i > 0) {
+            i -= 1;
+            const edit = edits[i];
+            
+            // Convert range to byte positions
+            const start_byte = try self.lsp.positionToByte(
+                self.buffer.textSlice(),
+                edit.range.start,
+            );
+            const end_byte = try self.lsp.positionToByte(
+                self.buffer.textSlice(),
+                edit.range.end,
+            );
+            
+            // Replace range with new text
+            try self.buffer.replace_range(start_byte, end_byte, edit.new_text);
+        }
+        
+        // Update Aurora rendering
+        const new_text = self.buffer.textSlice();
+        var new_aurora = try GrainAurora.init(self.allocator, new_text);
+        errdefer new_aurora.deinit();
+        self.aurora.deinit();
+        self.aurora = new_aurora;
+        
+        // Notify LSP of change
+        const change = LspClient.TextDocumentChange{
+            .range = null, // Full document replacement
+            .text = new_text,
+        };
+        try self.lsp.didChange(self.file_uri, &.{change});
+    }
 
     /// Insert text at cursor; triggers LSP didChange notification.
     /// Prevents insertion into readonly spans. Records operation in undo history.

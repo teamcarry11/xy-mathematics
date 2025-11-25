@@ -17,6 +17,7 @@ const window_switching = @import("window_switching.zig");
 const window_state = @import("window_state.zig");
 const window_preview = @import("window_preview.zig");
 const window_visual = @import("window_visual.zig");
+const window_stacking = @import("window_stacking.zig");
 const keyboard_shortcuts = @import("keyboard_shortcuts.zig");
 
 // Bounded: Max number of windows.
@@ -177,6 +178,7 @@ pub const Compositor = struct {
     switch_order: window_switching.WindowSwitchOrder,
     state_manager: window_state.WindowStateManager,
     preview_manager: window_preview.PreviewManager,
+    window_stack: window_stacking.WindowStack,
 
     pub fn init(allocator: std.mem.Allocator) Compositor {
         std.debug.assert(@intFromPtr(allocator.ptr) != 0);
@@ -208,6 +210,7 @@ pub const Compositor = struct {
             .switch_order = window_switching.WindowSwitchOrder.init(),
             .state_manager = window_state.WindowStateManager.init(),
             .preview_manager = window_preview.PreviewManager.init(),
+            .window_stack = window_stacking.WindowStack.init(),
         };
         var i: u32 = 0;
         while (i < MAX_WINDOWS) : (i += 1) {
@@ -273,6 +276,8 @@ pub const Compositor = struct {
         }
         // Add window to switch order.
         _ = self.switch_order.add_window(window_id);
+        // Add window to stacking order (at top).
+        _ = self.window_stack.add_window(window_id);
         std.debug.assert(self.windows_len <= MAX_WINDOWS);
         std.debug.assert(window_id > 0);
         return window_id;
@@ -312,6 +317,8 @@ pub const Compositor = struct {
         }
         // Remove from switch order.
         _ = self.switch_order.remove_window(window_id);
+        // Remove from stacking order.
+        _ = self.window_stack.remove_window(window_id);
         // Remove from state manager.
         _ = self.state_manager.remove_window(window_id);
         // Remove from preview manager.
@@ -430,12 +437,15 @@ pub const Compositor = struct {
         std.debug.assert(self.framebuffer_base > 0);
         // Clear framebuffer to background color.
         self.renderer.clear(framebuffer_renderer.COLOR_DARK_BG);
-        // Render each visible, non-minimized window.
-        var i: u32 = 0;
-        while (i < self.windows_len) : (i += 1) {
-            const win = &self.windows[i];
-            if (win.visible and !win.minimized) {
-                self.render_window_decorations(win);
+        // Render windows in stacking order (bottom to top).
+        var stack_i: u32 = 0;
+        while (stack_i < self.window_stack.window_ids_len) : (stack_i += 1) {
+            if (self.window_stack.get_window_at(stack_i)) |window_id| {
+                if (self.get_window(window_id)) |win| {
+                    if (win.visible and !win.minimized) {
+                        self.render_window_decorations(win);
+                    }
+                }
             }
         }
         // Render desktop shell (status bar and launcher).
@@ -624,6 +634,8 @@ pub const Compositor = struct {
             self.focused_window_id = window_id;
             // Move to front of switch order.
             self.switch_order.move_to_front(window_id);
+            // Raise to top of stacking order.
+            _ = self.window_stack.raise_to_top(window_id);
             return true;
         }
         return false;
@@ -925,6 +937,18 @@ pub const Compositor = struct {
                 _ = self.generate_window_preview(win.id);
             }
         }
+    }
+
+    // Raise window to top of stacking order.
+    pub fn raise_window(self: *Compositor, window_id: u32) bool {
+        std.debug.assert(window_id > 0);
+        return self.window_stack.raise_to_top(window_id);
+    }
+
+    // Lower window to bottom of stacking order.
+    pub fn lower_window(self: *Compositor, window_id: u32) bool {
+        std.debug.assert(window_id > 0);
+        return self.window_stack.lower_to_bottom(window_id);
     }
 
     // Get resize handle at mouse position.

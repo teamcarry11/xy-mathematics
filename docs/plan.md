@@ -39,6 +39,31 @@
      - ✅ Memory statistics printing (usage, access counts, region stats)
      - ✅ Integration with read64/write64 (automatic tracking)
      - ✅ Comprehensive tests (tests/062_vm_memory_stats_test.zig)
+   - ✅ VM Instruction Execution Statistics (Phase 2.1.5)
+     - ✅ Instruction execution tracking per opcode (MAX_OPCODES: 128)
+     - ✅ Instruction categorization (arithmetic, memory, control_flow, system, other)
+     - ✅ Instruction statistics printing (total, unique opcodes, top 10 instructions)
+     - ✅ Integration with step() (automatic instruction tracking)
+     - ✅ Comprehensive tests (tests/063_vm_instruction_stats_test.zig)
+   - ✅ VM Syscall Execution Statistics (Phase 2.1.6)
+     - ✅ Syscall execution tracking per syscall number (MAX_SYSCALLS: 32)
+     - ✅ Syscall categorization (process, memory, io, ipc, system, other)
+     - ✅ Syscall statistics printing (total, unique syscalls, top 10 syscalls)
+     - ✅ Integration with execute_ecall() (automatic syscall tracking for kernel syscalls >= 10)
+     - ✅ Comprehensive tests (tests/064_vm_syscall_stats_test.zig)
+   - ✅ VM Execution Flow Tracking (Phase 2.1.7)
+     - ✅ PC sequence tracking (circular buffer, MAX_PC_HISTORY: 256)
+     - ✅ Unique PC tracking (MAX_UNIQUE_PCS: 128)
+     - ✅ Loop pattern detection (repeated PC sequences)
+     - ✅ Execution flow statistics printing (total, unique PCs, top 10 PCs, loop detection)
+     - ✅ Integration with step() (automatic PC tracking)
+     - ✅ Comprehensive tests (tests/065_vm_execution_flow_test.zig)
+   - ✅ VM Statistics Aggregator (Phase 2.1.8)
+     - ✅ Unified statistics reporting interface
+     - ✅ Aggregates all VM statistics modules (performance, exceptions, memory, instructions, syscalls, execution flow)
+     - ✅ Comprehensive statistics printing (all modules in one call)
+     - ✅ Reset all statistics in one call
+     - ✅ Comprehensive tests (tests/066_vm_stats_aggregator_test.zig)
 
 2. **Kernel Boot Sequence**
    - Implement basic boot loader

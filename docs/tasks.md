@@ -36,6 +36,31 @@
   - [x] Integration with read64/write64()
   - [x] Comprehensive tests (tests/062_vm_memory_stats_test.zig)
   - [x] Fixed initialization and bounds checking issues
+- [x] VM Instruction Execution Statistics (Phase 2.1.5)
+  - [x] Instruction execution tracking per opcode
+  - [x] Instruction categorization
+  - [x] Instruction statistics printing
+  - [x] Integration with step()
+  - [x] Comprehensive tests (tests/063_vm_instruction_stats_test.zig)
+- [x] VM Syscall Execution Statistics (Phase 2.1.6)
+  - [x] Syscall execution tracking per syscall number
+  - [x] Syscall categorization
+  - [x] Syscall statistics printing
+  - [x] Integration with execute_ecall()
+  - [x] Comprehensive tests (tests/064_vm_syscall_stats_test.zig)
+- [x] VM Execution Flow Tracking (Phase 2.1.7)
+  - [x] PC sequence tracking (circular buffer)
+  - [x] Unique PC tracking
+  - [x] Loop pattern detection
+  - [x] Execution flow statistics printing
+  - [x] Integration with step()
+  - [x] Comprehensive tests (tests/065_vm_execution_flow_test.zig)
+- [x] VM Statistics Aggregator (Phase 2.1.8)
+  - [x] Unified statistics reporting interface
+  - [x] Aggregates all VM statistics modules
+  - [x] Comprehensive statistics printing
+  - [x] Reset all statistics in one call
+  - [x] Comprehensive tests (tests/066_vm_stats_aggregator_test.zig)
 
 #### 2.2 Kernel Boot Sequence ✅ **COMPLETE**
 - [x] Implement basic boot loader
@@ -925,7 +950,7 @@
 - [x] Statement execution (if, while, for, return, block)
 - [x] Variable and constant declarations
 - [x] Built-in commands (echo, cd, pwd, exit)
-- [x] Built-in string functions (len, substr, trim)
+- [x] Built-in string functions (len, substr, trim, indexOf, replace, toUpper, toLower)
 - [x] Built-in math functions (abs, min, max, floor, ceil, round)
 - [x] Exit code handling
 - [x] Error handling (Interpreter.Error enum)

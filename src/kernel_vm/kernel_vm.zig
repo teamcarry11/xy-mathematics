@@ -18,4 +18,5 @@ pub const memory_stats = @import("memory_stats.zig");
 pub const instruction_stats = @import("instruction_stats.zig");
 pub const syscall_stats = @import("syscall_stats.zig");
 pub const execution_flow = @import("execution_flow.zig");
+pub const stats_aggregator = @import("stats_aggregator.zig");
 

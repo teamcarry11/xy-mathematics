@@ -24,15 +24,16 @@ pub const Terminal = struct {
     pub const MAX_ESCAPE_SEQ: u32 = 256;
 
     /// Character cell attributes.
-    pub const CellAttributes = packed struct {
-        fg_color: u8, // Foreground color index (0-15 for ANSI colors)
-        bg_color: u8, // Background color index (0-15 for ANSI colors)
+    pub const CellAttributes = struct {
+        fg_color: u8, // Foreground color index (0-15 for ANSI, 0-255 for 256-color)
+        bg_color: u8, // Background color index (0-15 for ANSI, 0-255 for 256-color)
+        fg_rgb: ?[3]u8, // Foreground RGB (true color, null if using indexed color)
+        bg_rgb: ?[3]u8, // Background RGB (true color, null if using indexed color)
         bold: bool, // Bold text
         italic: bool, // Italic text
         underline: bool, // Underline text
         blink: bool, // Blinking text
         reverse: bool, // Reverse video
-        _padding: u1 = 0,
     };
 
     /// Character cell (single cell in terminal grid).
@@ -92,6 +93,8 @@ pub const Terminal = struct {
             .current_attrs = CellAttributes{
                 .fg_color = 7,
                 .bg_color = 0,
+                .fg_rgb = null,
+                .bg_rgb = null,
                 .bold = false,
                 .italic = false,
                 .underline = false,
@@ -223,6 +226,8 @@ pub const Terminal = struct {
                 .attrs = CellAttributes{
                     .fg_color = self.default_fg,
                     .bg_color = self.default_bg,
+                    .fg_rgb = null,
+                    .bg_rgb = null,
                     .bold = false,
                     .italic = false,
                     .underline = false,

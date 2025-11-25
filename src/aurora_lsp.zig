@@ -2289,6 +2289,225 @@ pub const LspClient = struct {
         }
     }
     
+    /// Semantic token types (for textDocument/semanticTokens).
+    pub const SemanticTokenType = enum(u32) {
+        namespace = 0,
+        type = 1,
+        class = 2,
+        enum = 3,
+        interface = 4,
+        struct = 5,
+        type_parameter = 6,
+        parameter = 7,
+        variable = 8,
+        property = 9,
+        enum_member = 10,
+        event = 11,
+        function = 12,
+        method = 13,
+        macro = 14,
+        keyword = 15,
+        modifier = 16,
+        comment = 17,
+        string = 18,
+        number = 19,
+        regexp = 20,
+        operator = 21,
+    };
+    
+    /// Semantic token modifiers (bit flags).
+    pub const SemanticTokenModifiers = struct {
+        pub const declaration: u32 = 1 << 0;
+        pub const definition: u32 = 1 << 1;
+        pub const readonly: u32 = 1 << 2;
+        pub const static: u32 = 1 << 3;
+        pub const deprecated: u32 = 1 << 4;
+        pub const async: u32 = 1 << 5;
+        pub const modification: u32 = 1 << 6;
+        pub const documentation: u32 = 1 << 7;
+        pub const default_library: u32 = 1 << 8;
+    };
+    
+    /// Semantic token (for syntax highlighting).
+    pub const SemanticToken = struct {
+        delta_line: u32, // Line delta from previous token
+        delta_start: u32, // Character delta from previous token start
+        length: u32, // Token length
+        token_type: u32, // Token type (SemanticTokenType)
+        token_modifiers: u32, // Token modifiers (bit flags)
+    };
+    
+    /// Request textDocument/semanticTokens/full (get all semantic tokens).
+    /// Why: Get semantic tokens for syntax highlighting based on language server analysis.
+    /// Contract: uri must be valid.
+    /// Returns: Array of semantic tokens, or null if not available.
+    /// Note: Caller must free the returned tokens array.
+    pub fn requestSemanticTokensFull(self: *LspClient, uri: []const u8) !?[]SemanticToken {
+        // Assert: URI must be valid
+        std.debug.assert(uri.len > 0);
+        std.debug.assert(uri.len <= 4096); // Bounded URI length
+        
+        var params_obj = std.json.ObjectMap.init(self.allocator);
+        defer params_obj.deinit();
+        
+        var text_doc_obj = std.json.ObjectMap.init(self.allocator);
+        defer text_doc_obj.deinit();
+        try text_doc_obj.put("uri", std.json.Value{ .string = uri });
+        try params_obj.put("textDocument", std.json.Value{ .object = text_doc_obj });
+        
+        const params = std.json.Value{ .object = params_obj };
+        const response = try self.sendRequest("textDocument/semanticTokens/full", params);
+        
+        // Parse semantic tokens from response.result
+        if (response.result) |result| {
+            if (result == .object) {
+                const obj = result.object;
+                
+                // Parse data array (encoded semantic tokens)
+                const data_val = obj.get("data") orelse return null;
+                if (data_val != .array) return null;
+                
+                const data_items = data_val.array.items;
+                if (data_items.len % 5 != 0) return null; // Must be multiple of 5
+                
+                var tokens = try std.ArrayList(SemanticToken).initCapacity(
+                    self.allocator,
+                    data_items.len / 5,
+                );
+                errdefer tokens.deinit();
+                
+                var i: u32 = 0;
+                while (i < data_items.len) {
+                    if (i + 4 >= data_items.len) break;
+                    
+                    // Parse 5 integers: deltaLine, deltaStart, length, tokenType, tokenModifiers
+                    if (data_items[i] != .integer or
+                        data_items[i + 1] != .integer or
+                        data_items[i + 2] != .integer or
+                        data_items[i + 3] != .integer or
+                        data_items[i + 4] != .integer) {
+                        i += 5;
+                        continue;
+                    }
+                    
+                    const delta_line = @as(u32, @intCast(data_items[i].integer));
+                    const delta_start = @as(u32, @intCast(data_items[i + 1].integer));
+                    const length = @as(u32, @intCast(data_items[i + 2].integer));
+                    const token_type = @as(u32, @intCast(data_items[i + 3].integer));
+                    const token_modifiers = @as(u32, @intCast(data_items[i + 4].integer));
+                    
+                    try tokens.append(SemanticToken{
+                        .delta_line = delta_line,
+                        .delta_start = delta_start,
+                        .length = length,
+                        .token_type = token_type,
+                        .token_modifiers = token_modifiers,
+                    });
+                    
+                    i += 5;
+                }
+                
+                return try tokens.toOwnedSlice();
+            }
+        }
+        return null;
+    }
+    
+    /// Request textDocument/semanticTokens/range (get semantic tokens for range).
+    /// Why: Get semantic tokens for a specific range (for incremental updates).
+    /// Contract: uri and range must be valid.
+    /// Returns: Array of semantic tokens, or null if not available.
+    /// Note: Caller must free the returned tokens array.
+    pub fn requestSemanticTokensRange(
+        self: *LspClient,
+        uri: []const u8,
+        range: Range,
+    ) !?[]SemanticToken {
+        // Assert: URI must be valid
+        std.debug.assert(uri.len > 0);
+        std.debug.assert(uri.len <= 4096); // Bounded URI length
+        
+        var params_obj = std.json.ObjectMap.init(self.allocator);
+        defer params_obj.deinit();
+        
+        var text_doc_obj = std.json.ObjectMap.init(self.allocator);
+        defer text_doc_obj.deinit();
+        try text_doc_obj.put("uri", std.json.Value{ .string = uri });
+        try params_obj.put("textDocument", std.json.Value{ .object = text_doc_obj });
+        
+        var range_obj = std.json.ObjectMap.init(self.allocator);
+        defer range_obj.deinit();
+        
+        var start_obj = std.json.ObjectMap.init(self.allocator);
+        try start_obj.put("line", std.json.Value{ .integer = @intCast(range.start.line) });
+        try start_obj.put("character", std.json.Value{ .integer = @intCast(range.start.character) });
+        try range_obj.put("start", std.json.Value{ .object = start_obj });
+        
+        var end_obj = std.json.ObjectMap.init(self.allocator);
+        try end_obj.put("line", std.json.Value{ .integer = @intCast(range.end.line) });
+        try end_obj.put("character", std.json.Value{ .integer = @intCast(range.end.character) });
+        try range_obj.put("end", std.json.Value{ .object = end_obj });
+        
+        try params_obj.put("range", std.json.Value{ .object = range_obj });
+        
+        const params = std.json.Value{ .object = params_obj };
+        const response = try self.sendRequest("textDocument/semanticTokens/range", params);
+        
+        // Parse semantic tokens from response.result (same as full)
+        if (response.result) |result| {
+            if (result == .object) {
+                const obj = result.object;
+                
+                // Parse data array (encoded semantic tokens)
+                const data_val = obj.get("data") orelse return null;
+                if (data_val != .array) return null;
+                
+                const data_items = data_val.array.items;
+                if (data_items.len % 5 != 0) return null; // Must be multiple of 5
+                
+                var tokens = try std.ArrayList(SemanticToken).initCapacity(
+                    self.allocator,
+                    data_items.len / 5,
+                );
+                errdefer tokens.deinit();
+                
+                var i: u32 = 0;
+                while (i < data_items.len) {
+                    if (i + 4 >= data_items.len) break;
+                    
+                    // Parse 5 integers: deltaLine, deltaStart, length, tokenType, tokenModifiers
+                    if (data_items[i] != .integer or
+                        data_items[i + 1] != .integer or
+                        data_items[i + 2] != .integer or
+                        data_items[i + 3] != .integer or
+                        data_items[i + 4] != .integer) {
+                        i += 5;
+                        continue;
+                    }
+                    
+                    const delta_line = @as(u32, @intCast(data_items[i].integer));
+                    const delta_start = @as(u32, @intCast(data_items[i + 1].integer));
+                    const length = @as(u32, @intCast(data_items[i + 2].integer));
+                    const token_type = @as(u32, @intCast(data_items[i + 3].integer));
+                    const token_modifiers = @as(u32, @intCast(data_items[i + 4].integer));
+                    
+                    try tokens.append(SemanticToken{
+                        .delta_line = delta_line,
+                        .delta_start = delta_start,
+                        .length = length,
+                        .token_type = token_type,
+                        .token_modifiers = token_modifiers,
+                    });
+                    
+                    i += 5;
+                }
+                
+                return try tokens.toOwnedSlice();
+            }
+        }
+        return null;
+    }
+    
     /// Cancel a pending request.
     pub fn cancelRequest(self: *LspClient, request_id: u64) !void {
         // Assert: Request must be pending

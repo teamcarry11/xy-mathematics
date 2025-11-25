@@ -25,4 +25,5 @@ pub const instruction_perf = @import("instruction_perf.zig");
 pub const stats_export = @import("stats_export.zig");
 pub const debug_interface = @import("debug_interface.zig");
 pub const state_inspection = @import("state_inspection.zig");
+pub const execution_control = @import("execution_control.zig");
 

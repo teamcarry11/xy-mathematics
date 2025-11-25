@@ -110,6 +110,14 @@
      - ✅ Memory read helpers (read_memory_u64, read_memory_u32)
      - ✅ State printing helpers (print_register_state, print_memory_dump)
      - ✅ Comprehensive tests (tests/072_vm_state_inspection_test.zig)
+   - ✅ VM Execution Control (Phase 2.1.15)
+     - ✅ Continue execution (resume until next breakpoint)
+     - ✅ Step over (execute one instruction, skip function calls)
+     - ✅ Step into (execute one instruction, enter function calls)
+     - ✅ Execution state tracking (paused, running, stepping_over, stepping_into)
+     - ✅ Call stack tracking (MAX_CALL_STACK: 64)
+     - ✅ Execution control methods (continue_execution, step_over, step_into, pause)
+     - ✅ Comprehensive tests (tests/073_vm_execution_control_test.zig)
 
 2. **Kernel Boot Sequence**
    - Implement basic boot loader

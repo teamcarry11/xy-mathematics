@@ -28,6 +28,7 @@ const window_effects = @import("window_effects.zig");
 const window_drag_drop = @import("window_drag_drop.zig");
 const window_rules = @import("window_rules.zig");
 const window_events = @import("window_events.zig");
+const window_session = @import("window_session.zig");
 const keyboard_shortcuts = @import("keyboard_shortcuts.zig");
 const desktop_shell = @import("desktop_shell.zig");
 const runtime_config = @import("runtime_config.zig");
@@ -203,6 +204,7 @@ pub const Compositor = struct {
     drop_zone_manager: window_drag_drop.DropZoneManager,
     rule_manager: window_rules.WindowRuleManager,
     event_manager: window_events.EventManager,
+    session_manager: window_session.SessionManager,
     border_width: u32, // Configurable border width
     title_bar_height: u32, // Configurable title bar height
 
@@ -226,11 +228,7 @@ pub const Compositor = struct {
             .focused_window_id = 0,
             .shortcut_registry = keyboard_shortcuts.ShortcutRegistry.init(),
             .config_manager = null,
-            .shell = desktop_shell.DesktopShell.init(
-                &compositor.renderer,
-                compositor.output.width,
-                compositor.output.height,
-            ),
+            .shell = undefined, // Will be initialized after compositor is created
             .app_registry = application.ApplicationRegistry.init(),
             .app_launcher = undefined,
             .switch_order = window_switching.WindowSwitchOrder.init(),
@@ -243,6 +241,7 @@ pub const Compositor = struct {
             .drop_zone_manager = window_drag_drop.DropZoneManager.init(),
             .rule_manager = window_rules.WindowRuleManager.init(),
             .event_manager = window_events.EventManager.init(),
+            .session_manager = window_session.SessionManager.init(),
             .border_width = BORDER_WIDTH, // Default border width
             .title_bar_height = TITLE_BAR_HEIGHT, // Default title bar height
         };
@@ -741,7 +740,7 @@ pub const Compositor = struct {
                         if (self.get_resize_handle(window_id, event.mouse.x, event.mouse.y)) |handle| {
                             if (handle != ResizeHandle.none) {
                                 self.start_resize(window_id, handle, event.mouse.x, event.mouse.y);
-                            } else {
+                            } else if (self.get_window(window_id)) |win| {
                                 const button_type = window_decorations.get_button_at(
                                     win.x,
                                     win.y,
@@ -961,7 +960,7 @@ pub const Compositor = struct {
                 win.visible = !state.minimized;
                 // Restore title.
                 var i: u32 = 0;
-                while (i < compositor.MAX_TITLE_LEN) : (i += 1) {
+                while (i < MAX_TITLE_LEN) : (i += 1) {
                     win.title[i] = 0;
                 }
                 i = 0;
@@ -1471,8 +1470,8 @@ pub const Compositor = struct {
 
     // Update window resize.
     fn update_resize(self: *Compositor, win: *Window, x: u32, y: u32) void {
-        _ = self;
         std.debug.assert(win.resize_state.active);
+        _ = self;
         const dx = @as(i32, @intCast(x)) - win.resize_state.start_x;
         const dy = @as(i32, @intCast(y)) - win.resize_state.start_y;
         const min_size: u32 = 100;

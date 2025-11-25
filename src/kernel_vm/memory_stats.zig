@@ -37,7 +37,10 @@ pub const MemoryRegion = struct {
     total_bytes_written: u64,
 
     pub fn init(start_addr: u64, end_addr: u64) MemoryRegion {
-        std.debug.assert(start_addr < end_addr);
+        // Allow 0,0 for uninitialized regions.
+        if (start_addr > 0 or end_addr > 0) {
+            std.debug.assert(start_addr < end_addr);
+        }
         return MemoryRegion{
             .start_addr = start_addr,
             .end_addr = end_addr,

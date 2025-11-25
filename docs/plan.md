@@ -502,8 +502,23 @@ Create a fourth agent dedicated to **Grain OS** - a Zig-Wayland implemented GNOM
    - ✅ Comprehensive tests (`tests/064_grain_os_window_resize_drag_test.zig`)
    - ✅ Window management keybindings documentation (`docs/grain_os_window_management_keybindings.md`)
    - ✅ Agent integration prompts (`docs/agent_prompts_window_management.md`)
-11. **Phase 11**: Integration (Grain Kernel syscalls, VM testing)
-12. **Phase 12**: Applications (Aurora, Dream, Skate, Terminal ports)
+11. **Phase 11**: Window Snapping ✅ **COMPLETE**
+   - ✅ Window snapping module (`src/grain_os/window_snapping.zig`)
+   - ✅ Snap zone detection (left, right, top, bottom, corners)
+   - ✅ Snap position calculation (half-screen, quarter-screen zones)
+   - ✅ Snap threshold configuration (SNAP_THRESHOLD: 20 pixels)
+   - ✅ Compositor integration (automatic snapping during drag)
+   - ✅ Comprehensive tests (`tests/065_grain_os_window_snapping_test.zig`)
+12. **Phase 12**: Window Switching ✅ **COMPLETE**
+   - ✅ Window switching module (`src/grain_os/window_switching.zig`)
+   - ✅ Window switch order management (MAX_SWITCH_WINDOWS: 256)
+   - ✅ Forward/backward window cycling
+   - ✅ Window order tracking (move to front on focus)
+   - ✅ Keyboard shortcuts (Alt+Tab forward, Alt+Shift+Tab backward)
+   - ✅ Compositor integration (automatic order management)
+   - ✅ Comprehensive tests (`tests/066_grain_os_window_switching_test.zig`)
+13. **Phase 13**: Integration (Grain Kernel syscalls, VM testing)
+14. **Phase 14**: Applications (Aurora, Dream, Skate, Terminal ports)
 
 ### Proposal Document
 
@@ -775,6 +790,7 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 - ✅ Editor LSP Integration Enhancements ✅ **COMPLETE**
   - ✅ Implement LSP didChange notification on text insert
   - ✅ Add LSP hover request support (requestHover method)
+  - ✅ Add LSP go-to-definition support (requestDefinition method, go_to_definition in Editor)
   - ✅ Integrate hover requests into moveCursor
   - ✅ Implement ghost text storage for AI completions
   - ✅ Fix didChange range calculation for insertions
@@ -1028,6 +1044,15 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 - ✅ Comprehensive tests (`tests/041_grainscript_interpreter_test.zig`)
 - ✅ Iterative evaluation (no recursion, stack-based)
 - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+- ✅ User-defined function calls (`src/grainscript/interpreter.zig`)
+  - ✅ Function call execution (call_user_function method)
+  - ✅ Parameter binding (create local variables for parameters)
+  - ✅ Return value handling (store return value in call frame)
+  - ✅ Call stack management (push/pop frames, track local variables)
+  - ✅ Scope management (function-local scope, automatic cleanup)
+  - ✅ Return statement integration (propagates return value through call stack)
+  - ✅ Comprehensive tests (`tests/041_grainscript_interpreter_test.zig`)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, iterative algorithms)
 - ⚠️ External command execution (requires kernel syscall integration - Phase 8.1.4+)
 
 #### 8.1.4: Variable Handling ✅ **COMPLETE**
@@ -1321,6 +1346,15 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 - ✅ Comprehensive tests (`tests/041_grainscript_interpreter_test.zig`)
 - ✅ Iterative evaluation (no recursion, stack-based)
 - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+- ✅ User-defined function calls (`src/grainscript/interpreter.zig`)
+  - ✅ Function call execution (call_user_function method)
+  - ✅ Parameter binding (create local variables for parameters)
+  - ✅ Return value handling (store return value in call frame)
+  - ✅ Call stack management (push/pop frames, track local variables)
+  - ✅ Scope management (function-local scope, automatic cleanup)
+  - ✅ Return statement integration (propagates return value through call stack)
+  - ✅ Comprehensive tests (`tests/041_grainscript_interpreter_test.zig`)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, iterative algorithms)
 - ⚠️ External command execution (requires kernel syscall integration - Phase 8.1.4+)
 
 #### 8.1.4: Variable Handling ✅ **COMPLETE**
@@ -1614,6 +1648,15 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 - ✅ Comprehensive tests (`tests/041_grainscript_interpreter_test.zig`)
 - ✅ Iterative evaluation (no recursion, stack-based)
 - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+- ✅ User-defined function calls (`src/grainscript/interpreter.zig`)
+  - ✅ Function call execution (call_user_function method)
+  - ✅ Parameter binding (create local variables for parameters)
+  - ✅ Return value handling (store return value in call frame)
+  - ✅ Call stack management (push/pop frames, track local variables)
+  - ✅ Scope management (function-local scope, automatic cleanup)
+  - ✅ Return statement integration (propagates return value through call stack)
+  - ✅ Comprehensive tests (`tests/041_grainscript_interpreter_test.zig`)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, iterative algorithms)
 - ⚠️ External command execution (requires kernel syscall integration - Phase 8.1.4+)
 
 #### 8.1.4: Variable Handling ✅ **COMPLETE**

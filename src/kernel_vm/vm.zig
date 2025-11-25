@@ -7,6 +7,7 @@ const performance_mod = @import("performance.zig");
 const state_snapshot_mod = @import("state_snapshot.zig");
 const exception_stats_mod = @import("exception_stats.zig");
 const memory_stats_mod = @import("memory_stats.zig");
+const instruction_stats_mod = @import("instruction_stats.zig");
 
 /// Pure Zig RISC-V64 emulator for kernel development.
 /// Grain Style: Static allocation where possible, comprehensive assertions,
@@ -315,6 +316,10 @@ pub const VM = struct {
     /// Why: Track memory usage, access patterns, and allocation metrics.
     /// GrainStyle: Static allocation, bounded counters, explicit types.
     memory_stats: memory_stats_mod.VMMemoryStats = undefined,
+    /// Instruction execution statistics tracker.
+    /// Why: Track instruction execution frequency and patterns.
+    /// GrainStyle: Static allocation, bounded counters, explicit types.
+    instruction_stats: instruction_stats_mod.VMInstructionStats = .{},
 
     const Self = @This();
 
@@ -1027,6 +1032,10 @@ pub const VM = struct {
 
         // Decode instruction opcode (bits [6:0]).
         const opcode = @as(u7, @truncate(inst));
+        const opcode_u32: u32 = @intCast(opcode);
+        
+        // Track instruction execution.
+        self.instruction_stats.record_instruction(opcode_u32);
 
         // Execute based on opcode.
         // Why: RISC-V uses opcode-based instruction decoding.

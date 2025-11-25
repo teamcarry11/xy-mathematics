@@ -267,3 +267,15 @@ pub fn action_maximize_height(comp: *compositor.Compositor, window_id: u32) bool
     return false;
 }
 
+// Switch to next window (Alt+Tab forward).
+pub fn action_switch_next(comp: *compositor.Compositor, _window_id: u32) bool {
+    _ = _window_id;
+    return comp.switch_to_next_window();
+}
+
+// Switch to previous window (Alt+Shift+Tab backward).
+pub fn action_switch_previous(comp: *compositor.Compositor, _window_id: u32) bool {
+    _ = _window_id;
+    return comp.switch_to_previous_window();
+}
+

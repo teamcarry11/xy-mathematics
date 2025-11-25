@@ -235,6 +235,31 @@ pub const Editor = struct {
         };
         return self.tree_sitter.getNodeAt(&tree, point);
     }
+    
+    /// Go to definition of symbol at current cursor position.
+    /// Why: Navigate to symbol definition for code navigation.
+    /// Contract: Cursor must be positioned on a symbol.
+    /// Returns: Location of definition (file URI and range), or null if not found.
+    pub fn go_to_definition(self: *Editor) !?LspClient.Location {
+        // Request definition from LSP server
+        const location = try self.lsp.requestDefinition(
+            self.file_uri,
+            self.cursor_line,
+            self.cursor_char,
+        );
+        
+        // If definition found, move cursor to definition location
+        if (location) |loc| {
+            // Note: In full implementation, this would:
+            // 1. Open the file at loc.uri if different from current file
+            // 2. Move cursor to loc.range.start
+            // 3. Scroll to make definition visible
+            // For now, just return the location
+            return loc;
+        }
+        
+        return null;
+    }
 
     /// Insert text at cursor; triggers LSP didChange notification.
     /// Prevents insertion into readonly spans. Records operation in undo history.

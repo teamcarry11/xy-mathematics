@@ -14,6 +14,7 @@ const input_handler = @import("input_handler.zig");
 const workspace = @import("workspace.zig");
 const window_snapping = @import("window_snapping.zig");
 const window_switching = @import("window_switching.zig");
+const window_state = @import("window_state.zig");
 
 // Bounded: Max number of windows.
 pub const MAX_WINDOWS: u32 = 256;
@@ -171,6 +172,7 @@ pub const Compositor = struct {
     app_registry: application.ApplicationRegistry,
     app_launcher: application.ApplicationLauncher,
     switch_order: window_switching.WindowSwitchOrder,
+    state_manager: window_state.WindowStateManager,
 
     pub fn init(allocator: std.mem.Allocator) Compositor {
         std.debug.assert(@intFromPtr(allocator.ptr) != 0);
@@ -200,6 +202,7 @@ pub const Compositor = struct {
             .app_registry = application.ApplicationRegistry.init(),
             .app_launcher = undefined,
             .switch_order = window_switching.WindowSwitchOrder.init(),
+            .state_manager = window_state.WindowStateManager.init(),
         };
         var i: u32 = 0;
         while (i < MAX_WINDOWS) : (i += 1) {
@@ -263,6 +266,8 @@ pub const Compositor = struct {
                 win.height = bounds.height;
             }
         }
+        // Add window to switch order.
+        _ = self.switch_order.add_window(window_id);
         std.debug.assert(self.windows_len <= MAX_WINDOWS);
         std.debug.assert(window_id > 0);
         return window_id;
@@ -300,6 +305,8 @@ pub const Compositor = struct {
         if (self.workspace_manager.get_current_workspace()) |ws| {
             _ = ws.remove_window(window_id);
         }
+        // Remove from switch order.
+        _ = self.switch_order.remove_window(window_id);
         // Shift remaining windows left.
         while (i < self.windows_len - 1) : (i += 1) {
             self.windows[i] = self.windows[i + 1];
@@ -535,6 +542,8 @@ pub const Compositor = struct {
         if (self.get_window(window_id)) |win| {
             win.focused = true;
             self.focused_window_id = window_id;
+            // Move to front of switch order.
+            self.switch_order.move_to_front(window_id);
             return true;
         }
         return false;
@@ -717,6 +726,22 @@ pub const Compositor = struct {
     // Launch application by name.
     pub fn launch_application(self: *Compositor, name: []const u8) bool {
         return self.app_launcher.launch_application_by_name(name);
+    }
+
+    // Switch to next window (forward cycle).
+    pub fn switch_to_next_window(self: *Compositor) bool {
+        if (self.switch_order.get_next()) |window_id| {
+            return self.focus_window(window_id);
+        }
+        return false;
+    }
+
+    // Switch to previous window (backward cycle).
+    pub fn switch_to_previous_window(self: *Compositor) bool {
+        if (self.switch_order.get_previous()) |window_id| {
+            return self.focus_window(window_id);
+        }
+        return false;
     }
 
     // Get resize handle at mouse position.

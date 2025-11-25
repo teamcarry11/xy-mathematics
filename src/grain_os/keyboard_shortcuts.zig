@@ -37,6 +37,7 @@ pub const KEY_G: u32 = 0x47;
 pub const KEY_E: u32 = 0x45;
 pub const KEY_T: u32 = 0x54;
 pub const KEY_C: u32 = 0x43;
+pub const KEY_TAB: u32 = 0x09;
 
 // Keyboard shortcut: key combination and action.
 pub const KeyboardShortcut = struct {
@@ -85,6 +86,8 @@ pub const ShortcutRegistry = struct {
         _ = registry.register_shortcut(MODIFIER_CTRL | MODIFIER_ALT, KEY_EQUALS, window_actions.action_larger, "larger");
         _ = registry.register_shortcut(MODIFIER_CTRL | MODIFIER_ALT, KEY_MINUS, window_actions.action_smaller, "smaller");
         _ = registry.register_shortcut(MODIFIER_CTRL | MODIFIER_ALT | MODIFIER_SHIFT, KEY_UP, window_actions.action_maximize_height, "maximize-height");
+        _ = registry.register_shortcut(MODIFIER_ALT, KEY_TAB, window_actions.action_switch_next, "switch-next");
+        _ = registry.register_shortcut(MODIFIER_ALT | MODIFIER_SHIFT, KEY_TAB, window_actions.action_switch_previous, "switch-previous");
         std.debug.assert(registry.shortcuts_len <= MAX_SHORTCUTS);
         return registry;
     }

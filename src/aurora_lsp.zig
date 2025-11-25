@@ -46,6 +46,12 @@ pub const LspClient = struct {
         contents: []const u8, // Hover content (markdown or plain text)
         range: ?Range = null, // Optional range for hover
     };
+    
+    /// Location result for go-to-definition (file URI and range).
+    pub const Location = struct {
+        uri: []const u8, // File URI where definition is located
+        range: Range, // Range of the definition
+    };
 
     pub const Diagnostic = struct {
         range: Range,

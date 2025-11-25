@@ -321,6 +321,136 @@ pub const Interpreter = struct {
             .builtin_handler = builtin_exit,
         };
         self.functions_len += 1;
+
+        // Register string functions
+        try self.register_string_functions();
+        // Register math functions
+        try self.register_math_functions();
+    }
+
+    /// Register string manipulation built-in functions.
+    // 2025-11-24-184000-pst: Active function
+    fn register_string_functions(self: *Interpreter) !void {
+        // len(str) - Get string length
+        const len_name = try self.allocator.dupe(u8, "len");
+        errdefer self.allocator.free(len_name);
+        self.functions[self.functions_len] = Function{
+            .name = len_name,
+            .name_len = @as(u32, @intCast(len_name.len)),
+            .is_builtin = true,
+            .param_count = 1,
+            .body_node = null,
+            .builtin_handler = builtin_len,
+        };
+        self.functions_len += 1;
+
+        // substr(str, start, end) - Get substring
+        const substr_name = try self.allocator.dupe(u8, "substr");
+        errdefer self.allocator.free(substr_name);
+        self.functions[self.functions_len] = Function{
+            .name = substr_name,
+            .name_len = @as(u32, @intCast(substr_name.len)),
+            .is_builtin = true,
+            .param_count = 3,
+            .body_node = null,
+            .builtin_handler = builtin_substr,
+        };
+        self.functions_len += 1;
+
+        // trim(str) - Trim whitespace
+        const trim_name = try self.allocator.dupe(u8, "trim");
+        errdefer self.allocator.free(trim_name);
+        self.functions[self.functions_len] = Function{
+            .name = trim_name,
+            .name_len = @as(u32, @intCast(trim_name.len)),
+            .is_builtin = true,
+            .param_count = 1,
+            .body_node = null,
+            .builtin_handler = builtin_trim,
+        };
+        self.functions_len += 1;
+    }
+
+    /// Register math built-in functions.
+    // 2025-11-24-184000-pst: Active function
+    fn register_math_functions(self: *Interpreter) !void {
+        // abs(x) - Absolute value
+        const abs_name = try self.allocator.dupe(u8, "abs");
+        errdefer self.allocator.free(abs_name);
+        self.functions[self.functions_len] = Function{
+            .name = abs_name,
+            .name_len = @as(u32, @intCast(abs_name.len)),
+            .is_builtin = true,
+            .param_count = 1,
+            .body_node = null,
+            .builtin_handler = builtin_abs,
+        };
+        self.functions_len += 1;
+
+        // min(a, b) - Minimum value
+        const min_name = try self.allocator.dupe(u8, "min");
+        errdefer self.allocator.free(min_name);
+        self.functions[self.functions_len] = Function{
+            .name = min_name,
+            .name_len = @as(u32, @intCast(min_name.len)),
+            .is_builtin = true,
+            .param_count = 2,
+            .body_node = null,
+            .builtin_handler = builtin_min,
+        };
+        self.functions_len += 1;
+
+        // max(a, b) - Maximum value
+        const max_name = try self.allocator.dupe(u8, "max");
+        errdefer self.allocator.free(max_name);
+        self.functions[self.functions_len] = Function{
+            .name = max_name,
+            .name_len = @as(u32, @intCast(max_name.len)),
+            .is_builtin = true,
+            .param_count = 2,
+            .body_node = null,
+            .builtin_handler = builtin_max,
+        };
+        self.functions_len += 1;
+
+        // floor(x) - Floor function
+        const floor_name = try self.allocator.dupe(u8, "floor");
+        errdefer self.allocator.free(floor_name);
+        self.functions[self.functions_len] = Function{
+            .name = floor_name,
+            .name_len = @as(u32, @intCast(floor_name.len)),
+            .is_builtin = true,
+            .param_count = 1,
+            .body_node = null,
+            .builtin_handler = builtin_floor,
+        };
+        self.functions_len += 1;
+
+        // ceil(x) - Ceiling function
+        const ceil_name = try self.allocator.dupe(u8, "ceil");
+        errdefer self.allocator.free(ceil_name);
+        self.functions[self.functions_len] = Function{
+            .name = ceil_name,
+            .name_len = @as(u32, @intCast(ceil_name.len)),
+            .is_builtin = true,
+            .param_count = 1,
+            .body_node = null,
+            .builtin_handler = builtin_ceil,
+        };
+        self.functions_len += 1;
+
+        // round(x) - Round function
+        const round_name = try self.allocator.dupe(u8, "round");
+        errdefer self.allocator.free(round_name);
+        self.functions[self.functions_len] = Function{
+            .name = round_name,
+            .name_len = @as(u32, @intCast(round_name.len)),
+            .is_builtin = true,
+            .param_count = 1,
+            .body_node = null,
+            .builtin_handler = builtin_round,
+        };
+        self.functions_len += 1;
     }
 
     /// Built-in echo command: Print arguments to stdout.
@@ -409,6 +539,173 @@ pub const Interpreter = struct {
         }
 
         return Value.from_integer(0);
+    }
+
+    /// Built-in len function: Get string length.
+    // 2025-11-24-184000-pst: Active function
+    fn builtin_len(interpreter: *Interpreter, args: []const Value) Error!Value {
+        if (args.len != 1) {
+            return Error.invalid_argument;
+        }
+        const arg = args[0];
+        if (arg != .string) {
+            return Error.type_mismatch;
+        }
+        return Value.from_integer(@as(i64, @intCast(arg.string.len)));
+    }
+
+    /// Built-in substr function: Get substring.
+    // 2025-11-24-184000-pst: Active function
+    fn builtin_substr(interpreter: *Interpreter, args: []const Value) Error!Value {
+        if (args.len != 3) {
+            return Error.invalid_argument;
+        }
+        if (args[0] != .string) {
+            return Error.type_mismatch;
+        }
+        if (args[1] != .integer or args[2] != .integer) {
+            return Error.type_mismatch;
+        }
+        const str = args[0].string;
+        const start = args[1].integer;
+        const end = args[2].integer;
+        if (start < 0 or end < start or end > @as(i64, @intCast(str.len))) {
+            return Error.invalid_argument;
+        }
+        const start_u = @as(u32, @intCast(start));
+        const end_u = @as(u32, @intCast(end));
+        const substr = str[start_u..end_u];
+        return try Value.from_string(interpreter.allocator, substr);
+    }
+
+    /// Built-in trim function: Trim whitespace from string.
+    // 2025-11-24-184000-pst: Active function
+    fn builtin_trim(interpreter: *Interpreter, args: []const Value) Error!Value {
+        if (args.len != 1) {
+            return Error.invalid_argument;
+        }
+        if (args[0] != .string) {
+            return Error.type_mismatch;
+        }
+        const str = args[0].string;
+        // Find start (skip whitespace)
+        var start: u32 = 0;
+        while (start < str.len and (str[start] == ' ' or str[start] == '\t' or str[start] == '\n' or str[start] == '\r')) : (start += 1) {}
+        // Find end (skip whitespace from end)
+        var end: u32 = str.len;
+        while (end > start and (str[end - 1] == ' ' or str[end - 1] == '\t' or str[end - 1] == '\n' or str[end - 1] == '\r')) : (end -= 1) {}
+        const trimmed = str[start..end];
+        return try Value.from_string(interpreter.allocator, trimmed);
+    }
+
+    /// Built-in abs function: Absolute value.
+    // 2025-11-24-184000-pst: Active function
+    fn builtin_abs(interpreter: *Interpreter, args: []const Value) Error!Value {
+        _ = interpreter;
+        if (args.len != 1) {
+            return Error.invalid_argument;
+        }
+        const arg = args[0];
+        return switch (arg) {
+            .integer => |v| Value.from_integer(if (v < 0) -v else v),
+            .float => |v| Value.from_float(@abs(v)),
+            else => Error.type_mismatch,
+        };
+    }
+
+    /// Built-in min function: Minimum of two values.
+    // 2025-11-24-184000-pst: Active function
+    fn builtin_min(interpreter: *Interpreter, args: []const Value) Error!Value {
+        _ = interpreter;
+        if (args.len != 2) {
+            return Error.invalid_argument;
+        }
+        const a = args[0];
+        const b = args[1];
+        if (a != b) {
+            return Error.type_mismatch;
+        }
+        return switch (a) {
+            .integer => |av| {
+                const bv = b.integer;
+                Value.from_integer(if (av < bv) av else bv)
+            },
+            .float => |av| {
+                const bv = b.float;
+                Value.from_float(if (av < bv) av else bv)
+            },
+            else => Error.type_mismatch,
+        };
+    }
+
+    /// Built-in max function: Maximum of two values.
+    // 2025-11-24-184000-pst: Active function
+    fn builtin_max(interpreter: *Interpreter, args: []const Value) Error!Value {
+        _ = interpreter;
+        if (args.len != 2) {
+            return Error.invalid_argument;
+        }
+        const a = args[0];
+        const b = args[1];
+        if (a != b) {
+            return Error.type_mismatch;
+        }
+        return switch (a) {
+            .integer => |av| {
+                const bv = b.integer;
+                Value.from_integer(if (av > bv) av else bv)
+            },
+            .float => |av| {
+                const bv = b.float;
+                Value.from_float(if (av > bv) av else bv)
+            },
+            else => Error.type_mismatch,
+        };
+    }
+
+    /// Built-in floor function: Floor of float.
+    // 2025-11-24-184000-pst: Active function
+    fn builtin_floor(interpreter: *Interpreter, args: []const Value) Error!Value {
+        _ = interpreter;
+        if (args.len != 1) {
+            return Error.invalid_argument;
+        }
+        const arg = args[0];
+        return switch (arg) {
+            .integer => |v| Value.from_integer(v),
+            .float => |v| Value.from_float(@floor(v)),
+            else => Error.type_mismatch,
+        };
+    }
+
+    /// Built-in ceil function: Ceiling of float.
+    // 2025-11-24-184000-pst: Active function
+    fn builtin_ceil(interpreter: *Interpreter, args: []const Value) Error!Value {
+        _ = interpreter;
+        if (args.len != 1) {
+            return Error.invalid_argument;
+        }
+        const arg = args[0];
+        return switch (arg) {
+            .integer => |v| Value.from_integer(v),
+            .float => |v| Value.from_float(@ceil(v)),
+            else => Error.type_mismatch,
+        };
+    }
+
+    /// Built-in round function: Round float to nearest integer.
+    // 2025-11-24-184000-pst: Active function
+    fn builtin_round(interpreter: *Interpreter, args: []const Value) Error!Value {
+        _ = interpreter;
+        if (args.len != 1) {
+            return Error.invalid_argument;
+        }
+        const arg = args[0];
+        return switch (arg) {
+            .integer => |v| Value.from_integer(v),
+            .float => |v| Value.from_float(@round(v)),
+            else => Error.type_mismatch,
+        };
     }
 
     /// Execute AST (evaluate all top-level statements).

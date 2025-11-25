@@ -36,6 +36,12 @@
   - [x] Integration with read64/write64()
   - [x] Comprehensive tests (tests/062_vm_memory_stats_test.zig)
   - [x] Fixed initialization and bounds checking issues
+- [x] VM Instruction Execution Statistics (Phase 2.1.5)
+  - [x] Instruction execution tracking per opcode
+  - [x] Instruction categorization
+  - [x] Instruction statistics printing
+  - [x] Integration with step()
+  - [x] Comprehensive tests (tests/063_vm_instruction_stats_test.zig)
 
 #### 2.2 Kernel Boot Sequence ✅ **COMPLETE**
 - [x] Implement basic boot loader
@@ -902,12 +908,23 @@
 - [x] Statement execution (if, while, for, return, block)
 - [x] Variable and constant declarations
 - [x] Built-in commands (echo, cd, pwd, exit)
+- [x] Built-in string functions (len, substr, trim)
+- [x] Built-in math functions (abs, min, max, floor, ceil, round)
 - [x] Exit code handling
 - [x] Error handling (Interpreter.Error enum)
 - [x] Bounded runtime state (MAX_VARIABLES: 1,000, MAX_FUNCTIONS: 256, MAX_CALL_STACK: 1,024)
 - [x] Comprehensive tests (`tests/041_grainscript_interpreter_test.zig`)
 - [x] Iterative evaluation (no recursion, stack-based)
 - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
+- [x] User-defined function calls (`src/grainscript/interpreter.zig`)
+  - [x] Function call execution (call_user_function method)
+  - [x] Parameter binding (create local variables for parameters)
+  - [x] Return value handling (store return value in call frame)
+  - [x] Call stack management (push/pop frames, track local variables)
+  - [x] Scope management (function-local scope, automatic cleanup)
+  - [x] Return statement integration (propagates return value through call stack)
+  - [x] Comprehensive tests (`tests/041_grainscript_interpreter_test.zig`)
+  - [x] GrainStyle compliance (u32 types, assertions, bounded allocations, iterative algorithms)
 - [ ] External command execution (requires kernel syscall integration - Phase 8.1.4+)
 
 #### 8.1.4 Variable Handling ✅ **COMPLETE**
@@ -1257,6 +1274,14 @@
     - ✅ Snap threshold configuration (SNAP_THRESHOLD: 20 pixels)
     - ✅ Compositor integration (automatic snapping during drag)
     - ✅ Comprehensive tests (`tests/065_grain_os_window_snapping_test.zig`)
+  - ✅ Window switching (Phase 12) ✅ **COMPLETE**
+    - ✅ Window switching module (`src/grain_os/window_switching.zig`)
+    - ✅ Window switch order management (MAX_SWITCH_WINDOWS: 256)
+    - ✅ Forward/backward window cycling
+    - ✅ Window order tracking (move to front on focus)
+    - ✅ Keyboard shortcuts (Alt+Tab forward, Alt+Shift+Tab backward)
+    - ✅ Compositor integration (automatic order management)
+    - ✅ Comprehensive tests (`tests/066_grain_os_window_switching_test.zig`)
 
 **In Progress**: 
 - Dream Editor Core - GLM-4.6 Integration (Phase 4.1.3) 🔄

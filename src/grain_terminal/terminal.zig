@@ -491,6 +491,26 @@ pub const Terminal = struct {
                 // Select Graphic Rendition (SGR)
                 self.handle_sgr_sequence(params);
             },
+            '@' => {
+                // Insert Character (ICH) - insert blank characters at cursor
+                const n = self.parse_csi_param(params, 1);
+                self.insert_characters(n, cells);
+            },
+            'P' => {
+                // Delete Character (DCH) - delete characters at cursor
+                const n = self.parse_csi_param(params, 1);
+                self.delete_characters(n, cells);
+            },
+            'L' => {
+                // Insert Line (IL) - insert blank lines at cursor
+                const n = self.parse_csi_param(params, 1);
+                self.insert_lines(n, cells);
+            },
+            'M' => {
+                // Delete Line (DL) - delete lines at cursor
+                const n = self.parse_csi_param(params, 1);
+                self.delete_lines(n, cells);
+            },
             else => {
                 // Unknown CSI sequence, ignore
             },
@@ -679,6 +699,155 @@ pub const Terminal = struct {
             else => {
                 // Unknown mode, ignore
             },
+        }
+    }
+
+    /// Insert characters at cursor position (ICH).
+    // 2025-11-24-204500-pst: Active function
+    fn insert_characters(self: *Terminal, count: u32, cells: []Cell) void {
+        // Assert: Cursor position must be valid
+        std.debug.assert(self.cursor_y < self.height);
+        std.debug.assert(cells.len >= self.width * self.height);
+
+        if (count == 0) {
+            return;
+        }
+
+        const line_start = self.cursor_y * self.width;
+        const line_end = line_start + self.width;
+
+        // Shift characters right (from cursor to end of line)
+        // Start from end and work backwards to avoid overwriting
+        var x: u32 = self.width;
+        while (x > self.cursor_x) : (x -= 1) {
+            const src_idx = line_start + x - 1;
+            const dst_idx = if (x + count <= self.width) line_start + x + count - 1 else line_end - 1;
+            if (dst_idx < line_end) {
+                cells[dst_idx] = cells[src_idx];
+            }
+        }
+
+        // Fill inserted characters with blanks
+        var i: u32 = 0;
+        while (i < count and (self.cursor_x + i) < self.width) : (i += 1) {
+            const idx = line_start + self.cursor_x + i;
+            cells[idx] = Cell{
+                .ch = ' ',
+                .attrs = self.current_attrs,
+            };
+        }
+    }
+
+    /// Delete characters at cursor position (DCH).
+    // 2025-11-24-204500-pst: Active function
+    fn delete_characters(self: *Terminal, count: u32, cells: []Cell) void {
+        // Assert: Cursor position must be valid
+        std.debug.assert(self.cursor_y < self.height);
+        std.debug.assert(cells.len >= self.width * self.height);
+
+        if (count == 0) {
+            return;
+        }
+
+        const line_start = self.cursor_y * self.width;
+
+        // Shift characters left (from cursor+count to end of line)
+        var x: u32 = self.cursor_x + count;
+        while (x < self.width) : (x += 1) {
+            const src_idx = line_start + x;
+            const dst_idx = line_start + x - count;
+            cells[dst_idx] = cells[src_idx];
+        }
+
+        // Fill end of line with blanks
+        var i: u32 = 0;
+        while (i < count and (self.width - i) > 0) : (i += 1) {
+            const idx = line_start + self.width - 1 - i;
+            cells[idx] = Cell{
+                .ch = ' ',
+                .attrs = self.current_attrs,
+            };
+        }
+    }
+
+    /// Insert lines at cursor position (IL).
+    // 2025-11-24-204500-pst: Active function
+    fn insert_lines(self: *Terminal, count: u32, cells: []Cell) void {
+        // Assert: Cursor position must be valid
+        std.debug.assert(self.cursor_y < self.height);
+        std.debug.assert(cells.len >= self.width * self.height);
+
+        if (count == 0) {
+            return;
+        }
+
+        // Shift lines down (from cursor to bottom)
+        // Start from bottom and work backwards
+        var y: u32 = self.height;
+        while (y > self.cursor_y) : (y -= 1) {
+            const src_line_start = (y - 1) * self.width;
+            const dst_line_start = if (y + count <= self.height) (y + count - 1) * self.width else (self.height - 1) * self.width;
+            var x: u32 = 0;
+            while (x < self.width) : (x += 1) {
+                const src_idx = src_line_start + x;
+                const dst_idx = dst_line_start + x;
+                if (dst_idx < self.width * self.height) {
+                    cells[dst_idx] = cells[src_idx];
+                }
+            }
+        }
+
+        // Fill inserted lines with blanks
+        var i: u32 = 0;
+        while (i < count and (self.cursor_y + i) < self.height) : (i += 1) {
+            const line_start = (self.cursor_y + i) * self.width;
+            var x: u32 = 0;
+            while (x < self.width) : (x += 1) {
+                const idx = line_start + x;
+                cells[idx] = Cell{
+                    .ch = ' ',
+                    .attrs = self.current_attrs,
+                };
+            }
+        }
+    }
+
+    /// Delete lines at cursor position (DL).
+    // 2025-11-24-204500-pst: Active function
+    fn delete_lines(self: *Terminal, count: u32, cells: []Cell) void {
+        // Assert: Cursor position must be valid
+        std.debug.assert(self.cursor_y < self.height);
+        std.debug.assert(cells.len >= self.width * self.height);
+
+        if (count == 0) {
+            return;
+        }
+
+        // Shift lines up (from cursor+count to bottom)
+        var y: u32 = self.cursor_y + count;
+        while (y < self.height) : (y += 1) {
+            const src_line_start = y * self.width;
+            const dst_line_start = (y - count) * self.width;
+            var x: u32 = 0;
+            while (x < self.width) : (x += 1) {
+                const src_idx = src_line_start + x;
+                const dst_idx = dst_line_start + x;
+                cells[dst_idx] = cells[src_idx];
+            }
+        }
+
+        // Fill bottom lines with blanks
+        var i: u32 = 0;
+        while (i < count and (self.height - i) > 0) : (i += 1) {
+            const line_start = (self.height - 1 - i) * self.width;
+            var x: u32 = 0;
+            while (x < self.width) : (x += 1) {
+                const idx = line_start + x;
+                cells[idx] = Cell{
+                    .ch = ' ',
+                    .attrs = self.current_attrs,
+                };
+            }
         }
     }
 

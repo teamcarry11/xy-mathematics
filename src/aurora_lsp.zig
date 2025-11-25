@@ -627,17 +627,17 @@ pub const LspClient = struct {
         try params_obj.put("textDocument", std.json.Value{ .object = text_doc_obj });
         
         // Add range
-        var range_obj = std.json.ObjectMap.init(self.allocator);
+        var range_param_obj = std.json.ObjectMap.init(self.allocator);
         var start_obj = std.json.ObjectMap.init(self.allocator);
         try start_obj.put("line", std.json.Value{ .integer = @intCast(range.start.line) });
         try start_obj.put("character", std.json.Value{ .integer = @intCast(range.start.character) });
-        try range_obj.put("start", std.json.Value{ .object = start_obj });
+        try range_param_obj.put("start", std.json.Value{ .object = start_obj });
         
         var end_obj = std.json.ObjectMap.init(self.allocator);
         try end_obj.put("line", std.json.Value{ .integer = @intCast(range.end.line) });
         try end_obj.put("character", std.json.Value{ .integer = @intCast(range.end.character) });
-        try range_obj.put("end", std.json.Value{ .object = end_obj });
-        try params_obj.put("range", std.json.Value{ .object = range_obj });
+        try range_param_obj.put("end", std.json.Value{ .object = end_obj });
+        try params_obj.put("range", std.json.Value{ .object = range_param_obj });
         
         // Add formatting options if provided
         if (options) |opts| {
@@ -670,19 +670,19 @@ pub const LspClient = struct {
                         // Parse range
                         const range_val = obj.get("range") orelse continue;
                         if (range_val != .object) continue;
-                        const range_obj = range_val.object;
+                        const edit_range_obj = range_val.object;
                         
-                        const start_val = range_obj.get("start") orelse continue;
-                        const end_val = range_obj.get("end") orelse continue;
+                        const start_val = edit_range_obj.get("start") orelse continue;
+                        const end_val = edit_range_obj.get("end") orelse continue;
                         if (start_val != .object or end_val != .object) continue;
                         
-                        const start_obj = start_val.object;
-                        const end_obj = end_val.object;
+                        const edit_start_obj = start_val.object;
+                        const edit_end_obj = end_val.object;
                         
-                        const start_line_val = start_obj.get("line") orelse continue;
-                        const start_char_val = start_obj.get("character") orelse continue;
-                        const end_line_val = end_obj.get("line") orelse continue;
-                        const end_char_val = end_obj.get("character") orelse continue;
+                        const start_line_val = edit_start_obj.get("line") orelse continue;
+                        const start_char_val = edit_start_obj.get("character") orelse continue;
+                        const end_line_val = edit_end_obj.get("line") orelse continue;
+                        const end_char_val = edit_end_obj.get("character") orelse continue;
                         
                         if (start_line_val != .integer or start_char_val != .integer or
                             end_line_val != .integer or end_char_val != .integer) continue;
@@ -715,6 +715,308 @@ pub const LspClient = struct {
         }
         return null;
     }
+    
+    /// Request textDocument/codeAction (get code actions for diagnostics/selection).
+    /// Why: Get quick fixes, refactorings, and other code actions from LSP server.
+    /// Contract: uri and range must be valid.
+    /// Returns: Array of code actions, or null if no actions available.
+    pub fn requestCodeActions(
+        self: *LspClient,
+        uri: []const u8,
+        range: Range,
+        context: ?CodeActionContext,
+    ) !?[]CodeAction {
+        // Assert: URI and range must be valid
+        std.debug.assert(uri.len > 0);
+        std.debug.assert(uri.len <= 4096); // Bounded URI length
+        
+        var params_obj = std.json.ObjectMap.init(self.allocator);
+        defer params_obj.deinit();
+        
+        var text_doc_obj = std.json.ObjectMap.init(self.allocator);
+        defer text_doc_obj.deinit();
+        try text_doc_obj.put("uri", std.json.Value{ .string = uri });
+        try params_obj.put("textDocument", std.json.Value{ .object = text_doc_obj });
+        
+        // Add range
+        var range_param_obj = std.json.ObjectMap.init(self.allocator);
+        var start_obj = std.json.ObjectMap.init(self.allocator);
+        try start_obj.put("line", std.json.Value{ .integer = @intCast(range.start.line) });
+        try start_obj.put("character", std.json.Value{ .integer = @intCast(range.start.character) });
+        try range_param_obj.put("start", std.json.Value{ .object = start_obj });
+        
+        var end_obj = std.json.ObjectMap.init(self.allocator);
+        try end_obj.put("line", std.json.Value{ .integer = @intCast(range.end.line) });
+        try end_obj.put("character", std.json.Value{ .integer = @intCast(range.end.character) });
+        try range_param_obj.put("end", std.json.Value{ .object = end_obj });
+        try params_obj.put("range", std.json.Value{ .object = range_param_obj });
+        
+        // Add context if provided
+        if (context) |ctx| {
+            var context_obj = std.json.ObjectMap.init(self.allocator);
+            if (ctx.diagnostics.len > 0) {
+                var diags_array = std.ArrayList(std.json.Value).init(self.allocator);
+                defer diags_array.deinit(self.allocator);
+                
+                for (ctx.diagnostics) |diag| {
+                    var diag_obj = std.json.ObjectMap.init(self.allocator);
+                    
+                    // Add range
+                    var diag_range_obj = std.json.ObjectMap.init(self.allocator);
+                    var diag_start_obj = std.json.ObjectMap.init(self.allocator);
+                    try diag_start_obj.put("line", std.json.Value{ .integer = @intCast(diag.range.start.line) });
+                    try diag_start_obj.put("character", std.json.Value{ .integer = @intCast(diag.range.start.character) });
+                    try diag_range_obj.put("start", std.json.Value{ .object = diag_start_obj });
+                    
+                    var diag_end_obj = std.json.ObjectMap.init(self.allocator);
+                    try diag_end_obj.put("line", std.json.Value{ .integer = @intCast(diag.range.end.line) });
+                    try diag_end_obj.put("character", std.json.Value{ .integer = @intCast(diag.range.end.character) });
+                    try diag_range_obj.put("end", std.json.Value{ .object = diag_end_obj });
+                    try diag_obj.put("range", std.json.Value{ .object = diag_range_obj });
+                    
+                    // Add severity if present
+                    if (diag.severity) |sev| {
+                        try diag_obj.put("severity", std.json.Value{ .integer = @intCast(sev) });
+                    }
+                    
+                    // Add message
+                    try diag_obj.put("message", std.json.Value{ .string = diag.message });
+                    
+                    // Add source if present
+                    if (diag.source) |src| {
+                        try diag_obj.put("source", std.json.Value{ .string = src });
+                    }
+                    
+                    try diags_array.append(self.allocator, std.json.Value{ .object = diag_obj });
+                }
+                
+                const diags_slice = try diags_array.toOwnedSlice(self.allocator);
+                try context_obj.put("diagnostics", std.json.Value{ .array = .{ .items = diags_slice, .capacity = diags_slice.len, .allocator = self.allocator } });
+            }
+            
+            // Add onlyRequested if present
+            if (ctx.only_requested) |only| {
+                try context_obj.put("only", std.json.Value{ .bool = only });
+            }
+            
+            try params_obj.put("context", std.json.Value{ .object = context_obj });
+        }
+        
+        const params = std.json.Value{ .object = params_obj };
+        const response = try self.sendRequest("textDocument/codeAction", params);
+        
+        // Parse code actions array from response.result
+        if (response.result) |result| {
+            if (result == .array) {
+                const items = result.array.items;
+                var actions = std.ArrayList(CodeAction).init(self.allocator);
+                errdefer {
+                    // Free any allocated strings on error
+                    for (actions.items) |*action| {
+                        self.allocator.free(action.title);
+                        if (action.command) |cmd| {
+                            self.allocator.free(cmd.command);
+                            if (cmd.arguments) |args| {
+                                self.allocator.free(args);
+                            }
+                        }
+                        if (action.edit) |edit| {
+                            for (edit.changes.items) |*change| {
+                                for (change.edits.items) |*text_edit| {
+                                    self.allocator.free(text_edit.new_text);
+                                }
+                                change.edits.deinit(self.allocator);
+                                self.allocator.free(change.uri);
+                            }
+                            edit.changes.deinit(self.allocator);
+                        }
+                    }
+                    actions.deinit();
+                }
+                
+                for (items) |item| {
+                    if (item == .object) {
+                        const obj = item.object;
+                        
+                        // Parse title
+                        const title_val = obj.get("title") orelse continue;
+                        if (title_val != .string) continue;
+                        const title_str = title_val.string;
+                        
+                        const title_copy = try self.allocator.dupe(u8, title_str);
+                        errdefer self.allocator.free(title_copy);
+                        
+                        // Parse command (optional)
+                        var command: ?CodeActionCommand = null;
+                        if (obj.get("command")) |cmd_val| {
+                            if (cmd_val == .object) {
+                                const cmd_obj = cmd_val.object;
+                                const cmd_title = cmd_obj.get("command") orelse continue;
+                                if (cmd_title != .string) continue;
+                                
+                                const cmd_str = try self.allocator.dupe(u8, cmd_title.string);
+                                errdefer self.allocator.free(cmd_str);
+                                
+                                // Parse arguments (optional)
+                                var arguments: ?[]const u8 = null;
+                                if (cmd_obj.get("arguments")) |args_val| {
+                                    // Arguments can be any JSON value, store as string for now
+                                    const args_str = try self.serialize_json_value(args_val);
+                                    errdefer self.allocator.free(args_str);
+                                    arguments = args_str;
+                                }
+                                
+                                command = CodeActionCommand{
+                                    .command = cmd_str,
+                                    .arguments = arguments,
+                                };
+                            }
+                        }
+                        
+                        // Parse edit (optional)
+                        var edit: ?WorkspaceEdit = null;
+                        if (obj.get("edit")) |edit_val| {
+                            if (edit_val == .object) {
+                                const edit_obj = edit_val.object;
+                                
+                                // Parse changes (map of URI to TextEdit[])
+                                var changes = std.ArrayList(TextDocumentEdit).init(self.allocator);
+                                errdefer {
+                                    for (changes.items) |*change| {
+                                        for (change.edits.items) |*text_edit| {
+                                            self.allocator.free(text_edit.new_text);
+                                        }
+                                        change.edits.deinit(self.allocator);
+                                        self.allocator.free(change.uri);
+                                    }
+                                    changes.deinit();
+                                }
+                                
+                                if (edit_obj.get("changes")) |changes_val| {
+                                    if (changes_val == .object) {
+                                        var changes_it = changes_val.object.iterator();
+                                        while (changes_it.next()) |entry| {
+                                            const uri_str = entry.key_ptr.*;
+                                            const edits_val = entry.value_ptr.*;
+                                            
+                                            if (edits_val == .array) {
+                                                var edits = std.ArrayList(TextEdit).init(self.allocator);
+                                                errdefer {
+                                                    for (edits.items) |*text_edit| {
+                                                        self.allocator.free(text_edit.new_text);
+                                                    }
+                                                    edits.deinit();
+                                                }
+                                                
+                                                for (edits_val.array.items) |edit_item| {
+                                                    if (edit_item == .object) {
+                                                        const edit_item_obj = edit_item.object;
+                                                        
+                                                        // Parse range
+                                                        const range_val = edit_item_obj.get("range") orelse continue;
+                                                        if (range_val != .object) continue;
+                                                        const edit_range_obj = range_val.object;
+                                                        
+                                                        const start_val = edit_range_obj.get("start") orelse continue;
+                                                        const end_val = edit_range_obj.get("end") orelse continue;
+                                                        if (start_val != .object or end_val != .object) continue;
+                                                        
+                                                        const edit_start_obj = start_val.object;
+                                                        const edit_end_obj = end_val.object;
+                                                        
+                                                        const start_line_val = edit_start_obj.get("line") orelse continue;
+                                                        const start_char_val = edit_start_obj.get("character") orelse continue;
+                                                        const end_line_val = edit_end_obj.get("line") orelse continue;
+                                                        const end_char_val = edit_end_obj.get("character") orelse continue;
+                                                        
+                                                        if (start_line_val != .integer or start_char_val != .integer or
+                                                            end_line_val != .integer or end_char_val != .integer) continue;
+                                                        
+                                                        const start_line = @as(u32, @intCast(start_line_val.integer));
+                                                        const start_char = @as(u32, @intCast(start_char_val.integer));
+                                                        const end_line = @as(u32, @intCast(end_line_val.integer));
+                                                        const end_char = @as(u32, @intCast(end_char_val.integer));
+                                                        
+                                                        // Parse newText
+                                                        const new_text_val = edit_item_obj.get("newText") orelse continue;
+                                                        if (new_text_val != .string) continue;
+                                                        const new_text_str = new_text_val.string;
+                                                        
+                                                        const new_text_copy = try self.allocator.dupe(u8, new_text_str);
+                                                        errdefer self.allocator.free(new_text_copy);
+                                                        
+                                                        try edits.append(TextEdit{
+                                                            .range = Range{
+                                                                .start = Position{ .line = start_line, .character = start_char },
+                                                                .end = Position{ .line = end_line, .character = end_char },
+                                                            },
+                                                            .new_text = new_text_copy,
+                                                        });
+                                                    }
+                                                }
+                                                
+                                                const uri_copy = try self.allocator.dupe(u8, uri_str);
+                                                errdefer self.allocator.free(uri_copy);
+                                                
+                                                try changes.append(TextDocumentEdit{
+                                                    .uri = uri_copy,
+                                                    .edits = edits,
+                                                });
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                const changes_slice = try changes.toOwnedSlice(self.allocator);
+                                edit = WorkspaceEdit{
+                                    .changes = std.ArrayList(TextDocumentEdit).fromOwnedSlice(self.allocator, changes_slice),
+                                };
+                            }
+                        }
+                        
+                        try actions.append(CodeAction{
+                            .title = title_copy,
+                            .command = command,
+                            .edit = edit,
+                        });
+                    }
+                }
+                
+                return try actions.toOwnedSlice();
+            }
+        }
+        return null;
+    }
+    
+    /// Code action from LSP server.
+    pub const CodeAction = struct {
+        title: []const u8, // Title of the action
+        command: ?CodeActionCommand = null, // Optional command to execute
+        edit: ?WorkspaceEdit = null, // Optional workspace edit
+    };
+    
+    /// Code action command.
+    pub const CodeActionCommand = struct {
+        command: []const u8, // Command identifier
+        arguments: ?[]const u8 = null, // Optional arguments (JSON string)
+    };
+    
+    /// Workspace edit (multiple file edits).
+    pub const WorkspaceEdit = struct {
+        changes: std.ArrayList(TextDocumentEdit), // Changes per document
+    };
+    
+    /// Text document edit (edits for a single document).
+    pub const TextDocumentEdit = struct {
+        uri: []const u8, // Document URI
+        edits: std.ArrayList(TextEdit), // Text edits for this document
+    };
+    
+    /// Code action context (diagnostics, etc.).
+    pub const CodeActionContext = struct {
+        diagnostics: []const Diagnostic, // Diagnostics in the range
+        only_requested: ?bool = null, // Only return requested action kinds
+    };
     
     /// Text edit for document formatting.
     pub const TextEdit = struct {

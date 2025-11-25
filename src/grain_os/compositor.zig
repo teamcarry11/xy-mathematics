@@ -19,6 +19,7 @@ const window_preview = @import("window_preview.zig");
 const window_visual = @import("window_visual.zig");
 const window_stacking = @import("window_stacking.zig");
 const window_opacity = @import("window_opacity.zig");
+const window_animation = @import("window_animation.zig");
 const keyboard_shortcuts = @import("keyboard_shortcuts.zig");
 
 // Bounded: Max number of windows.
@@ -182,6 +183,7 @@ pub const Compositor = struct {
     state_manager: window_state.WindowStateManager,
     preview_manager: window_preview.PreviewManager,
     window_stack: window_stacking.WindowStack,
+    animation_manager: window_animation.AnimationManager,
 
     pub fn init(allocator: std.mem.Allocator) Compositor {
         std.debug.assert(@intFromPtr(allocator.ptr) != 0);
@@ -214,6 +216,7 @@ pub const Compositor = struct {
             .state_manager = window_state.WindowStateManager.init(),
             .preview_manager = window_preview.PreviewManager.init(),
             .window_stack = window_stacking.WindowStack.init(),
+            .animation_manager = window_animation.AnimationManager.init(),
         };
         var i: u32 = 0;
         while (i < MAX_WINDOWS) : (i += 1) {
@@ -438,6 +441,8 @@ pub const Compositor = struct {
 
     pub fn render_to_framebuffer(self: *Compositor) void {
         std.debug.assert(self.framebuffer_base > 0);
+        // Update animations (simplified: use fixed timestamp).
+        self.update_animations(0); // Would use actual timestamp in full impl.
         // Clear framebuffer to background color.
         self.renderer.clear(framebuffer_renderer.COLOR_DARK_BG);
         // Render windows in stacking order (bottom to top).
@@ -983,6 +988,88 @@ pub const Compositor = struct {
             return win.opacity;
         }
         return null;
+    }
+
+    // Update all active animations.
+    pub fn update_animations(self: *Compositor, current_time: u64) void {
+        var i: u32 = 0;
+        while (i < self.animation_manager.animations_len) : (i += 1) {
+            const anim = &self.animation_manager.animations[i];
+            if (anim.active) {
+                if (self.animation_manager.update_animation(
+                    anim.window_id,
+                    current_time,
+                )) |values| {
+                    if (self.get_window(anim.window_id)) |win| {
+                        win.x = values.x;
+                        win.y = values.y;
+                        win.width = values.width;
+                        win.height = values.height;
+                        win.opacity = values.opacity;
+                    }
+                }
+            }
+        }
+    }
+
+    // Start move animation for window.
+    pub fn animate_move(
+        self: *Compositor,
+        window_id: u32,
+        target_x: i32,
+        target_y: i32,
+        start_time: u64,
+    ) bool {
+        std.debug.assert(window_id > 0);
+        if (self.get_window(window_id)) |win| {
+            return self.animation_manager.start_animation(
+                window_id,
+                window_animation.AnimationType.move,
+                win.x,
+                win.y,
+                win.width,
+                win.height,
+                win.opacity,
+                target_x,
+                target_y,
+                win.width,
+                win.height,
+                win.opacity,
+                start_time,
+            );
+        }
+        return false;
+    }
+
+    // Start resize animation for window.
+    pub fn animate_resize(
+        self: *Compositor,
+        window_id: u32,
+        target_width: u32,
+        target_height: u32,
+        start_time: u64,
+    ) bool {
+        std.debug.assert(window_id > 0);
+        std.debug.assert(target_width > 0);
+        std.debug.assert(target_height > 0);
+        if (self.get_window(window_id)) |win| {
+            return self.animation_manager.start_animation(
+                window_id,
+                window_animation.AnimationType.resize,
+                win.x,
+                win.y,
+                win.width,
+                win.height,
+                win.opacity,
+                win.x,
+                win.y,
+                target_width,
+                target_height,
+                win.opacity,
+                start_time,
+            );
+        }
+        return false;
     }
 
     // Get resize handle at mouse position.

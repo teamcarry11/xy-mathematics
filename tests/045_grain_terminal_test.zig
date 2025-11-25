@@ -427,6 +427,102 @@ test "terminal csi cursor vertical absolute" {
     try testing.expect(terminal.cursor_x == 10);
 }
 
+test "terminal csi insert character" {
+    var terminal = Terminal.init(80, 24);
+    var cells: [80 * 24]Terminal.Cell = undefined;
+    terminal.clear(&cells);
+
+    // Write some text
+    terminal.process_char('A', &cells);
+    terminal.process_char('B', &cells);
+    terminal.process_char('C', &cells);
+    terminal.cursor_x = 1; // Move cursor to position 1
+
+    // Insert 2 characters: ESC[2@
+    terminal.process_char(0x1B, &cells); // ESC
+    terminal.process_char('[', &cells);
+    terminal.process_char('2', &cells);
+    terminal.process_char('@', &cells);
+
+    // Check that characters were inserted (B and C should be shifted right)
+    const cell1 = terminal.get_cell(1, 0, &cells).?;
+    try testing.expect(cell1.ch == ' ');
+    const cell2 = terminal.get_cell(2, 0, &cells).?;
+    try testing.expect(cell2.ch == ' ');
+    const cell3 = terminal.get_cell(3, 0, &cells).?;
+    try testing.expect(cell3.ch == 'B');
+}
+
+test "terminal csi delete character" {
+    var terminal = Terminal.init(80, 24);
+    var cells: [80 * 24]Terminal.Cell = undefined;
+    terminal.clear(&cells);
+
+    // Write some text
+    terminal.process_char('A', &cells);
+    terminal.process_char('B', &cells);
+    terminal.process_char('C', &cells);
+    terminal.cursor_x = 1; // Move cursor to position 1
+
+    // Delete 1 character: ESC[1P
+    terminal.process_char(0x1B, &cells); // ESC
+    terminal.process_char('[', &cells);
+    terminal.process_char('1', &cells);
+    terminal.process_char('P', &cells);
+
+    // Check that character was deleted (C should move to position 1)
+    const cell1 = terminal.get_cell(1, 0, &cells).?;
+    try testing.expect(cell1.ch == 'C');
+}
+
+test "terminal csi insert line" {
+    var terminal = Terminal.init(80, 24);
+    var cells: [80 * 24]Terminal.Cell = undefined;
+    terminal.clear(&cells);
+
+    // Write text on line 0 and line 1
+    terminal.process_char('A', &cells);
+    terminal.cursor_x = 0;
+    terminal.cursor_y = 1;
+    terminal.process_char('B', &cells);
+    terminal.cursor_y = 0; // Move cursor back to line 0
+
+    // Insert 1 line: ESC[1L
+    terminal.process_char(0x1B, &cells); // ESC
+    terminal.process_char('[', &cells);
+    terminal.process_char('1', &cells);
+    terminal.process_char('L', &cells);
+
+    // Check that line was inserted (B should move to line 2)
+    const cell_line0 = terminal.get_cell(0, 0, &cells).?;
+    try testing.expect(cell_line0.ch == ' ');
+    const cell_line2 = terminal.get_cell(0, 2, &cells).?;
+    try testing.expect(cell_line2.ch == 'B');
+}
+
+test "terminal csi delete line" {
+    var terminal = Terminal.init(80, 24);
+    var cells: [80 * 24]Terminal.Cell = undefined;
+    terminal.clear(&cells);
+
+    // Write text on line 0 and line 1
+    terminal.process_char('A', &cells);
+    terminal.cursor_x = 0;
+    terminal.cursor_y = 1;
+    terminal.process_char('B', &cells);
+    terminal.cursor_y = 0; // Move cursor back to line 0
+
+    // Delete 1 line: ESC[1M
+    terminal.process_char(0x1B, &cells); // ESC
+    terminal.process_char('[', &cells);
+    terminal.process_char('1', &cells);
+    terminal.process_char('M', &cells);
+
+    // Check that line was deleted (B should move to line 0)
+    const cell_line0 = terminal.get_cell(0, 0, &cells).?;
+    try testing.expect(cell_line0.ch == 'B');
+}
+
 test "terminal true color foreground" {
     var terminal = Terminal.init(80, 24);
     var cells: [80 * 24]Terminal.Cell = undefined;

@@ -3118,7 +3118,11 @@ pub const VM = struct {
         const rs1_signed = @as(i64, @bitCast(rs1_value));
         const rs2_signed = @as(i64, @bitCast(rs2_value));
 
-        if (rs1_signed < rs2_signed) {
+        // Store PC before branch for statistics tracking.
+        const pc_before = self.regs.pc;
+
+        const branch_taken = (rs1_signed < rs2_signed);
+        if (branch_taken) {
             const imm64 = @as(i64, imm13);
             const offset: u64 = @bitCast(imm64); // Use @bitCast to handle negative immediates correctly
             const branch_target = self.regs.pc +% offset;
@@ -3136,8 +3140,15 @@ pub const VM = struct {
             }
 
             self.regs.pc = branch_target;
+            
+            // Track branch statistics.
+            self.branch_stats.record_branch(pc_before, branch_taken);
+            
             return;
         }
+        
+        // Track branch statistics (not taken).
+        self.branch_stats.record_branch(pc_before, branch_taken);
     }
 
     /// Execute BGE (Branch if Greater or Equal) instruction.
@@ -3164,7 +3175,11 @@ pub const VM = struct {
         const rs1_signed = @as(i64, @bitCast(rs1_value));
         const rs2_signed = @as(i64, @bitCast(rs2_value));
 
-        if (rs1_signed >= rs2_signed) {
+        // Store PC before branch for statistics tracking.
+        const pc_before = self.regs.pc;
+
+        const branch_taken = (rs1_signed >= rs2_signed);
+        if (branch_taken) {
             const imm64 = @as(i64, imm13);
             const offset: u64 = @bitCast(imm64); // Use @bitCast to handle negative immediates correctly
             const branch_target = self.regs.pc +% offset;
@@ -3182,8 +3197,15 @@ pub const VM = struct {
             }
 
             self.regs.pc = branch_target;
+            
+            // Track branch statistics.
+            self.branch_stats.record_branch(pc_before, branch_taken);
+            
             return;
         }
+        
+        // Track branch statistics (not taken).
+        self.branch_stats.record_branch(pc_before, branch_taken);
     }
 
     /// Execute BLTU (Branch if Less Than Unsigned) instruction.
@@ -3208,7 +3230,11 @@ pub const VM = struct {
         const rs1_value = self.regs.get(rs1);
         const rs2_value = self.regs.get(rs2);
 
-        if (rs1_value < rs2_value) {
+        // Store PC before branch for statistics tracking.
+        const pc_before = self.regs.pc;
+
+        const branch_taken = (rs1_value < rs2_value);
+        if (branch_taken) {
             const imm64 = @as(i64, imm13);
             const offset: u64 = @bitCast(imm64); // Use @bitCast to handle negative immediates correctly
             const branch_target = self.regs.pc +% offset;
@@ -3224,8 +3250,15 @@ pub const VM = struct {
             }
 
             self.regs.pc = aligned_target;
+            
+            // Track branch statistics.
+            self.branch_stats.record_branch(pc_before, branch_taken);
+            
             return;
         }
+        
+        // Track branch statistics (not taken).
+        self.branch_stats.record_branch(pc_before, branch_taken);
     }
 
     /// Execute BGEU (Branch if Greater or Equal Unsigned) instruction.

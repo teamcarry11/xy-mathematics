@@ -335,6 +335,70 @@ pub const Editor = struct {
         return edits;
     }
     
+    /// Get code actions for current selection or diagnostics.
+    /// Why: Get quick fixes, refactorings, and other code actions from LSP server.
+    /// Contract: File must be open, range must be valid, and LSP server must be running.
+    /// Returns: Array of code actions, or null if no actions available.
+    /// Note: Caller must free the returned actions array and all strings within.
+    pub fn get_code_actions(
+        self: *Editor,
+        start_line: u32,
+        start_char: u32,
+        end_line: u32,
+        end_char: u32,
+        diagnostics: ?[]const LspClient.Diagnostic,
+    ) !?[]LspClient.CodeAction {
+        // Assert: Range must be valid
+        std.debug.assert(start_line <= end_line);
+        if (start_line == end_line) {
+            std.debug.assert(start_char <= end_char);
+        }
+        
+        // Request code actions from LSP server
+        const range = LspClient.Range{
+            .start = LspClient.Position{ .line = start_line, .character = start_char },
+            .end = LspClient.Position{ .line = end_line, .character = end_char },
+        };
+        
+        const context: ?LspClient.CodeActionContext = if (diagnostics) |diags|
+            LspClient.CodeActionContext{
+                .diagnostics = diags,
+                .only_requested = null,
+            }
+        else
+            null;
+        
+        const actions = try self.lsp.requestCodeActions(self.file_uri, range, context);
+        
+        // Return actions array (caller must free)
+        return actions;
+    }
+    
+    /// Apply workspace edit (multiple file edits from code action).
+    /// Why: Apply code action edits that may span multiple files.
+    /// Contract: edit must be valid.
+    /// Note: Currently only applies edits to the current file. Multi-file support would require editor manager.
+    pub fn apply_workspace_edit(self: *Editor, edit: LspClient.WorkspaceEdit) !void {
+        // Assert: Edit must be valid
+        std.debug.assert(edit.changes.items.len <= 100); // Bounded file count
+        
+        // Apply edits for each document
+        for (edit.changes.items) |change| {
+            // Check if this is the current file
+            if (std.mem.eql(u8, change.uri, self.file_uri)) {
+                // Apply text edits to current file
+                const edits_slice = change.edits.items;
+                try self.apply_text_edits(edits_slice);
+            } else {
+                // Note: In full implementation, this would:
+                // 1. Open the file at change.uri if not already open
+                // 2. Apply edits to that file
+                // 3. Update the file's buffer and rendering
+                // For now, we only support edits to the current file
+            }
+        }
+    }
+    
     /// Apply text edits to editor buffer.
     /// Why: Apply formatting edits or other text transformations.
     /// Contract: edits array must be valid and sorted by position.

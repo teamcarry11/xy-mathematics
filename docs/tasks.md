@@ -66,7 +66,7 @@
   - [x] Branch outcome tracking (taken/not taken)
   - [x] Branch taken rate calculation
   - [x] Branch statistics printing
-  - [x] Integration with execute_beq() and execute_bne()
+  - [x] Integration with all branch instructions (BEQ, BNE, BLT, BGE, BLTU, BGEU)
   - [x] Comprehensive tests (tests/067_vm_branch_stats_test.zig)
 
 #### 2.2 Kernel Boot Sequence ✅ **COMPLETE**
@@ -1026,6 +1026,7 @@
 - [x] Character cell grid management (Cell struct, CellAttributes)
 - [x] Escape sequence handling (ESC, CSI, OSC sequences)
 - [x] Cursor movement (up, down, forward, backward, position, next line, previous line, horizontal absolute, vertical absolute)
+- [x] Insert/delete operations (CSI @/P for insert/delete character, CSI L/M for insert/delete line)
 - [x] Text attributes (bold, italic, underline, blink, reverse video)
 - [x] ANSI color support (16-color palette)
 - [x] 256-color support (CSI 38;5;n for foreground, CSI 48;5;n for background)

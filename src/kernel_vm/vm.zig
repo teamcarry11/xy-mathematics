@@ -1035,7 +1035,10 @@ pub const VM = struct {
         
         // Track instruction execution (performance monitoring).
         self.performance.increment_instruction();
-
+        
+        // Track execution flow (PC sequence).
+        self.execution_flow.record_pc(pc_before);
+        
         // Assert: instruction must be valid (not all ones, which is invalid).
         // Note: Zero instructions (NOP) are valid, so we don't check for 0x00000000.
         std.debug.assert(inst != 0xFFFFFFFF);

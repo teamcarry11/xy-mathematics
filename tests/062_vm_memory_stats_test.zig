@@ -5,7 +5,7 @@ const std = @import("std");
 const testing = std.testing;
 const kernel_vm = @import("kernel_vm");
 const vm_mod = kernel_vm;
-const memory_stats_mod = @import("kernel_vm/memory_stats.zig");
+const memory_stats_mod = kernel_vm.memory_stats;
 
 test "VM memory stats initialization" {
     const stats = memory_stats_mod.VMMemoryStats.init(8 * 1024 * 1024);

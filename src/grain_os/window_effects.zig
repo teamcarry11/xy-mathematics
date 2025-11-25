@@ -55,15 +55,16 @@ pub fn calc_fade_out_opacity(progress: f32) u8 {
 
 // Calculate slide-in position.
 pub fn calc_slide_in_position(
-    start_pos: i32,
+    _start_pos: i32,
     target_pos: i32,
     progress: f32,
     direction: SlideDirection,
-    screen_size: u32,
+    _screen_size: u32,
 ) i32 {
+    _ = _start_pos;
+    _ = _screen_size;
     std.debug.assert(progress >= 0.0);
     std.debug.assert(progress <= 1.0);
-    _ = screen_size;
     const offset = switch (direction) {
         .from_top => -@as(i32, @intFromFloat((1.0 - progress) * 100.0)),
         .from_bottom => @as(i32, @intFromFloat((1.0 - progress) * 100.0)),
@@ -75,23 +76,22 @@ pub fn calc_slide_in_position(
 
 // Calculate slide-out position.
 pub fn calc_slide_out_position(
-    start_pos: i32,
+    _start_pos: i32,
     target_pos: i32,
     progress: f32,
     direction: SlideDirection,
-    screen_size: u32,
+    _screen_size: u32,
 ) i32 {
+    _ = _start_pos;
+    _ = _screen_size;
     std.debug.assert(progress >= 0.0);
     std.debug.assert(progress <= 1.0);
-    _ = start_pos;
-    _ = target_pos;
     const offset = switch (direction) {
         .from_top => -@as(i32, @intFromFloat(progress * 100.0)),
         .from_bottom => @as(i32, @intFromFloat(progress * 100.0)),
         .from_left => -@as(i32, @intFromFloat(progress * 100.0)),
         .from_right => @as(i32, @intFromFloat(progress * 100.0)),
     };
-    _ = screen_size;
     return target_pos + offset;
 }
 

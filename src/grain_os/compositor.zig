@@ -25,6 +25,7 @@ const window_constraints = @import("window_constraints.zig");
 const window_grouping = @import("window_grouping.zig");
 const window_focus = @import("window_focus.zig");
 const window_effects = @import("window_effects.zig");
+const window_drag_drop = @import("window_drag_drop.zig");
 const keyboard_shortcuts = @import("keyboard_shortcuts.zig");
 
 // Bounded: Max number of windows.
@@ -193,6 +194,7 @@ pub const Compositor = struct {
     animation_manager: window_animation.AnimationManager,
     group_manager: window_grouping.WindowGroupManager,
     focus_manager: window_focus.FocusManager,
+    drop_zone_manager: window_drag_drop.DropZoneManager,
 
     pub fn init(allocator: std.mem.Allocator) Compositor {
         std.debug.assert(@intFromPtr(allocator.ptr) != 0);
@@ -228,6 +230,7 @@ pub const Compositor = struct {
             .animation_manager = window_animation.AnimationManager.init(),
             .group_manager = window_grouping.WindowGroupManager.init(),
             .focus_manager = window_focus.FocusManager.init(),
+            .drop_zone_manager = window_drag_drop.DropZoneManager.init(),
         };
         var i: u32 = 0;
         while (i < MAX_WINDOWS) : (i += 1) {
@@ -295,6 +298,8 @@ pub const Compositor = struct {
         _ = self.switch_order.add_window(window_id);
         // Add window to stacking order (at top).
         _ = self.window_stack.add_window(window_id);
+        // Start fade-in effect for new window.
+        _ = window_effects.start_fade_in(&self.animation_manager, window_id, 0);
         std.debug.assert(self.windows_len <= MAX_WINDOWS);
         std.debug.assert(window_id > 0);
         return window_id;
@@ -342,6 +347,10 @@ pub const Compositor = struct {
         _ = self.preview_manager.remove_preview(window_id);
         // Remove from all groups.
         self.group_manager.remove_window_from_all_groups(window_id);
+        // Start fade-out effect before removal (would wait for completion in full impl).
+        if (self.get_window(window_id)) |win| {
+            _ = window_effects.start_fade_out(&self.animation_manager, window_id, win.opacity, 0);
+        }
         // Shift remaining windows left.
         while (i < self.windows_len - 1) : (i += 1) {
             self.windows[i] = self.windows[i + 1];

@@ -719,3 +719,79 @@ test "terminal dec private mode cursor enable" {
     try testing.expect(terminal.dec_tcem == true);
 }
 
+test "terminal tab stop set" {
+    var terminal = Terminal.init(80, 24);
+    var cells: [80 * 24]Terminal.Cell = undefined;
+    terminal.clear(&cells);
+
+    // Move cursor to column 10
+    terminal.cursor_x = 10;
+
+    // Set tab stop: ESC H (HTS)
+    terminal.process_char(0x1B, &cells); // ESC
+    terminal.process_char('H', &cells);
+
+    // Check tab stop was set
+    try testing.expect(terminal.tab_stops[10] == true);
+}
+
+test "terminal tab stop clear" {
+    var terminal = Terminal.init(80, 24);
+    var cells: [80 * 24]Terminal.Cell = undefined;
+    terminal.clear(&cells);
+
+    // Move cursor to column 10
+    terminal.cursor_x = 10;
+
+    // Set tab stop: ESC H (HTS)
+    terminal.process_char(0x1B, &cells); // ESC
+    terminal.process_char('H', &cells);
+
+    // Clear tab stop at current column: ESC[0g (TBC)
+    terminal.process_char(0x1B, &cells); // ESC
+    terminal.process_char('[', &cells);
+    terminal.process_char('0', &cells);
+    terminal.process_char('g', &cells);
+
+    // Check tab stop was cleared
+    try testing.expect(terminal.tab_stops[10] == false);
+}
+
+test "terminal tab stop clear all" {
+    var terminal = Terminal.init(80, 24);
+    var cells: [80 * 24]Terminal.Cell = undefined;
+    terminal.clear(&cells);
+
+    // Clear all tab stops: ESC[3g (TBC)
+    terminal.process_char(0x1B, &cells); // ESC
+    terminal.process_char('[', &cells);
+    terminal.process_char('3', &cells);
+    terminal.process_char('g', &cells);
+
+    // Check all tab stops were cleared
+    var i: u32 = 0;
+    while (i < 80) : (i += 1) {
+        try testing.expect(terminal.tab_stops[i] == false);
+    }
+}
+
+test "terminal tab character" {
+    var terminal = Terminal.init(80, 24);
+    var cells: [80 * 24]Terminal.Cell = undefined;
+    terminal.clear(&cells);
+
+    // Set tab stop at column 15
+    terminal.cursor_x = 15;
+    terminal.process_char(0x1B, &cells); // ESC
+    terminal.process_char('H', &cells);
+
+    // Move cursor to column 10
+    terminal.cursor_x = 10;
+
+    // Process tab character
+    terminal.process_char('\t', &cells);
+
+    // Check cursor moved to tab stop
+    try testing.expect(terminal.cursor_x == 15);
+}
+

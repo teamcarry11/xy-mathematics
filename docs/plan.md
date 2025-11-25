@@ -635,8 +635,18 @@ Create a fourth agent dedicated to **Grain OS** - a Zig-Wayland implemented GNOM
    - ✅ Set/get focus policy methods
    - ✅ Get previous focused window method
    - ✅ Comprehensive tests (`tests/076_grain_os_window_focus_test.zig`)
-23. **Phase 23**: Integration (Grain Kernel syscalls, VM testing)
-24. **Phase 24**: Applications (Aurora, Dream, Skate, Terminal ports)
+23. **Phase 23**: Window Effects ✅ **COMPLETE**
+   - ✅ Window effects module (`src/grain_os/window_effects.zig`)
+   - ✅ Effect types (fade-in, fade-out, slide-in, slide-out)
+   - ✅ Fade opacity calculations (fade-in, fade-out)
+   - ✅ Slide position calculations (slide-in, slide-out)
+   - ✅ Slide directions (from top, bottom, left, right)
+   - ✅ Compositor integration (fade-in on create, fade-out on remove)
+   - ✅ Start fade-in/fade-out methods
+   - ✅ Effect duration configuration (150ms fade, 200ms slide)
+   - ✅ Comprehensive tests (`tests/077_grain_os_window_effects_test.zig`)
+24. **Phase 24**: Integration (Grain Kernel syscalls, VM testing)
+25. **Phase 25**: Applications (Aurora, Dream, Skate, Terminal ports)
 
 ### Proposal Document
 
@@ -917,6 +927,7 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
   - ✅ Add LSP symbol rename support (requestRename method, rename_symbol in Editor)
   - ✅ Add LSP workspace symbols support (requestWorkspaceSymbols method, search_workspace_symbols in Editor)
   - ✅ Add LSP document symbols support (requestDocumentSymbols method, get_document_symbols in Editor)
+  - ✅ Add LSP on-type formatting support (requestOnTypeFormatting method, format_on_type in Editor)
   - ✅ Integrate hover requests into moveCursor
   - ✅ Implement ghost text storage for AI completions
   - ✅ Fix didChange range calculation for insertions
@@ -1225,6 +1236,8 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 - ✅ Cursor movement (up, down, forward, backward, position, next line, previous line, horizontal absolute, vertical absolute)
 - ✅ Insert/delete operations (insert/delete character, insert/delete line)
 - ✅ Scrolling region support (DECSTBM, CSI r)
+- ✅ DEC private mode support (DECCKM, DECOM, DECAWM, DECTCEM)
+- ✅ Tab stop support (HTS, TBC, tab character handling)
 - ✅ Text attributes (bold, italic, underline, blink, reverse video)
 - ✅ ANSI color support (16-color palette)
 - ✅ 256-color support (CSI 38;5;n, 48;5;n)
@@ -1536,6 +1549,8 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 - ✅ Cursor movement (up, down, forward, backward, position, next line, previous line, horizontal absolute, vertical absolute)
 - ✅ Insert/delete operations (insert/delete character, insert/delete line)
 - ✅ Scrolling region support (DECSTBM, CSI r)
+- ✅ DEC private mode support (DECCKM, DECOM, DECAWM, DECTCEM)
+- ✅ Tab stop support (HTS, TBC, tab character handling)
 - ✅ Text attributes (bold, italic, underline, blink, reverse video)
 - ✅ ANSI color support (16-color palette)
 - ✅ 256-color support (CSI 38;5;n, 48;5;n)
@@ -1847,6 +1862,8 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 - ✅ Cursor movement (up, down, forward, backward, position, next line, previous line, horizontal absolute, vertical absolute)
 - ✅ Insert/delete operations (insert/delete character, insert/delete line)
 - ✅ Scrolling region support (DECSTBM, CSI r)
+- ✅ DEC private mode support (DECCKM, DECOM, DECAWM, DECTCEM)
+- ✅ Tab stop support (HTS, TBC, tab character handling)
 - ✅ Text attributes (bold, italic, underline, blink, reverse video)
 - ✅ ANSI color support (16-color palette)
 - ✅ 256-color support (CSI 38;5;n, 48;5;n)

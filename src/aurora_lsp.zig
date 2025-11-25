@@ -214,6 +214,191 @@ pub const LspClient = struct {
         return null;
     }
     
+    /// Request textDocument/signatureHelp (get function signature at position).
+    /// Why: Show function signatures and parameter hints as user types.
+    /// Contract: uri, line, and character must be valid.
+    /// Returns: Signature help information, or null if not available.
+    pub fn requestSignatureHelp(
+        self: *LspClient,
+        uri: []const u8,
+        line: u32,
+        character: u32,
+    ) !?SignatureHelp {
+        // Assert: URI and position must be valid
+        std.debug.assert(uri.len > 0);
+        std.debug.assert(uri.len <= 4096); // Bounded URI length
+        
+        var params_obj = std.json.ObjectMap.init(self.allocator);
+        defer params_obj.deinit();
+        
+        var text_doc_obj = std.json.ObjectMap.init(self.allocator);
+        defer text_doc_obj.deinit();
+        try text_doc_obj.put("uri", std.json.Value{ .string = uri });
+        try params_obj.put("textDocument", std.json.Value{ .object = text_doc_obj });
+        
+        var position_obj = std.json.ObjectMap.init(self.allocator);
+        defer position_obj.deinit();
+        try position_obj.put("line", std.json.Value{ .integer = @intCast(line) });
+        try position_obj.put("character", std.json.Value{ .integer = @intCast(character) });
+        try params_obj.put("position", std.json.Value{ .object = position_obj });
+        
+        const params = std.json.Value{ .object = params_obj };
+        const response = try self.sendRequest("textDocument/signatureHelp", params);
+        
+        // Parse signature help from response.result
+        if (response.result) |result| {
+            if (result == .object) {
+                const obj = result.object;
+                
+                // Parse signatures array
+                const signatures_val = obj.get("signatures") orelse return null;
+                if (signatures_val != .array) return null;
+                
+                var signatures = std.ArrayList(SignatureInformation).init(self.allocator);
+                errdefer {
+                    // Free any allocated strings on error
+                    for (signatures.items) |*sig| {
+                        self.allocator.free(sig.label);
+                        if (sig.documentation) |doc| {
+                            self.allocator.free(doc);
+                        }
+                        if (sig.parameters) |params_list| {
+                            for (params_list.items) |*param| {
+                                self.allocator.free(param.label);
+                                if (param.documentation) |doc| {
+                                    self.allocator.free(doc);
+                                }
+                            }
+                            params_list.deinit(self.allocator);
+                            self.allocator.free(params_list.items);
+                        }
+                    }
+                    signatures.deinit();
+                }
+                
+                for (signatures_val.array.items) |sig_item| {
+                    if (sig_item == .object) {
+                        const sig_obj = sig_item.object;
+                        
+                        // Parse label
+                        const label_val = sig_obj.get("label") orelse continue;
+                        if (label_val != .string) continue;
+                        const label_str = label_val.string;
+                        
+                        const label_copy = try self.allocator.dupe(u8, label_str);
+                        errdefer self.allocator.free(label_copy);
+                        
+                        // Parse documentation (optional)
+                        var documentation: ?[]const u8 = null;
+                        if (sig_obj.get("documentation")) |doc_val| {
+                            if (doc_val == .string) {
+                                const doc_str = doc_val.string;
+                                const doc_copy = try self.allocator.dupe(u8, doc_str);
+                                errdefer self.allocator.free(doc_copy);
+                                documentation = doc_copy;
+                            }
+                        }
+                        
+                        // Parse parameters (optional)
+                        var parameters: ?std.ArrayList(ParameterInformation) = null;
+                        if (sig_obj.get("parameters")) |params_val| {
+                            if (params_val == .array) {
+                                parameters = std.ArrayList(ParameterInformation).init(self.allocator);
+                                errdefer {
+                                    if (parameters) |*params_list| {
+                                        for (params_list.items) |*param| {
+                                            self.allocator.free(param.label);
+                                            if (param.documentation) |doc| {
+                                                self.allocator.free(doc);
+                                            }
+                                        }
+                                        params_list.deinit();
+                                    }
+                                }
+                                
+                                for (params_val.array.items) |param_item| {
+                                    if (param_item == .object) {
+                                        const param_obj = param_item.object;
+                                        
+                                        // Parse label
+                                        const param_label_val = param_obj.get("label") orelse continue;
+                                        if (param_label_val != .string) continue;
+                                        const param_label_str = param_label_val.string;
+                                        
+                                        const param_label_copy = try self.allocator.dupe(u8, param_label_str);
+                                        errdefer self.allocator.free(param_label_copy);
+                                        
+                                        // Parse documentation (optional)
+                                        var param_doc: ?[]const u8 = null;
+                                        if (param_obj.get("documentation")) |doc_val| {
+                                            if (doc_val == .string) {
+                                                const param_doc_str = doc_val.string;
+                                                const param_doc_copy = try self.allocator.dupe(u8, param_doc_str);
+                                                errdefer self.allocator.free(param_doc_copy);
+                                                param_doc = param_doc_copy;
+                                            }
+                                        }
+                                        
+                                        try parameters.?.append(ParameterInformation{
+                                            .label = param_label_copy,
+                                            .documentation = param_doc,
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                        
+                        try signatures.append(SignatureInformation{
+                            .label = label_copy,
+                            .documentation = documentation,
+                            .parameters = parameters,
+                        });
+                    }
+                }
+                
+                // Parse activeSignature (optional)
+                const active_sig: ?u32 = if (obj.get("activeSignature")) |as|
+                    if (as == .integer) @as(u32, @intCast(as.integer)) else null
+                else
+                    null;
+                
+                // Parse activeParameter (optional)
+                const active_param: ?u32 = if (obj.get("activeParameter")) |ap|
+                    if (ap == .integer) @as(u32, @intCast(ap.integer)) else null
+                else
+                    null;
+                
+                const signatures_slice = try signatures.toOwnedSlice();
+                return SignatureHelp{
+                    .signatures = std.ArrayList(SignatureInformation).fromOwnedSlice(self.allocator, signatures_slice),
+                    .active_signature = active_sig,
+                    .active_parameter = active_param,
+                };
+            }
+        }
+        return null;
+    }
+    
+    /// Signature help information from LSP server.
+    pub const SignatureHelp = struct {
+        signatures: std.ArrayList(SignatureInformation), // Available signatures
+        active_signature: ?u32 = null, // Currently active signature index
+        active_parameter: ?u32 = null, // Currently active parameter index
+    };
+    
+    /// Signature information (function signature).
+    pub const SignatureInformation = struct {
+        label: []const u8, // Function signature label
+        documentation: ?[]const u8 = null, // Optional documentation
+        parameters: ?std.ArrayList(ParameterInformation) = null, // Optional parameters
+    };
+    
+    /// Parameter information (function parameter).
+    pub const ParameterInformation = struct {
+        label: []const u8, // Parameter label
+        documentation: ?[]const u8 = null, // Optional documentation
+    };
+    
     /// Request textDocument/hover at a position.
     pub fn requestHover(
         self: *LspClient,
@@ -1555,6 +1740,120 @@ pub const LspClient = struct {
         detail: ?[]const u8 = null, // Optional detail (e.g., function signature)
         children: ?std.ArrayList(DocumentSymbol) = null, // Optional child symbols
     };
+    
+    /// Request textDocument/onTypeFormatting (format on character trigger).
+    /// Why: Format code automatically when typing specific characters (e.g., ';', '}').
+    /// Contract: uri, position, and ch must be valid.
+    /// Returns: Array of text edits to apply, or null if formatting not available.
+    pub fn requestOnTypeFormatting(
+        self: *LspClient,
+        uri: []const u8,
+        line: u32,
+        character: u32,
+        ch: u8,
+        options: ?FormattingOptions,
+    ) !?[]TextEdit {
+        // Assert: URI, position, and character must be valid
+        std.debug.assert(uri.len > 0);
+        std.debug.assert(uri.len <= 4096); // Bounded URI length
+        std.debug.assert(ch > 0);
+        
+        var params_obj = std.json.ObjectMap.init(self.allocator);
+        defer params_obj.deinit();
+        
+        var text_doc_obj = std.json.ObjectMap.init(self.allocator);
+        defer text_doc_obj.deinit();
+        try text_doc_obj.put("uri", std.json.Value{ .string = uri });
+        try params_obj.put("textDocument", std.json.Value{ .object = text_doc_obj });
+        
+        // Add position
+        var position_obj = std.json.ObjectMap.init(self.allocator);
+        defer position_obj.deinit();
+        try position_obj.put("line", std.json.Value{ .integer = @intCast(line) });
+        try position_obj.put("character", std.json.Value{ .integer = @intCast(character) });
+        try params_obj.put("position", std.json.Value{ .object = position_obj });
+        
+        // Add character that triggered formatting
+        var ch_str: [1]u8 = undefined;
+        ch_str[0] = ch;
+        try params_obj.put("ch", std.json.Value{ .string = &ch_str });
+        
+        // Add formatting options if provided
+        if (options) |opts| {
+            var options_obj = std.json.ObjectMap.init(self.allocator);
+            try options_obj.put("tabSize", std.json.Value{ .integer = @intCast(opts.tab_size) });
+            try options_obj.put("insertSpaces", std.json.Value{ .bool = opts.insert_spaces });
+            try params_obj.put("options", std.json.Value{ .object = options_obj });
+        }
+        
+        const params = std.json.Value{ .object = params_obj };
+        const response = try self.sendRequest("textDocument/onTypeFormatting", params);
+        
+        // Parse text edits array from response.result (same as document formatting)
+        if (response.result) |result| {
+            if (result == .array) {
+                const items = result.array.items;
+                var edits = std.ArrayList(TextEdit).init(self.allocator);
+                errdefer {
+                    // Free any allocated text on error
+                    for (edits.items) |*edit| {
+                        self.allocator.free(edit.new_text);
+                    }
+                    edits.deinit();
+                }
+                
+                for (items) |item| {
+                    if (item == .object) {
+                        const obj = item.object;
+                        
+                        // Parse range
+                        const range_val = obj.get("range") orelse continue;
+                        if (range_val != .object) continue;
+                        const edit_range_obj = range_val.object;
+                        
+                        const start_val = edit_range_obj.get("start") orelse continue;
+                        const end_val = edit_range_obj.get("end") orelse continue;
+                        if (start_val != .object or end_val != .object) continue;
+                        
+                        const edit_start_obj = start_val.object;
+                        const edit_end_obj = end_val.object;
+                        
+                        const start_line_val = edit_start_obj.get("line") orelse continue;
+                        const start_char_val = edit_start_obj.get("character") orelse continue;
+                        const end_line_val = edit_end_obj.get("line") orelse continue;
+                        const end_char_val = edit_end_obj.get("character") orelse continue;
+                        
+                        if (start_line_val != .integer or start_char_val != .integer or
+                            end_line_val != .integer or end_char_val != .integer) continue;
+                        
+                        const start_line = @as(u32, @intCast(start_line_val.integer));
+                        const start_char = @as(u32, @intCast(start_char_val.integer));
+                        const end_line = @as(u32, @intCast(end_line_val.integer));
+                        const end_char = @as(u32, @intCast(end_char_val.integer));
+                        
+                        // Parse newText
+                        const new_text_val = obj.get("newText") orelse continue;
+                        if (new_text_val != .string) continue;
+                        const new_text_str = new_text_val.string;
+                        
+                        const new_text_copy = try self.allocator.dupe(u8, new_text_str);
+                        errdefer self.allocator.free(new_text_copy);
+                        
+                        try edits.append(TextEdit{
+                            .range = Range{
+                                .start = Position{ .line = start_line, .character = start_char },
+                                .end = Position{ .line = end_line, .character = end_char },
+                            },
+                            .new_text = new_text_copy,
+                        });
+                    }
+                }
+                
+                return try edits.toOwnedSlice();
+            }
+        }
+        return null;
+    }
     
     /// Formatting options for document formatting.
     pub const FormattingOptions = struct {

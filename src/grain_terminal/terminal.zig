@@ -99,6 +99,15 @@ pub const Terminal = struct {
             .dec_om = false,
             .dec_awm = true,
             .dec_tcem = true,
+            .tab_stops = init: {
+                var stops: [256]bool = undefined;
+                // Initialize tab stops every 8 columns (standard)
+                var i: u32 = 0;
+                while (i < 256) : (i += 1) {
+                    stops[i] = (i % 8 == 7);
+                }
+                break :init stops;
+            },
             .default_fg = 7, // Default: white foreground
             .default_bg = 0, // Default: black background
             .window_title = [_]u8{0} ** 256,
@@ -141,10 +150,7 @@ pub const Terminal = struct {
                         self.cursor_y = self.scroll_bottom - 1;
                     }
                 } else if (ch == '\t') { // Tab
-                    self.cursor_x = (self.cursor_x + 8) & ~@as(u32, 7); // Round to next tab stop
-                    if (self.cursor_x >= self.width) {
-                        self.cursor_x = self.width - 1;
-                    }
+                    self.handle_tab();
                 } else if (ch == 0x07) { // BEL (bell/beep)
                     self.handle_bell();
                 } else if (ch >= 0x20 and ch < 0x7F) { // Printable ASCII
@@ -360,6 +366,12 @@ pub const Terminal = struct {
                     self.cursor_y = self.height - 1;
                 }
             },
+            'H' => {
+                // Horizontal Tab Set (HTS) - set tab stop at current column
+                if (self.cursor_x < MAX_WIDTH) {
+                    self.tab_stops[self.cursor_x] = true;
+                }
+            },
             'c' => {
                 // Reset terminal
                 self.cursor_x = 0;
@@ -375,6 +387,11 @@ pub const Terminal = struct {
                     .blink = false,
                     .reverse = false,
                 };
+                // Reset tab stops to default (every 8 columns)
+                var i: u32 = 0;
+                while (i < MAX_WIDTH) : (i += 1) {
+                    self.tab_stops[i] = (i % 8 == 7);
+                }
             },
             else => {
                 // Unknown escape sequence, ignore
@@ -709,6 +726,21 @@ pub const Terminal = struct {
         // Move cursor to home position (top-left of scrolling region)
         self.cursor_x = 0;
         self.cursor_y = self.scroll_top;
+    }
+
+    /// Handle tab character (move to next tab stop).
+    // 2025-11-24-215700-pst: Active function
+    fn handle_tab(self: *Terminal) void {
+        // Find next tab stop
+        var x: u32 = self.cursor_x + 1;
+        while (x < self.width and x < MAX_WIDTH) : (x += 1) {
+            if (self.tab_stops[x]) {
+                self.cursor_x = x;
+                return;
+            }
+        }
+        // No tab stop found, move to end of line
+        self.cursor_x = self.width - 1;
     }
 
     /// Handle Set Mode (SM) - CSI ? <n> h (DEC private modes).

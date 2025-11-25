@@ -140,6 +140,12 @@ pub const VMStatsAggregator = struct {
         self.vm.register_stats.reset();
         self.vm.instruction_perf.reset();
     }
+
+    pub fn export_to_json(self: *VMStatsAggregator) []const u8 {
+        const export_mod = @import("stats_export.zig");
+        var exporter = export_mod.VMStatsExporter.init(self.vm);
+        return exporter.export_to_json();
+    }
 };
 
 const exception_stats_mod = @import("exception_stats.zig");

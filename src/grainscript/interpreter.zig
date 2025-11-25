@@ -561,6 +561,32 @@ pub const Interpreter = struct {
             .builtin_handler = builtin_round,
         };
         self.functions_len += 1;
+
+        // sqrt(x) - Square root
+        const sqrt_name = try self.allocator.dupe(u8, "sqrt");
+        errdefer self.allocator.free(sqrt_name);
+        self.functions[self.functions_len] = Function{
+            .name = sqrt_name,
+            .name_len = @as(u32, @intCast(sqrt_name.len)),
+            .is_builtin = true,
+            .param_count = 1,
+            .body_node = null,
+            .builtin_handler = builtin_sqrt,
+        };
+        self.functions_len += 1;
+
+        // pow(base, exponent) - Power function
+        const pow_name = try self.allocator.dupe(u8, "pow");
+        errdefer self.allocator.free(pow_name);
+        self.functions[self.functions_len] = Function{
+            .name = pow_name,
+            .name_len = @as(u32, @intCast(pow_name.len)),
+            .is_builtin = true,
+            .param_count = 2,
+            .body_node = null,
+            .builtin_handler = builtin_pow,
+        };
+        self.functions_len += 1;
     }
 
     /// Register string utility built-in functions.
@@ -846,6 +872,53 @@ pub const Interpreter = struct {
             .float => |v| Value.from_float(@round(v)),
             else => Error.type_mismatch,
         };
+    }
+
+    /// Built-in sqrt function: Square root.
+    // 2025-11-24-221400-pst: Active function
+    fn builtin_sqrt(interpreter: *Interpreter, args: []const Value) Error!Value {
+        _ = interpreter;
+        if (args.len != 1) {
+            return Error.invalid_argument;
+        }
+        const arg = args[0];
+        return switch (arg) {
+            .integer => |v| {
+                if (v < 0) {
+                    return Error.invalid_argument;
+                }
+                return Value.from_float(@sqrt(@as(f64, @floatFromInt(v))));
+            },
+            .float => |v| {
+                if (v < 0.0) {
+                    return Error.invalid_argument;
+                }
+                return Value.from_float(@sqrt(v));
+            },
+            else => Error.type_mismatch,
+        };
+    }
+
+    /// Built-in pow function: Power (base^exponent).
+    // 2025-11-24-221400-pst: Active function
+    fn builtin_pow(interpreter: *Interpreter, args: []const Value) Error!Value {
+        _ = interpreter;
+        if (args.len != 2) {
+            return Error.invalid_argument;
+        }
+        const base = args[0];
+        const exponent = args[1];
+        const base_f64: f64 = switch (base) {
+            .integer => |v| @as(f64, @floatFromInt(v)),
+            .float => |v| v,
+            else => return Error.type_mismatch,
+        };
+        const exp_f64: f64 = switch (exponent) {
+            .integer => |v| @as(f64, @floatFromInt(v)),
+            .float => |v| v,
+            else => return Error.type_mismatch,
+        };
+        return Value.from_float(std.math.pow(f64, base_f64, exp_f64));
     }
 
     /// Built-in indexOf function: Find substring position.

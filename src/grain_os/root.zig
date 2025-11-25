@@ -30,4 +30,5 @@ pub const window_constraints = @import("window_constraints.zig");
 pub const window_grouping = @import("window_grouping.zig");
 pub const window_focus = @import("window_focus.zig");
 pub const window_effects = @import("window_effects.zig");
+pub const window_drag_drop = @import("window_drag_drop.zig");
 

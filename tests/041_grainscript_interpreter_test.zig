@@ -841,6 +841,58 @@ test "interpreter builtin isBoolean" {
     try testing.expect(interpreter.get_exit_code() == 0);
 }
 
+/// Test interpreter with built-in sqrt function.
+test "interpreter builtin sqrt" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const source = "var x = sqrt(16); var y = sqrt(25.0);";
+
+    var lexer = try Lexer.init(allocator, source);
+    defer lexer.deinit();
+
+    try lexer.tokenize();
+
+    var parser = try Parser.init(allocator, &lexer);
+    defer parser.deinit();
+
+    try parser.parse();
+
+    var interpreter = try Interpreter.init(allocator, &parser);
+    defer interpreter.deinit();
+
+    try interpreter.execute();
+
+    try testing.expect(interpreter.get_exit_code() == 0);
+}
+
+/// Test interpreter with built-in pow function.
+test "interpreter builtin pow" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const source = "var x = pow(2, 3); var y = pow(3.0, 2.0);";
+
+    var lexer = try Lexer.init(allocator, source);
+    defer lexer.deinit();
+
+    try lexer.tokenize();
+
+    var parser = try Parser.init(allocator, &lexer);
+    defer parser.deinit();
+
+    try parser.parse();
+
+    var interpreter = try Interpreter.init(allocator, &parser);
+    defer interpreter.deinit();
+
+    try interpreter.execute();
+
+    try testing.expect(interpreter.get_exit_code() == 0);
+}
+
 /// Test interpreter with built-in split function.
 test "interpreter builtin split" {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};

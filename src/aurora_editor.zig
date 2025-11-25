@@ -576,6 +576,50 @@ pub const Editor = struct {
             .text = text,
         };
         try self.lsp.didChange(self.file_uri, &.{change});
+        
+        // Check if on-type formatting should be triggered
+        // Note: In full implementation, this would check if on-type formatting is enabled
+        // and if the last character is a trigger character (e.g., ';', '}', '\n')
+        if (text.len > 0) {
+            const last_char = text[text.len - 1];
+            // Common trigger characters: ';', '}', '\n'
+            if (last_char == ';' or last_char == '}' or last_char == '\n') {
+                // Request on-type formatting (non-blocking, optional)
+                _ = self.format_on_type(last_char) catch {
+                    // On-type formatting failed (server not ready, etc.) - ignore
+                };
+            }
+        }
+    }
+    
+    /// Format on type (triggered by specific characters).
+    /// Why: Format code automatically when typing trigger characters.
+    /// Contract: ch must be a valid trigger character.
+    /// Returns: Array of text edits to apply, or null if formatting not available.
+    /// Note: Caller must free the returned edits array and new_text strings.
+    pub fn format_on_type(
+        self: *Editor,
+        ch: u8,
+    ) !?[]LspClient.TextEdit {
+        // Assert: Character must be valid
+        std.debug.assert(ch > 0);
+        
+        // Request on-type formatting from LSP server
+        // Use default formatting options (4 spaces, insert spaces)
+        const options = LspClient.FormattingOptions{
+            .tab_size = 4,
+            .insert_spaces = true,
+        };
+        const edits = try self.lsp.requestOnTypeFormatting(
+            self.file_uri,
+            self.cursor_line,
+            self.cursor_char,
+            ch,
+            options,
+        );
+        
+        // Return edits array (caller must free)
+        return edits;
     }
     
     /// Delete text at cursor position.
@@ -756,7 +800,7 @@ pub const Editor = struct {
         try self.lsp.didChange(self.file_uri, &.{});
     }
 
-    /// Move cursor; may trigger hover requests.
+    /// Move cursor; may trigger hover and signature help requests.
     pub fn moveCursor(self: *Editor, line: u32, char: u32) void {
         self.cursor_line = line;
         self.cursor_char = char;
@@ -766,6 +810,29 @@ pub const Editor = struct {
         _ = self.lsp.requestHover(self.file_uri, line, char) catch {
             // Hover request failed (server not ready, etc.) - ignore
         };
+        
+        // Request signature help if cursor is in function call (non-blocking)
+        // Note: This is async - signature help result would be handled via callback in full implementation
+        _ = self.lsp.requestSignatureHelp(self.file_uri, line, char) catch {
+            // Signature help request failed (server not ready, etc.) - ignore
+        };
+    }
+    
+    /// Get signature help at current cursor position.
+    /// Why: Show function signatures and parameter hints as user types.
+    /// Contract: Cursor must be positioned in a function call.
+    /// Returns: Signature help information, or null if not available.
+    /// Note: Caller must free the returned signature help and all strings within.
+    pub fn get_signature_help(self: *Editor) !?LspClient.SignatureHelp {
+        // Request signature help from LSP server
+        const help = try self.lsp.requestSignatureHelp(
+            self.file_uri,
+            self.cursor_line,
+            self.cursor_char,
+        );
+        
+        // Return signature help (caller must free)
+        return help;
     }
 
     /// Accept ghost text completion (Tab key).

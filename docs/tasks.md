@@ -84,6 +84,12 @@
   - [x] Top instruction performance statistics printing
   - [x] Statistics aggregator integration
   - [x] Comprehensive tests (tests/069_vm_instruction_perf_test.zig)
+- [x] VM Statistics Export (Phase 2.1.12)
+  - [x] JSON export format for all VM statistics
+  - [x] Bounded JSON buffer (MAX_JSON_SIZE: 1MB)
+  - [x] Export all statistics modules (performance, exceptions, memory, instructions, syscalls, flow, registers, branches, perf)
+  - [x] Statistics aggregator integration
+  - [x] Comprehensive tests (tests/070_vm_stats_export_test.zig)
 
 #### 2.2 Kernel Boot Sequence ✅ **COMPLETE**
 - [x] Implement basic boot loader
@@ -652,6 +658,15 @@
   - [x] Support one level of child symbols (nested symbols)
   - [x] Add `get_document_symbols` method to Editor
   - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
+- [x] Editor On-Type Formatting Support ✅ **COMPLETE**
+  - [x] Add `requestOnTypeFormatting` method to LspClient
+  - [x] Parse on-type formatting result (array of text edits)
+  - [x] Support character trigger parameter
+  - [x] Support formatting options (tab size, insert spaces)
+  - [x] Add `format_on_type` method to Editor
+  - [x] Integrate with `insert` method (auto-trigger on ';', '}', '\n')
+  - [x] Reuse `apply_text_edits` for applying on-type formatting
+  - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
 - [x] File Save/Load Functionality ✅ **COMPLETE**
   - [x] save_file method (persist editor buffer to disk)
   - [x] load_file method (load file from disk into editor)
@@ -1024,7 +1039,7 @@
 - [x] Variable and constant declarations
 - [x] Built-in commands (echo, cd, pwd, exit)
 - [x] Built-in string functions (len, substr, trim, indexOf, replace, toUpper, toLower, startsWith, endsWith, charAt, repeat)
-- [x] Built-in math functions (abs, min, max, floor, ceil, round)
+- [x] Built-in math functions (abs, min, max, floor, ceil, round, sqrt, pow)
 - [x] Built-in type conversion functions (toString, toInt, toFloat)
 - [x] Built-in type checking functions (isNull, isEmpty, isNumber, isString, isBoolean)
 - [x] Built-in string utility functions (split, join)
@@ -1088,6 +1103,7 @@
 - [x] Insert/delete operations (CSI @/P for insert/delete character, CSI L/M for insert/delete line)
 - [x] Scrolling region support (DECSTBM, CSI r)
 - [x] DEC private mode support (DECCKM, DECOM, DECAWM, DECTCEM)
+- [x] Tab stop support (HTS, TBC, tab character handling)
 - [x] Text attributes (bold, italic, underline, blink, reverse video)
 - [x] ANSI color support (16-color palette)
 - [x] 256-color support (CSI 38;5;n for foreground, CSI 48;5;n for background)
@@ -1487,6 +1503,34 @@
     - ✅ Create/add/remove window group methods
     - ✅ Find window group method
     - ✅ Comprehensive tests (`tests/075_grain_os_window_grouping_test.zig`)
+  - ✅ Window focus management (Phase 22) ✅ **COMPLETE**
+    - ✅ Window focus module (`src/grain_os/window_focus.zig`)
+    - ✅ Focus policies (click-to-focus, focus-follows-mouse, sloppy-focus)
+    - ✅ Focus history tracking (up to 64 entries)
+    - ✅ Previous focus retrieval
+    - ✅ Compositor integration (focus history, focus-follows-mouse)
+    - ✅ Set/get focus policy methods
+    - ✅ Get previous focused window method
+    - ✅ Comprehensive tests (`tests/076_grain_os_window_focus_test.zig`)
+  - ✅ Window effects (Phase 23) ✅ **COMPLETE**
+    - ✅ Window effects module (`src/grain_os/window_effects.zig`)
+    - ✅ Effect types (fade-in, fade-out, slide-in, slide-out)
+    - ✅ Fade opacity calculations (fade-in, fade-out)
+    - ✅ Slide position calculations (slide-in, slide-out)
+    - ✅ Slide directions (from top, bottom, left, right)
+    - ✅ Compositor integration (fade-in on create, fade-out on remove)
+    - ✅ Start fade-in/fade-out methods
+    - ✅ Effect duration configuration (150ms fade, 200ms slide)
+    - ✅ Comprehensive tests (`tests/077_grain_os_window_effects_test.zig`)
+  - ✅ Window drag and drop (Phase 24) ✅ **COMPLETE**
+    - ✅ Window drag and drop module (`src/grain_os/window_drag_drop.zig`)
+    - ✅ Drop zone types (workspace, group, snap_zone)
+    - ✅ Drop zone management (add, find, remove)
+    - ✅ Drop zone detection (point-in-zone testing)
+    - ✅ Compositor integration (drop zone detection during drag)
+    - ✅ Drop handling on drag end
+    - ✅ Can drag/drop validation
+    - ✅ Comprehensive tests (`tests/078_grain_os_window_drag_drop_test.zig`)
 
 **In Progress**: 
 - Dream Editor Core - GLM-4.6 Integration (Phase 4.1.3) 🔄

@@ -120,10 +120,8 @@ pub const FramebufferRenderer = struct {
         // Note: In real implementation, text would be in VM memory.
         // For now, this is a placeholder that will be implemented
         // when we have VM memory access.
+        // Parameters are validated in assertions above.
         _ = self;
-        _ = text;
-        _ = x;
-        _ = y;
         _ = fg_color;
     }
 };

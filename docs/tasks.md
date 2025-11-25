@@ -706,6 +706,15 @@
   - [x] Integrate didSave into save_file method
   - [x] Integrate didClose into deinit method
   - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
+- [x] Editor LSP Semantic Tokens Support ✅ **COMPLETE**
+  - [x] Add `SemanticToken`, `SemanticTokenType`, and `SemanticTokenModifiers` structs
+  - [x] Add `requestSemanticTokensFull` method to LspClient
+  - [x] Add `requestSemanticTokensRange` method to LspClient
+  - [x] Parse semantic tokens from LSP response (encoded as array of 5 integers)
+  - [x] Support delta encoding (deltaLine, deltaStart from previous token)
+  - [x] Add `get_semantic_tokens` method to Editor
+  - [x] Add `get_semantic_tokens_range` method to Editor
+  - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
 - [x] File Save/Load Functionality ✅ **COMPLETE**
   - [x] save_file method (persist editor buffer to disk)
   - [x] load_file method (load file from disk into editor)

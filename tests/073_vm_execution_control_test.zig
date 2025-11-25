@@ -13,7 +13,7 @@ test "VM execution control initialization" {
     var program = [_]u8{0} ** 1024;
     var vm = kernel_vm_mod.VM{};
     vm.init(&program, 0x80000000);
-    var controller = kernel_vm_mod.execution_control.VMExecutionController.init(&vm);
+    const controller = kernel_vm_mod.execution_control.VMExecutionController.init(&vm);
     try testing.expect(controller.state == .paused);
     try testing.expect(controller.call_stack_len == 0);
 }

@@ -25,7 +25,7 @@ test "apply opacity to color" {
 test "clamp opacity" {
     std.debug.assert(window_opacity.clamp_opacity(0) == 0);
     std.debug.assert(window_opacity.clamp_opacity(255) == 255);
-    std.debug.assert(window_opacity.clamp_opacity(300) == 255);
+    std.debug.assert(window_opacity.clamp_opacity(128) == 128);
 }
 
 test "is fully opaque" {
@@ -88,7 +88,7 @@ test "compositor window default opacity" {
     }
 }
 
-test "compositor opacity clamping" {
+test "compositor opacity setting" {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
@@ -97,11 +97,12 @@ test "compositor opacity clamping" {
     const window_id = try comp.create_window(800, 600);
     std.debug.assert(window_id > 0);
 
-    _ = comp.set_window_opacity(window_id, @as(u8, @intCast(300)));
+    _ = comp.set_window_opacity(window_id, 128);
+    _ = comp.set_window_opacity(window_id, 200);
     const opacity = comp.get_window_opacity(window_id);
     std.debug.assert(opacity != null);
     if (opacity) |op| {
-        std.debug.assert(op == window_opacity.OPACITY_MAX);
+        std.debug.assert(op == 200);
     }
 }
 

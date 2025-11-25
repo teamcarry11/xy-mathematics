@@ -326,6 +326,8 @@ pub const Interpreter = struct {
         try self.register_string_functions();
         // Register math functions
         try self.register_math_functions();
+        // Register type conversion functions
+        try self.register_type_conversion_functions();
     }
 
     /// Register string manipulation built-in functions.

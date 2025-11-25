@@ -992,7 +992,7 @@
 - [x] Terminal emulation (VT100/VT220 subset, `src/grain_terminal/terminal.zig`)
 - [x] Character cell grid management (Cell struct, CellAttributes)
 - [x] Escape sequence handling (ESC, CSI, OSC sequences)
-- [x] Cursor movement (up, down, forward, backward, position)
+- [x] Cursor movement (up, down, forward, backward, position, next line, previous line, horizontal absolute, vertical absolute)
 - [x] Text attributes (bold, italic, underline, blink, reverse video)
 - [x] ANSI color support (16-color palette)
 - [x] 256-color support (CSI 38;5;n for foreground, CSI 48;5;n for background)
@@ -1345,14 +1345,6 @@
     - ✅ Compositor integration (stacking order for rendering and hit testing)
     - ✅ Automatic raise on focus
     - ✅ Comprehensive tests (`tests/070_grain_os_window_stacking_test.zig`)
-  - ✅ Window opacity/transparency (Phase 17) ✅ **COMPLETE**
-    - ✅ Window opacity module (`src/grain_os/window_opacity.zig`)
-    - ✅ Opacity value management (0-255 range)
-    - ✅ Alpha blending functions (apply opacity to color, blend colors)
-    - ✅ Compositor integration (opacity applied to window rendering)
-    - ✅ Set/get window opacity methods
-    - ✅ Opacity clamping and validation
-    - ✅ Comprehensive tests (`tests/071_grain_os_window_opacity_test.zig`)
 
 **In Progress**: 
 - Dream Editor Core - GLM-4.6 Integration (Phase 4.1.3) 🔄

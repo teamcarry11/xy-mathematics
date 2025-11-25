@@ -2998,8 +2998,12 @@ pub const VM = struct {
         const rs1_value = self.regs.get(rs1);
         const rs2_value = self.regs.get(rs2);
 
+        // Store PC before branch for statistics tracking.
+        const pc_before = self.regs.pc;
+
         // Compare: if rs1 == rs2, branch.
-        if (rs1_value == rs2_value) {
+        const branch_taken = (rs1_value == rs2_value);
+        if (branch_taken) {
             // Sign-extend immediate to 64 bits and add to PC.
             const imm64 = @as(i64, imm13);
             const offset: u64 = @bitCast(imm64); // Use @bitCast to handle negative immediates correctly
@@ -3022,9 +3026,15 @@ pub const VM = struct {
             // Note: We'll skip the normal PC += 4 after this instruction.
             self.regs.pc = aligned_target;
 
+            // Track branch statistics.
+            self.branch_stats.record_branch(pc_before, branch_taken);
+
             // Return early to skip normal PC increment.
             return;
         }
+
+        // Track branch statistics (not taken).
+        self.branch_stats.record_branch(pc_before, branch_taken);
 
         // No branch: PC will be incremented normally by +4 in step().
     }

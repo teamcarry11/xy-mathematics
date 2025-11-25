@@ -572,8 +572,23 @@ Create a fourth agent dedicated to **Grain OS** - a Zig-Wayland implemented GNOM
    - ✅ Visual state management (shadow, glow, hover)
    - ✅ Compositor integration (automatic shadow/glow rendering)
    - ✅ Comprehensive tests (`tests/069_grain_os_window_visual_test.zig`)
-16. **Phase 16**: Integration (Grain Kernel syscalls, VM testing)
-17. **Phase 17**: Applications (Aurora, Dream, Skate, Terminal ports)
+16. **Phase 16**: Window Stacking Order ✅ **COMPLETE**
+   - ✅ Window stacking module (`src/grain_os/window_stacking.zig`)
+   - ✅ Window stack structure (z-order management)
+   - ✅ Raise/lower window operations
+   - ✅ Compositor integration (stacking order for rendering and hit testing)
+   - ✅ Automatic raise on focus
+   - ✅ Comprehensive tests (`tests/070_grain_os_window_stacking_test.zig`)
+17. **Phase 17**: Window Opacity/Transparency ✅ **COMPLETE**
+   - ✅ Window opacity module (`src/grain_os/window_opacity.zig`)
+   - ✅ Opacity value management (0-255 range)
+   - ✅ Alpha blending functions (apply opacity to color, blend colors)
+   - ✅ Compositor integration (opacity applied to window rendering)
+   - ✅ Set/get window opacity methods
+   - ✅ Opacity clamping and validation
+   - ✅ Comprehensive tests (`tests/071_grain_os_window_opacity_test.zig`)
+18. **Phase 18**: Integration (Grain Kernel syscalls, VM testing)
+19. **Phase 19**: Applications (Aurora, Dream, Skate, Terminal ports)
 
 ### Proposal Document
 

@@ -1241,6 +1241,9 @@ pub const Editor = struct {
         // Write content to file
         try file.writeAll(content);
         
+        // Notify LSP server that file was saved (include text for server processing)
+        try self.lsp.didSave(self.file_uri, content);
+        
         // Assert: File written successfully
         std.debug.assert(file_path.len > 0);
     }

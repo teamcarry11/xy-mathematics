@@ -29,7 +29,6 @@ const window_drag_drop = @import("window_drag_drop.zig");
 const keyboard_shortcuts = @import("keyboard_shortcuts.zig");
 const desktop_shell = @import("desktop_shell.zig");
 const runtime_config = @import("runtime_config.zig");
-const runtime_config = @import("runtime_config.zig");
 
 // Bounded: Max number of windows.
 pub const MAX_WINDOWS: u32 = 256;
@@ -1312,6 +1311,26 @@ pub const Compositor = struct {
     // Get previous focused window.
     pub fn get_previous_focused_window(self: *Compositor) ?u32 {
         return self.focus_manager.get_previous_focus();
+    }
+
+    // Add window rule.
+    pub fn add_window_rule(
+        self: *Compositor,
+        match_type: window_rules.MatchType,
+        pattern: []const u8,
+        action_type: window_rules.ActionType,
+    ) ?u32 {
+        return self.rule_manager.add_rule(match_type, pattern, action_type);
+    }
+
+    // Remove window rule.
+    pub fn remove_window_rule(self: *Compositor, rule_id: u32) bool {
+        return self.rule_manager.remove_rule(rule_id);
+    }
+
+    // Get rule count.
+    pub fn get_rule_count(self: *const Compositor) u32 {
+        return self.rule_manager.get_rule_count();
     }
 
     // Get resize handle at mouse position.

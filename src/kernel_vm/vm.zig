@@ -347,6 +347,10 @@ pub const VM = struct {
     /// Why: Track execution time per instruction type for performance analysis.
     /// GrainStyle: Static allocation, bounded counters, explicit types.
     instruction_perf: instruction_perf_mod.VMInstructionPerf = instruction_perf_mod.VMInstructionPerf.init(),
+    /// Debugging interface.
+    /// Why: Provide breakpoints, watchpoints, and step debugging capabilities.
+    /// GrainStyle: Static allocation, bounded arrays, explicit types.
+    debug_interface: debug_interface_mod.VMDebugInterface = debug_interface_mod.VMDebugInterface.init(),
 
     const Self = @This();
 

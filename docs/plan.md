@@ -517,7 +517,15 @@ Create a fourth agent dedicated to **Grain OS** - a Zig-Wayland implemented GNOM
    - ✅ Keyboard shortcuts (Alt+Tab forward, Alt+Shift+Tab backward)
    - ✅ Compositor integration (automatic order management)
    - ✅ Comprehensive tests (`tests/066_grain_os_window_switching_test.zig`)
-13. **Phase 13**: Integration (Grain Kernel syscalls, VM testing)
+13. **Phase 13**: Window State Persistence ✅ **COMPLETE**
+   - ✅ Window state module (`src/grain_os/window_state.zig`)
+   - ✅ Window state entry structure (position, size, state, workspace, title)
+   - ✅ Window state manager (save, restore, remove, clear)
+   - ✅ Compositor integration (save/restore window states)
+   - ✅ Save all windows state method
+   - ✅ Automatic state removal on window deletion
+   - ✅ Comprehensive tests (`tests/067_grain_os_window_state_test.zig`)
+14. **Phase 14**: Integration (Grain Kernel syscalls, VM testing)
 14. **Phase 14**: Applications (Aurora, Dream, Skate, Terminal ports)
 
 ### Proposal Document

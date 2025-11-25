@@ -36,12 +36,6 @@
   - [x] Integration with read64/write64()
   - [x] Comprehensive tests (tests/062_vm_memory_stats_test.zig)
   - [x] Fixed initialization and bounds checking issues
-- [x] VM Instruction Execution Statistics (Phase 2.1.5)
-  - [x] Instruction execution tracking per opcode
-  - [x] Instruction categorization
-  - [x] Instruction statistics printing
-  - [x] Integration with step()
-  - [x] Comprehensive tests (tests/063_vm_instruction_stats_test.zig)
 
 #### 2.2 Kernel Boot Sequence ✅ **COMPLETE**
 - [x] Implement basic boot loader
@@ -536,6 +530,13 @@
   - [x] Implement ghost text accept/reject (Tab to accept, ESC to reject)
   - [x] Fix didChange range calculation for insertions
   - [x] All three editor TODOs now complete
+- [x] Editor Go-To-Definition Support ✅ **COMPLETE**
+  - [x] Add `requestDefinition` method to LspClient
+  - [x] Add `Location` struct for definition results
+  - [x] Parse definition result (single location or array of locations)
+  - [x] Add `go_to_definition` method to Editor
+  - [x] Support both single location and location array responses
+  - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
   - [x] GrainStyle compliant: explicit types, bounded operations, assertions
   - [x] File Save/Load Functionality ✅ **COMPLETE**
   - [x] save_file method (persist editor buffer to disk)

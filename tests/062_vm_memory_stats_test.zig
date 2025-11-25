@@ -42,9 +42,9 @@ test "VM memory stats add region" {
 
 test "VM memory stats region tracking" {
     var stats = memory_stats_mod.VMMemoryStats.init(8 * 1024 * 1024);
-    stats.add_region(0x80000000, 0x80001000);
-    stats.record_read(0x80000004, 8);
-    stats.record_write(0x80000008, 8);
+    stats.add_region(0x1000, 0x2000);
+    stats.record_read(0x1004, 8);
+    stats.record_write(0x1008, 8);
     try testing.expect(stats.regions[0].read_count == 1);
     try testing.expect(stats.regions[0].write_count == 1);
     try testing.expect(stats.regions[0].total_bytes_read == 8);

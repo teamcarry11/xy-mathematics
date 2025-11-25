@@ -300,6 +300,41 @@ pub const Editor = struct {
         return edits;
     }
     
+    /// Format selected range using LSP server.
+    /// Why: Format a specific range of code according to language server rules.
+    /// Contract: File must be open, range must be valid, and LSP server must be running.
+    /// Returns: Array of text edits to apply, or null if formatting not available.
+    /// Note: Caller must free the returned edits array and new_text strings.
+    pub fn format_range(
+        self: *Editor,
+        start_line: u32,
+        start_char: u32,
+        end_line: u32,
+        end_char: u32,
+        tab_size: u32,
+        insert_spaces: bool,
+    ) !?[]LspClient.TextEdit {
+        // Assert: Range must be valid
+        std.debug.assert(start_line <= end_line);
+        if (start_line == end_line) {
+            std.debug.assert(start_char <= end_char);
+        }
+        
+        // Request range formatting from LSP server
+        const range = LspClient.Range{
+            .start = LspClient.Position{ .line = start_line, .character = start_char },
+            .end = LspClient.Position{ .line = end_line, .character = end_char },
+        };
+        const options = LspClient.FormattingOptions{
+            .tab_size = tab_size,
+            .insert_spaces = insert_spaces,
+        };
+        const edits = try self.lsp.requestRangeFormatting(self.file_uri, range, options);
+        
+        // Return edits array (caller must free)
+        return edits;
+    }
+    
     /// Apply text edits to editor buffer.
     /// Why: Apply formatting edits or other text transformations.
     /// Contract: edits array must be valid and sorted by position.
@@ -315,17 +350,14 @@ pub const Editor = struct {
             const edit = edits[i];
             
             // Convert range to byte positions
-            const start_byte = try self.lsp.positionToByte(
-                self.buffer.textSlice(),
-                edit.range.start,
-            );
-            const end_byte = try self.lsp.positionToByte(
-                self.buffer.textSlice(),
-                edit.range.end,
-            );
+            const text = self.buffer.textSlice();
+            const start_byte = try self.position_to_byte(text, edit.range.start);
+            const end_byte = try self.position_to_byte(text, edit.range.end);
             
-            // Replace range with new text
-            try self.buffer.replace_range(start_byte, end_byte, edit.new_text);
+            // Replace range with new text (erase old, insert new)
+            const erase_len = end_byte - start_byte;
+            try self.buffer.erase(start_byte, erase_len);
+            try self.buffer.insert(start_byte, edit.new_text);
         }
         
         // Update Aurora rendering
@@ -341,6 +373,36 @@ pub const Editor = struct {
             .text = new_text,
         };
         try self.lsp.didChange(self.file_uri, &.{change});
+    }
+    
+    /// Convert LSP Position to byte offset in text (helper for apply_text_edits).
+    /// Why: Convert line/character position to byte offset for buffer operations.
+    /// Contract: text and pos must be valid.
+    fn position_to_byte(self: *Editor, text: []const u8, pos: LspClient.Position) !u32 {
+        _ = self;
+        var byte: u32 = 0;
+        var line: u32 = 0;
+        var char: u32 = 0;
+        
+        for (text) |c| {
+            if (line == pos.line and char == pos.character) {
+                return byte;
+            }
+            byte += 1;
+            if (c == '\n') {
+                line += 1;
+                char = 0;
+            } else {
+                char += 1;
+            }
+        }
+        
+        // Position at end of document
+        if (line == pos.line and char == pos.character) {
+            return byte;
+        }
+        
+        return error.InvalidPosition;
     }
 
     /// Insert text at cursor; triggers LSP didChange notification.

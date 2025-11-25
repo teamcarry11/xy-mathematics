@@ -417,6 +417,49 @@ pub const Terminal = struct {
                     self.cursor_y = self.height - 1;
                 }
             },
+            'E' => {
+                // Cursor Next Line (move to beginning of next line)
+                const n = self.parse_csi_param(params, 1);
+                self.cursor_y += n;
+                self.cursor_x = 0;
+                if (self.cursor_y >= self.height) {
+                    self.cursor_y = self.height - 1;
+                }
+            },
+            'F' => {
+                // Cursor Previous Line (move to beginning of previous line)
+                const n = self.parse_csi_param(params, 1);
+                if (self.cursor_y >= n) {
+                    self.cursor_y -= n;
+                } else {
+                    self.cursor_y = 0;
+                }
+                self.cursor_x = 0;
+            },
+            'G' => {
+                // Cursor Horizontal Absolute (move to column)
+                const n = self.parse_csi_param(params, 1);
+                if (n > 0) {
+                    self.cursor_x = n - 1;
+                } else {
+                    self.cursor_x = 0;
+                }
+                if (self.cursor_x >= self.width) {
+                    self.cursor_x = self.width - 1;
+                }
+            },
+            'd' => {
+                // Cursor Vertical Absolute (move to row)
+                const n = self.parse_csi_param(params, 1);
+                if (n > 0) {
+                    self.cursor_y = n - 1;
+                } else {
+                    self.cursor_y = 0;
+                }
+                if (self.cursor_y >= self.height) {
+                    self.cursor_y = self.height - 1;
+                }
+            },
             'n' => {
                 // Device Status Report (DSR) - respond with cursor position
                 // Format: ESC [ row ; col R
@@ -699,38 +742,72 @@ pub const Terminal = struct {
                 30...37 => {
                     // Foreground color (30-37) - 16-color palette
                     self.current_attrs.fg_color = @as(u8, @intCast(code - 30));
+                    self.current_attrs.fg_rgb = null; // Clear RGB when using indexed
                 },
                 38 => {
-                    // 256-color foreground: 38;5;n
+                    // Foreground color: 38;5;n (256-color) or 38;2;r;g;b (true color)
                     if (i + 2 < params_count and params_list[i + 1] == 5) {
+                        // 256-color foreground: 38;5;n
                         const color_code = params_list[i + 2];
                         if (color_code <= 255) {
                             self.current_attrs.fg_color = @as(u8, @intCast(color_code));
+                            self.current_attrs.fg_rgb = null; // Clear RGB when using indexed
                         }
                         i += 2; // Skip 5 and color code
+                    } else if (i + 4 < params_count and params_list[i + 1] == 2) {
+                        // True color foreground: 38;2;r;g;b
+                        const r = params_list[i + 2];
+                        const g = params_list[i + 3];
+                        const b = params_list[i + 4];
+                        if (r <= 255 and g <= 255 and b <= 255) {
+                            self.current_attrs.fg_rgb = [3]u8{
+                                @as(u8, @intCast(r)),
+                                @as(u8, @intCast(g)),
+                                @as(u8, @intCast(b)),
+                            };
+                        }
+                        i += 4; // Skip 2, r, g, b
                     }
                 },
                 39 => {
                     // Default foreground color
                     self.current_attrs.fg_color = self.default_fg;
+                    self.current_attrs.fg_rgb = null; // Clear RGB
                 },
                 40...47 => {
                     // Background color (40-47) - 16-color palette
                     self.current_attrs.bg_color = @as(u8, @intCast(code - 40));
+                    self.current_attrs.bg_rgb = null; // Clear RGB when using indexed
                 },
                 48 => {
-                    // 256-color background: 48;5;n
+                    // Background color: 48;5;n (256-color) or 48;2;r;g;b (true color)
                     if (i + 2 < params_count and params_list[i + 1] == 5) {
+                        // 256-color background: 48;5;n
                         const color_code = params_list[i + 2];
                         if (color_code <= 255) {
                             self.current_attrs.bg_color = @as(u8, @intCast(color_code));
+                            self.current_attrs.bg_rgb = null; // Clear RGB when using indexed
                         }
                         i += 2; // Skip 5 and color code
+                    } else if (i + 4 < params_count and params_list[i + 1] == 2) {
+                        // True color background: 48;2;r;g;b
+                        const r = params_list[i + 2];
+                        const g = params_list[i + 3];
+                        const b = params_list[i + 4];
+                        if (r <= 255 and g <= 255 and b <= 255) {
+                            self.current_attrs.bg_rgb = [3]u8{
+                                @as(u8, @intCast(r)),
+                                @as(u8, @intCast(g)),
+                                @as(u8, @intCast(b)),
+                            };
+                        }
+                        i += 4; // Skip 2, r, g, b
                     }
                 },
                 49 => {
                     // Default background color
                     self.current_attrs.bg_color = self.default_bg;
+                    self.current_attrs.bg_rgb = null; // Clear RGB
                 },
                 else => {
                     // Unknown code, ignore

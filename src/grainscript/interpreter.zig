@@ -421,6 +421,58 @@ pub const Interpreter = struct {
             .builtin_handler = builtin_tolower,
         };
         self.functions_len += 1;
+
+        // startsWith(str, prefix) - Check if string starts with prefix
+        const startswith_name = try self.allocator.dupe(u8, "startsWith");
+        errdefer self.allocator.free(startswith_name);
+        self.functions[self.functions_len] = Function{
+            .name = startswith_name,
+            .name_len = @as(u32, @intCast(startswith_name.len)),
+            .is_builtin = true,
+            .param_count = 2,
+            .body_node = null,
+            .builtin_handler = builtin_startswith,
+        };
+        self.functions_len += 1;
+
+        // endsWith(str, suffix) - Check if string ends with suffix
+        const endswith_name = try self.allocator.dupe(u8, "endsWith");
+        errdefer self.allocator.free(endswith_name);
+        self.functions[self.functions_len] = Function{
+            .name = endswith_name,
+            .name_len = @as(u32, @intCast(endswith_name.len)),
+            .is_builtin = true,
+            .param_count = 2,
+            .body_node = null,
+            .builtin_handler = builtin_endswith,
+        };
+        self.functions_len += 1;
+
+        // charAt(str, index) - Get character at index
+        const charat_name = try self.allocator.dupe(u8, "charAt");
+        errdefer self.allocator.free(charat_name);
+        self.functions[self.functions_len] = Function{
+            .name = charat_name,
+            .name_len = @as(u32, @intCast(charat_name.len)),
+            .is_builtin = true,
+            .param_count = 2,
+            .body_node = null,
+            .builtin_handler = builtin_charat,
+        };
+        self.functions_len += 1;
+
+        // repeat(str, count) - Repeat string N times
+        const repeat_name = try self.allocator.dupe(u8, "repeat");
+        errdefer self.allocator.free(repeat_name);
+        self.functions[self.functions_len] = Function{
+            .name = repeat_name,
+            .name_len = @as(u32, @intCast(repeat_name.len)),
+            .is_builtin = true,
+            .param_count = 2,
+            .body_node = null,
+            .builtin_handler = builtin_repeat,
+        };
+        self.functions_len += 1;
     }
 
     /// Register math built-in functions.
@@ -875,6 +927,96 @@ pub const Interpreter = struct {
             } else {
                 result[i] = ch;
             }
+        }
+        return Value{ .string = result };
+    }
+
+    /// Built-in startsWith function: Check if string starts with prefix.
+    // 2025-11-24-203000-pst: Active function
+    fn builtin_startswith(interpreter: *Interpreter, args: []const Value) Error!Value {
+        _ = interpreter;
+        if (args.len != 2) {
+            return Error.invalid_argument;
+        }
+        if (args[0] != .string or args[1] != .string) {
+            return Error.type_mismatch;
+        }
+        const str = args[0].string;
+        const prefix = args[1].string;
+        if (prefix.len > str.len) {
+            return Value.from_boolean(false);
+        }
+        return Value.from_boolean(std.mem.eql(u8, str[0..prefix.len], prefix));
+    }
+
+    /// Built-in endsWith function: Check if string ends with suffix.
+    // 2025-11-24-203000-pst: Active function
+    fn builtin_endswith(interpreter: *Interpreter, args: []const Value) Error!Value {
+        _ = interpreter;
+        if (args.len != 2) {
+            return Error.invalid_argument;
+        }
+        if (args[0] != .string or args[1] != .string) {
+            return Error.type_mismatch;
+        }
+        const str = args[0].string;
+        const suffix = args[1].string;
+        if (suffix.len > str.len) {
+            return Value.from_boolean(false);
+        }
+        const start_idx = str.len - suffix.len;
+        return Value.from_boolean(std.mem.eql(u8, str[start_idx..], suffix));
+    }
+
+    /// Built-in charAt function: Get character at index.
+    // 2025-11-24-203000-pst: Active function
+    fn builtin_charat(interpreter: *Interpreter, args: []const Value) Error!Value {
+        if (args.len != 2) {
+            return Error.invalid_argument;
+        }
+        if (args[0] != .string or args[1] != .integer) {
+            return Error.type_mismatch;
+        }
+        const str = args[0].string;
+        const idx = args[1].integer;
+        if (idx < 0 or @as(u32, @intCast(idx)) >= str.len) {
+            return Error.invalid_argument;
+        }
+        const idx_u = @as(u32, @intCast(idx));
+        const ch = str[idx_u];
+        var result = try interpreter.allocator.alloc(u8, 1);
+        errdefer interpreter.allocator.free(result);
+        result[0] = ch;
+        return Value{ .string = result };
+    }
+
+    /// Built-in repeat function: Repeat string N times.
+    // 2025-11-24-203000-pst: Active function
+    fn builtin_repeat(interpreter: *Interpreter, args: []const Value) Error!Value {
+        if (args.len != 2) {
+            return Error.invalid_argument;
+        }
+        if (args[0] != .string or args[1] != .integer) {
+            return Error.type_mismatch;
+        }
+        const str = args[0].string;
+        const count = args[1].integer;
+        if (count < 0) {
+            return Error.invalid_argument;
+        }
+        if (count == 0) {
+            return try Value.from_string(interpreter.allocator, "");
+        }
+        const count_u = @as(u32, @intCast(count));
+        const result_len = str.len * count_u;
+        if (result_len > MAX_STRING_LEN) {
+            return Error.string_too_long;
+        }
+        var result = try interpreter.allocator.alloc(u8, result_len);
+        errdefer interpreter.allocator.free(result);
+        var i: u32 = 0;
+        while (i < count_u) : (i += 1) {
+            @memcpy(result[i * str.len..(i + 1) * str.len], str);
         }
         return Value{ .string = result };
     }

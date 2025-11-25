@@ -18,6 +18,7 @@ const window_state = @import("window_state.zig");
 const window_preview = @import("window_preview.zig");
 const window_visual = @import("window_visual.zig");
 const window_stacking = @import("window_stacking.zig");
+const window_opacity = @import("window_opacity.zig");
 const keyboard_shortcuts = @import("keyboard_shortcuts.zig");
 
 // Bounded: Max number of windows.
@@ -83,6 +84,7 @@ pub const Window = struct {
     focused: bool,
     minimized: bool,
     maximized: bool,
+    opacity: u8, // Window opacity (0 = transparent, 255 = opaque).
     drag_state: DragState,
     resize_state: ResizeState,
 
@@ -111,6 +113,7 @@ pub const Window = struct {
             .focused = false,
             .minimized = false,
             .maximized = false,
+            .opacity = window_opacity.OPACITY_DEFAULT,
             .drag_state = DragState{
                 .active = false,
                 .start_x = 0,
@@ -465,11 +468,15 @@ pub const Compositor = struct {
         if (window_visual.should_render_focus_glow(win.focused)) {
             self.render_focus_glow(win);
         }
-        // Draw window border.
-        const border_color = if (win.focused)
+        // Draw window border (apply opacity).
+        const base_border_color = if (win.focused)
             framebuffer_renderer.COLOR_BLUE
         else
             framebuffer_renderer.COLOR_WHITE;
+        const border_color = window_opacity.apply_opacity_to_color(
+            base_border_color,
+            win.opacity,
+        );
         // Top border.
         self.renderer.draw_rect(
             win.x,
@@ -502,11 +509,15 @@ pub const Compositor = struct {
             win.height,
             border_color,
         );
-        // Draw title bar.
-        const title_bar_color = if (win.focused)
+        // Draw title bar (apply opacity).
+        const base_title_bar_color = if (win.focused)
             framebuffer_renderer.COLOR_BLUE
         else
             framebuffer_renderer.COLOR_DARK_BG;
+        const title_bar_color = window_opacity.apply_opacity_to_color(
+            base_title_bar_color,
+            win.opacity,
+        );
         self.renderer.draw_rect(
             @as(i32, @intCast(win.x)) + @as(i32, @intCast(BORDER_WIDTH)),
             @as(i32, @intCast(win.y)) + @as(i32, @intCast(BORDER_WIDTH)),
@@ -514,15 +525,19 @@ pub const Compositor = struct {
             TITLE_BAR_HEIGHT,
             title_bar_color,
         );
-        // Draw window content area (background).
+        // Draw window content area (background, apply opacity).
         const content_y = @as(i32, @intCast(win.y)) + @as(i32, @intCast(BORDER_WIDTH + TITLE_BAR_HEIGHT));
         const content_height = win.height - (BORDER_WIDTH * 2) - TITLE_BAR_HEIGHT;
+        const content_color = window_opacity.apply_opacity_to_color(
+            framebuffer_renderer.COLOR_WHITE,
+            win.opacity,
+        );
         self.renderer.draw_rect(
             @as(i32, @intCast(win.x)) + @as(i32, @intCast(BORDER_WIDTH)),
             content_y,
             win.width - (BORDER_WIDTH * 2),
             content_height,
-            framebuffer_renderer.COLOR_WHITE,
+            content_color,
         );
     }
 
@@ -949,6 +964,25 @@ pub const Compositor = struct {
     pub fn lower_window(self: *Compositor, window_id: u32) bool {
         std.debug.assert(window_id > 0);
         return self.window_stack.lower_to_bottom(window_id);
+    }
+
+    // Set window opacity.
+    pub fn set_window_opacity(self: *Compositor, window_id: u32, opacity: u8) bool {
+        std.debug.assert(window_id > 0);
+        if (self.get_window(window_id)) |win| {
+            win.opacity = window_opacity.clamp_opacity(opacity);
+            return true;
+        }
+        return false;
+    }
+
+    // Get window opacity.
+    pub fn get_window_opacity(self: *const Compositor, window_id: u32) ?u8 {
+        std.debug.assert(window_id > 0);
+        if (self.get_window(window_id)) |win| {
+            return win.opacity;
+        }
+        return null;
     }
 
     // Get resize handle at mouse position.

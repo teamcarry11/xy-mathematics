@@ -103,7 +103,7 @@ test "compositor focus raises window" {
 
     var comp = Compositor.init(allocator);
     const win1 = try comp.create_window(800, 600);
-    const win2 = try comp.create_window(900, 700);
+    const _win2 = try comp.create_window(900, 700);
     _ = comp.focus_window(win1);
     std.debug.assert(comp.window_stack.get_top_window() == win1);
 }
@@ -115,7 +115,7 @@ test "compositor raise window" {
 
     var comp = Compositor.init(allocator);
     const win1 = try comp.create_window(800, 600);
-    const win2 = try comp.create_window(900, 700);
+    const _win2 = try comp.create_window(900, 700);
     const result = comp.raise_window(win1);
     std.debug.assert(result);
     std.debug.assert(comp.window_stack.get_top_window() == win1);

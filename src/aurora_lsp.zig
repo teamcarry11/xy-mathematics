@@ -604,6 +604,118 @@ pub const LspClient = struct {
         return null;
     }
     
+    /// Request textDocument/rangeFormatting (format selected range).
+    /// Why: Format a specific range of code according to language server rules.
+    /// Contract: uri and range must be valid.
+    /// Returns: Array of text edits to apply, or null if formatting not available.
+    pub fn requestRangeFormatting(
+        self: *LspClient,
+        uri: []const u8,
+        range: Range,
+        options: ?FormattingOptions,
+    ) !?[]TextEdit {
+        // Assert: URI and range must be valid
+        std.debug.assert(uri.len > 0);
+        std.debug.assert(uri.len <= 4096); // Bounded URI length
+        
+        var params_obj = std.json.ObjectMap.init(self.allocator);
+        defer params_obj.deinit();
+        
+        var text_doc_obj = std.json.ObjectMap.init(self.allocator);
+        defer text_doc_obj.deinit();
+        try text_doc_obj.put("uri", std.json.Value{ .string = uri });
+        try params_obj.put("textDocument", std.json.Value{ .object = text_doc_obj });
+        
+        // Add range
+        var range_obj = std.json.ObjectMap.init(self.allocator);
+        var start_obj = std.json.ObjectMap.init(self.allocator);
+        try start_obj.put("line", std.json.Value{ .integer = @intCast(range.start.line) });
+        try start_obj.put("character", std.json.Value{ .integer = @intCast(range.start.character) });
+        try range_obj.put("start", std.json.Value{ .object = start_obj });
+        
+        var end_obj = std.json.ObjectMap.init(self.allocator);
+        try end_obj.put("line", std.json.Value{ .integer = @intCast(range.end.line) });
+        try end_obj.put("character", std.json.Value{ .integer = @intCast(range.end.character) });
+        try range_obj.put("end", std.json.Value{ .object = end_obj });
+        try params_obj.put("range", std.json.Value{ .object = range_obj });
+        
+        // Add formatting options if provided
+        if (options) |opts| {
+            var options_obj = std.json.ObjectMap.init(self.allocator);
+            try options_obj.put("tabSize", std.json.Value{ .integer = @intCast(opts.tab_size) });
+            try options_obj.put("insertSpaces", std.json.Value{ .bool = opts.insert_spaces });
+            try params_obj.put("options", std.json.Value{ .object = options_obj });
+        }
+        
+        const params = std.json.Value{ .object = params_obj };
+        const response = try self.sendRequest("textDocument/rangeFormatting", params);
+        
+        // Parse text edits array from response.result (same as document formatting)
+        if (response.result) |result| {
+            if (result == .array) {
+                const items = result.array.items;
+                var edits = std.ArrayList(TextEdit).init(self.allocator);
+                errdefer {
+                    // Free any allocated text on error
+                    for (edits.items) |*edit| {
+                        self.allocator.free(edit.new_text);
+                    }
+                    edits.deinit();
+                }
+                
+                for (items) |item| {
+                    if (item == .object) {
+                        const obj = item.object;
+                        
+                        // Parse range
+                        const range_val = obj.get("range") orelse continue;
+                        if (range_val != .object) continue;
+                        const range_obj = range_val.object;
+                        
+                        const start_val = range_obj.get("start") orelse continue;
+                        const end_val = range_obj.get("end") orelse continue;
+                        if (start_val != .object or end_val != .object) continue;
+                        
+                        const start_obj = start_val.object;
+                        const end_obj = end_val.object;
+                        
+                        const start_line_val = start_obj.get("line") orelse continue;
+                        const start_char_val = start_obj.get("character") orelse continue;
+                        const end_line_val = end_obj.get("line") orelse continue;
+                        const end_char_val = end_obj.get("character") orelse continue;
+                        
+                        if (start_line_val != .integer or start_char_val != .integer or
+                            end_line_val != .integer or end_char_val != .integer) continue;
+                        
+                        const start_line = @as(u32, @intCast(start_line_val.integer));
+                        const start_char = @as(u32, @intCast(start_char_val.integer));
+                        const end_line = @as(u32, @intCast(end_line_val.integer));
+                        const end_char = @as(u32, @intCast(end_char_val.integer));
+                        
+                        // Parse newText
+                        const new_text_val = obj.get("newText") orelse continue;
+                        if (new_text_val != .string) continue;
+                        const new_text_str = new_text_val.string;
+                        
+                        const new_text_copy = try self.allocator.dupe(u8, new_text_str);
+                        errdefer self.allocator.free(new_text_copy);
+                        
+                        try edits.append(TextEdit{
+                            .range = Range{
+                                .start = Position{ .line = start_line, .character = start_char },
+                                .end = Position{ .line = end_line, .character = end_char },
+                            },
+                            .new_text = new_text_copy,
+                        });
+                    }
+                }
+                
+                return try edits.toOwnedSlice();
+            }
+        }
+        return null;
+    }
+    
     /// Text edit for document formatting.
     pub const TextEdit = struct {
         range: Range, // Range to replace

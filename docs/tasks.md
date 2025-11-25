@@ -36,31 +36,6 @@
   - [x] Integration with read64/write64()
   - [x] Comprehensive tests (tests/062_vm_memory_stats_test.zig)
   - [x] Fixed initialization and bounds checking issues
-- [x] VM Instruction Execution Statistics (Phase 2.1.5)
-  - [x] Instruction execution tracking per opcode
-  - [x] Instruction categorization
-  - [x] Instruction statistics printing
-  - [x] Integration with step()
-  - [x] Comprehensive tests (tests/063_vm_instruction_stats_test.zig)
-- [x] VM Syscall Execution Statistics (Phase 2.1.6)
-  - [x] Syscall execution tracking per syscall number
-  - [x] Syscall categorization
-  - [x] Syscall statistics printing
-  - [x] Integration with execute_ecall()
-  - [x] Comprehensive tests (tests/064_vm_syscall_stats_test.zig)
-- [x] VM Execution Flow Tracking (Phase 2.1.7)
-  - [x] PC sequence tracking (circular buffer)
-  - [x] Unique PC tracking
-  - [x] Loop pattern detection
-  - [x] Execution flow statistics printing
-  - [x] Integration with step()
-  - [x] Comprehensive tests (tests/065_vm_execution_flow_test.zig)
-- [x] VM Statistics Aggregator (Phase 2.1.8)
-  - [x] Unified statistics reporting interface
-  - [x] Aggregates all VM statistics modules
-  - [x] Comprehensive statistics printing
-  - [x] Reset all statistics in one call
-  - [x] Comprehensive tests (tests/066_vm_stats_aggregator_test.zig)
 
 #### 2.2 Kernel Boot Sequence ✅ **COMPLETE**
 - [x] Implement basic boot loader
@@ -578,6 +553,15 @@
   - [x] Add `find_references` method to Editor
   - [x] Return array of reference locations
   - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
+- [x] Editor Document Formatting Support ✅ **COMPLETE**
+  - [x] Add `requestFormatting` method to LspClient
+  - [x] Add `TextEdit` and `FormattingOptions` structs
+  - [x] Parse formatting result (array of text edits)
+  - [x] Add `format_document` method to Editor
+  - [x] Add `apply_text_edits` method to Editor
+  - [x] Add `position_to_byte` helper method
+  - [x] Support tab size and insert spaces options
+  - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
   - [x] GrainStyle compliant: explicit types, bounded operations, assertions
 - [x] File Save/Load Functionality ✅ **COMPLETE**
   - [x] save_file method (persist editor buffer to disk)
@@ -950,7 +934,7 @@
 - [x] Statement execution (if, while, for, return, block)
 - [x] Variable and constant declarations
 - [x] Built-in commands (echo, cd, pwd, exit)
-- [x] Built-in string functions (len, substr, trim, indexOf, replace, toUpper, toLower)
+- [x] Built-in string functions (len, substr, trim, indexOf, replace, toUpper, toLower, startsWith, endsWith, charAt, repeat)
 - [x] Built-in math functions (abs, min, max, floor, ceil, round)
 - [x] Exit code handling
 - [x] Error handling (Interpreter.Error enum)
@@ -1012,6 +996,7 @@
 - [x] Text attributes (bold, italic, underline, blink, reverse video)
 - [x] ANSI color support (16-color palette)
 - [x] 256-color support (CSI 38;5;n for foreground, CSI 48;5;n for background)
+- [x] 24-bit true color support (CSI 38;2;r;g;b for foreground, CSI 48;2;r;g;b for background)
 - [x] Scrollback buffer tracking
 - [x] Scrollback navigation (scroll up/down, jump to top/bottom)
 - [x] Enhanced escape sequences (cursor position 'f', save/restore 's'/'u', device status report 'n', set/reset mode 'h'/'l')
@@ -1353,6 +1338,21 @@
     - ✅ Visual state management (shadow, glow, hover)
     - ✅ Compositor integration (automatic shadow/glow rendering)
     - ✅ Comprehensive tests (`tests/069_grain_os_window_visual_test.zig`)
+  - ✅ Window stacking order (Phase 16) ✅ **COMPLETE**
+    - ✅ Window stacking module (`src/grain_os/window_stacking.zig`)
+    - ✅ Window stack structure (z-order management)
+    - ✅ Raise/lower window operations
+    - ✅ Compositor integration (stacking order for rendering and hit testing)
+    - ✅ Automatic raise on focus
+    - ✅ Comprehensive tests (`tests/070_grain_os_window_stacking_test.zig`)
+  - ✅ Window opacity/transparency (Phase 17) ✅ **COMPLETE**
+    - ✅ Window opacity module (`src/grain_os/window_opacity.zig`)
+    - ✅ Opacity value management (0-255 range)
+    - ✅ Alpha blending functions (apply opacity to color, blend colors)
+    - ✅ Compositor integration (opacity applied to window rendering)
+    - ✅ Set/get window opacity methods
+    - ✅ Opacity clamping and validation
+    - ✅ Comprehensive tests (`tests/071_grain_os_window_opacity_test.zig`)
 
 **In Progress**: 
 - Dream Editor Core - GLM-4.6 Integration (Phase 4.1.3) 🔄

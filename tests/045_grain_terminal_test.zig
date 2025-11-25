@@ -355,3 +355,143 @@ test "terminal 256 color background" {
     try testing.expect(terminal.current_attrs.bg_color == 200);
 }
 
+test "terminal csi cursor next line" {
+    var terminal = Terminal.init(80, 24);
+    var cells: [80 * 24]Terminal.Cell = undefined;
+
+    // Move cursor to column 10
+    terminal.cursor_x = 10;
+    terminal.cursor_y = 5;
+
+    // Cursor Next Line: ESC[E (move to beginning of next line)
+    terminal.process_char(0x1B, &cells); // ESC
+    terminal.process_char('[', &cells);
+    terminal.process_char('E', &cells);
+
+    try testing.expect(terminal.cursor_y == 6);
+    try testing.expect(terminal.cursor_x == 0);
+}
+
+test "terminal csi cursor previous line" {
+    var terminal = Terminal.init(80, 24);
+    var cells: [80 * 24]Terminal.Cell = undefined;
+
+    // Move cursor to column 10
+    terminal.cursor_x = 10;
+    terminal.cursor_y = 5;
+
+    // Cursor Previous Line: ESC[F (move to beginning of previous line)
+    terminal.process_char(0x1B, &cells); // ESC
+    terminal.process_char('[', &cells);
+    terminal.process_char('F', &cells);
+
+    try testing.expect(terminal.cursor_y == 4);
+    try testing.expect(terminal.cursor_x == 0);
+}
+
+test "terminal csi cursor horizontal absolute" {
+    var terminal = Terminal.init(80, 24);
+    var cells: [80 * 24]Terminal.Cell = undefined;
+
+    // Move cursor to column 10
+    terminal.cursor_x = 10;
+    terminal.cursor_y = 5;
+
+    // Cursor Horizontal Absolute: ESC[20G (move to column 20)
+    terminal.process_char(0x1B, &cells); // ESC
+    terminal.process_char('[', &cells);
+    terminal.process_char('2', &cells);
+    terminal.process_char('0', &cells);
+    terminal.process_char('G', &cells);
+
+    try testing.expect(terminal.cursor_x == 19);
+    try testing.expect(terminal.cursor_y == 5);
+}
+
+test "terminal csi cursor vertical absolute" {
+    var terminal = Terminal.init(80, 24);
+    var cells: [80 * 24]Terminal.Cell = undefined;
+
+    // Move cursor to row 5
+    terminal.cursor_x = 10;
+    terminal.cursor_y = 5;
+
+    // Cursor Vertical Absolute: ESC[10d (move to row 10)
+    terminal.process_char(0x1B, &cells); // ESC
+    terminal.process_char('[', &cells);
+    terminal.process_char('1', &cells);
+    terminal.process_char('0', &cells);
+    terminal.process_char('d', &cells);
+
+    try testing.expect(terminal.cursor_y == 9);
+    try testing.expect(terminal.cursor_x == 10);
+}
+
+test "terminal true color foreground" {
+    var terminal = Terminal.init(80, 24);
+    var cells: [80 * 24]Terminal.Cell = undefined;
+    terminal.clear(&cells);
+
+    // Set true color foreground: ESC[38;2;255;128;64m (orange)
+    terminal.process_char(0x1B, &cells); // ESC
+    terminal.process_char('[', &cells);
+    terminal.process_char('3', &cells);
+    terminal.process_char('8', &cells);
+    terminal.process_char(';', &cells);
+    terminal.process_char('2', &cells);
+    terminal.process_char(';', &cells);
+    terminal.process_char('2', &cells);
+    terminal.process_char('5', &cells);
+    terminal.process_char('5', &cells);
+    terminal.process_char(';', &cells);
+    terminal.process_char('1', &cells);
+    terminal.process_char('2', &cells);
+    terminal.process_char('8', &cells);
+    terminal.process_char(';', &cells);
+    terminal.process_char('6', &cells);
+    terminal.process_char('4', &cells);
+    terminal.process_char('m', &cells);
+
+    // Check foreground RGB was set
+    try testing.expect(terminal.current_attrs.fg_rgb != null);
+    if (terminal.current_attrs.fg_rgb) |rgb| {
+        try testing.expect(rgb[0] == 255);
+        try testing.expect(rgb[1] == 128);
+        try testing.expect(rgb[2] == 64);
+    }
+}
+
+test "terminal true color background" {
+    var terminal = Terminal.init(80, 24);
+    var cells: [80 * 24]Terminal.Cell = undefined;
+    terminal.clear(&cells);
+
+    // Set true color background: ESC[48;2;64;128;255m (blue)
+    terminal.process_char(0x1B, &cells); // ESC
+    terminal.process_char('[', &cells);
+    terminal.process_char('4', &cells);
+    terminal.process_char('8', &cells);
+    terminal.process_char(';', &cells);
+    terminal.process_char('2', &cells);
+    terminal.process_char(';', &cells);
+    terminal.process_char('6', &cells);
+    terminal.process_char('4', &cells);
+    terminal.process_char(';', &cells);
+    terminal.process_char('1', &cells);
+    terminal.process_char('2', &cells);
+    terminal.process_char('8', &cells);
+    terminal.process_char(';', &cells);
+    terminal.process_char('2', &cells);
+    terminal.process_char('5', &cells);
+    terminal.process_char('5', &cells);
+    terminal.process_char('m', &cells);
+
+    // Check background RGB was set
+    try testing.expect(terminal.current_attrs.bg_rgb != null);
+    if (terminal.current_attrs.bg_rgb) |rgb| {
+        try testing.expect(rgb[0] == 64);
+        try testing.expect(rgb[1] == 128);
+        try testing.expect(rgb[2] == 255);
+    }
+}
+

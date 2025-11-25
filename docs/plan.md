@@ -64,6 +64,13 @@
      - ✅ Comprehensive statistics printing (all modules in one call)
      - ✅ Reset all statistics in one call
      - ✅ Comprehensive tests (tests/066_vm_stats_aggregator_test.zig)
+   - ✅ VM Branch Prediction Statistics (Phase 2.1.9)
+     - ✅ Branch instruction tracking per PC (MAX_BRANCH_PCS: 128)
+     - ✅ Branch outcome tracking (taken vs not taken)
+     - ✅ Branch taken rate calculation (per branch and overall)
+     - ✅ Branch statistics printing (total, taken/not taken, top 10 branches)
+     - ✅ Integration with execute_beq() and execute_bne() (automatic branch tracking)
+     - ✅ Comprehensive tests (tests/067_vm_branch_stats_test.zig)
 
 2. **Kernel Boot Sequence**
    - Implement basic boot loader
@@ -841,6 +848,7 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
   - ✅ Add LSP go-to-definition support (requestDefinition method, go_to_definition in Editor)
   - ✅ Add LSP diagnostics support (handle_publish_diagnostics, get_diagnostics methods)
   - ✅ Add LSP find references support (requestReferences method, find_references in Editor)
+  - ✅ Add LSP document formatting support (requestFormatting method, format_document in Editor)
   - ✅ Integrate hover requests into moveCursor
   - ✅ Implement ghost text storage for AI completions
   - ✅ Fix didChange range calculation for insertions
@@ -1149,6 +1157,8 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 - ✅ Cursor movement (up, down, forward, backward, position)
 - ✅ Text attributes (bold, italic, underline, blink, reverse video)
 - ✅ ANSI color support (16-color palette)
+- ✅ 256-color support (CSI 38;5;n, 48;5;n)
+- ✅ 24-bit true color support (CSI 38;2;r;g;b, 48;2;r;g;b)
 - ✅ Scrollback buffer tracking
 - ✅ Scrollback navigation (scroll up/down, jump to top/bottom)
 - ✅ Enhanced escape sequences (cursor position 'f', save/restore 's'/'u', device status report 'n', set/reset mode 'h'/'l')
@@ -1456,6 +1466,8 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 - ✅ Cursor movement (up, down, forward, backward, position)
 - ✅ Text attributes (bold, italic, underline, blink, reverse video)
 - ✅ ANSI color support (16-color palette)
+- ✅ 256-color support (CSI 38;5;n, 48;5;n)
+- ✅ 24-bit true color support (CSI 38;2;r;g;b, 48;2;r;g;b)
 - ✅ Scrollback buffer tracking
 - ✅ Scrollback navigation (scroll up/down, jump to top/bottom)
 - ✅ Enhanced escape sequences (cursor position 'f', save/restore 's'/'u', device status report 'n', set/reset mode 'h'/'l')
@@ -1763,6 +1775,8 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 - ✅ Cursor movement (up, down, forward, backward, position)
 - ✅ Text attributes (bold, italic, underline, blink, reverse video)
 - ✅ ANSI color support (16-color palette)
+- ✅ 256-color support (CSI 38;5;n, 48;5;n)
+- ✅ 24-bit true color support (CSI 38;2;r;g;b, 48;2;r;g;b)
 - ✅ Scrollback buffer tracking
 - ✅ Scrollback navigation (scroll up/down, jump to top/bottom)
 - ✅ Enhanced escape sequences (cursor position 'f', save/restore 's'/'u', device status report 'n', set/reset mode 'h'/'l')

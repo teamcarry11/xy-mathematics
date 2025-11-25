@@ -1436,14 +1436,20 @@ pub const Interpreter = struct {
         self.scope_depth = old_scope_depth;
 
         // Get return value from call frame (if set by return statement)
-        const frame_return = self.call_stack[frame_start].return_value;
+        // Must get before cleanup (cleanup pops frame)
+        const frame_return = if (frame_start < self.call_stack_len) self.call_stack[frame_start].return_value else null;
 
         // Clean up call frame (free local variables)
         self.cleanup_call_frame(frame_start);
 
         // Return value (or null if no return statement)
         if (frame_return) |val| {
-            return val;
+            // Copy return value (for strings, allocate new copy)
+            if (val == .string) {
+                return try Value.from_string(self.allocator, val.string);
+            } else {
+                return val;
+            }
         } else {
             return Value.from_null();
         }
@@ -1466,7 +1472,7 @@ pub const Interpreter = struct {
         return null;
     }
 
-    /// Clean up call frame (free local variables).
+    /// Clean up call frame (free local variables, but preserve return value).
     // 2025-11-24-183000-pst: Active function
     fn cleanup_call_frame(self: *Interpreter, frame_idx: u32) void {
         std.debug.assert(frame_idx < self.call_stack_len);
@@ -1498,7 +1504,8 @@ pub const Interpreter = struct {
         }
         self.variables_len -= vars_to_remove;
 
-        // Pop call frame
+        // Note: return_value is preserved in frame until caller uses it
+        // Pop call frame (return_value will be copied by caller if needed)
         self.call_stack_len -= 1;
     }
 

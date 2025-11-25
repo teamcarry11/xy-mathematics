@@ -91,7 +91,10 @@ pub const VMMemoryStats = struct {
     }
 
     pub fn add_region(self: *VMMemoryStats, start_addr: u64, end_addr: u64) void {
-        std.debug.assert(start_addr < end_addr);
+        // Allow 0,0 for uninitialized regions, but require valid range for active regions.
+        if (start_addr > 0 or end_addr > 0) {
+            std.debug.assert(start_addr < end_addr);
+        }
         if (self.regions_len >= MAX_MEMORY_REGIONS) {
             return;
         }

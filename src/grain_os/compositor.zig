@@ -13,6 +13,7 @@ const layout_generator = @import("layout_generator.zig");
 const input_handler = @import("input_handler.zig");
 const workspace = @import("workspace.zig");
 const window_snapping = @import("window_snapping.zig");
+const window_switching = @import("window_switching.zig");
 
 // Bounded: Max number of windows.
 pub const MAX_WINDOWS: u32 = 256;
@@ -169,6 +170,7 @@ pub const Compositor = struct {
     shell: desktop_shell.DesktopShell,
     app_registry: application.ApplicationRegistry,
     app_launcher: application.ApplicationLauncher,
+    switch_order: window_switching.WindowSwitchOrder,
 
     pub fn init(allocator: std.mem.Allocator) Compositor {
         std.debug.assert(@intFromPtr(allocator.ptr) != 0);
@@ -197,6 +199,7 @@ pub const Compositor = struct {
             ),
             .app_registry = application.ApplicationRegistry.init(),
             .app_launcher = undefined,
+            .switch_order = window_switching.WindowSwitchOrder.init(),
         };
         var i: u32 = 0;
         while (i < MAX_WINDOWS) : (i += 1) {

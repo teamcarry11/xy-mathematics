@@ -115,6 +115,9 @@ pub const GrainSkateApp = struct {
 
         // Set graph visualization in window for rendering
         try self.window.set_graph_viz(self.graph_viz);
+
+        // Set block storage for title rendering
+        self.window.set_block_storage(self.block_storage);
     }
 
     /// Open block for editing.

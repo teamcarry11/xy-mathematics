@@ -456,9 +456,11 @@ pub const LivePreview = struct {
         errdefer self.allocator.free(content_copy);
         
         const timestamp = std.time.timestamp();
-        // Assert: Timestamp must be non-negative (cast to u64)
-        std.debug.assert(timestamp >= 0);
-        const timestamp_u64 = @intCast(timestamp);
+        // Handle negative timestamps (shouldn't happen, but handle gracefully)
+        const timestamp_u64 = if (timestamp < 0)
+            @as(u64, 0)
+        else
+            @as(u64, @intCast(timestamp));
         
         try self.pending_updates.append(Update{
             .source = .nostr_event,

@@ -35,6 +35,19 @@ pub const JitPerfCounters = struct {
             std.debug.print("  Hit Rate: {d:.2}%\n", .{hit_rate});
         }
         std.debug.print("  Interpreter Fallbacks: {}\n", .{self.interpreter_fallbacks});
+        if (self.total_execution_time_ns > 0) {
+            const exec_ms = @as(f64, @floatFromInt(self.total_execution_time_ns)) / 1_000_000.0;
+            std.debug.print("  Total Execution Time: {d:.2} ms\n", .{exec_ms});
+        }
+        if (self.jit_compile_time_ns > 0) {
+            const compile_ms = @as(f64, @floatFromInt(self.jit_compile_time_ns)) / 1_000_000.0;
+            std.debug.print("  Total Compile Time: {d:.2} ms\n", .{compile_ms});
+        }
+        if (self.blocks_compiled > 0 and self.jit_compile_time_ns > 0) {
+            const avg_compile_ns = self.jit_compile_time_ns / self.blocks_compiled;
+            const avg_compile_us = @as(f64, @floatFromInt(avg_compile_ns)) / 1_000.0;
+            std.debug.print("  Avg Compile Time: {d:.2} us/block\n", .{avg_compile_us});
+        }
     }
 };
 
@@ -923,10 +936,13 @@ pub const JitContext = struct {
         var instructions_in_block: u32 = 0;
 
         if (self.block_cache.get(guest_pc)) |addr| {
-            // GrainStyle: Cast u32 to usize only for pointer arithmetic
+            // Cache hit: return existing compiled block.
+            self.perf_counters.cache_hits += 1;
             return @ptrCast(@alignCast(@as(*const anyopaque, @ptrFromInt(@intFromPtr(self.code_buffer.ptr) + @as(usize, addr)))));
         }
 
+        // Cache miss: compile new block.
+        self.perf_counters.cache_misses += 1;
         self.apply_fixups(guest_pc, start_offset);
 
         while (true) {

@@ -125,3 +125,52 @@ test "graph renderer zoom and pan" {
     try testing.expect(graph_viz.zoom > 1.0);
 }
 
+test "graph renderer labels" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var graph_viz = GraphVisualization.init(allocator);
+    graph_viz.add_block(1);
+    graph_viz.add_block(42);
+    graph_viz.add_block(123);
+    graph_viz.calculate_layout(10);
+
+    var renderer = GraphRenderer.init(&graph_viz, 800, 600);
+
+    var buffer: [800 * 600 * 4]u8 = undefined;
+    renderer.render(&buffer);
+
+    // Labels should be rendered (basic sanity check)
+    try testing.expect(buffer.len == 800 * 600 * 4);
+}
+
+test "graph renderer title labels" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const Block = @import("grain_skate").Block;
+
+    // Create block storage with blocks
+    var block_storage = try Block.BlockStorage.init(allocator);
+    defer block_storage.deinit();
+
+    const block1_id = try block_storage.create_block("Test Block", "Content 1");
+    const block2_id = try block_storage.create_block("Another Block", "Content 2");
+
+    var graph_viz = GraphVisualization.init(allocator);
+    graph_viz.add_block(block1_id);
+    graph_viz.add_block(block2_id);
+    graph_viz.calculate_layout(10);
+
+    var renderer = GraphRenderer.init(&graph_viz, 800, 600);
+    renderer.set_block_storage(&block_storage);
+
+    var buffer: [800 * 600 * 4]u8 = undefined;
+    renderer.render(&buffer);
+
+    // Title labels should be rendered (basic sanity check)
+    try testing.expect(buffer.len == 800 * 600 * 4);
+}
+

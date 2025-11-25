@@ -130,6 +130,14 @@ pub const SkateWindow = struct {
         self.graph_renderer = renderer;
     }
 
+    /// Set block storage for title rendering.
+    // 2025-11-24-171200-pst: Active function
+    pub fn set_block_storage(self: *SkateWindow, block_storage: *Block.BlockStorage) void {
+        if (self.graph_renderer) |renderer| {
+            renderer.set_block_storage(block_storage);
+        }
+    }
+
     /// Render graph to window buffer.
     // 2025-11-24-163500-pst: Active function
     pub fn render_graph(self: *SkateWindow) void {

@@ -12,6 +12,11 @@
 - [x] Implement `step_jit()` with interpreter fallback
 - [x] Sync guest state between JIT and VM
 - [x] Test with minimal kernel boot sequence (tests/058_kernel_boot_jit_test.zig)
+- [x] JIT Performance Timing Enhancement (Phase 2.1.1)
+  - [x] Added timing measurements for JIT compilation and execution
+  - [x] Enhanced cache hit/miss tracking in compile_block()
+  - [x] Improved performance statistics printing
+  - [x] Comprehensive tests (tests/059_jit_performance_timing_test.zig)
 
 #### 2.2 Kernel Boot Sequence ✅ **COMPLETE**
 - [x] Implement basic boot loader
@@ -1141,7 +1146,26 @@
     - ✅ Compositor integration (automatic window assignment)
     - ✅ Window visibility management per workspace
     - ✅ Comprehensive tests (`tests/057_grain_os_workspace_test.zig`)
-  - [ ] Runtime configuration (riverctl-like, Phase 5)
+  - ✅ Window decorations & operations (Phase 5) ✅ **COMPLETE**
+    - ✅ Window decorations (title bar, border) (`src/grain_os/compositor.zig`)
+    - ✅ Window operations (minimize, maximize, restore, unmaximize)
+    - ✅ Hit testing for window decorations (title bar, close button)
+    - ✅ Window decoration rendering (focused/unfocused states)
+    - ✅ Comprehensive tests (`tests/058_grain_os_window_decorations_test.zig`)
+  - ✅ Rectangle-inspired keyboard shortcuts (Phase 5.1) ✅ **COMPLETE**
+    - ✅ Keyboard shortcut registry (`src/grain_os/keyboard_shortcuts.zig`)
+    - ✅ Window action functions (`src/grain_os/window_actions.zig`)
+    - ✅ Rectangle-inspired shortcuts (Ctrl+Alt+Arrow keys, etc.)
+    - ✅ Compositor integration (keyboard event handling)
+    - ✅ Rectangle mirrored to `grainstore/github/rxhanson/Rectangle/` (MIT license)
+    - ✅ Comprehensive tests (`tests/059_grain_os_keyboard_shortcuts_test.zig`)
+  - ✅ Runtime configuration (Phase 6) ✅ **COMPLETE**
+    - ✅ Runtime configuration module (`src/grain_os/runtime_config.zig`)
+    - ✅ Configuration command parser (set-layout, get-layout, set-border-width, etc.)
+    - ✅ Layout type parsing (tall, wide, grid, monocle)
+    - ✅ Compositor integration (init_runtime_config, process_config_command)
+    - ✅ IPC channel support (channel_id-based configuration)
+    - ✅ Comprehensive tests (`tests/060_grain_os_runtime_config_test.zig`)
 
 **In Progress**: 
 - Dream Editor Core - GLM-4.6 Integration (Phase 4.1.3) 🔄

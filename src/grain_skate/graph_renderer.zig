@@ -8,6 +8,7 @@
 
 const std = @import("std");
 const GraphVisualization = @import("graph_viz.zig").GraphVisualization;
+const Block = @import("block.zig").Block;
 
 // Bounded: Max buffer width (explicit limit, in pixels)
 // 2025-11-24-121500-pst: Active constant
@@ -25,10 +26,15 @@ pub const COLOR_NODE_SELECTED: u32 = 0xFFE24A4A; // Red selected node
 pub const COLOR_EDGE: u32 = 0xFF666666; // Gray edge
 pub const COLOR_TEXT: u32 = 0xFFFFFFFF; // White text
 
+// Bounded: Max label length (explicit limit, in characters)
+// 2025-11-24-171200-pst: Active constant
+pub const MAX_LABEL_LEN: u32 = 32;
+
 // Graph renderer state.
 // 2025-11-24-121500-pst: Active struct
 pub const GraphRenderer = struct {
     graph_viz: *GraphVisualization,
+    block_storage: ?*Block.BlockStorage,
     buffer_width: u32,
     buffer_height: u32,
 
@@ -43,9 +49,16 @@ pub const GraphRenderer = struct {
 
         return GraphRenderer{
             .graph_viz = graph_viz,
+            .block_storage = null,
             .buffer_width = buffer_width,
             .buffer_height = buffer_height,
         };
+    }
+
+    /// Set block storage for title lookup.
+    // 2025-11-24-171200-pst: Active function
+    pub fn set_block_storage(self: *GraphRenderer, block_storage: *Block.BlockStorage) void {
+        self.block_storage = block_storage;
     }
 
     /// Render graph to RGBA buffer.
@@ -62,6 +75,9 @@ pub const GraphRenderer = struct {
 
         // Render nodes
         self.render_nodes(buffer);
+
+        // Render node labels
+        self.render_labels(buffer);
     }
 
     /// Clear buffer with background color.
@@ -235,6 +251,258 @@ pub const GraphRenderer = struct {
         const pixel_y = (@as(f32, @floatFromInt(self.buffer_height)) * 0.5) + (offset_y * @as(f32, @floatFromInt(self.buffer_height)));
         const clamped = std.math.clamp(pixel_y, 0.0, @as(f32, @floatFromInt(self.buffer_height - 1)));
         return @as(u32, @intFromFloat(clamped));
+    }
+
+    /// Render node labels (block IDs as numbers).
+    // 2025-11-24-170000-pst: Active function
+    fn render_labels(self: *const GraphRenderer, buffer: []u8) void {
+        const text_r = @as(u8, @truncate((COLOR_TEXT >> 16) & 0xFF));
+        const text_g = @as(u8, @truncate((COLOR_TEXT >> 8) & 0xFF));
+        const text_b = @as(u8, @truncate(COLOR_TEXT & 0xFF));
+        const text_a = @as(u8, @truncate((COLOR_TEXT >> 24) & 0xFF));
+
+        var n: u32 = 0;
+        while (n < self.graph_viz.nodes_len) : (n += 1) {
+            if (!self.graph_viz.nodes[n].visible) {
+                continue;
+            }
+
+            // Transform normalized coordinates to pixel coordinates
+            const center_x = self.normalized_to_pixel_x(self.graph_viz.nodes[n].position.x);
+            const center_y = self.normalized_to_pixel_y(self.graph_viz.nodes[n].position.y);
+            const radius = @as(u32, @intFromFloat(self.graph_viz.nodes[n].radius * self.graph_viz.zoom));
+
+            // Label position: below node (center_y + radius + offset)
+            const label_y = center_y + radius + 12;
+            const label_x = center_x;
+
+            // Render block title if available, otherwise render block ID
+            if (self.block_storage) |storage| {
+                if (storage.get_block(self.graph_viz.nodes[n].block_id)) |block| {
+                    if (block.title_len > 0) {
+                        self.draw_text(buffer, block.title[0..block.title_len], label_x, label_y, text_r, text_g, text_b, text_a);
+                        continue;
+                    }
+                }
+            }
+            // Fallback to block ID if no title available
+            self.draw_number(buffer, self.graph_viz.nodes[n].block_id, label_x, label_y, text_r, text_g, text_b, text_a);
+        }
+    }
+
+    /// Draw number at position (simple 5x7 bitmap font for digits).
+    // 2025-11-24-170000-pst: Active function
+    fn draw_number(self: *const GraphRenderer, buffer: []u8, number: u32, x: u32, y: u32, r: u8, g: u8, b: u8, a: u8) void {
+        // Convert number to string (max 10 digits for u32)
+        var digits: [10]u8 = undefined;
+        var num = number;
+        var digit_count: u32 = 0;
+
+        if (num == 0) {
+            digits[0] = '0';
+            digit_count = 1;
+        } else {
+            while (num > 0 and digit_count < 10) : (digit_count += 1) {
+                digits[9 - digit_count] = @as(u8, @intCast('0' + (num % 10)));
+                num /= 10;
+            }
+        }
+
+        // Draw each digit
+        var i: u32 = 0;
+        while (i < digit_count) : (i += 1) {
+            const digit = digits[10 - digit_count + i];
+            const digit_x = x + (i * 6); // 6 pixels per digit (5 width + 1 spacing)
+            self.draw_digit(buffer, digit, digit_x, y, r, g, b, a);
+        }
+    }
+
+    /// Draw single digit using simple 5x7 bitmap font.
+    // 2025-11-24-170000-pst: Active function
+    fn draw_digit(self: *const GraphRenderer, buffer: []u8, digit: u8, x: u32, y: u32, r: u8, g: u8, b: u8, a: u8) void {
+        // Simple 5x7 bitmap patterns for digits 0-9
+        const patterns = [10][7]u5{
+            // 0
+            .{ 0b01110, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110 },
+            // 1
+            .{ 0b00100, 0b01100, 0b00100, 0b00100, 0b00100, 0b00100, 0b01110 },
+            // 2
+            .{ 0b01110, 0b10001, 0b00001, 0b00110, 0b01000, 0b10000, 0b11111 },
+            // 3
+            .{ 0b01110, 0b10001, 0b00001, 0b00110, 0b00001, 0b10001, 0b01110 },
+            // 4
+            .{ 0b00010, 0b00110, 0b01010, 0b10010, 0b11111, 0b00010, 0b00010 },
+            // 5
+            .{ 0b11111, 0b10000, 0b11110, 0b00001, 0b00001, 0b10001, 0b01110 },
+            // 6
+            .{ 0b00110, 0b01000, 0b10000, 0b11110, 0b10001, 0b10001, 0b01110 },
+            // 7
+            .{ 0b11111, 0b00001, 0b00010, 0b00100, 0b01000, 0b01000, 0b01000 },
+            // 8
+            .{ 0b01110, 0b10001, 0b10001, 0b01110, 0b10001, 0b10001, 0b01110 },
+            // 9
+            .{ 0b01110, 0b10001, 0b10001, 0b01111, 0b00001, 0b00010, 0b01100 },
+        };
+
+        if (digit < '0' or digit > '9') {
+            return; // Invalid digit
+        }
+
+        const pattern_idx = digit - '0';
+        const pattern = patterns[pattern_idx];
+
+        // Draw pattern (5x7)
+        var row: u32 = 0;
+        while (row < 7) : (row += 1) {
+            var col: u32 = 0;
+            while (col < 5) : (col += 1) {
+                if ((pattern[row] & (@as(u5, 1) << @as(u3, @intCast(4 - col)))) != 0) {
+                    const px = x + col;
+                    const py = y + row;
+                    if (px < self.buffer_width and py < self.buffer_height) {
+                        const idx = (py * self.buffer_width + px) * 4;
+                        buffer[idx + 0] = r;
+                        buffer[idx + 1] = g;
+                        buffer[idx + 2] = b;
+                        buffer[idx + 3] = a;
+                    }
+                }
+            }
+        }
+    }
+
+    /// Draw text string (supports alphanumeric and basic punctuation).
+    // 2025-11-24-171200-pst: Active function
+    fn draw_text(self: *const GraphRenderer, buffer: []u8, text: []const u8, x: u32, y: u32, r: u8, g: u8, b: u8, a: u8) void {
+        // Truncate text to max label length
+        const text_len = @min(text.len, MAX_LABEL_LEN);
+        var char_x = x;
+
+        // Draw each character
+        var i: u32 = 0;
+        while (i < text_len) : (i += 1) {
+            const ch = text[i];
+            if (self.draw_char(buffer, ch, char_x, y, r, g, b, a)) {
+                char_x += 6; // 6 pixels per character (5 width + 1 spacing)
+            }
+        }
+    }
+
+    /// Draw single character (supports digits, letters, space, basic punctuation).
+    // 2025-11-24-171200-pst: Active function
+    fn draw_char(self: *const GraphRenderer, buffer: []u8, ch: u8, x: u32, y: u32, r: u8, g: u8, b: u8, a: u8) bool {
+        // Handle digits (already implemented)
+        if (ch >= '0' and ch <= '9') {
+            self.draw_digit(buffer, ch, x, y, r, g, b, a);
+            return true;
+        }
+
+        // Handle space
+        if (ch == ' ') {
+            return true; // Skip space (no rendering needed)
+        }
+
+        // Handle uppercase letters (A-Z)
+        if (ch >= 'A' and ch <= 'Z') {
+            self.draw_letter_upper(buffer, ch, x, y, r, g, b, a);
+            return true;
+        }
+
+        // Handle lowercase letters (a-z) - render as uppercase for simplicity
+        if (ch >= 'a' and ch <= 'z') {
+            const upper_ch = ch - ('a' - 'A');
+            self.draw_letter_upper(buffer, upper_ch, x, y, r, g, b, a);
+            return true;
+        }
+
+        // Unsupported character - skip
+        return false;
+    }
+
+    /// Draw uppercase letter using simple 5x7 bitmap font.
+    // 2025-11-24-171200-pst: Active function
+    fn draw_letter_upper(self: *const GraphRenderer, buffer: []u8, letter: u8, x: u32, y: u32, r: u8, g: u8, b: u8, a: u8) void {
+        // Simple 5x7 bitmap patterns for uppercase letters A-Z
+        const patterns = [26][7]u5{
+            // A
+            .{ 0b01110, 0b10001, 0b10001, 0b11111, 0b10001, 0b10001, 0b10001 },
+            // B
+            .{ 0b11110, 0b10001, 0b10001, 0b11110, 0b10001, 0b10001, 0b11110 },
+            // C
+            .{ 0b01110, 0b10001, 0b10000, 0b10000, 0b10000, 0b10001, 0b01110 },
+            // D
+            .{ 0b11110, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b11110 },
+            // E
+            .{ 0b11111, 0b10000, 0b10000, 0b11110, 0b10000, 0b10000, 0b11111 },
+            // F
+            .{ 0b11111, 0b10000, 0b10000, 0b11110, 0b10000, 0b10000, 0b10000 },
+            // G
+            .{ 0b01110, 0b10001, 0b10000, 0b10111, 0b10001, 0b10001, 0b01110 },
+            // H
+            .{ 0b10001, 0b10001, 0b10001, 0b11111, 0b10001, 0b10001, 0b10001 },
+            // I
+            .{ 0b01110, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b01110 },
+            // J
+            .{ 0b00111, 0b00010, 0b00010, 0b00010, 0b10010, 0b10010, 0b01100 },
+            // K
+            .{ 0b10001, 0b10010, 0b10100, 0b11000, 0b10100, 0b10010, 0b10001 },
+            // L
+            .{ 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b11111 },
+            // M
+            .{ 0b10001, 0b11011, 0b10101, 0b10001, 0b10001, 0b10001, 0b10001 },
+            // N
+            .{ 0b10001, 0b11001, 0b10101, 0b10011, 0b10001, 0b10001, 0b10001 },
+            // O
+            .{ 0b01110, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110 },
+            // P
+            .{ 0b11110, 0b10001, 0b10001, 0b11110, 0b10000, 0b10000, 0b10000 },
+            // Q
+            .{ 0b01110, 0b10001, 0b10001, 0b10001, 0b10101, 0b10010, 0b01101 },
+            // R
+            .{ 0b11110, 0b10001, 0b10001, 0b11110, 0b10100, 0b10010, 0b10001 },
+            // S
+            .{ 0b01110, 0b10001, 0b10000, 0b01110, 0b00001, 0b10001, 0b01110 },
+            // T
+            .{ 0b11111, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100 },
+            // U
+            .{ 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110 },
+            // V
+            .{ 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b01010, 0b00100 },
+            // W
+            .{ 0b10001, 0b10001, 0b10001, 0b10001, 0b10101, 0b11011, 0b10001 },
+            // X
+            .{ 0b10001, 0b01010, 0b00100, 0b00100, 0b00100, 0b01010, 0b10001 },
+            // Y
+            .{ 0b10001, 0b10001, 0b01010, 0b00100, 0b00100, 0b00100, 0b00100 },
+            // Z
+            .{ 0b11111, 0b00001, 0b00010, 0b00100, 0b01000, 0b10000, 0b11111 },
+        };
+
+        if (letter < 'A' or letter > 'Z') {
+            return; // Invalid letter
+        }
+
+        const pattern_idx = letter - 'A';
+        const pattern = patterns[pattern_idx];
+
+        // Draw pattern (5x7)
+        var row: u32 = 0;
+        while (row < 7) : (row += 1) {
+            var col: u32 = 0;
+            while (col < 5) : (col += 1) {
+                if ((pattern[row] & (@as(u5, 1) << @as(u3, @intCast(4 - col)))) != 0) {
+                    const px = x + col;
+                    const py = y + row;
+                    if (px < self.buffer_width and py < self.buffer_height) {
+                        const idx = (py * self.buffer_width + px) * 4;
+                        buffer[idx + 0] = r;
+                        buffer[idx + 1] = g;
+                        buffer[idx + 2] = b;
+                        buffer[idx + 3] = a;
+                    }
+                }
+            }
+        }
     }
 };
 

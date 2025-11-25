@@ -13,6 +13,8 @@ const layout_generator = @import("layout_generator.zig");
 const input_handler = @import("input_handler.zig");
 const workspace = @import("workspace.zig");
 const keyboard_shortcuts = @import("keyboard_shortcuts.zig");
+const runtime_config = @import("runtime_config.zig");
+const desktop_shell = @import("desktop_shell.zig");
 
 // Bounded: Max number of windows.
 pub const MAX_WINDOWS: u32 = 256;
@@ -109,6 +111,8 @@ pub const Compositor = struct {
     input: input_handler.InputHandler,
     focused_window_id: u32,
     shortcut_registry: keyboard_shortcuts.ShortcutRegistry,
+    config_manager: ?runtime_config.RuntimeConfig,
+    shell: desktop_shell.DesktopShell,
 
     pub fn init(allocator: std.mem.Allocator) Compositor {
         std.debug.assert(@intFromPtr(allocator.ptr) != 0);
@@ -129,6 +133,12 @@ pub const Compositor = struct {
             .input = input_handler.InputHandler.init(),
             .focused_window_id = 0,
             .shortcut_registry = keyboard_shortcuts.ShortcutRegistry.init(),
+            .config_manager = null,
+            .shell = desktop_shell.DesktopShell.init(
+                &compositor.renderer,
+                compositor.output.width,
+                compositor.output.height,
+            ),
         };
         var i: u32 = 0;
         while (i < MAX_WINDOWS) : (i += 1) {
@@ -347,6 +357,9 @@ pub const Compositor = struct {
                 self.render_window_decorations(win);
             }
         }
+        // Render desktop shell (status bar and launcher).
+        self.shell.set_current_workspace(self.workspace_manager.current_workspace_id);
+        self.shell.render();
     }
 
     // Render window decorations (border, title bar, content area).
@@ -572,6 +585,21 @@ pub const Compositor = struct {
     // Get focused window ID.
     pub fn get_focused_window_id(self: *const Compositor) u32 {
         return self.focused_window_id;
+    }
+
+    // Initialize runtime configuration manager.
+    pub fn init_runtime_config(self: *Compositor, channel_id: u32) void {
+        std.debug.assert(channel_id > 0);
+        self.config_manager = runtime_config.RuntimeConfig.init(self, channel_id);
+    }
+
+    // Process configuration command.
+    pub fn process_config_command(self: *Compositor, cmd_str: []const u8) bool {
+        std.debug.assert(cmd_str.len > 0);
+        if (self.config_manager) |*config| {
+            return config.process_command(cmd_str);
+        }
+        return false;
     }
 };
 

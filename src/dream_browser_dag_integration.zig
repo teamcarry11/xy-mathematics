@@ -52,9 +52,8 @@ pub const BrowserDagIntegration = struct {
     
     /// Initialize browser-DAG integration.
     pub fn init(allocator: std.mem.Allocator, dag: *DagCore) BrowserDagIntegration {
-        // Assert: Allocator and DAG must be valid
-        std.debug.assert(allocator.ptr != null);
-        _ = dag; // DAG is owned by caller
+        // DAG is owned by caller
+        _ = dag;
         
         return BrowserDagIntegration{
             .allocator = allocator,

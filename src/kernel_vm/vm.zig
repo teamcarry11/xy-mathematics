@@ -526,28 +526,39 @@ pub const VM = struct {
         const jit_ctx = self.jit.?;
         const pc = self.regs.pc;
         
-        // Try JIT compilation
+        // Check cache first (avoid compilation if already compiled).
+        const compile_start = std.time.nanoTimestamp();
         const func = jit_ctx.compile_block(pc) catch {
-            // JIT failed, fall back to interpreter
+            // JIT failed, fall back to interpreter.
             jit_ctx.perf_counters.interpreter_fallbacks += 1;
             return self.step();
         };
+        const compile_end = std.time.nanoTimestamp();
+        const compile_time: i64 = compile_end - compile_start;
+        if (compile_time > 0) {
+            jit_ctx.perf_counters.jit_compile_time_ns += @intCast(compile_time);
+        }
         
-        // Sync guest state to JIT
+        // Sync guest state to JIT.
         var guest_state = jit_mod.GuestState{
             .regs = self.regs.regs,
             .pc = pc,
         };
         
-        // Execute JIT code
+        // Execute JIT code (measure execution time).
+        const exec_start = std.time.nanoTimestamp();
         jit_mod.JitContext.enter_jit(func, &guest_state, &self.memory);
+        const exec_end = std.time.nanoTimestamp();
+        const exec_time: i64 = exec_end - exec_start;
+        if (exec_time > 0) {
+            jit_ctx.perf_counters.total_execution_time_ns += @intCast(exec_time);
+        }
         
-        // Sync back to VM
+        // Sync back to VM.
         self.regs.regs = guest_state.regs;
         self.regs.pc = guest_state.pc;
         
-        // Update perf counters
-        jit_ctx.perf_counters.cache_hits += 1;
+        // Note: cache_hits/cache_misses are tracked in compile_block().
         
         std.debug.assert(self.regs.pc % 4 == 0 or self.state != .running);
     }

@@ -16,6 +16,11 @@
    - ✅ Add `init_with_jit()` and `step_jit()` methods
    - ✅ Implement interpreter fallback for JIT failures (step_jit() automatically falls back)
    - ✅ Test with minimal kernel boot sequence (tests/058_kernel_boot_jit_test.zig)
+   - ✅ JIT Performance Timing Enhancement (Phase 2.1.1)
+     - ✅ Added timing measurements for JIT compilation and execution
+     - ✅ Enhanced cache hit/miss tracking in compile_block()
+     - ✅ Improved performance statistics printing (execution time, compile time, averages)
+     - ✅ Comprehensive tests (tests/059_jit_performance_timing_test.zig)
 
 2. **Kernel Boot Sequence**
    - Implement basic boot loader
@@ -425,8 +430,28 @@ Create a fourth agent dedicated to **Grain OS** - a Zig-Wayland implemented GNOM
    - ✅ Compositor integration (automatic window assignment)
    - ✅ Window visibility management per workspace
    - ✅ Comprehensive tests (`tests/057_grain_os_workspace_test.zig`)
-5. **Phase 5**: Desktop Shell (window manager, launcher)
-6. **Phase 6**: Application Framework (API, loader, `~/Applications/`)
+5. **Phase 5**: Window Decorations & Operations ✅ **COMPLETE**
+   - ✅ Window decorations (title bar, border) (`src/grain_os/compositor.zig`)
+   - ✅ Window operations (minimize, maximize, restore, unmaximize)
+   - ✅ Hit testing for window decorations (title bar, close button)
+   - ✅ Window decoration rendering (focused/unfocused states)
+   - ✅ Comprehensive tests (`tests/058_grain_os_window_decorations_test.zig`)
+   - ✅ Rectangle-inspired keyboard shortcuts (Phase 5.1) (`src/grain_os/keyboard_shortcuts.zig`)
+     - ✅ Keyboard shortcut registry (MAX_SHORTCUTS: 64)
+     - ✅ Window action functions (halves, quarters, thirds, two-thirds, center, larger, smaller, maximize height)
+     - ✅ Rectangle-inspired shortcuts (Ctrl+Alt+Arrow keys, etc.)
+     - ✅ Compositor integration (keyboard event handling)
+     - ✅ Rectangle mirrored to `grainstore/github/rxhanson/Rectangle/` (MIT license)
+     - ✅ Comprehensive tests (`tests/059_grain_os_keyboard_shortcuts_test.zig`)
+6. **Phase 6**: Runtime Configuration (riverctl-like) ✅ **COMPLETE**
+   - ✅ Runtime configuration module (`src/grain_os/runtime_config.zig`)
+   - ✅ Configuration command parser (set-layout, get-layout, set-border-width, etc.)
+   - ✅ Layout type parsing (tall, wide, grid, monocle)
+   - ✅ Compositor integration (init_runtime_config, process_config_command)
+   - ✅ IPC channel support (channel_id-based configuration)
+   - ✅ Comprehensive tests (`tests/060_grain_os_runtime_config_test.zig`)
+7. **Phase 7**: Desktop Shell (window manager, launcher)
+8. **Phase 8**: Application Framework (API, loader, `~/Applications/`)
 7. **Phase 7**: Integration (Grain Kernel syscalls, VM testing)
 8. **Phase 8**: Applications (Aurora, Dream, Skate, Terminal ports)
 
@@ -827,6 +852,7 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 - ✅ Enhanced error handling and validation (LayoutTooLarge, StackOverflow, InvalidNode)
 - ✅ Bounded operations (MAX_LAYOUT_BOXES, MAX_STACK_DEPTH, MAX_DIMENSION)
 - ✅ Viewport error handling (invalid allocator check removed, timestamp validation)
+- ✅ Browser DAG integration error handling (invalid allocator check removed)
 
 #### 3.3: Nostr Content Loading ✅ **COMPLETE**
 - ✅ Parse Nostr URLs (`nostr:note1...`, `nostr:npub1...`, `src/dream_browser_nostr.zig`)
@@ -859,6 +885,7 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 
 #### 3.2: Live Preview ✅ **COMPLETE**
 - ✅ Live Preview update logic implementation (editor ↔ browser sync)
+- ✅ Enhanced error handling (invalid allocator check removed, timestamp validation, buffer/Aurora init error handling)
 - ✅ Unified IDE integration (subscribe, process updates, handle edits)
 - ✅ Editor edits → Browser preview (real-time propagation)
 - ✅ Nostr event updates → Editor sync (bidirectional)
@@ -1073,6 +1100,8 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
   - ✅ Color management (background, nodes, edges, selection)
   - ✅ Comprehensive tests (`tests/056_grain_skate_graph_renderer_test.zig`)
   - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, iterative algorithms)
+  - ✅ Node label rendering (block IDs as numbers, 5x7 bitmap font)
+  - ✅ Label positioning (below nodes with offset)
 - ✅ Window graph rendering integration (`src/grain_skate/window.zig`)
   - ✅ Graph renderer integration with window buffer
   - ✅ `set_graph_viz()` method for graph visualization setup
@@ -1335,6 +1364,8 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
   - ✅ Color management (background, nodes, edges, selection)
   - ✅ Comprehensive tests (`tests/056_grain_skate_graph_renderer_test.zig`)
   - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, iterative algorithms)
+  - ✅ Node label rendering (block IDs as numbers, 5x7 bitmap font)
+  - ✅ Label positioning (below nodes with offset)
 - ✅ Window graph rendering integration (`src/grain_skate/window.zig`)
   - ✅ Graph renderer integration with window buffer
   - ✅ `set_graph_viz()` method for graph visualization setup
@@ -1597,6 +1628,8 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
   - ✅ Color management (background, nodes, edges, selection)
   - ✅ Comprehensive tests (`tests/056_grain_skate_graph_renderer_test.zig`)
   - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, iterative algorithms)
+  - ✅ Node label rendering (block IDs as numbers, 5x7 bitmap font)
+  - ✅ Label positioning (below nodes with offset)
 - ✅ Window graph rendering integration (`src/grain_skate/window.zig`)
   - ✅ Graph renderer integration with window buffer
   - ✅ `set_graph_viz()` method for graph visualization setup

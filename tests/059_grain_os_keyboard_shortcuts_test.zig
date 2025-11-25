@@ -10,13 +10,13 @@ const ShortcutRegistry = grain_os.keyboard_shortcuts.ShortcutRegistry;
 const window_actions = grain_os.window_actions;
 
 test "shortcut registry initialization" {
-    var registry = ShortcutRegistry.init();
+    const registry = ShortcutRegistry.init();
     std.debug.assert(registry.shortcuts_len > 0);
     std.debug.assert(registry.shortcuts_len <= grain_os.keyboard_shortcuts.MAX_SHORTCUTS);
 }
 
 test "find shortcut" {
-    var registry = ShortcutRegistry.init();
+    const registry = ShortcutRegistry.init();
     const action_opt = registry.find_shortcut(
         grain_os.keyboard_shortcuts.MODIFIER_CTRL | grain_os.keyboard_shortcuts.MODIFIER_ALT,
         grain_os.keyboard_shortcuts.KEY_LEFT,
@@ -85,8 +85,8 @@ test "action center" {
     if (compositor.get_window(window_id)) |win| {
         const content_width = compositor.output.width - (grain_os.compositor.BORDER_WIDTH * 2);
         const center_x = (content_width - win.width) / 2;
-        std.debug.assert(win.x >= @as(i32, @intCast(compositor.BORDER_WIDTH + center_x - 1)));
-        std.debug.assert(win.x <= @as(i32, @intCast(compositor.BORDER_WIDTH + center_x + 1)));
+        std.debug.assert(win.x >= @as(i32, @intCast(grain_os.compositor.BORDER_WIDTH + center_x - 1)));
+        std.debug.assert(win.x <= @as(i32, @intCast(grain_os.compositor.BORDER_WIDTH + center_x + 1)));
     }
 }
 

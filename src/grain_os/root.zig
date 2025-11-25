@@ -14,4 +14,5 @@ pub const input_handler = @import("input_handler.zig");
 pub const workspace = @import("workspace.zig");
 pub const window_actions = @import("window_actions.zig");
 pub const keyboard_shortcuts = @import("keyboard_shortcuts.zig");
+pub const runtime_config = @import("runtime_config.zig");
 

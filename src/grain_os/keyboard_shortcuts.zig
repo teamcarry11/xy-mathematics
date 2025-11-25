@@ -67,24 +67,24 @@ pub const ShortcutRegistry = struct {
             };
         }
         // Register Rectangle-inspired shortcuts.
-        registry.register_shortcut(MODIFIER_CTRL | MODIFIER_ALT, KEY_LEFT, window_actions.action_left_half, "left-half");
-        registry.register_shortcut(MODIFIER_CTRL | MODIFIER_ALT, KEY_RIGHT, window_actions.action_right_half, "right-half");
-        registry.register_shortcut(MODIFIER_CTRL | MODIFIER_ALT, KEY_UP, window_actions.action_top_half, "top-half");
-        registry.register_shortcut(MODIFIER_CTRL | MODIFIER_ALT, KEY_DOWN, window_actions.action_bottom_half, "bottom-half");
-        registry.register_shortcut(MODIFIER_CTRL | MODIFIER_ALT, KEY_U, window_actions.action_top_left, "top-left");
-        registry.register_shortcut(MODIFIER_CTRL | MODIFIER_ALT, KEY_I, window_actions.action_top_right, "top-right");
-        registry.register_shortcut(MODIFIER_CTRL | MODIFIER_ALT, KEY_J, window_actions.action_bottom_left, "bottom-left");
-        registry.register_shortcut(MODIFIER_CTRL | MODIFIER_ALT, KEY_K, window_actions.action_bottom_right, "bottom-right");
-        registry.register_shortcut(MODIFIER_CTRL | MODIFIER_ALT, KEY_D, window_actions.action_first_third, "first-third");
-        registry.register_shortcut(MODIFIER_CTRL | MODIFIER_ALT, KEY_F, window_actions.action_center_third, "center-third");
-        registry.register_shortcut(MODIFIER_CTRL | MODIFIER_ALT, KEY_G, window_actions.action_last_third, "last-third");
-        registry.register_shortcut(MODIFIER_CTRL | MODIFIER_ALT, KEY_E, window_actions.action_first_two_thirds, "first-two-thirds");
-        registry.register_shortcut(MODIFIER_CTRL | MODIFIER_ALT, KEY_T, window_actions.action_last_two_thirds, "last-two-thirds");
-        registry.register_shortcut(MODIFIER_CTRL | MODIFIER_ALT, KEY_RETURN, action_maximize, "maximize");
-        registry.register_shortcut(MODIFIER_CTRL | MODIFIER_ALT, KEY_C, window_actions.action_center, "center");
-        registry.register_shortcut(MODIFIER_CTRL | MODIFIER_ALT, KEY_EQUALS, window_actions.action_larger, "larger");
-        registry.register_shortcut(MODIFIER_CTRL | MODIFIER_ALT, KEY_MINUS, window_actions.action_smaller, "smaller");
-        registry.register_shortcut(MODIFIER_CTRL | MODIFIER_ALT | MODIFIER_SHIFT, KEY_UP, window_actions.action_maximize_height, "maximize-height");
+        _ = registry.register_shortcut(MODIFIER_CTRL | MODIFIER_ALT, KEY_LEFT, window_actions.action_left_half, "left-half");
+        _ = registry.register_shortcut(MODIFIER_CTRL | MODIFIER_ALT, KEY_RIGHT, window_actions.action_right_half, "right-half");
+        _ = registry.register_shortcut(MODIFIER_CTRL | MODIFIER_ALT, KEY_UP, window_actions.action_top_half, "top-half");
+        _ = registry.register_shortcut(MODIFIER_CTRL | MODIFIER_ALT, KEY_DOWN, window_actions.action_bottom_half, "bottom-half");
+        _ = registry.register_shortcut(MODIFIER_CTRL | MODIFIER_ALT, KEY_U, window_actions.action_top_left, "top-left");
+        _ = registry.register_shortcut(MODIFIER_CTRL | MODIFIER_ALT, KEY_I, window_actions.action_top_right, "top-right");
+        _ = registry.register_shortcut(MODIFIER_CTRL | MODIFIER_ALT, KEY_J, window_actions.action_bottom_left, "bottom-left");
+        _ = registry.register_shortcut(MODIFIER_CTRL | MODIFIER_ALT, KEY_K, window_actions.action_bottom_right, "bottom-right");
+        _ = registry.register_shortcut(MODIFIER_CTRL | MODIFIER_ALT, KEY_D, window_actions.action_first_third, "first-third");
+        _ = registry.register_shortcut(MODIFIER_CTRL | MODIFIER_ALT, KEY_F, window_actions.action_center_third, "center-third");
+        _ = registry.register_shortcut(MODIFIER_CTRL | MODIFIER_ALT, KEY_G, window_actions.action_last_third, "last-third");
+        _ = registry.register_shortcut(MODIFIER_CTRL | MODIFIER_ALT, KEY_E, window_actions.action_first_two_thirds, "first-two-thirds");
+        _ = registry.register_shortcut(MODIFIER_CTRL | MODIFIER_ALT, KEY_T, window_actions.action_last_two_thirds, "last-two-thirds");
+        _ = registry.register_shortcut(MODIFIER_CTRL | MODIFIER_ALT, KEY_RETURN, action_maximize, "maximize");
+        _ = registry.register_shortcut(MODIFIER_CTRL | MODIFIER_ALT, KEY_C, window_actions.action_center, "center");
+        _ = registry.register_shortcut(MODIFIER_CTRL | MODIFIER_ALT, KEY_EQUALS, window_actions.action_larger, "larger");
+        _ = registry.register_shortcut(MODIFIER_CTRL | MODIFIER_ALT, KEY_MINUS, window_actions.action_smaller, "smaller");
+        _ = registry.register_shortcut(MODIFIER_CTRL | MODIFIER_ALT | MODIFIER_SHIFT, KEY_UP, window_actions.action_maximize_height, "maximize-height");
         std.debug.assert(registry.shortcuts_len <= MAX_SHORTCUTS);
         return registry;
     }

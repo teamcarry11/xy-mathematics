@@ -71,6 +71,28 @@
      - ✅ Branch statistics printing (total, taken/not taken, top 10 branches)
      - ✅ Integration with all branch instructions (BEQ, BNE, BLT, BGE, BLTU, BGEU)
      - ✅ Comprehensive tests (tests/067_vm_branch_stats_test.zig)
+   - ✅ VM Register Usage Statistics (Phase 2.1.10)
+     - ✅ Register read/write tracking per register (NUM_REGISTERS: 32)
+     - ✅ Total read/write counts
+     - ✅ Register usage percentage calculation
+     - ✅ Top register statistics printing
+     - ✅ Integration with instruction execution (ADD, ADDI, LUI, etc.)
+     - ✅ Statistics aggregator integration
+     - ✅ Comprehensive tests (tests/068_vm_register_stats_test.zig)
+   - ✅ VM Instruction Performance Profiling (Phase 2.1.11)
+     - ✅ Execution time tracking per opcode (MAX_OPCODES: 64)
+     - ✅ Execution count tracking per opcode
+     - ✅ Average execution time calculation
+     - ✅ Total profiling time tracking
+     - ✅ Top instruction performance statistics printing
+     - ✅ Statistics aggregator integration
+     - ✅ Comprehensive tests (tests/069_vm_instruction_perf_test.zig)
+   - ✅ VM Statistics Export (Phase 2.1.12)
+     - ✅ JSON export format for all VM statistics
+     - ✅ Bounded JSON buffer (MAX_JSON_SIZE: 1MB)
+     - ✅ Export all statistics modules (performance, exceptions, memory, instructions, syscalls, flow, registers, branches, perf)
+     - ✅ Statistics aggregator integration
+     - ✅ Comprehensive tests (tests/070_vm_stats_export_test.zig)
 
 2. **Kernel Boot Sequence**
    - Implement basic boot loader

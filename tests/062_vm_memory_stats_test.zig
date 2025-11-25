@@ -18,14 +18,16 @@ test "VM memory stats initialization" {
 
 test "VM memory stats record read" {
     var stats = memory_stats_mod.VMMemoryStats.init(8 * 1024 * 1024);
-    stats.record_read(0x80000000, 8);
+    // Use address within memory range (0x80000000 is kernel base, but we track virtual addresses).
+    stats.record_read(0x1000, 8);
     try testing.expect(stats.total_reads == 1);
     try testing.expect(stats.total_bytes_read == 8);
 }
 
 test "VM memory stats record write" {
     var stats = memory_stats_mod.VMMemoryStats.init(8 * 1024 * 1024);
-    stats.record_write(0x80000000, 8);
+    // Use address within memory range.
+    stats.record_write(0x1000, 8);
     try testing.expect(stats.total_writes == 1);
     try testing.expect(stats.total_bytes_written == 8);
 }

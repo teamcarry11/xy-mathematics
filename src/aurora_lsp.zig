@@ -12,6 +12,11 @@ pub const LspClient = struct {
     // Snapshot model: track document versions incrementally (Matklad-style)
     // Bounded: Max 1000 document snapshots
     pub const MAX_SNAPSHOTS: u32 = 1000;
+    
+    // Diagnostics storage: track diagnostics per document
+    // Bounded: Max 1000 diagnostics per document
+    pub const MAX_DIAGNOSTICS_PER_DOCUMENT: u32 = 1000;
+    
     allocator: std.mem.Allocator,
     server_process: ?std.process.Child = null,
     request_id: u64 = 1,
@@ -19,6 +24,7 @@ pub const LspClient = struct {
     snapshots: std.ArrayListUnmanaged(DocumentSnapshot) = .{},
     current_snapshot_id: u64 = 0,
     pending_requests: std.AutoHashMap(u64, void) = undefined,
+    diagnostics: std.StringHashMap(std.ArrayListUnmanaged(Diagnostic)) = undefined,
 
     pub const Message = struct {
         jsonrpc: []const u8 = "2.0",
@@ -91,6 +97,7 @@ pub const LspClient = struct {
             .allocator = allocator,
             .snapshots = .{},
             .pending_requests = std.AutoHashMap(u64, void).init(allocator),
+            .diagnostics = std.StringHashMap(std.ArrayListUnmanaged(Diagnostic)).init(allocator),
         };
     }
 
@@ -101,6 +108,23 @@ pub const LspClient = struct {
             self.allocator.free(snapshot.text);
         }
         self.snapshots.deinit(self.allocator);
+        
+        // Free diagnostics
+        var diagnostics_it = self.diagnostics.iterator();
+        while (diagnostics_it.next()) |entry| {
+            // Free diagnostic messages and sources
+            for (entry.value_ptr.items) |*diag| {
+                self.allocator.free(diag.message);
+                if (diag.source) |source| {
+                    self.allocator.free(source);
+                }
+            }
+            entry.value_ptr.deinit(self.allocator);
+            // Free URI key (StringHashMap owns keys, but we allocated them)
+            self.allocator.free(entry.key_ptr.*);
+        }
+        self.diagnostics.deinit();
+        
         self.pending_requests.deinit();
         
         if (self.server_process) |*proc| {

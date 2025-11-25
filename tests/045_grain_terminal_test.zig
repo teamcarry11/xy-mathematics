@@ -311,3 +311,47 @@ test "terminal osc window title" {
     try testing.expect(std.mem.eql(u8, title, "Test Title"));
 }
 
+test "terminal 256 color foreground" {
+    var terminal = Terminal.init(80, 24);
+    var cells: [80 * 24]Terminal.Cell = undefined;
+    terminal.clear(&cells);
+
+    // Set 256-color foreground: ESC[38;5;100m
+    terminal.process_char(0x1B, &cells); // ESC
+    terminal.process_char('[', &cells);
+    terminal.process_char('3', &cells);
+    terminal.process_char('8', &cells);
+    terminal.process_char(';', &cells);
+    terminal.process_char('5', &cells);
+    terminal.process_char(';', &cells);
+    terminal.process_char('1', &cells);
+    terminal.process_char('0', &cells);
+    terminal.process_char('0', &cells);
+    terminal.process_char('m', &cells);
+
+    // Check foreground color was set to 100
+    try testing.expect(terminal.current_attrs.fg_color == 100);
+}
+
+test "terminal 256 color background" {
+    var terminal = Terminal.init(80, 24);
+    var cells: [80 * 24]Terminal.Cell = undefined;
+    terminal.clear(&cells);
+
+    // Set 256-color background: ESC[48;5;200m
+    terminal.process_char(0x1B, &cells); // ESC
+    terminal.process_char('[', &cells);
+    terminal.process_char('4', &cells);
+    terminal.process_char('8', &cells);
+    terminal.process_char(';', &cells);
+    terminal.process_char('5', &cells);
+    terminal.process_char(';', &cells);
+    terminal.process_char('2', &cells);
+    terminal.process_char('0', &cells);
+    terminal.process_char('0', &cells);
+    terminal.process_char('m', &cells);
+
+    // Check background color was set to 200
+    try testing.expect(terminal.current_attrs.bg_color == 200);
+}
+

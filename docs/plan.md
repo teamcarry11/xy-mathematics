@@ -525,8 +525,16 @@ Create a fourth agent dedicated to **Grain OS** - a Zig-Wayland implemented GNOM
    - ✅ Save all windows state method
    - ✅ Automatic state removal on window deletion
    - ✅ Comprehensive tests (`tests/067_grain_os_window_state_test.zig`)
-14. **Phase 14**: Integration (Grain Kernel syscalls, VM testing)
-14. **Phase 14**: Applications (Aurora, Dream, Skate, Terminal ports)
+14. **Phase 14**: Window Previews ✅ **COMPLETE**
+   - ✅ Window preview module (`src/grain_os/window_preview.zig`)
+   - ✅ Preview thumbnail structure (160x90 pixels)
+   - ✅ Preview manager (cache management, generation)
+   - ✅ Compositor integration (generate/get previews)
+   - ✅ Generate all windows previews method
+   - ✅ Automatic preview removal on window deletion
+   - ✅ Comprehensive tests (`tests/068_grain_os_window_preview_test.zig`)
+15. **Phase 15**: Integration (Grain Kernel syscalls, VM testing)
+16. **Phase 16**: Applications (Aurora, Dream, Skate, Terminal ports)
 
 ### Proposal Document
 
@@ -799,6 +807,7 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
   - ✅ Implement LSP didChange notification on text insert
   - ✅ Add LSP hover request support (requestHover method)
   - ✅ Add LSP go-to-definition support (requestDefinition method, go_to_definition in Editor)
+  - ✅ Add LSP diagnostics support (handle_publish_diagnostics, get_diagnostics methods)
   - ✅ Integrate hover requests into moveCursor
   - ✅ Implement ghost text storage for AI completions
   - ✅ Fix didChange range calculation for insertions

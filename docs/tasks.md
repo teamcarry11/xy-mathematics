@@ -537,8 +537,17 @@
   - [x] Add `go_to_definition` method to Editor
   - [x] Support both single location and location array responses
   - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
+- [x] Editor LSP Diagnostics Support ✅ **COMPLETE**
+  - [x] Add diagnostics storage (StringHashMap per document URI)
+  - [x] Add `handle_publish_diagnostics` method to LspClient
+  - [x] Add `get_diagnostics` method to LspClient
+  - [x] Add `handle_notification` method for processing server notifications
+  - [x] Parse textDocument/publishDiagnostics notifications
+  - [x] Add `get_diagnostics` method to Editor
+  - [x] Bounded diagnostics storage (MAX_DIAGNOSTICS_PER_DOCUMENT: 1000)
+  - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
   - [x] GrainStyle compliant: explicit types, bounded operations, assertions
-  - [x] File Save/Load Functionality ✅ **COMPLETE**
+- [x] File Save/Load Functionality ✅ **COMPLETE**
   - [x] save_file method (persist editor buffer to disk)
   - [x] load_file method (load file from disk into editor)
   - [x] Handle file:// URI prefix (strip for file path)
@@ -970,6 +979,7 @@
 - [x] Cursor movement (up, down, forward, backward, position)
 - [x] Text attributes (bold, italic, underline, blink, reverse video)
 - [x] ANSI color support (16-color palette)
+- [x] 256-color support (CSI 38;5;n for foreground, CSI 48;5;n for background)
 - [x] Scrollback buffer tracking
 - [x] Scrollback navigation (scroll up/down, jump to top/bottom)
 - [x] Enhanced escape sequences (cursor position 'f', save/restore 's'/'u', device status report 'n', set/reset mode 'h'/'l')
@@ -1291,6 +1301,14 @@
     - ✅ Save all windows state method
     - ✅ Automatic state removal on window deletion
     - ✅ Comprehensive tests (`tests/067_grain_os_window_state_test.zig`)
+  - ✅ Window previews (Phase 14) ✅ **COMPLETE**
+    - ✅ Window preview module (`src/grain_os/window_preview.zig`)
+    - ✅ Preview thumbnail structure (160x90 pixels)
+    - ✅ Preview manager (cache management, generation)
+    - ✅ Compositor integration (generate/get previews)
+    - ✅ Generate all windows previews method
+    - ✅ Automatic preview removal on window deletion
+    - ✅ Comprehensive tests (`tests/068_grain_os_window_preview_test.zig`)
 
 **In Progress**: 
 - Dream Editor Core - GLM-4.6 Integration (Phase 4.1.3) 🔄

@@ -8,6 +8,7 @@ const state_snapshot_mod = @import("state_snapshot.zig");
 const exception_stats_mod = @import("exception_stats.zig");
 const memory_stats_mod = @import("memory_stats.zig");
 const instruction_stats_mod = @import("instruction_stats.zig");
+const syscall_stats_mod = @import("syscall_stats.zig");
 
 /// Pure Zig RISC-V64 emulator for kernel development.
 /// Grain Style: Static allocation where possible, comprehensive assertions,
@@ -320,6 +321,10 @@ pub const VM = struct {
     /// Why: Track instruction execution frequency and patterns.
     /// GrainStyle: Static allocation, bounded counters, explicit types.
     instruction_stats: instruction_stats_mod.VMInstructionStats = .{},
+    /// Syscall execution statistics tracker.
+    /// Why: Track syscall execution frequency and patterns.
+    /// GrainStyle: Static allocation, bounded counters, explicit types.
+    syscall_stats: syscall_stats_mod.VMSyscallStats = .{},
 
     const Self = @This();
 
@@ -3384,6 +3389,10 @@ pub const VM = struct {
         } else {
             // Assert: Kernel syscall must have function ID >= 10.
             std.debug.assert(syscall_num >= 10);
+
+            // Track kernel syscall execution.
+            const syscall_num_u32: u32 = @intCast(syscall_num);
+            self.syscall_stats.record_syscall(syscall_num_u32);
 
             // Kernel syscall: Handle via callback if available.
             if (self.syscall_handler) |handler| {

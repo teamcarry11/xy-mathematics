@@ -15,6 +15,7 @@ const workspace = @import("workspace.zig");
 const window_snapping = @import("window_snapping.zig");
 const window_switching = @import("window_switching.zig");
 const window_state = @import("window_state.zig");
+const keyboard_shortcuts = @import("keyboard_shortcuts.zig");
 
 // Bounded: Max number of windows.
 pub const MAX_WINDOWS: u32 = 256;
@@ -166,13 +167,14 @@ pub const Compositor = struct {
     workspace_manager: workspace.WorkspaceManager,
     input: input_handler.InputHandler,
     focused_window_id: u32,
-    shortcut_registry: keyboard_shortcuts_mod.ShortcutRegistry,
+    shortcut_registry: keyboard_shortcuts.ShortcutRegistry,
     config_manager: ?runtime_config.RuntimeConfig,
     shell: desktop_shell.DesktopShell,
     app_registry: application.ApplicationRegistry,
     app_launcher: application.ApplicationLauncher,
     switch_order: window_switching.WindowSwitchOrder,
     state_manager: window_state.WindowStateManager,
+    preview_manager: window_preview.PreviewManager,
 
     pub fn init(allocator: std.mem.Allocator) Compositor {
         std.debug.assert(@intFromPtr(allocator.ptr) != 0);
@@ -203,6 +205,7 @@ pub const Compositor = struct {
             .app_launcher = undefined,
             .switch_order = window_switching.WindowSwitchOrder.init(),
             .state_manager = window_state.WindowStateManager.init(),
+            .preview_manager = window_preview.PreviewManager.init(),
         };
         var i: u32 = 0;
         while (i < MAX_WINDOWS) : (i += 1) {
@@ -309,6 +312,8 @@ pub const Compositor = struct {
         _ = self.switch_order.remove_window(window_id);
         // Remove from state manager.
         _ = self.state_manager.remove_window(window_id);
+        // Remove from preview manager.
+        _ = self.preview_manager.remove_preview(window_id);
         // Shift remaining windows left.
         while (i < self.windows_len - 1) : (i += 1) {
             self.windows[i] = self.windows[i + 1];
@@ -809,6 +814,43 @@ pub const Compositor = struct {
         var i: u32 = 0;
         while (i < self.windows_len) : (i += 1) {
             _ = self.save_window_state(self.windows[i].id);
+        }
+    }
+
+    // Generate preview for window.
+    pub fn generate_window_preview(self: *Compositor, window_id: u32) bool {
+        std.debug.assert(window_id > 0);
+        if (self.get_window(window_id)) |win| {
+            return self.preview_manager.generate_preview(
+                window_id,
+                win.x,
+                win.y,
+                win.width,
+                win.height,
+                self.output.width,
+                self.output.height,
+            );
+        }
+        return false;
+    }
+
+    // Get window preview.
+    pub fn get_window_preview(
+        self: *Compositor,
+        window_id: u32,
+    ) ?*window_preview.WindowPreview {
+        std.debug.assert(window_id > 0);
+        return self.preview_manager.get_preview(window_id);
+    }
+
+    // Generate previews for all visible windows.
+    pub fn generate_all_previews(self: *Compositor) void {
+        var i: u32 = 0;
+        while (i < self.windows_len) : (i += 1) {
+            const win = &self.windows[i];
+            if (win.visible and !win.minimized) {
+                _ = self.generate_window_preview(win.id);
+            }
         }
     }
 

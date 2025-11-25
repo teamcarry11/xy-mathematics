@@ -546,6 +546,14 @@ pub const Editor = struct {
         }
     }
 
+    /// Get diagnostics for current file.
+    /// Why: Retrieve LSP diagnostics (errors, warnings) for display.
+    /// Contract: File must be open and LSP server must be running.
+    /// Returns: Slice of diagnostics for the current file.
+    pub fn get_diagnostics(self: *Editor) []const LspClient.Diagnostic {
+        return self.lsp.get_diagnostics(self.file_uri);
+    }
+    
     /// Render editor view: buffer content + LSP diagnostics overlay.
     /// Includes readonly spans and ghost text for visual distinction.
     pub fn render(self: *Editor) !GrainAurora.RenderResult {

@@ -76,3 +76,4 @@ test "VM instruction stats reset" {
     try testing.expect(stats.entries[1].execution_count == 0);
 }
 
+

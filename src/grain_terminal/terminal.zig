@@ -632,6 +632,7 @@ pub const Terminal = struct {
     }
 
     /// Handle SGR (Select Graphic Rendition) sequence.
+    // 2025-11-24-192000-pst: Active function
     fn handle_sgr_sequence(self: *Terminal, params: []const u8) void {
         if (params.len == 0) {
             // Reset attributes
@@ -647,9 +648,23 @@ pub const Terminal = struct {
             return;
         }
 
+        // Parse parameters (handle multi-parameter sequences like 38;5;n)
+        var params_list: [16]u32 = undefined;
+        var params_count: u32 = 0;
         var params_iter = std.mem.splitScalar(u8, params, ';');
         while (params_iter.next()) |param_str| {
+            if (params_count >= 16) {
+                break; // Bounded: max 16 parameters
+            }
             const code = self.parse_number(param_str, 0);
+            params_list[params_count] = code;
+            params_count += 1;
+        }
+
+        // Process parameters (handle 256-color sequences)
+        var i: u32 = 0;
+        while (i < params_count) : (i += 1) {
+            const code = params_list[i];
             switch (code) {
                 0 => {
                     // Reset all attributes
@@ -674,26 +689,36 @@ pub const Terminal = struct {
                 25 => self.current_attrs.blink = false,
                 27 => self.current_attrs.reverse = false,
                 30...37 => {
-                    // Foreground color (30-37)
+                    // Foreground color (30-37) - 16-color palette
                     self.current_attrs.fg_color = @as(u8, @intCast(code - 30));
                 },
                 38 => {
-                    // Extended foreground color (not fully implemented)
-                    // Skip next parameter
-                    _ = params_iter.next();
+                    // 256-color foreground: 38;5;n
+                    if (i + 2 < params_count and params_list[i + 1] == 5) {
+                        const color_code = params_list[i + 2];
+                        if (color_code <= 255) {
+                            self.current_attrs.fg_color = @as(u8, @intCast(color_code));
+                        }
+                        i += 2; // Skip 5 and color code
+                    }
                 },
                 39 => {
                     // Default foreground color
                     self.current_attrs.fg_color = self.default_fg;
                 },
                 40...47 => {
-                    // Background color (40-47)
+                    // Background color (40-47) - 16-color palette
                     self.current_attrs.bg_color = @as(u8, @intCast(code - 40));
                 },
                 48 => {
-                    // Extended background color (not fully implemented)
-                    // Skip next parameter
-                    _ = params_iter.next();
+                    // 256-color background: 48;5;n
+                    if (i + 2 < params_count and params_list[i + 1] == 5) {
+                        const color_code = params_list[i + 2];
+                        if (color_code <= 255) {
+                            self.current_attrs.bg_color = @as(u8, @intCast(color_code));
+                        }
+                        i += 2; // Skip 5 and color code
+                    }
                 },
                 49 => {
                     // Default background color

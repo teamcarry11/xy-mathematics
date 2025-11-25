@@ -6,12 +6,12 @@
 
 ### Day 1-2: VM Integration & Kernel Boot 🔥 **CRITICAL**
 
-#### 2.1 Complete VM Integration
-- [ ] Hook JIT into `vm.zig` dispatch loop
-- [ ] Add `init_with_jit()` method to VM struct
-- [ ] Implement `step_jit()` with interpreter fallback
-- [ ] Sync guest state between JIT and VM
-- [ ] Test with minimal kernel boot sequence
+#### 2.1 Complete VM Integration ✅ **COMPLETE**
+- [x] Hook JIT into `vm.zig` dispatch loop (updated integration.zig and process_execution.zig)
+- [x] Add `init_with_jit()` method to VM struct
+- [x] Implement `step_jit()` with interpreter fallback
+- [x] Sync guest state between JIT and VM
+- [x] Test with minimal kernel boot sequence (tests/058_kernel_boot_jit_test.zig)
 
 #### 2.2 Kernel Boot Sequence ✅ **COMPLETE**
 - [x] Implement basic boot loader
@@ -615,6 +615,9 @@
 - [x] Readonly spans for metadata (event ID, timestamp, author)
 - [x] Editable spans for content (text content is editable)
 - [x] DAG-based rendering pipeline (DOM nodes from DAG)
+- [x] Enhanced error handling and validation (LayoutTooLarge, StackOverflow, InvalidNode)
+- [x] Bounded operations (MAX_LAYOUT_BOXES, MAX_STACK_DEPTH, MAX_DIMENSION)
+- [x] Viewport error handling (invalid allocator check removed, timestamp validation)
 
 #### 4.3.3 Nostr Content Loading ✅ **COMPLETE**
 - [x] Parse Nostr URLs (`nostr:note1...`, `nostr:npub1...`, `src/dream_browser_nostr.zig`)
@@ -662,6 +665,7 @@
   - [x] Add process_live_preview_updates method
   - [x] Add handle_editor_edit method
   - [x] Add handle_browser_update method
+- [x] Enhanced error handling (invalid allocator check removed, timestamp validation, buffer/Aurora init error handling)
 - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
 
 #### 4.3.3 GrainBank Integration ✅ **COMPLETE**

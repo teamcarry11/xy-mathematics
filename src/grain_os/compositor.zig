@@ -12,12 +12,19 @@ const framebuffer_renderer = @import("framebuffer_renderer.zig");
 const layout_generator = @import("layout_generator.zig");
 const input_handler = @import("input_handler.zig");
 const workspace = @import("workspace.zig");
+const keyboard_shortcuts = @import("keyboard_shortcuts.zig");
 
 // Bounded: Max number of windows.
 pub const MAX_WINDOWS: u32 = 256;
 
 // Bounded: Max window title length.
 pub const MAX_TITLE_LEN: u32 = 256;
+
+// Bounded: Title bar height.
+pub const TITLE_BAR_HEIGHT: u32 = 24;
+
+// Bounded: Window border width.
+pub const BORDER_WIDTH: u32 = 2;
 
 // Window state: represents a window in the compositor.
 pub const Window = struct {
@@ -31,6 +38,8 @@ pub const Window = struct {
     title_len: u32,
     visible: bool,
     focused: bool,
+    minimized: bool,
+    maximized: bool,
 
     pub fn init(
         id: u32,
@@ -55,6 +64,8 @@ pub const Window = struct {
             .title_len = 0,
             .visible = true,
             .focused = false,
+            .minimized = false,
+            .maximized = false,
         };
         var j: u32 = 0;
         while (j < MAX_TITLE_LEN) : (j += 1) {
@@ -97,6 +108,7 @@ pub const Compositor = struct {
     workspace_manager: workspace.WorkspaceManager,
     input: input_handler.InputHandler,
     focused_window_id: u32,
+    shortcut_registry: keyboard_shortcuts.ShortcutRegistry,
 
     pub fn init(allocator: std.mem.Allocator) Compositor {
         std.debug.assert(@intFromPtr(allocator.ptr) != 0);
@@ -116,6 +128,7 @@ pub const Compositor = struct {
             .workspace_manager = workspace.WorkspaceManager.init(),
             .input = input_handler.InputHandler.init(),
             .focused_window_id = 0,
+            .shortcut_registry = keyboard_shortcuts.ShortcutRegistry.init(),
         };
         var i: u32 = 0;
         while (i < MAX_WINDOWS) : (i += 1) {
@@ -326,21 +339,79 @@ pub const Compositor = struct {
         std.debug.assert(self.framebuffer_base > 0);
         // Clear framebuffer to background color.
         self.renderer.clear(framebuffer_renderer.COLOR_DARK_BG);
-        // Render each visible window.
+        // Render each visible, non-minimized window.
         var i: u32 = 0;
         while (i < self.windows_len) : (i += 1) {
             const win = &self.windows[i];
-            if (win.visible) {
-                // Draw window background (simple rectangle for now).
-                self.renderer.draw_rect(
-                    win.x,
-                    win.y,
-                    win.width,
-                    win.height,
-                    framebuffer_renderer.COLOR_WHITE,
-                );
+            if (win.visible and !win.minimized) {
+                self.render_window_decorations(win);
             }
         }
+    }
+
+    // Render window decorations (border, title bar, content area).
+    fn render_window_decorations(self: *Compositor, win: *Window) void {
+        std.debug.assert(win.width > 0);
+        std.debug.assert(win.height > 0);
+        // Draw window border.
+        const border_color = if (win.focused)
+            framebuffer_renderer.COLOR_BLUE
+        else
+            framebuffer_renderer.COLOR_WHITE;
+        // Top border.
+        self.renderer.draw_rect(
+            win.x,
+            win.y,
+            win.width,
+            BORDER_WIDTH,
+            border_color,
+        );
+        // Bottom border.
+        self.renderer.draw_rect(
+            win.x,
+            @as(i32, @intCast(win.y)) + @as(i32, @intCast(win.height)) - @as(i32, @intCast(BORDER_WIDTH)),
+            win.width,
+            BORDER_WIDTH,
+            border_color,
+        );
+        // Left border.
+        self.renderer.draw_rect(
+            win.x,
+            win.y,
+            BORDER_WIDTH,
+            win.height,
+            border_color,
+        );
+        // Right border.
+        self.renderer.draw_rect(
+            @as(i32, @intCast(win.x)) + @as(i32, @intCast(win.width)) - @as(i32, @intCast(BORDER_WIDTH)),
+            win.y,
+            BORDER_WIDTH,
+            win.height,
+            border_color,
+        );
+        // Draw title bar.
+        const title_bar_color = if (win.focused)
+            framebuffer_renderer.COLOR_BLUE
+        else
+            framebuffer_renderer.COLOR_DARK_BG;
+        self.renderer.draw_rect(
+            @as(i32, @intCast(win.x)) + @as(i32, @intCast(BORDER_WIDTH)),
+            @as(i32, @intCast(win.y)) + @as(i32, @intCast(BORDER_WIDTH)),
+            win.width - (BORDER_WIDTH * 2),
+            TITLE_BAR_HEIGHT,
+            title_bar_color,
+        );
+        // Draw window content area (background).
+        const content_y = @as(i32, @intCast(win.y)) + @as(i32, @intCast(BORDER_WIDTH + TITLE_BAR_HEIGHT));
+        const content_height = win.height - (BORDER_WIDTH * 2) - TITLE_BAR_HEIGHT;
+        self.renderer.draw_rect(
+            @as(i32, @intCast(win.x)) + @as(i32, @intCast(BORDER_WIDTH)),
+            content_y,
+            win.width - (BORDER_WIDTH * 2),
+            content_height,
+            framebuffer_renderer.COLOR_WHITE,
+        );
     }
 
     pub fn set_syscall_fn(
@@ -360,7 +431,7 @@ pub const Compositor = struct {
         while (i > 0) {
             i -= 1;
             const win = &self.windows[i];
-            if (win.visible) {
+            if (win.visible and !win.minimized) {
                 const win_x = @as(u32, @intCast(win.x));
                 const win_y = @as(u32, @intCast(win.y));
                 if (x >= win_x and x < win_x + win.width and
@@ -408,25 +479,94 @@ pub const Compositor = struct {
             if (event.event_type == .mouse) {
                 // Handle mouse events.
                 if (event.mouse.kind == .down) {
-                    // Mouse click: focus window at click position.
+                    // Check for close button click.
                     const window_id_opt = self.find_window_at(
                         event.mouse.x,
                         event.mouse.y,
                     );
                     if (window_id_opt) |window_id| {
-                        _ = self.focus_window(window_id);
+                        if (self.is_in_close_button(window_id, event.mouse.x, event.mouse.y)) {
+                            _ = self.remove_window(window_id);
+                        } else {
+                            _ = self.focus_window(window_id);
+                        }
                     } else {
                         self.unfocus_all();
                     }
                 }
             } else if (event.event_type == .keyboard) {
-                // Handle keyboard events (route to focused window).
-                if (self.focused_window_id > 0) {
-                    // TODO: Route keyboard event to focused window.
-                    _ = event.keyboard;
+                // Handle keyboard shortcuts for window management.
+                if (event.keyboard.kind == .down) {
+                    const action_opt = self.shortcut_registry.find_shortcut(
+                        event.keyboard.modifiers,
+                        event.keyboard.key_code,
+                    );
+                    if (action_opt) |action| {
+                        if (self.focused_window_id > 0) {
+                            _ = action(self, self.focused_window_id);
+                        }
+                    } else if (self.focused_window_id > 0) {
+                        // Route keyboard event to focused window if no shortcut matched.
+                        _ = event.keyboard;
+                    }
                 }
             }
         }
+    }
+
+    // Minimize window.
+    pub fn minimize_window(self: *Compositor, window_id: u32) bool {
+        std.debug.assert(window_id > 0);
+        if (self.get_window(window_id)) |win| {
+            win.minimized = true;
+            win.visible = false;
+            return true;
+        }
+        return false;
+    }
+
+    // Restore window (unminimize).
+    pub fn restore_window(self: *Compositor, window_id: u32) bool {
+        std.debug.assert(window_id > 0);
+        if (self.get_window(window_id)) |win| {
+            win.minimized = false;
+            win.visible = true;
+            return true;
+        }
+        return false;
+    }
+
+    // Maximize window.
+    pub fn maximize_window(self: *Compositor, window_id: u32) bool {
+        std.debug.assert(window_id > 0);
+        if (self.get_window(window_id)) |win| {
+            win.maximized = true;
+            win.x = 0;
+            win.y = @as(i32, @intCast(BORDER_WIDTH + TITLE_BAR_HEIGHT));
+            win.width = self.output.width;
+            win.height = self.output.height - (BORDER_WIDTH * 2) - TITLE_BAR_HEIGHT;
+            self.recalculate_layout();
+            return true;
+        }
+        return false;
+    }
+
+    // Unmaximize window.
+    pub fn unmaximize_window(self: *Compositor, window_id: u32) bool {
+        std.debug.assert(window_id > 0);
+        if (self.get_window(window_id)) |win| {
+            win.maximized = false;
+            // Restore from tiling tree.
+            if (self.tiling_tree.get_window_bounds(window_id)) |bounds| {
+                win.x = bounds.x;
+                win.y = bounds.y;
+                win.width = bounds.width;
+                win.height = bounds.height;
+            }
+            self.recalculate_layout();
+            return true;
+        }
+        return false;
     }
 
     // Get focused window ID.

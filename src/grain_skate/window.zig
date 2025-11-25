@@ -2,6 +2,8 @@ const std = @import("std");
 const MacWindow = @import("macos_window");
 const Editor = @import("editor.zig").Editor;
 const Block = @import("block.zig").Block;
+const GraphVisualization = @import("graph_viz.zig").GraphVisualization;
+const GraphRenderer = @import("graph_renderer.zig").GraphRenderer;
 
 /// Grain Skate Window: Native macOS window management for knowledge graph application.
 /// ~<~ Glow Airbend: explicit window state, bounded UI buffers.
@@ -26,6 +28,7 @@ pub const SkateWindow = struct {
     window: *MacWindow.Window,
     editor: ?*Editor.EditorState,
     current_block_id: ?u32,
+    graph_renderer: ?*GraphRenderer,
     allocator: std.mem.Allocator,
 
     /// Initialize Grain Skate window.
@@ -46,6 +49,7 @@ pub const SkateWindow = struct {
             .window = window,
             .editor = null,
             .current_block_id = null,
+            .graph_renderer = null,
             .allocator = allocator,
         };
     }
@@ -53,6 +57,11 @@ pub const SkateWindow = struct {
     /// Deinitialize Grain Skate window.
     // 2025-11-23-170000-pst: Active function
     pub fn deinit(self: *SkateWindow) void {
+        // Clean up graph renderer if present
+        if (self.graph_renderer) |renderer| {
+            self.allocator.destroy(renderer);
+        }
+
         // Clean up editor if present
         if (self.editor) |editor| {
             editor.deinit();
@@ -102,6 +111,41 @@ pub const SkateWindow = struct {
     // 2025-11-23-170000-pst: Active function
     pub fn get_editor(self: *const SkateWindow) ?*Editor.EditorState {
         return self.editor;
+    }
+
+    /// Set graph visualization for rendering.
+    // 2025-11-24-163500-pst: Active function
+    pub fn set_graph_viz(self: *SkateWindow, graph_viz: *GraphVisualization) !void {
+        std.debug.assert(graph_viz.zoom > 0.0);
+        // Clean up existing renderer if present
+        if (self.graph_renderer) |renderer| {
+            self.allocator.destroy(renderer);
+            self.graph_renderer = null;
+        }
+        // Create new renderer
+        const buffer_width = 1024; // Fixed buffer width from MacWindow
+        const buffer_height = 768; // Fixed buffer height from MacWindow
+        const renderer = try self.allocator.create(GraphRenderer);
+        renderer.* = GraphRenderer.init(graph_viz, buffer_width, buffer_height);
+        self.graph_renderer = renderer;
+    }
+
+    /// Render graph to window buffer.
+    // 2025-11-24-163500-pst: Active function
+    pub fn render_graph(self: *SkateWindow) void {
+        if (self.graph_renderer) |renderer| {
+            const buffer = self.window.getBuffer();
+            renderer.render(buffer);
+        }
+    }
+
+    /// Present window (render graph and display).
+    // 2025-11-24-163500-pst: Active function
+    pub fn present(self: *SkateWindow) !void {
+        // Render graph if renderer is set
+        self.render_graph();
+        // Present window buffer
+        try self.window.present();
     }
 };
 

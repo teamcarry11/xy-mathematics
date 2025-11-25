@@ -107,9 +107,9 @@ pub fn execute_process(
             break;
         }
         
-        // Execute one VM step.
-        // Why: Execute one instruction at a time.
-        vm.step() catch |err| {
+        // Execute one VM step (use JIT if enabled, falls back to interpreter).
+        // Why: Execute one instruction at a time with JIT acceleration.
+        vm.step_jit() catch |err| {
             // VM execution error: save context and return false (process exited).
             _ = err;
             save_process_context(vm, process_context);

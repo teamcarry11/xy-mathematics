@@ -522,7 +522,8 @@ pub const Integration = struct {
         // Execute VM instructions until halted or error.
         while (self.vm.*.state == .running) {
             // Contract: VM step may return error (invalid instruction, memory access).
-            try self.vm.*.step();
+            // Use JIT if enabled (falls back to interpreter if not).
+            try self.vm.*.step_jit();
         }
 
         // Contract: VM must be halted or errored after loop.

@@ -11,11 +11,11 @@
 
 **Objective**: Get Grain Basin Kernel booting in Grain Vantage with JIT acceleration.
 
-1. **Complete VM Integration**
-   - Hook JIT into `vm.zig` dispatch loop
-   - Add `init_with_jit()` and `step_jit()` methods
-   - Implement interpreter fallback for JIT failures
-   - Test with minimal kernel boot sequence
+1. **Complete VM Integration** ✅ **COMPLETE**
+   - ✅ Hook JIT into `vm.zig` dispatch loop (updated integration.zig and process_execution.zig to use step_jit())
+   - ✅ Add `init_with_jit()` and `step_jit()` methods
+   - ✅ Implement interpreter fallback for JIT failures (step_jit() automatically falls back)
+   - ✅ Test with minimal kernel boot sequence (tests/058_kernel_boot_jit_test.zig)
 
 2. **Kernel Boot Sequence**
    - Implement basic boot loader
@@ -824,6 +824,9 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 - ✅ Readonly spans for metadata (event ID, timestamp, author)
 - ✅ Editable spans for content (text content is editable)
 - ✅ DAG-based rendering pipeline (DOM nodes from DAG)
+- ✅ Enhanced error handling and validation (LayoutTooLarge, StackOverflow, InvalidNode)
+- ✅ Bounded operations (MAX_LAYOUT_BOXES, MAX_STACK_DEPTH, MAX_DIMENSION)
+- ✅ Viewport error handling (invalid allocator check removed, timestamp validation)
 
 #### 3.3: Nostr Content Loading ✅ **COMPLETE**
 - ✅ Parse Nostr URLs (`nostr:note1...`, `nostr:npub1...`, `src/dream_browser_nostr.zig`)
@@ -1070,6 +1073,14 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
   - ✅ Color management (background, nodes, edges, selection)
   - ✅ Comprehensive tests (`tests/056_grain_skate_graph_renderer_test.zig`)
   - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, iterative algorithms)
+- ✅ Window graph rendering integration (`src/grain_skate/window.zig`)
+  - ✅ Graph renderer integration with window buffer
+  - ✅ `set_graph_viz()` method for graph visualization setup
+  - ✅ `render_graph()` method for rendering graph to buffer
+  - ✅ `present()` method for rendering and displaying window
+  - ✅ Automatic graph setup in `load_blocks_to_graph()`
+  - ✅ Comprehensive tests (`tests/057_grain_skate_window_graph_test.zig`)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 
 #### 8.3.3: Social Features ✅ **COMPLETE**
 - ✅ Link-based reply system (`src/grain_skate/social.zig`)
@@ -1324,6 +1335,14 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
   - ✅ Color management (background, nodes, edges, selection)
   - ✅ Comprehensive tests (`tests/056_grain_skate_graph_renderer_test.zig`)
   - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, iterative algorithms)
+- ✅ Window graph rendering integration (`src/grain_skate/window.zig`)
+  - ✅ Graph renderer integration with window buffer
+  - ✅ `set_graph_viz()` method for graph visualization setup
+  - ✅ `render_graph()` method for rendering graph to buffer
+  - ✅ `present()` method for rendering and displaying window
+  - ✅ Automatic graph setup in `load_blocks_to_graph()`
+  - ✅ Comprehensive tests (`tests/057_grain_skate_window_graph_test.zig`)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 
 #### 8.3.3: Social Features ✅ **COMPLETE**
 - ✅ Link-based reply system (`src/grain_skate/social.zig`)
@@ -1578,6 +1597,14 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
   - ✅ Color management (background, nodes, edges, selection)
   - ✅ Comprehensive tests (`tests/056_grain_skate_graph_renderer_test.zig`)
   - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, iterative algorithms)
+- ✅ Window graph rendering integration (`src/grain_skate/window.zig`)
+  - ✅ Graph renderer integration with window buffer
+  - ✅ `set_graph_viz()` method for graph visualization setup
+  - ✅ `render_graph()` method for rendering graph to buffer
+  - ✅ `present()` method for rendering and displaying window
+  - ✅ Automatic graph setup in `load_blocks_to_graph()`
+  - ✅ Comprehensive tests (`tests/057_grain_skate_window_graph_test.zig`)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 
 #### 8.3.3: Social Features ✅ **COMPLETE**
 - ✅ Link-based reply system (`src/grain_skate/social.zig`)

@@ -112,6 +112,9 @@ pub const GrainSkateApp = struct {
 
         // Calculate layout
         self.graph_viz.calculate_layout(50);
+
+        // Set graph visualization in window for rendering
+        try self.window.set_graph_viz(self.graph_viz);
     }
 
     /// Open block for editing.

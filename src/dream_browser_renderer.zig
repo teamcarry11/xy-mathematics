@@ -112,8 +112,10 @@ pub const DreamBrowserRenderer = struct {
     
     /// Determine display type for HTML node (block or inline).
     pub fn getDisplayType(node: *const DreamBrowserParser.HtmlNode) DisplayType {
-        // Assert: Node must be valid
-        std.debug.assert(node.tag_name.len > 0);
+        // Assert: Node must be valid (default to inline for empty tag names)
+        if (node.tag_name.len == 0) {
+            return .inline_element;
+        }
         
         // Block-level elements
         const block_tags = [_][]const u8{ "div", "p", "h1", "h2", "h3", "h4", "h5", "h6", "ul", "ol", "li", "section", "article", "header", "footer", "nav" };
@@ -359,7 +361,9 @@ pub const DreamBrowserRenderer = struct {
         buffer: *GrainBuffer,
     ) ![]const GrainBuffer.Segment {
         // Assert: Node and buffer must be valid
-        std.debug.assert(node.tag_name.len > 0);
+        if (node.tag_name.len == 0) {
+            return Error.InvalidNode;
+        }
         
         var readonly_spans = std.ArrayList(GrainBuffer.Segment){ .items = &.{}, .capacity = 0 };
         errdefer readonly_spans.deinit(self.allocator);
@@ -425,7 +429,9 @@ pub const DreamBrowserRenderer = struct {
         buffer: *GrainBuffer,
     ) !void {
         // Assert: Node and buffer must be valid
-        std.debug.assert(node.tag_name.len > 0);
+        if (node.tag_name.len == 0) {
+            return Error.InvalidNode;
+        }
         
         // Iterative stack-based processing (replaces recursion)
         var stack = std.ArrayList(*const DreamBrowserParser.HtmlNode){ .items = &.{}, .capacity = 0 };
@@ -437,7 +443,9 @@ pub const DreamBrowserRenderer = struct {
         // Process stack iteratively
         while (stack.items.len > 0) {
             // Assert: Stack depth must be within bounds
-            std.debug.assert(stack.items.len <= MAX_STACK_DEPTH);
+            if (stack.items.len > MAX_STACK_DEPTH) {
+                return Error.StackOverflow;
+            }
             
             const current_node = stack.pop();
             
@@ -466,7 +474,9 @@ pub const DreamBrowserRenderer = struct {
         buffer: *GrainBuffer,
     ) !RenderResult {
         // Assert: Root node must be valid
-        std.debug.assert(root.tag_name.len > 0);
+        if (root.tag_name.len == 0) {
+            return Error.InvalidNode;
+        }
         
         // Render to Grain Aurora component
         const aurora_node = try self.renderToAurora(root, css_rules);

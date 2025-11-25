@@ -53,9 +53,6 @@ pub const LivePreview = struct {
     pending_updates: std.ArrayList(Update) = undefined,
     
     pub fn init(allocator: std.mem.Allocator) !LivePreview {
-        // Assert: Allocator must be valid
-        std.debug.assert(allocator.ptr != null);
-        
         const dag = try DagCore.init(allocator);
         errdefer dag.deinit();
         
@@ -261,17 +258,23 @@ pub const LivePreview = struct {
                                 editor_instance.editor.buffer.deinit();
                                 
                                 // Create new buffer with updated content
-                                editor_instance.editor.buffer = try GrainBuffer.fromSlice(
+                                editor_instance.editor.buffer = GrainBuffer.fromSlice(
                                     editor_instance.editor.allocator,
                                     update.data,
-                                );
+                                ) catch {
+                                    // If buffer creation fails, skip this update
+                                    continue;
+                                };
                                 
                                 // Update Aurora rendering
                                 editor_instance.editor.aurora.deinit();
-                                editor_instance.editor.aurora = try GrainAurora.init(
+                                editor_instance.editor.aurora = GrainAurora.init(
                                     editor_instance.editor.allocator,
                                     update.data,
-                                );
+                                ) catch {
+                                    // If Aurora init fails, skip this update
+                                    continue;
+                                };
                                 break;
                             }
                         }

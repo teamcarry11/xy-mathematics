@@ -307,6 +307,8 @@ pub const Compositor = struct {
         }
         // Remove from switch order.
         _ = self.switch_order.remove_window(window_id);
+        // Remove from state manager.
+        _ = self.state_manager.remove_window(window_id);
         // Shift remaining windows left.
         while (i < self.windows_len - 1) : (i += 1) {
             self.windows[i] = self.windows[i + 1];
@@ -742,6 +744,72 @@ pub const Compositor = struct {
             return self.focus_window(window_id);
         }
         return false;
+    }
+
+    // Save window state.
+    pub fn save_window_state(self: *Compositor, window_id: u32) bool {
+        std.debug.assert(window_id > 0);
+        if (self.get_window(window_id)) |win| {
+            const workspace_id = if (self.workspace_manager.get_window_workspace(window_id)) |ws_id|
+                ws_id
+            else
+                self.workspace_manager.current_workspace_id;
+            const title_slice = win.title[0..win.title_len];
+            return self.state_manager.save_window(
+                window_id,
+                win.x,
+                win.y,
+                win.width,
+                win.height,
+                win.minimized,
+                win.maximized,
+                workspace_id,
+                title_slice,
+            );
+        }
+        return false;
+    }
+
+    // Restore window state.
+    pub fn restore_window_state(self: *Compositor, window_id: u32) bool {
+        std.debug.assert(window_id > 0);
+        if (self.state_manager.get_window_state(window_id)) |state| {
+            if (self.get_window(window_id)) |win| {
+                win.x = state.x;
+                win.y = state.y;
+                win.width = state.width;
+                win.height = state.height;
+                win.minimized = state.minimized;
+                win.maximized = state.maximized;
+                win.visible = !state.minimized;
+                // Restore title.
+                var i: u32 = 0;
+                while (i < compositor.MAX_TITLE_LEN) : (i += 1) {
+                    win.title[i] = 0;
+                }
+                i = 0;
+                while (i < state.title_len) : (i += 1) {
+                    win.title[i] = state.title[i];
+                }
+                win.title_len = state.title_len;
+                // Assign to workspace.
+                _ = self.workspace_manager.assign_window_to_workspace(
+                    window_id,
+                    state.workspace_id,
+                );
+                self.recalculate_layout();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Save all window states.
+    pub fn save_all_window_states(self: *Compositor) void {
+        var i: u32 = 0;
+        while (i < self.windows_len) : (i += 1) {
+            _ = self.save_window_state(self.windows[i].id);
+        }
     }
 
     // Get resize handle at mouse position.

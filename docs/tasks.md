@@ -98,6 +98,23 @@
   - [x] Watchpoint trigger detection
   - [x] Integration with step(), read64(), write64()
   - [x] Comprehensive tests (tests/071_vm_debug_interface_test.zig)
+- [x] VM Execution Control (Phase 2.1.15)
+  - [x] Continue execution (resume until next breakpoint)
+  - [x] Step over (execute one instruction, skip function calls)
+  - [x] Step into (execute one instruction, enter function calls)
+  - [x] Execution state tracking (paused, running, stepping)
+  - [x] Call stack tracking (MAX_CALL_STACK: 64)
+  - [x] Execution control methods (continue, step_over, step_into, pause)
+  - [x] Comprehensive tests (tests/073_vm_execution_control_test.zig)
+- [x] VM Debugging Command Interface (Phase 2.1.16)
+  - [x] Unified debugging API (combines debug_interface, state_inspection, execution_control)
+  - [x] Command-based interface (set breakpoint, continue, step, inspect state)
+  - [x] Breakpoint management (set/remove breakpoints)
+  - [x] Watchpoint management (set/remove watchpoints)
+  - [x] Execution control (continue, step_over, step_into, pause)
+  - [x] State inspection (registers, memory, stack)
+  - [x] Debug event detection (breakpoint hit, watchpoint triggered)
+  - [x] Comprehensive tests (tests/074_vm_debug_command_test.zig)
 
 #### 2.2 Kernel Boot Sequence ✅ **COMPLETE**
 - [x] Implement basic boot loader

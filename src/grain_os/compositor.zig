@@ -206,7 +206,7 @@ pub const Compositor = struct {
     rule_manager: window_rules.WindowRuleManager,
     event_manager: window_events.EventManager,
     session_manager: window_session.SessionManager,
-    lock_screen_manager: lock_screen.LockScreenManager,
+    lock_screen_manager: lock_screen_mod.LockScreenManager,
     border_width: u32, // Configurable border width
     title_bar_height: u32, // Configurable title bar height
 
@@ -244,7 +244,7 @@ pub const Compositor = struct {
             .rule_manager = window_rules.WindowRuleManager.init(),
             .event_manager = window_events.EventManager.init(),
             .session_manager = window_session.SessionManager.init(),
-            .lock_screen_manager = lock_screen.LockScreenManager.init(),
+            .lock_screen_manager = lock_screen_mod.LockScreenManager.init(),
             .border_width = BORDER_WIDTH, // Default border width
             .title_bar_height = TITLE_BAR_HEIGHT, // Default title bar height
         };

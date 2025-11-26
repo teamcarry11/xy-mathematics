@@ -2294,9 +2294,9 @@ pub const LspClient = struct {
         namespace = 0,
         type = 1,
         class = 2,
-        enum = 3,
+        enum_type = 3, // Renamed from 'enum' (reserved keyword)
         interface = 4,
-        struct = 5,
+        struct_type = 5, // Renamed from 'struct' (reserved keyword)
         type_parameter = 6,
         parameter = 7,
         variable = 8,
@@ -2317,15 +2317,15 @@ pub const LspClient = struct {
     
     /// Semantic token modifiers (bit flags).
     pub const SemanticTokenModifiers = struct {
-        pub const declaration: u32 = 1 << 0;
-        pub const definition: u32 = 1 << 1;
-        pub const readonly: u32 = 1 << 2;
-        pub const static: u32 = 1 << 3;
-        pub const deprecated: u32 = 1 << 4;
-        pub const async: u32 = 1 << 5;
-        pub const modification: u32 = 1 << 6;
-        pub const documentation: u32 = 1 << 7;
-        pub const default_library: u32 = 1 << 8;
+        pub const declaration: u32 = 1;
+        pub const definition: u32 = 2;
+        pub const readonly: u32 = 4;
+        pub const static: u32 = 8;
+        pub const deprecated: u32 = 16;
+        pub const async: u32 = 32;
+        pub const modification: u32 = 64;
+        pub const documentation: u32 = 128;
+        pub const default_library: u32 = 256;
     };
     
     /// Semantic token (for syntax highlighting).
@@ -2503,6 +2503,237 @@ pub const LspClient = struct {
                 }
                 
                 return try tokens.toOwnedSlice();
+            }
+        }
+        return null;
+    }
+    
+    /// Inlay hint kind (for textDocument/inlayHint).
+    pub const InlayHintKind = enum(u32) {
+        type = 1, // Type hint
+        parameter = 2, // Parameter name hint
+    };
+    
+    /// Inlay hint (for parameter names and type hints).
+    pub const InlayHint = struct {
+        position: Position, // Position where hint should be displayed
+        label: []const u8, // Hint label (text to display)
+        kind: ?u32 = null, // Hint kind (InlayHintKind)
+        text_edits: ?std.ArrayList(TextEdit) = null, // Optional text edits
+        tooltip: ?[]const u8 = null, // Optional tooltip
+        padding_left: ?bool = null, // Optional padding before hint
+        padding_right: ?bool = null, // Optional padding after hint
+    };
+    
+    /// Request textDocument/inlayHint (get inlay hints for document).
+    /// Why: Get inlay hints (parameter names, type hints) for better code readability.
+    /// Contract: uri and range must be valid.
+    /// Returns: Array of inlay hints, or null if not available.
+    /// Note: Caller must free the returned hints array and all strings within.
+    pub fn requestInlayHints(
+        self: *LspClient,
+        uri: []const u8,
+        range: Range,
+    ) !?[]InlayHint {
+        // Assert: URI must be valid
+        std.debug.assert(uri.len > 0);
+        std.debug.assert(uri.len <= 4096); // Bounded URI length
+        
+        var params_obj = std.json.ObjectMap.init(self.allocator);
+        defer params_obj.deinit();
+        
+        var text_doc_obj = std.json.ObjectMap.init(self.allocator);
+        defer text_doc_obj.deinit();
+        try text_doc_obj.put("uri", std.json.Value{ .string = uri });
+        try params_obj.put("textDocument", std.json.Value{ .object = text_doc_obj });
+        
+        var range_obj = std.json.ObjectMap.init(self.allocator);
+        defer range_obj.deinit();
+        
+        var start_obj = std.json.ObjectMap.init(self.allocator);
+        try start_obj.put("line", std.json.Value{ .integer = @intCast(range.start.line) });
+        try start_obj.put("character", std.json.Value{ .integer = @intCast(range.start.character) });
+        try range_obj.put("start", std.json.Value{ .object = start_obj });
+        
+        var end_obj = std.json.ObjectMap.init(self.allocator);
+        try end_obj.put("line", std.json.Value{ .integer = @intCast(range.end.line) });
+        try end_obj.put("character", std.json.Value{ .integer = @intCast(range.end.character) });
+        try range_obj.put("end", std.json.Value{ .object = end_obj });
+        
+        try params_obj.put("range", std.json.Value{ .object = range_obj });
+        
+        const params = std.json.Value{ .object = params_obj };
+        const response = try self.sendRequest("textDocument/inlayHint", params);
+        
+        // Parse inlay hints array from response.result
+        if (response.result) |result| {
+            if (result == .array) {
+                const items = result.array.items;
+                var hints = std.ArrayList(InlayHint).init(self.allocator);
+                errdefer {
+                    // Free any allocated strings on error
+                    for (hints.items) |*hint| {
+                        self.allocator.free(hint.label);
+                        if (hint.tooltip) |tooltip| {
+                            self.allocator.free(tooltip);
+                        }
+                        if (hint.text_edits) |edits| {
+                            for (edits.items) |*edit| {
+                                self.allocator.free(edit.new_text);
+                            }
+                            edits.deinit();
+                        }
+                    }
+                    hints.deinit();
+                }
+                
+                for (items) |item| {
+                    if (item == .object) {
+                        const obj = item.object;
+                        
+                        // Parse position (required)
+                        const position_val = obj.get("position") orelse continue;
+                        if (position_val != .object) continue;
+                        const position_obj = position_val.object;
+                        
+                        const line_val = position_obj.get("line") orelse continue;
+                        const char_val = position_obj.get("character") orelse continue;
+                        if (line_val != .integer or char_val != .integer) continue;
+                        
+                        const line = @as(u32, @intCast(line_val.integer));
+                        const char = @as(u32, @intCast(char_val.integer));
+                        
+                        // Parse label (required, can be string or array of strings)
+                        const label_val = obj.get("label") orelse continue;
+                        var label: []const u8 = undefined;
+                        if (label_val == .string) {
+                            const label_str = label_val.string;
+                            const label_copy = try self.allocator.dupe(u8, label_str);
+                            errdefer self.allocator.free(label_copy);
+                            label = label_copy;
+                        } else if (label_val == .array) {
+                            // Label can be array of strings (concatenate)
+                            const label_items = label_val.array.items;
+                            var label_buf = std.ArrayList(u8).init(self.allocator);
+                            errdefer label_buf.deinit();
+                            
+                            for (label_items) |label_item| {
+                                if (label_item == .string) {
+                                    try label_buf.appendSlice(label_item.string);
+                                }
+                            }
+                            
+                            label = try label_buf.toOwnedSlice();
+                        } else {
+                            continue;
+                        }
+                        
+                        // Parse kind (optional)
+                        const kind: ?u32 = if (obj.get("kind")) |k|
+                            if (k == .integer) @as(u32, @intCast(k.integer)) else null
+                        else
+                            null;
+                        
+                        // Parse tooltip (optional)
+                        var tooltip: ?[]const u8 = null;
+                        if (obj.get("tooltip")) |tooltip_val| {
+                            if (tooltip_val == .string) {
+                                const tooltip_str = tooltip_val.string;
+                                const tooltip_copy = try self.allocator.dupe(u8, tooltip_str);
+                                errdefer self.allocator.free(tooltip_copy);
+                                tooltip = tooltip_copy;
+                            }
+                        }
+                        
+                        // Parse textEdits (optional)
+                        var text_edits: ?std.ArrayList(TextEdit) = null;
+                        if (obj.get("textEdits")) |edits_val| {
+                            if (edits_val == .array) {
+                                const edits_items = edits_val.array.items;
+                                var edits = std.ArrayList(TextEdit).init(self.allocator);
+                                errdefer {
+                                    for (edits.items) |*edit| {
+                                        self.allocator.free(edit.new_text);
+                                    }
+                                    edits.deinit();
+                                }
+                                
+                                for (edits_items) |edit_item| {
+                                    if (edit_item == .object) {
+                                        const edit_obj = edit_item.object;
+                                        
+                                        // Parse range
+                                        const range_val = edit_obj.get("range") orelse continue;
+                                        if (range_val != .object) continue;
+                                        const inner_range_obj = range_val.object;
+                                        
+                                        const start_val = inner_range_obj.get("start") orelse continue;
+                                        const end_val = inner_range_obj.get("end") orelse continue;
+                                        if (start_val != .object or end_val != .object) continue;
+                                        
+                                        const inner_start_obj = start_val.object;
+                                        const inner_end_obj = end_val.object;
+                                        
+                                        const start_line_val = inner_start_obj.get("line") orelse continue;
+                                        const start_char_val = inner_start_obj.get("character") orelse continue;
+                                        const end_line_val = inner_end_obj.get("line") orelse continue;
+                                        const end_char_val = inner_end_obj.get("character") orelse continue;
+                                        
+                                        if (start_line_val != .integer or start_char_val != .integer or
+                                            end_line_val != .integer or end_char_val != .integer) continue;
+                                        
+                                        const start_line = @as(u32, @intCast(start_line_val.integer));
+                                        const start_char = @as(u32, @intCast(start_char_val.integer));
+                                        const end_line = @as(u32, @intCast(end_line_val.integer));
+                                        const end_char = @as(u32, @intCast(end_char_val.integer));
+                                        
+                                        // Parse newText
+                                        const new_text_val = edit_obj.get("newText") orelse continue;
+                                        if (new_text_val != .string) continue;
+                                        const new_text_str = new_text_val.string;
+                                        
+                                        const new_text_copy = try self.allocator.dupe(u8, new_text_str);
+                                        errdefer self.allocator.free(new_text_copy);
+                                        
+                                        try edits.append(TextEdit{
+                                            .range = Range{
+                                                .start = Position{ .line = start_line, .character = start_char },
+                                                .end = Position{ .line = end_line, .character = end_char },
+                                            },
+                                            .new_text = new_text_copy,
+                                        });
+                                    }
+                                }
+                                
+                                text_edits = edits;
+                            }
+                        }
+                        
+                        // Parse paddingLeft (optional)
+                        const padding_left: ?bool = if (obj.get("paddingLeft")) |p|
+                            if (p == .bool) p.bool else null
+                        else
+                            null;
+                        
+                        // Parse paddingRight (optional)
+                        const padding_right: ?bool = if (obj.get("paddingRight")) |p|
+                            if (p == .bool) p.bool else null
+                        else
+                            null;
+                        
+                        try hints.append(InlayHint{
+                            .position = Position{ .line = line, .character = char },
+                            .label = label,
+                            .kind = kind,
+                            .text_edits = text_edits,
+                            .tooltip = tooltip,
+                            .padding_left = padding_left,
+                            .padding_right = padding_right,
+                        });
+                    }
+                }
+                
+                return try hints.toOwnedSlice();
             }
         }
         return null;

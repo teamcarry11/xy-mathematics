@@ -118,6 +118,15 @@
      - ✅ Call stack tracking (MAX_CALL_STACK: 64)
      - ✅ Execution control methods (continue_execution, step_over, step_into, pause)
      - ✅ Comprehensive tests (tests/073_vm_execution_control_test.zig)
+   - ✅ VM Debugging Command Interface (Phase 2.1.16)
+     - ✅ Unified debugging API (combines debug_interface, state_inspection, execution_control)
+     - ✅ Command-based interface (set breakpoint, continue, step, inspect state)
+     - ✅ Breakpoint management (set/remove breakpoints)
+     - ✅ Watchpoint management (set/remove watchpoints)
+     - ✅ Execution control (continue, step_over, step_into, pause)
+     - ✅ State inspection (registers, memory, stack)
+     - ✅ Debug event detection (breakpoint hit, watchpoint triggered)
+     - ✅ Comprehensive tests (tests/074_vm_debug_command_test.zig)
 
 2. **Kernel Boot Sequence**
    - Implement basic boot loader
@@ -979,6 +988,7 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
   - ✅ Add LSP completion item resolve support (resolveCompletionItem method, resolve_completion_item in Editor)
   - ✅ Add LSP did save/close notification support (didSave, didClose methods, integrated into save_file and deinit)
   - ✅ Add LSP will save support (requestWillSave, requestWillSaveWaitUntil methods, integrated into save_file)
+  - ✅ Add LSP semantic tokens support (requestSemanticTokensFull, requestSemanticTokensRange methods, get_semantic_tokens in Editor)
   - ✅ Integrate hover requests into moveCursor
   - ✅ Implement ghost text storage for AI completions
   - ✅ Fix didChange range calculation for insertions

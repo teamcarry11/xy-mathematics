@@ -948,6 +948,35 @@ pub const Editor = struct {
         return tokens;
     }
     
+    /// Get inlay hints for current file (for parameter names and type hints).
+    /// Why: Get inlay hints from LSP server for better code readability.
+    /// Contract: File must be open, range must be valid, and LSP server must be running.
+    /// Returns: Array of inlay hints, or null if not available.
+    /// Note: Caller must free the returned hints array and all strings within.
+    pub fn get_inlay_hints(
+        self: *Editor,
+        start_line: u32,
+        start_char: u32,
+        end_line: u32,
+        end_char: u32,
+    ) !?[]LspClient.InlayHint {
+        // Assert: Range must be valid
+        std.debug.assert(start_line <= end_line);
+        if (start_line == end_line) {
+            std.debug.assert(start_char <= end_char);
+        }
+        
+        // Request inlay hints for range from LSP server
+        const range = LspClient.Range{
+            .start = LspClient.Position{ .line = start_line, .character = start_char },
+            .end = LspClient.Position{ .line = end_line, .character = end_char },
+        };
+        const hints = try self.lsp.requestInlayHints(self.file_uri, range);
+        
+        // Return hints array (caller must free)
+        return hints;
+    }
+    
     /// Render editor view: buffer content + LSP diagnostics overlay.
     /// Includes readonly spans and ghost text for visual distinction.
     pub fn render(self: *Editor) !GrainAurora.RenderResult {

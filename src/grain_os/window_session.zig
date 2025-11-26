@@ -62,7 +62,18 @@ pub const SessionManager = struct {
         };
         var i: u32 = 0;
         while (i < MAX_SESSIONS) : (i += 1) {
-            manager.sessions[i] = WindowSession.init(0, "");
+            manager.sessions[i] = WindowSession{
+                .session_id = 0,
+                .name = undefined,
+                .name_len = 0,
+                .state_manager = window_state.WindowStateManager.init(),
+                .timestamp = 0,
+                .active = false,
+            };
+            var j: u32 = 0;
+            while (j < MAX_SESSION_NAME_LEN) : (j += 1) {
+                manager.sessions[i].name[j] = 0;
+            }
         }
         return manager;
     }

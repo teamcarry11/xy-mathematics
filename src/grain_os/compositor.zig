@@ -29,6 +29,7 @@ const window_drag_drop = @import("window_drag_drop.zig");
 const window_rules = @import("window_rules.zig");
 const window_events = @import("window_events.zig");
 const window_session = @import("window_session.zig");
+const lock_screen_mod = @import("lock_screen.zig");
 const keyboard_shortcuts = @import("keyboard_shortcuts.zig");
 const desktop_shell = @import("desktop_shell.zig");
 const runtime_config = @import("runtime_config.zig");
@@ -205,12 +206,13 @@ pub const Compositor = struct {
     rule_manager: window_rules.WindowRuleManager,
     event_manager: window_events.EventManager,
     session_manager: window_session.SessionManager,
+    lock_screen_manager: lock_screen.LockScreenManager,
     border_width: u32, // Configurable border width
     title_bar_height: u32, // Configurable title bar height
 
     pub fn init(allocator: std.mem.Allocator) Compositor {
         std.debug.assert(@intFromPtr(allocator.ptr) != 0);
-        var compositor = Compositor{
+        var comp = Compositor{
             .allocator = allocator,
             .windows = undefined,
             .windows_len = 0,
@@ -242,6 +244,7 @@ pub const Compositor = struct {
             .rule_manager = window_rules.WindowRuleManager.init(),
             .event_manager = window_events.EventManager.init(),
             .session_manager = window_session.SessionManager.init(),
+            .lock_screen_manager = lock_screen.LockScreenManager.init(),
             .border_width = BORDER_WIDTH, // Default border width
             .title_bar_height = TITLE_BAR_HEIGHT, // Default title bar height
         };
@@ -1338,6 +1341,142 @@ pub const Compositor = struct {
         return self.rule_manager.get_rule_count();
     }
 
+    // Create window session.
+    pub fn create_window_session(self: *Compositor, name: []const u8) ?u32 {
+        if (self.session_manager.create_session(name)) |session_id| {
+            // Save all current window states to session.
+            if (self.session_manager.find_session(session_id)) |session| {
+                var i: u32 = 0;
+                while (i < self.windows_len) : (i += 1) {
+                    const win = &self.windows[i];
+                    const workspace_id = if (self.workspace_manager.get_window_workspace(win.id)) |ws_id|
+                        ws_id
+                    else
+                        self.workspace_manager.current_workspace_id;
+                    const title_slice = win.title[0..win.title_len];
+                    _ = session.state_manager.save_window(
+                        win.id,
+                        win.x,
+                        win.y,
+                        win.width,
+                        win.height,
+                        win.minimized,
+                        win.maximized,
+                        workspace_id,
+                        title_slice,
+                    );
+                }
+            }
+            return session_id;
+        }
+        return null;
+    }
+
+    // Restore window session.
+    pub fn restore_window_session(self: *Compositor, session_id: u32) bool {
+        std.debug.assert(session_id > 0);
+        if (self.session_manager.find_session(session_id)) |session| {
+            // Restore all windows from session.
+            var i: u32 = 0;
+            while (i < session.state_manager.entries_len) : (i += 1) {
+                const entry = session.state_manager.entries[i];
+                if (self.get_window(entry.window_id)) |win| {
+                    win.x = entry.x;
+                    win.y = entry.y;
+                    win.width = entry.width;
+                    win.height = entry.height;
+                    win.minimized = entry.minimized;
+                    win.maximized = entry.maximized;
+                    win.visible = !entry.minimized;
+                    // Restore title.
+                    var j: u32 = 0;
+                    while (j < MAX_TITLE_LEN) : (j += 1) {
+                        win.title[j] = 0;
+                    }
+                    j = 0;
+                    while (j < entry.title_len) : (j += 1) {
+                        win.title[j] = entry.title[j];
+                    }
+                    win.title_len = entry.title_len;
+                    // Assign to workspace.
+                    _ = self.workspace_manager.assign_window_to_workspace(
+                        entry.window_id,
+                        entry.workspace_id,
+                    );
+                }
+            }
+            self.recalculate_layout();
+            return true;
+        }
+        return false;
+    }
+
+    // Delete window session.
+    pub fn delete_window_session(self: *Compositor, session_id: u32) bool {
+        return self.session_manager.delete_session(session_id);
+    }
+
+    // Find session by name.
+    pub fn find_session_by_name(self: *Compositor, name: []const u8) ?u32 {
+        if (self.session_manager.find_session_by_name(name)) |session| {
+            return session.session_id;
+        }
+        return null;
+    }
+
+    // Get session count.
+    pub fn get_session_count(self: *const Compositor) u32 {
+        return self.session_manager.get_session_count();
+    }
+
+    // Lock screen.
+    pub fn lock_compositor_screen(self: *Compositor) void {
+        self.lock_screen_manager.lock();
+    }
+
+    // Unlock screen.
+    pub fn unlock_compositor_screen(self: *Compositor) void {
+        self.lock_screen_manager.unlock();
+    }
+
+    // Check if screen is locked.
+    pub fn is_screen_locked(self: *const Compositor) bool {
+        return self.lock_screen_manager.is_locked();
+    }
+
+    // Add user identity.
+    pub fn add_user_identity(
+        self: *Compositor,
+        name: []const u8,
+        home_path: []const u8,
+    ) ?u32 {
+        return self.lock_screen_manager.add_identity(name, home_path);
+    }
+
+    // Authenticate with password.
+    pub fn authenticate_password(
+        self: *Compositor,
+        identity_id: u32,
+        password: []const u8,
+    ) bool {
+        return self.lock_screen_manager.authenticate_password(identity_id, password);
+    }
+
+    // Authenticate with TouchID.
+    pub fn authenticate_touchid(self: *Compositor, identity_id: u32) bool {
+        return self.lock_screen_manager.authenticate_touchid(identity_id);
+    }
+
+    // Get current identity.
+    pub fn get_current_identity(self: *const Compositor) ?*const lock_screen.UserIdentity {
+        return self.lock_screen_manager.identity_manager.get_current_identity();
+    }
+
+    // Get identity count.
+    pub fn get_identity_count(self: *const Compositor) u32 {
+        return self.lock_screen_manager.identity_manager.get_identity_count();
+    }
+
     // Get resize handle at mouse position.
     pub fn get_resize_handle(
         self: *Compositor,
@@ -1471,7 +1610,8 @@ pub const Compositor = struct {
     // Update window resize.
     fn update_resize(self: *Compositor, win: *Window, x: u32, y: u32) void {
         std.debug.assert(win.resize_state.active);
-        _ = self;
+        // Parameters x and y are used in calculations below.
+        // Self is used implicitly through method calls.
         const dx = @as(i32, @intCast(x)) - win.resize_state.start_x;
         const dy = @as(i32, @intCast(y)) - win.resize_state.start_y;
         const min_size: u32 = 100;

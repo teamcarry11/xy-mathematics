@@ -132,7 +132,7 @@ pub const DesktopShell = struct {
     }
 
     // Sync launcher items with registered applications.
-    fn sync_launcher_items(self: *DesktopShell) void {
+    pub fn sync_launcher_items(self: *DesktopShell) void {
         if (self.app_registry) |registry| {
             self.launcher_items_len = 0;
             const visible_apps = registry.get_visible_applications();

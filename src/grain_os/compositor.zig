@@ -35,6 +35,7 @@ const clipboard = @import("clipboard.zig");
 const app_launcher = @import("app_launcher.zig");
 const system_tray = @import("system_tray.zig");
 const power_management = @import("power_management.zig");
+const display_management = @import("display_management.zig");
 const keyboard_shortcuts = @import("keyboard_shortcuts.zig");
 const desktop_shell = @import("desktop_shell.zig");
 const runtime_config = @import("runtime_config.zig");
@@ -217,6 +218,7 @@ pub const Compositor = struct {
     app_launcher_manager: app_launcher.ApplicationLauncher,
     system_tray_manager: system_tray.SystemTrayManager,
     power_manager: power_management.PowerManagementManager,
+    display_manager: display_management.DisplayManager,
     border_width: u32, // Configurable border width
     title_bar_height: u32, // Configurable title bar height
 
@@ -259,6 +261,8 @@ pub const Compositor = struct {
             .clipboard_manager = clipboard.ClipboardManager.init(),
             .app_launcher_manager = app_launcher.ApplicationLauncher.init(),
             .system_tray_manager = system_tray.SystemTrayManager.init(),
+            .power_manager = power_management.PowerManagementManager.init(),
+            .display_manager = display_management.DisplayManager.init(),
             .border_width = BORDER_WIDTH, // Default border width
             .title_bar_height = TITLE_BAR_HEIGHT, // Default title bar height
         };
@@ -1812,6 +1816,62 @@ pub const Compositor = struct {
     // Get auto-suspend timeout.
     pub fn get_auto_suspend_timeout(self: *const Compositor) u32 {
         return self.power_manager.get_auto_suspend_timeout();
+    }
+
+    // Add display.
+    pub fn add_display(
+        self: *Compositor,
+        name: []const u8,
+        width: u32,
+        height: u32,
+        connection: display_management.DisplayConnection,
+    ) ?u32 {
+        return self.display_manager.add_display(name, width, height, connection);
+    }
+
+    // Remove display.
+    pub fn remove_display(self: *Compositor, display_id: u32) bool {
+        return self.display_manager.remove_display(display_id);
+    }
+
+    // Set display position.
+    pub fn set_display_position(
+        self: *Compositor,
+        display_id: u32,
+        x: i32,
+        y: i32,
+    ) bool {
+        return self.display_manager.set_display_position(display_id, x, y);
+    }
+
+    // Set primary display.
+    pub fn set_primary_display(self: *Compositor, display_id: u32) bool {
+        return self.display_manager.set_primary_display(display_id);
+    }
+
+    // Enable display.
+    pub fn enable_display(self: *Compositor, display_id: u32) bool {
+        return self.display_manager.enable_display(display_id);
+    }
+
+    // Disable display.
+    pub fn disable_display(self: *Compositor, display_id: u32) bool {
+        return self.display_manager.disable_display(display_id);
+    }
+
+    // Get primary display.
+    pub fn get_primary_display(self: *const Compositor) ?*const display_management.Display {
+        return self.display_manager.get_primary_display();
+    }
+
+    // Get display count.
+    pub fn get_display_count(self: *const Compositor) u32 {
+        return self.display_manager.get_display_count();
+    }
+
+    // Get active display count.
+    pub fn get_active_display_count(self: *const Compositor) u32 {
+        return self.display_manager.get_active_display_count();
     }
 
     // Get resize handle at mouse position.

@@ -1082,6 +1082,19 @@ pub const Editor = struct {
         return presentations;
     }
     
+    /// Get folding ranges for current file (for code folding).
+    /// Why: Get folding ranges from LSP server for code folding (e.g., functions, blocks, regions).
+    /// Contract: File must be open and LSP server must be running.
+    /// Returns: Array of folding ranges, or null if not available.
+    /// Note: Caller must free the returned ranges array.
+    pub fn get_folding_ranges(self: *Editor) !?[]LspClient.FoldingRange {
+        // Request folding ranges from LSP server
+        const ranges = try self.lsp.requestFoldingRanges(self.file_uri);
+        
+        // Return ranges array (caller must free)
+        return ranges;
+    }
+    
     /// Render editor view: buffer content + LSP diagnostics overlay.
     /// Includes readonly spans and ghost text for visual distinction.
     pub fn render(self: *Editor) !GrainAurora.RenderResult {

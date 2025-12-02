@@ -3461,6 +3461,110 @@ pub const LspClient = struct {
         return null;
     }
     
+    /// Folding range kind (for textDocument/foldingRange).
+    pub const FoldingRangeKind = enum(u32) {
+        comment = 1, // Folding range for comments
+        imports = 2, // Folding range for imports
+        region = 3, // Folding range for region markers
+    };
+    
+    /// Folding range (for code folding).
+    pub const FoldingRange = struct {
+        start_line: u32, // Start line of the range (0-based)
+        end_line: u32, // End line of the range (0-based)
+        start_character: ?u32 = null, // Optional start character (0-based)
+        end_character: ?u32 = null, // Optional end character (0-based)
+        kind: ?u32 = null, // Optional kind (FoldingRangeKind)
+    };
+    
+    /// Request textDocument/foldingRange (get folding ranges).
+    /// Why: Get folding ranges for code folding (e.g., functions, blocks, regions).
+    /// Contract: uri must be valid.
+    /// Returns: Array of folding ranges, or null if not available.
+    /// Note: Caller must free the returned ranges array.
+    pub fn requestFoldingRanges(self: *LspClient, uri: []const u8) !?[]FoldingRange {
+        // Assert: URI must be valid
+        std.debug.assert(uri.len > 0);
+        std.debug.assert(uri.len <= 4096); // Bounded URI length
+        
+        var params_obj = std.json.ObjectMap.init(self.allocator);
+        defer params_obj.deinit();
+        
+        var text_doc_obj = std.json.ObjectMap.init(self.allocator);
+        defer text_doc_obj.deinit();
+        try text_doc_obj.put("uri", std.json.Value{ .string = uri });
+        try params_obj.put("textDocument", std.json.Value{ .object = text_doc_obj });
+        
+        const params = std.json.Value{ .object = params_obj };
+        const response = try self.sendRequest("textDocument/foldingRange", params);
+        
+        // Parse folding ranges array from response.result
+        if (response.result) |result| {
+            if (result == .array) {
+                const items = result.array.items;
+                var ranges = std.ArrayList(FoldingRange).init(self.allocator);
+                errdefer ranges.deinit();
+                
+                for (items) |item| {
+                    if (item == .object) {
+                        const obj = item.object;
+                        
+                        // Parse startLine (required)
+                        const start_line_val = obj.get("startLine") orelse continue;
+                        if (start_line_val != .integer) continue;
+                        const start_line = @as(u32, @intCast(start_line_val.integer));
+                        
+                        // Parse endLine (required)
+                        const end_line_val = obj.get("endLine") orelse continue;
+                        if (end_line_val != .integer) continue;
+                        const end_line = @as(u32, @intCast(end_line_val.integer));
+                        
+                        // Parse startCharacter (optional)
+                        const start_char: ?u32 = if (obj.get("startCharacter")) |c|
+                            if (c == .integer) @as(u32, @intCast(c.integer)) else null
+                        else
+                            null;
+                        
+                        // Parse endCharacter (optional)
+                        const end_char: ?u32 = if (obj.get("endCharacter")) |c|
+                            if (c == .integer) @as(u32, @intCast(c.integer)) else null
+                        else
+                            null;
+                        
+                        // Parse kind (optional)
+                        const kind: ?u32 = if (obj.get("kind")) |k|
+                            if (k == .string) blk: {
+                                // Parse kind string (e.g., "comment", "imports", "region")
+                                const kind_str = k.string;
+                                if (std.mem.eql(u8, kind_str, "comment")) {
+                                    break :blk @intFromEnum(FoldingRangeKind.comment);
+                                } else if (std.mem.eql(u8, kind_str, "imports")) {
+                                    break :blk @intFromEnum(FoldingRangeKind.imports);
+                                } else if (std.mem.eql(u8, kind_str, "region")) {
+                                    break :blk @intFromEnum(FoldingRangeKind.region);
+                                } else {
+                                    break :blk null;
+                                }
+                            } else if (k == .integer) @as(u32, @intCast(k.integer)) else null
+                        else
+                            null;
+                        
+                        try ranges.append(FoldingRange{
+                            .start_line = start_line,
+                            .end_line = end_line,
+                            .start_character = start_char,
+                            .end_character = end_char,
+                            .kind = kind,
+                        });
+                    }
+                }
+                
+                return try ranges.toOwnedSlice();
+            }
+        }
+        return null;
+    }
+    
     /// Cancel a pending request.
     pub fn cancelRequest(self: *LspClient, request_id: u64) !void {
         // Assert: Request must be pending

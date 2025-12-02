@@ -163,6 +163,31 @@ pub const Editor = struct {
             self.allocator.free(self.lines);
             self.lines = new_lines;
         }
+
+        /// Remove a line from the buffer (creates new buffer without line).
+        // 2025-12-02-115753-pst: Active function
+        pub fn remove_line(self: *TextBuffer, line_index: u32) !void {
+            std.debug.assert(line_index < self.lines_len);
+            const new_lines_len = if (self.lines_len > 0)
+                self.lines_len - 1
+            else
+                0;
+            const new_lines = try self.allocator.alloc([]const u8, new_lines_len);
+            errdefer self.allocator.free(new_lines);
+            var i: u32 = 0;
+            while (i < line_index) : (i += 1) {
+                new_lines[i] = self.lines[i];
+            }
+            var j: u32 = line_index + 1;
+            while (j < self.lines_len) : (j += 1) {
+                new_lines[i] = self.lines[j];
+                i += 1;
+            }
+            // Free old lines and replace
+            self.allocator.free(self.lines);
+            self.lines = new_lines;
+            self.lines_len = new_lines_len;
+        }
     };
 
     /// Undo/redo operation structure.
@@ -226,6 +251,8 @@ pub const Editor = struct {
         redo_history_len: u32,
         yank_buffer: ?[]u8, // Yank (copy) buffer
         yank_buffer_len: u32,
+        visual_anchor_line: u32, // Visual mode selection anchor line
+        visual_anchor_column: u32, // Visual mode selection anchor column
         allocator: std.mem.Allocator,
 
         /// Initialize editor state.
@@ -255,6 +282,8 @@ pub const Editor = struct {
                 .redo_history_len = 0,
                 .yank_buffer = null,
                 .yank_buffer_len = 0,
+                .visual_anchor_line = 0,
+                .visual_anchor_column = 0,
                 .allocator = allocator,
             };
         }
@@ -345,6 +374,157 @@ pub const Editor = struct {
         /// Exit insert mode (Vim ESC).
         pub fn exit_insert_mode(self: *EditorState) void {
             self.mode = .normal;
+        }
+
+        /// Enter visual mode (Vim 'v').
+        // 2025-12-02-121512-pst: Active function
+        pub fn enter_visual_mode(self: *EditorState) void {
+            self.mode = .visual;
+            // Set selection anchor to current cursor position
+            self.visual_anchor_line = self.cursor_line;
+            self.visual_anchor_column = self.cursor_column;
+        }
+
+        /// Exit visual mode (Vim ESC).
+        // 2025-12-02-121512-pst: Active function
+        pub fn exit_visual_mode(self: *EditorState) void {
+            self.mode = .normal;
+        }
+
+        /// Switch editor mode.
+        pub fn switch_mode(self: *EditorState, new_mode: EditorMode) void {
+            if (self.mode == .visual) {
+                self.exit_visual_mode();
+            }
+            self.mode = new_mode;
+            if (new_mode == .visual) {
+                self.enter_visual_mode();
+            }
+        }
+
+        /// Get visual selection bounds (normalized: start <= end).
+        // 2025-12-02-121512-pst: Active function
+        pub fn get_visual_selection(self: *const EditorState) struct {
+            start_line: u32,
+            start_column: u32,
+            end_line: u32,
+            end_column: u32,
+        } {
+            std.debug.assert(self.mode == .visual);
+            // Normalize selection (start <= end)
+            const anchor_line = self.visual_anchor_line;
+            const anchor_col = self.visual_anchor_column;
+            const cursor_line = self.cursor_line;
+            const cursor_col = self.cursor_column;
+            // Compare positions (line first, then column)
+            const anchor_before = (anchor_line < cursor_line) or
+                (anchor_line == cursor_line and anchor_col <= cursor_col);
+            if (anchor_before) {
+                return .{
+                    .start_line = anchor_line,
+                    .start_column = anchor_col,
+                    .end_line = cursor_line,
+                    .end_column = cursor_col,
+                };
+            } else {
+                return .{
+                    .start_line = cursor_line,
+                    .start_column = cursor_col,
+                    .end_line = anchor_line,
+                    .end_column = anchor_col,
+                };
+            }
+        }
+
+        /// Yank selected text in visual mode.
+        // 2025-12-02-121512-pst: Active function
+        pub fn yank_selection(self: *EditorState) !void {
+            std.debug.assert(self.mode == .visual);
+            const selection = self.get_visual_selection();
+            // Calculate total size of selected text
+            var total_size: u32 = 0;
+            var line: u32 = selection.start_line;
+            while (line <= selection.end_line) : (line += 1) {
+                std.debug.assert(line < self.buffer.lines_len);
+                const line_text = self.buffer.lines[line];
+                const line_len = @as(u32, @intCast(line_text.len));
+                if (line == selection.start_line and line == selection.end_line) {
+                    // Single line selection
+                    const start_col = selection.start_column;
+                    const end_col = selection.end_column;
+                    std.debug.assert(start_col <= end_col);
+                    std.debug.assert(end_col <= line_len);
+                    total_size += end_col - start_col;
+                } else if (line == selection.start_line) {
+                    // First line of multi-line selection
+                    const start_col = selection.start_column;
+                    std.debug.assert(start_col <= line_len);
+                    total_size += line_len - start_col + 1; // +1 for newline
+                } else if (line == selection.end_line) {
+                    // Last line of multi-line selection
+                    const end_col = selection.end_column;
+                    std.debug.assert(end_col <= line_len);
+                    total_size += end_col;
+                } else {
+                    // Middle line of multi-line selection
+                    total_size += line_len + 1; // +1 for newline
+                }
+            }
+            if (total_size > MAX_YANK_BUFFER) {
+                return error.YankBufferTooLarge;
+            }
+            // Free existing yank buffer
+            if (self.yank_buffer) |yank_buf| {
+                self.allocator.free(yank_buf);
+                self.yank_buffer = null;
+            }
+            // Allocate yank buffer
+            const yank_buf = try self.allocator.alloc(u8, total_size);
+            errdefer self.allocator.free(yank_buf);
+            // Copy selected text
+            var pos: u32 = 0;
+            line = selection.start_line;
+            while (line <= selection.end_line) : (line += 1) {
+                const line_text = self.buffer.lines[line];
+                const line_len = @as(u32, @intCast(line_text.len));
+                if (line == selection.start_line and line == selection.end_line) {
+                    // Single line selection
+                    const start_col = selection.start_column;
+                    const end_col = selection.end_column;
+                    const copy_len = end_col - start_col;
+                    if (copy_len > 0) {
+                        @memcpy(yank_buf[pos..][0..copy_len], line_text[start_col..end_col]);
+                        pos += copy_len;
+                    }
+                } else if (line == selection.start_line) {
+                    // First line of multi-line selection
+                    const start_col = selection.start_column;
+                    const copy_len = line_len - start_col;
+                    if (copy_len > 0) {
+                        @memcpy(yank_buf[pos..][0..copy_len], line_text[start_col..]);
+                        pos += copy_len;
+                    }
+                    yank_buf[pos] = '\n';
+                    pos += 1;
+                } else if (line == selection.end_line) {
+                    // Last line of multi-line selection
+                    const end_col = selection.end_column;
+                    if (end_col > 0) {
+                        @memcpy(yank_buf[pos..][0..end_col], line_text[0..end_col]);
+                        pos += end_col;
+                    }
+                } else {
+                    // Middle line of multi-line selection
+                    if (line_len > 0) {
+                        @memcpy(yank_buf[pos..][0..line_len], line_text);
+                        pos += line_len;
+                    }
+                    yank_buf[pos] = '\n';
+                    pos += 1;
+                }
+            }
+            self.yank_buffer = yank_buf;
+            self.yank_buffer_len = pos;
         }
 
         /// Insert character at cursor (insert mode).
@@ -676,6 +856,126 @@ pub const Editor = struct {
             }
             self.cursor_line = redo_op.line_num;
             self.cursor_column = redo_op.column;
+        }
+
+        /// Yank (copy) current line to yank buffer.
+        // 2025-12-02-115753-pst: Active function
+        pub fn yank_line(self: *EditorState) !void {
+            std.debug.assert(self.cursor_line < self.buffer.lines_len);
+            const line = self.buffer.lines[self.cursor_line];
+            const line_len = @as(u32, @intCast(line.len));
+            if (line_len > MAX_YANK_BUFFER) {
+                return error.YankBufferTooLarge;
+            }
+            if (self.yank_buffer) |yank_buf| {
+                self.allocator.free(yank_buf);
+                self.yank_buffer = null;
+            }
+            const yank_buf = try self.allocator.alloc(u8, line_len);
+            errdefer self.allocator.free(yank_buf);
+            @memcpy(yank_buf, line);
+            self.yank_buffer = yank_buf;
+            self.yank_buffer_len = line_len;
+        }
+
+        /// Paste yank buffer at cursor.
+        // 2025-12-02-115753-pst: Active function
+        pub fn paste(self: *EditorState) !void {
+            if (self.yank_buffer == null or self.yank_buffer_len == 0) {
+                return;
+            }
+            const yank_buf = self.yank_buffer.?;
+            std.debug.assert(self.cursor_line < self.buffer.lines_len);
+            const current_line = self.buffer.lines[self.cursor_line];
+            const line_len = @as(u32, @intCast(current_line.len));
+            const new_line_len = line_len + self.yank_buffer_len;
+            if (new_line_len > MAX_LINE_LEN) {
+                return error.LineTooLong;
+            }
+            const paste_pos = self.cursor_column;
+            const new_line = try self.allocator.alloc(u8, new_line_len);
+            errdefer self.allocator.free(new_line);
+            if (paste_pos > 0) {
+                @memcpy(new_line[0..paste_pos], current_line[0..paste_pos]);
+            }
+            @memcpy(new_line[paste_pos..][0..self.yank_buffer_len], yank_buf);
+            if (paste_pos < line_len) {
+                @memcpy(
+                    new_line[paste_pos + self.yank_buffer_len..],
+                    current_line[paste_pos..],
+                );
+            }
+            if (self.undo_history_len < MAX_UNDO_HISTORY) {
+                const undo_op = try UndoOperation.init(
+                    self.allocator,
+                    .insert,
+                    self.cursor_line,
+                    paste_pos,
+                    yank_buf,
+                );
+                self.undo_history[self.undo_history_len] = undo_op;
+                self.undo_history_len += 1;
+                var i: u32 = 0;
+                while (i < self.redo_history_len) : (i += 1) {
+                    self.redo_history[i].deinit();
+                }
+                self.redo_history_len = 0;
+            }
+            try self.buffer.replace_line(self.cursor_line, new_line);
+            self.cursor_column = paste_pos + self.yank_buffer_len;
+        }
+
+        /// Delete current line (Vim 'dd').
+        // 2025-12-02-115753-pst: Active function
+        pub fn delete_line(self: *EditorState) !void {
+            std.debug.assert(self.mode == .normal);
+            std.debug.assert(self.cursor_line < self.buffer.lines_len);
+            const line_to_delete = self.buffer.lines[self.cursor_line];
+            const line_len = @as(u32, @intCast(line_to_delete.len));
+            if (line_len > 0 and line_len <= MAX_YANK_BUFFER) {
+                if (self.yank_buffer) |yank_buf| {
+                    self.allocator.free(yank_buf);
+                }
+                const yank_buf = try self.allocator.alloc(u8, line_len);
+                errdefer self.allocator.free(yank_buf);
+                @memcpy(yank_buf, line_to_delete);
+                self.yank_buffer = yank_buf;
+                self.yank_buffer_len = line_len;
+            }
+            if (self.undo_history_len < MAX_UNDO_HISTORY) {
+                const undo_op = try UndoOperation.init(
+                    self.allocator,
+                    .delete,
+                    self.cursor_line,
+                    0,
+                    line_to_delete,
+                );
+                self.undo_history[self.undo_history_len] = undo_op;
+                self.undo_history_len += 1;
+                var i: u32 = 0;
+                while (i < self.redo_history_len) : (i += 1) {
+                    self.redo_history[i].deinit();
+                }
+                self.redo_history_len = 0;
+            }
+            // Remove line from buffer
+            try self.buffer.remove_line(self.cursor_line);
+            if (self.cursor_line >= self.buffer.lines_len and self.buffer.lines_len > 0) {
+                self.cursor_line = self.buffer.lines_len - 1;
+            } else if (self.buffer.lines_len == 0) {
+                const empty_lines = try self.allocator.alloc([]const u8, 1);
+                empty_lines[0] = "";
+                self.buffer.lines = empty_lines;
+                self.buffer.lines_len = 1;
+                self.cursor_line = 0;
+                self.cursor_column = 0;
+            }
+            if (self.cursor_line < self.buffer.lines_len) {
+                const new_line_len = @as(u32, @intCast(self.buffer.lines[self.cursor_line].len));
+                if (self.cursor_column > new_line_len) {
+                    self.cursor_column = new_line_len;
+                }
+            }
         }
     };
 };

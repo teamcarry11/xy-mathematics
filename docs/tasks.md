@@ -139,6 +139,13 @@
   - [x] Generate optimization hints (JIT optimization, memory layout, register allocation)
   - [x] Bounded hint buffer (MAX_HINTS: 32)
   - [x] Comprehensive tests (tests/077_vm_optimization_hints_test.zig)
+- [x] VM Performance Benchmarking Framework (Phase 2.1.20)
+  - [x] Benchmark execution (run test programs and measure performance)
+  - [x] Performance metrics collection (instructions, cycles, memory, JIT stats)
+  - [x] Benchmark comparison (compare current vs baseline results)
+  - [x] Performance regression detection (detect performance degradation)
+  - [x] Bounded benchmark results (MAX_BENCHMARKS: 64)
+  - [x] Comprehensive tests (tests/078_vm_benchmark_test.zig)
 
 #### 2.2 Kernel Boot Sequence ✅ **COMPLETE**
 - [x] Implement basic boot loader
@@ -1314,6 +1321,14 @@
   - [x] Character deletion (`delete_char` method) - deletes character at cursor in normal mode
   - [x] Line replacement (`replace_line` method) - updates buffer with modified line
   - [x] Editor update in window (`set_current_block` updates editor with new block content)
+  - [x] Undo functionality (`undo` method) - undoes last operation (insert/delete)
+  - [x] Redo functionality (`redo` method) - redoes last undone operation
+  - [x] Yank (copy) functionality (`yank_line` method) - copies current line to yank buffer
+  - [x] Paste functionality (`paste` method) - pastes yank buffer at cursor
+  - [x] Delete line functionality (`delete_line` method) - deletes current line (Vim 'dd')
+  - [x] Line removal (`remove_line` method) - removes line from buffer
+  - [x] Yank buffer management - stores copied text (MAX_YANK_BUFFER: 1MB)
+  - [x] Modal editor integration - yank (y), paste (p), delete line (d) keybindings
 - [x] Comprehensive tests (`tests/048_grain_skate_core_test.zig`)
 - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
 - [x] Storage integration (`src/grain_skate/storage_integration.zig`)

@@ -42,4 +42,5 @@ pub const clipboard = @import("clipboard.zig");
 pub const app_launcher = @import("app_launcher.zig");
 pub const system_tray = @import("system_tray.zig");
 pub const power_management = @import("power_management.zig");
+pub const display_management = @import("display_management.zig");
 

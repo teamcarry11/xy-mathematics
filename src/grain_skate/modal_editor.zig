@@ -114,7 +114,7 @@ pub const ModalEditor = struct {
             },
             .visual_mode => {
                 // Enter visual mode (v)
-                self.editor.mode = .visual;
+                self.editor.enter_visual_mode();
             },
             .command_mode => {
                 // Enter command mode (:)
@@ -321,6 +321,9 @@ pub const ModalEditor = struct {
             ':' => return .command_mode,
             'x' => return .delete_char,
             'u' => return .undo,
+            'y' => return .yank,
+            'p' => return .paste,
+            'd' => return .delete_line,
             else => return .no_action,
         }
     }

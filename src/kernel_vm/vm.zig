@@ -16,6 +16,7 @@ const instruction_perf_mod = @import("instruction_perf.zig");
 const debug_interface_mod = @import("debug_interface.zig");
 const instruction_trace_mod = @import("instruction_trace.zig");
 const checkpoint_mod = @import("checkpoint.zig");
+const optimization_hints_mod = @import("optimization_hints.zig");
 
 /// Pure Zig RISC-V64 emulator for kernel development.
 /// Grain Style: Static allocation where possible, comprehensive assertions,
@@ -361,6 +362,10 @@ pub const VM = struct {
     /// Why: Save and restore VM state for debugging and state management.
     /// GrainStyle: Static allocation, bounded buffers, explicit types.
     checkpoint: checkpoint_mod.VMCheckpoint = checkpoint_mod.VMCheckpoint.init(),
+    /// Optimization hints analyzer.
+    /// Why: Analyze statistics and provide optimization recommendations.
+    /// GrainStyle: Static allocation, bounded buffers, explicit types.
+    optimization_hints: optimization_hints_mod.VMOptimizationHints = optimization_hints_mod.VMOptimizationHints.init(),
 
     const Self = @This();
 

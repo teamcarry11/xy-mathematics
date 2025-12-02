@@ -29,4 +29,5 @@ pub const execution_control = @import("execution_control.zig");
 pub const debug_command = @import("debug_command.zig");
 pub const instruction_trace = @import("instruction_trace.zig");
 pub const checkpoint = @import("checkpoint.zig");
+pub const optimization_hints = @import("optimization_hints.zig");
 

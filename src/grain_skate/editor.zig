@@ -20,6 +20,9 @@ pub const Editor = struct {
     // Bounded: Max line length (explicit limit)
     pub const MAX_LINE_LEN: u32 = 65_536; // 64 KB
 
+    // Bounded: Max yank buffer size (explicit limit, in bytes)
+    pub const MAX_YANK_BUFFER: u32 = 1_048_576; // 1 MB
+
     /// Editor mode enumeration.
     pub const EditorMode = enum(u8) {
         normal, // Normal mode (Vim)
@@ -221,6 +224,8 @@ pub const Editor = struct {
         undo_history_len: u32,
         redo_history: []UndoOperation, // Redo history (bounded)
         redo_history_len: u32,
+        yank_buffer: ?[]u8, // Yank (copy) buffer
+        yank_buffer_len: u32,
         allocator: std.mem.Allocator,
 
         /// Initialize editor state.
@@ -248,6 +253,8 @@ pub const Editor = struct {
                 .undo_history_len = 0,
                 .redo_history = redo_history,
                 .redo_history_len = 0,
+                .yank_buffer = null,
+                .yank_buffer_len = 0,
                 .allocator = allocator,
             };
         }
@@ -274,6 +281,11 @@ pub const Editor = struct {
                 self.redo_history[i].deinit();
             }
             self.allocator.free(self.redo_history);
+
+            // Deinitialize yank buffer
+            if (self.yank_buffer) |yank_buf| {
+                self.allocator.free(yank_buf);
+            }
 
             self.* = undefined;
         }
@@ -448,6 +460,222 @@ pub const Editor = struct {
                 try self.buffer.replace_line(self.cursor_line, "");
             }
             // Cursor stays at same position (character deleted)
+        }
+
+        /// Undo last operation.
+        // 2025-12-02-114747-pst: Active function
+        pub fn undo(self: *EditorState) !void {
+            // Check if there's anything to undo
+            if (self.undo_history_len == 0) {
+                return; // Nothing to undo
+            }
+            // Get last undo operation
+            const undo_op = &self.undo_history[self.undo_history_len - 1];
+            std.debug.assert(undo_op.line_num < self.buffer.lines_len);
+            // Restore based on operation type
+            switch (undo_op.operation_type) {
+                .insert => try self.undo_insert(undo_op),
+                .delete => try self.undo_delete(undo_op),
+                .replace => {
+                    // Undo replace: restore original text (not implemented yet)
+                    _ = undo_op;
+                },
+            }
+            // Remove from undo history
+            undo_op.deinit();
+            self.undo_history_len -= 1;
+        }
+
+        /// Undo insert operation (helper).
+        // 2025-12-02-114747-pst: Active function
+        fn undo_insert(self: *EditorState, undo_op: *UndoOperation) !void {
+            const current_line = self.buffer.lines[undo_op.line_num];
+            const line_len = @as(u32, @intCast(current_line.len));
+            const text_len = undo_op.text_len;
+            std.debug.assert(undo_op.column + text_len <= line_len);
+            // Create new line without inserted text
+            const new_line_len = line_len - text_len;
+            const new_line = if (new_line_len > 0) blk: {
+                const new_line_buf = try self.allocator.alloc(u8, new_line_len);
+                errdefer self.allocator.free(new_line_buf);
+                if (undo_op.column > 0) {
+                    @memcpy(new_line_buf[0..undo_op.column], current_line[0..undo_op.column]);
+                }
+                if (undo_op.column + text_len < line_len) {
+                    @memcpy(
+                        new_line_buf[undo_op.column..],
+                        current_line[undo_op.column + text_len..],
+                    );
+                }
+                break :blk new_line_buf;
+            } else "";
+            // Save to redo history
+            if (self.redo_history_len < MAX_UNDO_HISTORY) {
+                const redo_op = try UndoOperation.init(
+                    self.allocator,
+                    .insert,
+                    undo_op.line_num,
+                    undo_op.column,
+                    undo_op.text,
+                );
+                self.redo_history[self.redo_history_len] = redo_op;
+                self.redo_history_len += 1;
+            }
+            // Replace line and restore cursor
+            if (new_line_len > 0) {
+                try self.buffer.replace_line(undo_op.line_num, new_line);
+            } else {
+                try self.buffer.replace_line(undo_op.line_num, "");
+            }
+            self.cursor_line = undo_op.line_num;
+            self.cursor_column = undo_op.column;
+        }
+
+        /// Undo delete operation (helper).
+        // 2025-12-02-114747-pst: Active function
+        fn undo_delete(self: *EditorState, undo_op: *UndoOperation) !void {
+            const current_line = self.buffer.lines[undo_op.line_num];
+            const line_len = @as(u32, @intCast(current_line.len));
+            const text_len = undo_op.text_len;
+            const new_line_len = line_len + text_len;
+            std.debug.assert(new_line_len <= MAX_LINE_LEN);
+            // Create new line with deleted text reinserted
+            const new_line = try self.allocator.alloc(u8, new_line_len);
+            errdefer self.allocator.free(new_line);
+            if (undo_op.column > 0) {
+                @memcpy(new_line[0..undo_op.column], current_line[0..undo_op.column]);
+            }
+            @memcpy(new_line[undo_op.column..][0..text_len], undo_op.text);
+            if (undo_op.column < line_len) {
+                @memcpy(
+                    new_line[undo_op.column + text_len..],
+                    current_line[undo_op.column..],
+                );
+            }
+            // Save to redo history
+            if (self.redo_history_len < MAX_UNDO_HISTORY) {
+                const redo_op = try UndoOperation.init(
+                    self.allocator,
+                    .delete,
+                    undo_op.line_num,
+                    undo_op.column,
+                    undo_op.text,
+                );
+                self.redo_history[self.redo_history_len] = redo_op;
+                self.redo_history_len += 1;
+            }
+            // Replace line and restore cursor
+            try self.buffer.replace_line(undo_op.line_num, new_line);
+            self.cursor_line = undo_op.line_num;
+            self.cursor_column = undo_op.column + text_len;
+        }
+
+        /// Redo last undone operation.
+        // 2025-12-02-114747-pst: Active function
+        pub fn redo(self: *EditorState) !void {
+            // Check if there's anything to redo
+            if (self.redo_history_len == 0) {
+                return; // Nothing to redo
+            }
+            // Get last redo operation
+            const redo_op = &self.redo_history[self.redo_history_len - 1];
+            std.debug.assert(redo_op.line_num < self.buffer.lines_len);
+            // Reapply based on operation type
+            switch (redo_op.operation_type) {
+                .insert => try self.redo_insert(redo_op),
+                .delete => try self.redo_delete(redo_op),
+                .replace => {
+                    // Redo replace: restore replaced text (not implemented yet)
+                    _ = redo_op;
+                },
+            }
+            // Remove from redo history
+            redo_op.deinit();
+            self.redo_history_len -= 1;
+        }
+
+        /// Redo insert operation (helper).
+        // 2025-12-02-114747-pst: Active function
+        fn redo_insert(self: *EditorState, redo_op: *UndoOperation) !void {
+            const current_line = self.buffer.lines[redo_op.line_num];
+            const line_len = @as(u32, @intCast(current_line.len));
+            const text_len = redo_op.text_len;
+            const new_line_len = line_len + text_len;
+            std.debug.assert(new_line_len <= MAX_LINE_LEN);
+            // Create new line with text reinserted
+            const new_line = try self.allocator.alloc(u8, new_line_len);
+            errdefer self.allocator.free(new_line);
+            if (redo_op.column > 0) {
+                @memcpy(new_line[0..redo_op.column], current_line[0..redo_op.column]);
+            }
+            @memcpy(new_line[redo_op.column..][0..text_len], redo_op.text);
+            if (redo_op.column < line_len) {
+                @memcpy(
+                    new_line[redo_op.column + text_len..],
+                    current_line[redo_op.column..],
+                );
+            }
+            // Save to undo history
+            if (self.undo_history_len < MAX_UNDO_HISTORY) {
+                const undo_op = try UndoOperation.init(
+                    self.allocator,
+                    .insert,
+                    redo_op.line_num,
+                    redo_op.column,
+                    redo_op.text,
+                );
+                self.undo_history[self.undo_history_len] = undo_op;
+                self.undo_history_len += 1;
+            }
+            // Replace line and update cursor
+            try self.buffer.replace_line(redo_op.line_num, new_line);
+            self.cursor_line = redo_op.line_num;
+            self.cursor_column = redo_op.column + text_len;
+        }
+
+        /// Redo delete operation (helper).
+        // 2025-12-02-114747-pst: Active function
+        fn redo_delete(self: *EditorState, redo_op: *UndoOperation) !void {
+            const current_line = self.buffer.lines[redo_op.line_num];
+            const line_len = @as(u32, @intCast(current_line.len));
+            const text_len = redo_op.text_len;
+            std.debug.assert(redo_op.column + text_len <= line_len);
+            // Create new line without deleted text
+            const new_line_len = line_len - text_len;
+            const new_line = if (new_line_len > 0) blk: {
+                const new_line_buf = try self.allocator.alloc(u8, new_line_len);
+                errdefer self.allocator.free(new_line_buf);
+                if (redo_op.column > 0) {
+                    @memcpy(new_line_buf[0..redo_op.column], current_line[0..redo_op.column]);
+                }
+                if (redo_op.column + text_len < line_len) {
+                    @memcpy(
+                        new_line_buf[redo_op.column..],
+                        current_line[redo_op.column + text_len..],
+                    );
+                }
+                break :blk new_line_buf;
+            } else "";
+            // Save to undo history
+            if (self.undo_history_len < MAX_UNDO_HISTORY) {
+                const undo_op = try UndoOperation.init(
+                    self.allocator,
+                    .delete,
+                    redo_op.line_num,
+                    redo_op.column,
+                    redo_op.text,
+                );
+                self.undo_history[self.undo_history_len] = undo_op;
+                self.undo_history_len += 1;
+            }
+            // Replace line and update cursor
+            if (new_line_len > 0) {
+                try self.buffer.replace_line(redo_op.line_num, new_line);
+            } else {
+                try self.buffer.replace_line(redo_op.line_num, "");
+            }
+            self.cursor_line = redo_op.line_num;
+            self.cursor_column = redo_op.column;
         }
     };
 };

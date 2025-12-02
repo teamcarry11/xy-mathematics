@@ -9,8 +9,8 @@ const std = @import("std");
 // Power state types.
 pub const PowerState = enum(u8) {
     on,
-    suspend,
-    hibernate,
+    suspended,
+    hibernated,
     shutdown,
 };
 
@@ -52,9 +52,9 @@ pub const PowerManagementManager = struct {
     }
 
     // Suspend system.
-    pub fn suspend(self: *PowerManagementManager) bool {
+    pub fn suspend_system(self: *PowerManagementManager) bool {
         if (self.current_state == PowerState.on) {
-            self.current_state = PowerState.suspend;
+            self.current_state = PowerState.suspended;
             // Would trigger actual suspend in full implementation.
             return true;
         }
@@ -62,9 +62,9 @@ pub const PowerManagementManager = struct {
     }
 
     // Hibernate system.
-    pub fn hibernate(self: *PowerManagementManager) bool {
+    pub fn hibernate_system(self: *PowerManagementManager) bool {
         if (self.current_state == PowerState.on) {
-            self.current_state = PowerState.hibernate;
+            self.current_state = PowerState.hibernated;
             // Would trigger actual hibernate in full implementation.
             return true;
         }
@@ -72,7 +72,7 @@ pub const PowerManagementManager = struct {
     }
 
     // Shutdown system.
-    pub fn shutdown(self: *PowerManagementManager) bool {
+    pub fn shutdown_system(self: *PowerManagementManager) bool {
         if (self.current_state == PowerState.on) {
             self.current_state = PowerState.shutdown;
             // Would trigger actual shutdown in full implementation.

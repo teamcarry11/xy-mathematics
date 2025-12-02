@@ -3129,6 +3129,338 @@ pub const LspClient = struct {
         return null;
     }
     
+    /// Color information (for textDocument/colorPresentation).
+    pub const Color = struct {
+        red: f64, // Red component (0.0 to 1.0)
+        green: f64, // Green component (0.0 to 1.0)
+        blue: f64, // Blue component (0.0 to 1.0)
+        alpha: f64, // Alpha component (0.0 to 1.0)
+    };
+    
+    /// Color presentation (how to display/edit a color).
+    pub const ColorPresentation = struct {
+        label: []const u8, // Label for the color (e.g., "rgb(255, 0, 0)")
+        text_edit: ?TextEdit = null, // Optional text edit to apply when selecting this presentation
+        additional_text_edits: ?std.ArrayList(TextEdit) = null, // Optional additional text edits
+    };
+    
+    /// Request textDocument/documentColor (get color information in document).
+    /// Why: Get color information for color picker and color editing.
+    /// Contract: uri must be valid.
+    /// Returns: Array of color information with ranges, or null if not available.
+    /// Note: Caller must free the returned array and all strings within.
+    pub fn requestDocumentColor(self: *LspClient, uri: []const u8) !?[]struct { range: Range, color: Color } {
+        // Assert: URI must be valid
+        std.debug.assert(uri.len > 0);
+        std.debug.assert(uri.len <= 4096); // Bounded URI length
+        
+        var params_obj = std.json.ObjectMap.init(self.allocator);
+        defer params_obj.deinit();
+        
+        var text_doc_obj = std.json.ObjectMap.init(self.allocator);
+        defer text_doc_obj.deinit();
+        try text_doc_obj.put("uri", std.json.Value{ .string = uri });
+        try params_obj.put("textDocument", std.json.Value{ .object = text_doc_obj });
+        
+        const params = std.json.Value{ .object = params_obj };
+        const response = try self.sendRequest("textDocument/documentColor", params);
+        
+        // Parse color information array from response.result
+        if (response.result) |result| {
+            if (result == .array) {
+                const items = result.array.items;
+                var colors = std.ArrayList(struct { range: Range, color: Color }).init(self.allocator);
+                errdefer colors.deinit();
+                
+                for (items) |item| {
+                    if (item == .object) {
+                        const obj = item.object;
+                        
+                        // Parse range (required)
+                        const range_val = obj.get("range") orelse continue;
+                        if (range_val != .object) continue;
+                        const range_obj = range_val.object;
+                        
+                        const start_val = range_obj.get("start") orelse continue;
+                        const end_val = range_obj.get("end") orelse continue;
+                        if (start_val != .object or end_val != .object) continue;
+                        
+                        const start_obj = start_val.object;
+                        const end_obj = end_val.object;
+                        
+                        const start_line_val = start_obj.get("line") orelse continue;
+                        const start_char_val = start_obj.get("character") orelse continue;
+                        const end_line_val = end_obj.get("line") orelse continue;
+                        const end_char_val = end_obj.get("character") orelse continue;
+                        
+                        if (start_line_val != .integer or start_char_val != .integer or
+                            end_line_val != .integer or end_char_val != .integer) continue;
+                        
+                        const start_line = @as(u32, @intCast(start_line_val.integer));
+                        const start_char = @as(u32, @intCast(start_char_val.integer));
+                        const end_line = @as(u32, @intCast(end_line_val.integer));
+                        const end_char = @as(u32, @intCast(end_char_val.integer));
+                        
+                        // Parse color (required)
+                        const color_val = obj.get("color") orelse continue;
+                        if (color_val != .object) continue;
+                        const color_obj = color_val.object;
+                        
+                        const red_val = color_obj.get("red") orelse continue;
+                        const green_val = color_obj.get("green") orelse continue;
+                        const blue_val = color_obj.get("blue") orelse continue;
+                        const alpha_val_opt = color_obj.get("alpha");
+                        
+                        if (red_val != .float_number and red_val != .integer) continue;
+                        if (green_val != .float_number and green_val != .integer) continue;
+                        if (blue_val != .float_number and blue_val != .integer) continue;
+                        
+                        const red: f64 = if (red_val == .float_number) red_val.float_number else @as(f64, @floatFromInt(red_val.integer));
+                        const green: f64 = if (green_val == .float_number) green_val.float_number else @as(f64, @floatFromInt(green_val.integer));
+                        const blue: f64 = if (blue_val == .float_number) blue_val.float_number else @as(f64, @floatFromInt(blue_val.integer));
+                        const alpha: f64 = if (alpha_val_opt) |alpha_val| blk: {
+                            if (alpha_val == .float_number) {
+                                break :blk alpha_val.float_number;
+                            } else if (alpha_val == .integer) {
+                                break :blk @as(f64, @floatFromInt(alpha_val.integer));
+                            } else {
+                                break :blk 1.0;
+                            }
+                        } else 1.0;
+                        
+                        try colors.append(.{
+                            .range = Range{
+                                .start = Position{ .line = start_line, .character = start_char },
+                                .end = Position{ .line = end_line, .character = end_char },
+                            },
+                            .color = Color{
+                                .red = red,
+                                .green = green,
+                                .blue = blue,
+                                .alpha = alpha,
+                            },
+                        });
+                    }
+                }
+                
+                return try colors.toOwnedSlice();
+            }
+        }
+        return null;
+    }
+    
+    /// Request textDocument/colorPresentation (get color presentation options).
+    /// Why: Get different ways to display/edit a color (e.g., "rgb(255, 0, 0)", "#ff0000", "red").
+    /// Contract: uri, color, and range must be valid.
+    /// Returns: Array of color presentations, or null if not available.
+    /// Note: Caller must free the returned presentations array and all strings within.
+    pub fn requestColorPresentation(
+        self: *LspClient,
+        uri: []const u8,
+        color: Color,
+        range: Range,
+    ) !?[]ColorPresentation {
+        // Assert: URI must be valid
+        std.debug.assert(uri.len > 0);
+        std.debug.assert(uri.len <= 4096); // Bounded URI length
+        
+        var params_obj = std.json.ObjectMap.init(self.allocator);
+        defer params_obj.deinit();
+        
+        var text_doc_obj = std.json.ObjectMap.init(self.allocator);
+        defer text_doc_obj.deinit();
+        try text_doc_obj.put("uri", std.json.Value{ .string = uri });
+        try params_obj.put("textDocument", std.json.Value{ .object = text_doc_obj });
+        
+        // Add color
+        var color_obj = std.json.ObjectMap.init(self.allocator);
+        defer color_obj.deinit();
+        try color_obj.put("red", std.json.Value{ .float_number = color.red });
+        try color_obj.put("green", std.json.Value{ .float_number = color.green });
+        try color_obj.put("blue", std.json.Value{ .float_number = color.blue });
+        try color_obj.put("alpha", std.json.Value{ .float_number = color.alpha });
+        try params_obj.put("color", std.json.Value{ .object = color_obj });
+        
+        // Add range
+        var range_obj = std.json.ObjectMap.init(self.allocator);
+        defer range_obj.deinit();
+        
+        var start_obj = std.json.ObjectMap.init(self.allocator);
+        try start_obj.put("line", std.json.Value{ .integer = @intCast(range.start.line) });
+        try start_obj.put("character", std.json.Value{ .integer = @intCast(range.start.character) });
+        try range_obj.put("start", std.json.Value{ .object = start_obj });
+        
+        var end_obj = std.json.ObjectMap.init(self.allocator);
+        try end_obj.put("line", std.json.Value{ .integer = @intCast(range.end.line) });
+        try end_obj.put("character", std.json.Value{ .integer = @intCast(range.end.character) });
+        try range_obj.put("end", std.json.Value{ .object = end_obj });
+        
+        try params_obj.put("range", std.json.Value{ .object = range_obj });
+        
+        const params = std.json.Value{ .object = params_obj };
+        const response = try self.sendRequest("textDocument/colorPresentation", params);
+        
+        // Parse color presentations array from response.result
+        if (response.result) |result| {
+            if (result == .array) {
+                const items = result.array.items;
+                var presentations = std.ArrayList(ColorPresentation).init(self.allocator);
+                errdefer {
+                    // Free any allocated strings on error
+                    for (presentations.items) |*presentation| {
+                        self.allocator.free(presentation.label);
+                        if (presentation.text_edit) |*edit| {
+                            self.allocator.free(edit.new_text);
+                        }
+                        if (presentation.additional_text_edits) |edits| {
+                            for (edits.items) |*edit| {
+                                self.allocator.free(edit.new_text);
+                            }
+                            edits.deinit();
+                        }
+                    }
+                    presentations.deinit();
+                }
+                
+                for (items) |item| {
+                    if (item == .object) {
+                        const obj = item.object;
+                        
+                        // Parse label (required)
+                        const label_val = obj.get("label") orelse continue;
+                        if (label_val != .string) continue;
+                        const label_str = label_val.string;
+                        
+                        const label_copy = try self.allocator.dupe(u8, label_str);
+                        errdefer self.allocator.free(label_copy);
+                        
+                        // Parse textEdit (optional)
+                        var text_edit: ?TextEdit = null;
+                        if (obj.get("textEdit")) |edit_val| {
+                            if (edit_val == .object) {
+                                const edit_obj = edit_val.object;
+                                
+                                // Parse range
+                                const range_val = edit_obj.get("range") orelse continue;
+                                if (range_val != .object) continue;
+                                const inner_range_obj = range_val.object;
+                                
+                                const start_val = inner_range_obj.get("start") orelse continue;
+                                const end_val = inner_range_obj.get("end") orelse continue;
+                                if (start_val != .object or end_val != .object) continue;
+                                
+                                const inner_start_obj = start_val.object;
+                                const inner_end_obj = end_val.object;
+                                
+                                const start_line_val = inner_start_obj.get("line") orelse continue;
+                                const start_char_val = inner_start_obj.get("character") orelse continue;
+                                const end_line_val = inner_end_obj.get("line") orelse continue;
+                                const end_char_val = inner_end_obj.get("character") orelse continue;
+                                
+                                if (start_line_val != .integer or start_char_val != .integer or
+                                    end_line_val != .integer or end_char_val != .integer) continue;
+                                
+                                const start_line = @as(u32, @intCast(start_line_val.integer));
+                                const start_char = @as(u32, @intCast(start_char_val.integer));
+                                const end_line = @as(u32, @intCast(end_line_val.integer));
+                                const end_char = @as(u32, @intCast(end_char_val.integer));
+                                
+                                // Parse newText
+                                const new_text_val = edit_obj.get("newText") orelse continue;
+                                if (new_text_val != .string) continue;
+                                const new_text_str = new_text_val.string;
+                                
+                                const new_text_copy = try self.allocator.dupe(u8, new_text_str);
+                                errdefer self.allocator.free(new_text_copy);
+                                
+                                text_edit = TextEdit{
+                                    .range = Range{
+                                        .start = Position{ .line = start_line, .character = start_char },
+                                        .end = Position{ .line = end_line, .character = end_char },
+                                    },
+                                    .new_text = new_text_copy,
+                                };
+                            }
+                        }
+                        
+                        // Parse additionalTextEdits (optional)
+                        var additional_edits: ?std.ArrayList(TextEdit) = null;
+                        if (obj.get("additionalTextEdits")) |edits_val| {
+                            if (edits_val == .array) {
+                                const edits_items = edits_val.array.items;
+                                var edits = std.ArrayList(TextEdit).init(self.allocator);
+                                errdefer {
+                                    for (edits.items) |*edit| {
+                                        self.allocator.free(edit.new_text);
+                                    }
+                                    edits.deinit();
+                                }
+                                
+                                for (edits_items) |edit_item| {
+                                    if (edit_item == .object) {
+                                        const edit_obj = edit_item.object;
+                                        
+                                        // Parse range
+                                        const range_val = edit_obj.get("range") orelse continue;
+                                        if (range_val != .object) continue;
+                                        const inner_range_obj = range_val.object;
+                                        
+                                        const start_val = inner_range_obj.get("start") orelse continue;
+                                        const end_val = inner_range_obj.get("end") orelse continue;
+                                        if (start_val != .object or end_val != .object) continue;
+                                        
+                                        const inner_start_obj = start_val.object;
+                                        const inner_end_obj = end_val.object;
+                                        
+                                        const start_line_val = inner_start_obj.get("line") orelse continue;
+                                        const start_char_val = inner_start_obj.get("character") orelse continue;
+                                        const end_line_val = inner_end_obj.get("line") orelse continue;
+                                        const end_char_val = inner_end_obj.get("character") orelse continue;
+                                        
+                                        if (start_line_val != .integer or start_char_val != .integer or
+                                            end_line_val != .integer or end_char_val != .integer) continue;
+                                        
+                                        const start_line = @as(u32, @intCast(start_line_val.integer));
+                                        const start_char = @as(u32, @intCast(start_char_val.integer));
+                                        const end_line = @as(u32, @intCast(end_line_val.integer));
+                                        const end_char = @as(u32, @intCast(end_char_val.integer));
+                                        
+                                        // Parse newText
+                                        const new_text_val = edit_obj.get("newText") orelse continue;
+                                        if (new_text_val != .string) continue;
+                                        const new_text_str = new_text_val.string;
+                                        
+                                        const new_text_copy = try self.allocator.dupe(u8, new_text_str);
+                                        errdefer self.allocator.free(new_text_copy);
+                                        
+                                        try edits.append(TextEdit{
+                                            .range = Range{
+                                                .start = Position{ .line = start_line, .character = start_char },
+                                                .end = Position{ .line = end_line, .character = end_char },
+                                            },
+                                            .new_text = new_text_copy,
+                                        });
+                                    }
+                                }
+                                
+                                additional_edits = edits;
+                            }
+                        }
+                        
+                        try presentations.append(ColorPresentation{
+                            .label = label_copy,
+                            .text_edit = text_edit,
+                            .additional_text_edits = additional_edits,
+                        });
+                    }
+                }
+                
+                return try presentations.toOwnedSlice();
+            }
+        }
+        return null;
+    }
+    
     /// Cancel a pending request.
     pub fn cancelRequest(self: *LspClient, request_id: u64) !void {
         // Assert: Request must be pending

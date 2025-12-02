@@ -34,6 +34,7 @@ const notification = @import("notification.zig");
 const clipboard = @import("clipboard.zig");
 const app_launcher = @import("app_launcher.zig");
 const system_tray = @import("system_tray.zig");
+const power_management = @import("power_management.zig");
 const keyboard_shortcuts = @import("keyboard_shortcuts.zig");
 const desktop_shell = @import("desktop_shell.zig");
 const runtime_config = @import("runtime_config.zig");
@@ -215,6 +216,7 @@ pub const Compositor = struct {
     clipboard_manager: clipboard.ClipboardManager,
     app_launcher_manager: app_launcher.ApplicationLauncher,
     system_tray_manager: system_tray.SystemTrayManager,
+    power_manager: power_management.PowerManagementManager,
     border_width: u32, // Configurable border width
     title_bar_height: u32, // Configurable title bar height
 
@@ -1750,6 +1752,66 @@ pub const Compositor = struct {
     // Get visible tray icon count.
     pub fn get_visible_tray_icon_count(self: *const Compositor) u32 {
         return self.system_tray_manager.get_visible_icon_count();
+    }
+
+    // Suspend system.
+    pub fn suspend_system(self: *Compositor) bool {
+        return self.power_manager.suspend_system();
+    }
+
+    // Hibernate system.
+    pub fn hibernate_system(self: *Compositor) bool {
+        return self.power_manager.hibernate_system();
+    }
+
+    // Shutdown system.
+    pub fn shutdown_system(self: *Compositor) bool {
+        return self.power_manager.shutdown_system();
+    }
+
+    // Get power state.
+    pub fn get_power_state(self: *const Compositor) power_management.PowerState {
+        return self.power_manager.get_power_state();
+    }
+
+    // Get battery level.
+    pub fn get_battery_level(self: *const Compositor) u32 {
+        return self.power_manager.get_battery_level();
+    }
+
+    // Set battery level.
+    pub fn set_battery_level(self: *Compositor, level: u32) void {
+        self.power_manager.set_battery_level(level);
+    }
+
+    // Get battery state.
+    pub fn get_battery_state(self: *const Compositor) power_management.BatteryState {
+        return self.power_manager.get_battery_state();
+    }
+
+    // Set battery state.
+    pub fn set_battery_state(self: *Compositor, state: power_management.BatteryState) void {
+        self.power_manager.set_battery_state(state);
+    }
+
+    // Enable auto-suspend.
+    pub fn enable_auto_suspend(self: *Compositor, timeout_ms: u32) void {
+        self.power_manager.enable_auto_suspend(timeout_ms);
+    }
+
+    // Disable auto-suspend.
+    pub fn disable_auto_suspend(self: *Compositor) void {
+        self.power_manager.disable_auto_suspend();
+    }
+
+    // Check if auto-suspend is enabled.
+    pub fn is_auto_suspend_enabled(self: *const Compositor) bool {
+        return self.power_manager.is_auto_suspend_enabled();
+    }
+
+    // Get auto-suspend timeout.
+    pub fn get_auto_suspend_timeout(self: *const Compositor) u32 {
+        return self.power_manager.get_auto_suspend_timeout();
     }
 
     // Get resize handle at mouse position.

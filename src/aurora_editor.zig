@@ -1039,6 +1039,49 @@ pub const Editor = struct {
         return linked_range;
     }
     
+    /// Get color information for current file (for color picker).
+    /// Why: Get color information from LSP server for color picker and color editing.
+    /// Contract: File must be open and LSP server must be running.
+    /// Returns: Array of color information with ranges, or null if not available.
+    /// Note: Caller must free the returned array.
+    pub fn get_document_colors(self: *Editor) !?[]struct { range: LspClient.Range, color: LspClient.Color } {
+        // Request document colors from LSP server
+        const colors = try self.lsp.requestDocumentColor(self.file_uri);
+        
+        // Return colors array (caller must free)
+        return colors;
+    }
+    
+    /// Get color presentation options (different ways to display/edit a color).
+    /// Why: Get different color formats (e.g., "rgb(255, 0, 0)", "#ff0000", "red").
+    /// Contract: File must be open, color and range must be valid, and LSP server must be running.
+    /// Returns: Array of color presentations, or null if not available.
+    /// Note: Caller must free the returned presentations array and all strings within.
+    pub fn get_color_presentations(
+        self: *Editor,
+        color: LspClient.Color,
+        start_line: u32,
+        start_char: u32,
+        end_line: u32,
+        end_char: u32,
+    ) !?[]LspClient.ColorPresentation {
+        // Assert: Range must be valid
+        std.debug.assert(start_line <= end_line);
+        if (start_line == end_line) {
+            std.debug.assert(start_char <= end_char);
+        }
+        
+        // Request color presentations from LSP server
+        const range = LspClient.Range{
+            .start = LspClient.Position{ .line = start_line, .character = start_char },
+            .end = LspClient.Position{ .line = end_line, .character = end_char },
+        };
+        const presentations = try self.lsp.requestColorPresentation(self.file_uri, color, range);
+        
+        // Return presentations array (caller must free)
+        return presentations;
+    }
+    
     /// Render editor view: buffer content + LSP diagnostics overlay.
     /// Includes readonly spans and ghost text for visual distinction.
     pub fn render(self: *Editor) !GrainAurora.RenderResult {

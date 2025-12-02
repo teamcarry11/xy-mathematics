@@ -126,11 +126,38 @@ pub const ModalEditor = struct {
             },
             .undo => {
                 // Undo (u)
-                self.editor.undo();
+                self.editor.undo() catch |err| {
+                    // Handle undo error (e.g., out of memory)
+                    _ = err;
+                };
             },
             .redo => {
                 // Redo (Ctrl+r)
-                self.editor.redo();
+                self.editor.redo() catch |err| {
+                    // Handle redo error (e.g., out of memory)
+                    _ = err;
+                };
+            },
+            .yank => {
+                // Yank (copy) line (y)
+                self.editor.yank_line() catch |err| {
+                    // Handle yank error (e.g., out of memory)
+                    _ = err;
+                };
+            },
+            .paste => {
+                // Paste (p)
+                self.editor.paste() catch |err| {
+                    // Handle paste error (e.g., out of memory)
+                    _ = err;
+                };
+            },
+            .delete_line => {
+                // Delete line (dd)
+                self.editor.delete_line() catch |err| {
+                    // Handle delete line error (e.g., out of memory)
+                    _ = err;
+                };
             },
             .no_action => {
                 // No action

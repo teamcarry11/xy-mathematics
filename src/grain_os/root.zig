@@ -39,4 +39,6 @@ pub const lock_screen = @import("lock_screen.zig");
 pub const font_renderer = @import("font_renderer.zig");
 pub const notification = @import("notification.zig");
 pub const clipboard = @import("clipboard.zig");
+pub const app_launcher = @import("app_launcher.zig");
+pub const system_tray = @import("system_tray.zig");
 

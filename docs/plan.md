@@ -135,6 +135,14 @@
      - ✅ Memory read/write tracking in trace
      - ✅ Trace export (dump trace to buffer for analysis)
      - ✅ Comprehensive tests (tests/075_vm_instruction_trace_test.zig)
+   - ✅ VM Checkpoint/Restore (Phase 2.1.18)
+     - ✅ Checkpoint creation (save complete VM state to buffer)
+     - ✅ Checkpoint restoration (restore VM state from buffer)
+     - ✅ Bounded checkpoint buffer (MAX_CHECKPOINTS: 16, MAX_VM_MEMORY_SIZE: 8MB)
+     - ✅ State validation (verify checkpoint integrity with checksum)
+     - ✅ Multiple checkpoints (support multiple saved states)
+     - ✅ Checkpoint management (create, restore, delete, query)
+     - ✅ Comprehensive tests (tests/076_vm_checkpoint_test.zig)
 
 2. **Kernel Boot Sequence**
    - Implement basic boot loader
@@ -571,8 +579,18 @@ Create a fourth agent dedicated to **Grain OS** - a Zig-Wayland implemented GNOM
    - ✅ Launcher toggle functionality
    - ✅ Compositor integration (renders on top of windows)
    - ✅ Workspace indicator in status bar
+   - ✅ Time display (HH:MM:SS format with 7-segment style digits)
    - ✅ Comprehensive tests (`tests/061_grain_os_desktop_shell_test.zig`)
-8. **Phase 8**: Application Framework ✅ **COMPLETE**
+8. **Phase 8**: Font Rendering ✅ **COMPLETE**
+   - ✅ Font renderer module (`src/grain_os/font_renderer.zig`)
+   - ✅ 8x8 bitmap font for ASCII 32-126 (printable characters)
+   - ✅ Character rendering (draw_char method with bit pattern rendering)
+   - ✅ Text string rendering (draw_text method with character spacing)
+   - ✅ Desktop shell integration (time display, launcher items use font renderer)
+   - ✅ Framebuffer renderer integration (draw_text uses font renderer)
+   - ✅ Replaced placeholder rectangles with actual text rendering
+   - ✅ GrainStyle compliance (u32 types, bounded operations, assertions)
+9. **Phase 9**: Application Framework ✅ **COMPLETE**
    - ✅ Application framework module (`src/grain_os/application.zig`)
    - ✅ Application registry (register, get by ID/name, get visible)
    - ✅ Application launcher (launch by ID/name via kernel spawn)
@@ -999,6 +1017,8 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
   - ✅ Add LSP semantic tokens support (requestSemanticTokensFull, requestSemanticTokensRange methods, get_semantic_tokens in Editor)
   - ✅ Add LSP inlay hints support (requestInlayHints method, get_inlay_hints in Editor)
   - ✅ Add LSP document links support (requestDocumentLinks, resolveDocumentLink methods, get_document_links in Editor)
+  - ✅ Add LSP prepare rename support (requestPrepareRename method, prepare_rename_symbol in Editor)
+  - ✅ Add LSP linked editing ranges support (requestLinkedEditingRange method, get_linked_editing_ranges in Editor)
   - ✅ Integrate hover requests into moveCursor
   - ✅ Implement ghost text storage for AI completions
   - ✅ Fix didChange range calculation for insertions

@@ -3027,6 +3027,108 @@ pub const LspClient = struct {
         return null;
     }
     
+    /// Linked editing range (for synchronized editing of multiple occurrences).
+    pub const LinkedEditingRange = struct {
+        ranges: []Range, // Ranges that should be edited together
+        word_pattern: ?[]const u8 = null, // Optional regex pattern for word boundaries
+    };
+    
+    /// Request textDocument/linkedEditingRange (get linked editing ranges).
+    /// Why: Get ranges that should be edited together (e.g., HTML tag names, JSX tags).
+    /// Contract: uri, line, and character must be valid.
+    /// Returns: Linked editing range with ranges to edit together, or null if not available.
+    /// Note: Caller must free the returned linked editing range and all strings within.
+    pub fn requestLinkedEditingRange(
+        self: *LspClient,
+        uri: []const u8,
+        line: u32,
+        character: u32,
+    ) !?LinkedEditingRange {
+        // Assert: URI and position must be valid
+        std.debug.assert(uri.len > 0);
+        std.debug.assert(uri.len <= 4096); // Bounded URI length
+        
+        var params_obj = std.json.ObjectMap.init(self.allocator);
+        defer params_obj.deinit();
+        
+        var text_doc_obj = std.json.ObjectMap.init(self.allocator);
+        defer text_doc_obj.deinit();
+        try text_doc_obj.put("uri", std.json.Value{ .string = uri });
+        try params_obj.put("textDocument", std.json.Value{ .object = text_doc_obj });
+        
+        var position_obj = std.json.ObjectMap.init(self.allocator);
+        defer position_obj.deinit();
+        try position_obj.put("line", std.json.Value{ .integer = @intCast(line) });
+        try position_obj.put("character", std.json.Value{ .integer = @intCast(character) });
+        try params_obj.put("position", std.json.Value{ .object = position_obj });
+        
+        const params = std.json.Value{ .object = params_obj };
+        const response = try self.sendRequest("textDocument/linkedEditingRange", params);
+        
+        // Parse linked editing range from response.result
+        if (response.result) |result| {
+            if (result == .object) {
+                const obj = result.object;
+                
+                // Parse ranges (required)
+                const ranges_val = obj.get("ranges") orelse return null;
+                if (ranges_val != .array) return null;
+                
+                const ranges_items = ranges_val.array.items;
+                var ranges = std.ArrayList(Range).init(self.allocator);
+                errdefer ranges.deinit();
+                
+                for (ranges_items) |range_item| {
+                    if (range_item == .object) {
+                        const range_obj = range_item.object;
+                        
+                        const start_val = range_obj.get("start") orelse continue;
+                        const end_val = range_obj.get("end") orelse continue;
+                        if (start_val != .object or end_val != .object) continue;
+                        
+                        const start_obj = start_val.object;
+                        const end_obj = end_val.object;
+                        
+                        const start_line_val = start_obj.get("line") orelse continue;
+                        const start_char_val = start_obj.get("character") orelse continue;
+                        const end_line_val = end_obj.get("line") orelse continue;
+                        const end_char_val = end_obj.get("character") orelse continue;
+                        
+                        if (start_line_val != .integer or start_char_val != .integer or
+                            end_line_val != .integer or end_char_val != .integer) continue;
+                        
+                        const start_line = @as(u32, @intCast(start_line_val.integer));
+                        const start_char = @as(u32, @intCast(start_char_val.integer));
+                        const end_line = @as(u32, @intCast(end_line_val.integer));
+                        const end_char = @as(u32, @intCast(end_char_val.integer));
+                        
+                        try ranges.append(Range{
+                            .start = Position{ .line = start_line, .character = start_char },
+                            .end = Position{ .line = end_line, .character = end_char },
+                        });
+                    }
+                }
+                
+                // Parse wordPattern (optional)
+                var word_pattern: ?[]const u8 = null;
+                if (obj.get("wordPattern")) |pattern_val| {
+                    if (pattern_val == .string) {
+                        const pattern_str = pattern_val.string;
+                        const pattern_copy = try self.allocator.dupe(u8, pattern_str);
+                        errdefer self.allocator.free(pattern_copy);
+                        word_pattern = pattern_copy;
+                    }
+                }
+                
+                return LinkedEditingRange{
+                    .ranges = try ranges.toOwnedSlice(),
+                    .word_pattern = word_pattern,
+                };
+            }
+        }
+        return null;
+    }
+    
     /// Cancel a pending request.
     pub fn cancelRequest(self: *LspClient, request_id: u64) !void {
         // Assert: Request must be pending

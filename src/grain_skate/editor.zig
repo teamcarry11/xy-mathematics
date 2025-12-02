@@ -139,6 +139,27 @@ pub const Editor = struct {
 
             return content[0..pos];
         }
+
+        /// Replace a line in the buffer (creates new buffer with modified line).
+        // 2025-12-02-112844-pst: Active function
+        pub fn replace_line(self: *TextBuffer, line_index: u32, new_line: []const u8) !void {
+            std.debug.assert(line_index < self.lines_len);
+            std.debug.assert(new_line.len <= MAX_LINE_LEN);
+            // Create new lines array with modified line
+            const new_lines = try self.allocator.alloc([]const u8, self.lines_len);
+            errdefer self.allocator.free(new_lines);
+            var i: u32 = 0;
+            while (i < self.lines_len) : (i += 1) {
+                if (i == line_index) {
+                    new_lines[i] = new_line;
+                } else {
+                    new_lines[i] = self.lines[i];
+                }
+            }
+            // Free old lines and replace
+            self.allocator.free(self.lines);
+            self.lines = new_lines;
+        }
     };
 
     /// Undo/redo operation structure.
@@ -315,31 +336,118 @@ pub const Editor = struct {
         }
 
         /// Insert character at cursor (insert mode).
+        // 2025-12-02-112844-pst: Active function
         pub fn insert_char(self: *EditorState, ch: u8) !void {
             // Assert: Must be in insert mode
             std.debug.assert(self.mode == .insert);
-
-            // For now, this is a placeholder
-            // In a full implementation, we would:
-            // 1. Insert character at cursor position
-            // 2. Update buffer
-            // 3. Add to undo history
-            // 4. Move cursor right
-            _ = ch;
-            // self will be used in full implementation
+            std.debug.assert(self.cursor_line < self.buffer.lines_len);
+            // Get current line
+            const current_line = self.buffer.lines[self.cursor_line];
+            const line_len = @as(u32, @intCast(current_line.len));
+            std.debug.assert(self.cursor_column <= line_len);
+            // Check line length limit
+            if (line_len >= MAX_LINE_LEN) {
+                return error.LineTooLong;
+            }
+            // Create new line with character inserted
+            const new_line_len = line_len + 1;
+            const new_line = try self.allocator.alloc(u8, new_line_len);
+            errdefer self.allocator.free(new_line);
+            // Copy before cursor
+            if (self.cursor_column > 0) {
+                @memcpy(new_line[0..self.cursor_column], current_line[0..self.cursor_column]);
+            }
+            // Insert character
+            new_line[self.cursor_column] = ch;
+            // Copy after cursor
+            if (self.cursor_column < line_len) {
+                @memcpy(
+                    new_line[self.cursor_column + 1..],
+                    current_line[self.cursor_column..],
+                );
+            }
+            // Save to undo history
+            if (self.undo_history_len < MAX_UNDO_HISTORY) {
+                const undo_op = try UndoOperation.init(
+                    self.allocator,
+                    .insert,
+                    self.cursor_line,
+                    self.cursor_column,
+                    &[_]u8{ch},
+                );
+                self.undo_history[self.undo_history_len] = undo_op;
+                self.undo_history_len += 1;
+                // Clear redo history on new edit
+                var i: u32 = 0;
+                while (i < self.redo_history_len) : (i += 1) {
+                    self.redo_history[i].deinit();
+                }
+                self.redo_history_len = 0;
+            }
+            // Replace line in buffer
+            try self.buffer.replace_line(self.cursor_line, new_line);
+            // Move cursor right
+            self.cursor_column += 1;
         }
 
         /// Delete character at cursor (Vim 'x').
+        // 2025-12-02-112844-pst: Active function
         pub fn delete_char(self: *EditorState) !void {
             // Assert: Must be in normal mode
             std.debug.assert(self.mode == .normal);
-
-            // For now, this is a placeholder
-            // In a full implementation, we would:
-            // 1. Delete character at cursor position
-            // 2. Update buffer
-            // 3. Add to undo history
-            // self will be used in full implementation
+            std.debug.assert(self.cursor_line < self.buffer.lines_len);
+            // Get current line
+            const current_line = self.buffer.lines[self.cursor_line];
+            const line_len = @as(u32, @intCast(current_line.len));
+            // Check if there's a character to delete
+            if (self.cursor_column >= line_len) {
+                return; // Nothing to delete
+            }
+            // Get character being deleted for undo
+            const deleted_char = current_line[self.cursor_column];
+            // Create new line without deleted character
+            const new_line_len = if (line_len > 0) line_len - 1 else 0;
+            const new_line = if (new_line_len > 0) blk: {
+                const new_line_buf = try self.allocator.alloc(u8, new_line_len);
+                errdefer self.allocator.free(new_line_buf);
+                // Copy before cursor
+                if (self.cursor_column > 0) {
+                    @memcpy(new_line_buf[0..self.cursor_column], current_line[0..self.cursor_column]);
+                }
+                // Copy after cursor (skip deleted character)
+                if (self.cursor_column + 1 < line_len) {
+                    @memcpy(
+                        new_line_buf[self.cursor_column..],
+                        current_line[self.cursor_column + 1..],
+                    );
+                }
+                break :blk new_line_buf;
+            } else "";
+            // Save to undo history
+            if (self.undo_history_len < MAX_UNDO_HISTORY) {
+                const undo_op = try UndoOperation.init(
+                    self.allocator,
+                    .delete,
+                    self.cursor_line,
+                    self.cursor_column,
+                    &[_]u8{deleted_char},
+                );
+                self.undo_history[self.undo_history_len] = undo_op;
+                self.undo_history_len += 1;
+                // Clear redo history on new edit
+                var i: u32 = 0;
+                while (i < self.redo_history_len) : (i += 1) {
+                    self.redo_history[i].deinit();
+                }
+                self.redo_history_len = 0;
+            }
+            // Replace line in buffer
+            if (new_line_len > 0) {
+                try self.buffer.replace_line(self.cursor_line, new_line);
+            } else {
+                try self.buffer.replace_line(self.cursor_line, "");
+            }
+            // Cursor stays at same position (character deleted)
         }
     };
 };

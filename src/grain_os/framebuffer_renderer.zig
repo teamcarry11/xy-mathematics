@@ -38,9 +38,12 @@ pub const FramebufferRenderer = struct {
     syscall_fn: ?SyscallFn = null,
 
     pub fn init() FramebufferRenderer {
-        return FramebufferRenderer{
+        var renderer = FramebufferRenderer{
             .syscall_fn = null,
+            .font = undefined,
         };
+        renderer.font = font_renderer.FontRenderer.init(&renderer);
+        return renderer;
     }
 
     pub fn set_syscall_fn(self: *FramebufferRenderer, fn_ptr: SyscallFn) void {
@@ -107,6 +110,7 @@ pub const FramebufferRenderer = struct {
     }
 
     // Draw text string.
+    // 2025-11-26-130343-pst: Active function (updated to use font renderer)
     pub fn draw_text(
         self: *const FramebufferRenderer,
         text: []const u8,
@@ -119,11 +123,8 @@ pub const FramebufferRenderer = struct {
         std.debug.assert(x < FRAMEBUFFER_WIDTH);
         std.debug.assert(y < FRAMEBUFFER_HEIGHT);
         std.debug.assert(self.syscall_fn != null);
-        // Note: In real implementation, text would be in VM memory.
-        // For now, this is a placeholder that will be implemented
-        // when we have VM memory access.
-        // Parameters are validated in assertions above (text, x, y used in asserts).
-        _ = fg_color;
+        // Use font renderer to draw text.
+        self.font.draw_text(text, x, y, fg_color);
     }
 };
 

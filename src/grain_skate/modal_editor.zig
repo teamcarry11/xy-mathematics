@@ -176,7 +176,7 @@ pub const ModalEditor = struct {
         quit, // Quit (q, q!)
         save_quit, // Save and quit (wq)
         force_quit, // Force quit without saving (q!)
-        error, // Command error
+        command_error, // Command error
     };
 
     /// Handle command mode key event.
@@ -219,7 +219,7 @@ pub const ModalEditor = struct {
         const cmd_start = self.find_command_start();
         const cmd_end = self.find_command_end(cmd_start);
         if (cmd_start >= cmd_end) {
-            return .error;
+            return .command_error;
         }
 
         const cmd = self.command_buffer[cmd_start..cmd_end];
@@ -242,7 +242,7 @@ pub const ModalEditor = struct {
             return .save_quit;
         } else {
             // Unknown command
-            return .error;
+            return .command_error;
         }
     }
 

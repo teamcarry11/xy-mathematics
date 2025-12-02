@@ -329,17 +329,14 @@ pub const DesktopShell = struct {
                 item_height,
                 framebuffer_renderer.COLOR_DARK_BG,
             );
-            // Draw item name (simple text rendering as rectangles for now).
-            // In a real implementation, this would use a font renderer.
+            // Draw item name using font renderer.
             const name_x = launcher_x + item_padding + 4;
             const name_y = item_y + 8;
-            // Draw item name as simple rectangles (placeholder).
-            // For now, just draw a rectangle representing text.
-            self.renderer.draw_rect(
-                @as(i32, @intCast(name_x)),
-                @as(i32, @intCast(name_y)),
-                @min(item.name_len * 6, LAUNCHER_WIDTH - (item_padding * 2) - 8),
-                12,
+            const name_slice = item.name[0..item.name_len];
+            self.font.draw_text(
+                name_slice,
+                name_x,
+                name_y,
                 framebuffer_renderer.COLOR_WHITE,
             );
             y_offset += item_height + item_padding;

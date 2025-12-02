@@ -89,14 +89,16 @@ pub const SkateWindow = struct {
 
         // Create or update editor with block content
         if (self.editor) |editor| {
-            // Update existing editor (placeholder - full implementation will update buffer)
-            _ = editor;
-        } else {
-            // Create new editor
-            const editor = try Editor.EditorState.init(self.allocator, block.content);
-            errdefer editor.deinit();
-            self.editor = editor;
+            // Update existing editor: deinit old and create new with block content
+            editor.deinit();
+            self.allocator.destroy(editor);
+            self.editor = null;
         }
+        // Create new editor with block content
+        const editor = try self.allocator.create(Editor.EditorState);
+        errdefer self.allocator.destroy(editor);
+        editor.* = try Editor.EditorState.init(self.allocator, block.content);
+        self.editor = editor;
 
         self.current_block_id = block.id;
     }

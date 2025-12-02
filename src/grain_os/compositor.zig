@@ -33,6 +33,7 @@ const lock_screen_mod = @import("lock_screen.zig");
 const notification = @import("notification.zig");
 const clipboard = @import("clipboard.zig");
 const app_launcher = @import("app_launcher.zig");
+const system_tray = @import("system_tray.zig");
 const keyboard_shortcuts = @import("keyboard_shortcuts.zig");
 const desktop_shell = @import("desktop_shell.zig");
 const runtime_config = @import("runtime_config.zig");
@@ -212,6 +213,8 @@ pub const Compositor = struct {
     lock_screen_manager: lock_screen_mod.LockScreenManager,
     notification_manager: notification.NotificationManager,
     clipboard_manager: clipboard.ClipboardManager,
+    app_launcher_manager: app_launcher.ApplicationLauncher,
+    system_tray_manager: system_tray.SystemTrayManager,
     border_width: u32, // Configurable border width
     title_bar_height: u32, // Configurable title bar height
 
@@ -252,6 +255,8 @@ pub const Compositor = struct {
             .lock_screen_manager = lock_screen_mod.LockScreenManager.init(),
             .notification_manager = notification.NotificationManager.init(),
             .clipboard_manager = clipboard.ClipboardManager.init(),
+            .app_launcher_manager = app_launcher.ApplicationLauncher.init(),
+            .system_tray_manager = system_tray.SystemTrayManager.init(),
             .border_width = BORDER_WIDTH, // Default border width
             .title_bar_height = TITLE_BAR_HEIGHT, // Default title bar height
         };
@@ -1622,6 +1627,129 @@ pub const Compositor = struct {
     // Clear clipboard history.
     pub fn clear_clipboard_history(self: *Compositor) void {
         self.clipboard_manager.clear_history();
+    }
+
+    // Add app to launcher.
+    pub fn add_app_to_launcher(
+        self: *Compositor,
+        app_id: u32,
+        name: []const u8,
+        icon_path: []const u8,
+    ) bool {
+        return self.app_launcher_manager.add_app(app_id, name, icon_path);
+    }
+
+    // Search apps in launcher.
+    pub fn search_apps_in_launcher(
+        self: *Compositor,
+        query: []const u8,
+        results: []u32,
+    ) u32 {
+        return self.app_launcher_manager.search_apps(query, results);
+    }
+
+    // Add app to favorites.
+    pub fn add_app_to_favorites(self: *Compositor, app_id: u32) bool {
+        return self.app_launcher_manager.add_favorite(app_id);
+    }
+
+    // Remove app from favorites.
+    pub fn remove_app_from_favorites(self: *Compositor, app_id: u32) bool {
+        return self.app_launcher_manager.remove_favorite(app_id);
+    }
+
+    // Record app usage.
+    pub fn record_app_usage(self: *Compositor, app_id: u32) void {
+        self.app_launcher_manager.record_app_usage(app_id);
+    }
+
+    // Show app launcher.
+    pub fn show_app_launcher(self: *Compositor) void {
+        self.app_launcher_manager.show();
+    }
+
+    // Hide app launcher.
+    pub fn hide_app_launcher(self: *Compositor) void {
+        self.app_launcher_manager.hide();
+    }
+
+    // Check if app launcher is visible.
+    pub fn is_app_launcher_visible(self: *const Compositor) bool {
+        return self.app_launcher_manager.is_visible();
+    }
+
+    // Get app launcher count.
+    pub fn get_app_launcher_count(self: *const Compositor) u32 {
+        return self.app_launcher_manager.get_app_count();
+    }
+
+    // Get favorites count.
+    pub fn get_favorites_count(self: *const Compositor) u32 {
+        return self.app_launcher_manager.get_favorites_count();
+    }
+
+    // Get recent apps count.
+    pub fn get_recent_apps_count(self: *const Compositor) u32 {
+        return self.app_launcher_manager.get_recent_apps_count();
+    }
+
+    // Add tray icon.
+    pub fn add_tray_icon(
+        self: *Compositor,
+        app_id: u32,
+        icon_path: []const u8,
+        tooltip: []const u8,
+    ) ?u32 {
+        return self.system_tray_manager.add_icon(app_id, icon_path, tooltip);
+    }
+
+    // Remove tray icon.
+    pub fn remove_tray_icon(self: *Compositor, icon_id: u32) bool {
+        return self.system_tray_manager.remove_icon(icon_id);
+    }
+
+    // Update tray icon tooltip.
+    pub fn update_tray_icon_tooltip(
+        self: *Compositor,
+        icon_id: u32,
+        tooltip: []const u8,
+    ) bool {
+        return self.system_tray_manager.update_tooltip(icon_id, tooltip);
+    }
+
+    // Show tray icon.
+    pub fn show_tray_icon(self: *Compositor, icon_id: u32) bool {
+        return self.system_tray_manager.show_icon(icon_id);
+    }
+
+    // Hide tray icon.
+    pub fn hide_tray_icon(self: *Compositor, icon_id: u32) bool {
+        return self.system_tray_manager.hide_icon(icon_id);
+    }
+
+    // Show system tray.
+    pub fn show_system_tray(self: *Compositor) void {
+        self.system_tray_manager.show();
+    }
+
+    // Hide system tray.
+    pub fn hide_system_tray(self: *Compositor) void {
+        self.system_tray_manager.hide();
+    }
+
+    // Check if system tray is visible.
+    pub fn is_system_tray_visible(self: *const Compositor) bool {
+        return self.system_tray_manager.is_visible();
+    }
+
+    // Get tray icon count.
+    pub fn get_tray_icon_count(self: *const Compositor) u32 {
+        return self.system_tray_manager.get_icon_count();
+    }
+
+    // Get visible tray icon count.
+    pub fn get_visible_tray_icon_count(self: *const Compositor) u32 {
+        return self.system_tray_manager.get_visible_icon_count();
     }
 
     // Get resize handle at mouse position.

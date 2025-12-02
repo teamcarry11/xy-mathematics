@@ -123,6 +123,14 @@
   - [x] Memory read/write tracking in trace
   - [x] Trace export (dump trace to buffer for analysis)
   - [x] Comprehensive tests (tests/075_vm_instruction_trace_test.zig)
+- [x] VM Checkpoint/Restore (Phase 2.1.18)
+  - [x] Checkpoint creation (save complete VM state to buffer)
+  - [x] Checkpoint restoration (restore VM state from buffer)
+  - [x] Bounded checkpoint buffer (MAX_CHECKPOINTS: 16, MAX_VM_MEMORY_SIZE: 8MB)
+  - [x] State validation (verify checkpoint integrity with checksum)
+  - [x] Multiple checkpoints (support multiple saved states)
+  - [x] Checkpoint management (create, restore, delete, query)
+  - [x] Comprehensive tests (tests/076_vm_checkpoint_test.zig)
 
 #### 2.2 Kernel Boot Sequence ✅ **COMPLETE**
 - [x] Implement basic boot loader
@@ -748,6 +756,18 @@
   - [x] Support optional fields (target, tooltip)
   - [x] Add `get_document_links` method to Editor
   - [x] Add `resolve_document_link` method to Editor
+  - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
+- [x] Editor LSP Prepare Rename Support ✅ **COMPLETE**
+  - [x] Add `requestPrepareRename` method to LspClient
+  - [x] Parse prepare rename result (range where rename is valid)
+  - [x] Add `prepare_rename_symbol` method to Editor
+  - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
+- [x] Editor LSP Linked Editing Ranges Support ✅ **COMPLETE**
+  - [x] Add `LinkedEditingRange` struct
+  - [x] Add `requestLinkedEditingRange` method to LspClient
+  - [x] Parse linked editing ranges from LSP response (ranges array, wordPattern)
+  - [x] Support optional wordPattern field (regex pattern for word boundaries)
+  - [x] Add `get_linked_editing_ranges` method to Editor
   - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
 - [x] File Save/Load Functionality ✅ **COMPLETE**
   - [x] save_file method (persist editor buffer to disk)
@@ -1624,6 +1644,15 @@
     - ✅ Split ratio clamping (enforce valid range)
     - ✅ Compositor integration (set/get tiling config methods)
     - ✅ Comprehensive tests (`tests/079_grain_os_tiling_config_test.zig`)
+  - ✅ Font rendering (Phase 26) ✅ **COMPLETE**
+    - ✅ Font renderer module (`src/grain_os/font_renderer.zig`)
+    - ✅ 8x8 bitmap font for ASCII 32-126 (printable characters)
+    - ✅ Character rendering (draw_char method)
+    - ✅ Text string rendering (draw_text method)
+    - ✅ Desktop shell integration (time display, launcher items)
+    - ✅ Framebuffer renderer integration (draw_text uses font renderer)
+    - ✅ Replaced placeholder rectangles with actual text rendering
+    - ✅ GrainStyle compliance (u32 types, bounded operations, assertions)
 
 **In Progress**: 
 - Dream Editor Core - GLM-4.6 Integration (Phase 4.1.3) 🔄

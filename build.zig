@@ -1593,6 +1593,19 @@ pub fn build(b: *std.Build) void {
     const vm_instruction_trace_tests_run = b.addRunArtifact(vm_instruction_trace_tests);
     test_step.dependOn(&vm_instruction_trace_tests_run.step);
 
+    const vm_checkpoint_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/076_vm_checkpoint_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "kernel_vm", .module = kernel_vm_module },
+            },
+        }),
+    });
+    const vm_checkpoint_tests_run = b.addRunArtifact(vm_checkpoint_tests);
+    test_step.dependOn(&vm_checkpoint_tests_run.step);
+
     const grain_os_layout_tests = b.addTest(.{
         .root_module = b.createModule(.{
             .root_source_file = b.path("tests/053_grain_os_layout_test.zig"),
@@ -1995,6 +2008,32 @@ pub fn build(b: *std.Build) void {
     });
     const grain_os_clipboard_tests_run = b.addRunArtifact(grain_os_clipboard_tests);
     test_step.dependOn(&grain_os_clipboard_tests_run.step);
+
+    const grain_os_app_launcher_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/086_grain_os_app_launcher_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_os", .module = grain_os_module },
+            },
+        }),
+    });
+    const grain_os_app_launcher_tests_run = b.addRunArtifact(grain_os_app_launcher_tests);
+    test_step.dependOn(&grain_os_app_launcher_tests_run.step);
+
+    const grain_os_system_tray_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/087_grain_os_system_tray_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_os", .module = grain_os_module },
+            },
+        }),
+    });
+    const grain_os_system_tray_tests_run = b.addRunArtifact(grain_os_system_tray_tests);
+    test_step.dependOn(&grain_os_system_tray_tests_run.step);
 
     // RISC-V Logo Display Program
     const riscv_logo_exe = b.addExecutable(.{

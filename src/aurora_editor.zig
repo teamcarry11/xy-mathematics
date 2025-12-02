@@ -1022,6 +1022,23 @@ pub const Editor = struct {
         return resolved;
     }
     
+    /// Get linked editing ranges for current file (for synchronized editing).
+    /// Why: Get ranges that should be edited together (e.g., HTML tag names, JSX tags).
+    /// Contract: File must be open and LSP server must be running.
+    /// Returns: Linked editing range with ranges to edit together, or null if not available.
+    /// Note: Caller must free the returned linked editing range and all strings within.
+    pub fn get_linked_editing_ranges(self: *Editor) !?LspClient.LinkedEditingRange {
+        // Request linked editing ranges from LSP server
+        const linked_range = try self.lsp.requestLinkedEditingRange(
+            self.file_uri,
+            self.cursor_line,
+            self.cursor_char,
+        );
+        
+        // Return linked editing range (caller must free)
+        return linked_range;
+    }
+    
     /// Render editor view: buffer content + LSP diagnostics overlay.
     /// Includes readonly spans and ghost text for visual distinction.
     pub fn render(self: *Editor) !GrainAurora.RenderResult {

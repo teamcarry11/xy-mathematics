@@ -6,6 +6,7 @@
 
 const std = @import("std");
 const framebuffer_renderer = @import("framebuffer_renderer.zig");
+const font_renderer = @import("font_renderer.zig");
 const workspace = @import("workspace.zig");
 const application = @import("application.zig");
 
@@ -60,6 +61,7 @@ pub const LauncherItem = struct {
 // Desktop shell: status bar and launcher.
 pub const DesktopShell = struct {
     renderer: *const framebuffer_renderer.FramebufferRenderer,
+    font: font_renderer.FontRenderer,
     output_width: u32,
     output_height: u32,
     launcher_items: [MAX_LAUNCHER_ITEMS]LauncherItem,
@@ -79,6 +81,7 @@ pub const DesktopShell = struct {
         std.debug.assert(output_height > 0);
         var shell = DesktopShell{
             .renderer = renderer,
+            .font = font_renderer.FontRenderer.init(renderer),
             .output_width = output_width,
             .output_height = output_height,
             .launcher_items = undefined,
@@ -212,64 +215,33 @@ pub const DesktopShell = struct {
     }
 
     // Draw time in status bar (right-aligned).
-    // 2025-11-25-005738-pst: Active function
+    // 2025-11-26-130343-pst: Active function (updated to use font renderer)
     fn draw_time(self: *const DesktopShell, status_y: u32) void {
         // Format time as HH:MM:SS.
         const hours = @as(u32, @intCast((self.current_time_seconds / 3600) % 24));
         const minutes = @as(u32, @intCast((self.current_time_seconds / 60) % 60));
         const seconds = @as(u32, @intCast(self.current_time_seconds % 60));
-        // Simple time display: draw rectangles for digits (placeholder).
-        // In a real implementation, this would use a font renderer.
-        const time_x = self.output_width - 100; // Right-aligned
+        // Format time string.
+        var time_buf: [9]u8 = undefined;
+        const time_str = std.fmt.bufPrint(
+            &time_buf,
+            "{d:0>2}:{d:0>2}:{d:0>2}",
+            .{ hours, minutes, seconds },
+        ) catch return;
+        // Calculate right-aligned position.
+        const time_width = @as(u32, @intCast(time_str.len)) * font_renderer.FONT_WIDTH;
+        const time_x = if (self.output_width > time_width)
+            self.output_width - time_width - 8
+        else
+            8;
         const time_y = status_y + 8;
-        // Draw time background rectangle.
-        self.renderer.draw_rect(
-            @as(i32, @intCast(time_x)),
-            @as(i32, @intCast(time_y)),
-            90,
-            16,
-            framebuffer_renderer.COLOR_DARK_BG,
-        );
-        // Draw time digits as simple rectangles (placeholder rendering).
-        // Hours.
-        self.draw_digit(time_x, time_y, hours / 10);
-        self.draw_digit(time_x + 12, time_y, hours % 10);
-        // Colon.
-        self.renderer.draw_rect(
-            @as(i32, @intCast(time_x + 24)),
-            @as(i32, @intCast(time_y + 4)),
-            2,
-            2,
+        // Draw time using font renderer.
+        self.font.draw_text(
+            time_str,
+            time_x,
+            time_y,
             framebuffer_renderer.COLOR_WHITE,
         );
-        self.renderer.draw_rect(
-            @as(i32, @intCast(time_x + 24)),
-            @as(i32, @intCast(time_y + 10)),
-            2,
-            2,
-            framebuffer_renderer.COLOR_WHITE,
-        );
-        // Minutes.
-        self.draw_digit(time_x + 30, time_y, minutes / 10);
-        self.draw_digit(time_x + 42, time_y, minutes % 10);
-        // Colon.
-        self.renderer.draw_rect(
-            @as(i32, @intCast(time_x + 54)),
-            @as(i32, @intCast(time_y + 4)),
-            2,
-            2,
-            framebuffer_renderer.COLOR_WHITE,
-        );
-        self.renderer.draw_rect(
-            @as(i32, @intCast(time_x + 54)),
-            @as(i32, @intCast(time_y + 10)),
-            2,
-            2,
-            framebuffer_renderer.COLOR_WHITE,
-        );
-        // Seconds.
-        self.draw_digit(time_x + 60, time_y, seconds / 10);
-        self.draw_digit(time_x + 72, time_y, seconds % 10);
     }
 
     // Draw a single digit (0-9) as simple rectangles.

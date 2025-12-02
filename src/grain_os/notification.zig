@@ -96,7 +96,25 @@ pub const NotificationManager = struct {
         };
         var i: u32 = 0;
         while (i < MAX_NOTIFICATIONS) : (i += 1) {
-            manager.notifications[i] = Notification.init(0, "", "", NotificationPriority.normal);
+            manager.notifications[i] = Notification{
+                .notification_id = 0,
+                .title = undefined,
+                .title_len = 0,
+                .message = undefined,
+                .message_len = 0,
+                .priority = NotificationPriority.normal,
+                .timestamp = 0,
+                .timeout_ms = DEFAULT_TIMEOUT_MS,
+                .expired = false,
+            };
+            var j: u32 = 0;
+            while (j < MAX_TITLE_LEN) : (j += 1) {
+                manager.notifications[i].title[j] = 0;
+            }
+            j = 0;
+            while (j < MAX_MESSAGE_LEN) : (j += 1) {
+                manager.notifications[i].message[j] = 0;
+            }
         }
         return manager;
     }
@@ -200,18 +218,17 @@ pub const NotificationManager = struct {
 
     // Clear expired notifications.
     pub fn clear_expired(self: *NotificationManager) void {
-        var i: u32 = 0;
-        while (i < self.notifications_len) : (i += 1) {
-            if (self.notifications[i].expired) {
-                // Shift remaining notifications left.
-                var j: u32 = i;
-                while (j < self.notifications_len - 1) : (j += 1) {
-                    self.notifications[j] = self.notifications[j + 1];
+        var write_idx: u32 = 0;
+        var read_idx: u32 = 0;
+        while (read_idx < self.notifications_len) : (read_idx += 1) {
+            if (!self.notifications[read_idx].expired) {
+                if (write_idx != read_idx) {
+                    self.notifications[write_idx] = self.notifications[read_idx];
                 }
-                self.notifications_len -= 1;
-                i -= 1; // Recheck current index.
+                write_idx += 1;
             }
         }
+        self.notifications_len = write_idx;
     }
 };
 

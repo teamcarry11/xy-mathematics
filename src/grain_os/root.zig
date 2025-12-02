@@ -36,4 +36,7 @@ pub const window_rules = @import("window_rules.zig");
 pub const window_events = @import("window_events.zig");
 pub const window_session = @import("window_session.zig");
 pub const lock_screen = @import("lock_screen.zig");
+pub const font_renderer = @import("font_renderer.zig");
+pub const notification = @import("notification.zig");
+pub const clipboard = @import("clipboard.zig");
 

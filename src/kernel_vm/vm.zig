@@ -14,6 +14,7 @@ const branch_stats_mod = @import("branch_stats.zig");
 const register_stats_mod = @import("register_stats.zig");
 const instruction_perf_mod = @import("instruction_perf.zig");
 const debug_interface_mod = @import("debug_interface.zig");
+const instruction_trace_mod = @import("instruction_trace.zig");
 
 /// Pure Zig RISC-V64 emulator for kernel development.
 /// Grain Style: Static allocation where possible, comprehensive assertions,
@@ -351,6 +352,10 @@ pub const VM = struct {
     /// Why: Provide breakpoints, watchpoints, and step debugging capabilities.
     /// GrainStyle: Static allocation, bounded arrays, explicit types.
     debug_interface: debug_interface_mod.VMDebugInterface = debug_interface_mod.VMDebugInterface.init(),
+    /// Instruction trace logger.
+    /// Why: Record instruction execution history for debugging.
+    /// GrainStyle: Static allocation, bounded circular buffer, explicit types.
+    instruction_trace: instruction_trace_mod.VMInstructionTrace = instruction_trace_mod.VMInstructionTrace.init(),
 
     const Self = @This();
 
@@ -1076,6 +1081,9 @@ pub const VM = struct {
         
         // Track instruction execution.
         self.instruction_stats.record_instruction(opcode_u32);
+
+        // Record instruction trace (before execution).
+        self.instruction_trace.record_instruction(self, pc_before, inst);
 
         // Execute based on opcode.
         // Why: RISC-V uses opcode-based instruction decoding.
@@ -2767,6 +2775,9 @@ pub const VM = struct {
         const word = std.mem.readInt(u32, mem_slice, .little);
         const word64: u64 = word;
 
+        // Record memory read in trace.
+        self.instruction_trace.record_memory_read(eff_addr, word64);
+
         self.regs.set(rd, word64);
 
         // Assert: register must be set correctly.
@@ -2844,6 +2855,9 @@ pub const VM = struct {
 
         const rs2_value = self.regs.get(rs2);
         const byte = @as(u8, @truncate(rs2_value));
+
+        // Record memory write in trace.
+        self.instruction_trace.record_memory_write(eff_addr, @as(u64, byte));
 
         // Write byte to memory using translated physical offset
         // GrainStyle: Cast u64 to usize only for array indexing

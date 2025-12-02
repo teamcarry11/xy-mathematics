@@ -115,6 +115,14 @@
   - [x] State inspection (registers, memory, stack)
   - [x] Debug event detection (breakpoint hit, watchpoint triggered)
   - [x] Comprehensive tests (tests/074_vm_debug_command_test.zig)
+- [x] VM Instruction Trace Logging (Phase 2.1.17)
+  - [x] Instruction trace logging (record PC, instruction, registers, memory accesses)
+  - [x] Circular buffer (bounded trace history, MAX_TRACE_ENTRIES: 1024)
+  - [x] Trace entry format (PC, instruction, register state, memory access)
+  - [x] Trace filtering (enable/disable tracing, filter by PC range)
+  - [x] Memory read/write tracking in trace
+  - [x] Trace export (dump trace to buffer for analysis)
+  - [x] Comprehensive tests (tests/075_vm_instruction_trace_test.zig)
 
 #### 2.2 Kernel Boot Sequence ✅ **COMPLETE**
 - [x] Implement basic boot loader
@@ -731,6 +739,15 @@
   - [x] Support delta encoding (deltaLine, deltaStart from previous token)
   - [x] Add `get_semantic_tokens` method to Editor
   - [x] Add `get_semantic_tokens_range` method to Editor
+  - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
+- [x] Editor LSP Document Links Support ✅ **COMPLETE**
+  - [x] Add `DocumentLink` struct
+  - [x] Add `requestDocumentLinks` method to LspClient
+  - [x] Add `resolveDocumentLink` method to LspClient
+  - [x] Parse document links from LSP response (range, target, tooltip)
+  - [x] Support optional fields (target, tooltip)
+  - [x] Add `get_document_links` method to Editor
+  - [x] Add `resolve_document_link` method to Editor
   - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
 - [x] File Save/Load Functionality ✅ **COMPLETE**
   - [x] save_file method (persist editor buffer to disk)

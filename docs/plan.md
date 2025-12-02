@@ -127,6 +127,14 @@
      - ✅ State inspection (registers, memory, stack)
      - ✅ Debug event detection (breakpoint hit, watchpoint triggered)
      - ✅ Comprehensive tests (tests/074_vm_debug_command_test.zig)
+   - ✅ VM Instruction Trace Logging (Phase 2.1.17)
+     - ✅ Instruction trace logging (record PC, instruction, registers, memory accesses)
+     - ✅ Circular buffer (bounded trace history, MAX_TRACE_ENTRIES: 1024)
+     - ✅ Trace entry format (PC, instruction, register state, memory access)
+     - ✅ Trace filtering (enable/disable tracing, filter by PC range)
+     - ✅ Memory read/write tracking in trace
+     - ✅ Trace export (dump trace to buffer for analysis)
+     - ✅ Comprehensive tests (tests/075_vm_instruction_trace_test.zig)
 
 2. **Kernel Boot Sequence**
    - Implement basic boot loader
@@ -989,6 +997,8 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
   - ✅ Add LSP did save/close notification support (didSave, didClose methods, integrated into save_file and deinit)
   - ✅ Add LSP will save support (requestWillSave, requestWillSaveWaitUntil methods, integrated into save_file)
   - ✅ Add LSP semantic tokens support (requestSemanticTokensFull, requestSemanticTokensRange methods, get_semantic_tokens in Editor)
+  - ✅ Add LSP inlay hints support (requestInlayHints method, get_inlay_hints in Editor)
+  - ✅ Add LSP document links support (requestDocumentLinks, resolveDocumentLink methods, get_document_links in Editor)
   - ✅ Integrate hover requests into moveCursor
   - ✅ Implement ghost text storage for AI completions
   - ✅ Fix didChange range calculation for insertions

@@ -30,6 +30,9 @@ const window_rules = @import("window_rules.zig");
 const window_events = @import("window_events.zig");
 const window_session = @import("window_session.zig");
 const lock_screen_mod = @import("lock_screen.zig");
+const notification = @import("notification.zig");
+const clipboard = @import("clipboard.zig");
+const app_launcher = @import("app_launcher.zig");
 const keyboard_shortcuts = @import("keyboard_shortcuts.zig");
 const desktop_shell = @import("desktop_shell.zig");
 const runtime_config = @import("runtime_config.zig");
@@ -207,6 +210,8 @@ pub const Compositor = struct {
     event_manager: window_events.EventManager,
     session_manager: window_session.SessionManager,
     lock_screen_manager: lock_screen_mod.LockScreenManager,
+    notification_manager: notification.NotificationManager,
+    clipboard_manager: clipboard.ClipboardManager,
     border_width: u32, // Configurable border width
     title_bar_height: u32, // Configurable title bar height
 
@@ -245,21 +250,23 @@ pub const Compositor = struct {
             .event_manager = window_events.EventManager.init(),
             .session_manager = window_session.SessionManager.init(),
             .lock_screen_manager = lock_screen_mod.LockScreenManager.init(),
+            .notification_manager = notification.NotificationManager.init(),
+            .clipboard_manager = clipboard.ClipboardManager.init(),
             .border_width = BORDER_WIDTH, // Default border width
             .title_bar_height = TITLE_BAR_HEIGHT, // Default title bar height
         };
         var i: u32 = 0;
         while (i < MAX_WINDOWS) : (i += 1) {
-            compositor.windows[i] = Window.init(0, 0, 0, 0, 0, 0);
+            comp.windows[i] = Window.init(0, 0, 0, 0, 0, 0);
         }
-        compositor.next_object_id = 4;
-        compositor.app_launcher = application.ApplicationLauncher.init(
-            &compositor.app_registry,
+        comp.next_object_id = 4;
+        comp.app_launcher = application.ApplicationLauncher.init(
+            &comp.app_registry,
         );
-        compositor.shell.set_app_registry(&compositor.app_registry);
-        std.debug.assert(compositor.windows_len == 0);
-        std.debug.assert(compositor.next_window_id > 0);
-        return compositor;
+        comp.shell.set_app_registry(&comp.app_registry);
+        std.debug.assert(comp.windows_len == 0);
+        std.debug.assert(comp.next_window_id > 0);
+        return comp;
     }
 
     pub fn create_window(
@@ -321,7 +328,21 @@ pub const Compositor = struct {
         return window_id;
     }
 
+    // Get window (mutable version for modifications).
     pub fn get_window(self: *Compositor, window_id: u32) ?*Window {
+        std.debug.assert(window_id > 0);
+        var i: u32 = 0;
+        while (i < self.windows_len) : (i += 1) {
+            if (self.windows[i].id == window_id) {
+                std.debug.assert(self.windows[i].id == window_id);
+                return &self.windows[i];
+            }
+        }
+        return null;
+    }
+
+    // Get window (const version for read-only access).
+    pub fn get_window_const(self: *const Compositor, window_id: u32) ?*const Window {
         std.debug.assert(window_id > 0);
         var i: u32 = 0;
         while (i < self.windows_len) : (i += 1) {
@@ -886,6 +907,32 @@ pub const Compositor = struct {
         return false;
     }
 
+    // Set border width (runtime configuration).
+    // 2025-11-25-183652-pst: Active function
+    pub fn set_border_width(self: *Compositor, width: u32) void {
+        std.debug.assert(width > 0);
+        std.debug.assert(width <= 32); // Bounded: max 32 pixels
+        self.border_width = width;
+    }
+
+    // Set title bar height (runtime configuration).
+    // 2025-11-25-183652-pst: Active function
+    pub fn set_title_bar_height(self: *Compositor, height: u32) void {
+        std.debug.assert(height > 0);
+        std.debug.assert(height <= 64); // Bounded: max 64 pixels
+        self.title_bar_height = height;
+    }
+
+    // Get border width.
+    pub fn get_border_width(self: *const Compositor) u32 {
+        return self.border_width;
+    }
+
+    // Get title bar height.
+    pub fn get_title_bar_height(self: *const Compositor) u32 {
+        return self.title_bar_height;
+    }
+
     // Toggle launcher visibility.
     pub fn toggle_launcher(self: *Compositor) void {
         self.shell.toggle_launcher();
@@ -1053,7 +1100,7 @@ pub const Compositor = struct {
     // Get window opacity.
     pub fn get_window_opacity(self: *const Compositor, window_id: u32) ?u8 {
         std.debug.assert(window_id > 0);
-        if (self.get_window(window_id)) |win| {
+        if (self.get_window_const(window_id)) |win| {
             return win.opacity;
         }
         return null;
@@ -1261,7 +1308,7 @@ pub const Compositor = struct {
         window_id: u32,
     ) ?window_constraints.WindowConstraints {
         std.debug.assert(window_id > 0);
-        if (self.get_window(window_id)) |win| {
+        if (self.get_window_const(window_id)) |win| {
             return win.constraints;
         }
         return null;
@@ -1468,13 +1515,113 @@ pub const Compositor = struct {
     }
 
     // Get current identity.
-    pub fn get_current_identity(self: *const Compositor) ?*const lock_screen.UserIdentity {
+    pub fn get_current_identity(self: *const Compositor) ?*const lock_screen_mod.UserIdentity {
         return self.lock_screen_manager.identity_manager.get_current_identity();
     }
 
     // Get identity count.
     pub fn get_identity_count(self: *const Compositor) u32 {
         return self.lock_screen_manager.identity_manager.get_identity_count();
+    }
+
+    // Add event listener.
+    // 2025-11-26-124738-pst: Active function
+    pub fn add_event_listener(
+        self: *Compositor,
+        listener_fn: window_events.EventListenerFn,
+        user_data: ?*anyopaque,
+    ) bool {
+        return self.event_manager.add_listener(listener_fn, user_data);
+    }
+
+    // Show notification.
+    pub fn show_notification(
+        self: *Compositor,
+        title: []const u8,
+        message: []const u8,
+        priority: notification.NotificationPriority,
+    ) ?u32 {
+        return self.notification_manager.add_notification(title, message, priority);
+    }
+
+    // Remove notification.
+    pub fn remove_notification(self: *Compositor, notification_id: u32) bool {
+        return self.notification_manager.remove_notification(notification_id);
+    }
+
+    // Expire notification.
+    pub fn expire_notification(self: *Compositor, notification_id: u32) bool {
+        return self.notification_manager.expire_notification(notification_id);
+    }
+
+    // Get notification count.
+    pub fn get_notification_count(self: *const Compositor) u32 {
+        return self.notification_manager.get_notification_count();
+    }
+
+    // Get active notification count.
+    pub fn get_active_notification_count(self: *const Compositor) u32 {
+        return self.notification_manager.get_active_count();
+    }
+
+    // Clear all notifications.
+    pub fn clear_all_notifications(self: *Compositor) void {
+        self.notification_manager.clear_all();
+    }
+
+    // Clear expired notifications.
+    pub fn clear_expired_notifications(self: *Compositor) void {
+        self.notification_manager.clear_expired();
+    }
+
+    // Set clipboard data.
+    pub fn set_clipboard_data(
+        self: *Compositor,
+        format: clipboard.ClipboardFormat,
+        data: []const u8,
+        format_name: []const u8,
+    ) bool {
+        return self.clipboard_manager.set_data(format, data, format_name);
+    }
+
+    // Get clipboard data.
+    pub fn get_clipboard_data(self: *const Compositor) ?[]const u8 {
+        return self.clipboard_manager.get_data();
+    }
+
+    // Get clipboard format.
+    pub fn get_clipboard_format(self: *const Compositor) clipboard.ClipboardFormat {
+        return self.clipboard_manager.get_format();
+    }
+
+    // Get clipboard format name.
+    pub fn get_clipboard_format_name(self: *const Compositor) []const u8 {
+        return self.clipboard_manager.get_format_name();
+    }
+
+    // Check if clipboard is empty.
+    pub fn is_clipboard_empty(self: *const Compositor) bool {
+        return self.clipboard_manager.is_empty();
+    }
+
+    // Clear clipboard.
+    pub fn clear_clipboard(self: *Compositor) void {
+        self.clipboard_manager.clear();
+    }
+
+    // Get clipboard history entry.
+    pub fn get_clipboard_history_entry(self: *const Compositor, index: u32) ?*const clipboard.ClipboardEntry {
+        return self.clipboard_manager.get_history_entry(index);
+    }
+
+    // Get clipboard history count.
+    pub fn get_clipboard_history_count(self: *const Compositor) u32 {
+        return self.clipboard_manager.get_history_count();
+    }
+
+    // Clear clipboard history.
+    pub fn clear_clipboard_history(self: *Compositor) void {
+        self.clipboard_manager.clear_history();
     }
 
     // Get resize handle at mouse position.
@@ -1689,8 +1836,8 @@ pub const Compositor = struct {
         // Clamp window to screen bounds.
         const max_width = self.output.width - (self.border_width * 2);
         const max_height = self.output.height - (self.border_width * 2) - self.title_bar_height - desktop_shell.STATUS_BAR_HEIGHT;
-        win.width = std.math.min(win.width, max_width);
-        win.height = std.math.min(win.height, max_height);
+        win.width = if (win.width > max_width) max_width else win.width;
+        win.height = if (win.height > max_height) max_height else win.height;
     }
 
     // End window drag.

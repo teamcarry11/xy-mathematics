@@ -1305,6 +1305,72 @@ pub const LspClient = struct {
         new_text: []const u8, // New text to insert
     };
     
+    /// Request textDocument/prepareRename (check if rename is valid at position).
+    /// Why: Validate that rename is possible at the given position before attempting rename.
+    /// Contract: uri, line, and character must be valid.
+    /// Returns: Range where rename is valid, or null if rename not available.
+    /// Note: Caller must free the returned range if it contains allocated strings.
+    pub fn requestPrepareRename(
+        self: *LspClient,
+        uri: []const u8,
+        line: u32,
+        character: u32,
+    ) !?Range {
+        // Assert: URI and position must be valid
+        std.debug.assert(uri.len > 0);
+        std.debug.assert(uri.len <= 4096); // Bounded URI length
+        
+        var params_obj = std.json.ObjectMap.init(self.allocator);
+        defer params_obj.deinit();
+        
+        var text_doc_obj = std.json.ObjectMap.init(self.allocator);
+        defer text_doc_obj.deinit();
+        try text_doc_obj.put("uri", std.json.Value{ .string = uri });
+        try params_obj.put("textDocument", std.json.Value{ .object = text_doc_obj });
+        
+        var position_obj = std.json.ObjectMap.init(self.allocator);
+        defer position_obj.deinit();
+        try position_obj.put("line", std.json.Value{ .integer = @intCast(line) });
+        try position_obj.put("character", std.json.Value{ .integer = @intCast(character) });
+        try params_obj.put("position", std.json.Value{ .object = position_obj });
+        
+        const params = std.json.Value{ .object = params_obj };
+        const response = try self.sendRequest("textDocument/prepareRename", params);
+        
+        // Parse range from response.result
+        if (response.result) |result| {
+            if (result == .object) {
+                const obj = result.object;
+                
+                const start_val = obj.get("start") orelse return null;
+                const end_val = obj.get("end") orelse return null;
+                if (start_val != .object or end_val != .object) return null;
+                
+                const start_obj = start_val.object;
+                const end_obj = end_val.object;
+                
+                const start_line_val = start_obj.get("line") orelse return null;
+                const start_char_val = start_obj.get("character") orelse return null;
+                const end_line_val = end_obj.get("line") orelse return null;
+                const end_char_val = end_obj.get("character") orelse return null;
+                
+                if (start_line_val != .integer or start_char_val != .integer or
+                    end_line_val != .integer or end_char_val != .integer) return null;
+                
+                const start_line = @as(u32, @intCast(start_line_val.integer));
+                const start_char = @as(u32, @intCast(start_char_val.integer));
+                const end_line = @as(u32, @intCast(end_line_val.integer));
+                const end_char = @as(u32, @intCast(end_char_val.integer));
+                
+                return Range{
+                    .start = Position{ .line = start_line, .character = start_char },
+                    .end = Position{ .line = end_line, .character = end_char },
+                };
+            }
+        }
+        return null;
+    }
+    
     /// Request textDocument/rename (rename symbol at position).
     /// Why: Rename a symbol across all references for refactoring.
     /// Contract: uri, position, and new_name must be valid.
@@ -2734,6 +2800,228 @@ pub const LspClient = struct {
                 }
                 
                 return try hints.toOwnedSlice();
+            }
+        }
+        return null;
+    }
+    
+    /// Document link (for hyperlinks in code).
+    pub const DocumentLink = struct {
+        range: Range, // Range where link is located
+        target: ?[]const u8 = null, // Optional target URI (if not provided, resolveDocumentLink should be called)
+        tooltip: ?[]const u8 = null, // Optional tooltip
+    };
+    
+    /// Request textDocument/documentLink (get document links).
+    /// Why: Get hyperlinks in code (e.g., import paths, URLs, file references).
+    /// Contract: uri must be valid.
+    /// Returns: Array of document links, or null if not available.
+    /// Note: Caller must free the returned links array and all strings within.
+    pub fn requestDocumentLinks(self: *LspClient, uri: []const u8) !?[]DocumentLink {
+        // Assert: URI must be valid
+        std.debug.assert(uri.len > 0);
+        std.debug.assert(uri.len <= 4096); // Bounded URI length
+        
+        var params_obj = std.json.ObjectMap.init(self.allocator);
+        defer params_obj.deinit();
+        
+        var text_doc_obj = std.json.ObjectMap.init(self.allocator);
+        defer text_doc_obj.deinit();
+        try text_doc_obj.put("uri", std.json.Value{ .string = uri });
+        try params_obj.put("textDocument", std.json.Value{ .object = text_doc_obj });
+        
+        const params = std.json.Value{ .object = params_obj };
+        const response = try self.sendRequest("textDocument/documentLink", params);
+        
+        // Parse document links array from response.result
+        if (response.result) |result| {
+            if (result == .array) {
+                const items = result.array.items;
+                var links = std.ArrayList(DocumentLink).init(self.allocator);
+                errdefer {
+                    // Free any allocated strings on error
+                    for (links.items) |*link| {
+                        if (link.target) |target| {
+                            self.allocator.free(target);
+                        }
+                        if (link.tooltip) |tooltip| {
+                            self.allocator.free(tooltip);
+                        }
+                    }
+                    links.deinit();
+                }
+                
+                for (items) |item| {
+                    if (item == .object) {
+                        const obj = item.object;
+                        
+                        // Parse range (required)
+                        const range_val = obj.get("range") orelse continue;
+                        if (range_val != .object) continue;
+                        const range_obj = range_val.object;
+                        
+                        const start_val = range_obj.get("start") orelse continue;
+                        const end_val = range_obj.get("end") orelse continue;
+                        if (start_val != .object or end_val != .object) continue;
+                        
+                        const start_obj = start_val.object;
+                        const end_obj = end_val.object;
+                        
+                        const start_line_val = start_obj.get("line") orelse continue;
+                        const start_char_val = start_obj.get("character") orelse continue;
+                        const end_line_val = end_obj.get("line") orelse continue;
+                        const end_char_val = end_obj.get("character") orelse continue;
+                        
+                        if (start_line_val != .integer or start_char_val != .integer or
+                            end_line_val != .integer or end_char_val != .integer) continue;
+                        
+                        const start_line = @as(u32, @intCast(start_line_val.integer));
+                        const start_char = @as(u32, @intCast(start_char_val.integer));
+                        const end_line = @as(u32, @intCast(end_line_val.integer));
+                        const end_char = @as(u32, @intCast(end_char_val.integer));
+                        
+                        // Parse target (optional)
+                        var target: ?[]const u8 = null;
+                        if (obj.get("target")) |target_val| {
+                            if (target_val == .string) {
+                                const target_str = target_val.string;
+                                const target_copy = try self.allocator.dupe(u8, target_str);
+                                errdefer self.allocator.free(target_copy);
+                                target = target_copy;
+                            }
+                        }
+                        
+                        // Parse tooltip (optional)
+                        var tooltip: ?[]const u8 = null;
+                        if (obj.get("tooltip")) |tooltip_val| {
+                            if (tooltip_val == .string) {
+                                const tooltip_str = tooltip_val.string;
+                                const tooltip_copy = try self.allocator.dupe(u8, tooltip_str);
+                                errdefer self.allocator.free(tooltip_copy);
+                                tooltip = tooltip_copy;
+                            }
+                        }
+                        
+                        try links.append(DocumentLink{
+                            .range = Range{
+                                .start = Position{ .line = start_line, .character = start_char },
+                                .end = Position{ .line = end_line, .character = end_char },
+                            },
+                            .target = target,
+                            .tooltip = tooltip,
+                        });
+                    }
+                }
+                
+                return try links.toOwnedSlice();
+            }
+        }
+        return null;
+    }
+    
+    /// Resolve document link (get target URI for link without target).
+    /// Why: Resolve document link target if it was not provided in requestDocumentLinks.
+    /// Contract: link must be valid (must have range at minimum).
+    /// Returns: Resolved document link with target URI, or null if not available.
+    /// Note: Caller must free the returned link and all strings within.
+    pub fn resolveDocumentLink(self: *LspClient, link: DocumentLink) !?DocumentLink {
+        // Assert: Link must have range
+        std.debug.assert(link.range.start.line <= link.range.end.line);
+        
+        var params_obj = std.json.ObjectMap.init(self.allocator);
+        defer params_obj.deinit();
+        
+        // Build link object
+        var link_obj = std.json.ObjectMap.init(self.allocator);
+        defer link_obj.deinit();
+        
+        var range_obj = std.json.ObjectMap.init(self.allocator);
+        defer range_obj.deinit();
+        
+        var start_obj = std.json.ObjectMap.init(self.allocator);
+        try start_obj.put("line", std.json.Value{ .integer = @intCast(link.range.start.line) });
+        try start_obj.put("character", std.json.Value{ .integer = @intCast(link.range.start.character) });
+        try range_obj.put("start", std.json.Value{ .object = start_obj });
+        
+        var end_obj = std.json.ObjectMap.init(self.allocator);
+        try end_obj.put("line", std.json.Value{ .integer = @intCast(link.range.end.line) });
+        try end_obj.put("character", std.json.Value{ .integer = @intCast(link.range.end.character) });
+        try range_obj.put("end", std.json.Value{ .object = end_obj });
+        
+        try link_obj.put("range", std.json.Value{ .object = range_obj });
+        
+        if (link.target) |target| {
+            try link_obj.put("target", std.json.Value{ .string = target });
+        }
+        if (link.tooltip) |tooltip| {
+            try link_obj.put("tooltip", std.json.Value{ .string = tooltip });
+        }
+        
+        try params_obj.put("link", std.json.Value{ .object = link_obj });
+        
+        const params = std.json.Value{ .object = params_obj };
+        const response = try self.sendRequest("documentLink/resolve", params);
+        
+        // Parse resolved document link from response.result
+        if (response.result) |result| {
+            if (result == .object) {
+                const obj = result.object;
+                
+                // Parse range (required)
+                const range_val = obj.get("range") orelse return null;
+                if (range_val != .object) return null;
+                const inner_range_obj = range_val.object;
+                
+                const start_val = inner_range_obj.get("start") orelse return null;
+                const end_val = inner_range_obj.get("end") orelse return null;
+                if (start_val != .object or end_val != .object) return null;
+                
+                const inner_start_obj = start_val.object;
+                const inner_end_obj = end_val.object;
+                
+                const start_line_val = inner_start_obj.get("line") orelse return null;
+                const start_char_val = inner_start_obj.get("character") orelse return null;
+                const end_line_val = inner_end_obj.get("line") orelse return null;
+                const end_char_val = inner_end_obj.get("character") orelse return null;
+                
+                if (start_line_val != .integer or start_char_val != .integer or
+                    end_line_val != .integer or end_char_val != .integer) return null;
+                
+                const start_line = @as(u32, @intCast(start_line_val.integer));
+                const start_char = @as(u32, @intCast(start_char_val.integer));
+                const end_line = @as(u32, @intCast(end_line_val.integer));
+                const end_char = @as(u32, @intCast(end_char_val.integer));
+                
+                // Parse target (optional, but should be present after resolve)
+                var target: ?[]const u8 = null;
+                if (obj.get("target")) |target_val| {
+                    if (target_val == .string) {
+                        const target_str = target_val.string;
+                        const target_copy = try self.allocator.dupe(u8, target_str);
+                        errdefer self.allocator.free(target_copy);
+                        target = target_copy;
+                    }
+                }
+                
+                // Parse tooltip (optional)
+                var tooltip: ?[]const u8 = null;
+                if (obj.get("tooltip")) |tooltip_val| {
+                    if (tooltip_val == .string) {
+                        const tooltip_str = tooltip_val.string;
+                        const tooltip_copy = try self.allocator.dupe(u8, tooltip_str);
+                        errdefer self.allocator.free(tooltip_copy);
+                        tooltip = tooltip_copy;
+                    }
+                }
+                
+                return DocumentLink{
+                    .range = Range{
+                        .start = Position{ .line = start_line, .character = start_char },
+                        .end = Position{ .line = end_line, .character = end_char },
+                    },
+                    .target = target,
+                    .tooltip = tooltip,
+                };
             }
         }
         return null;

@@ -425,6 +425,22 @@ pub const Editor = struct {
         }
     }
     
+    /// Prepare rename symbol at current cursor position (validate rename is possible).
+    /// Why: Check if rename is valid at the current position before attempting rename.
+    /// Contract: Cursor must be positioned on a symbol.
+    /// Returns: Range where rename is valid, or null if rename not available.
+    pub fn prepare_rename_symbol(self: *Editor) !?LspClient.Range {
+        // Request prepare rename from LSP server
+        const range = try self.lsp.requestPrepareRename(
+            self.file_uri,
+            self.cursor_line,
+            self.cursor_char,
+        );
+        
+        // Return range (caller must free if it contains allocated strings)
+        return range;
+    }
+    
     /// Rename symbol at current cursor position.
     /// Why: Rename a symbol across all references for refactoring.
     /// Contract: Cursor must be positioned on a symbol, new_name must be valid.
@@ -975,6 +991,35 @@ pub const Editor = struct {
         
         // Return hints array (caller must free)
         return hints;
+    }
+    
+    /// Get document links for current file (for hyperlinks in code).
+    /// Why: Get document links from LSP server for hyperlinks (e.g., import paths, URLs).
+    /// Contract: File must be open and LSP server must be running.
+    /// Returns: Array of document links, or null if not available.
+    /// Note: Caller must free the returned links array and all strings within.
+    pub fn get_document_links(self: *Editor) !?[]LspClient.DocumentLink {
+        // Request document links from LSP server
+        const links = try self.lsp.requestDocumentLinks(self.file_uri);
+        
+        // Return links array (caller must free)
+        return links;
+    }
+    
+    /// Resolve document link (get target URI for link without target).
+    /// Why: Resolve document link target if it was not provided in get_document_links.
+    /// Contract: link must be valid (must have range at minimum).
+    /// Returns: Resolved document link with target URI, or null if not available.
+    /// Note: Caller must free the returned link and all strings within.
+    pub fn resolve_document_link(
+        self: *Editor,
+        link: LspClient.DocumentLink,
+    ) !?LspClient.DocumentLink {
+        // Request document link resolve from LSP server
+        const resolved = try self.lsp.resolveDocumentLink(link);
+        
+        // Return resolved link (caller must free)
+        return resolved;
     }
     
     /// Render editor view: buffer content + LSP diagnostics overlay.

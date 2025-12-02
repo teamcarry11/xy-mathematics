@@ -6,6 +6,7 @@
 
 const std = @import("std");
 const basin_kernel = @import("basin_kernel");
+const font_renderer = @import("font_renderer.zig");
 
 // Bounded: Max text length for rendering.
 pub const MAX_TEXT_LEN: u32 = 256;
@@ -32,6 +33,7 @@ const SyscallFn = *const fn (u32, u64, u64, u64, u64) i64;
 
 // Framebuffer renderer: renders windows to kernel framebuffer.
 pub const FramebufferRenderer = struct {
+    font: font_renderer.FontRenderer,
     // Syscall function pointer (set by kernel integration).
     syscall_fn: ?SyscallFn = null,
 

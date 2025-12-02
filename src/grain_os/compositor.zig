@@ -36,6 +36,8 @@ const app_launcher = @import("app_launcher.zig");
 const system_tray = @import("system_tray.zig");
 const power_management = @import("power_management.zig");
 const display_management = @import("display_management.zig");
+const settings_manager = @import("settings_manager.zig");
+const theme_manager = @import("theme_manager.zig");
 const keyboard_shortcuts = @import("keyboard_shortcuts.zig");
 const desktop_shell = @import("desktop_shell.zig");
 const runtime_config = @import("runtime_config.zig");
@@ -219,6 +221,7 @@ pub const Compositor = struct {
     system_tray_manager: system_tray.SystemTrayManager,
     power_manager: power_management.PowerManagementManager,
     display_manager: display_management.DisplayManager,
+    settings_manager: settings_manager.SettingsManager,
     border_width: u32, // Configurable border width
     title_bar_height: u32, // Configurable title bar height
 
@@ -263,6 +266,7 @@ pub const Compositor = struct {
             .system_tray_manager = system_tray.SystemTrayManager.init(),
             .power_manager = power_management.PowerManagementManager.init(),
             .display_manager = display_management.DisplayManager.init(),
+            .settings_manager = settings_manager.SettingsManager.init(),
             .border_width = BORDER_WIDTH, // Default border width
             .title_bar_height = TITLE_BAR_HEIGHT, // Default title bar height
         };
@@ -1872,6 +1876,84 @@ pub const Compositor = struct {
     // Get active display count.
     pub fn get_active_display_count(self: *const Compositor) u32 {
         return self.display_manager.get_active_display_count();
+    }
+
+    // Add settings category.
+    pub fn add_settings_category(
+        self: *Compositor,
+        name: []const u8,
+    ) ?u32 {
+        return self.settings_manager.add_category(name);
+    }
+
+    // Add setting.
+    pub fn add_setting(
+        self: *Compositor,
+        category_id: u32,
+        key: []const u8,
+        value_type: settings_manager.SettingValueType,
+    ) ?u32 {
+        return self.settings_manager.add_setting(category_id, key, value_type);
+    }
+
+    // Set setting string value.
+    pub fn set_setting_string(
+        self: *Compositor,
+        setting_id: u32,
+        value: []const u8,
+    ) bool {
+        return self.settings_manager.set_setting_string(setting_id, value);
+    }
+
+    // Set setting integer value.
+    pub fn set_setting_integer(
+        self: *Compositor,
+        setting_id: u32,
+        value: i64,
+    ) bool {
+        return self.settings_manager.set_setting_integer(setting_id, value);
+    }
+
+    // Set setting boolean value.
+    pub fn set_setting_boolean(
+        self: *Compositor,
+        setting_id: u32,
+        value: bool,
+    ) bool {
+        return self.settings_manager.set_setting_boolean(setting_id, value);
+    }
+
+    // Set setting float value.
+    pub fn set_setting_float(
+        self: *Compositor,
+        setting_id: u32,
+        value: f64,
+    ) bool {
+        return self.settings_manager.set_setting_float(setting_id, value);
+    }
+
+    // Find setting by key.
+    pub fn find_setting_by_key(
+        self: *Compositor,
+        category_id: u32,
+        key: []const u8,
+    ) ?*const settings_manager.Setting {
+        return self.settings_manager.find_setting_by_key(category_id, key);
+    }
+
+    // Remove setting.
+    pub fn remove_setting(self: *Compositor, setting_id: u32) bool {
+        return self.settings_manager.remove_setting(setting_id);
+    }
+
+    // Get setting count.
+    pub fn get_setting_count(self: *const Compositor) u32 {
+        return self.settings_manager.get_setting_count();
+    }
+
+    // Get category count.
+    pub fn get_category_count(self: *const Compositor) u32 {
+        return self.settings_manager.get_category_count();
     }
 
     // Get resize handle at mouse position.

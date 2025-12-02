@@ -146,6 +146,14 @@
   - [x] Performance regression detection (detect performance degradation)
   - [x] Bounded benchmark results (MAX_BENCHMARKS: 64)
   - [x] Comprehensive tests (tests/078_vm_benchmark_test.zig)
+- [x] VM Memory Protection (Phase 2.1.21)
+  - [x] Page table management (create, modify, query page tables)
+  - [x] Memory permission management (read, write, execute permissions)
+  - [x] Page fault handling (detect and handle page faults)
+  - [x] Memory region protection (protect memory regions with permissions)
+  - [x] Address translation (translate virtual to physical addresses)
+  - [x] Bounded page table entries (MAX_PAGE_TABLE_ENTRIES: 1024)
+  - [x] Comprehensive tests (tests/079_vm_memory_protection_test.zig)
 
 #### 2.2 Kernel Boot Sequence ✅ **COMPLETE**
 - [x] Implement basic boot loader
@@ -1329,6 +1337,15 @@
   - [x] Line removal (`remove_line` method) - removes line from buffer
   - [x] Yank buffer management - stores copied text (MAX_YANK_BUFFER: 1MB)
   - [x] Modal editor integration - yank (y), paste (p), delete line (d) keybindings
+  - [x] Visual mode selection (`enter_visual_mode`, `exit_visual_mode` methods)
+  - [x] Visual selection tracking (anchor position, cursor position)
+  - [x] Visual selection bounds (`get_visual_selection` method)
+  - [x] Visual mode yank (`yank_selection` method) - yanks selected text
+  - [x] Visual mode delete (`delete_selection` method) - deletes selected text
+  - [x] Visual mode movement - extends selection with cursor movement
+  - [x] Single-line selection delete - deletes portion of line
+  - [x] Multi-line selection delete - merges lines after deletion
+  - [x] Modal editor integration - visual mode (v) keybinding, yank (y), delete (x)
 - [x] Comprehensive tests (`tests/048_grain_skate_core_test.zig`)
 - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
 - [x] Storage integration (`src/grain_skate/storage_integration.zig`)

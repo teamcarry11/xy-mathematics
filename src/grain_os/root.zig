@@ -43,4 +43,6 @@ pub const app_launcher = @import("app_launcher.zig");
 pub const system_tray = @import("system_tray.zig");
 pub const power_management = @import("power_management.zig");
 pub const display_management = @import("display_management.zig");
+pub const settings_manager = @import("settings_manager.zig");
+pub const theme_manager = @import("theme_manager.zig");
 

@@ -31,4 +31,5 @@ pub const instruction_trace = @import("instruction_trace.zig");
 pub const checkpoint = @import("checkpoint.zig");
 pub const optimization_hints = @import("optimization_hints.zig");
 pub const benchmark = @import("benchmark.zig");
+pub const memory_protection = @import("memory_protection.zig");
 

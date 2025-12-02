@@ -183,15 +183,48 @@ pub const ModalEditor = struct {
     }
 
     /// Handle visual mode key event.
-    // 2025-11-23-170000-pst: Active function
+    // 2025-12-02-121512-pst: Active function
     fn handle_visual_mode(self: *ModalEditor, event: events.KeyboardEvent) !void {
         // Visual mode: similar to normal mode but with selection
         if (event.key_code == 27) {
             // Escape key: return to normal mode
-            self.editor.exit_insert_mode();
+            self.editor.exit_visual_mode();
         } else {
-            // Use normal mode handling for movement
-            try self.handle_normal_mode(event);
+            // Map key to action
+            const action = self.map_key_to_action(event);
+            // Execute action (movement extends selection)
+            switch (action) {
+                .move_left => self.editor.move_left(),
+                .move_right => self.editor.move_right(),
+                .move_up => self.editor.move_up(),
+                .move_down => self.editor.move_down(),
+                .yank => {
+                    // Yank selected text (y)
+                    self.editor.yank_selection() catch |err| {
+                        _ = err;
+                    };
+                    self.editor.exit_visual_mode();
+                },
+                .delete_char => {
+                    // Delete selected text (x)
+                    self.editor.delete_selection() catch |err| {
+                        _ = err;
+                    };
+                },
+                .paste => {
+                    // Paste (replace selection with yank buffer) (p)
+                    self.editor.paste_selection() catch |err| {
+                        _ = err;
+                    };
+                },
+                .normal_mode => {
+                    // Return to normal mode
+                    self.editor.exit_visual_mode();
+                },
+                else => {
+                    // Other actions not handled in visual mode
+                },
+            }
         }
     }
 

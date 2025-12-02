@@ -3565,6 +3565,109 @@ pub const LspClient = struct {
         return null;
     }
     
+    /// Document highlight kind (for textDocument/documentHighlight).
+    pub const DocumentHighlightKind = enum(u32) {
+        text = 1, // Text highlight (default)
+        read = 2, // Read access highlight
+        write = 3, // Write access highlight
+    };
+    
+    /// Document highlight (for highlighting all occurrences of a symbol).
+    pub const DocumentHighlight = struct {
+        range: Range, // Range to highlight
+        kind: ?u32 = null, // Optional kind (DocumentHighlightKind)
+    };
+    
+    /// Request textDocument/documentHighlight (get highlights for symbol at position).
+    /// Why: Highlight all occurrences of a symbol at a given position (e.g., variable, function).
+    /// Contract: uri, line, and character must be valid.
+    /// Returns: Array of document highlights, or null if not available.
+    /// Note: Caller must free the returned highlights array.
+    pub fn requestDocumentHighlights(
+        self: *LspClient,
+        uri: []const u8,
+        line: u32,
+        character: u32,
+    ) !?[]DocumentHighlight {
+        // Assert: URI and position must be valid
+        std.debug.assert(uri.len > 0);
+        std.debug.assert(uri.len <= 4096); // Bounded URI length
+        
+        var params_obj = std.json.ObjectMap.init(self.allocator);
+        defer params_obj.deinit();
+        
+        var text_doc_obj = std.json.ObjectMap.init(self.allocator);
+        defer text_doc_obj.deinit();
+        try text_doc_obj.put("uri", std.json.Value{ .string = uri });
+        try params_obj.put("textDocument", std.json.Value{ .object = text_doc_obj });
+        
+        var position_obj = std.json.ObjectMap.init(self.allocator);
+        defer position_obj.deinit();
+        try position_obj.put("line", std.json.Value{ .integer = @intCast(line) });
+        try position_obj.put("character", std.json.Value{ .integer = @intCast(character) });
+        try params_obj.put("position", std.json.Value{ .object = position_obj });
+        
+        const params = std.json.Value{ .object = params_obj };
+        const response = try self.sendRequest("textDocument/documentHighlight", params);
+        
+        // Parse document highlights array from response.result
+        if (response.result) |result| {
+            if (result == .array) {
+                const items = result.array.items;
+                var highlights = std.ArrayList(DocumentHighlight).init(self.allocator);
+                errdefer highlights.deinit();
+                
+                for (items) |item| {
+                    if (item == .object) {
+                        const obj = item.object;
+                        
+                        // Parse range (required)
+                        const range_val = obj.get("range") orelse continue;
+                        if (range_val != .object) continue;
+                        const range_obj = range_val.object;
+                        
+                        const start_val = range_obj.get("start") orelse continue;
+                        const end_val = range_obj.get("end") orelse continue;
+                        if (start_val != .object or end_val != .object) continue;
+                        
+                        const start_obj = start_val.object;
+                        const end_obj = end_val.object;
+                        
+                        const start_line_val = start_obj.get("line") orelse continue;
+                        const start_char_val = start_obj.get("character") orelse continue;
+                        const end_line_val = end_obj.get("line") orelse continue;
+                        const end_char_val = end_obj.get("character") orelse continue;
+                        
+                        if (start_line_val != .integer or start_char_val != .integer or
+                            end_line_val != .integer or end_char_val != .integer) continue;
+                        
+                        const start_line = @as(u32, @intCast(start_line_val.integer));
+                        const start_char = @as(u32, @intCast(start_char_val.integer));
+                        const end_line = @as(u32, @intCast(end_line_val.integer));
+                        const end_char = @as(u32, @intCast(end_char_val.integer));
+                        
+                        // Parse kind (optional)
+                        const kind: ?u32 = if (obj.get("kind")) |k|
+                            if (k == .integer) @as(u32, @intCast(k.integer)) else null
+                        else
+                            null;
+                        
+                        try highlights.append(DocumentHighlight{
+                            .range = Range{
+                                .start = Position{ .line = start_line, .character = start_char },
+                                .end = Position{ .line = end_line, .character = end_char },
+                            },
+                            .kind = kind,
+                        });
+                    }
+                }
+                
+                return try highlights.toOwnedSlice();
+            }
+        }
+        return null;
+    }
+    
     /// Cancel a pending request.
     pub fn cancelRequest(self: *LspClient, request_id: u64) !void {
         // Assert: Request must be pending

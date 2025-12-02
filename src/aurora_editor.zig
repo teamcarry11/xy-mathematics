@@ -1095,6 +1095,23 @@ pub const Editor = struct {
         return ranges;
     }
     
+    /// Get document highlights for symbol at cursor position.
+    /// Why: Highlight all occurrences of a symbol at the cursor position (e.g., variable, function).
+    /// Contract: File must be open and LSP server must be running.
+    /// Returns: Array of document highlights, or null if not available.
+    /// Note: Caller must free the returned highlights array.
+    pub fn get_document_highlights(self: *Editor) !?[]LspClient.DocumentHighlight {
+        // Request document highlights from LSP server
+        const highlights = try self.lsp.requestDocumentHighlights(
+            self.file_uri,
+            self.cursor_line,
+            self.cursor_char,
+        );
+        
+        // Return highlights array (caller must free)
+        return highlights;
+    }
+    
     /// Render editor view: buffer content + LSP diagnostics overlay.
     /// Includes readonly spans and ghost text for visual distinction.
     pub fn render(self: *Editor) !GrainAurora.RenderResult {

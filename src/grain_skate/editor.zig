@@ -442,34 +442,7 @@ pub const Editor = struct {
             std.debug.assert(self.mode == .visual);
             const selection = self.get_visual_selection();
             // Calculate total size of selected text
-            var total_size: u32 = 0;
-            var line: u32 = selection.start_line;
-            while (line <= selection.end_line) : (line += 1) {
-                std.debug.assert(line < self.buffer.lines_len);
-                const line_text = self.buffer.lines[line];
-                const line_len = @as(u32, @intCast(line_text.len));
-                if (line == selection.start_line and line == selection.end_line) {
-                    // Single line selection
-                    const start_col = selection.start_column;
-                    const end_col = selection.end_column;
-                    std.debug.assert(start_col <= end_col);
-                    std.debug.assert(end_col <= line_len);
-                    total_size += end_col - start_col;
-                } else if (line == selection.start_line) {
-                    // First line of multi-line selection
-                    const start_col = selection.start_column;
-                    std.debug.assert(start_col <= line_len);
-                    total_size += line_len - start_col + 1; // +1 for newline
-                } else if (line == selection.end_line) {
-                    // Last line of multi-line selection
-                    const end_col = selection.end_column;
-                    std.debug.assert(end_col <= line_len);
-                    total_size += end_col;
-                } else {
-                    // Middle line of multi-line selection
-                    total_size += line_len + 1; // +1 for newline
-                }
-            }
+            const total_size = try self.calculate_selection_size(selection);
             if (total_size > MAX_YANK_BUFFER) {
                 return error.YankBufferTooLarge;
             }
@@ -482,49 +455,279 @@ pub const Editor = struct {
             const yank_buf = try self.allocator.alloc(u8, total_size);
             errdefer self.allocator.free(yank_buf);
             // Copy selected text
+            const actual_size = try self.copy_selection_to_buffer(selection, yank_buf);
+            self.yank_buffer = yank_buf;
+            self.yank_buffer_len = actual_size;
+        }
+
+        /// Calculate size of visual selection (helper).
+        // 2025-12-02-121512-pst: Active function
+        fn calculate_selection_size(
+            self: *const EditorState,
+            selection: struct {
+                start_line: u32,
+                start_column: u32,
+                end_line: u32,
+                end_column: u32,
+            },
+        ) !u32 {
+            var total_size: u32 = 0;
+            var line: u32 = selection.start_line;
+            while (line <= selection.end_line) : (line += 1) {
+                std.debug.assert(line < self.buffer.lines_len);
+                const line_text = self.buffer.lines[line];
+                const line_len = @as(u32, @intCast(line_text.len));
+                if (line == selection.start_line and line == selection.end_line) {
+                    total_size += selection.end_column - selection.start_column;
+                } else if (line == selection.start_line) {
+                    total_size += line_len - selection.start_column + 1;
+                } else if (line == selection.end_line) {
+                    total_size += selection.end_column;
+                } else {
+                    total_size += line_len + 1;
+                }
+            }
+            return total_size;
+        }
+
+        /// Copy visual selection to buffer (helper).
+        // 2025-12-02-121512-pst: Active function
+        fn copy_selection_to_buffer(
+            self: *const EditorState,
+            selection: struct {
+                start_line: u32,
+                start_column: u32,
+                end_line: u32,
+                end_column: u32,
+            },
+            buffer: []u8,
+        ) !u32 {
             var pos: u32 = 0;
-            line = selection.start_line;
+            var line: u32 = selection.start_line;
             while (line <= selection.end_line) : (line += 1) {
                 const line_text = self.buffer.lines[line];
                 const line_len = @as(u32, @intCast(line_text.len));
                 if (line == selection.start_line and line == selection.end_line) {
-                    // Single line selection
-                    const start_col = selection.start_column;
-                    const end_col = selection.end_column;
-                    const copy_len = end_col - start_col;
+                    const copy_len = selection.end_column - selection.start_column;
                     if (copy_len > 0) {
-                        @memcpy(yank_buf[pos..][0..copy_len], line_text[start_col..end_col]);
+                        @memcpy(buffer[pos..][0..copy_len], line_text[selection.start_column..selection.end_column]);
                         pos += copy_len;
                     }
                 } else if (line == selection.start_line) {
-                    // First line of multi-line selection
-                    const start_col = selection.start_column;
-                    const copy_len = line_len - start_col;
+                    const copy_len = line_len - selection.start_column;
                     if (copy_len > 0) {
-                        @memcpy(yank_buf[pos..][0..copy_len], line_text[start_col..]);
+                        @memcpy(buffer[pos..][0..copy_len], line_text[selection.start_column..]);
                         pos += copy_len;
                     }
-                    yank_buf[pos] = '\n';
+                    buffer[pos] = '\n';
                     pos += 1;
                 } else if (line == selection.end_line) {
-                    // Last line of multi-line selection
-                    const end_col = selection.end_column;
-                    if (end_col > 0) {
-                        @memcpy(yank_buf[pos..][0..end_col], line_text[0..end_col]);
-                        pos += end_col;
+                    if (selection.end_column > 0) {
+                        @memcpy(buffer[pos..][0..selection.end_column], line_text[0..selection.end_column]);
+                        pos += selection.end_column;
                     }
                 } else {
-                    // Middle line of multi-line selection
                     if (line_len > 0) {
-                        @memcpy(yank_buf[pos..][0..line_len], line_text);
+                        @memcpy(buffer[pos..][0..line_len], line_text);
                         pos += line_len;
                     }
-                    yank_buf[pos] = '\n';
+                    buffer[pos] = '\n';
                     pos += 1;
                 }
             }
-            self.yank_buffer = yank_buf;
-            self.yank_buffer_len = pos;
+            return pos;
+        }
+
+        /// Delete selected text in visual mode.
+        // 2025-12-02-124119-pst: Active function
+        pub fn delete_selection(self: *EditorState) !void {
+            std.debug.assert(self.mode == .visual);
+            const selection = self.get_visual_selection();
+            // Get selection text for undo before deleting
+            const deleted_text = try self.get_selection_text_for_undo(selection);
+            defer self.allocator.free(deleted_text);
+            // Yank selection (for redo and paste)
+            try self.yank_selection();
+            // Delete the selected text (undo operation will copy deleted_text)
+            if (selection.start_line == selection.end_line) {
+                try self.delete_single_line_selection(selection, deleted_text);
+            } else {
+                try self.delete_multi_line_selection(selection, deleted_text);
+            }
+            // Move cursor to selection start
+            self.cursor_line = selection.start_line;
+            self.cursor_column = selection.start_column;
+            // Exit visual mode
+            self.exit_visual_mode();
+        }
+
+        /// Delete single line selection (helper).
+        // 2025-12-02-124119-pst: Active function
+        fn delete_single_line_selection(
+            self: *EditorState,
+            selection: struct {
+                start_line: u32,
+                start_column: u32,
+                end_line: u32,
+                end_column: u32,
+            },
+            deleted_text: []const u8,
+        ) !void {
+            std.debug.assert(selection.start_line == selection.end_line);
+            const line_idx = selection.start_line;
+            std.debug.assert(line_idx < self.buffer.lines_len);
+            const line_text = self.buffer.lines[line_idx];
+            const line_len = @as(u32, @intCast(line_text.len));
+            const start_col = selection.start_column;
+            const end_col = selection.end_column;
+            // Create new line without selected portion
+            const before_len = start_col;
+            const after_len = line_len - end_col;
+            const new_line_len = before_len + after_len;
+            const new_line = if (new_line_len > 0) blk: {
+                const new_line_buf = try self.allocator.alloc(u8, new_line_len);
+                errdefer self.allocator.free(new_line_buf);
+                if (before_len > 0) {
+                    @memcpy(new_line_buf[0..before_len], line_text[0..start_col]);
+                }
+                if (after_len > 0) {
+                    @memcpy(new_line_buf[before_len..], line_text[end_col..]);
+                }
+                break :blk new_line_buf;
+            } else "";
+            // Save to undo history
+            if (self.undo_history_len < MAX_UNDO_HISTORY) {
+                const undo_op = try UndoOperation.init(
+                    self.allocator,
+                    .delete,
+                    line_idx,
+                    start_col,
+                    deleted_text,
+                );
+                self.undo_history[self.undo_history_len] = undo_op;
+                self.undo_history_len += 1;
+                var i: u32 = 0;
+                while (i < self.redo_history_len) : (i += 1) {
+                    self.redo_history[i].deinit();
+                }
+                self.redo_history_len = 0;
+            }
+            // Replace line in buffer
+            try self.buffer.replace_line(line_idx, new_line);
+        }
+
+        /// Delete multi-line selection (helper).
+        // 2025-12-02-124119-pst: Active function
+        fn delete_multi_line_selection(
+            self: *EditorState,
+            selection: struct {
+                start_line: u32,
+                start_column: u32,
+                end_line: u32,
+                end_column: u32,
+            },
+            deleted_text: []const u8,
+        ) !void {
+            std.debug.assert(selection.start_line < selection.end_line);
+            const start_line = selection.start_line;
+            const end_line = selection.end_line;
+            std.debug.assert(start_line < self.buffer.lines_len);
+            std.debug.assert(end_line < self.buffer.lines_len);
+            // Get start and end line text
+            const start_line_text = self.buffer.lines[start_line];
+            const end_line_text = self.buffer.lines[end_line];
+            const start_line_len = @as(u32, @intCast(start_line_text.len));
+            const end_line_len = @as(u32, @intCast(end_line_text.len));
+            // Create merged line from start and end
+            const start_prefix_len = selection.start_column;
+            const end_suffix_len = end_line_len - selection.end_column;
+            const merged_line_len = start_prefix_len + end_suffix_len;
+            const merged_line = if (merged_line_len > 0) blk: {
+                const merged_buf = try self.allocator.alloc(u8, merged_line_len);
+                errdefer self.allocator.free(merged_buf);
+                if (start_prefix_len > 0) {
+                    @memcpy(merged_buf[0..start_prefix_len], start_line_text[0..selection.start_column]);
+                }
+                if (end_suffix_len > 0) {
+                    @memcpy(merged_buf[start_prefix_len..], end_line_text[selection.end_column..]);
+                }
+                break :blk merged_buf;
+            } else "";
+            // Calculate number of lines to remove
+            const lines_to_remove = end_line - start_line;
+            // Create new lines array
+            const new_lines_len = self.buffer.lines_len - lines_to_remove;
+            const new_lines = try self.allocator.alloc([]const u8, new_lines_len);
+            errdefer self.allocator.free(new_lines);
+            // Copy lines before selection
+            var i: u32 = 0;
+            while (i < start_line) : (i += 1) {
+                new_lines[i] = self.buffer.lines[i];
+            }
+            // Add merged line
+            new_lines[i] = merged_line;
+            i += 1;
+            // Copy lines after selection
+            var j: u32 = end_line + 1;
+            while (j < self.buffer.lines_len) : (j += 1) {
+                new_lines[i] = self.buffer.lines[j];
+                i += 1;
+            }
+            // Save to undo history
+            if (self.undo_history_len < MAX_UNDO_HISTORY) {
+                const undo_op = try UndoOperation.init(
+                    self.allocator,
+                    .delete,
+                    start_line,
+                    selection.start_column,
+                    deleted_text,
+                );
+                self.undo_history[self.undo_history_len] = undo_op;
+                self.undo_history_len += 1;
+                var k: u32 = 0;
+                while (k < self.redo_history_len) : (k += 1) {
+                    self.redo_history[k].deinit();
+                }
+                self.redo_history_len = 0;
+            }
+            // Replace buffer lines
+            self.allocator.free(self.buffer.lines);
+            self.buffer.lines = new_lines;
+            self.buffer.lines_len = new_lines_len;
+        }
+
+        /// Get selection text for undo history (helper).
+        // 2025-12-02-124119-pst: Active function
+        fn get_selection_text_for_undo(
+            self: *const EditorState,
+            selection: struct {
+                start_line: u32,
+                start_column: u32,
+                end_line: u32,
+                end_column: u32,
+            },
+        ) ![]const u8 {
+            // Calculate size
+            var total_size: u32 = 0;
+            var line: u32 = selection.start_line;
+            while (line <= selection.end_line) : (line += 1) {
+                const line_text = self.buffer.lines[line];
+                const line_len = @as(u32, @intCast(line_text.len));
+                if (line == selection.start_line and line == selection.end_line) {
+                    total_size += selection.end_column - selection.start_column;
+                } else if (line == selection.start_line) {
+                    total_size += line_len - selection.start_column + 1;
+                } else if (line == selection.end_line) {
+                    total_size += selection.end_column;
+                } else {
+                    total_size += line_len + 1;
+                }
+            }
+            // Allocate and copy
+            const text = try self.allocator.alloc(u8, total_size);
+            errdefer self.allocator.free(text);
+            _ = try self.copy_selection_to_buffer(selection, text);
+            return text;
         }
 
         /// Insert character at cursor (insert mode).

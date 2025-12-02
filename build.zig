@@ -1632,6 +1632,19 @@ pub fn build(b: *std.Build) void {
     const vm_benchmark_tests_run = b.addRunArtifact(vm_benchmark_tests);
     test_step.dependOn(&vm_benchmark_tests_run.step);
 
+    const vm_memory_protection_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/079_vm_memory_protection_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "kernel_vm", .module = kernel_vm_module },
+            },
+        }),
+    });
+    const vm_memory_protection_tests_run = b.addRunArtifact(vm_memory_protection_tests);
+    test_step.dependOn(&vm_memory_protection_tests_run.step);
+
     const grain_os_layout_tests = b.addTest(.{
         .root_module = b.createModule(.{
             .root_source_file = b.path("tests/053_grain_os_layout_test.zig"),
@@ -2086,6 +2099,32 @@ pub fn build(b: *std.Build) void {
     });
     const grain_os_display_management_tests_run = b.addRunArtifact(grain_os_display_management_tests);
     test_step.dependOn(&grain_os_display_management_tests_run.step);
+
+    const grain_os_settings_manager_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/090_grain_os_settings_manager_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_os", .module = grain_os_module },
+            },
+        }),
+    });
+    const grain_os_settings_manager_tests_run = b.addRunArtifact(grain_os_settings_manager_tests);
+    test_step.dependOn(&grain_os_settings_manager_tests_run.step);
+
+    const grain_os_theme_manager_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/091_grain_os_theme_manager_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_os", .module = grain_os_module },
+            },
+        }),
+    });
+    const grain_os_theme_manager_tests_run = b.addRunArtifact(grain_os_theme_manager_tests);
+    test_step.dependOn(&grain_os_theme_manager_tests_run.step);
 
     // RISC-V Logo Display Program
     const riscv_logo_exe = b.addExecutable(.{

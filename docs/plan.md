@@ -158,6 +158,14 @@
      - ✅ Performance regression detection (detect performance degradation)
      - ✅ Bounded benchmark results (MAX_BENCHMARKS: 64)
      - ✅ Comprehensive tests (tests/078_vm_benchmark_test.zig)
+   - ✅ VM Memory Protection (Phase 2.1.21)
+     - ✅ Page table management (create, modify, query page tables)
+     - ✅ Memory permission management (read, write, execute permissions)
+     - ✅ Page fault handling (detect and handle page faults)
+     - ✅ Memory region protection (protect memory regions with permissions)
+     - ✅ Address translation (translate virtual to physical addresses)
+     - ✅ Bounded page table entries (MAX_PAGE_TABLE_ENTRIES: 1024)
+     - ✅ Comprehensive tests (tests/079_vm_memory_protection_test.zig)
 
 2. **Kernel Boot Sequence**
    - Implement basic boot loader
@@ -1035,6 +1043,7 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
   - ✅ Add LSP prepare rename support (requestPrepareRename method, prepare_rename_symbol in Editor)
   - ✅ Add LSP linked editing ranges support (requestLinkedEditingRange method, get_linked_editing_ranges in Editor)
   - ✅ Add LSP color presentation support (requestDocumentColor, requestColorPresentation methods, get_document_colors, get_color_presentations in Editor)
+  - ✅ Add LSP folding ranges support (requestFoldingRanges method, get_folding_ranges in Editor)
   - ✅ Integrate hover requests into moveCursor
   - ✅ Implement ghost text storage for AI completions
   - ✅ Fix didChange range calculation for insertions

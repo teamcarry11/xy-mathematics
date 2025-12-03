@@ -596,9 +596,15 @@ pub const VM = struct {
         
         // Check cache first (avoid compilation if already compiled).
         const compile_start = std.time.nanoTimestamp();
-        const func = jit_ctx.compile_block(pc) catch {
-            // JIT failed, fall back to interpreter.
-            jit_ctx.perf_counters.interpreter_fallbacks += 1;
+        const func = jit_ctx.compile_block(pc) catch |err| {
+            // JIT failed or threshold not met, fall back to interpreter.
+            if (err == jit_mod.JitError.ThresholdNotMet) {
+                // Threshold not met: use interpreter and track execution.
+                jit_ctx.perf_counters.hot_path_tracker.record_execution(pc);
+            } else {
+                // Other JIT error: fall back to interpreter.
+                jit_ctx.perf_counters.interpreter_fallbacks += 1;
+            }
             return self.step();
         };
         const compile_end = std.time.nanoTimestamp();
@@ -1041,6 +1047,20 @@ pub const VM = struct {
             }
             const has_execute = (permissions & 4) != 0;
             if (!has_execute) {
+                // Page mapped but no execute permission: record access fault (instruction access fault, code 1).
+                self.exception_stats.record_exception(1);
+                return VMError.invalid_memory_access;
+            }
+        } else {
+            // Use memory protection system if no external permission checker.
+            if (!self.memory_protection.check_permission(pc, memory_protection_mod.MemoryPermissions.EXECUTE)) {
+                // Check if page is mapped at all.
+                const perms_opt = self.memory_protection.get_permissions(pc);
+                if (perms_opt == null) {
+                    // Page not mapped: record page fault (instruction page fault, code 12).
+                    self.exception_stats.record_exception(12);
+                    return VMError.invalid_memory_access;
+                }
                 // Page mapped but no execute permission: record access fault (instruction access fault, code 1).
                 self.exception_stats.record_exception(1);
                 return VMError.invalid_memory_access;

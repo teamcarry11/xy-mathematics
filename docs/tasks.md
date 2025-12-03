@@ -152,6 +152,80 @@
   - [x] Page fault handling (detect and handle page faults)
   - [x] Memory region protection (protect memory regions with permissions)
   - [x] Address translation (translate virtual to physical addresses)
+- [x] JIT Missing Instruction Support (Phase 2.1.22)
+  - [x] SLT (Set Less Than, signed) instruction implementation
+  - [x] SLTU (Set Less Than Unsigned) instruction implementation
+  - [x] SLTI (Set Less Than Immediate, signed) instruction implementation
+  - [x] SLTIU (Set Less Than Immediate Unsigned) instruction implementation
+  - [x] Comparison helper functions (emit_cmp, emit_cset)
+  - [x] AArch64 conditional set instructions (cset with LT/LO conditions)
+  - [x] Comprehensive tests (tests/071_jit_slt_instructions_test.zig)
+- [x] JIT Block Chaining (Phase 2.1.23)
+  - [x] Block chaining statistics tracking (chain_opportunities, chains_created, chain_hits)
+  - [x] Direct jump chaining for JAL instructions when target block exists
+  - [x] emit_call_target function for calling chained blocks
+  - [x] Chain statistics in performance counters
+  - [x] Comprehensive tests (tests/072_jit_block_chaining_test.zig)
+- [x] JIT Block Invalidation (Phase 2.1.24)
+  - [x] Block invalidation function (invalidate_block) for single block recompilation
+  - [x] Bulk invalidation function (invalidate_all_blocks) for full cache clear
+  - [x] Invalidation statistics tracking (blocks_invalidated, cache_invalidations)
+  - [x] Support for self-modifying code and debugging scenarios
+  - [x] Comprehensive tests (tests/073_jit_block_invalidation_test.zig)
+- [x] JIT Compilation Thresholds (Phase 2.1.25)
+  - [x] Compilation threshold configuration (set_compilation_threshold)
+  - [x] Threshold checking (should_compile_block) based on execution count
+  - [x] Deferred compilation statistics (threshold_deferred)
+  - [x] Integration with hot path tracker for execution counting
+  - [x] ThresholdNotMet error for blocks below threshold
+  - [x] Comprehensive tests (tests/074_jit_compilation_threshold_test.zig)
+- [x] Kernel Process Enumeration (Phase 3.1)
+  - [x] enumerate_processes syscall (#51) implementation
+  - [x] ProcessInfo structure for userspace process information
+  - [x] Bounded buffer support (max processes, buffer size limits)
+  - [x] Error handling (null pointer, buffer too small, invalid arguments)
+  - [x] Comprehensive tests (tests/075_kernel_process_enumeration_test.zig)
+- [x] Per-Process Resource Tracking (Phase 3.2)
+  - [x] get_process_info syscall (#52) implementation
+  - [x] CPU time tracking (cpu_time_ns) in Process struct
+  - [x] Memory usage tracking (memory_used) in Process struct
+  - [x] Parent process ID tracking (parent_pid) in Process struct
+  - [x] Resource initialization in syscall_spawn
+  - [x] Error handling (invalid PID, null pointer, process not found)
+  - [x] Comprehensive tests (tests/075_kernel_process_enumeration_test.zig)
+- [x] Kernel Log Reading (Phase 3.3)
+  - [x] read_kernel_log syscall (#53) implementation
+  - [x] KernelLogBuffer module for storing log entries
+  - [x] KernelLogEntry structure (timestamp, level, source, message)
+  - [x] Log level enumeration (debug, info, warn, error)
+  - [x] Circular buffer implementation (max 256 entries)
+  - [x] Bounded buffer support (max entries, buffer size limits)
+  - [x] Error handling (null pointer, buffer too small, invalid arguments)
+  - [x] Comprehensive tests (tests/076_kernel_log_reading_test.zig)
+- [x] CPU Time Tracking (Phase 3.4)
+  - [x] CPU time tracking during process execution
+  - [x] Timer-based CPU time measurement (start/end time tracking)
+  - [x] Process CPU time accumulation (cpu_time_ns field updates)
+  - [x] Integration with process execution loop in integration.zig
+  - [x] Saturating arithmetic for overflow/underflow protection
+  - [x] Comprehensive tests (tests/077_cpu_time_tracking_test.zig)
+- [x] Memory Usage Tracking (Phase 3.5)
+  - [x] Memory usage calculation from memory mappings
+  - [x] Process memory usage updates on map/unmap syscalls
+  - [x] Memory usage calculation helper function (calculate_process_memory_usage)
+  - [x] Process memory update helper function (update_process_memory_usage)
+  - [x] Integration with memory mapping operations
+  - [x] On-demand memory usage updates in get_process_info
+  - [x] Saturating arithmetic for overflow protection
+  - [x] Comprehensive tests (tests/078_memory_usage_tracking_test.zig)
+- [x] Enhanced System Information (Phase 3.6)
+  - [x] Enhanced SysInfo structure with additional fields
+  - [x] Used memory tracking (total - available)
+  - [x] Process count statistics (total, running, exited)
+  - [x] Enhanced sysinfo syscall with new metrics
+  - [x] Process statistics calculation
+  - [x] Memory usage percentage support (used_memory field)
+  - [x] Comprehensive tests (tests/079_enhanced_sysinfo_test.zig)
   - [x] Bounded page table entries (MAX_PAGE_TABLE_ENTRIES: 1024)
   - [x] Comprehensive tests (tests/079_vm_memory_protection_test.zig)
 
@@ -802,6 +876,167 @@
   - [x] Add `get_document_colors` method to Editor
   - [x] Add `get_color_presentations` method to Editor
   - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
+- [x] Editor LSP Folding Ranges Support ✅ **COMPLETE**
+  - [x] Add `FoldingRangeKind` enum (comment, imports, region)
+  - [x] Add `FoldingRange` struct (start_line, end_line, optional start_character, end_character, kind)
+  - [x] Add `requestFoldingRanges` method to LspClient
+  - [x] Parse folding ranges from LSP response (startLine, endLine, optional startCharacter, endCharacter, kind)
+  - [x] Support optional kind field (string or integer)
+  - [x] Add `get_folding_ranges` method to Editor
+  - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
+- [x] Editor LSP Document Highlights Support ✅ **COMPLETE**
+  - [x] Add `DocumentHighlightKind` enum (text, read, write)
+  - [x] Add `DocumentHighlight` struct (range, optional kind)
+  - [x] Add `requestDocumentHighlights` method to LspClient
+  - [x] Parse document highlights from LSP response (range, optional kind)
+  - [x] Support optional kind field (integer)
+  - [x] Add `get_document_highlights` method to Editor
+  - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
+- [x] Editor LSP Selection Ranges Support ✅ **COMPLETE**
+  - [x] Add `SelectionRange` struct (range, optional parent)
+  - [x] Add `requestSelectionRanges` method to LspClient
+  - [x] Parse selection ranges from LSP response (range, optional parent)
+  - [x] Support multiple positions (array of positions)
+  - [x] Support optional parent field (single level for now)
+  - [x] Add `get_selection_ranges` method to Editor
+  - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
+- [x] Editor LSP Code Lens Support ✅ **COMPLETE**
+  - [x] Add `CodeLensCommand` struct (title, command, optional arguments)
+  - [x] Add `CodeLens` struct (range, optional command, optional data)
+  - [x] Add `requestCodeLens` method to LspClient
+  - [x] Add `resolveCodeLens` method to LspClient
+  - [x] Parse code lenses from LSP response (range, optional command, optional data)
+  - [x] Parse resolved code lens from LSP response (range, command, optional data)
+  - [x] Support optional command arguments array
+  - [x] Support optional data field (server-specific)
+  - [x] Add `get_code_lenses` method to Editor
+  - [x] Add `resolve_code_lens` method to Editor
+  - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
+- [x] Editor LSP Workspace Folders Support ✅ **COMPLETE**
+  - [x] Add `WorkspaceFolder` struct (uri, name)
+  - [x] Add `requestWorkspaceFolders` method to LspClient
+  - [x] Add `notifyDidChangeWorkspaceFolders` method to LspClient
+  - [x] Parse workspace folders from LSP response (uri, name)
+  - [x] Support workspace folder change notifications (added, removed)
+  - [x] Add `get_workspace_folders` method to Editor
+  - [x] Add `notify_workspace_folders_changed` method to Editor
+  - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
+- [x] Editor LSP Apply Edit Support ✅ **COMPLETE**
+  - [x] Add `applyEdit` method to LspClient
+  - [x] Support applying workspace edits from LSP server
+  - [x] Parse apply edit response (applied: true/false)
+  - [x] Add `apply_workspace_edit_from_server` method to Editor
+  - [x] Integrate with existing `apply_workspace_edit` method
+  - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
+- [x] Editor LSP File Watching Support ✅ **COMPLETE**
+  - [x] Add `FileChangeType` enum (created, changed, deleted)
+  - [x] Add `FileEvent` struct (uri, change_type)
+  - [x] Add `handleDidChangeWatchedFiles` method to LspClient
+  - [x] Support file system change notifications
+  - [x] Add `handle_file_system_changes` method to Editor
+  - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
+- [x] Editor LSP Diagnostics Visual Rendering ✅ **COMPLETE**
+  - [x] Extend `RenderResult` to include `diagnostic_spans` field
+  - [x] Add `DiagnosticSpan` struct (start, end, severity, message)
+  - [x] Update `render()` method to convert LSP diagnostics to diagnostic spans
+  - [x] Convert diagnostic ranges (line/character) to byte positions
+  - [x] Copy diagnostic messages for lifetime management
+  - [x] Support severity levels (Error, Warning, Info, Hint)
+  - [x] Error handling for invalid diagnostic positions
+  - [x] Memory management (free diagnostic message strings on error)
+  - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
+- [x] Editor LSP Inlay Hints Visual Rendering ✅ **COMPLETE**
+  - [x] Extend `RenderResult` to include `inlay_hint_spans` field
+  - [x] Add `InlayHintSpan` struct (position, label, kind, tooltip, padding)
+  - [x] Update `render()` method to convert LSP inlay hints to inlay hint spans
+  - [x] Convert inlay hint positions (line/character) to byte positions
+  - [x] Copy hint labels and tooltips for lifetime management
+  - [x] Support hint kinds (Type=1, Parameter=2)
+  - [x] Support padding flags (left, right)
+  - [x] Calculate line count from text for hint range
+  - [x] Error handling (non-fatal, skip hints on error)
+  - [x] Memory management (free label and tooltip strings on error)
+  - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
+- [x] Editor LSP Code Lens Visual Rendering ✅ **COMPLETE**
+  - [x] Extend `RenderResult` to include `code_lens_spans` field
+  - [x] Add `CodeLensSpan` struct (position, title, command, range_start, range_end)
+  - [x] Update `render()` method to convert LSP code lenses to code lens spans
+  - [x] Convert code lens ranges (line/character) to byte positions
+  - [x] Copy code lens titles and command identifiers for lifetime management
+  - [x] Support code lens commands (title, command identifier)
+  - [x] Skip unresolved code lenses (lenses without commands)
+  - [x] Error handling (non-fatal, skip lenses on error)
+  - [x] Memory management (free title and command strings on error)
+  - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
+- [x] Editor LSP Document Highlights Visual Rendering ✅ **COMPLETE**
+  - [x] Extend `RenderResult` to include `document_highlight_spans` field
+  - [x] Add `DocumentHighlightSpan` struct (start, end, kind)
+  - [x] Update `render()` method to convert LSP document highlights to highlight spans
+  - [x] Convert highlight ranges (line/character) to byte positions
+  - [x] Support highlight kinds (Text=1, Read=2, Write=3)
+  - [x] Request highlights at cursor position
+  - [x] Error handling (non-fatal, skip highlights on error)
+  - [x] Memory management (no additional allocations needed, spans only)
+  - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
+- [x] Editor LSP Folding Ranges Visual Rendering ✅ **COMPLETE**
+  - [x] Extend `RenderResult` to include `folding_range_spans` field
+  - [x] Add `FoldingRangeSpan` struct (start, end, kind)
+  - [x] Update `render()` method to convert LSP folding ranges to folding range spans
+  - [x] Convert folding range positions (line/character) to byte positions
+  - [x] Support folding range kinds (Comment=1, Imports=2, Region=3)
+  - [x] Handle optional start/end character positions
+  - [x] Request folding ranges for entire document
+  - [x] Error handling (non-fatal, skip ranges on error)
+  - [x] Memory management (no additional allocations needed, spans only)
+  - [x] GrainStyle compliance (u32 types, assertions, bounded allocations, no usize)
+- [x] Editor LSP Selection Ranges Visual Rendering ✅ **COMPLETE**
+  - [x] Extend `RenderResult` to include `selection_range_spans` field
+  - [x] Add `SelectionRangeSpan` struct (start, end, level)
+  - [x] Update `render()` method to convert LSP selection ranges to selection range spans
+  - [x] Flatten selection range hierarchy (parent-child chain) into spans
+  - [x] Convert selection range positions (line/character) to byte positions
+  - [x] Track selection level (0=innermost, higher=outer)
+  - [x] Request selection ranges at cursor position
+  - [x] Error handling (non-fatal, skip ranges on error)
+  - [x] Bounded operations (MAX_SELECTION_RANGES: 100, MAX_SELECTION_LEVEL: 100)
+  - [x] Memory management (no additional allocations needed, spans only)
+  - [x] GrainStyle compliance (u32 types, assertions, bounded allocations, no usize)
+- [x] Editor LSP Document Links Visual Rendering ✅ **COMPLETE**
+  - [x] Extend `RenderResult` to include `document_link_spans` field
+  - [x] Add `DocumentLinkSpan` struct (start, end, target, tooltip)
+  - [x] Update `render()` method to convert LSP document links to document link spans
+  - [x] Convert document link ranges (line/character) to byte positions
+  - [x] Copy target URIs and tooltips for lifetime management
+  - [x] Support optional target URI and tooltip
+  - [x] Request document links for entire document
+  - [x] Error handling (non-fatal, skip links on error)
+  - [x] Memory management (free target and tooltip strings on error)
+  - [x] GrainStyle compliance (u32 types, assertions, bounded allocations, no usize)
+- [x] RenderResult Memory Management ✅ **COMPLETE**
+  - [x] Add `deinit()` method to `RenderResult` struct
+  - [x] Free diagnostic message strings
+  - [x] Free inlay hint label and tooltip strings
+  - [x] Free code lens title and command strings
+  - [x] Free document link target and tooltip strings
+  - [x] Skip spans with no allocated strings (highlights, tokens, ranges)
+  - [x] Proper cleanup to prevent memory leaks
+  - [x] GrainStyle compliance (explicit cleanup, no leaks)
+- [x] RenderResult Grain/Tiger Style Refactoring (Fixed-Size Buffers) ✅ **COMPLETE**
+  - [x] Replaced dynamic allocation with fixed-size arrays in `RenderResult`
+  - [x] Added MAX_ constants for all span types (MAX_DIAGNOSTIC_SPANS: 1000, MAX_INLAY_HINT_SPANS: 500, etc.)
+  - [x] Added MAX_ constants for string lengths (MAX_DIAGNOSTIC_MESSAGE_LEN: 1024, etc.)
+  - [x] Changed span structs to use fixed-size buffers instead of `[]const u8` slices
+  - [x] Added length fields to track actual usage (diagnostic_spans_len, inlay_hint_spans_len, etc.)
+  - [x] Updated `render()` method to use fixed-size arrays with bounds checking
+  - [x] String truncation for strings exceeding buffer limits (predictable behavior)
+  - [x] Removed all dynamic allocation from RenderResult (no ArrayList, no dupe, no deinit needed)
+  - [x] GrainStyle compliance (bounded allocations, predictable memory usage, no dynamic allocation)
+- [x] Fix Grain/Tiger Style Compliance (usize → u32) ✅ **COMPLETE**
+  - [x] Replace all `usize` types with explicit `u32` in span structures
+  - [x] Fix ghost text span calculation to use `u32` instead of `usize`
+  - [x] Fix `Span` struct to use `u32` instead of `usize`
+  - [x] Ensure all byte positions use explicit `u32` type
+  - [x] GrainStyle compliance (no platform-unspecific types)
 - [x] File Save/Load Functionality ✅ **COMPLETE**
   - [x] save_file method (persist editor buffer to disk)
   - [x] load_file method (load file from disk into editor)
@@ -1342,10 +1577,52 @@
   - [x] Visual selection bounds (`get_visual_selection` method)
   - [x] Visual mode yank (`yank_selection` method) - yanks selected text
   - [x] Visual mode delete (`delete_selection` method) - deletes selected text
+  - [x] Visual mode paste (`paste_selection` method) - replaces selection with yank buffer
   - [x] Visual mode movement - extends selection with cursor movement
   - [x] Single-line selection delete - deletes portion of line
   - [x] Multi-line selection delete - merges lines after deletion
-  - [x] Modal editor integration - visual mode (v) keybinding, yank (y), delete (x)
+  - [x] Single-line selection replace - replaces portion of line with text
+  - [x] Multi-line selection replace - replaces multi-line selection with text
+  - [x] Text parsing helper (`parse_text_to_lines` method) - parses text into lines
+  - [x] Modal editor integration - visual mode (v) keybinding, yank (y), delete (x), paste (p)
+  - [x] Replace operation undo (`undo_replace` method) - restores original text
+  - [x] Replace operation redo (`redo_replace` method) - restores replacement text
+  - [x] Complete undo/redo support for all operation types (insert, delete, replace)
+  - [x] Visual line mode (`visual_line` mode) - line-based selection (Vim 'V')
+  - [x] Visual line mode entry (`enter_visual_line_mode` method) - enters line selection mode
+  - [x] Visual line mode selection - always selects entire lines from start to end
+  - [x] Visual line mode movement - up/down selects lines, ignores column position
+  - [x] Modal editor integration - visual line mode (V) keybinding, yank (y), delete (x), paste (p)
+  - [x] Word movement (`move_word_forward` method) - move to start of next word (Vim 'w')
+  - [x] Word movement (`move_word_backward` method) - move to start of previous word (Vim 'b')
+  - [x] Word movement (`move_word_end` method) - move to end of current/next word (Vim 'e')
+  - [x] Word character detection (`is_word_char` helper) - identifies alphanumeric and underscore
+  - [x] Word movement across line boundaries - handles end/start of lines
+  - [x] Modal editor integration - word movement (w, b, e) keybindings in normal and visual modes
+  - [x] Search mode (`enter_search_mode`, `enter_search_backward_mode` methods) - Vim '/' and '?'
+  - [x] Search pattern management (`add_search_char`, `remove_search_char` methods) - build search pattern
+  - [x] Search execution (`find_next`, `find_previous` methods) - find pattern forward/backward
+  - [x] Search pattern matching (`find_pattern_forward`, `find_pattern_backward` helpers) - iterative search
+  - [x] Search wrap-around - wraps to beginning/end when pattern not found
+  - [x] Modal editor integration - search mode (/, ?) keybindings, find next/previous (n, N)
+  - [x] Visual block mode (`visual_block` mode) - column-based rectangular selection (Vim Ctrl+v)
+  - [x] Visual block mode entry (`enter_visual_block_mode` method) - enters column selection mode
+  - [x] Visual block mode selection - rectangular column-based selection across multiple lines
+  - [x] Visual block mode movement - extends rectangular selection with cursor movement
+  - [x] Modal editor integration - visual block mode (Ctrl+v) keybinding, yank (y), delete (x), paste (p)
+  - [x] Find/replace functionality (`replace_on_line` method) - replace first occurrence on current line
+  - [x] Find/replace all functionality (`replace_all_on_line` method) - replace all occurrences on current line
+  - [x] Find/replace buffer functionality (`replace_all_in_buffer` method) - replace all in entire buffer
+  - [x] Substitute command parsing (`parse_substitute_command` method) - parses Vim :s/old/new/ format
+  - [x] Global replace flag support - 'g' flag for replace all on line
+  - [x] Command mode integration - substitute commands (s/pattern/replacement/ and s/pattern/replacement/g)
+  - [x] Line movement (`move_line_start` method) - move to beginning of line (Vim '0')
+  - [x] Line movement (`move_line_end` method) - move to end of line (Vim '$')
+  - [x] Line movement (`move_line_start_nonblank` method) - move to first non-whitespace (Vim '^')
+  - [x] File movement (`move_file_start` method) - move to beginning of file (Vim 'gg')
+  - [x] File movement (`move_file_end` method) - move to end of file (Vim 'G')
+  - [x] Key sequence tracking - handles 'gg' sequence for move to file start
+  - [x] Modal editor integration - line/file movement (0, $, ^, gg, G) keybindings
 - [x] Comprehensive tests (`tests/048_grain_skate_core_test.zig`)
 - [x] GrainStyle compliance (u32 types, assertions, bounded allocations)
 - [x] Storage integration (`src/grain_skate/storage_integration.zig`)
@@ -1379,6 +1656,76 @@
   - ✅ Automatic title/ID fallback (shows title if available, ID otherwise)
   - ✅ Comprehensive tests (`tests/056_grain_skate_graph_renderer_test.zig`)
   - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, iterative algorithms)
+- ✅ Keyboard event routing (`src/grain_skate/window.zig`, `src/grain_skate/app.zig`)
+  - ✅ Keyboard event handling in window (`handle_keyboard_event` method)
+  - ✅ Event routing to modal editor (when editor is active)
+  - ✅ Ctrl+Alt passthrough (for OS window management)
+  - ✅ Key down event filtering (only handle key down events)
+  - ✅ App-level keyboard event handler (`handle_keyboard_event` method)
+  - ✅ Automatic display refresh after keyboard input
+  - ✅ Comprehensive tests (`tests/055_grain_skate_app_test.zig`)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+- ✅ Save integration (`src/grain_skate/modal_editor.zig`, `src/grain_skate/app.zig`)
+  - ✅ Command result tracking (`last_command_result` field in ModalEditor)
+  - ✅ Command result retrieval (`get_last_command_result()` method)
+  - ✅ Save command execution (command mode 'w' returns save result)
+  - ✅ Editor content extraction (get buffer content as string)
+  - ✅ Block storage update on save (update_current_block() on save/save_quit)
+  - ✅ Automatic save on command mode 'w' and 'wq'
+  - ✅ Comprehensive tests (`tests/055_grain_skate_app_test.zig`)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+- ✅ Quit handling (`src/grain_skate/window.zig`, `src/grain_skate/app.zig`)
+  - ✅ Close editor method (close_editor() cleans up editor and renderer)
+  - ✅ Quit command processing (:q, :q!, :wq closes editor)
+  - ✅ Return to graph view on quit (renders graph when editor is closed)
+- ✅ Enhanced error feedback (`src/grain_skate/editor_renderer.zig`, `src/grain_skate/app.zig`)
+  - ✅ Error message display in status line (red text for errors)
+  - ✅ Error timeout management (automatic clearing after timeout)
+  - ✅ Error message methods (set_error, clear_error, check_error_timeout)
+  - ✅ Error display on save failures, auto-save failures, key event failures
+  - ✅ Error color constant (COLOR_ERROR: red)
+  - ✅ Comprehensive error handling in app.zig (save, auto-save, key events)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+- ✅ Split pane layout (`src/grain_skate/window.zig`)
+  - ✅ Split pane state tracking (split_pane_enabled, split_position)
+  - ✅ Split pane rendering (graph left, editor right, divider line)
+  - ✅ Split pane methods (set_split_pane, set_split_position, is_split_pane_enabled)
+  - ✅ Sub-rectangle rendering (render_graph_to_rect, render_editor_to_rect)
+  - ✅ Buffer copying utility (copy_buffer_rect)
+  - ✅ Automatic split position calculation (default 50/50 split)
+  - ✅ Split position clamping (minimum 100px per pane)
+  - ✅ Comprehensive rendering in present() method
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+- ✅ Syntax highlighting (`src/grain_skate/editor_renderer.zig`)
+  - ✅ Syntax color constants (keywords, strings, comments, numbers)
+  - ✅ Syntax highlighting state (syntax_highlighting_enabled flag)
+  - ✅ Syntax detection (keywords, strings, comments, numbers)
+  - ✅ Keyword detection (common programming keywords, Zig-focused)
+  - ✅ String detection (single and double quotes with escape handling)
+  - ✅ Comment detection (single-line // and multi-line /* */)
+  - ✅ Number detection (integer and float literals)
+  - ✅ Syntax-aware text rendering (render_text_with_syntax method)
+  - ✅ Syntax helper methods (is_word_start, is_word_char, is_digit, is_keyword)
+  - ✅ Enable/disable syntax highlighting (set_syntax_highlighting method)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, iterative parsing)
+  - ✅ Modal editor cleanup (deinit and destroy on quit)
+  - ✅ Comprehensive tests (`tests/055_grain_skate_app_test.zig`)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+- ✅ Editor text rendering enhancements (`src/grain_skate/editor_renderer.zig`)
+  - ✅ Line numbers display (dynamic column width, right-aligned, 1-based)
+  - ✅ Line number column background (separate color for visual distinction)
+  - ✅ Text/cursor/selection offset by line number column width
+  - ✅ Automatic column width calculation based on total line count
+  - ✅ Comprehensive tests (integrated with existing editor renderer tests)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+- ✅ Save status indicator (`src/grain_skate/editor_renderer.zig`, `src/grain_skate/app.zig`)
+  - ✅ Modified flag tracking (tracks unsaved changes)
+  - ✅ Automatic modification detection (via undo history)
+  - ✅ Status line "[+]" indicator when content is modified
+  - ✅ Modified flag cleared on successful save
+  - ✅ Window integration (get_editor_renderer method)
+  - ✅ Comprehensive tests (integrated with existing app tests)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 - ✅ Interactive graph features (`src/grain_skate/graph_viz.zig`, `src/grain_skate/window.zig`)
   - ✅ Hit testing (find node at pixel coordinates)
   - ✅ Click handling (open block when node clicked)
@@ -1429,7 +1776,16 @@
 ### 7.2 Stability
 - [ ] Comprehensive error handling
 - [ ] Crash recovery
-- [ ] Auto-save
+- ✅ Auto-save (`src/grain_skate/app.zig`)
+  - ✅ Auto-save timeout constant (AUTO_SAVE_TIMEOUT_SEC: 30 seconds)
+  - ✅ Last edit time tracking (last_edit_time field)
+  - ✅ Auto-save check method (check_auto_save)
+  - ✅ Auto-save on timeout (saves if modified and timeout elapsed)
+  - ✅ Last edit time update (update_last_edit_time method)
+  - ✅ Auto-save integration (called on keyboard events)
+  - ✅ Error handling for auto-save failures
+  - ✅ Comprehensive tests (integrated with existing app tests)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
 - [ ] State persistence
 
 ### 7.3 Documentation
@@ -1707,6 +2063,113 @@
     - ✅ Framebuffer renderer integration (draw_text uses font renderer)
     - ✅ Replaced placeholder rectangles with actual text rendering
     - ✅ GrainStyle compliance (u32 types, bounded operations, assertions)
+  - ✅ Security/Permissions Management (Phase 47) ✅ **COMPLETE**
+    - ✅ Security manager module (`src/grain_os/security_manager.zig`)
+    - ✅ Permission types (none, read, write, execute, admin, full_control)
+    - ✅ User roles (guest, user, admin, root)
+    - ✅ Permission management (add, find permissions)
+    - ✅ User management (add, find, remove users)
+    - ✅ Permission granting/revoking (grant/revoke permissions to users)
+    - ✅ Permission checking (check if user has permission, root has all)
+    - ✅ Current user tracking (set/get current user)
+    - ✅ Compositor integration (all security management methods)
+    - ✅ Comprehensive tests (`tests/099_grain_os_security_manager_test.zig`)
+  - ✅ System Services Management (Phase 48) ✅ **COMPLETE**
+    - ✅ Service manager module (`src/grain_os/service_manager.zig`)
+    - ✅ Service states (stopped, starting, running, stopping, failed, disabled)
+    - ✅ Service types (system, user, network, filesystem, device, other)
+    - ✅ Service lifecycle (start, stop, restart services)
+    - ✅ Auto-start configuration (enable/disable auto-start)
+    - ✅ Restart on failure (enable/disable restart on failure)
+    - ✅ Service dependencies (add/remove dependencies between services)
+    - ✅ Service management (add, find, remove services)
+    - ✅ Running service count tracking
+    - ✅ Compositor integration (all service management methods)
+    - ✅ Comprehensive tests (`tests/100_grain_os_service_manager_test.zig`)
+  - ✅ Backup/Restore Management (Phase 49) ✅ **COMPLETE**
+    - ✅ Backup manager module (`src/grain_os/backup_manager.zig`)
+    - ✅ Backup types (full, incremental, settings_only, data_only, custom)
+    - ✅ Backup states (pending, in_progress, completed, failed, cancelled)
+    - ✅ Backup creation (create backup with name, description, path, type)
+    - ✅ Backup lifecycle (start, complete, fail, cancel backup operations)
+    - ✅ Backup restore (restore from completed backup)
+    - ✅ Backup management (add, find, remove backups)
+    - ✅ Backup size tracking (track backup size in bytes)
+    - ✅ Current backup tracking (track currently active backup operation)
+    - ✅ Completed backup count tracking
+    - ✅ Compositor integration (all backup management methods)
+    - ✅ Comprehensive tests (`tests/101_grain_os_backup_manager_test.zig`)
+  - ✅ Update Management (Phase 50) ✅ **COMPLETE**
+    - ✅ Update manager module (`src/grain_os/update_manager.zig`)
+    - ✅ Update types (security, bugfix, feature, major, minor)
+    - ✅ Update states (available, downloading, downloaded, installing, installed, failed, cancelled)
+    - ✅ Update creation (add update with version, description, URL, type, size, release date)
+    - ✅ Update lifecycle (start download, complete download, start installation, complete installation)
+    - ✅ Update failure/cancellation (fail or cancel update operations)
+    - ✅ Version management (set/get current system version)
+    - ✅ Auto-update configuration (enable/disable auto-update)
+    - ✅ Update management (add, find, remove updates)
+    - ✅ Available update count tracking
+    - ✅ Current update tracking (track currently active update operation)
+    - ✅ Compositor integration (all update management methods)
+    - ✅ Comprehensive tests (`tests/102_grain_os_update_manager_test.zig`)
+  - ✅ Package Management (Phase 51) ✅ **COMPLETE**
+    - ✅ Package manager module (`src/grain_os/package_manager.zig`)
+    - ✅ Package states (not_installed, installing, installed, removing, failed)
+    - ✅ Package creation (add package with name, version, description, size)
+    - ✅ Package installation (install package with timestamp)
+    - ✅ Package removal (remove installed package)
+    - ✅ Package dependencies (add/remove dependencies between packages)
+    - ✅ Package management (add, find, remove package entries)
+    - ✅ Installed package count tracking
+    - ✅ Package size tracking (track package size in bytes)
+    - ✅ Installation timestamp tracking
+    - ✅ Compositor integration (all package management methods)
+    - ✅ Comprehensive tests (`tests/103_grain_os_package_manager_test.zig`)
+  - ✅ Enhanced SysInfo Integration (Phase 52) ✅ **COMPLETE**
+    - ✅ Enhanced ResourceMonitor integration with kernel SysInfo
+    - ✅ Updated buffer size from 40 to 56 bytes for enhanced SysInfo
+    - ✅ Use kernel-calculated `used_memory` field (instead of manual calculation)
+    - ✅ Process count tracking (total_processes, running_processes, exited_processes)
+    - ✅ Added `update_usage_with_processes()` method
+    - ✅ Added `get_total_processes()`, `get_running_processes()`, `get_exited_processes()` methods
+    - ✅ Updated `update_from_kernel()` to use enhanced sysinfo fields
+    - ✅ Added process count fields to ResourceUsage struct
+    - ✅ Compositor integration (get_total_process_count, get_running_process_count, get_exited_process_count)
+    - ✅ Updated tests to verify enhanced sysinfo integration
+  - ✅ System Health Monitoring (Phase 53) ✅ **COMPLETE**
+    - ✅ Health monitor module (`src/grain_os/health_monitor.zig`)
+    - ✅ Health statuses (healthy, warning, critical, unknown)
+    - ✅ Health check creation (add health check with name)
+    - ✅ Health check updates (update health check status and message)
+    - ✅ Overall health status calculation (based on all checks)
+    - ✅ Health check management (add, find, remove health checks)
+    - ✅ Health check counts (healthy, warning, critical check counts)
+    - ✅ Last check time tracking
+    - ✅ Compositor integration (all health monitoring methods)
+    - ✅ Comprehensive tests (`tests/104_grain_os_health_monitor_test.zig`)
+  - ✅ Process Supervision (Phase 54) ✅ **COMPLETE**
+    - ✅ Process supervision module (`src/grain_os/process_supervision.zig`)
+    - ✅ Supervision policies (always, never, on_failure, on_success)
+    - ✅ Supervision states (idle, starting, running, crashed, stopping, stopped)
+    - ✅ Supervised process management (add, find, remove supervised processes)
+    - ✅ Automatic restart logic (restart based on policy and exit code)
+    - ✅ Restart limits (max restarts, restart delay)
+    - ✅ Process exit recording (record exit code and timestamp)
+    - ✅ State tracking (running, crashed, stopped counts)
+    - ✅ Compositor integration (all process supervision methods)
+    - ✅ Comprehensive tests (`tests/105_grain_os_process_supervision_test.zig`)
+    - ✅ Inspired by s6 (https://github.com/skarnet/s6) with Grain Style abstractions
+  - ✅ System Metrics Aggregation (Phase 55) ✅ **COMPLETE**
+    - ✅ System metrics module (`src/grain_os/system_metrics.zig`)
+    - ✅ System status aggregation (CPU, memory, disk, processes, health)
+    - ✅ Metrics aggregation from multiple sources (resource monitor, health monitor, process supervisor)
+    - ✅ Overall system health calculation (critical > warning > healthy > unknown)
+    - ✅ System status structure (unified view of all metrics)
+    - ✅ Health thresholds (CPU/memory/disk > 90% = warning, critical checks = critical)
+    - ✅ Timestamp tracking
+    - ✅ Compositor integration (update_system_metrics, get_system_status, get_overall_system_health)
+    - ✅ Comprehensive tests (`tests/106_grain_os_system_metrics_test.zig`)
 
 **In Progress**: 
 - Dream Editor Core - GLM-4.6 Integration (Phase 4.1.3) 🔄

@@ -43,6 +43,7 @@ test "set current theme" {
     var manager = ThemeManager.init();
     if (manager.add_theme("Dark", "#000000", "#ffffff", "#333333", "#0066ff")) |theme_id_1| {
         if (manager.add_theme("Light", "#ffffff", "#000000", "#cccccc", "#0066ff")) |theme_id_2| {
+            _ = theme_id_1;
             const result = manager.set_current_theme(theme_id_2);
             std.debug.assert(result);
             std.debug.assert(manager.current_theme_id == theme_id_2);
@@ -75,7 +76,7 @@ test "remove current theme" {
     var manager = ThemeManager.init();
     if (manager.add_theme("Dark", "#000000", "#ffffff", "#333333", "#0066ff")) |theme_id_1| {
         if (manager.add_theme("Light", "#ffffff", "#000000", "#cccccc", "#0066ff")) |theme_id_2| {
-            _ = theme_id_1;
+            _ = manager.set_current_theme(theme_id_2);
             const result = manager.remove_theme(theme_id_2);
             std.debug.assert(result);
             std.debug.assert(manager.current_theme_id == theme_id_1);
@@ -101,6 +102,7 @@ test "compositor set current theme" {
     var comp = Compositor.init(allocator);
     if (comp.add_theme("Dark", "#000000", "#ffffff", "#333333", "#0066ff")) |theme_id_1| {
         if (comp.add_theme("Light", "#ffffff", "#000000", "#cccccc", "#0066ff")) |theme_id_2| {
+            _ = theme_id_1;
             const result = comp.set_current_theme(theme_id_2);
             std.debug.assert(result);
         }

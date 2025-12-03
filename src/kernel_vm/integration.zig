@@ -439,7 +439,21 @@ pub const Integration = struct {
         
         // Execute process in VM using process execution module.
         // Why: Run process until it exits or yields.
+        // Record start time for CPU time tracking.
+        // Why: Track CPU time used by process for resource monitoring.
+        const start_time_ns = self.kernel.timer.get_uptime_ns();
+        
+        // Execute process in VM.
         const should_continue = process_execution.execute_process(self.vm, process_context, max_steps);
+        
+        // Record end time and update CPU time.
+        // Why: Calculate elapsed CPU time and update process statistics.
+        const end_time_ns = self.kernel.timer.get_uptime_ns();
+        const elapsed_ns = end_time_ns -% start_time_ns; // Saturating subtract to prevent underflow
+        
+        // Update process CPU time.
+        // Why: Track total CPU time used by process.
+        process.cpu_time_ns +%= elapsed_ns; // Saturating add to prevent overflow
         
         // Check if process exited (state changed to exited).
         // Why: Update scheduler if process terminated.

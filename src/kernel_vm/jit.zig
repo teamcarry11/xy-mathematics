@@ -11,6 +11,7 @@ pub const JitError = error{
     EncodingError,
     ProtectionFailure,
     InvalidSnapshot,
+    ThresholdNotMet, // Block execution count below compilation threshold
 };
 
 // Bounded: Max hot paths to track.
@@ -125,6 +126,12 @@ pub const JitPerfCounters = struct {
     total_code_size_bytes: u64 = 0,
     max_code_size_bytes: u64 = 0,
     min_code_size_bytes: u64 = 0,
+    chain_opportunities: u64 = 0, // Direct jumps that could be chained
+    chains_created: u64 = 0, // Actual chains created
+    chain_hits: u64 = 0, // Executions via chains
+    blocks_invalidated: u64 = 0, // Blocks invalidated
+    cache_invalidations: u64 = 0, // Full cache invalidations
+    threshold_deferred: u64 = 0, // Blocks deferred due to threshold
 
     pub fn print_stats(self: *const JitPerfCounters) void {
         std.debug.print("\nJIT Performance Stats:\n", .{});
@@ -168,6 +175,25 @@ pub const JitPerfCounters = struct {
             const avg_compile_ns = self.jit_compile_time_ns / self.blocks_compiled;
             const avg_compile_us = @as(f64, @floatFromInt(avg_compile_ns)) / 1_000.0;
             std.debug.print("  Avg Compile Time: {d:.2} us/block\n", .{avg_compile_us});
+        }
+        if (self.chain_opportunities > 0) {
+            std.debug.print("  Chain Opportunities: {}\n", .{self.chain_opportunities});
+            std.debug.print("  Chains Created: {}\n", .{self.chains_created});
+            if (self.chains_created > 0) {
+                const chain_rate = @as(f64, @floatFromInt(self.chains_created)) /
+                    @as(f64, @floatFromInt(self.chain_opportunities)) * 100.0;
+                std.debug.print("  Chain Rate: {d:.2}%\n", .{chain_rate});
+            }
+            std.debug.print("  Chain Hits: {}\n", .{self.chain_hits});
+        }
+        if (self.blocks_invalidated > 0) {
+            std.debug.print("  Blocks Invalidated: {}\n", .{self.blocks_invalidated});
+        }
+        if (self.cache_invalidations > 0) {
+            std.debug.print("  Cache Invalidations: {}\n", .{self.cache_invalidations});
+        }
+        if (self.threshold_deferred > 0) {
+            std.debug.print("  Threshold Deferred: {}\n", .{self.threshold_deferred});
         }
     }
 };
@@ -268,6 +294,7 @@ pub const JitContext = struct {
 
     block_cache: std.AutoHashMap(u64, u32), // Maps guest PC to code buffer offset
     pending_fixups: std.AutoHashMap(u64, *Fixup),
+    compilation_threshold: u32, // Minimum executions before compiling (0 = compile immediately)
 
     pub fn init(allocator: std.mem.Allocator, guest_state: *GuestState, guest_ram: []u8, memory_size: u64) !JitContext {
         // Assert: guest RAM must be non-empty
@@ -414,6 +441,34 @@ pub const JitContext = struct {
         std.debug.assert(self.cursor <= self.code_buffer.len);
     }
 
+    /// Emit conditional set instruction (cset).
+    /// Why: Set register to 1 if condition is true, else 0.
+    /// Contract: Sets rd to 1 if condition is true, 0 otherwise.
+    /// GrainStyle: Explicit condition codes, deterministic behavior.
+    pub fn emit_cset(self: *JitContext, rd: u5, cond: u4) void {
+        std.debug.assert(self.cursor + 4 <= self.code_buffer.len);
+        std.debug.assert(self.cursor % 4 == 0);
+        std.debug.assert(cond < 16); // Valid condition code
+        const start_cursor = self.cursor;
+        const opcode: u32 = 0x1A800000;
+        const inst = opcode | (@as(u32, cond) << 12) | @as(u32, rd);
+        self.emit_u32(inst);
+        std.debug.assert(self.cursor == start_cursor + 4);
+        std.debug.assert(self.cursor <= self.code_buffer.len);
+    }
+
+    /// Emit compare instruction (cmp).
+    /// Why: Compare two registers and set flags.
+    /// Contract: Compares rn and rm, sets condition flags.
+    /// GrainStyle: Uses subs to set flags, deterministic behavior.
+    pub fn emit_cmp(self: *JitContext, rn: u5, rm: u5) void {
+        std.debug.assert(self.cursor + 4 <= self.code_buffer.len);
+        std.debug.assert(self.cursor % 4 == 0);
+        // Use xzr (register 31) as destination (discard result, only set flags).
+        const xzr: u5 = 31;
+        self.emit_subs(xzr, rn, rm);
+    }
+
     pub fn emit_mov_imm(self: *JitContext, rd: u5, imm: u16) void {
         std.debug.assert(self.cursor + 4 <= self.code_buffer.len);
         std.debug.assert(self.cursor % 4 == 0);
@@ -459,6 +514,27 @@ pub const JitContext = struct {
         self.emit_u32(0xD65F03C0);
         std.debug.assert(self.cursor == start_cursor + 4);
         std.debug.assert(self.cursor <= self.code_buffer.len);
+    }
+
+    /// Emit call to target function (bl instruction).
+    /// Why: Enable block chaining by calling next block directly.
+    /// Contract: Calls target function with guest_state as argument.
+    /// GrainStyle: Explicit function pointer, deterministic call.
+    pub fn emit_call_target(self: *JitContext, target_func: *const fn (*GuestState) callconv(.c) void) void {
+        std.debug.assert(self.cursor + 16 <= self.code_buffer.len); // Max 4 instructions for 64-bit address
+        std.debug.assert(self.cursor % 4 == 0);
+        const start_cursor = self.cursor;
+        
+        // Load target function address into x16 (IP0, caller-saved).
+        const target_addr = @intFromPtr(target_func);
+        self.emit_mov_u64(16, target_addr);
+        
+        // Call target function: blr x16 (branch with link to register).
+        const blr_inst: u32 = 0xD63F0200 | (@as(u32, 16) << 5);
+        self.emit_u32(blr_inst);
+        
+        std.debug.assert(self.cursor >= start_cursor + 4);
+        std.debug.assert(self.cursor <= start_cursor + 20); // At most 5 instructions
     }
 
     pub fn emit_b(self: *JitContext, offset: i28) void {
@@ -1053,6 +1129,57 @@ pub const JitContext = struct {
         }
     }
 
+    /// Invalidate a compiled block, forcing recompilation.
+    /// Why: Support self-modifying code, debugging, and code updates.
+    /// Contract: Removes block from cache, allowing recompilation on next access.
+    /// GrainStyle: Explicit invalidation, deterministic behavior.
+    pub fn invalidate_block(self: *JitContext, guest_pc: u64) void {
+        std.debug.assert(guest_pc > 0);
+        if (self.block_cache.remove(guest_pc)) {
+            self.perf_counters.blocks_invalidated += 1;
+        }
+    }
+
+    /// Invalidate all compiled blocks, forcing full recompilation.
+    /// Why: Support major code changes or debugging scenarios.
+    /// Contract: Clears entire block cache.
+    /// GrainStyle: Explicit bulk invalidation, deterministic behavior.
+    pub fn invalidate_all_blocks(self: *JitContext) void {
+        const count = self.block_cache.count();
+        self.block_cache.clearRetainingCapacity();
+        if (count > 0) {
+            self.perf_counters.cache_invalidations += 1;
+            self.perf_counters.blocks_invalidated += @intCast(count);
+        }
+    }
+
+    /// Check if a block should be compiled based on execution threshold.
+    /// Why: Only compile frequently executed blocks to reduce compilation overhead.
+    /// Contract: Returns true if block should be compiled, false if threshold not met.
+    /// GrainStyle: Explicit threshold checking, deterministic behavior.
+    fn should_compile_block(self: *const JitContext, guest_pc: u64) bool {
+        std.debug.assert(guest_pc > 0);
+        // If threshold is 0, compile immediately (threshold disabled).
+        if (self.compilation_threshold == 0) {
+            return true;
+        }
+        // Check execution count in hot path tracker.
+        if (self.perf_counters.hot_path_tracker.find_path_index(guest_pc)) |idx| {
+            const execution_count = self.perf_counters.hot_path_tracker.paths[idx].execution_count;
+            return execution_count >= self.compilation_threshold;
+        }
+        // Block not tracked yet: don't compile (threshold not met).
+        return false;
+    }
+
+    /// Set compilation threshold (minimum executions before compiling).
+    /// Why: Control when blocks are compiled to balance compilation cost vs execution speed.
+    /// Contract: 0 = compile immediately, >0 = compile after N executions.
+    /// GrainStyle: Explicit threshold configuration, deterministic behavior.
+    pub fn set_compilation_threshold(self: *JitContext, threshold: u32) void {
+        self.compilation_threshold = threshold;
+    }
+
     pub fn compile_block(self: *JitContext, guest_pc: u64) !*const fn (*GuestState) callconv(.c) void {
         self.unprotect_code();
         defer self.protect_code();
@@ -1065,6 +1192,13 @@ pub const JitContext = struct {
             // Cache hit: return existing compiled block.
             self.perf_counters.cache_hits += 1;
             return @ptrCast(@alignCast(@as(*const anyopaque, @ptrFromInt(@intFromPtr(self.code_buffer.ptr) + @as(usize, addr)))));
+        }
+
+        // Check compilation threshold before compiling.
+        if (!self.should_compile_block(guest_pc)) {
+            // Threshold not met: track deferral and return error.
+            self.perf_counters.threshold_deferred += 1;
+            return error.ThresholdNotMet;
         }
 
         // Cache miss: compile new block.
@@ -1097,9 +1231,17 @@ pub const JitContext = struct {
                                 self.emit_asr_v(0, 0, 1);
                             }
                         },
+                        0x2 => { // SLT (Set Less Than, signed)
+                            self.emit_cmp(0, 1); // Compare rs1 (reg 0) with rs2 (reg 1)
+                            self.emit_cset(0, 0xB); // Set reg 0 to 1 if LT (signed less than), else 0
+                        },
+                        0x3 => { // SLTU (Set Less Than Unsigned)
+                            self.emit_cmp(0, 1); // Compare rs1 (reg 0) with rs2 (reg 1)
+                            self.emit_cset(0, 0x3); // Set reg 0 to 1 if LO (unsigned less than), else 0
+                        },
                         0x6 => self.emit_orr(0, 0, 1), // OR
                         0x7 => self.emit_and(0, 0, 1), // AND
-                        else => {}, // SLT/SLTU not implemented yet
+                        else => {},
                     }
                     self.emit_str_to_state(0, inst.rd);
                 },
@@ -1136,7 +1278,17 @@ pub const JitContext = struct {
                                 self.emit_asr_i(0, 0, shamt);
                             }
                         },
-                        else => {}, // SLTI/SLTIU not implemented
+                        0x2 => { // SLTI (Set Less Than Immediate, signed)
+                            self.emit_mov_u64(1, imm_u);
+                            self.emit_cmp(0, 1); // Compare rs1 (reg 0) with imm (reg 1)
+                            self.emit_cset(0, 0xB); // Set reg 0 to 1 if LT (signed less than), else 0
+                        },
+                        0x3 => { // SLTIU (Set Less Than Immediate Unsigned)
+                            self.emit_mov_u64(1, imm_u);
+                            self.emit_cmp(0, 1); // Compare rs1 (reg 0) with imm (reg 1)
+                            self.emit_cset(0, 0x3); // Set reg 0 to 1 if LO (unsigned less than), else 0
+                        },
+                        else => {},
                     }
                     self.emit_str_to_state(0, inst.rd);
                 },
@@ -1225,9 +1377,25 @@ pub const JitContext = struct {
                     self.emit_mov_u64(0, ret_addr);
                     self.emit_str_to_state(0, inst.rd);
 
-                    const patch_pos = self.cursor;
-                    self.emit_b(0);
-                    try self.record_fixup(current_pc + @as(u64, @bitCast(@as(i64, inst.imm))), patch_pos);
+                    const target_pc = current_pc + @as(u64, @bitCast(@as(i64, inst.imm)));
+                    // Track chain opportunity for direct jumps.
+                    self.perf_counters.chain_opportunities += 1;
+                    
+                    // Try to chain if target block exists in cache.
+                    if (self.block_cache.get(target_pc)) |target_offset| {
+                        // Target block exists: chain directly to it.
+                        const target_func = @ptrCast(@alignCast(@as(*const anyopaque, @ptrFromInt(@intFromPtr(self.code_buffer.ptr) + @as(usize, target_offset)))));
+                        // Emit call to target function instead of branch.
+                        self.emit_call_target(target_func);
+                        // After chained block returns, return to dispatcher.
+                        self.emit_ret();
+                        self.perf_counters.chains_created += 1;
+                    } else {
+                        // Target not compiled yet: use fixup.
+                        const patch_pos = self.cursor;
+                        self.emit_b(0);
+                        try self.record_fixup(target_pc, patch_pos);
+                    }
 
                     break;
                 },

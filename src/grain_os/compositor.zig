@@ -38,6 +38,22 @@ const power_management = @import("power_management.zig");
 const display_management = @import("display_management.zig");
 const settings_manager = @import("settings_manager.zig");
 const theme_manager = @import("theme_manager.zig");
+const screen_capture = @import("screen_capture.zig");
+const file_manager = @import("file_manager.zig");
+const resource_monitor = @import("resource_monitor.zig");
+const audio_manager = @import("audio_manager.zig");
+const network_manager = @import("network_manager.zig");
+const process_manager = @import("process_manager.zig");
+const system_logger = @import("system_logger.zig");
+const time_manager = @import("time_manager.zig");
+const security_manager = @import("security_manager.zig");
+const service_manager = @import("service_manager.zig");
+const backup_manager = @import("backup_manager.zig");
+const update_manager = @import("update_manager.zig");
+const package_manager = @import("package_manager.zig");
+const health_monitor = @import("health_monitor.zig");
+const process_supervision = @import("process_supervision.zig");
+const system_metrics = @import("system_metrics.zig");
 const keyboard_shortcuts = @import("keyboard_shortcuts.zig");
 const desktop_shell = @import("desktop_shell.zig");
 const runtime_config = @import("runtime_config.zig");
@@ -222,6 +238,23 @@ pub const Compositor = struct {
     power_manager: power_management.PowerManagementManager,
     display_manager: display_management.DisplayManager,
     settings_manager: settings_manager.SettingsManager,
+    theme_manager: theme_manager.ThemeManager,
+    screen_capture_manager: screen_capture.ScreenCaptureManager,
+    file_manager: file_manager.FileManager,
+    resource_monitor: resource_monitor.ResourceMonitor,
+    audio_manager: audio_manager.AudioManager,
+    network_manager: network_manager.NetworkManager,
+    process_manager: process_manager.ProcessManager,
+    system_logger: system_logger.SystemLogger,
+    time_manager: time_manager.TimeManager,
+    security_manager: security_manager.SecurityManager,
+    service_manager: service_manager.ServiceManager,
+    backup_manager: backup_manager.BackupManager,
+    update_manager: update_manager.UpdateManager,
+    package_manager: package_manager.PackageManager,
+    health_monitor: health_monitor.HealthMonitor,
+    process_supervisor: process_supervision.ProcessSupervisor,
+    metrics_aggregator: system_metrics.MetricsAggregator,
     border_width: u32, // Configurable border width
     title_bar_height: u32, // Configurable title bar height
 
@@ -267,6 +300,23 @@ pub const Compositor = struct {
             .power_manager = power_management.PowerManagementManager.init(),
             .display_manager = display_management.DisplayManager.init(),
             .settings_manager = settings_manager.SettingsManager.init(),
+            .theme_manager = theme_manager.ThemeManager.init(),
+            .screen_capture_manager = screen_capture.ScreenCaptureManager.init(),
+            .file_manager = file_manager.FileManager.init(),
+            .resource_monitor = resource_monitor.ResourceMonitor.init(),
+            .audio_manager = audio_manager.AudioManager.init(),
+            .network_manager = network_manager.NetworkManager.init(),
+            .process_manager = process_manager.ProcessManager.init(),
+            .system_logger = system_logger.SystemLogger.init(),
+            .time_manager = time_manager.TimeManager.init(),
+            .security_manager = security_manager.SecurityManager.init(),
+            .service_manager = service_manager.ServiceManager.init(),
+            .backup_manager = backup_manager.BackupManager.init(),
+            .update_manager = update_manager.UpdateManager.init(),
+            .package_manager = package_manager.PackageManager.init(),
+            .health_monitor = health_monitor.HealthMonitor.init(),
+            .process_supervisor = process_supervision.ProcessSupervisor.init(),
+            .metrics_aggregator = system_metrics.MetricsAggregator.init(),
             .border_width = BORDER_WIDTH, // Default border width
             .title_bar_height = TITLE_BAR_HEIGHT, // Default title bar height
         };
@@ -691,6 +741,8 @@ pub const Compositor = struct {
     ) void {
         self.renderer.set_syscall_fn(fn_ptr);
         self.input.set_syscall_fn(fn_ptr);
+        self.resource_monitor.set_syscall_fn(fn_ptr);
+        self.process_manager.set_syscall_fn(fn_ptr);
     }
 
     // Find window at mouse position (hit testing).
@@ -1954,6 +2006,1023 @@ pub const Compositor = struct {
     // Get category count.
     pub fn get_category_count(self: *const Compositor) u32 {
         return self.settings_manager.get_category_count();
+    }
+
+    // Add theme.
+    pub fn add_theme(
+        self: *Compositor,
+        name: []const u8,
+        bg_color: []const u8,
+        fg_color: []const u8,
+        border_color: []const u8,
+        accent_color: []const u8,
+    ) ?u32 {
+        return self.theme_manager.add_theme(name, bg_color, fg_color, border_color, accent_color);
+    }
+
+    // Set current theme.
+    pub fn set_current_theme(self: *Compositor, theme_id: u32) bool {
+        return self.theme_manager.set_current_theme(theme_id);
+    }
+
+    // Get current theme.
+    pub fn get_current_theme(self: *const Compositor) ?*const theme_manager.Theme {
+        return self.theme_manager.get_current_theme();
+    }
+
+    // Remove theme.
+    pub fn remove_theme(self: *Compositor, theme_id: u32) bool {
+        return self.theme_manager.remove_theme(theme_id);
+    }
+
+    // Get theme count.
+    pub fn get_theme_count(self: *const Compositor) u32 {
+        return self.theme_manager.get_theme_count();
+    }
+
+    // Capture screenshot.
+    pub fn capture_screenshot(
+        self: *Compositor,
+        name: []const u8,
+        x: i32,
+        y: i32,
+        width: u32,
+        height: u32,
+        format: screen_capture.CaptureFormat,
+        timestamp: u64,
+    ) ?u32 {
+        return self.screen_capture_manager.capture_screenshot(name, x, y, width, height, format, timestamp);
+    }
+
+    // Start screen recording.
+    pub fn start_screen_recording(
+        self: *Compositor,
+        name: []const u8,
+        x: i32,
+        y: i32,
+        width: u32,
+        height: u32,
+        format: screen_capture.CaptureFormat,
+        timestamp: u64,
+    ) ?u32 {
+        return self.screen_capture_manager.start_recording(name, x, y, width, height, format, timestamp);
+    }
+
+    // Stop screen recording.
+    pub fn stop_screen_recording(self: *Compositor) bool {
+        return self.screen_capture_manager.stop_recording();
+    }
+
+    // Check if recording is active.
+    pub fn is_recording_active(self: *const Compositor) bool {
+        return self.screen_capture_manager.is_recording_active();
+    }
+
+    // Get current recording ID.
+    pub fn get_current_recording_id(self: *const Compositor) ?u32 {
+        return self.screen_capture_manager.get_current_recording_id();
+    }
+
+    // Remove capture.
+    pub fn remove_capture(self: *Compositor, capture_id: u32) bool {
+        return self.screen_capture_manager.remove_capture(capture_id);
+    }
+
+    // Get capture count.
+    pub fn get_capture_count(self: *const Compositor) u32 {
+        return self.screen_capture_manager.get_capture_count();
+    }
+
+    // Add file entry.
+    pub fn add_file_entry(
+        self: *Compositor,
+        name: []const u8,
+        path: []const u8,
+        file_type: file_manager.FileType,
+        size: u64,
+        modified_time: u64,
+    ) ?u32 {
+        return self.file_manager.add_file_entry(name, path, file_type, size, modified_time);
+    }
+
+    // Find file entry by path.
+    pub fn find_file_entry_by_path(
+        self: *Compositor,
+        path: []const u8,
+    ) ?*const file_manager.FileEntry {
+        return self.file_manager.find_file_entry_by_path(path);
+    }
+
+    // Set current directory.
+    pub fn set_current_directory(self: *Compositor, path: []const u8) bool {
+        return self.file_manager.set_current_directory(path);
+    }
+
+    // Get current directory.
+    pub fn get_current_directory(self: *const Compositor) []const u8 {
+        return self.file_manager.get_current_directory();
+    }
+
+    // Remove file entry.
+    pub fn remove_file_entry(self: *Compositor, entry_id: u32) bool {
+        return self.file_manager.remove_file_entry(entry_id);
+    }
+
+    // Clear all file entries.
+    pub fn clear_all_file_entries(self: *Compositor) void {
+        self.file_manager.clear_all();
+    }
+
+    // Get file count.
+    pub fn get_file_count(self: *const Compositor) u32 {
+        return self.file_manager.get_file_count();
+    }
+
+    // Update resource usage.
+    pub fn update_resource_usage(
+        self: *Compositor,
+        cpu_percent: f64,
+        memory_used: u64,
+        memory_total: u64,
+        disk_used: u64,
+        disk_total: u64,
+        timestamp: u64,
+    ) void {
+        self.resource_monitor.update_usage(cpu_percent, memory_used, memory_total, disk_used, disk_total, timestamp);
+    }
+
+    // Update resource usage from kernel.
+    pub fn update_resource_usage_from_kernel(self: *Compositor, timestamp: u64) bool {
+        return self.resource_monitor.update_from_kernel(timestamp);
+    }
+
+    // Get CPU usage.
+    pub fn get_cpu_usage(self: *const Compositor) f64 {
+        return self.resource_monitor.get_cpu_usage();
+    }
+
+    // Get memory usage.
+    pub fn get_memory_usage(self: *const Compositor) u64 {
+        return self.resource_monitor.get_memory_usage();
+    }
+
+    // Get total memory.
+    pub fn get_total_memory(self: *const Compositor) u64 {
+        return self.resource_monitor.get_total_memory();
+    }
+
+    // Get memory usage percentage.
+    pub fn get_memory_usage_percent(self: *const Compositor) f64 {
+        return self.resource_monitor.get_memory_usage_percent();
+    }
+
+    // Get disk usage.
+    pub fn get_disk_usage(self: *const Compositor) u64 {
+        return self.resource_monitor.get_disk_usage();
+    }
+
+    // Get total disk.
+    pub fn get_total_disk(self: *const Compositor) u64 {
+        return self.resource_monitor.get_total_disk();
+    }
+
+    // Get disk usage percentage.
+    pub fn get_disk_usage_percent(self: *const Compositor) f64 {
+        return self.resource_monitor.get_disk_usage_percent();
+    }
+
+    // Get current resource usage.
+    pub fn get_current_resource_usage(self: *const Compositor) resource_monitor.ResourceUsage {
+        return self.resource_monitor.get_current_usage();
+    }
+
+    // Get total process count from resource monitor.
+    pub fn get_total_process_count(self: *const Compositor) u32 {
+        return self.resource_monitor.get_total_processes();
+    }
+
+    // Get running process count from resource monitor.
+    pub fn get_running_process_count_from_monitor(self: *const Compositor) u32 {
+        return self.resource_monitor.get_running_processes();
+    }
+
+    // Get exited process count from resource monitor.
+    pub fn get_exited_process_count(self: *const Compositor) u32 {
+        return self.resource_monitor.get_exited_processes();
+    }
+
+    // Get exited process count.
+    pub fn get_exited_process_count(self: *const Compositor) u32 {
+        return self.resource_monitor.get_exited_processes();
+    }
+
+    // Get resource history entry.
+    pub fn get_resource_history_entry(self: *const Compositor, index: u32) ?*const resource_monitor.ResourceUsage {
+        return self.resource_monitor.get_history_entry(index);
+    }
+
+    // Get resource history count.
+    pub fn get_resource_history_count(self: *const Compositor) u32 {
+        return self.resource_monitor.get_history_count();
+    }
+
+    // Clear resource history.
+    pub fn clear_resource_history(self: *Compositor) void {
+        self.resource_monitor.clear_history();
+    }
+
+    // Add audio device.
+    pub fn add_audio_device(
+        self: *Compositor,
+        name: []const u8,
+        device_type: audio_manager.AudioDeviceType,
+    ) ?u32 {
+        return self.audio_manager.add_device(name, device_type);
+    }
+
+    // Set device volume.
+    pub fn set_audio_device_volume(self: *Compositor, device_id: u32, volume: u32) bool {
+        return self.audio_manager.set_device_volume(device_id, volume);
+    }
+
+    // Get device volume.
+    pub fn get_audio_device_volume(self: *Compositor, device_id: u32) ?u32 {
+        return self.audio_manager.get_device_volume(device_id);
+    }
+
+    // Mute device.
+    pub fn mute_audio_device(self: *Compositor, device_id: u32) bool {
+        return self.audio_manager.mute_device(device_id);
+    }
+
+    // Unmute device.
+    pub fn unmute_audio_device(self: *Compositor, device_id: u32) bool {
+        return self.audio_manager.unmute_device(device_id);
+    }
+
+    // Set active output device.
+    pub fn set_active_audio_output_device(self: *Compositor, device_id: u32) bool {
+        return self.audio_manager.set_active_output_device(device_id);
+    }
+
+    // Set active input device.
+    pub fn set_active_audio_input_device(self: *Compositor, device_id: u32) bool {
+        return self.audio_manager.set_active_input_device(device_id);
+    }
+
+    // Get active output device.
+    pub fn get_active_audio_output_device(self: *const Compositor) ?*const audio_manager.AudioDevice {
+        return self.audio_manager.get_active_output_device();
+    }
+
+    // Get active input device.
+    pub fn get_active_audio_input_device(self: *const Compositor) ?*const audio_manager.AudioDevice {
+        return self.audio_manager.get_active_input_device();
+    }
+
+    // Set master volume.
+    pub fn set_master_volume(self: *Compositor, volume: u32) void {
+        self.audio_manager.set_master_volume(volume);
+    }
+
+    // Get master volume.
+    pub fn get_master_volume(self: *const Compositor) u32 {
+        return self.audio_manager.get_master_volume();
+    }
+
+    // Mute master.
+    pub fn mute_master_audio(self: *Compositor) void {
+        self.audio_manager.mute_master();
+    }
+
+    // Unmute master.
+    pub fn unmute_master_audio(self: *Compositor) void {
+        self.audio_manager.unmute_master();
+    }
+
+    // Check if master is muted.
+    pub fn is_master_audio_muted(self: *const Compositor) bool {
+        return self.audio_manager.is_master_muted();
+    }
+
+    // Remove audio device.
+    pub fn remove_audio_device(self: *Compositor, device_id: u32) bool {
+        return self.audio_manager.remove_device(device_id);
+    }
+
+    // Get audio device count.
+    pub fn get_audio_device_count(self: *const Compositor) u32 {
+        return self.audio_manager.get_device_count();
+    }
+
+    // Add network interface.
+    pub fn add_network_interface(
+        self: *Compositor,
+        name: []const u8,
+        interface_type: network_manager.InterfaceType,
+    ) ?u32 {
+        return self.network_manager.add_interface(name, interface_type);
+    }
+
+    // Set interface IP address.
+    pub fn set_network_interface_ip(
+        self: *Compositor,
+        interface_id: u32,
+        ip_address: []const u8,
+        ip_type: network_manager.IpAddressType,
+    ) bool {
+        return self.network_manager.set_interface_ip(interface_id, ip_address, ip_type);
+    }
+
+    // Set interface netmask.
+    pub fn set_network_interface_netmask(
+        self: *Compositor,
+        interface_id: u32,
+        netmask: []const u8,
+    ) bool {
+        return self.network_manager.set_interface_netmask(interface_id, netmask);
+    }
+
+    // Set interface gateway.
+    pub fn set_network_interface_gateway(
+        self: *Compositor,
+        interface_id: u32,
+        gateway: []const u8,
+    ) bool {
+        return self.network_manager.set_interface_gateway(interface_id, gateway);
+    }
+
+    // Bring interface up.
+    pub fn bring_network_interface_up(self: *Compositor, interface_id: u32) bool {
+        return self.network_manager.bring_interface_up(interface_id);
+    }
+
+    // Bring interface down.
+    pub fn bring_network_interface_down(self: *Compositor, interface_id: u32) bool {
+        return self.network_manager.bring_interface_down(interface_id);
+    }
+
+    // Set active interface.
+    pub fn set_active_network_interface(self: *Compositor, interface_id: u32) bool {
+        return self.network_manager.set_active_interface(interface_id);
+    }
+
+    // Get active interface.
+    pub fn get_active_network_interface(self: *const Compositor) ?*const network_manager.NetworkInterface {
+        return self.network_manager.get_active_interface();
+    }
+
+    // Remove network interface.
+    pub fn remove_network_interface(self: *Compositor, interface_id: u32) bool {
+        return self.network_manager.remove_interface(interface_id);
+    }
+
+    // Get network interface count.
+    pub fn get_network_interface_count(self: *const Compositor) u32 {
+        return self.network_manager.get_interface_count();
+    }
+
+    // Add process.
+    pub fn add_process(
+        self: *Compositor,
+        parent_process_id: u32,
+        name: []const u8,
+        cmd_line: []const u8,
+        start_time: u64,
+    ) ?u32 {
+        return self.process_manager.add_process(parent_process_id, name, cmd_line, start_time);
+    }
+
+    // Spawn process using kernel spawn syscall.
+    pub fn spawn_process(
+        self: *Compositor,
+        parent_process_id: u32,
+        name: []const u8,
+        cmd_line: []const u8,
+        start_time: u64,
+    ) ?u32 {
+        return self.process_manager.spawn_process(parent_process_id, name, cmd_line, start_time);
+    }
+
+    // Kill process using kernel kill syscall.
+    pub fn kill_process(self: *Compositor, process_id: u32) bool {
+        return self.process_manager.kill_process(process_id);
+    }
+
+    // Set process state.
+    pub fn set_process_state(
+        self: *Compositor,
+        process_id: u32,
+        state: process_manager.ProcessState,
+    ) bool {
+        return self.process_manager.set_process_state(process_id, state);
+    }
+
+    // Set process priority.
+    pub fn set_process_priority(
+        self: *Compositor,
+        process_id: u32,
+        priority: process_manager.ProcessPriority,
+    ) bool {
+        return self.process_manager.set_process_priority(process_id, priority);
+    }
+
+    // Update process CPU usage.
+    pub fn update_process_cpu_usage(
+        self: *Compositor,
+        process_id: u32,
+        cpu_usage: f64,
+    ) bool {
+        return self.process_manager.update_process_cpu_usage(process_id, cpu_usage);
+    }
+
+    // Update process memory usage.
+    pub fn update_process_memory_usage(
+        self: *Compositor,
+        process_id: u32,
+        memory_usage: u64,
+    ) bool {
+        return self.process_manager.update_process_memory_usage(process_id, memory_usage);
+    }
+
+    // Remove process.
+    pub fn remove_process(self: *Compositor, process_id: u32) bool {
+        return self.process_manager.remove_process(process_id);
+    }
+
+    // Get process count.
+    pub fn get_process_count(self: *const Compositor) u32 {
+        return self.process_manager.get_process_count();
+    }
+
+    // Get running process count.
+    pub fn get_running_process_count(self: *const Compositor) u32 {
+        return self.process_manager.get_running_process_count();
+    }
+
+    // Log system event.
+    pub fn log_system_event(
+        self: *Compositor,
+        level: system_logger.LogLevel,
+        source: []const u8,
+        message: []const u8,
+        timestamp: u64,
+    ) ?u32 {
+        return self.system_logger.log(level, source, message, timestamp);
+    }
+
+    // Set minimum log level.
+    pub fn set_min_log_level(self: *Compositor, level: system_logger.LogLevel) void {
+        self.system_logger.set_min_log_level(level);
+    }
+
+    // Get minimum log level.
+    pub fn get_min_log_level(self: *const Compositor) system_logger.LogLevel {
+        return self.system_logger.get_min_log_level();
+    }
+
+    // Get log entry by index.
+    pub fn get_log_entry(self: *const Compositor, index: u32) ?*const system_logger.LogEntry {
+        return self.system_logger.get_entry(index);
+    }
+
+    // Clear all logs.
+    pub fn clear_all_logs(self: *Compositor) void {
+        self.system_logger.clear_all();
+    }
+
+    // Get log count.
+    pub fn get_log_count(self: *const Compositor) u32 {
+        return self.system_logger.get_log_count();
+    }
+
+    // Get log count by level.
+    pub fn get_log_count_by_level(self: *const Compositor, level: system_logger.LogLevel) u32 {
+        return self.system_logger.get_log_count_by_level(level);
+    }
+
+    // Set system time.
+    pub fn set_system_time(self: *Compositor, time_ns: u64) void {
+        self.time_manager.set_system_time(time_ns);
+    }
+
+    // Get system time.
+    pub fn get_system_time(self: *const Compositor) u64 {
+        return self.time_manager.get_system_time();
+    }
+
+    // Set timezone.
+    pub fn set_timezone(
+        self: *Compositor,
+        name: []const u8,
+        abbreviation: []const u8,
+        offset_seconds: i32,
+    ) bool {
+        return self.time_manager.set_timezone(name, abbreviation, offset_seconds);
+    }
+
+    // Get timezone.
+    pub fn get_timezone(self: *const Compositor) time_manager.Timezone {
+        return self.time_manager.get_timezone();
+    }
+
+    // Set time format.
+    pub fn set_time_format(self: *Compositor, format: time_manager.TimeFormat) void {
+        self.time_manager.set_time_format(format);
+    }
+
+    // Get time format.
+    pub fn get_time_format(self: *const Compositor) time_manager.TimeFormat {
+        return self.time_manager.get_time_format();
+    }
+
+    // Set date format.
+    pub fn set_date_format(self: *Compositor, format: time_manager.DateFormat) void {
+        self.time_manager.set_date_format(format);
+    }
+
+    // Get date format.
+    pub fn get_date_format(self: *const Compositor) time_manager.DateFormat {
+        return self.time_manager.get_date_format();
+    }
+
+    // Enable auto-sync.
+    pub fn enable_time_auto_sync(self: *Compositor) void {
+        self.time_manager.enable_auto_sync();
+    }
+
+    // Disable auto-sync.
+    pub fn disable_time_auto_sync(self: *Compositor) void {
+        self.time_manager.disable_auto_sync();
+    }
+
+    // Check if auto-sync is enabled.
+    pub fn is_time_auto_sync_enabled(self: *const Compositor) bool {
+        return self.time_manager.is_auto_sync_enabled();
+    }
+
+    // Get local time.
+    pub fn get_local_time(self: *const Compositor) u64 {
+        return self.time_manager.get_local_time();
+    }
+
+    // Add permission.
+    pub fn add_permission(
+        self: *Compositor,
+        name: []const u8,
+        permission_type: security_manager.PermissionType,
+    ) ?u32 {
+        return self.security_manager.add_permission(name, permission_type);
+    }
+
+    // Add user.
+    pub fn add_user(
+        self: *Compositor,
+        name: []const u8,
+        role: security_manager.UserRole,
+    ) ?u32 {
+        return self.security_manager.add_user(name, role);
+    }
+
+    // Grant permission to user.
+    pub fn grant_permission(self: *Compositor, user_id: u32, permission_id: u32) bool {
+        return self.security_manager.grant_permission(user_id, permission_id);
+    }
+
+    // Revoke permission from user.
+    pub fn revoke_permission(self: *Compositor, user_id: u32, permission_id: u32) bool {
+        return self.security_manager.revoke_permission(user_id, permission_id);
+    }
+
+    // Check if user has permission.
+    pub fn has_permission(self: *const Compositor, user_id: u32, permission_id: u32) bool {
+        return self.security_manager.has_permission(user_id, permission_id);
+    }
+
+    // Set current user.
+    pub fn set_current_user(self: *Compositor, user_id: u32) bool {
+        return self.security_manager.set_current_user(user_id);
+    }
+
+    // Get current user.
+    pub fn get_current_user(self: *const Compositor) ?*const security_manager.User {
+        return self.security_manager.get_current_user();
+    }
+
+    // Remove user.
+    pub fn remove_user(self: *Compositor, user_id: u32) bool {
+        return self.security_manager.remove_user(user_id);
+    }
+
+    // Get permission count.
+    pub fn get_permission_count(self: *const Compositor) u32 {
+        return self.security_manager.get_permission_count();
+    }
+
+    // Get user count.
+    pub fn get_user_count(self: *const Compositor) u32 {
+        return self.security_manager.get_user_count();
+    }
+
+    // Add service.
+    pub fn add_service(
+        self: *Compositor,
+        name: []const u8,
+        description: []const u8,
+        service_type: service_manager.ServiceType,
+    ) ?u32 {
+        return self.service_manager.add_service(name, description, service_type);
+    }
+
+    // Start service.
+    pub fn start_service(self: *Compositor, service_id: u32) bool {
+        return self.service_manager.start_service(service_id);
+    }
+
+    // Stop service.
+    pub fn stop_service(self: *Compositor, service_id: u32) bool {
+        return self.service_manager.stop_service(service_id);
+    }
+
+    // Restart service.
+    pub fn restart_service(self: *Compositor, service_id: u32) bool {
+        return self.service_manager.restart_service(service_id);
+    }
+
+    // Enable service auto-start.
+    pub fn enable_service_auto_start(self: *Compositor, service_id: u32) bool {
+        return self.service_manager.enable_auto_start(service_id);
+    }
+
+    // Disable service auto-start.
+    pub fn disable_service_auto_start(self: *Compositor, service_id: u32) bool {
+        return self.service_manager.disable_auto_start(service_id);
+    }
+
+    // Enable restart on failure.
+    pub fn enable_service_restart_on_failure(self: *Compositor, service_id: u32) bool {
+        return self.service_manager.enable_restart_on_failure(service_id);
+    }
+
+    // Disable restart on failure.
+    pub fn disable_service_restart_on_failure(self: *Compositor, service_id: u32) bool {
+        return self.service_manager.disable_restart_on_failure(service_id);
+    }
+
+    // Add service dependency.
+    pub fn add_service_dependency(self: *Compositor, service_id: u32, dependency_id: u32) bool {
+        return self.service_manager.add_dependency(service_id, dependency_id);
+    }
+
+    // Remove service dependency.
+    pub fn remove_service_dependency(self: *Compositor, service_id: u32, dependency_id: u32) bool {
+        return self.service_manager.remove_dependency(service_id, dependency_id);
+    }
+
+    // Remove service.
+    pub fn remove_service(self: *Compositor, service_id: u32) bool {
+        return self.service_manager.remove_service(service_id);
+    }
+
+    // Get service count.
+    pub fn get_service_count(self: *const Compositor) u32 {
+        return self.service_manager.get_service_count();
+    }
+
+    // Get running service count.
+    pub fn get_running_service_count(self: *const Compositor) u32 {
+        return self.service_manager.get_running_service_count();
+    }
+
+    // Create backup.
+    pub fn create_backup(
+        self: *Compositor,
+        name: []const u8,
+        description: []const u8,
+        path: []const u8,
+        backup_type: backup_manager.BackupType,
+        timestamp: u64,
+    ) ?u32 {
+        return self.backup_manager.create_backup(name, description, path, backup_type, timestamp);
+    }
+
+    // Start backup operation.
+    pub fn start_backup(self: *Compositor, backup_id: u32) bool {
+        return self.backup_manager.start_backup(backup_id);
+    }
+
+    // Complete backup operation.
+    pub fn complete_backup(self: *Compositor, backup_id: u32, size_bytes: u64) bool {
+        return self.backup_manager.complete_backup(backup_id, size_bytes);
+    }
+
+    // Fail backup operation.
+    pub fn fail_backup(self: *Compositor, backup_id: u32) bool {
+        return self.backup_manager.fail_backup(backup_id);
+    }
+
+    // Cancel backup operation.
+    pub fn cancel_backup(self: *Compositor, backup_id: u32) bool {
+        return self.backup_manager.cancel_backup(backup_id);
+    }
+
+    // Restore from backup.
+    pub fn restore_backup(self: *Compositor, backup_id: u32) bool {
+        return self.backup_manager.restore_backup(backup_id);
+    }
+
+    // Remove backup.
+    pub fn remove_backup(self: *Compositor, backup_id: u32) bool {
+        return self.backup_manager.remove_backup(backup_id);
+    }
+
+    // Get backup count.
+    pub fn get_backup_count(self: *const Compositor) u32 {
+        return self.backup_manager.get_backup_count();
+    }
+
+    // Get completed backup count.
+    pub fn get_completed_backup_count(self: *const Compositor) u32 {
+        return self.backup_manager.get_completed_backup_count();
+    }
+
+    // Get current backup ID.
+    pub fn get_current_backup_id(self: *const Compositor) u32 {
+        return self.backup_manager.get_current_backup_id();
+    }
+
+    // Add update.
+    pub fn add_update(
+        self: *Compositor,
+        version: []const u8,
+        description: []const u8,
+        url: []const u8,
+        update_type: update_manager.UpdateType,
+        size_bytes: u64,
+        release_date: u64,
+    ) ?u32 {
+        return self.update_manager.add_update(version, description, url, update_type, size_bytes, release_date);
+    }
+
+    // Start download.
+    pub fn start_update_download(self: *Compositor, update_id: u32) bool {
+        return self.update_manager.start_download(update_id);
+    }
+
+    // Complete download.
+    pub fn complete_update_download(self: *Compositor, update_id: u32) bool {
+        return self.update_manager.complete_download(update_id);
+    }
+
+    // Start installation.
+    pub fn start_update_installation(self: *Compositor, update_id: u32) bool {
+        return self.update_manager.start_installation(update_id);
+    }
+
+    // Complete installation.
+    pub fn complete_update_installation(self: *Compositor, update_id: u32) bool {
+        return self.update_manager.complete_installation(update_id);
+    }
+
+    // Fail update.
+    pub fn fail_update(self: *Compositor, update_id: u32) bool {
+        return self.update_manager.fail_update(update_id);
+    }
+
+    // Cancel update.
+    pub fn cancel_update(self: *Compositor, update_id: u32) bool {
+        return self.update_manager.cancel_update(update_id);
+    }
+
+    // Remove update.
+    pub fn remove_update(self: *Compositor, update_id: u32) bool {
+        return self.update_manager.remove_update(update_id);
+    }
+
+    // Set current version.
+    pub fn set_current_version(self: *Compositor, version: []const u8) bool {
+        return self.update_manager.set_current_version(version);
+    }
+
+    // Get current version.
+    pub fn get_current_version(self: *const Compositor) []const u8 {
+        return self.update_manager.get_current_version();
+    }
+
+    // Enable auto-update.
+    pub fn enable_auto_update(self: *Compositor) void {
+        self.update_manager.enable_auto_update();
+    }
+
+    // Disable auto-update.
+    pub fn disable_auto_update(self: *Compositor) void {
+        self.update_manager.disable_auto_update();
+    }
+
+    // Check if auto-update is enabled.
+    pub fn is_auto_update_enabled(self: *const Compositor) bool {
+        return self.update_manager.is_auto_update_enabled();
+    }
+
+    // Get update count.
+    pub fn get_update_count(self: *const Compositor) u32 {
+        return self.update_manager.get_update_count();
+    }
+
+    // Get available update count.
+    pub fn get_available_update_count(self: *const Compositor) u32 {
+        return self.update_manager.get_available_update_count();
+    }
+
+    // Get current update ID.
+    pub fn get_current_update_id(self: *const Compositor) u32 {
+        return self.update_manager.get_current_update_id();
+    }
+
+    // Add package.
+    pub fn add_package(
+        self: *Compositor,
+        name: []const u8,
+        version: []const u8,
+        description: []const u8,
+        size_bytes: u64,
+    ) ?u32 {
+        return self.package_manager.add_package(name, version, description, size_bytes);
+    }
+
+    // Install package.
+    pub fn install_package(self: *Compositor, package_id: u32, timestamp: u64) bool {
+        return self.package_manager.install_package(package_id, timestamp);
+    }
+
+    // Remove package.
+    pub fn remove_package(self: *Compositor, package_id: u32) bool {
+        return self.package_manager.remove_package(package_id);
+    }
+
+    // Add package dependency.
+    pub fn add_package_dependency(self: *Compositor, package_id: u32, dependency_id: u32) bool {
+        return self.package_manager.add_dependency(package_id, dependency_id);
+    }
+
+    // Remove package dependency.
+    pub fn remove_package_dependency(self: *Compositor, package_id: u32, dependency_id: u32) bool {
+        return self.package_manager.remove_dependency(package_id, dependency_id);
+    }
+
+    // Remove package entry.
+    pub fn remove_package_entry(self: *Compositor, package_id: u32) bool {
+        return self.package_manager.remove_package_entry(package_id);
+    }
+
+    // Get package count.
+    pub fn get_package_count(self: *const Compositor) u32 {
+        return self.package_manager.get_package_count();
+    }
+
+    // Get installed package count.
+    pub fn get_installed_package_count(self: *const Compositor) u32 {
+        return self.package_manager.get_installed_package_count();
+    }
+
+    // Add health check.
+    pub fn add_health_check(self: *Compositor, name: []const u8) ?u32 {
+        return self.health_monitor.add_health_check(name);
+    }
+
+    // Update health check status.
+    pub fn update_health_check(
+        self: *Compositor,
+        check_id: u32,
+        status: health_monitor.HealthStatus,
+        message: []const u8,
+        timestamp: u64,
+    ) bool {
+        return self.health_monitor.update_health_check(check_id, status, message, timestamp);
+    }
+
+    // Remove health check.
+    pub fn remove_health_check(self: *Compositor, check_id: u32) bool {
+        return self.health_monitor.remove_health_check(check_id);
+    }
+
+    // Get overall health status.
+    pub fn get_overall_health_status(self: *const Compositor) health_monitor.HealthStatus {
+        return self.health_monitor.get_overall_status();
+    }
+
+    // Get health check count.
+    pub fn get_health_check_count(self: *const Compositor) u32 {
+        return self.health_monitor.get_health_check_count();
+    }
+
+    // Get healthy check count.
+    pub fn get_healthy_check_count(self: *const Compositor) u32 {
+        return self.health_monitor.get_healthy_check_count();
+    }
+
+    // Get warning check count.
+    pub fn get_warning_check_count(self: *const Compositor) u32 {
+        return self.health_monitor.get_warning_check_count();
+    }
+
+    // Get critical check count.
+    pub fn get_critical_check_count(self: *const Compositor) u32 {
+        return self.health_monitor.get_critical_check_count();
+    }
+
+    // Add supervised process.
+    pub fn add_supervised_process(
+        self: *Compositor,
+        process_id: u32,
+        policy: process_supervision.SupervisionPolicy,
+        max_restarts: u32,
+        restart_delay_ms: u32,
+    ) ?u32 {
+        return self.process_supervisor.add_supervised_process(process_id, policy, max_restarts, restart_delay_ms);
+    }
+
+    // Update supervised process state.
+    pub fn update_supervised_process_state(
+        self: *Compositor,
+        process_id: u32,
+        state: process_supervision.SupervisionState,
+    ) bool {
+        return self.process_supervisor.update_process_state(process_id, state);
+    }
+
+    // Record supervised process exit.
+    pub fn record_supervised_process_exit(
+        self: *Compositor,
+        process_id: u32,
+        exit_code: i32,
+        timestamp: u64,
+    ) bool {
+        return self.process_supervisor.record_process_exit(process_id, exit_code, timestamp);
+    }
+
+    // Remove supervised process.
+    pub fn remove_supervised_process(self: *Compositor, supervision_id: u32) bool {
+        return self.process_supervisor.remove_supervised_process(supervision_id);
+    }
+
+    // Get supervised process count.
+    pub fn get_supervised_process_count(self: *const Compositor) u32 {
+        return self.process_supervisor.get_supervised_count();
+    }
+
+    // Get running supervised count.
+    pub fn get_running_supervised_count(self: *const Compositor) u32 {
+        return self.process_supervisor.get_running_count();
+    }
+
+    // Get crashed supervised count.
+    pub fn get_crashed_supervised_count(self: *const Compositor) u32 {
+        return self.process_supervisor.get_crashed_count();
+    }
+
+    // Update system metrics from all sources.
+    pub fn update_system_metrics(self: *Compositor, timestamp: u64) void {
+        // Update from resource monitor.
+        self.metrics_aggregator.update_from_resource_monitor(
+            self.resource_monitor.get_cpu_usage(),
+            self.resource_monitor.get_memory_usage_percent(),
+            self.resource_monitor.get_disk_usage_percent(),
+            self.resource_monitor.get_total_processes(),
+            self.resource_monitor.get_running_processes(),
+        );
+        // Update from health monitor.
+        const overall_health = self.health_monitor.get_overall_status();
+        const health_status = switch (overall_health) {
+            health_monitor.HealthStatus.healthy => system_metrics.SystemHealth.healthy,
+            health_monitor.HealthStatus.warning => system_metrics.SystemHealth.warning,
+            health_monitor.HealthStatus.critical => system_metrics.SystemHealth.critical,
+            health_monitor.HealthStatus.unknown => system_metrics.SystemHealth.unknown,
+        };
+        self.metrics_aggregator.update_from_health_monitor(
+            health_status,
+            self.health_monitor.get_healthy_check_count(),
+            self.health_monitor.get_warning_check_count(),
+            self.health_monitor.get_critical_check_count(),
+        );
+        // Update from process supervisor.
+        self.metrics_aggregator.update_from_process_supervisor(
+            self.process_supervisor.get_supervised_count(),
+            self.process_supervisor.get_running_count(),
+            self.process_supervisor.get_crashed_count(),
+        );
+        // Update timestamp.
+        self.metrics_aggregator.update_timestamp(timestamp);
+    }
+
+    // Get system status.
+    pub fn get_system_status(self: *Compositor) system_metrics.SystemStatus {
+        return self.metrics_aggregator.get_system_status();
+    }
+
+    // Get overall system health.
+    pub fn get_overall_system_health(self: *Compositor) system_metrics.SystemHealth {
+        return self.metrics_aggregator.get_overall_health();
     }
 
     // Get resize handle at mouse position.

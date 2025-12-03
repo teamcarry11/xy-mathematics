@@ -40,6 +40,9 @@ const MemoryStats = memory_stats.MemoryStats;
 const cow = @import("cow.zig");
 const CowTable = cow.CowTable;
 const resource_cleanup = @import("resource_cleanup.zig");
+const KernelLogBuffer = @import("kernel_log_buffer.zig").KernelLogBuffer;
+const KernelLogEntry = @import("kernel_log_buffer.zig").KernelLogEntry;
+const KernelLogLevel = @import("kernel_log_buffer.zig").KernelLogLevel;
 
 // Export resource_cleanup for tests.
 pub const resource_cleanup_module = resource_cleanup;
@@ -84,6 +87,11 @@ pub const Syscall = enum(u32) {
     
     // System Information
     sysinfo = 50,
+    enumerate_processes = 51,
+    get_process_info = 52,
+    read_kernel_log = 53,
+    set_priority = 54,
+    get_priority = 55,
     
     // Input Events
     read_input_event = 60,
@@ -196,6 +204,10 @@ pub const SysInfo = struct {
     /// Available physical memory (bytes).
     available_memory: u64,
     
+    /// Used physical memory (bytes).
+    /// Why: Track memory usage for resource monitoring.
+    used_memory: u64,
+    
     /// Number of CPU cores.
     cpu_cores: u32,
     
@@ -205,15 +217,59 @@ pub const SysInfo = struct {
     /// Load average (1-minute average, scaled by 1000).
     load_avg_1min: u32,
     
+    /// Total number of processes (allocated).
+    /// Why: Track process count for system monitoring.
+    total_processes: u32,
+    
+    /// Number of running processes.
+    /// Why: Track active process count for system monitoring.
+    running_processes: u32,
+    
+    /// Number of exited processes.
+    /// Why: Track terminated process count for system monitoring.
+    exited_processes: u32,
+    
     /// Initialize SysInfo with default values.
     /// Why: Explicit initialization, prevent uninitialized fields.
     pub fn init() SysInfo {
         return SysInfo{
             .total_memory = 0,
             .available_memory = 0,
+            .used_memory = 0,
             .cpu_cores = 0,
             .uptime_ns = 0,
             .load_avg_1min = 0,
+            .total_processes = 0,
+            .running_processes = 0,
+            .exited_processes = 0,
+        };
+    }
+};
+
+/// Process information structure for userspace.
+/// Why: Provide process information to userspace programs.
+/// GrainStyle: Explicit types, bounded size, deterministic layout.
+pub const ProcessInfo = struct {
+    /// Process ID.
+    pid: u32,
+    /// Parent process ID (0 if no parent).
+    parent_pid: u32,
+    /// Process state (0=free, 1=running, 2=exited).
+    state: u8,
+    /// Total CPU time used (nanoseconds).
+    cpu_time_ns: u64,
+    /// Memory used (bytes).
+    memory_used: u64,
+    
+    /// Initialize ProcessInfo with default values.
+    /// Why: Explicit initialization, prevent uninitialized fields.
+    pub fn init() ProcessInfo {
+        return ProcessInfo{
+            .pid = 0,
+            .parent_pid = 0,
+            .state = 0,
+            .cpu_time_ns = 0,
+            .memory_used = 0,
         };
     }
 };
@@ -501,6 +557,19 @@ pub const Process = struct {
     /// Signal table for process.
     /// Why: Handle signals (SIGTERM, SIGKILL, etc.) for process.
     signals: SignalTable,
+    /// Total CPU time used (nanoseconds).
+    /// Why: Track CPU usage for resource monitoring.
+    cpu_time_ns: u64,
+    /// Memory used (bytes).
+    /// Why: Track memory usage for resource monitoring.
+    memory_used: u64,
+    /// Parent process ID (0 if no parent).
+    /// Why: Track parent-child relationships.
+    parent_pid: u64,
+    /// Process priority (nice value, -20 to 19, default 0).
+    /// Why: Track process priority for scheduling decisions.
+    /// Note: Lower nice value = higher priority (POSIX-style).
+    priority: i8,
     /// Whether this entry is allocated (in use).
     allocated: bool,
     
@@ -517,6 +586,10 @@ pub const Process = struct {
             .stack_pointer = 0,
             .context = null,
             .signals = SignalTable.init(),
+            .cpu_time_ns = 0,
+            .memory_used = 0,
+            .parent_pid = 0,
+            .priority = 0, // Default priority (nice value 0)
             .allocated = false,
         };
     }
@@ -632,6 +705,11 @@ pub const BasinKernel = struct {
     /// Grain Style: Static allocation, initialized at kernel boot.
     mouse: Mouse,
     
+    /// Kernel log buffer.
+    /// Why: Store kernel log entries for userspace access.
+    /// Grain Style: Static allocation, initialized at kernel boot.
+    log_buffer: KernelLogBuffer,
+    
     /// Memory pool for kernel allocations.
     /// Why: Provide kernel-side memory allocation.
     /// Grain Style: Static allocation, initialized at kernel boot.
@@ -689,12 +767,16 @@ pub const BasinKernel = struct {
             .storage = Storage.init(),
             .keyboard = Keyboard.init(),
             .mouse = Mouse.init(),
+            .log_buffer = undefined, // Will initialize below with timer reference
             .memory_pool = MemoryPool.init(),
             .page_table = PageTable.init(),
             .page_fault_stats = PageFaultStats.init(),
             .memory_stats = MemoryStats.init(),
             .cow_table = CowTable.init(),
         };
+        
+        // Initialize log buffer with timer reference (after timer is created).
+        kernel.log_buffer = KernelLogBuffer.init(&kernel.timer);
         
         // Initialize default users (root and xy).
         kernel.init_users();
@@ -776,6 +858,53 @@ pub const BasinKernel = struct {
             }
         }
         return null;
+    }
+    
+    /// Calculate memory usage for a process by summing its memory mappings.
+    /// Why: Track total memory used by a process for resource monitoring.
+    /// Contract: process_id must be valid (non-zero).
+    /// Returns: Total memory used in bytes (sum of all mapping sizes).
+    /// Grain Style: Explicit types, bounded operations, deterministic calculation.
+    fn calculate_process_memory_usage(self: *const BasinKernel, process_id: u64) u64 {
+        // Assert: process ID must be valid (non-zero).
+        Debug.kassert(process_id != 0, "Process ID is 0", .{});
+        
+        const process_id_u32 = @as(u32, @truncate(process_id));
+        var total_memory: u64 = 0;
+        
+        // Sum memory from all mappings owned by this process.
+        // Why: Calculate total memory used by summing mapping sizes.
+        for (0..MAX_MAPPINGS) |i| {
+            const mapping = &self.mappings[i];
+            if (mapping.allocated and mapping.owner_process_id == process_id_u32) {
+                total_memory +%= mapping.size; // Saturating add to prevent overflow
+            }
+        }
+        
+        // Assert: Total memory must be reasonable (bounded by VM memory size).
+        const VM_MEMORY_SIZE: u64 = 4 * 1024 * 1024; // 4MB default
+        Debug.kassert(total_memory <= VM_MEMORY_SIZE, "Process memory > VM size", .{});
+        
+        return total_memory;
+    }
+    
+    /// Update memory usage for a process.
+    /// Why: Keep process memory_used field current when mappings change.
+    /// Contract: process_id must be valid (non-zero).
+    /// Grain Style: Explicit types, bounded operations.
+    fn update_process_memory_usage(self: *BasinKernel, process_id: u64) void {
+        // Assert: process ID must be valid (non-zero).
+        Debug.kassert(process_id != 0, "Process ID is 0", .{});
+        
+        // Find process in process table.
+        for (0..MAX_PROCESSES) |i| {
+            if (self.processes[i].allocated and self.processes[i].id == process_id) {
+                // Calculate and update memory usage.
+                const memory_used = self.calculate_process_memory_usage(process_id);
+                self.processes[i].memory_used = memory_used;
+                return;
+            }
+        }
     }
     
     /// Find user by name.
@@ -1066,12 +1195,12 @@ pub const BasinKernel = struct {
         Debug.kassert(syscall_num >= 10, "Syscall num {d} < 10", .{syscall_num});
         
         // Assert: syscall number must be within valid range.
-        Debug.kassert(syscall_num <= @intFromEnum(Syscall.sysinfo), "Syscall num {d} too high", .{syscall_num});
+        Debug.kassert(syscall_num <= @intFromEnum(Syscall.get_priority), "Syscall num {d} too high", .{syscall_num});
         
         // Decode syscall number.
         const syscall = @as(?Syscall, @enumFromInt(syscall_num)) orelse {
             // Assert: Invalid syscall number must return error.
-            Debug.kassert(syscall_num < 10 or syscall_num > @intFromEnum(Syscall.sysinfo), "Invalid syscall logic", .{});
+            Debug.kassert(syscall_num < 10 or syscall_num > @intFromEnum(Syscall.get_priority), "Invalid syscall logic", .{});
             return BasinError.invalid_syscall;
         };
         
@@ -1107,6 +1236,11 @@ pub const BasinKernel = struct {
             .clock_gettime => self.syscall_clock_gettime(arg1, arg2, arg3, arg4),
             .sleep_until => self.syscall_sleep_until(arg1, arg2, arg3, arg4),
             .sysinfo => self.syscall_sysinfo(arg1, arg2, arg3, arg4),
+            .enumerate_processes => self.syscall_enumerate_processes(arg1, arg2, arg3, arg4),
+            .get_process_info => self.syscall_get_process_info(arg1, arg2, arg3, arg4),
+            .read_kernel_log => self.syscall_read_kernel_log(arg1, arg2, arg3, arg4),
+            .set_priority => self.syscall_set_priority(arg1, arg2, arg3, arg4),
+            .get_priority => self.syscall_get_priority(arg1, arg2, arg3, arg4),
             .read_input_event => self.syscall_read_input_event(arg1, arg2, arg3, arg4),
             .fb_clear => self.syscall_fb_clear(arg1, arg2, arg3, arg4),
             .fb_draw_pixel => self.syscall_fb_draw_pixel(arg1, arg2, arg3, arg4),
@@ -1311,6 +1445,13 @@ pub const BasinKernel = struct {
         self.processes[idx].entry_point = entry_point;
         self.processes[idx].stack_pointer = stack_pointer;
         self.processes[idx].context = process_context;
+        // Get parent process ID from current process (if any).
+        const current_pid = self.scheduler.get_current();
+        self.processes[idx].parent_pid = if (current_pid > 0) current_pid else 0;
+        // Initialize resource tracking.
+        self.processes[idx].cpu_time_ns = 0;
+        self.processes[idx].memory_used = executable_len; // Initial memory = executable size
+        self.processes[idx].priority = 0; // Default priority (nice value 0)
         self.processes[idx].allocated = true;
         
         // Set as current running process in scheduler.
@@ -1634,6 +1775,13 @@ pub const BasinKernel = struct {
         self.memory_stats.update_from_page_table(@ptrCast(&self.page_table), VM_MEMORY_SIZE);
         self.memory_stats.update_mapping_count(self.count_allocated_mappings());
         
+        // Update process memory usage.
+        // Why: Track memory used by process for resource monitoring.
+        if (owner_process_id > 0) {
+            const owner_process_id_u64 = @as(u64, owner_process_id);
+            self.update_process_memory_usage(owner_process_id_u64);
+        }
+        
         // Assert: Mapping entry must be allocated correctly.
         Debug.kassert(mapping.allocated, "Mapping not allocated", .{});
         Debug.kassert(mapping.address == mapping_addr, "Mapping addr mismatch", .{});
@@ -1709,11 +1857,12 @@ pub const BasinKernel = struct {
         // Free mapping entry.
         var mapping = &self.mappings[mapping_idx];
         const mapping_size = mapping.size;
+        const owner_process_id = mapping.owner_process_id;
         mapping.allocated = false;
         mapping.address = 0;
         mapping.size = 0;
-        mapping.flags = MapFlags.init(.{});
         mapping.owner_process_id = 0;
+        mapping.flags = MapFlags.init(.{});
         
         // Update page table (unmap pages).
         self.page_table.unmap_pages(region, mapping_size);
@@ -1721,6 +1870,13 @@ pub const BasinKernel = struct {
         // Update memory statistics.
         self.memory_stats.update_from_page_table(@ptrCast(&self.page_table), VM_MEMORY_SIZE);
         self.memory_stats.update_mapping_count(self.count_allocated_mappings());
+        
+        // Update process memory usage.
+        // Why: Track memory used by process for resource monitoring.
+        if (owner_process_id > 0) {
+            const owner_process_id_u64 = @as(u64, owner_process_id);
+            self.update_process_memory_usage(owner_process_id_u64);
+        }
         
         // Assert: Mapping entry must be freed correctly.
         Debug.kassert(!mapping.allocated, "Mapping still allocated", .{});
@@ -2909,8 +3065,15 @@ pub const BasinKernel = struct {
         const available_pages = MAX_PAGES - allocated_pages;
         const available_memory: u64 = @as(u64, available_pages) * PAGE_SIZE;
         
+        // Calculate used memory (total - available).
+        // Why: Track memory usage for resource monitoring.
+        const used_memory: u64 = total_memory -% available_memory; // Saturating subtract
+        
         // Assert: Available memory must be <= total memory.
         Debug.kassert(available_memory <= total_memory, "Available > total", .{});
+        
+        // Assert: Used memory must be <= total memory.
+        Debug.kassert(used_memory <= total_memory, "Used > total", .{});
         
         // Get uptime from timer (nanoseconds since boot).
         const uptime_ns: u64 = self.timer.get_uptime_ns();
@@ -2918,16 +3081,31 @@ pub const BasinKernel = struct {
         // Assert: Uptime must be non-negative.
         Debug.kassert(uptime_ns >= 0, "Uptime negative", .{});
         
-        // Calculate load average (simple: running processes / max processes).
-        // Why: Provide basic load metric for system monitoring.
+        // Calculate process statistics.
+        // Why: Provide process count metrics for system monitoring.
+        var total_count: u32 = 0;
         var running_count: u32 = 0;
+        var exited_count: u32 = 0;
         for (0..MAX_PROCESSES) |i| {
-            if (self.processes[i].allocated and self.processes[i].state == .running) {
-                running_count += 1;
+            if (self.processes[i].allocated) {
+                total_count += 1;
+                if (self.processes[i].state == .running) {
+                    running_count += 1;
+                } else if (self.processes[i].state == .exited) {
+                    exited_count += 1;
+                }
             }
         }
+        
+        // Assert: Process counts must be valid.
+        Debug.kassert(total_count <= MAX_PROCESSES, "Total processes > max", .{});
+        Debug.kassert(running_count <= total_count, "Running > total", .{});
+        Debug.kassert(exited_count <= total_count, "Exited > total", .{});
+        
+        // Calculate load average (simple: running processes / max processes).
+        // Why: Provide basic load metric for system monitoring.
         // Load average: running processes / max processes (scaled to 1000 for fixed-point).
-        const load_avg_1min: u32 = (running_count * 1000) / MAX_PROCESSES;
+        const load_avg_1min: u32 = if (MAX_PROCESSES > 0) (running_count * 1000) / MAX_PROCESSES else 0;
         
         // Assert: Load average must be <= 1000 (scaled).
         Debug.kassert(load_avg_1min <= 1000, "Load avg > 1000", .{});
@@ -2936,10 +3114,15 @@ pub const BasinKernel = struct {
         // Structure layout:
         // - total_memory: u64 (offset 0)
         // - available_memory: u64 (offset 8)
-        // - cpu_cores: u32 (offset 16)
-        // - uptime_ns: u64 (offset 20, but u32 alignment means offset 24)
-        // - load_avg_1min: u32 (offset 32)
-        // Total size: 40 bytes (with padding)
+        // - used_memory: u64 (offset 16)
+        // - cpu_cores: u32 (offset 24)
+        // - padding: [4]u8 (offset 28)
+        // - uptime_ns: u64 (offset 32)
+        // - load_avg_1min: u32 (offset 40)
+        // - total_processes: u32 (offset 44)
+        // - running_processes: u32 (offset 48)
+        // - exited_processes: u32 (offset 52)
+        // Total size: 56 bytes (with padding)
         
         // Return success (integration layer writes data).
         const result = SyscallResult.ok(0);
@@ -2951,6 +3134,323 @@ pub const BasinKernel = struct {
         // Store system info in kernel for integration layer access.
         // Note: Integration layer can access these values via kernel.sysinfo_* fields.
         // For now, we calculate them here and integration layer will read them.
+        
+        return result;
+    }
+
+    fn syscall_enumerate_processes(
+        self: *BasinKernel,
+        buffer_ptr: u64,
+        buffer_len: u64,
+        max_processes: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg4;
+        
+        // Assert: buffer pointer must be valid (non-zero, within VM memory).
+        if (buffer_ptr == 0) {
+            return BasinError.invalid_argument; // Null pointer
+        }
+        
+        const VM_MEMORY_SIZE: u64 = 4 * 1024 * 1024; // 4MB default
+        if (buffer_ptr >= VM_MEMORY_SIZE) {
+            return BasinError.invalid_argument; // Buffer pointer exceeds VM memory
+        }
+        
+        // Assert: buffer length must be sufficient for at least one ProcessInfo.
+        const PROCESS_INFO_SIZE: u64 = 32; // pid(4) + parent_pid(4) + state(1) + padding(3) + cpu_time_ns(8) + memory_used(8)
+        if (buffer_len < PROCESS_INFO_SIZE) {
+            return BasinError.invalid_argument; // Buffer too small
+        }
+        
+        // Assert: max_processes must be reasonable.
+        const MAX_PROCESSES_U64: u64 = MAX_PROCESSES;
+        const limit: u64 = if (max_processes > 0 and max_processes < MAX_PROCESSES_U64) max_processes else MAX_PROCESSES_U64;
+        
+        // Calculate how many ProcessInfo structures fit in buffer.
+        const max_fit: u64 = buffer_len / PROCESS_INFO_SIZE;
+        const count: u64 = if (limit < max_fit) limit else max_fit;
+        
+        // Enumerate processes and write to buffer.
+        // Note: Integration layer will write ProcessInfo structures to buffer_ptr.
+        var written: u32 = 0;
+        var i: u32 = 0;
+        while (i < MAX_PROCESSES and written < count) : (i += 1) {
+            if (self.processes[i].allocated) {
+                written += 1;
+            }
+        }
+        
+        // Return number of processes found (integration layer writes data).
+        const result = SyscallResult.ok(@intCast(written));
+        
+        // Assert: result must be success.
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+
+    fn syscall_get_process_info(
+        self: *BasinKernel,
+        pid: u64,
+        info_ptr: u64,
+        _arg3: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg3;
+        _ = _arg4;
+        
+        // Assert: process ID must be valid (non-zero).
+        if (pid == 0) {
+            return BasinError.invalid_argument; // Invalid process ID
+        }
+        
+        // Assert: info pointer must be valid (non-zero, within VM memory).
+        if (info_ptr == 0) {
+            return BasinError.invalid_argument; // Null pointer
+        }
+        
+        const VM_MEMORY_SIZE: u64 = 4 * 1024 * 1024; // 4MB default
+        if (info_ptr >= VM_MEMORY_SIZE) {
+            return BasinError.invalid_argument; // Info pointer exceeds VM memory
+        }
+        
+        // Assert: ProcessInfo structure must fit within VM memory.
+        const PROCESS_INFO_SIZE: u64 = 32;
+        if (info_ptr + PROCESS_INFO_SIZE > VM_MEMORY_SIZE) {
+            return BasinError.invalid_argument; // ProcessInfo exceeds VM memory
+        }
+        
+        // Find process in process table.
+        var found: ?usize = null;
+        for (0..MAX_PROCESSES) |i| {
+            if (self.processes[i].allocated and self.processes[i].id == pid) {
+                found = i;
+                break;
+            }
+        }
+        
+        if (found == null) {
+            return BasinError.not_found; // Process not found
+        }
+        
+        const idx = found.?;
+        
+        // Update process memory usage before returning info.
+        // Why: Ensure memory_used is current when querying process info.
+        self.update_process_memory_usage(pid);
+        
+        // Get process information.
+        // Note: Integration layer will write ProcessInfo structure to info_ptr.
+        // Process data available: self.processes[idx].id, .parent_pid, .state, .cpu_time_ns, .memory_used
+        // Structure layout:
+        // - pid: u32 (offset 0)
+        // - parent_pid: u32 (offset 4)
+        // - state: u8 (offset 8)
+        // - padding: [3]u8 (offset 9-11)
+        // - cpu_time_ns: u64 (offset 12, but u64 alignment means offset 16)
+        // - memory_used: u64 (offset 24)
+        // Total size: 32 bytes
+        
+        // Return success (integration layer writes data).
+        const result = SyscallResult.ok(0);
+        
+        // Assert: result must be success.
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+
+    fn syscall_read_kernel_log(
+        self: *BasinKernel,
+        buffer_ptr: u64,
+        buffer_len: u64,
+        max_entries: u64,
+        flags: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = flags; // Reserved for future use (filter flags)
+        
+        // Assert: buffer pointer must be valid (non-zero, within VM memory).
+        if (buffer_ptr == 0) {
+            return BasinError.invalid_argument; // Null pointer
+        }
+        
+        const VM_MEMORY_SIZE: u64 = 4 * 1024 * 1024; // 4MB default
+        if (buffer_ptr >= VM_MEMORY_SIZE) {
+            return BasinError.invalid_argument; // Buffer pointer exceeds VM memory
+        }
+        
+        // Assert: buffer length must be sufficient for at least one KernelLogEntry.
+        // Structure layout: timestamp(8) + level(1) + padding(7) + source(32) + message(256) = 304 bytes
+        const KERNEL_LOG_ENTRY_SIZE: u64 = @sizeOf(KernelLogEntry);
+        if (buffer_len < KERNEL_LOG_ENTRY_SIZE) {
+            return BasinError.invalid_argument; // Buffer too small
+        }
+        
+        // Get entry count from log buffer.
+        const entry_count = self.log_buffer.get_entry_count();
+        
+        // Assert: max_entries must be reasonable.
+        const MAX_LOG_ENTRIES_U64: u64 = 256;
+        const limit: u64 = if (max_entries > 0 and max_entries < MAX_LOG_ENTRIES_U64) max_entries else MAX_LOG_ENTRIES_U64;
+        
+        // Calculate how many KernelLogEntry structures fit in buffer.
+        const max_fit: u64 = buffer_len / KERNEL_LOG_ENTRY_SIZE;
+        const count: u64 = if (limit < max_fit) limit else max_fit;
+        const actual_count: u64 = if (count < entry_count) count else entry_count;
+        
+        // Enumerate log entries and write to buffer.
+        // Note: Integration layer will write KernelLogEntry structures to buffer_ptr.
+        var written: u32 = 0;
+        var i: u32 = 0;
+        while (i < actual_count) : (i += 1) {
+            if (self.log_buffer.get_entry(i)) |_| {
+                written += 1;
+            }
+        }
+        
+        // Return number of log entries found (integration layer writes data).
+        const result = SyscallResult.ok(@intCast(written));
+        
+        // Assert: result must be success.
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+
+    fn syscall_set_priority(
+        self: *BasinKernel,
+        pid: u64,
+        priority: u64,
+        _arg3: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg3;
+        _ = _arg4;
+        
+        // Assert: process ID must be valid (non-zero).
+        if (pid == 0) {
+            return BasinError.invalid_argument; // Invalid process ID
+        }
+        
+        // Assert: priority must be valid nice value (-20 to 19).
+        // Why: POSIX-style nice values: -20 (highest priority) to 19 (lowest priority).
+        const MIN_NICE: i8 = -20;
+        const MAX_NICE: i8 = 19;
+        // Convert u64 to i8 (assuming value is in 0-39 range, subtract 20).
+        // Why: Userspace passes nice value as unsigned (0-39), convert to signed (-20 to 19).
+        const priority_offset: u64 = 20;
+        if (priority < priority_offset or priority > priority_offset + 39) {
+            return BasinError.invalid_argument; // Invalid priority value
+        }
+        const priority_i8 = @as(i8, @intCast(@as(i64, @intCast(priority)) - @as(i64, priority_offset)));
+        
+        // Assert: Priority must be in valid range after conversion.
+        Debug.kassert(priority_i8 >= MIN_NICE and priority_i8 <= MAX_NICE, "Priority out of range", .{});
+        
+        // Find process in process table.
+        var found: ?usize = null;
+        for (0..MAX_PROCESSES) |i| {
+            if (self.processes[i].allocated and self.processes[i].id == pid) {
+                found = i;
+                break;
+            }
+        }
+        
+        if (found == null) {
+            return BasinError.not_found; // Process not found
+        }
+        
+        const idx = found.?;
+        
+        // Set process priority.
+        // Why: Update process priority for scheduling decisions.
+        self.processes[idx].priority = priority_i8;
+        
+        // Assert: Priority must be set correctly.
+        Debug.kassert(self.processes[idx].priority == priority_i8, "Priority not set", .{});
+        
+        // Return success.
+        const result = SyscallResult.ok(0);
+        
+        // Assert: result must be success.
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+
+    fn syscall_get_priority(
+        self: *BasinKernel,
+        pid: u64,
+        _arg2: u64,
+        _arg3: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg2;
+        _ = _arg3;
+        _ = _arg4;
+        
+        // Assert: process ID must be valid (non-zero).
+        if (pid == 0) {
+            return BasinError.invalid_argument; // Invalid process ID
+        }
+        
+        // Find process in process table.
+        var found: ?usize = null;
+        for (0..MAX_PROCESSES) |i| {
+            if (self.processes[i].allocated and self.processes[i].id == pid) {
+                found = i;
+                break;
+            }
+        }
+        
+        if (found == null) {
+            return BasinError.not_found; // Process not found
+        }
+        
+        const idx = found.?;
+        
+        // Get process priority.
+        // Why: Return process priority for userspace queries.
+        const priority = self.processes[idx].priority;
+        
+        // Convert i8 to u64 for return value (add 20 to make it non-negative).
+        // Why: Return nice value as unsigned (0-39 range: -20 becomes 0, 19 becomes 39).
+        const priority_u64 = @as(u64, @intCast(@as(i32, priority) + 20));
+        
+        // Assert: Priority value must be in valid range (0-39).
+        Debug.kassert(priority_u64 <= 39, "Priority value > 39", .{});
+        
+        // Return priority value.
+        const result = SyscallResult.ok(priority_u64);
+        
+        // Assert: result must be success.
+        Debug.kassert(result == .success, "Result not success", .{});
         
         return result;
     }

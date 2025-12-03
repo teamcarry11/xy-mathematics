@@ -9,5 +9,6 @@ pub const SkateWindow = @import("window.zig").SkateWindow;
 pub const ModalEditor = @import("modal_editor.zig").ModalEditor;
 pub const GraphVisualization = @import("graph_viz.zig").GraphVisualization;
 pub const GraphRenderer = @import("graph_renderer.zig").GraphRenderer;
+pub const EditorRenderer = @import("editor_renderer.zig").EditorRenderer;
 pub const GrainSkateApp = @import("app.zig").GrainSkateApp;
 

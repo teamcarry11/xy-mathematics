@@ -3668,6 +3668,634 @@ pub const LspClient = struct {
         return null;
     }
     
+    /// Selection range (for expanding text selection).
+    pub const SelectionRange = struct {
+        range: Range, // The range of this selection range
+        parent: ?*SelectionRange = null, // Optional parent selection range
+    };
+    
+    /// Request textDocument/selectionRange (get selection ranges for expanding selection).
+    /// Why: Get selection ranges for expanding text selection (e.g., word -> statement -> block).
+    /// Contract: uri and positions array must be valid.
+    /// Returns: Array of selection ranges (one per position), or null if not available.
+    /// Note: Caller must free the returned ranges array and all nested parent ranges.
+    pub fn requestSelectionRanges(
+        self: *LspClient,
+        uri: []const u8,
+        positions: []const Position,
+    ) !?[]SelectionRange {
+        // Assert: URI and positions must be valid
+        std.debug.assert(uri.len > 0);
+        std.debug.assert(uri.len <= 4096); // Bounded URI length
+        std.debug.assert(positions.len > 0);
+        std.debug.assert(positions.len <= 100); // Bounded positions count
+        
+        var params_obj = std.json.ObjectMap.init(self.allocator);
+        defer params_obj.deinit();
+        
+        var text_doc_obj = std.json.ObjectMap.init(self.allocator);
+        defer text_doc_obj.deinit();
+        try text_doc_obj.put("uri", std.json.Value{ .string = uri });
+        try params_obj.put("textDocument", std.json.Value{ .object = text_doc_obj });
+        
+        // Build positions array
+        var positions_array = std.ArrayList(std.json.Value).init(self.allocator);
+        defer positions_array.deinit();
+        
+        for (positions) |pos| {
+            var pos_obj = std.json.ObjectMap.init(self.allocator);
+            defer pos_obj.deinit();
+            try pos_obj.put("line", std.json.Value{ .integer = @intCast(pos.line) });
+            try pos_obj.put("character", std.json.Value{ .integer = @intCast(pos.character) });
+            try positions_array.append(std.json.Value{ .object = pos_obj });
+        }
+        
+        try params_obj.put("positions", std.json.Value{ .array = positions_array });
+        
+        const params = std.json.Value{ .object = params_obj };
+        const response = try self.sendRequest("textDocument/selectionRange", params);
+        
+        // Parse selection ranges array from response.result
+        if (response.result) |result| {
+            if (result == .array) {
+                const items = result.array.items;
+                var ranges = std.ArrayList(SelectionRange).init(self.allocator);
+                errdefer ranges.deinit();
+                
+                for (items) |item| {
+                    if (item == .object) {
+                        const obj = item.object;
+                        
+                        // Parse range (required)
+                        const range_val = obj.get("range") orelse continue;
+                        if (range_val != .object) continue;
+                        const range_obj = range_val.object;
+                        
+                        const start_val = range_obj.get("start") orelse continue;
+                        const end_val = range_obj.get("end") orelse continue;
+                        if (start_val != .object or end_val != .object) continue;
+                        
+                        const start_obj = start_val.object;
+                        const end_obj = end_val.object;
+                        
+                        const start_line_val = start_obj.get("line") orelse continue;
+                        const start_char_val = start_obj.get("character") orelse continue;
+                        const end_line_val = end_obj.get("line") orelse continue;
+                        const end_char_val = end_obj.get("character") orelse continue;
+                        
+                        if (start_line_val != .integer or start_char_val != .integer or
+                            end_line_val != .integer or end_char_val != .integer) continue;
+                        
+                        const start_line = @as(u32, @intCast(start_line_val.integer));
+                        const start_char = @as(u32, @intCast(start_char_val.integer));
+                        const end_line = @as(u32, @intCast(end_line_val.integer));
+                        const end_char = @as(u32, @intCast(end_char_val.integer));
+                        
+                        const parsed_range = Range{
+                            .start = Position{ .line = start_line, .character = start_char },
+                            .end = Position{ .line = end_line, .character = end_char },
+                        };
+                        
+                        // Parse parent (optional, recursive)
+                        var parent: ?*SelectionRange = null;
+                        if (obj.get("parent")) |parent_val| {
+                            if (parent_val == .object) {
+                                // Parse parent recursively (simplified: single level for now)
+                                const parent_obj = parent_val.object;
+                                const parent_range_val = parent_obj.get("range") orelse null;
+                                if (parent_range_val) |prv| {
+                                    if (prv == .object) {
+                                        const parent_range_obj = prv.object;
+                                        const parent_start_val = parent_range_obj.get("start") orelse null;
+                                        const parent_end_val = parent_range_obj.get("end") orelse null;
+                                        if (parent_start_val) |psv| {
+                                            if (psv == .object and parent_end_val) |pev| {
+                                                if (pev == .object) {
+                                                    const parent_start_obj = psv.object;
+                                                    const parent_end_obj = pev.object;
+                                                    const parent_start_line_val = parent_start_obj.get("line") orelse null;
+                                                    const parent_start_char_val = parent_start_obj.get("character") orelse null;
+                                                    const parent_end_line_val = parent_end_obj.get("line") orelse null;
+                                                    const parent_end_char_val = parent_end_obj.get("character") orelse null;
+                                                    if (parent_start_line_val) |pslv| {
+                                                        if (pslv == .integer and parent_start_char_val) |pscv| {
+                                                            if (pscv == .integer and parent_end_line_val) |pelv| {
+                                                                if (pelv == .integer and parent_end_char_val) |pecv| {
+                                                                    if (pecv == .integer) {
+                                                                        const parent_start_line = @as(u32, @intCast(pslv.integer));
+                                                                        const parent_start_char = @as(u32, @intCast(pscv.integer));
+                                                                        const parent_end_line = @as(u32, @intCast(pelv.integer));
+                                                                        const parent_end_char = @as(u32, @intCast(pecv.integer));
+                                                                        
+                                                                        // Allocate parent range (caller must free)
+                                                                        const parent_range = try self.allocator.create(SelectionRange);
+                                                                        parent_range.* = SelectionRange{
+                                                                            .range = Range{
+                                                                                .start = Position{ .line = parent_start_line, .character = parent_start_char },
+                                                                                .end = Position{ .line = parent_end_line, .character = parent_end_char },
+                                                                            },
+                                                                            .parent = null, // Single level only for now
+                                                                        };
+                                                                        parent = parent_range;
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        
+                        try ranges.append(SelectionRange{
+                            .range = parsed_range,
+                            .parent = parent,
+                        });
+                    }
+                }
+                
+                return try ranges.toOwnedSlice();
+            }
+        }
+        return null;
+    }
+    
+    /// Code lens command (for executing code lens actions).
+    pub const CodeLensCommand = struct {
+        title: []const u8, // Title of the command
+        command: []const u8, // Command identifier
+        arguments: ?std.ArrayList(std.json.Value) = null, // Optional command arguments
+    };
+    
+    /// Code lens (for actionable code information).
+    pub const CodeLens = struct {
+        range: Range, // Range this code lens applies to
+        command: ?CodeLensCommand = null, // Optional command to execute
+        data: ?std.json.Value = null, // Optional data field for server-specific data
+    };
+    
+    /// Request textDocument/codeLens (get code lenses for document).
+    /// Why: Get code lenses for actionable code information (e.g., references count, test coverage).
+    /// Contract: uri must be valid.
+    /// Returns: Array of code lenses, or null if not available.
+    /// Note: Caller must free the returned lenses array and all strings within.
+    pub fn requestCodeLens(self: *LspClient, uri: []const u8) !?[]CodeLens {
+        // Assert: URI must be valid
+        std.debug.assert(uri.len > 0);
+        std.debug.assert(uri.len <= 4096); // Bounded URI length
+        
+        var params_obj = std.json.ObjectMap.init(self.allocator);
+        defer params_obj.deinit();
+        
+        var text_doc_obj = std.json.ObjectMap.init(self.allocator);
+        defer text_doc_obj.deinit();
+        try text_doc_obj.put("uri", std.json.Value{ .string = uri });
+        try params_obj.put("textDocument", std.json.Value{ .object = text_doc_obj });
+        
+        const params = std.json.Value{ .object = params_obj };
+        const response = try self.sendRequest("textDocument/codeLens", params);
+        
+        // Parse code lenses array from response.result
+        if (response.result) |result| {
+            if (result == .array) {
+                const items = result.array.items;
+                var lenses = std.ArrayList(CodeLens).init(self.allocator);
+                errdefer lenses.deinit();
+                
+                for (items) |item| {
+                    if (item == .object) {
+                        const obj = item.object;
+                        
+                        // Parse range (required)
+                        const range_val = obj.get("range") orelse continue;
+                        if (range_val != .object) continue;
+                        const range_obj = range_val.object;
+                        
+                        const start_val = range_obj.get("start") orelse continue;
+                        const end_val = range_obj.get("end") orelse continue;
+                        if (start_val != .object or end_val != .object) continue;
+                        
+                        const start_obj = start_val.object;
+                        const end_obj = end_val.object;
+                        
+                        const start_line_val = start_obj.get("line") orelse continue;
+                        const start_char_val = start_obj.get("character") orelse continue;
+                        const end_line_val = end_obj.get("line") orelse continue;
+                        const end_char_val = end_obj.get("character") orelse continue;
+                        
+                        if (start_line_val != .integer or start_char_val != .integer or
+                            end_line_val != .integer or end_char_val != .integer) continue;
+                        
+                        const start_line = @as(u32, @intCast(start_line_val.integer));
+                        const start_char = @as(u32, @intCast(start_char_val.integer));
+                        const end_line = @as(u32, @intCast(end_line_val.integer));
+                        const end_char = @as(u32, @intCast(end_char_val.integer));
+                        
+                        const parsed_range = Range{
+                            .start = Position{ .line = start_line, .character = start_char },
+                            .end = Position{ .line = end_line, .character = end_char },
+                        };
+                        
+                        // Parse command (optional)
+                        var command: ?CodeLensCommand = null;
+                        if (obj.get("command")) |cmd_val| {
+                            if (cmd_val == .object) {
+                                const cmd_obj = cmd_val.object;
+                                
+                                const title_val = cmd_obj.get("title") orelse null;
+                                const command_val = cmd_obj.get("command") orelse null;
+                                
+                                if (title_val) |tv| {
+                                    if (tv == .string and command_val) |cv| {
+                                        if (cv == .string) {
+                                            const title_str = tv.string;
+                                            const command_str = cv.string;
+                                            const title_copy = try self.allocator.dupe(u8, title_str);
+                                            errdefer self.allocator.free(title_copy);
+                                            const command_copy = try self.allocator.dupe(u8, command_str);
+                                            errdefer self.allocator.free(command_copy);
+                                            
+                                            // Parse arguments (optional)
+                                            var arguments: ?std.ArrayList(std.json.Value) = null;
+                                            if (cmd_obj.get("arguments")) |args_val| {
+                                                if (args_val == .array) {
+                                                    arguments = std.ArrayList(std.json.Value).init(self.allocator);
+                                                    errdefer arguments.?.deinit();
+                                                    for (args_val.array.items) |arg_item| {
+                                                        try arguments.?.append(arg_item);
+                                                    }
+                                                }
+                                            }
+                                            
+                                            command = CodeLensCommand{
+                                                .title = title_copy,
+                                                .command = command_copy,
+                                                .arguments = arguments,
+                                            };
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Parse data (optional, server-specific)
+                        var data: ?std.json.Value = null;
+                        if (obj.get("data")) |data_val| {
+                            data = data_val;
+                        }
+                        
+                        try lenses.append(CodeLens{
+                            .range = parsed_range,
+                            .command = command,
+                            .data = data,
+                        });
+                    }
+                }
+                
+                return try lenses.toOwnedSlice();
+            }
+        }
+        return null;
+    }
+    
+    /// Resolve code lens (get full command details).
+    /// Why: Resolve a code lens to get its full command details (lazy loading).
+    /// Contract: code_lens must be valid.
+    /// Returns: Resolved code lens with command, or null if not available.
+    /// Note: Caller must free the returned code lens and all strings within.
+    pub fn resolveCodeLens(self: *LspClient, code_lens: CodeLens) !?CodeLens {
+        // Assert: Code lens must have range
+        std.debug.assert(code_lens.range.start.line <= 16384);
+        std.debug.assert(code_lens.range.end.line <= 16384);
+        
+        var params_obj = std.json.ObjectMap.init(self.allocator);
+        defer params_obj.deinit();
+        
+        // Build range
+        var range_obj = std.json.ObjectMap.init(self.allocator);
+        defer range_obj.deinit();
+        
+        var start_obj = std.json.ObjectMap.init(self.allocator);
+        defer start_obj.deinit();
+        try start_obj.put("line", std.json.Value{ .integer = @intCast(code_lens.range.start.line) });
+        try start_obj.put("character", std.json.Value{ .integer = @intCast(code_lens.range.start.character) });
+        try range_obj.put("start", std.json.Value{ .object = start_obj });
+        
+        var end_obj = std.json.ObjectMap.init(self.allocator);
+        defer end_obj.deinit();
+        try end_obj.put("line", std.json.Value{ .integer = @intCast(code_lens.range.end.line) });
+        try end_obj.put("character", std.json.Value{ .integer = @intCast(code_lens.range.end.character) });
+        try range_obj.put("end", std.json.Value{ .object = end_obj });
+        try params_obj.put("range", std.json.Value{ .object = range_obj });
+        
+        // Add data if present
+        if (code_lens.data) |data_val| {
+            try params_obj.put("data", data_val);
+        }
+        
+        const params = std.json.Value{ .object = params_obj };
+        const response = try self.sendRequest("codeLens/resolve", params);
+        
+        // Parse resolved code lens from response.result
+        if (response.result) |result| {
+            if (result == .object) {
+                const obj = result.object;
+                
+                // Parse range (required)
+                const range_val = obj.get("range") orelse return null;
+                if (range_val != .object) return null;
+                const parsed_range_obj = range_val.object;
+                
+                const start_val = parsed_range_obj.get("start") orelse return null;
+                const end_val = parsed_range_obj.get("end") orelse return null;
+                if (start_val != .object or end_val != .object) return null;
+                
+                const start_obj_inner = start_val.object;
+                const end_obj_inner = end_val.object;
+                
+                const start_line_val = start_obj_inner.get("line") orelse return null;
+                const start_char_val = start_obj_inner.get("character") orelse return null;
+                const end_line_val = end_obj_inner.get("line") orelse return null;
+                const end_char_val = end_obj_inner.get("character") orelse return null;
+                
+                if (start_line_val != .integer or start_char_val != .integer or
+                    end_line_val != .integer or end_char_val != .integer) return null;
+                
+                const start_line = @as(u32, @intCast(start_line_val.integer));
+                const start_char = @as(u32, @intCast(start_char_val.integer));
+                const end_line = @as(u32, @intCast(end_line_val.integer));
+                const end_char = @as(u32, @intCast(end_char_val.integer));
+                
+                const parsed_range = Range{
+                    .start = Position{ .line = start_line, .character = start_char },
+                    .end = Position{ .line = end_line, .character = end_char },
+                };
+                
+                // Parse command (required for resolved lens)
+                const cmd_val = obj.get("command") orelse return null;
+                if (cmd_val != .object) return null;
+                const cmd_obj = cmd_val.object;
+                
+                const title_val = cmd_obj.get("title") orelse return null;
+                const command_val = cmd_obj.get("command") orelse return null;
+                if (title_val != .string or command_val != .string) return null;
+                
+                const title_str = title_val.string;
+                const command_str = command_val.string;
+                const title_copy = try self.allocator.dupe(u8, title_str);
+                errdefer self.allocator.free(title_copy);
+                const command_copy = try self.allocator.dupe(u8, command_str);
+                errdefer self.allocator.free(command_copy);
+                
+                // Parse arguments (optional)
+                var arguments: ?std.ArrayList(std.json.Value) = null;
+                if (cmd_obj.get("arguments")) |args_val| {
+                    if (args_val == .array) {
+                        arguments = std.ArrayList(std.json.Value).init(self.allocator);
+                        errdefer arguments.?.deinit();
+                        for (args_val.array.items) |arg_item| {
+                            try arguments.?.append(arg_item);
+                        }
+                    }
+                }
+                
+                const command = CodeLensCommand{
+                    .title = title_copy,
+                    .command = command_copy,
+                    .arguments = arguments,
+                };
+                
+                // Parse data (optional)
+                var data: ?std.json.Value = null;
+                if (obj.get("data")) |data_val| {
+                    data = data_val;
+                }
+                
+                return CodeLens{
+                    .range = parsed_range,
+                    .command = command,
+                    .data = data,
+                };
+            }
+        }
+        return null;
+    }
+    
+    /// Workspace folder (for multi-root workspaces).
+    pub const WorkspaceFolder = struct {
+        uri: []const u8, // URI of the workspace folder
+        name: []const u8, // Name of the workspace folder
+    };
+    
+    /// Request workspace/workspaceFolders (get workspace folders).
+    /// Why: Get workspace folders for multi-root workspaces.
+    /// Returns: Array of workspace folders, or null if not available.
+    /// Note: Caller must free the returned folders array and all strings within.
+    pub fn requestWorkspaceFolders(self: *LspClient) !?[]WorkspaceFolder {
+        const response = try self.sendRequest("workspace/workspaceFolders", null);
+        
+        // Parse workspace folders array from response.result
+        if (response.result) |result| {
+            if (result == .array) {
+                const items = result.array.items;
+                var folders = std.ArrayList(WorkspaceFolder).init(self.allocator);
+                errdefer folders.deinit();
+                
+                for (items) |item| {
+                    if (item == .object) {
+                        const obj = item.object;
+                        
+                        // Parse uri (required)
+                        const uri_val = obj.get("uri") orelse continue;
+                        if (uri_val != .string) continue;
+                        const uri_str = uri_val.string;
+                        const uri_copy = try self.allocator.dupe(u8, uri_str);
+                        errdefer self.allocator.free(uri_copy);
+                        
+                        // Parse name (required)
+                        const name_val = obj.get("name") orelse continue;
+                        if (name_val != .string) continue;
+                        const name_str = name_val.string;
+                        const name_copy = try self.allocator.dupe(u8, name_str);
+                        errdefer self.allocator.free(name_copy);
+                        
+                        try folders.append(WorkspaceFolder{
+                            .uri = uri_copy,
+                            .name = name_copy,
+                        });
+                    }
+                }
+                
+                return try folders.toOwnedSlice();
+            }
+        }
+        return null;
+    }
+    
+    /// Notify workspace/didChangeWorkspaceFolders (workspace folders changed).
+    /// Why: Notify LSP server when workspace folders are added or removed.
+    /// Contract: event must be valid.
+    pub fn notifyDidChangeWorkspaceFolders(
+        self: *LspClient,
+        added: []const WorkspaceFolder,
+        removed: []const WorkspaceFolder,
+    ) !void {
+        // Assert: Arrays must be bounded
+        std.debug.assert(added.len <= 100); // Bounded added folders
+        std.debug.assert(removed.len <= 100); // Bounded removed folders
+        
+        var params_obj = std.json.ObjectMap.init(self.allocator);
+        defer params_obj.deinit();
+        
+        // Build added folders array
+        var added_array = std.ArrayList(std.json.Value).init(self.allocator);
+        defer added_array.deinit();
+        
+        for (added) |folder| {
+            var folder_obj = std.json.ObjectMap.init(self.allocator);
+            defer folder_obj.deinit();
+            try folder_obj.put("uri", std.json.Value{ .string = folder.uri });
+            try folder_obj.put("name", std.json.Value{ .string = folder.name });
+            try added_array.append(std.json.Value{ .object = folder_obj });
+        }
+        
+        // Build removed folders array
+        var removed_array = std.ArrayList(std.json.Value).init(self.allocator);
+        defer removed_array.deinit();
+        
+        for (removed) |folder| {
+            var folder_obj = std.json.ObjectMap.init(self.allocator);
+            defer folder_obj.deinit();
+            try folder_obj.put("uri", std.json.Value{ .string = folder.uri });
+            try folder_obj.put("name", std.json.Value{ .string = folder.name });
+            try removed_array.append(std.json.Value{ .object = folder_obj });
+        }
+        
+        var event_obj = std.json.ObjectMap.init(self.allocator);
+        defer event_obj.deinit();
+        try event_obj.put("added", std.json.Value{ .array = added_array });
+        try event_obj.put("removed", std.json.Value{ .array = removed_array });
+        try params_obj.put("event", std.json.Value{ .object = event_obj });
+        
+        const params = std.json.Value{ .object = params_obj };
+        try self.sendNotification("workspace/didChangeWorkspaceFolders", params);
+    }
+    
+    /// Execute workspace command (run a command from code actions or code lenses).
+    /// Why: Execute workspace commands from code actions, code lenses, or other LSP features.
+    /// Contract: command and arguments must be valid.
+    /// Returns: Command result (JSON value), or null if not available.
+    /// Note: Caller must free the returned result if it contains allocated strings.
+    pub fn executeCommand(
+        self: *LspClient,
+        command: []const u8,
+        arguments: ?[]const std.json.Value,
+    ) !?std.json.Value {
+        // Assert: Command must be valid
+        std.debug.assert(command.len > 0);
+        std.debug.assert(command.len <= 256); // Bounded command length
+        std.debug.assert(arguments == null or arguments.?.len <= 100); // Bounded arguments
+        
+        var params_obj = std.json.ObjectMap.init(self.allocator);
+        defer params_obj.deinit();
+        
+        try params_obj.put("command", std.json.Value{ .string = command });
+        
+        // Add arguments if present
+        if (arguments) |args| {
+            var args_array = std.ArrayList(std.json.Value).init(self.allocator);
+            defer args_array.deinit();
+            
+            for (args) |arg| {
+                try args_array.append(arg);
+            }
+            
+            try params_obj.put("arguments", std.json.Value{ .array = args_array });
+        }
+        
+        const params = std.json.Value{ .object = params_obj };
+        const response = try self.sendRequest("workspace/executeCommand", params);
+        
+        // Return result (caller must free if it contains allocated strings)
+        return response.result;
+    }
+    
+    /// Apply workspace edit (apply edits from server).
+    /// Why: Apply workspace edits from the LSP server (e.g., from code actions).
+    /// Contract: edit must be valid.
+    /// Returns: Whether the edit was applied (true) or rejected (false).
+    pub fn applyEdit(self: *LspClient, edit: WorkspaceEdit) !bool {
+        // Assert: Edit must be valid
+        std.debug.assert(edit.changes.items.len <= 100); // Bounded file count
+        
+        var params_obj = std.json.ObjectMap.init(self.allocator);
+        defer params_obj.deinit();
+        
+        // Build edit object
+        var edit_obj = std.json.ObjectMap.init(self.allocator);
+        defer edit_obj.deinit();
+        
+        // Build changes map (URI -> TextEdit[])
+        var changes_obj = std.json.ObjectMap.init(self.allocator);
+        defer changes_obj.deinit();
+        
+        for (edit.changes.items) |change| {
+            // Build text edits array for this URI
+            var edits_array = std.ArrayList(std.json.Value).init(self.allocator);
+            defer edits_array.deinit();
+            
+            for (change.edits.items) |text_edit| {
+                var edit_item_obj = std.json.ObjectMap.init(self.allocator);
+                defer edit_item_obj.deinit();
+                
+                // Add range
+                var range_obj = std.json.ObjectMap.init(self.allocator);
+                defer range_obj.deinit();
+                
+                var start_obj = std.json.ObjectMap.init(self.allocator);
+                defer start_obj.deinit();
+                try start_obj.put("line", std.json.Value{ .integer = @intCast(text_edit.range.start.line) });
+                try start_obj.put("character", std.json.Value{ .integer = @intCast(text_edit.range.start.character) });
+                try range_obj.put("start", std.json.Value{ .object = start_obj });
+                
+                var end_obj = std.json.ObjectMap.init(self.allocator);
+                defer end_obj.deinit();
+                try end_obj.put("line", std.json.Value{ .integer = @intCast(text_edit.range.end.line) });
+                try end_obj.put("character", std.json.Value{ .integer = @intCast(text_edit.range.end.character) });
+                try range_obj.put("end", std.json.Value{ .object = end_obj });
+                try edit_item_obj.put("range", std.json.Value{ .object = range_obj });
+                
+                // Add newText
+                try edit_item_obj.put("newText", std.json.Value{ .string = text_edit.new_text });
+                
+                try edits_array.append(std.json.Value{ .object = edit_item_obj });
+            }
+            
+            try changes_obj.put(change.uri, std.json.Value{ .array = edits_array });
+        }
+        
+        try edit_obj.put("changes", std.json.Value{ .object = changes_obj });
+        try params_obj.put("edit", std.json.Value{ .object = edit_obj });
+        
+        const params = std.json.Value{ .object = params_obj };
+        const response = try self.sendRequest("workspace/applyEdit", params);
+        
+        // Parse response (applied: true/false)
+        if (response.result) |result| {
+            if (result == .object) {
+                const obj = result.object;
+                const applied_val = obj.get("applied") orelse return false;
+                if (applied_val == .bool) {
+                    return applied_val.bool;
+                }
+            }
+        }
+        return false;
+    }
+    
     /// Cancel a pending request.
     pub fn cancelRequest(self: *LspClient, request_id: u64) !void {
         // Assert: Request must be pending
@@ -3680,6 +4308,37 @@ pub const LspClient = struct {
         const params = std.json.Value{ .object = params_obj };
         try self.sendNotification("$/cancelRequest", params);
         _ = self.pending_requests.remove(request_id);
+    }
+    
+    /// File change type (for workspace/didChangeWatchedFiles).
+    pub const FileChangeType = enum(u32) {
+        created = 1, // File was created
+        changed = 2, // File was changed
+        deleted = 3, // File was deleted
+    };
+    
+    /// File event (for workspace/didChangeWatchedFiles).
+    pub const FileEvent = struct {
+        uri: []const u8, // URI of the file
+        change_type: u32, // Type of change (FileChangeType)
+    };
+    
+    /// Handle workspace/didChangeWatchedFiles notification (file system changes).
+    /// Why: Handle file system change notifications from LSP server.
+    /// Contract: events array must be valid.
+    /// Note: This is a notification handler, not a request. The server sends this.
+    pub fn handleDidChangeWatchedFiles(
+        self: *LspClient,
+        events: []const FileEvent,
+    ) !void {
+        // Assert: Events array must be bounded
+        std.debug.assert(events.len <= 1000); // Bounded event count
+        
+        // Note: This is typically handled by the server sending notifications.
+        // The client can process these events to update its state.
+        // For now, this is a placeholder for future file watching integration.
+        _ = self;
+        _ = events;
     }
     
     /// Convert LSP Position to byte offset in text (for incremental edits).

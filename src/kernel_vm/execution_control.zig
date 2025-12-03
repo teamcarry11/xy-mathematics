@@ -115,7 +115,6 @@ pub const VMExecutionController = struct {
             return true;
         }
         if (self.state == .stepping_over) {
-            const pc_before = self.vm.regs.pc;
             try self.vm.step();
             const pc_after = self.vm.regs.pc;
             if (pc_after == self.step_over_target_pc + 4) {

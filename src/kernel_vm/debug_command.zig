@@ -34,7 +34,7 @@ pub const MAX_COMMAND_SIZE: u32 = 256;
 // Debugging command result.
 pub const DebugCommandResult = enum {
     success,
-    error,
+    error_occurred,
     breakpoint_hit,
     watchpoint_triggered,
 };

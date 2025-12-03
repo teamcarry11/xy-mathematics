@@ -35,15 +35,137 @@ pub const GrainAurora = struct {
         route: []const u8,
     };
 
+    // Bounded: Maximum spans per type (Grain/Tiger style: explicit limits)
+    pub const MAX_DIAGNOSTIC_SPANS: u32 = 1000;
+    pub const MAX_INLAY_HINT_SPANS: u32 = 500;
+    pub const MAX_CODE_LENS_SPANS: u32 = 100;
+    pub const MAX_DOCUMENT_HIGHLIGHT_SPANS: u32 = 100;
+    pub const MAX_SEMANTIC_TOKEN_SPANS: u32 = 10000;
+    pub const MAX_FOLDING_RANGE_SPANS: u32 = 1000;
+    pub const MAX_SELECTION_RANGE_SPANS: u32 = 100;
+    pub const MAX_DOCUMENT_LINK_SPANS: u32 = 1000;
+    
+    // Bounded: Maximum string lengths (Grain/Tiger style: explicit limits)
+    pub const MAX_DIAGNOSTIC_MESSAGE_LEN: u32 = 1024;
+    pub const MAX_INLAY_HINT_LABEL_LEN: u32 = 256;
+    pub const MAX_INLAY_HINT_TOOLTIP_LEN: u32 = 512;
+    pub const MAX_CODE_LENS_TITLE_LEN: u32 = 256;
+    pub const MAX_CODE_LENS_COMMAND_LEN: u32 = 256;
+    pub const MAX_DOCUMENT_LINK_TARGET_LEN: u32 = 4096;
+    pub const MAX_DOCUMENT_LINK_TOOLTIP_LEN: u32 = 512;
+
     pub const RenderResult = struct {
         root: Node,
-        readonly_spans: []const Span,
-        ghost_spans: []const Span = &.{}, // Ghost text spans (AI completions)
+        readonly_spans: []const Span, // Owned by caller (from GrainBuffer)
+        
+        // Bounded arrays with explicit counts (Grain/Tiger style: fixed-size storage)
+        diagnostic_spans: [MAX_DIAGNOSTIC_SPANS]DiagnosticSpan = undefined,
+        diagnostic_spans_len: u32 = 0,
+        
+        inlay_hint_spans: [MAX_INLAY_HINT_SPANS]InlayHintSpan = undefined,
+        inlay_hint_spans_len: u32 = 0,
+        
+        code_lens_spans: [MAX_CODE_LENS_SPANS]CodeLensSpan = undefined,
+        code_lens_spans_len: u32 = 0,
+        
+        document_highlight_spans: [MAX_DOCUMENT_HIGHLIGHT_SPANS]DocumentHighlightSpan = undefined,
+        document_highlight_spans_len: u32 = 0,
+        
+        semantic_token_spans: [MAX_SEMANTIC_TOKEN_SPANS]SemanticTokenSpan = undefined,
+        semantic_token_spans_len: u32 = 0,
+        
+        folding_range_spans: [MAX_FOLDING_RANGE_SPANS]FoldingRangeSpan = undefined,
+        folding_range_spans_len: u32 = 0,
+        
+        selection_range_spans: [MAX_SELECTION_RANGE_SPANS]SelectionRangeSpan = undefined,
+        selection_range_spans_len: u32 = 0,
+        
+        document_link_spans: [MAX_DOCUMENT_LINK_SPANS]DocumentLinkSpan = undefined,
+        document_link_spans_len: u32 = 0,
+        
+        ghost_spans: []const Span = &.{}, // Owned by caller (from Editor)
+        
+        // No deinit needed: all strings are in fixed-size buffers, no dynamic allocation
+    };
+    
+    /// Diagnostic span (for LSP diagnostics rendering).
+    /// Grain/Tiger style: fixed-size buffer, no dynamic allocation.
+    pub const DiagnosticSpan = struct {
+        start: u32, // Start byte position
+        end: u32, // End byte position
+        severity: u32, // Diagnostic severity (1=Error, 2=Warning, 3=Info, 4=Hint)
+        message: [MAX_DIAGNOSTIC_MESSAGE_LEN]u8 = undefined, // Fixed-size message buffer
+        message_len: u32 = 0, // Actual message length
+    };
+    
+    /// Inlay hint span (for LSP inlay hints rendering).
+    /// Grain/Tiger style: fixed-size buffers, no dynamic allocation.
+    pub const InlayHintSpan = struct {
+        position: u32, // Position where hint should be displayed (byte position)
+        label: [MAX_INLAY_HINT_LABEL_LEN]u8 = undefined, // Fixed-size label buffer
+        label_len: u32 = 0, // Actual label length
+        kind: u32, // Hint kind (1=Type, 2=Parameter)
+        tooltip: [MAX_INLAY_HINT_TOOLTIP_LEN]u8 = undefined, // Fixed-size tooltip buffer
+        tooltip_len: u32 = 0, // Actual tooltip length (0 = no tooltip)
+        padding_left: bool = false, // Padding before hint
+        padding_right: bool = false, // Padding after hint
+    };
+    
+    /// Code lens span (for LSP code lens rendering).
+    /// Grain/Tiger style: fixed-size buffers, no dynamic allocation.
+    pub const CodeLensSpan = struct {
+        position: u32, // Position where code lens should be displayed (byte position, start of range)
+        title: [MAX_CODE_LENS_TITLE_LEN]u8 = undefined, // Fixed-size title buffer
+        title_len: u32 = 0, // Actual title length
+        command: [MAX_CODE_LENS_COMMAND_LEN]u8 = undefined, // Fixed-size command buffer
+        command_len: u32 = 0, // Actual command length (0 = no command)
+        range_start: u32, // Start byte position of the range this lens applies to
+        range_end: u32, // End byte position of the range this lens applies to
+    };
+    
+    /// Document highlight span (for LSP document highlights rendering).
+    pub const DocumentHighlightSpan = struct {
+        start: u32, // Start byte position
+        end: u32, // End byte position
+        kind: u32, // Highlight kind (1=Text, 2=Read, 3=Write)
+    };
+    
+    /// Semantic token span (for LSP semantic tokens rendering).
+    pub const SemanticTokenSpan = struct {
+        start: u32, // Start byte position
+        end: u32, // End byte position
+        token_type: u32, // Token type (SemanticTokenType)
+        modifiers: u32, // Token modifiers (bit flags)
+    };
+    
+    /// Folding range span (for LSP folding ranges rendering).
+    pub const FoldingRangeSpan = struct {
+        start: u32, // Start byte position
+        end: u32, // End byte position
+        kind: u32, // Folding range kind (1=Comment, 2=Imports, 3=Region)
+    };
+    
+    /// Selection range span (for LSP selection ranges rendering).
+    pub const SelectionRangeSpan = struct {
+        start: u32, // Start byte position
+        end: u32, // End byte position
+        level: u32, // Selection level (0=innermost, higher=outer)
+    };
+    
+    /// Document link span (for LSP document links rendering).
+    /// Grain/Tiger style: fixed-size buffers, no dynamic allocation.
+    pub const DocumentLinkSpan = struct {
+        start: u32, // Start byte position
+        end: u32, // End byte position
+        target: [MAX_DOCUMENT_LINK_TARGET_LEN]u8 = undefined, // Fixed-size target buffer
+        target_len: u32 = 0, // Actual target length (0 = no target)
+        tooltip: [MAX_DOCUMENT_LINK_TOOLTIP_LEN]u8 = undefined, // Fixed-size tooltip buffer
+        tooltip_len: u32 = 0, // Actual tooltip length (0 = no tooltip)
     };
 
     pub const Span = struct {
-        start: usize,
-        end: usize,
+        start: u32, // Start byte position
+        end: u32, // End byte position
     };
 
     allocator: std.mem.Allocator,

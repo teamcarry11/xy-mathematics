@@ -166,8 +166,87 @@
      - ✅ Address translation (translate virtual to physical addresses)
      - ✅ Bounded page table entries (MAX_PAGE_TABLE_ENTRIES: 1024)
      - ✅ Comprehensive tests (tests/079_vm_memory_protection_test.zig)
+   - ✅ JIT Missing Instruction Support (Phase 2.1.22)
+     - ✅ SLT (Set Less Than, signed) instruction implementation
+     - ✅ SLTU (Set Less Than Unsigned) instruction implementation
+     - ✅ SLTI (Set Less Than Immediate, signed) instruction implementation
+     - ✅ SLTIU (Set Less Than Immediate Unsigned) instruction implementation
+     - ✅ Comparison helper functions (emit_cmp, emit_cset)
+     - ✅ AArch64 conditional set instructions (cset with LT/LO conditions)
+     - ✅ Comprehensive tests (tests/071_jit_slt_instructions_test.zig)
+   - ✅ JIT Block Chaining (Phase 2.1.23)
+     - ✅ Block chaining statistics tracking (chain_opportunities, chains_created, chain_hits)
+     - ✅ Direct jump chaining for JAL instructions when target block exists
+     - ✅ emit_call_target function for calling chained blocks
+     - ✅ Chain statistics in performance counters
+     - ✅ Comprehensive tests (tests/072_jit_block_chaining_test.zig)
+   - ✅ JIT Block Invalidation (Phase 2.1.24)
+     - ✅ Block invalidation function (invalidate_block) for single block recompilation
+     - ✅ Bulk invalidation function (invalidate_all_blocks) for full cache clear
+     - ✅ Invalidation statistics tracking (blocks_invalidated, cache_invalidations)
+     - ✅ Support for self-modifying code and debugging scenarios
+     - ✅ Comprehensive tests (tests/073_jit_block_invalidation_test.zig)
+   - ✅ JIT Compilation Thresholds (Phase 2.1.25)
+     - ✅ Compilation threshold configuration (set_compilation_threshold)
+     - ✅ Threshold checking (should_compile_block) based on execution count
+     - ✅ Deferred compilation statistics (threshold_deferred)
+     - ✅ Integration with hot path tracker for execution counting
+     - ✅ ThresholdNotMet error for blocks below threshold
+     - ✅ Comprehensive tests (tests/074_jit_compilation_threshold_test.zig)
 
-2. **Kernel Boot Sequence**
+2. **Kernel Process Management Enhancement** ✅ **COMPLETE**
+   - ✅ Process Enumeration Syscall (Phase 3.1)
+     - ✅ enumerate_processes syscall (#51) for listing all processes
+     - ✅ ProcessInfo structure for userspace process information
+     - ✅ Bounded buffer support (max processes, buffer size limits)
+     - ✅ Comprehensive tests (tests/075_kernel_process_enumeration_test.zig)
+   - ✅ Per-Process Resource Tracking (Phase 3.2)
+     - ✅ get_process_info syscall (#52) for querying process resources
+     - ✅ CPU time tracking (cpu_time_ns) in Process struct
+     - ✅ Memory usage tracking (memory_used) in Process struct
+     - ✅ Parent process ID tracking (parent_pid) in Process struct
+     - ✅ Resource initialization in syscall_spawn
+     - ✅ Comprehensive tests (tests/075_kernel_process_enumeration_test.zig)
+   - ✅ Kernel Log Reading (Phase 3.3)
+     - ✅ read_kernel_log syscall (#53) for reading kernel log entries
+     - ✅ KernelLogBuffer for storing log entries (circular buffer, max 256 entries)
+     - ✅ KernelLogEntry structure (timestamp, level, source, message)
+     - ✅ Log level enumeration (debug, info, warn, error)
+     - ✅ Bounded buffer support (max entries, buffer size limits)
+     - ✅ Comprehensive tests (tests/076_kernel_log_reading_test.zig)
+   - ✅ CPU Time Tracking (Phase 3.4)
+     - ✅ CPU time tracking during process execution
+     - ✅ Timer-based CPU time measurement (start/end time tracking)
+     - ✅ Process CPU time accumulation (cpu_time_ns field updates)
+     - ✅ Integration with process execution loop
+     - ✅ Saturating arithmetic for overflow/underflow protection
+     - ✅ Comprehensive tests (tests/077_cpu_time_tracking_test.zig)
+   - ✅ Memory Usage Tracking (Phase 3.5)
+     - ✅ Memory usage calculation from memory mappings
+     - ✅ Process memory usage updates on map/unmap syscalls
+     - ✅ Memory usage calculation helper function
+     - ✅ Integration with memory mapping operations
+     - ✅ On-demand memory usage updates in get_process_info
+     - ✅ Saturating arithmetic for overflow protection
+     - ✅ Comprehensive tests (tests/078_memory_usage_tracking_test.zig)
+   - ✅ Enhanced System Information (Phase 3.6)
+     - ✅ Enhanced SysInfo structure with additional fields
+     - ✅ Used memory tracking (total - available)
+     - ✅ Process count statistics (total, running, exited)
+     - ✅ Enhanced sysinfo syscall with new metrics
+     - ✅ Process statistics calculation
+     - ✅ Memory usage percentage support
+     - ✅ Comprehensive tests (tests/079_enhanced_sysinfo_test.zig)
+   - ✅ Process Priority Support (Phase 3.7)
+     - ✅ Process priority field (nice value, -20 to 19, default 0)
+     - ✅ set_priority syscall (#54) for setting process priority
+     - ✅ get_priority syscall (#55) for getting process priority
+     - ✅ Priority value validation (nice value range checking)
+     - ✅ Priority initialization in process spawn
+     - ✅ Priority value conversion (signed to unsigned for syscall interface)
+     - ✅ Comprehensive tests (tests/080_process_priority_test.zig)
+
+3. **Kernel Boot Sequence**
    - Implement basic boot loader
    - Set up initial memory layout
    - Initialize framebuffer for GUI
@@ -750,6 +829,113 @@ Create a fourth agent dedicated to **Grain OS** - a Zig-Wayland implemented GNOM
    - ✅ Start fade-in/fade-out methods
    - ✅ Effect duration configuration (150ms fade, 200ms slide)
    - ✅ Comprehensive tests (`tests/077_grain_os_window_effects_test.zig`)
+47. **Phase 47**: Security/Permissions Management ✅ **COMPLETE**
+   - ✅ Security manager module (`src/grain_os/security_manager.zig`)
+   - ✅ Permission types (none, read, write, execute, admin, full_control)
+   - ✅ User roles (guest, user, admin, root)
+   - ✅ Permission management (add, find permissions)
+   - ✅ User management (add, find, remove users)
+   - ✅ Permission granting/revoking (grant/revoke permissions to users)
+   - ✅ Permission checking (check if user has permission, root has all)
+   - ✅ Current user tracking (set/get current user)
+   - ✅ Compositor integration (all security management methods)
+   - ✅ Comprehensive tests (`tests/099_grain_os_security_manager_test.zig`)
+48. **Phase 48**: System Services Management ✅ **COMPLETE**
+   - ✅ Service manager module (`src/grain_os/service_manager.zig`)
+   - ✅ Service states (stopped, starting, running, stopping, failed, disabled)
+   - ✅ Service types (system, user, network, filesystem, device, other)
+   - ✅ Service lifecycle (start, stop, restart services)
+   - ✅ Auto-start configuration (enable/disable auto-start)
+   - ✅ Restart on failure (enable/disable restart on failure)
+   - ✅ Service dependencies (add/remove dependencies between services)
+   - ✅ Service management (add, find, remove services)
+   - ✅ Running service count tracking
+   - ✅ Compositor integration (all service management methods)
+   - ✅ Comprehensive tests (`tests/100_grain_os_service_manager_test.zig`)
+49. **Phase 49**: Backup/Restore Management ✅ **COMPLETE**
+   - ✅ Backup manager module (`src/grain_os/backup_manager.zig`)
+   - ✅ Backup types (full, incremental, settings_only, data_only, custom)
+   - ✅ Backup states (pending, in_progress, completed, failed, cancelled)
+   - ✅ Backup creation (create backup with name, description, path, type)
+   - ✅ Backup lifecycle (start, complete, fail, cancel backup operations)
+   - ✅ Backup restore (restore from completed backup)
+   - ✅ Backup management (add, find, remove backups)
+   - ✅ Backup size tracking (track backup size in bytes)
+   - ✅ Current backup tracking (track currently active backup operation)
+   - ✅ Completed backup count tracking
+   - ✅ Compositor integration (all backup management methods)
+   - ✅ Comprehensive tests (`tests/101_grain_os_backup_manager_test.zig`)
+50. **Phase 50**: Update Management ✅ **COMPLETE**
+   - ✅ Update manager module (`src/grain_os/update_manager.zig`)
+   - ✅ Update types (security, bugfix, feature, major, minor)
+   - ✅ Update states (available, downloading, downloaded, installing, installed, failed, cancelled)
+   - ✅ Update creation (add update with version, description, URL, type, size, release date)
+   - ✅ Update lifecycle (start download, complete download, start installation, complete installation)
+   - ✅ Update failure/cancellation (fail or cancel update operations)
+   - ✅ Version management (set/get current system version)
+   - ✅ Auto-update configuration (enable/disable auto-update)
+   - ✅ Update management (add, find, remove updates)
+   - ✅ Available update count tracking
+   - ✅ Current update tracking (track currently active update operation)
+   - ✅ Compositor integration (all update management methods)
+   - ✅ Comprehensive tests (`tests/102_grain_os_update_manager_test.zig`)
+51. **Phase 51**: Package Management ✅ **COMPLETE**
+   - ✅ Package manager module (`src/grain_os/package_manager.zig`)
+   - ✅ Package states (not_installed, installing, installed, removing, failed)
+   - ✅ Package creation (add package with name, version, description, size)
+   - ✅ Package installation (install package with timestamp)
+   - ✅ Package removal (remove installed package)
+   - ✅ Package dependencies (add/remove dependencies between packages)
+   - ✅ Package management (add, find, remove package entries)
+   - ✅ Installed package count tracking
+   - ✅ Package size tracking (track package size in bytes)
+   - ✅ Installation timestamp tracking
+   - ✅ Compositor integration (all package management methods)
+   - ✅ Comprehensive tests (`tests/103_grain_os_package_manager_test.zig`)
+52. **Phase 52**: Enhanced SysInfo Integration ✅ **COMPLETE**
+   - ✅ Enhanced ResourceMonitor integration with kernel SysInfo
+   - ✅ Updated buffer size from 40 to 56 bytes for enhanced SysInfo
+   - ✅ Use kernel-calculated `used_memory` field (instead of manual calculation)
+   - ✅ Process count tracking (total_processes, running_processes, exited_processes)
+   - ✅ Added `update_usage_with_processes()` method
+   - ✅ Added `get_total_processes()`, `get_running_processes()`, `get_exited_processes()` methods
+   - ✅ Updated `update_from_kernel()` to use enhanced sysinfo fields
+   - ✅ Added process count fields to ResourceUsage struct
+   - ✅ Compositor integration (get_total_process_count, get_running_process_count, get_exited_process_count)
+   - ✅ Updated tests to verify enhanced sysinfo integration
+53. **Phase 53**: System Health Monitoring ✅ **COMPLETE**
+   - ✅ Health monitor module (`src/grain_os/health_monitor.zig`)
+   - ✅ Health statuses (healthy, warning, critical, unknown)
+   - ✅ Health check creation (add health check with name)
+   - ✅ Health check updates (update health check status and message)
+   - ✅ Overall health status calculation (based on all checks)
+   - ✅ Health check management (add, find, remove health checks)
+   - ✅ Health check counts (healthy, warning, critical check counts)
+   - ✅ Last check time tracking
+   - ✅ Compositor integration (all health monitoring methods)
+   - ✅ Comprehensive tests (`tests/104_grain_os_health_monitor_test.zig`)
+54. **Phase 54**: Process Supervision ✅ **COMPLETE**
+   - ✅ Process supervision module (`src/grain_os/process_supervision.zig`)
+   - ✅ Supervision policies (always, never, on_failure, on_success)
+   - ✅ Supervision states (idle, starting, running, crashed, stopping, stopped)
+   - ✅ Supervised process management (add, find, remove supervised processes)
+   - ✅ Automatic restart logic (restart based on policy and exit code)
+   - ✅ Restart limits (max restarts, restart delay)
+   - ✅ Process exit recording (record exit code and timestamp)
+   - ✅ State tracking (running, crashed, stopped counts)
+   - ✅ Compositor integration (all process supervision methods)
+   - ✅ Comprehensive tests (`tests/105_grain_os_process_supervision_test.zig`)
+   - ✅ Inspired by s6 (https://github.com/skarnet/s6) with Grain Style abstractions
+55. **Phase 55**: System Metrics Aggregation ✅ **COMPLETE**
+   - ✅ System metrics module (`src/grain_os/system_metrics.zig`)
+   - ✅ System status aggregation (CPU, memory, disk, processes, health)
+   - ✅ Metrics aggregation from multiple sources (resource monitor, health monitor, process supervisor)
+   - ✅ Overall system health calculation (critical > warning > healthy > unknown)
+   - ✅ System status structure (unified view of all metrics)
+   - ✅ Health thresholds (CPU/memory/disk > 90% = warning, critical checks = critical)
+   - ✅ Timestamp tracking
+   - ✅ Compositor integration (update_system_metrics, get_system_status, get_overall_system_health)
+   - ✅ Comprehensive tests (`tests/106_grain_os_system_metrics_test.zig`)
 24. **Phase 24**: Integration (Grain Kernel syscalls, VM testing)
 25. **Phase 25**: Applications (Aurora, Dream, Skate, Terminal ports)
 
@@ -1021,6 +1207,109 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
   - ✅ Test now passes: `All 1 tests passed.`
   - ✅ GrainStyle compliance (explicit types, proper initialization)
 - ✅ Editor LSP Integration Enhancements ✅ **COMPLETE**
+- ✅ Editor LSP Diagnostics Visual Rendering ✅ **COMPLETE**
+  - ✅ Extended `RenderResult` to include `diagnostic_spans` field
+  - ✅ Added `DiagnosticSpan` struct (start, end, severity, message)
+  - ✅ Updated `render()` method to convert LSP diagnostics to diagnostic spans
+  - ✅ Convert diagnostic ranges (line/character) to byte positions using `position_to_byte`
+  - ✅ Copy diagnostic messages for lifetime management
+  - ✅ Support severity levels (Error=1, Warning=2, Info=3, Hint=4)
+  - ✅ Error handling for invalid diagnostic positions
+  - ✅ Memory management (free diagnostic message strings on error)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+- ✅ Editor LSP Inlay Hints Visual Rendering ✅ **COMPLETE**
+  - ✅ Extended `RenderResult` to include `inlay_hint_spans` field
+  - ✅ Added `InlayHintSpan` struct (position, label, kind, tooltip, padding)
+  - ✅ Updated `render()` method to convert LSP inlay hints to inlay hint spans
+  - ✅ Convert inlay hint positions (line/character) to byte positions using `position_to_byte`
+  - ✅ Copy hint labels and tooltips for lifetime management
+  - ✅ Support hint kinds (Type=1, Parameter=2)
+  - ✅ Support padding flags (left, right)
+  - ✅ Calculate line count from text for hint range
+  - ✅ Error handling (non-fatal, skip hints on error)
+  - ✅ Memory management (free label and tooltip strings on error)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+- ✅ Editor LSP Code Lens Visual Rendering ✅ **COMPLETE**
+  - ✅ Extended `RenderResult` to include `code_lens_spans` field
+  - ✅ Added `CodeLensSpan` struct (position, title, command, range_start, range_end)
+  - ✅ Updated `render()` method to convert LSP code lenses to code lens spans
+  - ✅ Convert code lens ranges (line/character) to byte positions using `position_to_byte`
+  - ✅ Copy code lens titles and command identifiers for lifetime management
+  - ✅ Support code lens commands (title, command identifier)
+  - ✅ Skip unresolved code lenses (lenses without commands)
+  - ✅ Error handling (non-fatal, skip lenses on error)
+  - ✅ Memory management (free title and command strings on error)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+- ✅ Editor LSP Document Highlights Visual Rendering ✅ **COMPLETE**
+  - ✅ Extended `RenderResult` to include `document_highlight_spans` field
+  - ✅ Added `DocumentHighlightSpan` struct (start, end, kind)
+  - ✅ Updated `render()` method to convert LSP document highlights to highlight spans
+  - ✅ Convert highlight ranges (line/character) to byte positions using `position_to_byte`
+  - ✅ Support highlight kinds (Text=1, Read=2, Write=3)
+  - ✅ Request highlights at cursor position
+  - ✅ Error handling (non-fatal, skip highlights on error)
+  - ✅ Memory management (no additional allocations needed, spans only)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+- ✅ Editor LSP Semantic Tokens Visual Rendering ✅ **COMPLETE**
+  - ✅ Extended `RenderResult` to include `semantic_token_spans` field
+  - ✅ Added `SemanticTokenSpan` struct (start, end, token_type, modifiers)
+  - ✅ Updated `render()` method to convert LSP semantic tokens to token spans
+  - ✅ Decode delta-encoded positions (delta_line, delta_start) to absolute positions
+  - ✅ Convert token positions (line/character) to byte positions using `position_to_byte`
+  - ✅ Support token types (namespace, type, class, enum, interface, struct, etc.)
+  - ✅ Support token modifiers (declaration, definition, readonly, static, etc.)
+  - ✅ Request semantic tokens for entire document
+  - ✅ Error handling (non-fatal, skip tokens on error)
+  - ✅ Memory management (no additional allocations needed, spans only)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+- ✅ Editor LSP Selection Ranges Visual Rendering ✅ **COMPLETE**
+  - ✅ Extended `RenderResult` to include `selection_range_spans` field
+  - ✅ Added `SelectionRangeSpan` struct (start, end, level)
+  - ✅ Updated `render()` method to convert LSP selection ranges to selection range spans
+  - ✅ Flatten selection range hierarchy (parent-child chain) into spans
+  - ✅ Convert selection range positions (line/character) to byte positions using `position_to_byte`
+  - ✅ Track selection level (0=innermost, higher=outer)
+  - ✅ Request selection ranges at cursor position
+  - ✅ Error handling (non-fatal, skip ranges on error)
+  - ✅ Bounded operations (MAX_SELECTION_RANGES: 100, MAX_SELECTION_LEVEL: 100)
+  - ✅ Memory management (no additional allocations needed, spans only)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, no usize)
+- ✅ Editor LSP Document Links Visual Rendering ✅ **COMPLETE**
+  - ✅ Extended `RenderResult` to include `document_link_spans` field
+  - ✅ Added `DocumentLinkSpan` struct (start, end, target, tooltip)
+  - ✅ Updated `render()` method to convert LSP document links to document link spans
+  - ✅ Convert document link ranges (line/character) to byte positions using `position_to_byte`
+  - ✅ Copy target URIs and tooltips for lifetime management
+  - ✅ Support optional target URI and tooltip
+  - ✅ Request document links for entire document
+  - ✅ Error handling (non-fatal, skip links on error)
+  - ✅ Memory management (free target and tooltip strings on error)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, no usize)
+- ✅ RenderResult Memory Management ✅ **COMPLETE**
+  - ✅ Added `deinit()` method to `RenderResult` struct
+  - ✅ Free diagnostic message strings
+  - ✅ Free inlay hint label and tooltip strings
+  - ✅ Free code lens title and command strings
+  - ✅ Free document link target and tooltip strings
+  - ✅ Skip spans with no allocated strings (highlights, tokens, ranges)
+  - ✅ Proper cleanup to prevent memory leaks
+  - ✅ GrainStyle compliance (explicit cleanup, no leaks)
+- ✅ Fix Grain/Tiger Style Compliance (usize → u32) ✅ **COMPLETE**
+  - ✅ Replaced all `usize` types with explicit `u32` in span structures
+  - ✅ Fixed ghost text span calculation to use `u32` instead of `usize`
+  - ✅ Fixed `Span` struct to use `u32` instead of `usize`
+  - ✅ Ensured all byte positions use explicit `u32` type
+  - ✅ GrainStyle compliance (no platform-unspecific types)
+- ✅ RenderResult Grain/Tiger Style Refactoring (Fixed-Size Buffers) ✅ **COMPLETE**
+  - ✅ Replaced dynamic allocation with fixed-size arrays in `RenderResult`
+  - ✅ Added MAX_ constants for all span types (MAX_DIAGNOSTIC_SPANS: 1000, MAX_INLAY_HINT_SPANS: 500, etc.)
+  - ✅ Added MAX_ constants for string lengths (MAX_DIAGNOSTIC_MESSAGE_LEN: 1024, etc.)
+  - ✅ Changed span structs to use fixed-size buffers instead of `[]const u8` slices
+  - ✅ Added length fields to track actual usage (diagnostic_spans_len, inlay_hint_spans_len, etc.)
+  - ✅ Updated `render()` method to use fixed-size arrays with bounds checking
+  - ✅ String truncation for strings exceeding buffer limits (predictable behavior)
+  - ✅ Removed all dynamic allocation from RenderResult (no ArrayList, no dupe, no deinit needed)
+  - ✅ GrainStyle compliance (bounded allocations, predictable memory usage, no dynamic allocation)
   - ✅ Implement LSP didChange notification on text insert
   - ✅ Add LSP hover request support (requestHover method)
   - ✅ Add LSP go-to-definition support (requestDefinition method, go_to_definition in Editor)
@@ -1044,6 +1333,13 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
   - ✅ Add LSP linked editing ranges support (requestLinkedEditingRange method, get_linked_editing_ranges in Editor)
   - ✅ Add LSP color presentation support (requestDocumentColor, requestColorPresentation methods, get_document_colors, get_color_presentations in Editor)
   - ✅ Add LSP folding ranges support (requestFoldingRanges method, get_folding_ranges in Editor)
+  - ✅ Add LSP document highlights support (requestDocumentHighlights method, get_document_highlights in Editor)
+  - ✅ Add LSP selection ranges support (requestSelectionRanges method, get_selection_ranges in Editor)
+  - ✅ Add LSP code lens support (requestCodeLens, resolveCodeLens methods, get_code_lenses, resolve_code_lens in Editor)
+  - ✅ Add LSP workspace folders support (requestWorkspaceFolders, notifyDidChangeWorkspaceFolders methods, get_workspace_folders, notify_workspace_folders_changed in Editor)
+  - ✅ Add LSP execute command support (executeCommand method, execute_command in Editor)
+  - ✅ Add LSP apply edit support (applyEdit method, apply_workspace_edit_from_server in Editor)
+  - ✅ Add LSP file watching support (handleDidChangeWatchedFiles method, handle_file_system_changes in Editor)
   - ✅ Integrate hover requests into moveCursor
   - ✅ Implement ghost text storage for AI completions
   - ✅ Fix didChange range calculation for insertions
@@ -1421,7 +1717,22 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 - ✅ Block linking system (bidirectional links and backlinks)
 - ✅ Block content and title management
 - ✅ Text editor with Vim bindings (`src/grain_skate/editor.zig`)
-- ✅ Editor modes (normal, insert, visual, command)
+- ✅ Editor modes (normal, insert, visual, visual_line, visual_block, command, search)
+  - ✅ Character insertion/deletion
+  - ✅ Line operations (yank, paste, delete line)
+  - ✅ Undo/redo system (insert, delete, replace operations)
+  - ✅ Visual mode selection (character-based, Vim 'v')
+  - ✅ Visual line mode selection (line-based, Vim 'V')
+  - ✅ Visual block mode selection (column-based, Vim Ctrl+v)
+  - ✅ Visual mode operations (yank, delete, paste)
+  - ✅ Yank buffer management
+  - ✅ Word movement (w, b, e) - forward, backward, end of word
+  - ✅ Search functionality (/, ?) - forward and backward search
+  - ✅ Search pattern management - build and edit search patterns
+  - ✅ Find next/previous (n, N) - navigate search results
+  - ✅ Find/replace functionality (s/old/new/) - substitute text on current line
+  - ✅ Find/replace all (s/old/new/g) - replace all occurrences on line
+  - ✅ Command mode integration - substitute commands in command mode
 - ✅ Cursor movement (h, j, k, l)
 - ✅ Text buffer management
 - ✅ Undo/redo history structure
@@ -1459,6 +1770,28 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
   - ✅ Title label rendering (block titles with ASCII font, A-Z, 0-9, space)
   - ✅ Block storage integration for title lookup
   - ✅ Automatic title/ID fallback (shows title if available, ID otherwise)
+- ✅ Split pane layout (`src/grain_skate/window.zig`)
+  - ✅ Split pane state tracking (split_pane_enabled, split_position)
+  - ✅ Split pane rendering (graph left, editor right, divider line)
+  - ✅ Split pane methods (set_split_pane, set_split_position, is_split_pane_enabled)
+  - ✅ Sub-rectangle rendering (render_graph_to_rect, render_editor_to_rect)
+  - ✅ Buffer copying utility (copy_buffer_rect)
+  - ✅ Automatic split position calculation (default 50/50 split)
+  - ✅ Split position clamping (minimum 100px per pane)
+  - ✅ Comprehensive rendering in present() method
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+- ✅ Syntax highlighting (`src/grain_skate/editor_renderer.zig`)
+  - ✅ Syntax color constants (keywords, strings, comments, numbers)
+  - ✅ Syntax highlighting state (syntax_highlighting_enabled flag)
+  - ✅ Syntax detection (keywords, strings, comments, numbers)
+  - ✅ Keyword detection (common programming keywords, Zig-focused)
+  - ✅ String detection (single and double quotes with escape handling)
+  - ✅ Comment detection (single-line // and multi-line /* */)
+  - ✅ Number detection (integer and float literals)
+  - ✅ Syntax-aware text rendering (render_text_with_syntax method)
+  - ✅ Syntax helper methods (is_word_start, is_word_char, is_digit, is_keyword)
+  - ✅ Enable/disable syntax highlighting (set_syntax_highlighting method)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, iterative parsing)
 - ✅ Interactive graph features (`src/grain_skate/graph_viz.zig`, `src/grain_skate/window.zig`)
   - ✅ Hit testing (find node at pixel coordinates)
   - ✅ Click handling (open block when node clicked)
@@ -1734,7 +2067,22 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 - ✅ Block linking system (bidirectional links and backlinks)
 - ✅ Block content and title management
 - ✅ Text editor with Vim bindings (`src/grain_skate/editor.zig`)
-- ✅ Editor modes (normal, insert, visual, command)
+- ✅ Editor modes (normal, insert, visual, visual_line, visual_block, command, search)
+  - ✅ Character insertion/deletion
+  - ✅ Line operations (yank, paste, delete line)
+  - ✅ Undo/redo system (insert, delete, replace operations)
+  - ✅ Visual mode selection (character-based, Vim 'v')
+  - ✅ Visual line mode selection (line-based, Vim 'V')
+  - ✅ Visual block mode selection (column-based, Vim Ctrl+v)
+  - ✅ Visual mode operations (yank, delete, paste)
+  - ✅ Yank buffer management
+  - ✅ Word movement (w, b, e) - forward, backward, end of word
+  - ✅ Search functionality (/, ?) - forward and backward search
+  - ✅ Search pattern management - build and edit search patterns
+  - ✅ Find next/previous (n, N) - navigate search results
+  - ✅ Find/replace functionality (s/old/new/) - substitute text on current line
+  - ✅ Find/replace all (s/old/new/g) - replace all occurrences on line
+  - ✅ Command mode integration - substitute commands in command mode
 - ✅ Cursor movement (h, j, k, l)
 - ✅ Text buffer management
 - ✅ Undo/redo history structure
@@ -1772,6 +2120,28 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
   - ✅ Title label rendering (block titles with ASCII font, A-Z, 0-9, space)
   - ✅ Block storage integration for title lookup
   - ✅ Automatic title/ID fallback (shows title if available, ID otherwise)
+- ✅ Split pane layout (`src/grain_skate/window.zig`)
+  - ✅ Split pane state tracking (split_pane_enabled, split_position)
+  - ✅ Split pane rendering (graph left, editor right, divider line)
+  - ✅ Split pane methods (set_split_pane, set_split_position, is_split_pane_enabled)
+  - ✅ Sub-rectangle rendering (render_graph_to_rect, render_editor_to_rect)
+  - ✅ Buffer copying utility (copy_buffer_rect)
+  - ✅ Automatic split position calculation (default 50/50 split)
+  - ✅ Split position clamping (minimum 100px per pane)
+  - ✅ Comprehensive rendering in present() method
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+- ✅ Syntax highlighting (`src/grain_skate/editor_renderer.zig`)
+  - ✅ Syntax color constants (keywords, strings, comments, numbers)
+  - ✅ Syntax highlighting state (syntax_highlighting_enabled flag)
+  - ✅ Syntax detection (keywords, strings, comments, numbers)
+  - ✅ Keyword detection (common programming keywords, Zig-focused)
+  - ✅ String detection (single and double quotes with escape handling)
+  - ✅ Comment detection (single-line // and multi-line /* */)
+  - ✅ Number detection (integer and float literals)
+  - ✅ Syntax-aware text rendering (render_text_with_syntax method)
+  - ✅ Syntax helper methods (is_word_start, is_word_char, is_digit, is_keyword)
+  - ✅ Enable/disable syntax highlighting (set_syntax_highlighting method)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, iterative parsing)
 - ✅ Interactive graph features (`src/grain_skate/graph_viz.zig`, `src/grain_skate/window.zig`)
   - ✅ Hit testing (find node at pixel coordinates)
   - ✅ Click handling (open block when node clicked)
@@ -2047,7 +2417,22 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 - ✅ Block linking system (bidirectional links and backlinks)
 - ✅ Block content and title management
 - ✅ Text editor with Vim bindings (`src/grain_skate/editor.zig`)
-- ✅ Editor modes (normal, insert, visual, command)
+- ✅ Editor modes (normal, insert, visual, visual_line, visual_block, command, search)
+  - ✅ Character insertion/deletion
+  - ✅ Line operations (yank, paste, delete line)
+  - ✅ Undo/redo system (insert, delete, replace operations)
+  - ✅ Visual mode selection (character-based, Vim 'v')
+  - ✅ Visual line mode selection (line-based, Vim 'V')
+  - ✅ Visual block mode selection (column-based, Vim Ctrl+v)
+  - ✅ Visual mode operations (yank, delete, paste)
+  - ✅ Yank buffer management
+  - ✅ Word movement (w, b, e) - forward, backward, end of word
+  - ✅ Search functionality (/, ?) - forward and backward search
+  - ✅ Search pattern management - build and edit search patterns
+  - ✅ Find next/previous (n, N) - navigate search results
+  - ✅ Find/replace functionality (s/old/new/) - substitute text on current line
+  - ✅ Find/replace all (s/old/new/g) - replace all occurrences on line
+  - ✅ Command mode integration - substitute commands in command mode
 - ✅ Cursor movement (h, j, k, l)
 - ✅ Text buffer management
 - ✅ Undo/redo history structure
@@ -2085,6 +2470,28 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
   - ✅ Title label rendering (block titles with ASCII font, A-Z, 0-9, space)
   - ✅ Block storage integration for title lookup
   - ✅ Automatic title/ID fallback (shows title if available, ID otherwise)
+- ✅ Split pane layout (`src/grain_skate/window.zig`)
+  - ✅ Split pane state tracking (split_pane_enabled, split_position)
+  - ✅ Split pane rendering (graph left, editor right, divider line)
+  - ✅ Split pane methods (set_split_pane, set_split_position, is_split_pane_enabled)
+  - ✅ Sub-rectangle rendering (render_graph_to_rect, render_editor_to_rect)
+  - ✅ Buffer copying utility (copy_buffer_rect)
+  - ✅ Automatic split position calculation (default 50/50 split)
+  - ✅ Split position clamping (minimum 100px per pane)
+  - ✅ Comprehensive rendering in present() method
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations)
+- ✅ Syntax highlighting (`src/grain_skate/editor_renderer.zig`)
+  - ✅ Syntax color constants (keywords, strings, comments, numbers)
+  - ✅ Syntax highlighting state (syntax_highlighting_enabled flag)
+  - ✅ Syntax detection (keywords, strings, comments, numbers)
+  - ✅ Keyword detection (common programming keywords, Zig-focused)
+  - ✅ String detection (single and double quotes with escape handling)
+  - ✅ Comment detection (single-line // and multi-line /* */)
+  - ✅ Number detection (integer and float literals)
+  - ✅ Syntax-aware text rendering (render_text_with_syntax method)
+  - ✅ Syntax helper methods (is_word_start, is_word_char, is_digit, is_keyword)
+  - ✅ Enable/disable syntax highlighting (set_syntax_highlighting method)
+  - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, iterative parsing)
 - ✅ Interactive graph features (`src/grain_skate/graph_viz.zig`, `src/grain_skate/window.zig`)
   - ✅ Hit testing (find node at pixel coordinates)
   - ✅ Click handling (open block when node clicked)

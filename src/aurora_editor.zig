@@ -1112,6 +1112,125 @@ pub const Editor = struct {
         return highlights;
     }
     
+    /// Get selection ranges for expanding text selection at cursor position.
+    /// Why: Get selection ranges for expanding text selection (e.g., word -> statement -> block).
+    /// Contract: File must be open and LSP server must be running.
+    /// Returns: Array of selection ranges (one per position), or null if not available.
+    /// Note: Caller must free the returned ranges array and all nested parent ranges.
+    pub fn get_selection_ranges(self: *Editor) !?[]LspClient.SelectionRange {
+        // Build positions array (single position at cursor)
+        const positions = [_]LspClient.Position{
+            LspClient.Position{ .line = self.cursor_line, .character = self.cursor_char },
+        };
+        
+        // Request selection ranges from LSP server
+        const ranges = try self.lsp.requestSelectionRanges(self.file_uri, &positions);
+        
+        // Return ranges array (caller must free)
+        return ranges;
+    }
+    
+    /// Get code lenses for current file (for actionable code information).
+    /// Why: Get code lenses for actionable code information (e.g., references count, test coverage).
+    /// Contract: File must be open and LSP server must be running.
+    /// Returns: Array of code lenses, or null if not available.
+    /// Note: Caller must free the returned lenses array and all strings within.
+    pub fn get_code_lenses(self: *Editor) !?[]LspClient.CodeLens {
+        // Request code lenses from LSP server
+        const lenses = try self.lsp.requestCodeLens(self.file_uri);
+        
+        // Return lenses array (caller must free)
+        return lenses;
+    }
+    
+    /// Resolve code lens (get full command details).
+    /// Why: Resolve a code lens to get its full command details (lazy loading).
+    /// Contract: code_lens must be valid.
+    /// Returns: Resolved code lens with command, or null if not available.
+    /// Note: Caller must free the returned code lens and all strings within.
+    pub fn resolve_code_lens(self: *Editor, code_lens: LspClient.CodeLens) !?LspClient.CodeLens {
+        // Resolve code lens from LSP server
+        const resolved = try self.lsp.resolveCodeLens(code_lens);
+        
+        // Return resolved code lens (caller must free)
+        return resolved;
+    }
+    
+    /// Get workspace folders (for multi-root workspaces).
+    /// Why: Get workspace folders from LSP server for multi-root workspaces.
+    /// Contract: LSP server must be running.
+    /// Returns: Array of workspace folders, or null if not available.
+    /// Note: Caller must free the returned folders array and all strings within.
+    pub fn get_workspace_folders(self: *Editor) !?[]LspClient.WorkspaceFolder {
+        // Request workspace folders from LSP server
+        const folders = try self.lsp.requestWorkspaceFolders();
+        
+        // Return folders array (caller must free)
+        return folders;
+    }
+    
+    /// Notify workspace folders changed (add or remove workspace folders).
+    /// Why: Notify LSP server when workspace folders are added or removed.
+    /// Contract: added and removed arrays must be valid.
+    pub fn notify_workspace_folders_changed(
+        self: *Editor,
+        added: []const LspClient.WorkspaceFolder,
+        removed: []const LspClient.WorkspaceFolder,
+    ) !void {
+        // Notify LSP server of workspace folder changes
+        try self.lsp.notifyDidChangeWorkspaceFolders(added, removed);
+    }
+    
+    /// Execute workspace command (run a command from code actions or code lenses).
+    /// Why: Execute workspace commands from code actions, code lenses, or other LSP features.
+    /// Contract: command and arguments must be valid.
+    /// Returns: Command result (JSON value), or null if not available.
+    /// Note: Caller must free the returned result if it contains allocated strings.
+    pub fn execute_command(
+        self: *Editor,
+        command: []const u8,
+        arguments: ?[]const std.json.Value,
+    ) !?std.json.Value {
+        // Execute command from LSP server
+        const result = try self.lsp.executeCommand(command, arguments);
+        
+        // Return result (caller must free if it contains allocated strings)
+        return result;
+    }
+    
+    /// Apply workspace edit from LSP server (apply edits from server).
+    /// Why: Apply workspace edits from the LSP server (e.g., from code actions).
+    /// Contract: edit must be valid.
+    /// Returns: Whether the edit was applied (true) or rejected (false).
+    pub fn apply_workspace_edit_from_server(self: *Editor, edit: LspClient.WorkspaceEdit) !bool {
+        // Apply edit from LSP server
+        const applied = try self.lsp.applyEdit(edit);
+        
+        // If applied, also apply locally
+        if (applied) {
+            try self.apply_workspace_edit(edit);
+        }
+        
+        return applied;
+    }
+    
+    /// Handle file system changes (workspace/didChangeWatchedFiles).
+    /// Why: Handle file system change notifications from LSP server.
+    /// Contract: events array must be valid.
+    pub fn handle_file_system_changes(
+        self: *Editor,
+        events: []const LspClient.FileEvent,
+    ) !void {
+        // Handle file system changes from LSP server
+        try self.lsp.handleDidChangeWatchedFiles(events);
+        
+        // Note: In full implementation, this would:
+        // 1. Reload files that were changed externally
+        // 2. Close files that were deleted
+        // 3. Update diagnostics for changed files
+        // For now, this is a placeholder for future file watching integration.
+    }
+    
     /// Render editor view: buffer content + LSP diagnostics overlay.
     /// Includes readonly spans and ghost text for visual distinction.
     pub fn render(self: *Editor) !GrainAurora.RenderResult {
@@ -1119,23 +1238,12 @@ pub const Editor = struct {
         const readonly_spans = self.buffer.getReadonlySpans();
         
         // Convert GrainBuffer segments to Aurora spans
-        const AuroraSpan = @import("structs/aurora.zig").Span;
-        var spans = try std.ArrayList(AuroraSpan).initCapacity(
-            self.allocator,
-            readonly_spans.len,
-        );
-        defer spans.deinit();
-        
-        for (readonly_spans) |segment| {
-            try spans.append(AuroraSpan{
-                .start = segment.start,
-                .end = segment.end,
-            });
-        }
+        // Note: readonly_spans are owned by GrainBuffer, we just reference them
+        // For RenderResult, we'll use the spans directly from GrainBuffer
         
         // Build rendered text with ghost text appended (if pending completion exists)
         var rendered_text = text;
-        var ghost_spans: []const AuroraSpan = &.{};
+        var ghost_spans: []const GrainAurora.Span = &.{};
         
         if (self.pending_completion) |completion| {
             // Assert: Completion must be bounded
@@ -1172,11 +1280,11 @@ pub const Editor = struct {
             
             // Create ghost text span (starts at cursor, extends for completion length)
             const ghost_start = cursor_pos;
-            const ghost_end = cursor_pos + @as(usize, @intCast(completion.len));
+            const ghost_end = cursor_pos + @as(u32, @intCast(completion.len));
             
             // Allocate ghost span
-            const ghost_span = try self.allocator.alloc(AuroraSpan, 1);
-            ghost_span[0] = AuroraSpan{
+            const ghost_span = try self.allocator.alloc(GrainAurora.Span, 1);
+            ghost_span[0] = GrainAurora.Span{
                 .start = ghost_start,
                 .end = ghost_end,
             };
@@ -1189,11 +1297,504 @@ pub const Editor = struct {
             }
         }
         
-        return GrainAurora.RenderResult{
+        // Get LSP diagnostics and convert to diagnostic spans
+        // Grain/Tiger style: fixed-size array, no dynamic allocation
+        const diagnostics = self.get_diagnostics();
+        var diagnostic_spans: [GrainAurora.MAX_DIAGNOSTIC_SPANS]GrainAurora.DiagnosticSpan = undefined;
+        var diagnostic_spans_len: u32 = 0;
+        
+        // Assert: Diagnostics must be bounded
+        std.debug.assert(diagnostics.len <= LspClient.MAX_DIAGNOSTICS_PER_DOCUMENT);
+        std.debug.assert(diagnostics.len <= GrainAurora.MAX_DIAGNOSTIC_SPANS);
+        
+        for (diagnostics) |diag| {
+            // Bounded: Check if we've reached max spans
+            if (diagnostic_spans_len >= GrainAurora.MAX_DIAGNOSTIC_SPANS) break;
+            
+            // Convert diagnostic range to byte positions
+            const start_byte = try self.position_to_byte(text, diag.range.start);
+            const end_byte = try self.position_to_byte(text, diag.range.end);
+            
+            // Assert: Byte positions must be valid
+            std.debug.assert(start_byte <= end_byte);
+            std.debug.assert(end_byte <= text.len);
+            
+            // Copy diagnostic message to fixed-size buffer (truncate if needed)
+            var message_buf: [GrainAurora.MAX_DIAGNOSTIC_MESSAGE_LEN]u8 = undefined;
+            const message_len = @min(diag.message.len, GrainAurora.MAX_DIAGNOSTIC_MESSAGE_LEN);
+            @memcpy(message_buf[0..message_len], diag.message[0..message_len]);
+            
+            // Get severity (default to Error if not specified)
+            const severity: u32 = diag.severity orelse 1; // 1=Error
+            
+            diagnostic_spans[diagnostic_spans_len] = GrainAurora.DiagnosticSpan{
+                .start = start_byte,
+                .end = end_byte,
+                .severity = severity,
+                .message = message_buf,
+                .message_len = message_len,
+            };
+            diagnostic_spans_len += 1;
+        }
+        
+        // Get LSP inlay hints and convert to inlay hint spans
+        // Calculate line count from text (for requesting hints for entire document)
+        var line_count: u32 = 0;
+        var last_char: u32 = 0;
+        for (text) |c| {
+            if (c == '\n') {
+                line_count += 1;
+                last_char = 0;
+            } else {
+                last_char += 1;
+            }
+        }
+        const last_line = line_count;
+        
+        // Grain/Tiger style: fixed-size array, no dynamic allocation
+        var inlay_hint_spans: [GrainAurora.MAX_INLAY_HINT_SPANS]GrainAurora.InlayHintSpan = undefined;
+        var inlay_hint_spans_len: u32 = 0;
+        
+        // Request inlay hints for entire document (non-fatal if it fails)
+        if (self.get_inlay_hints(0, 0, last_line, last_char)) |hints| {
+            defer {
+                // Free hints array (but not the strings inside, we copy them)
+                self.allocator.free(hints);
+            }
+            
+            // Assert: Hints must be bounded
+            std.debug.assert(hints.len <= GrainAurora.MAX_INLAY_HINT_SPANS);
+            
+            for (hints) |hint| {
+                // Bounded: Check if we've reached max spans
+                if (inlay_hint_spans_len >= GrainAurora.MAX_INLAY_HINT_SPANS) break;
+                
+                // Convert hint position to byte position
+                const position_byte = try self.position_to_byte(text, hint.position);
+                
+                // Assert: Position must be valid
+                std.debug.assert(position_byte <= text.len);
+                
+                // Copy hint label to fixed-size buffer (truncate if needed)
+                var label_buf: [GrainAurora.MAX_INLAY_HINT_LABEL_LEN]u8 = undefined;
+                const label_len = @min(hint.label.len, GrainAurora.MAX_INLAY_HINT_LABEL_LEN);
+                @memcpy(label_buf[0..label_len], hint.label[0..label_len]);
+                
+                // Copy tooltip to fixed-size buffer if present (truncate if needed)
+                var tooltip_buf: [GrainAurora.MAX_INLAY_HINT_TOOLTIP_LEN]u8 = undefined;
+                var tooltip_len: u32 = 0;
+                if (hint.tooltip) |tooltip| {
+                    tooltip_len = @min(tooltip.len, GrainAurora.MAX_INLAY_HINT_TOOLTIP_LEN);
+                    @memcpy(tooltip_buf[0..tooltip_len], tooltip[0..tooltip_len]);
+                }
+                
+                // Get hint kind (default to Parameter if not specified)
+                const kind: u32 = hint.kind orelse 2; // 2=Parameter
+                
+                // Get padding flags (default to false)
+                const padding_left: bool = hint.padding_left orelse false;
+                const padding_right: bool = hint.padding_right orelse false;
+                
+                inlay_hint_spans[inlay_hint_spans_len] = GrainAurora.InlayHintSpan{
+                    .position = position_byte,
+                    .label = label_buf,
+                    .label_len = label_len,
+                    .kind = kind,
+                    .tooltip = tooltip_buf,
+                    .tooltip_len = tooltip_len,
+                    .padding_left = padding_left,
+                    .padding_right = padding_right,
+                };
+                inlay_hint_spans_len += 1;
+            }
+        } else |err| {
+            // If get_inlay_hints returns an error, just skip inlay hints
+            // (this is non-fatal, editor can still render without hints)
+            _ = err;
+        }
+        
+        // Get LSP code lenses and convert to code lens spans
+        // Grain/Tiger style: fixed-size array, no dynamic allocation
+        var code_lens_spans: [GrainAurora.MAX_CODE_LENS_SPANS]GrainAurora.CodeLensSpan = undefined;
+        var code_lens_spans_len: u32 = 0;
+        
+        // Request code lenses (non-fatal if it fails)
+        if (self.get_code_lenses()) |lenses| {
+            defer {
+                // Free lenses array (but not the strings inside, we copy them)
+                self.allocator.free(lenses);
+            }
+            
+            // Assert: Lenses must be bounded
+            std.debug.assert(lenses.len <= GrainAurora.MAX_CODE_LENS_SPANS);
+            
+            for (lenses) |lens| {
+                // Bounded: Check if we've reached max spans
+                if (code_lens_spans_len >= GrainAurora.MAX_CODE_LENS_SPANS) break;
+                
+                // Convert lens range to byte positions
+                const range_start_byte = try self.position_to_byte(text, lens.range.start);
+                const range_end_byte = try self.position_to_byte(text, lens.range.end);
+                
+                // Assert: Range positions must be valid
+                std.debug.assert(range_start_byte <= range_end_byte);
+                std.debug.assert(range_end_byte <= text.len);
+                
+                // Code lens position is at the start of the range (displayed above line)
+                const position_byte = range_start_byte;
+                
+                // Get command from lens (may need to resolve first)
+                if (lens.command) |cmd| {
+                    // Copy command identifier to fixed-size buffer (truncate if needed)
+                    var command_buf: [GrainAurora.MAX_CODE_LENS_COMMAND_LEN]u8 = undefined;
+                    const command_len = @min(cmd.command.len, GrainAurora.MAX_CODE_LENS_COMMAND_LEN);
+                    @memcpy(command_buf[0..command_len], cmd.command[0..command_len]);
+                    
+                    // Copy title to fixed-size buffer (truncate if needed)
+                    var title_buf: [GrainAurora.MAX_CODE_LENS_TITLE_LEN]u8 = undefined;
+                    const title_len = @min(cmd.title.len, GrainAurora.MAX_CODE_LENS_TITLE_LEN);
+                    @memcpy(title_buf[0..title_len], cmd.title[0..title_len]);
+                    
+                    code_lens_spans[code_lens_spans_len] = GrainAurora.CodeLensSpan{
+                        .position = position_byte,
+                        .title = title_buf,
+                        .title_len = title_len,
+                        .command = command_buf,
+                        .command_len = command_len,
+                        .range_start = range_start_byte,
+                        .range_end = range_end_byte,
+                    };
+                    code_lens_spans_len += 1;
+                } else {
+                    // If no command, skip this lens (unresolved lenses need resolution first)
+                    // In full implementation, would resolve lens here or queue for resolution
+                    continue;
+                }
+            }
+        } else |err| {
+            // If get_code_lenses returns an error, just skip code lenses
+            // (this is non-fatal, editor can still render without lenses)
+            _ = err;
+        }
+        
+        // Get LSP document highlights and convert to highlight spans
+        // Grain/Tiger style: fixed-size array, no dynamic allocation
+        // Request highlights at cursor position (non-fatal if it fails)
+        var document_highlight_spans: [GrainAurora.MAX_DOCUMENT_HIGHLIGHT_SPANS]GrainAurora.DocumentHighlightSpan = undefined;
+        var document_highlight_spans_len: u32 = 0;
+        
+        if (self.get_document_highlights()) |highlights| {
+            defer {
+                // Free highlights array (but not the ranges inside, we convert them)
+                self.allocator.free(highlights);
+            }
+            
+            // Assert: Highlights must be bounded
+            std.debug.assert(highlights.len <= GrainAurora.MAX_DOCUMENT_HIGHLIGHT_SPANS);
+            
+            for (highlights) |highlight| {
+                // Bounded: Check if we've reached max spans
+                if (document_highlight_spans_len >= GrainAurora.MAX_DOCUMENT_HIGHLIGHT_SPANS) break;
+                
+                // Convert highlight range to byte positions
+                const start_byte = try self.position_to_byte(text, highlight.range.start);
+                const end_byte = try self.position_to_byte(text, highlight.range.end);
+                
+                // Assert: Range positions must be valid
+                std.debug.assert(start_byte <= end_byte);
+                std.debug.assert(end_byte <= text.len);
+                
+                // Get highlight kind (default to Text if not specified)
+                const kind: u32 = highlight.kind orelse 1; // 1=Text
+                
+                document_highlight_spans[document_highlight_spans_len] = GrainAurora.DocumentHighlightSpan{
+                    .start = start_byte,
+                    .end = end_byte,
+                    .kind = kind,
+                };
+                document_highlight_spans_len += 1;
+            }
+        } else |err| {
+            // If get_document_highlights returns an error, just skip highlights
+            // (this is non-fatal, editor can still render without highlights)
+            _ = err;
+        }
+        
+        // Get LSP semantic tokens and convert to semantic token spans
+        // Grain/Tiger style: fixed-size array, no dynamic allocation
+        // Request semantic tokens for entire document (non-fatal if it fails)
+        var semantic_token_spans: [GrainAurora.MAX_SEMANTIC_TOKEN_SPANS]GrainAurora.SemanticTokenSpan = undefined;
+        var semantic_token_spans_len: u32 = 0;
+        
+        if (self.get_semantic_tokens()) |tokens| {
+            defer {
+                // Free tokens array (but not the token data inside, we convert them)
+                self.allocator.free(tokens);
+            }
+            
+            // Assert: Tokens must be bounded
+            std.debug.assert(tokens.len <= GrainAurora.MAX_SEMANTIC_TOKEN_SPANS);
+            
+            // Track current position for delta decoding
+            var current_line: u32 = 0;
+            var current_char: u32 = 0;
+            
+            for (tokens) |token| {
+                // Bounded: Check if we've reached max spans
+                if (semantic_token_spans_len >= GrainAurora.MAX_SEMANTIC_TOKEN_SPANS) break;
+                
+                // Decode delta-encoded position
+                current_line += token.delta_line;
+                if (token.delta_line == 0) {
+                    // Same line: add character delta
+                    current_char += token.delta_start;
+                } else {
+                    // New line: character delta is absolute
+                    current_char = token.delta_start;
+                }
+                
+                // Convert line/character to byte position
+                const start_pos = LspClient.Position{
+                    .line = current_line,
+                    .character = current_char,
+                };
+                const start_byte = try self.position_to_byte(text, start_pos);
+                
+                // Calculate end position (start + length)
+                const end_char = current_char + token.length;
+                const end_pos = LspClient.Position{
+                    .line = current_line,
+                    .character = end_char,
+                };
+                const end_byte = try self.position_to_byte(text, end_pos);
+                
+                // Assert: Range positions must be valid
+                std.debug.assert(start_byte <= end_byte);
+                std.debug.assert(end_byte <= text.len);
+                
+                semantic_token_spans[semantic_token_spans_len] = GrainAurora.SemanticTokenSpan{
+                    .start = start_byte,
+                    .end = end_byte,
+                    .token_type = token.token_type,
+                    .modifiers = token.token_modifiers,
+                };
+                semantic_token_spans_len += 1;
+            }
+        } else |err| {
+            // If get_semantic_tokens returns an error, just skip semantic tokens
+            // (this is non-fatal, editor can still render without syntax highlighting)
+            _ = err;
+        }
+        
+        // Get LSP folding ranges and convert to folding range spans
+        // Grain/Tiger style: fixed-size array, no dynamic allocation
+        // Request folding ranges (non-fatal if it fails)
+        var folding_range_spans: [GrainAurora.MAX_FOLDING_RANGE_SPANS]GrainAurora.FoldingRangeSpan = undefined;
+        var folding_range_spans_len: u32 = 0;
+        
+        if (self.get_folding_ranges()) |ranges| {
+            defer {
+                // Free ranges array (but not the range data inside, we convert them)
+                self.allocator.free(ranges);
+            }
+            
+            // Assert: Ranges must be bounded
+            std.debug.assert(ranges.len <= GrainAurora.MAX_FOLDING_RANGE_SPANS);
+            
+            for (ranges) |range| {
+                // Bounded: Check if we've reached max spans
+                if (folding_range_spans_len >= GrainAurora.MAX_FOLDING_RANGE_SPANS) break;
+                
+                // Get start character (default to 0 if not specified)
+                const start_char: u32 = range.start_character orelse 0;
+                // Get end character (default to end of line if not specified)
+                // For now, use 0 as placeholder (would need line length calculation)
+                const end_char: u32 = range.end_character orelse 0;
+                
+                // Convert start position to byte position
+                const start_pos = LspClient.Position{
+                    .line = range.start_line,
+                    .character = start_char,
+                };
+                const start_byte = try self.position_to_byte(text, start_pos);
+                
+                // Convert end position to byte position
+                const end_pos = LspClient.Position{
+                    .line = range.end_line,
+                    .character = end_char,
+                };
+                const end_byte = try self.position_to_byte(text, end_pos);
+                
+                // Assert: Range positions must be valid
+                std.debug.assert(start_byte <= end_byte);
+                std.debug.assert(end_byte <= text.len);
+                
+                // Get folding range kind (default to Comment if not specified)
+                const kind: u32 = range.kind orelse 1; // 1=Comment
+                
+                folding_range_spans[folding_range_spans_len] = GrainAurora.FoldingRangeSpan{
+                    .start = start_byte,
+                    .end = end_byte,
+                    .kind = kind,
+                };
+                folding_range_spans_len += 1;
+            }
+        } else |err| {
+            // If get_folding_ranges returns an error, just skip folding ranges
+            // (this is non-fatal, editor can still render without folding)
+            _ = err;
+        }
+        
+        // Get LSP selection ranges and convert to selection range spans
+        // Grain/Tiger style: fixed-size array, no dynamic allocation
+        // Request selection ranges at cursor position (non-fatal if it fails)
+        var selection_range_spans: [GrainAurora.MAX_SELECTION_RANGE_SPANS]GrainAurora.SelectionRangeSpan = undefined;
+        var selection_range_spans_len: u32 = 0;
+        
+        if (self.get_selection_ranges()) |ranges| {
+            defer {
+                // Free ranges array (but not the nested parent ranges, we flatten them)
+                self.allocator.free(ranges);
+            }
+            
+            // Assert: Ranges must be bounded
+            std.debug.assert(ranges.len <= 100); // MAX_SELECTION_RANGES
+            
+            // Flatten selection range hierarchy (parent-child chain) into spans
+            for (ranges) |range| {
+                var current_range: ?*LspClient.SelectionRange = &range;
+                var level: u32 = 0;
+                
+                // Traverse parent chain (innermost to outermost)
+                while (current_range) |sel_range| {
+                    // Bounded: Check if we've reached max spans
+                    if (selection_range_spans_len >= GrainAurora.MAX_SELECTION_RANGE_SPANS) break;
+                    
+                    // Convert range to byte positions
+                    const start_byte = try self.position_to_byte(text, sel_range.range.start);
+                    const end_byte = try self.position_to_byte(text, sel_range.range.end);
+                    
+                    // Assert: Range positions must be valid
+                    std.debug.assert(start_byte <= end_byte);
+                    std.debug.assert(end_byte <= text.len);
+                    
+                    selection_range_spans[selection_range_spans_len] = GrainAurora.SelectionRangeSpan{
+                        .start = start_byte,
+                        .end = end_byte,
+                        .level = level,
+                    };
+                    selection_range_spans_len += 1;
+                    
+                    // Move to parent (if exists)
+                    current_range = sel_range.parent;
+                    level += 1;
+                    
+                    // Assert: Level must be bounded (prevent infinite loops)
+                    std.debug.assert(level <= 100); // MAX_SELECTION_LEVEL
+                }
+            }
+        } else |err| {
+            // If get_selection_ranges returns an error, just skip selection ranges
+            // (this is non-fatal, editor can still render without selection ranges)
+            _ = err;
+        }
+        
+        // Get LSP document links and convert to document link spans
+        // Grain/Tiger style: fixed-size array, no dynamic allocation
+        // Request document links (non-fatal if it fails)
+        var document_link_spans: [GrainAurora.MAX_DOCUMENT_LINK_SPANS]GrainAurora.DocumentLinkSpan = undefined;
+        var document_link_spans_len: u32 = 0;
+        
+        if (self.get_document_links()) |links| {
+            defer {
+                // Free links array (but not the strings inside, we copy them)
+                self.allocator.free(links);
+            }
+            
+            // Assert: Links must be bounded
+            std.debug.assert(links.len <= GrainAurora.MAX_DOCUMENT_LINK_SPANS);
+            
+            for (links) |link| {
+                // Bounded: Check if we've reached max spans
+                if (document_link_spans_len >= GrainAurora.MAX_DOCUMENT_LINK_SPANS) break;
+                
+                // Convert link range to byte positions
+                const start_byte = try self.position_to_byte(text, link.range.start);
+                const end_byte = try self.position_to_byte(text, link.range.end);
+                
+                // Assert: Range positions must be valid
+                std.debug.assert(start_byte <= end_byte);
+                std.debug.assert(end_byte <= text.len);
+                
+                // Copy target URI to fixed-size buffer if present (truncate if needed)
+                var target_buf: [GrainAurora.MAX_DOCUMENT_LINK_TARGET_LEN]u8 = undefined;
+                var target_len: u32 = 0;
+                if (link.target) |target| {
+                    target_len = @min(target.len, GrainAurora.MAX_DOCUMENT_LINK_TARGET_LEN);
+                    @memcpy(target_buf[0..target_len], target[0..target_len]);
+                }
+                
+                // Copy tooltip to fixed-size buffer if present (truncate if needed)
+                var tooltip_buf: [GrainAurora.MAX_DOCUMENT_LINK_TOOLTIP_LEN]u8 = undefined;
+                var tooltip_len: u32 = 0;
+                if (link.tooltip) |tooltip| {
+                    tooltip_len = @min(tooltip.len, GrainAurora.MAX_DOCUMENT_LINK_TOOLTIP_LEN);
+                    @memcpy(tooltip_buf[0..tooltip_len], tooltip[0..tooltip_len]);
+                }
+                
+                document_link_spans[document_link_spans_len] = GrainAurora.DocumentLinkSpan{
+                    .start = start_byte,
+                    .end = end_byte,
+                    .target = target_buf,
+                    .target_len = target_len,
+                    .tooltip = tooltip_buf,
+                    .tooltip_len = tooltip_len,
+                };
+                document_link_spans_len += 1;
+            }
+        } else |err| {
+            // If get_document_links returns an error, just skip document links
+            // (this is non-fatal, editor can still render without links)
+            _ = err;
+        }
+        
+        // Convert readonly spans to Aurora spans (for compatibility)
+        var readonly_aurora_spans: [1000]GrainAurora.Span = undefined;
+        var readonly_aurora_spans_len: u32 = 0;
+        for (readonly_spans) |segment| {
+            if (readonly_aurora_spans_len >= 1000) break; // Bounded
+            readonly_aurora_spans[readonly_aurora_spans_len] = GrainAurora.Span{
+                .start = @as(u32, @intCast(segment.start)),
+                .end = @as(u32, @intCast(segment.end)),
+            };
+            readonly_aurora_spans_len += 1;
+        }
+        
+        // Create RenderResult with fixed-size arrays (Grain/Tiger style: no dynamic allocation)
+        // Note: We store the arrays directly in RenderResult, not slices
+        const result = GrainAurora.RenderResult{
             .root = .{ .text = rendered_text },
-            .readonly_spans = try spans.toOwnedSlice(),
+            .readonly_spans = readonly_aurora_spans[0..readonly_aurora_spans_len],
             .ghost_spans = ghost_spans,
+            .diagnostic_spans = diagnostic_spans,
+            .diagnostic_spans_len = diagnostic_spans_len,
+            .inlay_hint_spans = inlay_hint_spans,
+            .inlay_hint_spans_len = inlay_hint_spans_len,
+            .code_lens_spans = code_lens_spans,
+            .code_lens_spans_len = code_lens_spans_len,
+            .document_highlight_spans = document_highlight_spans,
+            .document_highlight_spans_len = document_highlight_spans_len,
+            .semantic_token_spans = semantic_token_spans,
+            .semantic_token_spans_len = semantic_token_spans_len,
+            .folding_range_spans = folding_range_spans,
+            .folding_range_spans_len = folding_range_spans_len,
+            .selection_range_spans = selection_range_spans,
+            .selection_range_spans_len = selection_range_spans_len,
+            .document_link_spans = document_link_spans,
+            .document_link_spans_len = document_link_spans_len,
         };
+        
+        return result;
     }
     
     /// Request tool call from AI provider (if enabled).

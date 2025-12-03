@@ -229,7 +229,7 @@ pub const ResourceMonitor = struct {
         }
         const info = @as(*basin_kernel.SysInfo, @ptrCast(&sysinfo_buf));
         // Use enhanced sysinfo fields: used_memory, process counts.
-        const cpu_percent: f64 = @floatFromInt(info.load_avg_1min) / 10.0;
+        const cpu_percent: f64 = @as(f64, @floatFromInt(info.load_avg_1min)) / 10.0;
         const clamped_cpu = @min(cpu_percent, 100.0);
         self.update_usage_with_processes(
             clamped_cpu,

@@ -50,7 +50,7 @@ test "execute process runs VM until halted or max steps" {
     
     // Execute process with max 100 steps.
     // Note: This will halt quickly since VM memory is empty (invalid instructions).
-    const should_continue = pe.execute_process(&vm, &context, 100);
+    const should_continue = pe.execute_process(&vm, &context, 100, null);
     
     // Assert: Process execution should complete (halted or errored).
     // Note: VM will halt due to invalid instruction, so should_continue should be false.

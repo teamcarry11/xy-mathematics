@@ -86,6 +86,62 @@ pub const GrainAurora = struct {
         ghost_spans: []const Span = &.{}, // Owned by caller (from Editor)
         
         // No deinit needed: all strings are in fixed-size buffers, no dynamic allocation
+        
+        /// Get diagnostic spans as a slice.
+        /// Why: Convenient access to diagnostic spans using length field.
+        /// Contract: Returns slice of actual diagnostic spans (0..diagnostic_spans_len).
+        pub fn get_diagnostic_spans(self: *const RenderResult) []const DiagnosticSpan {
+            return self.diagnostic_spans[0..self.diagnostic_spans_len];
+        }
+        
+        /// Get inlay hint spans as a slice.
+        /// Why: Convenient access to inlay hint spans using length field.
+        /// Contract: Returns slice of actual inlay hint spans (0..inlay_hint_spans_len).
+        pub fn get_inlay_hint_spans(self: *const RenderResult) []const InlayHintSpan {
+            return self.inlay_hint_spans[0..self.inlay_hint_spans_len];
+        }
+        
+        /// Get code lens spans as a slice.
+        /// Why: Convenient access to code lens spans using length field.
+        /// Contract: Returns slice of actual code lens spans (0..code_lens_spans_len).
+        pub fn get_code_lens_spans(self: *const RenderResult) []const CodeLensSpan {
+            return self.code_lens_spans[0..self.code_lens_spans_len];
+        }
+        
+        /// Get document highlight spans as a slice.
+        /// Why: Convenient access to document highlight spans using length field.
+        /// Contract: Returns slice of actual document highlight spans (0..document_highlight_spans_len).
+        pub fn get_document_highlight_spans(self: *const RenderResult) []const DocumentHighlightSpan {
+            return self.document_highlight_spans[0..self.document_highlight_spans_len];
+        }
+        
+        /// Get semantic token spans as a slice.
+        /// Why: Convenient access to semantic token spans using length field.
+        /// Contract: Returns slice of actual semantic token spans (0..semantic_token_spans_len).
+        pub fn get_semantic_token_spans(self: *const RenderResult) []const SemanticTokenSpan {
+            return self.semantic_token_spans[0..self.semantic_token_spans_len];
+        }
+        
+        /// Get folding range spans as a slice.
+        /// Why: Convenient access to folding range spans using length field.
+        /// Contract: Returns slice of actual folding range spans (0..folding_range_spans_len).
+        pub fn get_folding_range_spans(self: *const RenderResult) []const FoldingRangeSpan {
+            return self.folding_range_spans[0..self.folding_range_spans_len];
+        }
+        
+        /// Get selection range spans as a slice.
+        /// Why: Convenient access to selection range spans using length field.
+        /// Contract: Returns slice of actual selection range spans (0..selection_range_spans_len).
+        pub fn get_selection_range_spans(self: *const RenderResult) []const SelectionRangeSpan {
+            return self.selection_range_spans[0..self.selection_range_spans_len];
+        }
+        
+        /// Get document link spans as a slice.
+        /// Why: Convenient access to document link spans using length field.
+        /// Contract: Returns slice of actual document link spans (0..document_link_spans_len).
+        pub fn get_document_link_spans(self: *const RenderResult) []const DocumentLinkSpan {
+            return self.document_link_spans[0..self.document_link_spans_len];
+        }
     };
     
     /// Diagnostic span (for LSP diagnostics rendering).
@@ -96,6 +152,13 @@ pub const GrainAurora = struct {
         severity: u32, // Diagnostic severity (1=Error, 2=Warning, 3=Info, 4=Hint)
         message: [MAX_DIAGNOSTIC_MESSAGE_LEN]u8 = undefined, // Fixed-size message buffer
         message_len: u32 = 0, // Actual message length
+        
+        /// Get message as a slice.
+        /// Why: Convenient access to message string using length field.
+        /// Contract: Returns slice of actual message (0..message_len).
+        pub fn get_message(self: *const DiagnosticSpan) []const u8 {
+            return self.message[0..self.message_len];
+        }
     };
     
     /// Inlay hint span (for LSP inlay hints rendering).
@@ -109,6 +172,21 @@ pub const GrainAurora = struct {
         tooltip_len: u32 = 0, // Actual tooltip length (0 = no tooltip)
         padding_left: bool = false, // Padding before hint
         padding_right: bool = false, // Padding after hint
+        
+        /// Get label as a slice.
+        /// Why: Convenient access to label string using length field.
+        /// Contract: Returns slice of actual label (0..label_len).
+        pub fn get_label(self: *const InlayHintSpan) []const u8 {
+            return self.label[0..self.label_len];
+        }
+        
+        /// Get tooltip as a slice (if present).
+        /// Why: Convenient access to tooltip string using length field.
+        /// Contract: Returns slice of actual tooltip (0..tooltip_len) if tooltip_len > 0, else null.
+        pub fn get_tooltip(self: *const InlayHintSpan) ?[]const u8 {
+            if (self.tooltip_len == 0) return null;
+            return self.tooltip[0..self.tooltip_len];
+        }
     };
     
     /// Code lens span (for LSP code lens rendering).
@@ -121,6 +199,21 @@ pub const GrainAurora = struct {
         command_len: u32 = 0, // Actual command length (0 = no command)
         range_start: u32, // Start byte position of the range this lens applies to
         range_end: u32, // End byte position of the range this lens applies to
+        
+        /// Get title as a slice.
+        /// Why: Convenient access to title string using length field.
+        /// Contract: Returns slice of actual title (0..title_len).
+        pub fn get_title(self: *const CodeLensSpan) []const u8 {
+            return self.title[0..self.title_len];
+        }
+        
+        /// Get command as a slice (if present).
+        /// Why: Convenient access to command string using length field.
+        /// Contract: Returns slice of actual command (0..command_len) if command_len > 0, else null.
+        pub fn get_command(self: *const CodeLensSpan) ?[]const u8 {
+            if (self.command_len == 0) return null;
+            return self.command[0..self.command_len];
+        }
     };
     
     /// Document highlight span (for LSP document highlights rendering).
@@ -161,6 +254,22 @@ pub const GrainAurora = struct {
         target_len: u32 = 0, // Actual target length (0 = no target)
         tooltip: [MAX_DOCUMENT_LINK_TOOLTIP_LEN]u8 = undefined, // Fixed-size tooltip buffer
         tooltip_len: u32 = 0, // Actual tooltip length (0 = no tooltip)
+        
+        /// Get target as a slice (if present).
+        /// Why: Convenient access to target string using length field.
+        /// Contract: Returns slice of actual target (0..target_len) if target_len > 0, else null.
+        pub fn get_target(self: *const DocumentLinkSpan) ?[]const u8 {
+            if (self.target_len == 0) return null;
+            return self.target[0..self.target_len];
+        }
+        
+        /// Get tooltip as a slice (if present).
+        /// Why: Convenient access to tooltip string using length field.
+        /// Contract: Returns slice of actual tooltip (0..tooltip_len) if tooltip_len > 0, else null.
+        pub fn get_tooltip(self: *const DocumentLinkSpan) ?[]const u8 {
+            if (self.tooltip_len == 0) return null;
+            return self.tooltip[0..self.tooltip_len];
+        }
     };
 
     pub const Span = struct {
@@ -272,4 +381,75 @@ pub fn demo() !void {
     state.toggle(.darkroom);
     AuroraFilter.apply(state, &pixels);
     std.debug.print("Applied darkroom filter to {d} pixels\n", .{pixels.len / 4});
+}
+
+test "RenderResult helper methods" {
+    var result = GrainAurora.RenderResult{
+        .root = .{ .text = "test" },
+        .readonly_spans = &.{},
+        .diagnostic_spans = undefined,
+        .diagnostic_spans_len = 2,
+        .inlay_hint_spans = undefined,
+        .inlay_hint_spans_len = 1,
+        .code_lens_spans = undefined,
+        .code_lens_spans_len = 0,
+        .document_highlight_spans = undefined,
+        .document_highlight_spans_len = 0,
+        .semantic_token_spans = undefined,
+        .semantic_token_spans_len = 0,
+        .folding_range_spans = undefined,
+        .folding_range_spans_len = 0,
+        .selection_range_spans = undefined,
+        .selection_range_spans_len = 0,
+        .document_link_spans = undefined,
+        .document_link_spans_len = 0,
+    };
+    
+    // Set up test data
+    @memcpy(result.diagnostic_spans[0].message[0..5], "error");
+    result.diagnostic_spans[0].message_len = 5;
+    result.diagnostic_spans[0].start = 0;
+    result.diagnostic_spans[0].end = 10;
+    result.diagnostic_spans[0].severity = 1;
+    
+    @memcpy(result.diagnostic_spans[1].message[0..7], "warning");
+    result.diagnostic_spans[1].message_len = 7;
+    result.diagnostic_spans[1].start = 10;
+    result.diagnostic_spans[1].end = 20;
+    result.diagnostic_spans[1].severity = 2;
+    
+    @memcpy(result.inlay_hint_spans[0].label[0..4], "type");
+    result.inlay_hint_spans[0].label_len = 4;
+    result.inlay_hint_spans[0].position = 5;
+    result.inlay_hint_spans[0].kind = 1;
+    result.inlay_hint_spans[0].tooltip_len = 0;
+    
+    // Test helper methods
+    const diagnostic_spans = result.get_diagnostic_spans();
+    try std.testing.expect(diagnostic_spans.len == 2);
+    try std.testing.expectEqualStrings("error", diagnostic_spans[0].get_message());
+    try std.testing.expectEqualStrings("warning", diagnostic_spans[1].get_message());
+    
+    const inlay_hint_spans = result.get_inlay_hint_spans();
+    try std.testing.expect(inlay_hint_spans.len == 1);
+    try std.testing.expectEqualStrings("type", inlay_hint_spans[0].get_label());
+    try std.testing.expect(inlay_hint_spans[0].get_tooltip() == null);
+    
+    const code_lens_spans = result.get_code_lens_spans();
+    try std.testing.expect(code_lens_spans.len == 0);
+    
+    const document_highlight_spans = result.get_document_highlight_spans();
+    try std.testing.expect(document_highlight_spans.len == 0);
+    
+    const semantic_token_spans = result.get_semantic_token_spans();
+    try std.testing.expect(semantic_token_spans.len == 0);
+    
+    const folding_range_spans = result.get_folding_range_spans();
+    try std.testing.expect(folding_range_spans.len == 0);
+    
+    const selection_range_spans = result.get_selection_range_spans();
+    try std.testing.expect(selection_range_spans.len == 0);
+    
+    const document_link_spans = result.get_document_link_spans();
+    try std.testing.expect(document_link_spans.len == 0);
 }

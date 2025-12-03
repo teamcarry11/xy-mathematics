@@ -570,6 +570,9 @@ pub const Process = struct {
     /// Why: Track process priority for scheduling decisions.
     /// Note: Lower nice value = higher priority (POSIX-style).
     priority: i8,
+    /// Time slice quantum (instruction steps per time slice, default 1000).
+    /// Why: Track time slice allocation for fair scheduling.
+    time_slice_quantum: u64,
     /// Whether this entry is allocated (in use).
     allocated: bool,
     
@@ -590,6 +593,7 @@ pub const Process = struct {
             .memory_used = 0,
             .parent_pid = 0,
             .priority = 0, // Default priority (nice value 0)
+            .time_slice_quantum = 1000, // Default time slice (1000 instruction steps)
             .allocated = false,
         };
     }
@@ -1455,7 +1459,9 @@ pub const BasinKernel = struct {
         self.processes[idx].allocated = true;
         
         // Set as current running process in scheduler.
-        self.scheduler.set_current(process_id);
+        // Set current process with time slice quantum.
+        const time_slice = self.processes[idx].time_slice_quantum;
+        self.scheduler.set_current(process_id, time_slice);
         
         // Assert: process must be allocated correctly.
         Debug.kassert(self.processes[idx].allocated, "Process not allocated", .{});
@@ -3244,8 +3250,6 @@ pub const BasinKernel = struct {
             return BasinError.not_found; // Process not found
         }
         
-        const idx = found.?;
-        
         // Update process memory usage before returning info.
         // Why: Ensure memory_used is current when querying process info.
         self.update_process_memory_usage(pid);
@@ -3611,7 +3615,7 @@ pub const BasinKernel = struct {
         if (signal == .sigkill) {
             process.state = .exited;
             process.exit_status = 128 + @intFromEnum(signal); // Exit code = 128 + signal
-            self.scheduler.set_current(0); // Clear current process
+            self.scheduler.clear_current(); // Clear current process
         }
         
         // Assert: Signal must be sent (postcondition).

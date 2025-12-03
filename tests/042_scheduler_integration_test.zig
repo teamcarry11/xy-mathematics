@@ -26,7 +26,9 @@ test "run_current_process executes current process" {
     const process_id = result.success;
     
     // Set as current process.
-    kernel.scheduler.set_current(process_id);
+    // Set current process with default time slice quantum.
+    const time_slice: u64 = 1000;
+    kernel.scheduler.set_current(process_id, time_slice);
     
     // Create integration.
     var integration = Integration.init_with_kernel(&vm, &kernel);

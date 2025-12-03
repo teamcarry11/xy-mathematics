@@ -192,6 +192,77 @@ pub const ProcessManager = struct {
         return false;
     }
 
+    // Set process priority via kernel syscall.
+    pub fn set_process_priority_via_kernel(
+        self: *ProcessManager,
+        process_id: u32,
+        nice_value: i8,
+    ) bool {
+        std.debug.assert(process_id > 0);
+        if (self.syscall_fn == null) {
+            return false;
+        }
+        // Convert nice value (-20 to 19) to unsigned (0-39 range, offset by 20).
+        const MIN_NICE: i8 = -20;
+        const MAX_NICE: i8 = 19;
+        if (nice_value < MIN_NICE or nice_value > MAX_NICE) {
+            return false;
+        }
+        const priority_u64: u64 = @as(u64, @intCast(@as(i32, nice_value) + 20));
+        const result = self.syscall_fn.?(@intFromEnum(basin_kernel.Syscall.set_priority), process_id, priority_u64, 0, 0);
+        if (result < 0) {
+            return false;
+        }
+        // Update internal priority based on nice value.
+        const priority = nice_to_priority(nice_value);
+        if (self.find_process(process_id)) |proc| {
+            proc.priority = priority;
+            return true;
+        }
+        return false;
+    }
+
+    // Get process priority via kernel syscall.
+    pub fn get_process_priority_via_kernel(
+        self: *ProcessManager,
+        process_id: u32,
+    ) ?i8 {
+        std.debug.assert(process_id > 0);
+        if (self.syscall_fn == null) {
+            return null;
+        }
+        const result = self.syscall_fn.?(@intFromEnum(basin_kernel.Syscall.get_priority), process_id, 0, 0, 0);
+        if (result < 0) {
+            return null;
+        }
+        // Convert unsigned (0-39 range) to nice value (-20 to 19).
+        const priority_u64: u64 = @as(u64, @intCast(result));
+        const priority_offset: u64 = 20;
+        if (priority_u64 < priority_offset or priority_u64 > priority_offset + 39) {
+            return null;
+        }
+        const nice_value = @as(i8, @intCast(@as(i64, @intCast(priority_u64)) - @as(i64, @intCast(priority_offset))));
+        // Update internal priority based on nice value.
+        const priority = nice_to_priority(nice_value);
+        if (self.find_process(process_id)) |proc| {
+            proc.priority = priority;
+        }
+        return nice_value;
+    }
+
+    // Convert nice value to ProcessPriority enum.
+    fn nice_to_priority(nice_value: i8) ProcessPriority {
+        if (nice_value <= -10) {
+            return ProcessPriority.realtime;
+        } else if (nice_value < 0) {
+            return ProcessPriority.high;
+        } else if (nice_value <= 10) {
+            return ProcessPriority.normal;
+        } else {
+            return ProcessPriority.low;
+        }
+    }
+
     // Update process CPU usage.
     pub fn update_process_cpu_usage(
         self: *ProcessManager,

@@ -54,6 +54,7 @@ const package_manager = @import("package_manager.zig");
 const health_monitor = @import("health_monitor.zig");
 const process_supervision = @import("process_supervision.zig");
 const system_metrics = @import("system_metrics.zig");
+const system_diagnostics = @import("system_diagnostics.zig");
 const keyboard_shortcuts = @import("keyboard_shortcuts.zig");
 const desktop_shell = @import("desktop_shell.zig");
 const runtime_config = @import("runtime_config.zig");
@@ -255,6 +256,7 @@ pub const Compositor = struct {
     health_monitor: health_monitor.HealthMonitor,
     process_supervisor: process_supervision.ProcessSupervisor,
     metrics_aggregator: system_metrics.MetricsAggregator,
+    system_diagnostics: system_diagnostics.SystemDiagnostics,
     border_width: u32, // Configurable border width
     title_bar_height: u32, // Configurable title bar height
 
@@ -317,6 +319,7 @@ pub const Compositor = struct {
             .health_monitor = health_monitor.HealthMonitor.init(),
             .process_supervisor = process_supervision.ProcessSupervisor.init(),
             .metrics_aggregator = system_metrics.MetricsAggregator.init(),
+            .system_diagnostics = system_diagnostics.SystemDiagnostics.init(),
             .border_width = BORDER_WIDTH, // Default border width
             .title_bar_height = TITLE_BAR_HEIGHT, // Default title bar height
         };
@@ -2211,11 +2214,6 @@ pub const Compositor = struct {
         return self.resource_monitor.get_exited_processes();
     }
 
-    // Get exited process count.
-    pub fn get_exited_process_count(self: *const Compositor) u32 {
-        return self.resource_monitor.get_exited_processes();
-    }
-
     // Get resource history entry.
     pub fn get_resource_history_entry(self: *const Compositor, index: u32) ?*const resource_monitor.ResourceUsage {
         return self.resource_monitor.get_history_entry(index);
@@ -2434,6 +2432,23 @@ pub const Compositor = struct {
         cpu_usage: f64,
     ) bool {
         return self.process_manager.update_process_cpu_usage(process_id, cpu_usage);
+    }
+
+    // Set process priority via kernel syscall.
+    pub fn set_process_priority_via_kernel(
+        self: *Compositor,
+        process_id: u32,
+        nice_value: i8,
+    ) bool {
+        return self.process_manager.set_process_priority_via_kernel(process_id, nice_value);
+    }
+
+    // Get process priority via kernel syscall.
+    pub fn get_process_priority_via_kernel(
+        self: *Compositor,
+        process_id: u32,
+    ) ?i8 {
+        return self.process_manager.get_process_priority_via_kernel(process_id);
     }
 
     // Update process memory usage.
@@ -3023,6 +3038,48 @@ pub const Compositor = struct {
     // Get overall system health.
     pub fn get_overall_system_health(self: *Compositor) system_metrics.SystemHealth {
         return self.metrics_aggregator.get_overall_health();
+    }
+
+    // Add diagnostic check.
+    pub fn add_diagnostic_check(
+        self: *Compositor,
+        name: []const u8,
+        severity: system_diagnostics.DiagnosticSeverity,
+        message: []const u8,
+        timestamp: u64,
+    ) ?u32 {
+        return self.system_diagnostics.add_diagnostic_check(name, severity, message, timestamp);
+    }
+
+    // Remove diagnostic check.
+    pub fn remove_diagnostic_check(self: *Compositor, check_id: u32) bool {
+        return self.system_diagnostics.remove_diagnostic_check(check_id);
+    }
+
+    // Get diagnostic check count.
+    pub fn get_diagnostic_check_count(self: *const Compositor) u32 {
+        return self.system_diagnostics.get_diagnostic_check_count();
+    }
+
+    // Get diagnostic check count by severity.
+    pub fn get_diagnostic_check_count_by_severity(
+        self: *const Compositor,
+        severity: system_diagnostics.DiagnosticSeverity,
+    ) u32 {
+        return self.system_diagnostics.get_diagnostic_check_count_by_severity(severity);
+    }
+
+    // Clear all diagnostic checks.
+    pub fn clear_all_diagnostic_checks(self: *Compositor) void {
+        self.system_diagnostics.clear_all();
+    }
+
+    // Clear diagnostic checks by severity.
+    pub fn clear_diagnostic_checks_by_severity(
+        self: *Compositor,
+        severity: system_diagnostics.DiagnosticSeverity,
+    ) void {
+        self.system_diagnostics.clear_by_severity(severity);
     }
 
     // Get resize handle at mouse position.

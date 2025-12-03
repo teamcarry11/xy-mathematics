@@ -6,6 +6,7 @@ const std = @import("std");
 const Debug = @import("debug.zig");
 const ProcessContext = @import("process.zig").ProcessContext;
 const VM = @import("kernel_vm").VM;
+const Scheduler = @import("scheduler.zig").Scheduler;
 
 /// Switch VM to process context (set VM registers from ProcessContext).
 /// Why: Prepare VM to execute a process by loading its context.
@@ -70,15 +71,16 @@ pub fn save_process_context(vm: *VM, process_context: *ProcessContext) void {
     Debug.kassert(process_context.sp == vm.regs.get(SP_REGISTER), "Process SP not saved", .{});
 }
 
-/// Execute process in VM until it exits or yields.
-/// Why: Run process execution loop, handling syscalls and context switches.
+/// Execute process in VM until it exits, yields, or time slice expires.
+/// Why: Run process execution loop, handling syscalls, context switches, and preemption.
 /// Contract: process_context must be initialized, vm must be initialized.
-/// Returns: true if process should continue (yield), false if process exited.
+/// Returns: true if process should continue (yield), false if process exited or preempted.
 /// Grain Style: Explicit types, bounded execution, no recursion.
 pub fn execute_process(
     vm: *VM,
     process_context: *ProcessContext,
     max_steps: u64,
+    scheduler: ?*Scheduler,
 ) bool {
     // Assert: Process context must be initialized (precondition).
     Debug.kassert(process_context.initialized, "Process context not initialized", .{});
@@ -98,8 +100,8 @@ pub fn execute_process(
     // Why: VM must be running to execute instructions.
     vm.state = .running;
     
-    // Execute VM steps until process exits or yields.
-    // Why: Run process until it makes exit syscall or yields.
+    // Execute VM steps until process exits, yields, or time slice expires.
+    // Why: Run process until it makes exit syscall, yields, or is preempted.
     var steps_executed: u64 = 0;
     while (steps_executed < max_steps) : (steps_executed += 1) {
         // Check if VM is halted or errored (process exited or error occurred).
@@ -115,6 +117,17 @@ pub fn execute_process(
             save_process_context(vm, process_context);
             return false;
         };
+        
+        // Decrement time slice if scheduler is provided.
+        // Why: Track time slice usage for preemption.
+        if (scheduler) |sched| {
+            const expired = sched.decrement_time_slice(1);
+            if (expired) {
+                // Time slice expired: preempt process.
+                save_process_context(vm, process_context);
+                return true; // Process should continue (yield due to preemption).
+            }
+        }
         
         // Check if process made exit syscall (syscall number 2 = exit).
         // Why: Detect when process calls exit syscall.
@@ -178,7 +191,7 @@ test "execute process runs VM until halted" {
     // Note: This test will fail if VM tries to execute invalid instructions.
     // For now, we just test that the function runs without crashing.
     // In a full implementation, we'd load valid instructions into VM memory.
-    const should_continue = execute_process(&vm, &context, 100);
+    const should_continue = execute_process(&vm, &context, 100, null);
     
     // Assert: Process execution should complete (halted or errored).
     // Note: This is a basic test - full implementation would check process state.

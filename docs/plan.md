@@ -245,6 +245,34 @@
      - ✅ Priority initialization in process spawn
      - ✅ Priority value conversion (signed to unsigned for syscall interface)
      - ✅ Comprehensive tests (tests/080_process_priority_test.zig)
+   - ✅ Priority-Based Scheduling (Phase 3.8)
+     - ✅ Priority-based process selection in scheduler
+     - ✅ Highest priority process selection (lowest nice value)
+     - ✅ Round-robin fallback for processes with same priority
+     - ✅ Scheduler integration with Process.priority field
+     - ✅ Priority-aware find_next_runnable implementation
+     - ✅ Comprehensive tests (priority selection, round-robin fallback)
+   - ✅ Time Slice Management (Phase 3.9)
+     - ✅ Time slice tracking in scheduler (time_slice_remaining field)
+     - ✅ Time slice quantum in Process struct (default 1000 steps)
+     - ✅ Time slice decrement during execution
+     - ✅ Time slice expiration detection
+     - ✅ Preemption support via time slice expiration
+     - ✅ Comprehensive tests (time slice decrement, expiration, preemption)
+   - ✅ Time Slice Preemption Integration (Phase 3.10)
+     - ✅ Time slice checking integrated into process execution loop
+     - ✅ Time slice decrement after each VM step
+     - ✅ Preemption when time slice expires
+     - ✅ Process context saving on preemption
+     - ✅ Integration with scheduler in execute_process_slice
+     - ✅ Backward compatibility (optional scheduler parameter)
+   - ✅ Scheduler Loop Implementation (Phase 3.11)
+     - ✅ Time slice quantum used in schedule_and_run_next
+     - ✅ Preemption detection after process execution
+     - ✅ Scheduler loop for coordinated process execution
+     - ✅ Bounded execution with max cycles limit
+     - ✅ Automatic rescheduling on time slice expiration
+     - ✅ Priority-based scheduling with time slice preemption
 
 3. **Kernel Boot Sequence**
    - Implement basic boot loader
@@ -936,6 +964,35 @@ Create a fourth agent dedicated to **Grain OS** - a Zig-Wayland implemented GNOM
    - ✅ Timestamp tracking
    - ✅ Compositor integration (update_system_metrics, get_system_status, get_overall_system_health)
    - ✅ Comprehensive tests (`tests/106_grain_os_system_metrics_test.zig`)
+56. **Phase 56**: Shared Module Coordination ✅ **ACKNOWLEDGED**
+   - ✅ Reviewed Grain Skate agent's shared module refactoring plan
+   - ✅ Acknowledged font renderer unification coordination request
+   - ✅ Documented Grain OS font renderer status and requirements
+   - ✅ Ready for shared font renderer migration (Phase 1 of refactoring plan)
+   - ✅ Coordination document: `docs/grain_os_font_renderer_coordination.md`
+   - ⏳ Waiting for shared font renderer implementation (`src/shared/font_renderer.zig`)
+   - **Reference**: `docs/grain_skate_future_enhancements.md` (Grain Skate agent)
+57. **Phase 57**: Process Priority Kernel Integration ✅ **COMPLETE**
+   - ✅ Kernel priority syscall integration (`set_priority`, `get_priority`)
+   - ✅ Nice value to ProcessPriority enum conversion
+   - ✅ Set process priority via kernel syscall
+   - ✅ Get process priority via kernel syscall
+   - ✅ Priority conversion logic (nice value ranges to enum values)
+   - ✅ Internal priority tracking update on kernel calls
+   - ✅ Compositor integration (set_process_priority_via_kernel, get_process_priority_via_kernel)
+   - ✅ Updated tests to verify kernel priority integration
+   - ✅ Kernel integration: Phase 3.7 Process Priority Support (from Vantage VM Basin Kernel Agent)
+58. **Phase 58**: System Diagnostics ✅ **COMPLETE**
+   - ✅ System diagnostics module (`src/grain_os/system_diagnostics.zig`)
+   - ✅ Diagnostic severity levels (info, warning, error, critical)
+   - ✅ Diagnostic check creation (add diagnostic check with name, severity, message, timestamp)
+   - ✅ Diagnostic check management (add, find, remove diagnostic checks)
+   - ✅ Diagnostic check counts by severity
+   - ✅ Clear all diagnostic checks
+   - ✅ Clear diagnostic checks by severity
+   - ✅ Timestamp tracking
+   - ✅ Compositor integration (all system diagnostics methods)
+   - ✅ Comprehensive tests (`tests/107_grain_os_system_diagnostics_test.zig`)
 24. **Phase 24**: Integration (Grain Kernel syscalls, VM testing)
 25. **Phase 25**: Applications (Aurora, Dream, Skate, Terminal ports)
 
@@ -1310,6 +1367,18 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
   - ✅ String truncation for strings exceeding buffer limits (predictable behavior)
   - ✅ Removed all dynamic allocation from RenderResult (no ArrayList, no dupe, no deinit needed)
   - ✅ GrainStyle compliance (bounded allocations, predictable memory usage, no dynamic allocation)
+- ✅ RenderResult Helper Methods ✅ **COMPLETE**
+  - ✅ Added helper methods to `RenderResult` for accessing spans as slices (`get_diagnostic_spans()`, `get_inlay_hint_spans()`, etc.)
+  - ✅ Added helper methods to span structs for accessing string buffers as slices (`get_message()`, `get_label()`, `get_tooltip()`, etc.)
+  - ✅ Convenient API for accessing fixed-size arrays using length fields
+  - ✅ Returns proper slices (0..len) for safe access
+  - ✅ Optional string accessors return null when length is 0
+  - ✅ Comprehensive test coverage (`test "RenderResult helper methods"`)
+  - ✅ GrainStyle compliance (grain_case function names, explicit types, bounded operations)
+- ✅ Build System Fix (Shared Module) ✅ **COMPLETE**
+  - ✅ Added `shared_module` definition to `build.zig` for shared font renderer
+  - ✅ Fixed build error for shared font renderer tests
+  - ✅ Build system integration complete
   - ✅ Implement LSP didChange notification on text insert
   - ✅ Add LSP hover request support (requestHover method)
   - ✅ Add LSP go-to-definition support (requestDefinition method, go_to_definition in Editor)
@@ -1839,12 +1908,42 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 - ✅ Comprehensive tests (`tests/055_grain_skate_app_test.zig`)
 - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, max 70 lines per function)
 
+#### 8.3.5: Main Entry Point & Build Configuration ✅ **COMPLETE** (2025-12-03-151539-pst)
+- ✅ Main entry point (`src/grain_skate_main.zig`)
+  - ✅ Application initialization (block storage, window, app)
+  - ✅ Initial block creation for testing
+  - ✅ Graph loading and rendering
+  - ✅ Event loop integration
+  - ✅ Error handling and cleanup
+- ✅ Build system integration (`build.zig`)
+  - ✅ `grain_skate` executable target
+  - ✅ macOS framework linking (AppKit, Foundation, CoreGraphics, QuartzCore)
+  - ✅ Objective-C bridge C wrapper
+  - ✅ Build steps: `grain-skate-build` and `grain-skate`
+- ✅ Module imports configuration
+  - ✅ `macos_window` module import for Grain Skate
+  - ✅ `events` module import
+- ✅ Running instructions:
+  - Build and run: `zig build grain-skate`
+  - Build only: `zig build grain-skate-build`
+- ✅ Status: Ready to run - all components integrated, main entry point complete
+
 ## 👥 Parallel Development Opportunities
 
 **Current Agent Focuses**:
 1. **VM/Kernel Agent**: Grain Vantage & Kernel Boot Integration (`src/kernel_vm/`, `src/kernel/`, `src/platform/macos_tahoe/`)
 2. **Dream Editor/Browser Agent**: Foundation components (`src/aurora_*.zig`, `src/dream_*.zig`)
 3. **Grain Skate Agent**: Grainscript (`src/grainscript/`), Grain Terminal, Grain Skate
+4. **Grain OS Agent**: Desktop environment compositor and system services (`src/grain_os/`)
+5. **Grain Workspace Agent**: Desktop applications (`src/grain_workspace/`) — **ACTIVE** (see `docs/grain_workspace_agent_prompt.md`)
+   - ✅ Phase 1: Grain Notes Application (2025-12-03-154648-pst)
+     - ✅ Module structure (`src/grain_workspace/root.zig`)
+     - ✅ Note data structure (block-based notes with linking)
+     - ✅ NotesApp application state management
+     - ✅ Note creation, deletion, search functionality
+     - ✅ Note linking and backlink management
+     - ✅ Comprehensive tests (`tests/108_grain_workspace_notes_test.zig`)
+     - ✅ Build system integration
 
 **Available for Parallel Work** (see `docs/agent_work_summary.md` and `docs/dream_editor_agent_summary.md`):
 - **Dream Editor/Browser** (`src/aurora_*.zig`, `src/dream_*.zig`) - 🔄 Active (Phase 0)
@@ -1859,6 +1958,7 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 - `docs/agent_work_summary.md` - VM/Kernel agent work
 - `docs/dream_editor_agent_summary.md` - Dream Editor/Browser agent work
 - `docs/grain_skate_agent_acknowledgment.md` - Grain Skate/Terminal/Script agent acknowledgment and plan
+- `docs/grain_workspace_agent_prompt.md` - Grain Workspace agent prompt and implementation guide
 
 ## 🔗 References
 
@@ -2189,12 +2289,42 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 - ✅ Comprehensive tests (`tests/055_grain_skate_app_test.zig`)
 - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, max 70 lines per function)
 
+#### 8.3.5: Main Entry Point & Build Configuration ✅ **COMPLETE** (2025-12-03-151539-pst)
+- ✅ Main entry point (`src/grain_skate_main.zig`)
+  - ✅ Application initialization (block storage, window, app)
+  - ✅ Initial block creation for testing
+  - ✅ Graph loading and rendering
+  - ✅ Event loop integration
+  - ✅ Error handling and cleanup
+- ✅ Build system integration (`build.zig`)
+  - ✅ `grain_skate` executable target
+  - ✅ macOS framework linking (AppKit, Foundation, CoreGraphics, QuartzCore)
+  - ✅ Objective-C bridge C wrapper
+  - ✅ Build steps: `grain-skate-build` and `grain-skate`
+- ✅ Module imports configuration
+  - ✅ `macos_window` module import for Grain Skate
+  - ✅ `events` module import
+- ✅ Running instructions:
+  - Build and run: `zig build grain-skate`
+  - Build only: `zig build grain-skate-build`
+- ✅ Status: Ready to run - all components integrated, main entry point complete
+
 ## 👥 Parallel Development Opportunities
 
 **Current Agent Focuses**:
 1. **VM/Kernel Agent**: Grain Vantage & Kernel Boot Integration (`src/kernel_vm/`, `src/kernel/`, `src/platform/macos_tahoe/`)
 2. **Dream Editor/Browser Agent**: Foundation components (`src/aurora_*.zig`, `src/dream_*.zig`)
 3. **Grain Skate Agent**: Grainscript (`src/grainscript/`), Grain Terminal, Grain Skate
+4. **Grain OS Agent**: Desktop environment compositor and system services (`src/grain_os/`)
+5. **Grain Workspace Agent**: Desktop applications (`src/grain_workspace/`) — **ACTIVE** (see `docs/grain_workspace_agent_prompt.md`)
+   - ✅ Phase 1: Grain Notes Application (2025-12-03-154648-pst)
+     - ✅ Module structure (`src/grain_workspace/root.zig`)
+     - ✅ Note data structure (block-based notes with linking)
+     - ✅ NotesApp application state management
+     - ✅ Note creation, deletion, search functionality
+     - ✅ Note linking and backlink management
+     - ✅ Comprehensive tests (`tests/108_grain_workspace_notes_test.zig`)
+     - ✅ Build system integration
 
 **Available for Parallel Work** (see `docs/agent_work_summary.md` and `docs/dream_editor_agent_summary.md`):
 - **Dream Editor/Browser** (`src/aurora_*.zig`, `src/dream_*.zig`) - 🔄 Active (Phase 0)
@@ -2209,6 +2339,7 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 - `docs/agent_work_summary.md` - VM/Kernel agent work
 - `docs/dream_editor_agent_summary.md` - Dream Editor/Browser agent work
 - `docs/grain_skate_agent_acknowledgment.md` - Grain Skate/Terminal/Script agent acknowledgment and plan
+- `docs/grain_workspace_agent_prompt.md` - Grain Workspace agent prompt and implementation guide
 
 ## 🔗 References
 
@@ -2539,12 +2670,42 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 - ✅ Comprehensive tests (`tests/055_grain_skate_app_test.zig`)
 - ✅ GrainStyle compliance (u32 types, assertions, bounded allocations, max 70 lines per function)
 
+#### 8.3.5: Main Entry Point & Build Configuration ✅ **COMPLETE** (2025-12-03-151539-pst)
+- ✅ Main entry point (`src/grain_skate_main.zig`)
+  - ✅ Application initialization (block storage, window, app)
+  - ✅ Initial block creation for testing
+  - ✅ Graph loading and rendering
+  - ✅ Event loop integration
+  - ✅ Error handling and cleanup
+- ✅ Build system integration (`build.zig`)
+  - ✅ `grain_skate` executable target
+  - ✅ macOS framework linking (AppKit, Foundation, CoreGraphics, QuartzCore)
+  - ✅ Objective-C bridge C wrapper
+  - ✅ Build steps: `grain-skate-build` and `grain-skate`
+- ✅ Module imports configuration
+  - ✅ `macos_window` module import for Grain Skate
+  - ✅ `events` module import
+- ✅ Running instructions:
+  - Build and run: `zig build grain-skate`
+  - Build only: `zig build grain-skate-build`
+- ✅ Status: Ready to run - all components integrated, main entry point complete
+
 ## 👥 Parallel Development Opportunities
 
 **Current Agent Focuses**:
 1. **VM/Kernel Agent**: Grain Vantage & Kernel Boot Integration (`src/kernel_vm/`, `src/kernel/`, `src/platform/macos_tahoe/`)
 2. **Dream Editor/Browser Agent**: Foundation components (`src/aurora_*.zig`, `src/dream_*.zig`)
 3. **Grain Skate Agent**: Grainscript (`src/grainscript/`), Grain Terminal, Grain Skate
+4. **Grain OS Agent**: Desktop environment compositor and system services (`src/grain_os/`)
+5. **Grain Workspace Agent**: Desktop applications (`src/grain_workspace/`) — **ACTIVE** (see `docs/grain_workspace_agent_prompt.md`)
+   - ✅ Phase 1: Grain Notes Application (2025-12-03-154648-pst)
+     - ✅ Module structure (`src/grain_workspace/root.zig`)
+     - ✅ Note data structure (block-based notes with linking)
+     - ✅ NotesApp application state management
+     - ✅ Note creation, deletion, search functionality
+     - ✅ Note linking and backlink management
+     - ✅ Comprehensive tests (`tests/108_grain_workspace_notes_test.zig`)
+     - ✅ Build system integration
 
 **Available for Parallel Work** (see `docs/agent_work_summary.md` and `docs/dream_editor_agent_summary.md`):
 - **Dream Editor/Browser** (`src/aurora_*.zig`, `src/dream_*.zig`) - 🔄 Active (Phase 0)
@@ -2559,6 +2720,7 @@ See: `docs/zyxspl-2025-11-23-173916-pst-grain-os-agent-proposal.md`
 - `docs/agent_work_summary.md` - VM/Kernel agent work
 - `docs/dream_editor_agent_summary.md` - Dream Editor/Browser agent work
 - `docs/grain_skate_agent_acknowledgment.md` - Grain Skate/Terminal/Script agent acknowledgment and plan
+- `docs/grain_workspace_agent_prompt.md` - Grain Workspace agent prompt and implementation guide
 
 ## 🔗 References
 

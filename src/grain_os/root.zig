@@ -61,4 +61,5 @@ pub const package_manager = @import("package_manager.zig");
 pub const health_monitor = @import("health_monitor.zig");
 pub const process_supervision = @import("process_supervision.zig");
 pub const system_metrics = @import("system_metrics.zig");
+pub const system_diagnostics = @import("system_diagnostics.zig");
 

@@ -121,6 +121,9 @@ pub const SkateWindow = struct {
         // Set block title for status line display
         if (block.title_len > 0) {
             editor_renderer.set_block_title(block.title[0..block.title_len]);
+            // Detect language from block title (as filename) and content
+            const block_content = if (block.content_len > 0) block.content[0..block.content_len] else "";
+            editor_renderer.detect_language(block.title[0..block.title_len], block_content);
         }
         self.editor_renderer = editor_renderer;
 

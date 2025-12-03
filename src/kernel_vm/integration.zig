@@ -444,7 +444,14 @@ pub const Integration = struct {
         const start_time_ns = self.kernel.timer.get_uptime_ns();
         
         // Execute process in VM.
-        const should_continue = process_execution.execute_process(self.vm, process_context, max_steps);
+        // Execute process with time slice preemption support.
+        // Why: Enable time slice-based preemption for fair scheduling.
+        const should_continue = process_execution.execute_process(
+            self.vm,
+            process_context,
+            max_steps,
+            &self.kernel.scheduler,
+        );
         
         // Record end time and update CPU time.
         // Why: Calculate elapsed CPU time and update process statistics.
@@ -498,9 +505,28 @@ pub const Integration = struct {
             return false; // No runnable process
         }
         
-        // Set as current process in scheduler.
-        // Why: Update scheduler state before execution.
-        self.kernel.scheduler.set_current(next_pid);
+        // Get process time slice quantum.
+        // Why: Use process-specific time slice for scheduling.
+        var process_idx: ?usize = null;
+        const MAX_PROCESSES: u32 = 16;
+        for (0..MAX_PROCESSES) |i| {
+            if (self.kernel.processes[i].allocated and self.kernel.processes[i].id == next_pid) {
+                process_idx = i;
+                break;
+            }
+        }
+        
+        if (process_idx == null) {
+            return false; // Process not found
+        }
+        
+        const idx = process_idx.?;
+        const process = &self.kernel.processes[idx];
+        const time_slice = process.time_slice_quantum;
+        
+        // Set as current process in scheduler with time slice.
+        // Why: Update scheduler state before execution with time slice.
+        self.kernel.scheduler.set_current(next_pid, time_slice);
         
         // Run current process (which is now next_pid).
         // Why: Execute the scheduled process.
@@ -510,8 +536,51 @@ pub const Integration = struct {
         // Note: should_continue indicates if process yielded (true) or exited (false).
         _ = should_continue;
         
+        // Check if process was preempted (time slice expired).
+        // Why: Reschedule if time slice expired.
+        if (self.kernel.scheduler.is_time_slice_expired()) {
+            // Time slice expired: clear current process for rescheduling.
+            self.kernel.scheduler.clear_current();
+        }
+        
         // Return true if process was scheduled and run.
         return true;
+    }
+    
+    /// Run scheduler loop (execute processes with time slice preemption).
+    /// Why: Coordinate process execution, preemption, and rescheduling.
+    /// Contract: Integration must be initialized.
+    /// Returns: Number of scheduling cycles completed.
+    /// Grain Style: Explicit types, bounded execution, comprehensive assertions.
+    pub fn run_scheduler_loop(self: *Self, max_cycles: u32, max_steps_per_process: u64) u32 {
+        // Assert: Integration must be initialized (precondition).
+        std.debug.assert(self.initialized);
+        
+        // Assert: Max cycles must be reasonable (bounded execution).
+        const MAX_CYCLES_LIMIT: u32 = 1_000_000; // 1 million cycles max
+        std.debug.assert(max_cycles <= MAX_CYCLES_LIMIT);
+        
+        // Assert: Max steps must be reasonable (bounded execution).
+        const MAX_STEPS_LIMIT: u64 = 1_000_000_000; // 1 billion steps max
+        std.debug.assert(max_steps_per_process <= MAX_STEPS_LIMIT);
+        
+        var cycles_completed: u32 = 0;
+        
+        // Scheduler loop: run processes until max cycles or no runnable processes.
+        while (cycles_completed < max_cycles) : (cycles_completed += 1) {
+            // Find and run next process.
+            const scheduled = self.schedule_and_run_next(max_steps_per_process);
+            
+            // If no runnable process, break loop.
+            if (!scheduled) {
+                break; // No more runnable processes
+            }
+        }
+        
+        // Assert: Cycles completed must be within limit (postcondition).
+        std.debug.assert(cycles_completed <= max_cycles);
+        
+        return cycles_completed;
     }
 
     /// Run VM execution loop until halted or error.

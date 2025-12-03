@@ -8,6 +8,9 @@
 
 const std = @import("std");
 const Editor = @import("editor.zig").Editor;
+const LanguageDetector = @import("language_detector.zig").LanguageDetector;
+const Language = @import("language_detector.zig").Language;
+const LanguageKeywords = @import("language_keywords.zig").LanguageKeywords;
 
 // Bounded: Max buffer width (explicit limit, in pixels)
 // 2025-12-02-142853-pst: Active constant
@@ -143,6 +146,7 @@ pub const EditorRenderer = struct {
     error_message: []const u8, // Error message to display (empty if no error)
     error_message_timeout: u64, // Timestamp when error message should be cleared (0 = no timeout)
     syntax_highlighting_enabled: bool, // Whether syntax highlighting is enabled
+    detected_language: Language, // Detected programming language (for language-specific highlighting)
 
     /// Initialize editor renderer.
     // 2025-12-02-142853-pst: Active function
@@ -665,6 +669,12 @@ pub const EditorRenderer = struct {
         self.modified = modified;
     }
 
+    /// Detect and set language from block title/filename and content.
+    // 2025-12-03-141818-pst: Active function
+    pub fn detect_language(self: *EditorRenderer, filename: []const u8, content: []const u8) void {
+        self.detected_language = LanguageDetector.detect(filename, content);
+    }
+
     /// Set error message to display (with timeout in seconds).
     // 2025-12-02-171119-pst: Active function
     pub fn set_error(self: *EditorRenderer, message: []const u8, timeout_sec: u64) void {
@@ -725,11 +735,14 @@ pub const EditorRenderer = struct {
         return ch >= '0' and ch <= '9';
     }
 
-    /// Check if word is a keyword.
-    // 2025-12-02-180222-pst: Active function
+    /// Check if word is a keyword (language-aware).
+    // 2025-12-03-141818-pst: Active function
     fn is_keyword(self: *const EditorRenderer, word: []const u8) bool {
-        _ = self;
-        // Common programming keywords (Zig-focused but language-agnostic)
+        // Use language-specific keywords if language is detected
+        if (self.detected_language != .unknown) {
+            return LanguageKeywords.is_keyword(self.detected_language, word);
+        }
+        // Fall back to generic keywords (Zig-focused but language-agnostic)
         const keywords = [_][]const u8{ "if", "else", "while", "for", "fn", "var", "const", "return", "break", "continue", "pub", "priv", "struct", "enum", "union", "error", "try", "catch", "defer", "switch", "case", "default", "true", "false", "null", "undefined", "void", "bool", "u8", "u16", "u32", "u64", "i8", "i16", "i32", "i64", "f32", "f64", "usize", "isize", "comptime", "inline", "noinline", "export", "extern", "packed", "align", "test", "async", "await", "suspend", "resume" };
         for (keywords) |keyword| {
             if (word.len == keyword.len and std.mem.eql(u8, word, keyword)) {

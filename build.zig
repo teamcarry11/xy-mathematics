@@ -248,6 +248,13 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    // Shared module (font renderer, etc.)
+    const shared_module = b.addModule("shared", .{
+        .root_source_file = b.path("src/shared/font_renderer.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
     // Grain OS module
     const grain_os_module = b.addModule("grain_os", .{
         .root_source_file = b.path("src/grain_os/root.zig"),
@@ -255,6 +262,18 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
         .imports = &.{
             .{ .name = "basin_kernel", .module = basin_kernel_module },
+        },
+    });
+
+    // Grain Workspace module
+    const grain_workspace_module = b.addModule("grain_workspace", .{
+        .root_source_file = b.path("src/grain_workspace/root.zig"),
+        .target = target,
+        .optimize = optimize,
+        .imports = &.{
+            .{ .name = "grain_silo", .module = grain_silo_module },
+            .{ .name = "grain_skate", .module = grain_skate_module },
+            .{ .name = "grain_os", .module = grain_os_module },
         },
     });
 
@@ -589,7 +608,96 @@ pub fn build(b: *std.Build) void {
     const tahoe_step = b.step("tahoe", "Build and run the macOS Tahoe Aurora GUI");
     const run_tahoe = b.addRunArtifact(tahoe_app);
     tahoe_step.dependOn(&run_tahoe.step);
+
+    // Grain Skate executable
+    std.debug.print("[build] Creating grain_skate executable...\n", .{});
+
+    const grain_skate_app = b.addExecutable(.{
+        .name = "grain_skate",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/grain_skate_main.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_skate", .module = grain_skate_module },
+                .{ .name = "events", .module = events_module },
+            },
+        }),
+    });
+
+    std.debug.print("[build] Adding C wrapper source: src/platform/macos_tahoe/objc_wrapper.c\n", .{});
+    // Add C wrapper for objc_msgSend to handle calling convention properly.
+    grain_skate_app.addCSourceFiles(.{
+        .files = &.{"src/platform/macos_tahoe/objc_wrapper.c"},
+        .flags = &.{},
+    });
+
+    std.debug.print("[build] Linking macOS frameworks: AppKit, Foundation, CoreGraphics, QuartzCore\n", .{});
+    // Link macOS frameworks: AppKit and Foundation for Cocoa bridge, CoreGraphics for drawing, QuartzCore for CALayer.
+    grain_skate_app.linkFramework("AppKit");
+    grain_skate_app.linkFramework("Foundation");
+    grain_skate_app.linkFramework("CoreGraphics");
+    grain_skate_app.linkFramework("QuartzCore");
+
+    std.debug.print("[build] Installing grain_skate artifact...\n", .{});
+    b.installArtifact(grain_skate_app);
+
+    std.debug.print("[build] Creating grain_skate build and run steps...\n", .{});
+
+    // Separate build step: just compile, don't run.
+    const grain_skate_build_step = b.step("grain-skate-build", "Build the macOS Grain Skate application (without running)");
+    grain_skate_build_step.dependOn(b.getInstallStep());
+
+    // Run step: build and then run the app.
+    const grain_skate_step = b.step("grain-skate", "Build and run the macOS Grain Skate application");
+    const run_grain_skate = b.addRunArtifact(grain_skate_app);
+    grain_skate_step.dependOn(&run_grain_skate.step);
     run_tahoe.step.dependOn(b.getInstallStep());
+
+    // Grain Skate executable
+    std.debug.print("[build] Creating grain_skate executable...\n", .{});
+
+    const grain_skate_app = b.addExecutable(.{
+        .name = "grain_skate",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/grain_skate_main.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_skate", .module = grain_skate_module },
+                .{ .name = "events", .module = events_module },
+            },
+        }),
+    });
+
+    std.debug.print("[build] Adding C wrapper source: src/platform/macos_tahoe/objc_wrapper.c\n", .{});
+    // Add C wrapper for objc_msgSend to handle calling convention properly.
+    grain_skate_app.addCSourceFiles(.{
+        .files = &.{"src/platform/macos_tahoe/objc_wrapper.c"},
+        .flags = &.{},
+    });
+
+    std.debug.print("[build] Linking macOS frameworks: AppKit, Foundation, CoreGraphics, QuartzCore\n", .{});
+    // Link macOS frameworks: AppKit and Foundation for Cocoa bridge, CoreGraphics for drawing, QuartzCore for CALayer.
+    grain_skate_app.linkFramework("AppKit");
+    grain_skate_app.linkFramework("Foundation");
+    grain_skate_app.linkFramework("CoreGraphics");
+    grain_skate_app.linkFramework("QuartzCore");
+
+    std.debug.print("[build] Installing grain_skate artifact...\n", .{});
+    b.installArtifact(grain_skate_app);
+
+    std.debug.print("[build] Creating grain_skate build and run steps...\n", .{});
+
+    // Separate build step: just compile, don't run.
+    const grain_skate_build_step = b.step("grain-skate-build", "Build the macOS Grain Skate application (without running)");
+    grain_skate_build_step.dependOn(b.getInstallStep());
+
+    // Run step: build and then run the app.
+    const grain_skate_step = b.step("grain-skate", "Build and run the macOS Grain Skate application");
+    const run_grain_skate = b.addRunArtifact(grain_skate_app);
+    grain_skate_step.dependOn(&run_grain_skate.step);
+    run_grain_skate.step.dependOn(b.getInstallStep());
     
     std.debug.print("[build] Tahoe build configuration complete.\n", .{});
     std.debug.print("[build] Use 'zig build tahoe-build' to compile without running.\n", .{});
@@ -1377,6 +1485,19 @@ pub fn build(b: *std.Build) void {
     });
     const grain_skate_editor_renderer_tests_run = b.addRunArtifact(grain_skate_editor_renderer_tests);
     test_step.dependOn(&grain_skate_editor_renderer_tests_run.step);
+
+    const shared_font_renderer_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/060_shared_font_renderer_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "shared", .module = shared_module },
+            },
+        }),
+    });
+    const shared_font_renderer_tests_run = b.addRunArtifact(shared_font_renderer_tests);
+    test_step.dependOn(&shared_font_renderer_tests_run.step);
 
     const grain_skate_graph_renderer_tests = b.addTest(.{
         .root_module = b.createModule(.{
@@ -2468,6 +2589,32 @@ pub fn build(b: *std.Build) void {
     });
     const grain_os_system_metrics_tests_run = b.addRunArtifact(grain_os_system_metrics_tests);
     test_step.dependOn(&grain_os_system_metrics_tests_run.step);
+
+    const grain_os_system_diagnostics_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/107_grain_os_system_diagnostics_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_os", .module = grain_os_module },
+            },
+        }),
+    });
+    const grain_os_system_diagnostics_tests_run = b.addRunArtifact(grain_os_system_diagnostics_tests);
+    test_step.dependOn(&grain_os_system_diagnostics_tests_run.step);
+
+    const grain_workspace_notes_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/108_grain_workspace_notes_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_workspace", .module = grain_workspace_module },
+            },
+        }),
+    });
+    const grain_workspace_notes_tests_run = b.addRunArtifact(grain_workspace_notes_tests);
+    test_step.dependOn(&grain_workspace_notes_tests_run.step);
 
     // RISC-V Logo Display Program
     const riscv_logo_exe = b.addExecutable(.{

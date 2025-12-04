@@ -3813,18 +3813,33 @@ pub const BasinKernel = struct {
         // Convert signal number to Signal enum.
         const signal = @as(Signal, @enumFromInt(@as(u32, @truncate(signal_num))));
         
-        // Check if PID is negative (process group ID).
-        // Why: POSIX allows negative PIDs to send signals to process groups.
-        // Note: We interpret the high bit as a flag for process group delivery.
-        // If the most significant bit is set, treat as negative (process group).
-        if (pid & 0x8000000000000000 != 0) {
-            // Negative PID: send signal to all processes in the process group.
+        // Check if PID indicates process group or session delivery.
+        // Why: POSIX allows negative PIDs to send signals to process groups/sessions.
+        // Note: We use bit flags to indicate delivery target:
+        // - Bit 63 (0x8000000000000000): Process group delivery
+        // - Bit 62 (0x4000000000000000): Session delivery
+        // - Both bits clear: Single process delivery
+        const is_process_group = (pid & 0x8000000000000000) != 0;
+        const is_session = (pid & 0x4000000000000000) != 0;
+        
+        if (is_process_group) {
+            // Process group delivery: send signal to all processes in the process group.
             // Extract process group ID by clearing the sign bit.
             const pgid = pid & 0x7FFFFFFFFFFFFFFF;
             if (pgid == 0) {
                 return BasinError.invalid_argument; // Invalid process group ID
             }
             return self.kill_process_group(pgid, signal);
+        }
+        
+        if (is_session) {
+            // Session delivery: send signal to all processes in the session.
+            // Extract session ID by clearing the session bit (bit 62).
+            const sid = pid & 0x3FFFFFFFFFFFFFFF;
+            if (sid == 0) {
+                return BasinError.invalid_argument; // Invalid session ID
+            }
+            return self.kill_session(sid, signal);
         }
         
         // Assert: PID must be valid (non-zero) for single process.
@@ -3896,6 +3911,61 @@ pub const BasinKernel = struct {
         }
         
         // Send signal to all processes in the group.
+        var i: u32 = 0;
+        while (i < processes_found) : (i += 1) {
+            const process_idx = process_indices[i];
+            const process = &self.processes[process_idx];
+            
+            // Send signal to process.
+            process.signals.send_signal(signal);
+            
+            // SIGKILL immediately terminates process.
+            if (signal == .sigkill) {
+                process.state = .exited;
+                process.exit_status = 128 + @intFromEnum(signal); // Exit code = 128 + signal
+                
+                // Clear current process if it's the one being killed.
+                if (self.scheduler.get_current() == process.id) {
+                    self.scheduler.clear_current();
+                }
+            }
+        }
+        
+        // Return success (number of processes signaled).
+        return SyscallResult.ok(processes_found);
+    }
+    
+    /// Send signal to all processes in a session.
+    /// Why: Support POSIX signal delivery to sessions.
+    /// Contract: sid must be valid (non-zero), signal must be valid.
+    fn kill_session(
+        self: *BasinKernel,
+        sid: u64,
+        signal: Signal,
+    ) BasinError!SyscallResult {
+        // Assert: Session ID must be valid (non-zero).
+        if (sid == 0) {
+            return BasinError.invalid_argument; // Invalid session ID
+        }
+        
+        // Find all processes in the session.
+        var processes_found: u32 = 0;
+        var process_indices: [MAX_PROCESSES]usize = undefined;
+        
+        var idx: u32 = 0;
+        while (idx < MAX_PROCESSES) : (idx += 1) {
+            if (self.processes[idx].allocated and self.processes[idx].sid == sid) {
+                process_indices[processes_found] = idx;
+                processes_found += 1;
+            }
+        }
+        
+        // If no processes found in session, return error.
+        if (processes_found == 0) {
+            return BasinError.not_found; // Session not found or empty
+        }
+        
+        // Send signal to all processes in the session.
         var i: u32 = 0;
         while (i < processes_found) : (i += 1) {
             const process_idx = process_indices[i];
@@ -4046,6 +4116,7 @@ pub const basin_kernel = struct {
     pub const OpenFlags = @import("basin_kernel.zig").OpenFlags;
     pub const ClockId = @import("basin_kernel.zig").ClockId;
     pub const Handle = @import("basin_kernel.zig").Handle;
+    pub const Signal = @import("signal.zig").Signal;
     pub const SysInfo = @import("basin_kernel.zig").SysInfo;
     pub const BasinError = @import("basin_kernel.zig").BasinError;
     pub const SyscallResult = @import("basin_kernel.zig").SyscallResult;

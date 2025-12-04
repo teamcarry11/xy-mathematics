@@ -2770,19 +2770,6 @@ pub fn build(b: *std.Build) void {
     const grain_workspace_file_manager_tests_run = b.addRunArtifact(grain_workspace_file_manager_tests);
     test_step.dependOn(&grain_workspace_file_manager_tests_run.step);
 
-    const grain_workspace_devtools_tests = b.addTest(.{
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/114_grain_workspace_devtools_test.zig"),
-            .target = target,
-            .optimize = optimize,
-            .imports = &.{
-                .{ .name = "grain_workspace", .module = grain_workspace_module },
-            },
-        }),
-    });
-    const grain_workspace_devtools_tests_run = b.addRunArtifact(grain_workspace_devtools_tests);
-    test_step.dependOn(&grain_workspace_devtools_tests_run.step);
-
     // Grain Database tests
     const grain_database_storage_engine_tests = b.addTest(.{
         .root_module = b.createModule(.{

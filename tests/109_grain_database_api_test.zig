@@ -141,7 +141,7 @@ test "rate limiter multiple requests" {
 
 test "json serializer initialization" {
     const allocator = testing.allocator;
-    var serializer = JsonSerializer.init(allocator);
+    const serializer = JsonSerializer.init(allocator);
     _ = serializer;
     try testing.expect(true);
 }
@@ -227,7 +227,7 @@ test "api context initialization" {
     var limiter = try RateLimiter.init(allocator, 100);
     defer limiter.deinit();
 
-    var context = ApiContext.init(
+    const context = ApiContext.init(
         allocator,
         &storage,
         &schema,
@@ -235,7 +235,6 @@ test "api context initialization" {
         &fulltext,
         &limiter,
     );
-    _ = context.graph_db;
     _ = context;
     try testing.expect(true);
 }

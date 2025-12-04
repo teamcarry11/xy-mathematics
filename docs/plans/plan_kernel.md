@@ -1,8 +1,8 @@
 # Grain Vantage VM Basin Kernel Agent: Development Plan
 
 **Agent**: Grain Vantage VM Basin Kernel Agent (1st Agent)  
-**Status**: Phase 3.14 Complete, Ready for Next Phase  
-**Last Updated**: 2025-12-04-094958-pst
+**Status**: Phase 3.15 Complete, Ready for Next Phase  
+**Last Updated**: 2025-12-04-101252-pst
 
 ---
 
@@ -352,6 +352,26 @@ Grain Vantage VM Basin Kernel Agent is responsible for building the RISC-V64 vir
 **Files**:
 - `src/kernel/basin_kernel.zig` — Enhanced kill syscall
 - `tests/082_signal_process_group_test.zig` — Comprehensive tests
+
+---
+
+#### Phase 3.15: Signal Delivery to Sessions ✅
+
+**Date**: 2025-12-04-101252-pst
+
+**Completed Work**:
+- Enhanced `syscall_kill` to support session delivery
+- Session PID detection using bit 62 flag (0x4000000000000000)
+- Session ID extraction from special PID
+- `kill_session()` helper function
+- Signal delivery to all processes in a session
+- SIGKILL termination of entire sessions
+- Error handling for invalid/empty sessions
+- Distinction between process group and session delivery
+
+**Files**:
+- `src/kernel/basin_kernel.zig` — Enhanced kill syscall with session support
+- `tests/083_signal_session_test.zig` — Comprehensive tests
 
 ---
 

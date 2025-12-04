@@ -36,4 +36,8 @@ pub const add_cors_headers = @import("api.zig").add_cors_headers;
 pub const WebSocketManager = @import("api.zig").WebSocketManager;
 pub const WebSocketConnection = @import("api.zig").WebSocketConnection;
 pub const AuthMiddleware = @import("api.zig").AuthMiddleware;
+pub const EndpointRegistry = @import("integration.zig").EndpointRegistry;
+pub const DatabaseEndpoint = @import("integration.zig").DatabaseEndpoint;
+pub const register_database_endpoints = @import("integration.zig").register_database_endpoints;
+pub const ApiContract = @import("integration.zig").ApiContract;
 

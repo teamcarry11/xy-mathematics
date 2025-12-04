@@ -14,7 +14,7 @@
 - Syntax highlighting performance optimization (incremental parsing)
 
 ### 2. Advanced Rendering Features
-- Text labels on graph nodes (block titles, descriptions)
+- ✅ Text labels on graph nodes (block titles, descriptions) - **COMPLETE** (2025-12-04-095210-pst)
 - Node icons (customizable per block type)
 - Graph zoom controls (mouse wheel, keyboard shortcuts)
 - Graph pan controls (drag, arrow keys)

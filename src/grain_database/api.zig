@@ -90,9 +90,9 @@ pub const ApiRequest = struct {
 // API response.
 pub const ApiResponse = struct {
     status_code: u16,
-    headers: []const Header,
+    headers: []Header,
     headers_len: u32,
-    body: []const u8,
+    body: []u8,
     body_len: u32,
     allocator: std.mem.Allocator,
 
@@ -105,10 +105,10 @@ pub const ApiResponse = struct {
 
     // Initialize response.
     pub fn init(allocator: std.mem.Allocator) !ApiResponse {
-        var headers = try allocator.alloc(Header, 32);
+        const headers = try allocator.alloc(Header, 32);
         errdefer allocator.free(headers);
 
-        var body = try allocator.alloc(u8, MAX_RESPONSE_BODY_SIZE);
+        const body = try allocator.alloc(u8, MAX_RESPONSE_BODY_SIZE);
         errdefer allocator.free(body);
 
         return ApiResponse{
@@ -299,7 +299,8 @@ pub const RateLimiter = struct {
         client_id: []const u8,
     ) !bool {
         std.debug.assert(client_id.len <= 256);
-        const now = std.time.timestamp();
+        const now_timestamp = std.time.timestamp();
+        const now = @as(u64, @intCast(if (now_timestamp < 0) 0 else now_timestamp));
         const window_seconds: u64 = 60;
 
         const entry = try self.find_or_create_entry(client_id);
@@ -335,7 +336,7 @@ pub const RateLimiter = struct {
             return error.TooManyRateLimitEntries;
         }
 
-        const entry = try RateLimitEntry.init(self.allocator, client_id);
+        var entry = try RateLimitEntry.init(self.allocator, client_id);
         errdefer entry.deinit();
 
         self.entries[self.entries_len] = entry;
@@ -481,22 +482,19 @@ pub const JsonSerializer = struct {
         record: *storage_engine.Record,
         output: []u8,
     ) !u32 {
+        _ = self;
         std.debug.assert(output.len >= MAX_RESPONSE_BODY_SIZE);
 
-        var json = std.ArrayList(u8).init(self.allocator);
-        defer json.deinit();
+        var stream = std.io.fixedBufferStream(output);
+        const writer = stream.writer();
 
-        try json.writer().print(
+        try writer.print(
             "{{\"id\":{},\"key\":\"{}\",\"value\":\"{}\"}}",
             .{ record.record_id, record.key, record.value },
         );
 
-        if (json.items.len > output.len) {
-            return error.BufferTooSmall;
-        }
-
-        @memcpy(output[0..json.items.len], json.items);
-        return @as(u32, @intCast(json.items.len));
+        const written = stream.getPos();
+        return @as(u32, @intCast(written));
     }
 
     // Serialize error to JSON.
@@ -505,19 +503,16 @@ pub const JsonSerializer = struct {
         error_message: []const u8,
         output: []u8,
     ) !u32 {
+        _ = self;
         std.debug.assert(output.len >= 1024);
 
-        var json = std.ArrayList(u8).init(self.allocator);
-        defer json.deinit();
+        var stream = std.io.fixedBufferStream(output);
+        const writer = stream.writer();
 
-        try json.writer().print("{{\"error\":\"{}\"}}", .{error_message});
+        try writer.print("{{\"error\":\"{}\"}}", .{error_message});
 
-        if (json.items.len > output.len) {
-            return error.BufferTooSmall;
-        }
-
-        @memcpy(output[0..json.items.len], json.items);
-        return @as(u32, @intCast(json.items.len));
+        const written = stream.getPos();
+        return @as(u32, @intCast(written));
     }
 };
 
@@ -742,6 +737,7 @@ pub const AuthMiddleware = struct {
             iat: u64,
         },
     ) bool {
+        _ = self;
         std.debug.assert(token.len > 0);
         std.debug.assert(token.len <= 2048);
         std.debug.assert(current_time > 0);

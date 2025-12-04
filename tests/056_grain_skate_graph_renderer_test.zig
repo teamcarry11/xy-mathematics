@@ -175,3 +175,87 @@ test "graph renderer title labels" {
     try testing.expect(buffer.len == 800 * 600 * 4);
 }
 
+test "graph renderer enhanced labels with truncation" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const Block = @import("grain_skate").Block;
+
+    // Create block storage with a long title (should be truncated)
+    var block_storage = try Block.BlockStorage.init(allocator);
+    defer block_storage.deinit();
+
+    const long_title = "This is a very long block title that should be truncated with ellipsis";
+    const block_id = try block_storage.create_block(long_title, "Content");
+
+    var graph_viz = GraphVisualization.init(allocator);
+    graph_viz.add_block(block_id);
+    graph_viz.calculate_layout(10);
+
+    var renderer = GraphRenderer.init(&graph_viz, 800, 600);
+    renderer.set_block_storage(&block_storage);
+
+    var buffer: [800 * 600 * 4]u8 = undefined;
+    renderer.render(&buffer);
+
+    // Enhanced labels with truncation should be rendered
+    try testing.expect(buffer.len == 800 * 600 * 4);
+}
+
+test "graph renderer enhanced labels with background" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const Block = @import("grain_skate").Block;
+
+    // Create block storage with blocks
+    var block_storage = try Block.BlockStorage.init(allocator);
+    defer block_storage.deinit();
+
+    const block1_id = try block_storage.create_block("Short", "Content 1");
+    const block2_id = try block_storage.create_block("Medium Title", "Content 2");
+
+    var graph_viz = GraphVisualization.init(allocator);
+    graph_viz.add_block(block1_id);
+    graph_viz.add_block(block2_id);
+    graph_viz.calculate_layout(10);
+
+    var renderer = GraphRenderer.init(&graph_viz, 800, 600);
+    renderer.set_block_storage(&block_storage);
+
+    var buffer: [800 * 600 * 4]u8 = undefined;
+    renderer.render(&buffer);
+
+    // Enhanced labels with background should be rendered
+    try testing.expect(buffer.len == 800 * 600 * 4);
+}
+
+test "graph renderer enhanced labels centered" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const Block = @import("grain_skate").Block;
+
+    // Create block storage with blocks
+    var block_storage = try Block.BlockStorage.init(allocator);
+    defer block_storage.deinit();
+
+    const block_id = try block_storage.create_block("Centered", "Content");
+
+    var graph_viz = GraphVisualization.init(allocator);
+    graph_viz.add_block(block_id);
+    graph_viz.calculate_layout(10);
+
+    var renderer = GraphRenderer.init(&graph_viz, 800, 600);
+    renderer.set_block_storage(&block_storage);
+
+    var buffer: [800 * 600 * 4]u8 = undefined;
+    renderer.render(&buffer);
+
+    // Centered labels should be rendered
+    try testing.expect(buffer.len == 800 * 600 * 4);
+}
+

@@ -570,5 +570,78 @@ pub const GraphRenderer = struct {
             }
         }
     }
+
+    /// Draw filled rectangle (iterative).
+    // 2025-12-04-095210-pst: Active function
+    fn draw_rect(self: *const GraphRenderer, buffer: []u8, x: u32, y: u32, w: u32, h: u32, r: u8, g: u8, b: u8, a: u8) void {
+        std.debug.assert(x < self.buffer_width); // Precondition
+        std.debug.assert(y < self.buffer_height); // Precondition
+        
+        var py: u32 = 0;
+        while (py < h) : (py += 1) {
+            const draw_y = y + py;
+            if (draw_y >= self.buffer_height) {
+                break;
+            }
+            var px: u32 = 0;
+            while (px < w) : (px += 1) {
+                const draw_x = x + px;
+                if (draw_x >= self.buffer_width) {
+                    break;
+                }
+                const idx = (draw_y * self.buffer_width + draw_x) * 4;
+                buffer[idx + 0] = r;
+                buffer[idx + 1] = g;
+                buffer[idx + 2] = b;
+                buffer[idx + 3] = a;
+            }
+        }
+        
+        std.debug.assert(py <= h); // Postcondition
+    }
+
+    /// Calculate text width in pixels (for centering).
+    // 2025-12-04-095210-pst: Active function
+    fn calculate_text_width(self: *const GraphRenderer, text: []const u8) u32 {
+        _ = self;
+        std.debug.assert(text.len <= MAX_LABEL_LEN); // Precondition
+        
+        var width: u32 = 0;
+        var i: u32 = 0;
+        while (i < text.len) : (i += 1) {
+            const ch = text[i];
+            if (ch == ' ') {
+                width += 6; // Space is 6 pixels wide
+            } else if ((ch >= '0' and ch <= '9') or (ch >= 'A' and ch <= 'Z') or (ch >= 'a' and ch <= 'z')) {
+                width += 6; // 6 pixels per character (5 width + 1 spacing)
+            } else {
+                width += 6; // Default to 6 pixels for other characters
+            }
+        }
+        
+        std.debug.assert(width <= MAX_LABEL_LEN * 6); // Postcondition
+        return width;
+    }
+
+    /// Count digits in a number (for width calculation).
+    // 2025-12-04-095210-pst: Active function
+    fn count_digits(self: *const GraphRenderer, number: u32) u32 {
+        _ = self;
+        std.debug.assert(number <= 0xFFFFFFFF); // Precondition
+        
+        if (number == 0) {
+            return 1;
+        }
+        
+        var count: u32 = 0;
+        var num = number;
+        while (num > 0) : (count += 1) {
+            num /= 10;
+        }
+        
+        std.debug.assert(count > 0); // Postcondition
+        std.debug.assert(count <= 10); // Postcondition (u32 max is 10 digits)
+        return count;
+    }
 };
 

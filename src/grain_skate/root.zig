@@ -11,4 +11,7 @@ pub const GraphVisualization = @import("graph_viz.zig").GraphVisualization;
 pub const GraphRenderer = @import("graph_renderer.zig").GraphRenderer;
 pub const EditorRenderer = @import("editor_renderer.zig").EditorRenderer;
 pub const GrainSkateApp = @import("app.zig").GrainSkateApp;
+pub const BracketMatcher = @import("bracket_matching.zig").BracketMatcher;
+pub const BracketMatch = @import("bracket_matching.zig").BracketMatch;
+pub const BracketType = @import("bracket_matching.zig").BracketType;
 

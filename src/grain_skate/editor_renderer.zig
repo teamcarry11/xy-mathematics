@@ -11,6 +11,8 @@ const Editor = @import("editor.zig").Editor;
 const LanguageDetector = @import("language_detector.zig").LanguageDetector;
 const Language = @import("language_detector.zig").Language;
 const LanguageKeywords = @import("language_keywords.zig").LanguageKeywords;
+const BracketMatcher = @import("bracket_matching.zig").BracketMatcher;
+const BracketMatch = @import("bracket_matching.zig").BracketMatch;
 
 // Bounded: Max buffer width (explicit limit, in pixels)
 // 2025-12-02-142853-pst: Active constant
@@ -49,6 +51,7 @@ pub const COLOR_KEYWORD: u32 = 0xFF569CD6; // Blue for keywords
 pub const COLOR_STRING: u32 = 0xFFCE9178; // Orange for strings
 pub const COLOR_COMMENT: u32 = 0xFF6A9955; // Green for comments
 pub const COLOR_NUMBER: u32 = 0xFFB5CEA8; // Light green for numbers
+pub const COLOR_BRACKET_MATCH: u32 = 0xFFFFFF00; // Yellow for matching brackets
 
 // Letter patterns for 5x7 bitmap font (A-Z, 0-9).
 // 2025-12-02-142853-pst: Active constant
@@ -257,6 +260,8 @@ pub const EditorRenderer = struct {
         if (self.editor.mode == .visual or self.editor.mode == .visual_line or self.editor.mode == .visual_block) {
             self.render_selection(buffer);
         }
+        // Render bracket matching (highlight matching bracket if cursor is on bracket)
+        self.render_bracket_match(buffer);
         // Render cursor
         self.render_cursor(buffer);
         // Render status line
@@ -673,6 +678,44 @@ pub const EditorRenderer = struct {
     // 2025-12-03-141818-pst: Active function
     pub fn detect_language(self: *EditorRenderer, filename: []const u8, content: []const u8) void {
         self.detected_language = LanguageDetector.detect(filename, content);
+    }
+
+    /// Render bracket matching highlight (highlight matching bracket if cursor is on bracket).
+    // 2025-12-03-162613-pst: Active function
+    fn render_bracket_match(self: *const EditorRenderer, buffer: []u8) void {
+        // Find matching bracket at cursor position
+        const match = BracketMatcher.find_matching_bracket(
+            self.editor,
+            self.editor.cursor_line,
+            self.editor.cursor_column,
+        );
+        
+        if (!match.found) {
+            return; // No matching bracket found
+        }
+        
+        // Highlight matching bracket if visible
+        if (match.line >= self.viewport_line and
+            match.line < self.viewport_line + self.get_visible_line_count())
+        {
+            const line_text = self.editor.buffer.lines[match.line];
+            if (match.column < line_text.len) {
+                if (match.column >= self.viewport_column and
+                    match.column < self.viewport_column + self.get_visible_column_count())
+                {
+                    // Match is visible, highlight it
+                    const match_r = @as(u8, @truncate((COLOR_BRACKET_MATCH >> 16) & 0xFF));
+                    const match_g = @as(u8, @truncate((COLOR_BRACKET_MATCH >> 8) & 0xFF));
+                    const match_b = @as(u8, @truncate(COLOR_BRACKET_MATCH & 0xFF));
+                    const match_a = @as(u8, @truncate((COLOR_BRACKET_MATCH >> 24) & 0xFF));
+                    const line_num_width = self.get_line_number_column_width();
+                    const match_x = line_num_width + (match.column - self.viewport_column) * CHAR_WIDTH;
+                    const match_y = (match.line - self.viewport_line) * (CHAR_HEIGHT + LINE_SPACING);
+                    // Draw highlight rectangle (full character width/height)
+                    self.draw_rect(buffer, match_x, match_y, CHAR_WIDTH, CHAR_HEIGHT, match_r, match_g, match_b, match_a / 2);
+                }
+            }
+        }
     }
 
     /// Set error message to display (with timeout in seconds).

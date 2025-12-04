@@ -10,6 +10,7 @@ const std = @import("std");
 const testing = std.testing;
 const NotesApp = @import("../src/grain_workspace/notes/app.zig").NotesApp;
 const Note = @import("../src/grain_workspace/notes/app.zig").Note;
+const grain_silo = @import("grain_silo");
 const MAX_NOTES = @import("../src/grain_workspace/notes/app.zig").MAX_NOTES;
 const MAX_NOTE_TITLE_LEN = @import("../src/grain_workspace/notes/app.zig").MAX_NOTE_TITLE_LEN;
 const MAX_NOTE_CONTENT_LEN = @import("../src/grain_workspace/notes/app.zig").MAX_NOTE_CONTENT_LEN;
@@ -245,5 +246,196 @@ test "multiple links per note" {
     if (note2) |n| n.deinit();
     const note3 = app.get_note(note_id3);
     if (note3) |n| n.deinit();
+}
+
+test "storage initialization" {
+    const allocator = testing.allocator;
+    var app = NotesApp.init(allocator);
+    var storage = try grain_silo.Storage.ObjectStorage.init(allocator, 1024);
+    defer storage.deinit();
+
+    app.init_storage(&storage);
+    try testing.expect(app.storage != null);
+}
+
+test "save note to storage" {
+    const allocator = testing.allocator;
+    var app = NotesApp.init(allocator);
+    var storage = try grain_silo.Storage.ObjectStorage.init(allocator, 1024);
+    defer storage.deinit();
+
+    app.init_storage(&storage);
+    const note_id = try app.create_note("Test Note", "Test Content");
+    try app.save_note(note_id);
+
+    const note = app.get_note(note_id);
+    try testing.expect(note != null);
+    try testing.expect(note.?.state == .saved);
+
+    // Cleanup
+    if (note) |n| n.deinit();
+}
+
+test "load note from storage" {
+    const allocator = testing.allocator;
+    var app1 = NotesApp.init(allocator);
+    var storage = try grain_silo.Storage.ObjectStorage.init(allocator, 1024);
+    defer storage.deinit();
+
+    app1.init_storage(&storage);
+    const note_id = try app1.create_note("Test Note", "Test Content");
+    try app1.save_note(note_id);
+
+    // Create new app and load from storage
+    var app2 = NotesApp.init(allocator);
+    app2.init_storage(&storage);
+    try app2.load_note(note_id);
+
+    const note = app2.get_note(note_id);
+    try testing.expect(note != null);
+    try testing.expect(std.mem.eql(u8, note.?.title[0..note.?.title_len], "Test Note"));
+    try testing.expect(std.mem.eql(u8, note.?.content[0..note.?.content_len], "Test Content"));
+
+    // Cleanup
+    if (note) |n| n.deinit();
+    const note1 = app1.get_note(note_id);
+    if (note1) |n| n.deinit();
+}
+
+test "export note to markdown" {
+    const allocator = testing.allocator;
+    var app = NotesApp.init(allocator);
+
+    const note_id = try app.create_note("Test Note", "Test content");
+    const markdown = try app.export_note_markdown(note_id, allocator);
+    defer allocator.free(markdown);
+
+    try testing.expect(markdown.len > 0);
+    try testing.expect(std.mem.indexOf(u8, markdown, "# Test Note") != null);
+    try testing.expect(std.mem.indexOf(u8, markdown, "Test content") != null);
+
+    // Cleanup
+    const note = app.get_note(note_id);
+    if (note) |n| n.deinit();
+}
+
+test "import note from markdown" {
+    const allocator = testing.allocator;
+    var app = NotesApp.init(allocator);
+
+    const markdown =
+        \\# Imported Note
+        \\
+        \\---
+        \\id: 1
+        \\state: draft
+        \\created: 1234567890
+        \\updated: 1234567890
+        \\---
+        \\
+        \\This is imported content.
+    ;
+
+    const note_id = try app.import_note_markdown(markdown);
+    const note = app.get_note(note_id);
+
+    try testing.expect(note != null);
+    try testing.expect(std.mem.eql(u8, note.?.title[0..note.?.title_len], "Imported Note"));
+    try testing.expect(std.mem.indexOf(u8, note.?.content[0..note.?.content_len], "imported content") != null);
+
+    // Cleanup
+    if (note) |n| n.deinit();
+}
+
+test "export note to json" {
+    const allocator = testing.allocator;
+    var app = NotesApp.init(allocator);
+
+    const note_id = try app.create_note("Test Note", "Test content");
+    const json = try app.export_note_json(note_id, allocator);
+    defer allocator.free(json);
+
+    try testing.expect(json.len > 0);
+    try testing.expect(std.mem.indexOf(u8, json, "\"title\": \"Test Note\"") != null);
+    try testing.expect(std.mem.indexOf(u8, json, "\"content\": \"Test content\"") != null);
+    try testing.expect(std.mem.indexOf(u8, json, "\"id\":") != null);
+
+    // Cleanup
+    const note = app.get_note(note_id);
+    if (note) |n| n.deinit();
+}
+
+test "import note from json" {
+    const allocator = testing.allocator;
+    var app = NotesApp.init(allocator);
+
+    const json =
+        \\{
+        \\  "id": 1,
+        \\  "title": "Imported Note",
+        \\  "content": "This is imported content.",
+        \\  "state": "draft",
+        \\  "created_at": 1234567890,
+        \\  "updated_at": 1234567890,
+        \\  "links": [],
+        \\  "backlinks": []
+        \\}
+    ;
+
+    const note_id = try app.import_note_json(json);
+    const note = app.get_note(note_id);
+
+    try testing.expect(note != null);
+    try testing.expect(std.mem.eql(u8, note.?.title[0..note.?.title_len], "Imported Note"));
+    try testing.expect(std.mem.indexOf(u8, note.?.content[0..note.?.content_len], "imported content") != null);
+
+    // Cleanup
+    if (note) |n| n.deinit();
+}
+
+test "export import roundtrip markdown" {
+    const allocator = testing.allocator;
+    var app1 = NotesApp.init(allocator);
+    var app2 = NotesApp.init(allocator);
+
+    const note_id1 = try app1.create_note("Roundtrip Note", "Roundtrip content");
+    const markdown = try app1.export_note_markdown(note_id1, allocator);
+    defer allocator.free(markdown);
+
+    const note_id2 = try app2.import_note_markdown(markdown);
+    const note1 = app1.get_note(note_id1);
+    const note2 = app2.get_note(note_id2);
+
+    try testing.expect(note1 != null);
+    try testing.expect(note2 != null);
+    try testing.expect(std.mem.eql(u8, note1.?.title[0..note1.?.title_len], note2.?.title[0..note2.?.title_len]));
+    try testing.expect(std.mem.eql(u8, note1.?.content[0..note1.?.content_len], note2.?.content[0..note2.?.content_len]));
+
+    // Cleanup
+    if (note1) |n| n.deinit();
+    if (note2) |n| n.deinit();
+}
+
+test "export import roundtrip json" {
+    const allocator = testing.allocator;
+    var app1 = NotesApp.init(allocator);
+    var app2 = NotesApp.init(allocator);
+
+    const note_id1 = try app1.create_note("Roundtrip Note", "Roundtrip content");
+    const json = try app1.export_note_json(note_id1, allocator);
+    defer allocator.free(json);
+
+    const note_id2 = try app2.import_note_json(json);
+    const note1 = app1.get_note(note_id1);
+    const note2 = app2.get_note(note_id2);
+
+    try testing.expect(note1 != null);
+    try testing.expect(note2 != null);
+    try testing.expect(std.mem.eql(u8, note1.?.title[0..note1.?.title_len], note2.?.title[0..note2.?.title_len]));
+    try testing.expect(std.mem.eql(u8, note1.?.content[0..note1.?.content_len], note2.?.content[0..note2.?.content_len]));
+
+    // Cleanup
+    if (note1) |n| n.deinit();
+    if (note2) |n| n.deinit();
 }
 

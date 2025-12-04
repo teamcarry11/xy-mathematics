@@ -32,6 +32,9 @@ pub fn error_to_string(err: Error) []const u8 {
     };
 }
 
-const error_count = 8;
-std.debug.assert(@typeInfo(Error).ErrorSet.?.len == error_count);
+const error_count: u32 = 8;
+
+pub fn validate_error_count() void {
+    std.debug.assert(@typeInfo(Error).ErrorSet.?.len == error_count);
+}
 

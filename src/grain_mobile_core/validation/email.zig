@@ -9,7 +9,6 @@ pub const MIN_EMAIL_LEN: u32 = 3;
 
 pub fn validate_email(email: []const u8) bool {
     std.debug.assert(email.len > 0);
-    std.debug.assert(email.len <= MAX_EMAIL_LEN);
     
     if (email.len < MIN_EMAIL_LEN) {
         return false;
@@ -18,6 +17,9 @@ pub fn validate_email(email: []const u8) bool {
     if (email.len > MAX_EMAIL_LEN) {
         return false;
     }
+    
+    std.debug.assert(email.len >= MIN_EMAIL_LEN);
+    std.debug.assert(email.len <= MAX_EMAIL_LEN);
     
     const has_at = has_at_symbol(email);
     const has_dot_after_at = has_dot_after_at_symbol(email);

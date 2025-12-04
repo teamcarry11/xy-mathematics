@@ -43,6 +43,9 @@ const resource_cleanup = @import("resource_cleanup.zig");
 const KernelLogBuffer = @import("kernel_log_buffer.zig").KernelLogBuffer;
 const KernelLogEntry = @import("kernel_log_buffer.zig").KernelLogEntry;
 const KernelLogLevel = @import("kernel_log_buffer.zig").KernelLogLevel;
+const scheduler_stats = @import("scheduler_stats.zig");
+const process_group = @import("process_group.zig");
+const ProcessGroupManager = process_group.ProcessGroupManager;
 
 // Export resource_cleanup for tests.
 pub const resource_cleanup_module = resource_cleanup;
@@ -92,6 +95,10 @@ pub const Syscall = enum(u32) {
     read_kernel_log = 53,
     set_priority = 54,
     get_priority = 55,
+    setpgid = 56,
+    getpgid = 57,
+    setsid = 58,
+    getsid = 59,
     
     // Input Events
     read_input_event = 60,
@@ -573,6 +580,12 @@ pub const Process = struct {
     /// Time slice quantum (instruction steps per time slice, default 1000).
     /// Why: Track time slice allocation for fair scheduling.
     time_slice_quantum: u64,
+    /// Process group ID (0 if no group).
+    /// Why: Track process group membership for group-based operations.
+    pgid: u64,
+    /// Session ID (0 if no session).
+    /// Why: Track session membership for session-based operations.
+    sid: u64,
     /// Whether this entry is allocated (in use).
     allocated: bool,
     
@@ -594,6 +607,8 @@ pub const Process = struct {
             .parent_pid = 0,
             .priority = 0, // Default priority (nice value 0)
             .time_slice_quantum = 1000, // Default time slice (1000 instruction steps)
+            .pgid = 0, // No process group by default
+            .sid = 0, // No session by default
             .allocated = false,
         };
     }
@@ -689,6 +704,11 @@ pub const BasinKernel = struct {
     /// Grain Style: Static allocation, initialized at kernel boot.
     scheduler: Scheduler,
     
+    /// Process group manager.
+    /// Why: Manage process groups and sessions.
+    /// Grain Style: Static allocation, initialized at kernel boot.
+    process_group_manager: ProcessGroupManager,
+    
     /// IPC channel table.
     /// Why: Manage inter-process communication channels.
     /// Grain Style: Static allocation, initialized at kernel boot.
@@ -767,6 +787,7 @@ pub const BasinKernel = struct {
             .timer = Timer.init(),
             .interrupt_controller = InterruptController.init(),
             .scheduler = Scheduler.init(),
+            .process_group_manager = ProcessGroupManager.init(),
             .channels = ChannelTable.init(),
             .storage = Storage.init(),
             .keyboard = Keyboard.init(),
@@ -1199,12 +1220,12 @@ pub const BasinKernel = struct {
         Debug.kassert(syscall_num >= 10, "Syscall num {d} < 10", .{syscall_num});
         
         // Assert: syscall number must be within valid range.
-        Debug.kassert(syscall_num <= @intFromEnum(Syscall.get_priority), "Syscall num {d} too high", .{syscall_num});
+        Debug.kassert(syscall_num <= @intFromEnum(Syscall.getsid), "Syscall num {d} too high", .{syscall_num});
         
         // Decode syscall number.
         const syscall = @as(?Syscall, @enumFromInt(syscall_num)) orelse {
             // Assert: Invalid syscall number must return error.
-            Debug.kassert(syscall_num < 10 or syscall_num > @intFromEnum(Syscall.get_priority), "Invalid syscall logic", .{});
+            Debug.kassert(syscall_num < 10 or syscall_num > @intFromEnum(Syscall.getsid), "Invalid syscall logic", .{});
             return BasinError.invalid_syscall;
         };
         
@@ -1245,6 +1266,10 @@ pub const BasinKernel = struct {
             .read_kernel_log => self.syscall_read_kernel_log(arg1, arg2, arg3, arg4),
             .set_priority => self.syscall_set_priority(arg1, arg2, arg3, arg4),
             .get_priority => self.syscall_get_priority(arg1, arg2, arg3, arg4),
+            .setpgid => self.syscall_setpgid(arg1, arg2, arg3, arg4),
+            .getpgid => self.syscall_getpgid(arg1, arg2, arg3, arg4),
+            .setsid => self.syscall_setsid(arg1, arg2, arg3, arg4),
+            .getsid => self.syscall_getsid(arg1, arg2, arg3, arg4),
             .read_input_event => self.syscall_read_input_event(arg1, arg2, arg3, arg4),
             .fb_clear => self.syscall_fb_clear(arg1, arg2, arg3, arg4),
             .fb_draw_pixel => self.syscall_fb_draw_pixel(arg1, arg2, arg3, arg4),
@@ -3459,6 +3484,207 @@ pub const BasinKernel = struct {
         return result;
     }
     
+    fn syscall_setpgid(
+        self: *BasinKernel,
+        pid: u64,
+        pgid: u64,
+        _arg3: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg3;
+        _ = _arg4;
+        
+        // Assert: Process ID must be valid (non-zero).
+        if (pid == 0) {
+            return BasinError.invalid_argument; // Invalid process ID
+        }
+        
+        // Assert: Process group ID must be valid (non-zero).
+        if (pgid == 0) {
+            return BasinError.invalid_argument; // Invalid process group ID
+        }
+        
+        // Find process in process table.
+        var found: ?usize = null;
+        for (0..MAX_PROCESSES) |i| {
+            if (self.processes[i].allocated and self.processes[i].id == pid) {
+                found = i;
+                break;
+            }
+        }
+        
+        if (found == null) {
+            return BasinError.not_found; // Process not found
+        }
+        
+        const idx = found.?;
+        
+        // Set process group ID.
+        // Why: Assign process to a process group.
+        self.processes[idx].pgid = pgid;
+        
+        // Return success.
+        return SyscallResult.ok(0);
+    }
+    
+    fn syscall_getpgid(
+        self: *BasinKernel,
+        pid: u64,
+        _arg2: u64,
+        _arg3: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg2;
+        _ = _arg3;
+        _ = _arg4;
+        
+        // Assert: Process ID must be valid (non-zero).
+        if (pid == 0) {
+            return BasinError.invalid_argument; // Invalid process ID
+        }
+        
+        // Find process in process table.
+        var found: ?usize = null;
+        for (0..MAX_PROCESSES) |i| {
+            if (self.processes[i].allocated and self.processes[i].id == pid) {
+                found = i;
+                break;
+            }
+        }
+        
+        if (found == null) {
+            return BasinError.not_found; // Process not found
+        }
+        
+        const idx = found.?;
+        
+        // Get process group ID.
+        // Why: Return process group ID for userspace queries.
+        const pgid = self.processes[idx].pgid;
+        
+        // Return process group ID.
+        return SyscallResult.ok(pgid);
+    }
+    
+    fn syscall_setsid(
+        self: *BasinKernel,
+        _arg1: u64,
+        _arg2: u64,
+        _arg3: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg1;
+        _ = _arg2;
+        _ = _arg3;
+        _ = _arg4;
+        
+        // Get current process ID.
+        const current_pid = self.scheduler.get_current();
+        if (current_pid == 0) {
+            return BasinError.invalid_argument; // No current process
+        }
+        
+        // Create new session.
+        // Why: Create a new session for the current process.
+        const sid = self.process_group_manager.create_session(current_pid);
+        if (sid == 0) {
+            return BasinError.resource_exhausted; // No free session slot
+        }
+        
+        // Find process in process table.
+        var found: ?usize = null;
+        for (0..MAX_PROCESSES) |i| {
+            if (self.processes[i].allocated and self.processes[i].id == current_pid) {
+                found = i;
+                break;
+            }
+        }
+        
+        if (found == null) {
+            return BasinError.not_found; // Process not found
+        }
+        
+        const idx = found.?;
+        
+        // Set session ID for current process.
+        // Why: Assign process to the new session.
+        self.processes[idx].sid = sid;
+        
+        // Create a new process group in the session.
+        // Why: Process becomes leader of both session and group.
+        const pgid = self.process_group_manager.create_group(
+            current_pid,
+            sid,
+            &self.processes,
+            MAX_PROCESSES,
+        );
+        if (pgid == 0) {
+            return BasinError.resource_exhausted; // No free group slot
+        }
+        
+        // Return session ID.
+        return SyscallResult.ok(sid);
+    }
+    
+    fn syscall_getsid(
+        self: *BasinKernel,
+        pid: u64,
+        _arg2: u64,
+        _arg3: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg2;
+        _ = _arg3;
+        _ = _arg4;
+        
+        // Assert: Process ID must be valid (non-zero).
+        if (pid == 0) {
+            return BasinError.invalid_argument; // Invalid process ID
+        }
+        
+        // Find process in process table.
+        var found: ?usize = null;
+        for (0..MAX_PROCESSES) |i| {
+            if (self.processes[i].allocated and self.processes[i].id == pid) {
+                found = i;
+                break;
+            }
+        }
+        
+        if (found == null) {
+            return BasinError.not_found; // Process not found
+        }
+        
+        const idx = found.?;
+        
+        // Get session ID.
+        // Why: Return session ID for userspace queries.
+        const sid = self.processes[idx].sid;
+        
+        // Return session ID.
+        return SyscallResult.ok(sid);
+    }
+    
     fn syscall_read_input_event(
         self: *BasinKernel,
         event_buf: u64,
@@ -3589,6 +3815,20 @@ pub const BasinKernel = struct {
             return BasinError.invalid_argument;
         }
         
+        // Convert signal number to Signal enum.
+        const signal = @as(Signal, @enumFromInt(@as(u32, @truncate(signal_num))));
+        
+        // Check if PID is negative (process group ID).
+        // Why: POSIX allows negative PIDs to send signals to process groups.
+        // Note: We use signed comparison to detect negative values.
+        const pid_signed = @as(i64, @bitCast(pid));
+        if (pid_signed < 0) {
+            // Negative PID: send signal to all processes in the process group.
+            const pgid = @as(u64, @bitCast(-pid_signed));
+            return self.kill_process_group(pgid, signal);
+        }
+        
+        // Positive PID: send signal to single process (existing behavior).
         // Find process by PID.
         var found: ?usize = null;
         for (0..MAX_PROCESSES) |i| {
@@ -3605,9 +3845,6 @@ pub const BasinKernel = struct {
         const idx = found.?;
         const process = &self.processes[idx];
         
-        // Convert signal number to Signal enum.
-        const signal = @as(Signal, @enumFromInt(@as(u32, @truncate(signal_num))));
-        
         // Send signal to process.
         process.signals.send_signal(signal);
         
@@ -3622,6 +3859,61 @@ pub const BasinKernel = struct {
         Debug.kassert(process.signals.is_pending(signal) or signal == .sigkill, "Signal not sent", .{});
         
         return SyscallResult.ok(0);
+    }
+    
+    /// Send signal to all processes in a process group.
+    /// Why: Support POSIX signal delivery to process groups.
+    /// Contract: pgid must be valid (non-zero), signal must be valid.
+    fn kill_process_group(
+        self: *BasinKernel,
+        pgid: u64,
+        signal: Signal,
+    ) BasinError!SyscallResult {
+        // Assert: Process group ID must be valid (non-zero).
+        if (pgid == 0) {
+            return BasinError.invalid_argument; // Invalid process group ID
+        }
+        
+        // Find all processes in the process group.
+        var processes_found: u32 = 0;
+        var process_indices: [MAX_PROCESSES]usize = undefined;
+        
+        var idx: u32 = 0;
+        while (idx < MAX_PROCESSES) : (idx += 1) {
+            if (self.processes[idx].allocated and self.processes[idx].pgid == pgid) {
+                process_indices[processes_found] = idx;
+                processes_found += 1;
+            }
+        }
+        
+        // If no processes found in group, return error.
+        if (processes_found == 0) {
+            return BasinError.not_found; // Process group not found or empty
+        }
+        
+        // Send signal to all processes in the group.
+        var i: u32 = 0;
+        while (i < processes_found) : (i += 1) {
+            const process_idx = process_indices[i];
+            const process = &self.processes[process_idx];
+            
+            // Send signal to process.
+            process.signals.send_signal(signal);
+            
+            // SIGKILL immediately terminates process.
+            if (signal == .sigkill) {
+                process.state = .exited;
+                process.exit_status = 128 + @intFromEnum(signal); // Exit code = 128 + signal
+                
+                // Clear current process if it's the one being killed.
+                if (self.scheduler.get_current() == process.id) {
+                    self.scheduler.clear_current();
+                }
+            }
+        }
+        
+        // Return success (number of processes signaled).
+        return SyscallResult.ok(processes_found);
     }
     
     fn syscall_signal(

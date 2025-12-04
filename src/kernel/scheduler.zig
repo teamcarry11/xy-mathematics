@@ -6,6 +6,8 @@ const std = @import("std");
 const Debug = @import("debug.zig");
 const ProcessState = @import("basin_kernel.zig").ProcessState;
 const Process = @import("basin_kernel.zig").Process;
+const scheduler_stats = @import("scheduler_stats.zig");
+const SchedulerStats = scheduler_stats.SchedulerStats;
 
 /// Process scheduler for Grain Basin kernel.
 /// Why: Manage process execution order and state management.
@@ -27,6 +29,10 @@ pub const Scheduler = struct {
     /// Why: Track initialization state for safety.
     initialized: bool,
     
+    /// Scheduler statistics tracker.
+    /// Why: Track scheduler behavior and performance metrics.
+    stats: SchedulerStats,
+    
     /// Initialize scheduler.
     /// Why: Set up scheduler state.
     /// Contract: Must be called once at kernel boot.
@@ -36,6 +42,7 @@ pub const Scheduler = struct {
             .next_index = 0,
             .time_slice_remaining = 0,
             .initialized = true,
+            .stats = SchedulerStats.init(),
         };
     }
     
@@ -52,8 +59,14 @@ pub const Scheduler = struct {
         // Assert: Time slice must be positive.
         Debug.kassert(time_slice > 0, "Time slice must be > 0", .{});
         
+        // Record context switch if switching to different process.
+        if (self.current_pid != 0 and self.current_pid != pid) {
+            self.stats.record_context_switch();
+        }
+        
         self.current_pid = pid;
         self.time_slice_remaining = time_slice;
+        self.stats.record_process_scheduled();
         
         // Assert: Current PID must be set.
         Debug.kassert(self.current_pid == pid, "Current PID not set", .{});
@@ -80,6 +93,8 @@ pub const Scheduler = struct {
         } else {
             // Time slice expired.
             self.time_slice_remaining = 0;
+            self.stats.record_time_slice_expiration();
+            self.stats.record_preemption();
             return true;
         }
     }
@@ -185,10 +200,14 @@ pub const Scheduler = struct {
         // If only one process with best priority, return it.
         if (found_count == 1) {
             self.next_index = (best_idx + 1) % max_processes;
+            self.stats.record_priority_selection();
+            self.stats.record_scheduling_decision();
             return best_pid;
         }
         
         // Multiple processes with same priority: use round-robin.
+        self.stats.record_round_robin_selection();
+        self.stats.record_scheduling_decision();
         return self.find_next_runnable_round_robin(processes, max_processes, best_priority);
     }
     
@@ -244,6 +263,16 @@ pub const Scheduler = struct {
         return self.current_pid == pid;
     }
     
+    /// Get scheduler statistics.
+    /// Why: Access scheduler behavior metrics for monitoring.
+    /// Contract: Returns reference to statistics tracker.
+    pub fn get_stats(self: *const Scheduler) *const SchedulerStats {
+        // Assert: Scheduler must be initialized.
+        Debug.kassert(self.initialized, "Scheduler not initialized", .{});
+        
+        return &self.stats;
+    }
+    
     /// Reset scheduler state.
     /// Why: Clear scheduler state (for testing or reinitialization).
     /// Contract: Must be called when all processes are terminated.
@@ -254,6 +283,7 @@ pub const Scheduler = struct {
         self.current_pid = 0;
         self.next_index = 0;
         self.time_slice_remaining = 0;
+        self.stats.reset();
         
         // Assert: Scheduler must be reset.
         Debug.kassert(self.current_pid == 0, "Current PID not reset", .{});

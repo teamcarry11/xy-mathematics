@@ -15,6 +15,7 @@ const totp = @import("../auth/totp.zig");
 const email_auth = @import("../auth/email.zig");
 const jwt = @import("../auth/jwt.zig");
 const errors = @import("../utils/errors.zig");
+const style_api = @import("style_api.zig");
 
 // C-compatible return codes
 pub const RESULT_OK: c_int = 0;

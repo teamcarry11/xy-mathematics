@@ -31,13 +31,14 @@
 ### 2. Grain Aurora IDE Dream Browser Agent
 
 **Status**: Active  
-**Current Tasks**: Foundation components, shared modules  
+**Current Tasks**: Shared module refactoring (Phase 2)  
 **Details**: See [`docs/tasks/tasks_aurora.md`](tasks/tasks_aurora.md)
 
 **Key Tasks**:
-- Shared foundation components
-- DAG integration
-- Editor-browser integration
+- Font renderer migration (Phase 1.2) ✅
+- Text buffer unification (Phase 2) — Planned
+- DAG integration (Phase 3) — Planned
+- UI rendering unification (Phase 4) — Planned
 
 ---
 
@@ -48,9 +49,11 @@
 **Details**: See [`docs/tasks/tasks_skate.md`](tasks/tasks_skate.md)
 
 **Key Tasks**:
-- Syntax highlighting ✅
-- Shared font renderer ✅
-- Text buffer unification (planned)
+- Bracket matching ✅ (2025-12-03-162613-pst)
+- Language-specific syntax highlighting ✅ (2025-12-03-141818-pst)
+- Shared font renderer (Phase 1.1) ✅ (2025-12-02-183358-pst)
+- Font renderer migration (Phase 1.4) - Planned
+- Text buffer unification (Phase 2) - Planned
 
 ---
 
@@ -119,8 +122,8 @@
 
 ### 7. Grain Database Agent
 
-**Status**: Active — Phase 4 Complete  
-**Current Tasks**: Phase 5 — API and Integration (PLANNED)  
+**Status**: Active — Phase 5 Complete  
+**Current Tasks**: Integration with Grain OS Agent API Server (Phase 59)  
 **Details**: See [`docs/tasks/tasks_database.md`](tasks/tasks_database.md)
 
 **Completed**:
@@ -132,9 +135,13 @@
   - Graph data structure, relationship indexes, BFS/DFS traversal, reverse lookup
 - Phase 4: Full-Text Search ✅ (2025-12-03-173339-pst)
   - Inverted index, tokenization, stemming, search interface
+- Phase 5: API and Integration ✅ (2025-12-03-175009-pst)
+  - REST API router, JSON serialization, rate limiting, CORS support
+  - API request/response structures, middleware support
+  - Integration with Grain OS Agent's API Server (Phase 59)
 
 **Next Phases**:
-- Phase 5: API and Integration (PLANNED)
+- All core database phases complete! Ready for integration with Grain OS Agent API Server.
 
 **Dependencies**:
 - **Needs**: API Server (Grain OS Agent — Phase 59), File Storage (Grain OS Agent — Phase 62)

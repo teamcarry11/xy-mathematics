@@ -25,10 +25,15 @@ pub const COLOR_NODE: u32 = 0xFF4A90E2; // Blue node
 pub const COLOR_NODE_SELECTED: u32 = 0xFFE24A4A; // Red selected node
 pub const COLOR_EDGE: u32 = 0xFF666666; // Gray edge
 pub const COLOR_TEXT: u32 = 0xFFFFFFFF; // White text
+pub const COLOR_LABEL_BG: u32 = 0x80000000; // Semi-transparent black background for labels
 
 // Bounded: Max label length (explicit limit, in characters)
 // 2025-11-24-171200-pst: Active constant
 pub const MAX_LABEL_LEN: u32 = 32;
+
+// Bounded: Max content preview length (explicit limit, in characters)
+// 2025-12-04-095210-pst: Active constant
+pub const MAX_CONTENT_PREVIEW_LEN: u32 = 20;
 
 // Letter patterns for 5x7 bitmap font (A-Z).
 // 2025-11-24-171200-pst: Active constant
@@ -310,13 +315,17 @@ pub const GraphRenderer = struct {
         return @as(u32, @intFromFloat(clamped));
     }
 
-    /// Render node labels (block IDs as numbers).
-    // 2025-11-24-170000-pst: Active function
+    /// Render node labels (block titles with background, centered, truncated with ellipsis).
+    // 2025-12-04-095210-pst: Active function
     fn render_labels(self: *const GraphRenderer, buffer: []u8) void {
         const text_r = @as(u8, @truncate((COLOR_TEXT >> 16) & 0xFF));
         const text_g = @as(u8, @truncate((COLOR_TEXT >> 8) & 0xFF));
         const text_b = @as(u8, @truncate(COLOR_TEXT & 0xFF));
         const text_a = @as(u8, @truncate((COLOR_TEXT >> 24) & 0xFF));
+        const bg_r = @as(u8, @truncate((COLOR_LABEL_BG >> 16) & 0xFF));
+        const bg_g = @as(u8, @truncate((COLOR_LABEL_BG >> 8) & 0xFF));
+        const bg_b = @as(u8, @truncate(COLOR_LABEL_BG & 0xFF));
+        const bg_a = @as(u8, @truncate((COLOR_LABEL_BG >> 24) & 0xFF));
 
         var n: u32 = 0;
         while (n < self.graph_viz.nodes_len) : (n += 1) {
@@ -331,19 +340,69 @@ pub const GraphRenderer = struct {
 
             // Label position: below node (center_y + radius + offset)
             const label_y = center_y + radius + 12;
-            const label_x = center_x;
 
-            // Render block title if available, otherwise render block ID
+            // Get label text (title or block ID)
+            var label_text: []const u8 = undefined;
+            var label_text_len: u32 = 0;
+            var is_number: bool = false;
+            
             if (self.block_storage) |storage| {
                 if (storage.get_block(self.graph_viz.nodes[n].block_id)) |block| {
                     if (block.title_len > 0) {
-                        self.draw_text(buffer, block.title[0..block.title_len], label_x, label_y, text_r, text_g, text_b, text_a);
-                        continue;
+                        label_text = block.title[0..block.title_len];
+                        label_text_len = block.title_len;
+                    } else {
+                        is_number = true;
                     }
+                } else {
+                    is_number = true;
                 }
+            } else {
+                is_number = true;
             }
-            // Fallback to block ID if no title available
-            self.draw_number(buffer, self.graph_viz.nodes[n].block_id, label_x, label_y, text_r, text_g, text_b, text_a);
+
+            // Handle number labels (block ID)
+            if (is_number) {
+                const num_digits = self.count_digits(self.graph_viz.nodes[n].block_id);
+                const text_width = num_digits * 6; // 6 pixels per digit
+                const text_x = if (text_width < center_x) center_x - (text_width / 2) else 0;
+                const bg_width = text_width + 4; // Padding
+                const bg_height: u32 = 9; // 7 pixels + 2 padding
+                const bg_x = if (bg_width < center_x) center_x - (bg_width / 2) else 0;
+                const bg_y = label_y - 1; // 1 pixel padding above
+                self.draw_rect(buffer, bg_x, bg_y, bg_width, bg_height, bg_r, bg_g, bg_b, bg_a);
+                self.draw_number(buffer, self.graph_viz.nodes[n].block_id, text_x, label_y, text_r, text_g, text_b, text_a);
+                continue;
+            }
+
+            // Truncate text with ellipsis if needed
+            var truncated_text: [MAX_LABEL_LEN + 3]u8 = undefined;
+            var final_text: []const u8 = undefined;
+            
+            if (label_text_len > MAX_LABEL_LEN) {
+                const trunc_len = MAX_LABEL_LEN - 3; // Reserve 3 chars for "..."
+                @memcpy(truncated_text[0..trunc_len], label_text[0..trunc_len]);
+                truncated_text[trunc_len] = '.';
+                truncated_text[trunc_len + 1] = '.';
+                truncated_text[trunc_len + 2] = '.';
+                final_text = truncated_text[0..MAX_LABEL_LEN];
+            } else {
+                final_text = label_text;
+            }
+
+            // Calculate text width for centering
+            const text_width = self.calculate_text_width(final_text);
+            const text_x = if (text_width < center_x) center_x - (text_width / 2) else 0;
+            
+            // Draw background rectangle (centered)
+            const bg_width = text_width + 4; // Padding
+            const bg_height: u32 = 9; // 7 pixels + 2 padding
+            const bg_x = if (bg_width < center_x) center_x - (bg_width / 2) else 0;
+            const bg_y = label_y - 1; // 1 pixel padding above
+            self.draw_rect(buffer, bg_x, bg_y, bg_width, bg_height, bg_r, bg_g, bg_b, bg_a);
+            
+            // Draw text (centered)
+            self.draw_text(buffer, final_text, text_x, label_y, text_r, text_g, text_b, text_a);
         }
     }
 

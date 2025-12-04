@@ -1,0 +1,384 @@
+# Grain Skate Terminal Silo Field Agent: Task List
+
+**Agent**: Grain Skate Terminal Silo Field Agent (3rd Agent)  
+**Status**: Core Features Complete, Shared Module Refactoring In Progress  
+**Last Updated**: 2025-12-03-175019-pst
+
+---
+
+## Current Work: Phase 1.4 - Font Renderer Migration
+
+**Priority**: **MEDIUM** — Code deduplication and consistency  
+**Status**: **PLANNED**  
+**Estimated Time**: 1 week
+
+### Tasks
+
+- [ ] Review shared font renderer API (`src/shared/font_renderer.zig`)
+- [ ] Migrate `src/grain_skate/editor_renderer.zig` to use shared font renderer
+- [ ] Update font size from 5x7 to 8x8 (upgrade to ASCII 32-126 character set)
+- [ ] Update all font rendering calls to use shared API
+- [ ] Remove duplicate font rendering code from editor renderer
+- [ ] Update tests to use shared font renderer
+- [ ] Verify visual correctness (font rendering matches previous behavior)
+- [ ] Update `build.zig` if needed
+- [ ] Update `docs/plans/plan_skate.md` and `docs/tasks/tasks_skate.md` with completion
+
+### Grain Style Requirements
+
+- All functions use `grain_case` naming
+- Bounded allocations: Use shared font renderer constants
+- Minimum 2 assertions per function
+- Max 70 lines per function
+- Max 100 characters per line
+- All compiler warnings enabled
+
+### Dependencies
+
+- **Needs**: Shared font renderer (Phase 1.1) ✅ Complete
+- **Provides**: Consistent font rendering across all applications
+- **Coordinates with**: Aurora Agent (already migrated), Grain OS Agent (ready to migrate)
+
+---
+
+## Planned: Phase 2 - Text Buffer Unification
+
+**Priority**: **HIGH** — Code deduplication and feature enhancement  
+**Status**: **PLANNED**  
+**Estimated Time**: 1-2 weeks
+
+### Tasks
+
+- [ ] Review `GrainBuffer` API (`src/grain_buffer.zig`) and ensure it meets Grain Skate needs
+- [ ] Create adapter layer if needed (wrap `GrainBuffer` for Grain Skate API)
+- [ ] Migrate Grain Skate editor (`src/grain_skate/editor.zig`) to use `GrainBuffer`
+- [ ] Update undo/redo system to work with `GrainBuffer`
+- [ ] Update visual mode operations to work with `GrainBuffer`
+- [ ] Remove duplicate `TextBuffer` implementation
+- [ ] Test thoroughly (undo/redo, visual mode, search, find/replace)
+- [ ] Update tests (`tests/048_grain_skate_core_test.zig`)
+- [ ] Update `build.zig` if needed
+- [ ] Update `docs/plans/plan_skate.md` and `docs/tasks/tasks_skate.md` with completion
+
+### Grain Style Requirements
+
+- All functions use `grain_case` naming
+- Bounded allocations: Use `GrainBuffer` constants
+- Minimum 2 assertions per function
+- Max 70 lines per function
+- Max 100 characters per line
+- All compiler warnings enabled
+
+### Dependencies
+
+- **Needs**: `GrainBuffer` from Aurora Agent (exists)
+- **Provides**: Consistent text buffer API across all applications
+- **Coordinates with**: Aurora Agent (API compatibility)
+
+---
+
+## Planned: Phase 3 - DAG Integration
+
+**Priority**: **MEDIUM** — Event ordering and collaboration foundation  
+**Status**: **PLANNED**  
+**Estimated Time**: 2-3 weeks
+
+### Tasks
+
+- [ ] Review `DagCore` API (`src/dag_core.zig`) and understand event ordering model
+- [ ] Create adapter layer to map Grain Skate operations to DAG events
+- [ ] Migrate Grain Skate undo/redo (`src/grain_skate/editor.zig`) to use DAG
+- [ ] Update undo/redo history structure to use DAG events
+- [ ] Test thoroughly (undo/redo, edge cases, nested operations)
+- [ ] Update tests (`tests/048_grain_skate_core_test.zig`)
+- [ ] Update `build.zig` if needed
+- [ ] Update `docs/plans/plan_skate.md` and `docs/tasks/tasks_skate.md` with completion
+
+### Grain Style Requirements
+
+- All functions use `grain_case` naming
+- Bounded allocations: Use DAG constants
+- Minimum 2 assertions per function
+- Max 70 lines per function
+- Max 100 characters per line
+- All compiler warnings enabled
+
+### Dependencies
+
+- **Needs**: `dag_core.zig` from Aurora Agent (exists)
+- **Provides**: Deterministic undo/redo, foundation for collaborative editing
+- **Coordinates with**: Aurora Agent (DAG API)
+
+---
+
+## Planned: Phase 4 - UI Rendering Unification
+
+**Priority**: **LOW** — Code deduplication and consistency  
+**Status**: **PLANNED**  
+**Estimated Time**: 2-4 weeks (evaluation dependent)
+
+### Tasks
+
+- [ ] Evaluate `GrainAurora` API (`src/grain_aurora.zig`) for Grain Skate use case
+- [ ] Prototype migration (editor rendering via `GrainAurora`)
+- [ ] If successful: Migrate graph rendering (may need custom components)
+- [ ] If not successful: Keep custom rendering, share utilities only
+- [ ] Test thoroughly (performance, visual correctness)
+- [ ] Update tests if needed
+- [ ] Update `build.zig` if needed
+- [ ] Update `docs/plans/plan_skate.md` and `docs/tasks/tasks_skate.md` with completion
+
+### Grain Style Requirements
+
+- All functions use `grain_case` naming
+- Bounded allocations: Use `GrainAurora` constants
+- Minimum 2 assertions per function
+- Max 70 lines per function
+- Max 100 characters per line
+- All compiler warnings enabled
+
+### Dependencies
+
+- **Needs**: `GrainAurora` from Aurora Agent (exists)
+- **Provides**: Consistent UI rendering across applications (if successful)
+- **Coordinates with**: Aurora Agent (component API)
+
+---
+
+## Planned: Phase 5 - Shared Utilities
+
+**Priority**: **LOW** — Code deduplication  
+**Status**: **PLANNED**  
+**Estimated Time**: 1 week
+
+### Tasks
+
+- [ ] Identify common utilities across applications
+- [ ] Create shared utility modules:
+  - Color constants (`shared/colors.zig`)
+  - Coordinate transformation (`shared/coords.zig`)
+  - Math utilities (`shared/math.zig`)
+  - String utilities (`shared/strings.zig`)
+- [ ] Migrate Grain Skate to use shared utilities
+- [ ] Remove duplicate utility code
+- [ ] Update tests if needed
+- [ ] Update `build.zig` if needed
+- [ ] Update `docs/plans/plan_skate.md` and `docs/tasks/tasks_skate.md` with completion
+
+### Grain Style Requirements
+
+- All functions use `grain_case` naming
+- Bounded allocations: Explicit limits for all utilities
+- Minimum 2 assertions per function
+- Max 70 lines per function
+- Max 100 characters per line
+- All compiler warnings enabled
+
+### Dependencies
+
+- **Needs**: None (new modules)
+- **Provides**: Shared utilities for all applications
+- **Coordinates with**: Aurora Agent, Grain OS Agent (shared usage)
+
+---
+
+## Completed Phases (Summary)
+
+### Phase 1.1: Shared Font Renderer ✅ **COMPLETE**
+
+**Date**: 2025-12-02-183358-pst
+
+**Completed Tasks**:
+- ✅ Created `src/shared/font_renderer.zig` with unified API
+- ✅ Support for multiple font sizes (5x7, 8x8)
+- ✅ Support for multiple character sets (ASCII alphanumeric, ASCII basic)
+- ✅ Character rendering API (`render_char_to_pixels`)
+- ✅ Pixel buffer rendering API
+- ✅ Comprehensive tests (`tests/060_shared_font_renderer_test.zig`)
+- ✅ Build system integration
+- ✅ Documentation updated
+
+**Key Modules**:
+- `src/shared/font_renderer.zig` - Unified font renderer
+
+**Tests**:
+- `tests/060_shared_font_renderer_test.zig` - Comprehensive font renderer tests
+
+---
+
+### Phase 2: Grain Skate Core Editor ✅ **COMPLETE**
+
+**Date**: 2025-11-23-114146-pst
+
+**Completed Tasks**:
+- ✅ Text buffer management (`src/grain_skate/editor.zig`)
+- ✅ Modal editor (`src/grain_skate/modal_editor.zig`)
+- ✅ All Vim editing modes (normal, insert, visual, visual_line, visual_block, command, search)
+- ✅ Cursor movement (h/j/k/l, word movement w/b/e, line/file movement 0/$/^/gg/G)
+- ✅ Text operations (insert, delete, replace, yank, paste)
+- ✅ Undo/redo system (full support for all operations)
+- ✅ Visual mode operations (character, line, block selection)
+- ✅ Search functionality (/, ?, n, N)
+- ✅ Find/replace (s/old/new/, s/old/new/g)
+- ✅ Command mode parsing (w, q, wq, q!, x, s/.../)
+- ✅ Comprehensive tests (`tests/048_grain_skate_core_test.zig`, `tests/058_grain_skate_modal_editor_test.zig`)
+
+**Key Modules**:
+- `src/grain_skate/editor.zig` - Text buffer and editor state
+- `src/grain_skate/modal_editor.zig` - Modal editing keybindings
+
+**Tests**:
+- `tests/048_grain_skate_core_test.zig` - Core editor tests
+- `tests/058_grain_skate_modal_editor_test.zig` - Modal editor tests
+
+---
+
+### Phase 3: Graph Visualization ✅ **COMPLETE**
+
+**Date**: 2025-11-23-170000-pst
+
+**Completed Tasks**:
+- ✅ Graph visualization (`src/grain_skate/graph_viz.zig`)
+- ✅ Graph rendering (`src/grain_skate/graph_renderer.zig`)
+- ✅ Force-directed layout algorithm (iterative, no recursion)
+- ✅ Node and edge management (MAX_NODES: 1024, MAX_EDGES: 4096)
+- ✅ View controls (pan, zoom, select)
+- ✅ Hit testing (find node at pixel coordinates)
+- ✅ Click handling (open block when node clicked)
+- ✅ Node label rendering (block IDs, block titles)
+- ✅ Comprehensive tests (`tests/054_grain_skate_graph_viz_test.zig`, `tests/056_grain_skate_graph_renderer_test.zig`)
+
+**Key Modules**:
+- `src/grain_skate/graph_viz.zig` - Graph visualization and layout
+- `src/grain_skate/graph_renderer.zig` - Graph rendering to pixel buffer
+
+**Tests**:
+- `tests/054_grain_skate_graph_viz_test.zig` - Graph visualization tests
+- `tests/056_grain_skate_graph_renderer_test.zig` - Graph renderer tests
+
+---
+
+### Phase 4: Storage Integration ✅ **COMPLETE**
+
+**Date**: 2025-11-23-114146-pst
+
+**Completed Tasks**:
+- ✅ Block storage (`src/grain_skate/block.zig`)
+- ✅ Storage integration (`src/grain_skate/storage_integration.zig`)
+- ✅ Block-to-object mapping (Grain Silo integration)
+- ✅ Hot cache promotion/demotion (Grain Field SRAM integration)
+- ✅ Persist/load blocks from Grain Silo
+- ✅ Block linking (bidirectional links)
+- ✅ Comprehensive tests (`tests/048_grain_skate_core_test.zig`)
+
+**Key Modules**:
+- `src/grain_skate/block.zig` - Block storage and management
+- `src/grain_skate/storage_integration.zig` - Grain Silo and Grain Field integration
+
+**Tests**:
+- `tests/048_grain_skate_core_test.zig` - Block storage tests
+
+---
+
+### Phase 5: Editor Rendering ✅ **COMPLETE**
+
+**Date**: 2025-12-02-142853-pst
+
+**Completed Tasks**:
+- ✅ Editor renderer (`src/grain_skate/editor_renderer.zig`)
+- ✅ Text rendering (monospace font, line rendering)
+- ✅ Cursor rendering (vertical line cursor indicator)
+- ✅ Selection highlighting (visual mode selections)
+- ✅ Status line rendering (mode indicator, line/column info, block title, save status)
+- ✅ Command line rendering (command mode input display)
+- ✅ Search pattern display (search mode input display)
+- ✅ Viewport management (scrolling, panning for large files)
+- ✅ Line numbers (dedicated column with background)
+- ✅ Error message display (with timeout)
+- ✅ Window integration (`src/grain_skate/window.zig`)
+- ✅ Split pane layout (graph left, editor right, divider line)
+- ✅ Window resize handling
+- ✅ Comprehensive tests (`tests/059_grain_skate_editor_renderer_test.zig`, `tests/057_grain_skate_window_graph_test.zig`)
+
+**Key Modules**:
+- `src/grain_skate/editor_renderer.zig` - Editor text rendering
+- `src/grain_skate/window.zig` - Window management and integration
+
+**Tests**:
+- `tests/059_grain_skate_editor_renderer_test.zig` - Editor renderer tests
+- `tests/057_grain_skate_window_graph_test.zig` - Window integration tests
+
+---
+
+### Phase 6: Syntax Highlighting ✅ **COMPLETE**
+
+**Date**: 2025-12-03-141818-pst
+
+**Completed Tasks**:
+- ✅ Language detection (`src/grain_skate/language_detector.zig`)
+- ✅ Language keywords (`src/grain_skate/language_keywords.zig`)
+- ✅ File type detection (extension-based, shebang-based)
+- ✅ Support for 15+ languages (Zig, Rust, C, C++, Python, JavaScript, TypeScript, Go, Java, Markdown, JSON, YAML, Shell, HTML, CSS)
+- ✅ Language-specific keyword sets
+- ✅ Syntax-aware text rendering
+- ✅ Automatic language detection from block title/filename and content
+- ✅ Enable/disable syntax highlighting
+
+**Key Modules**:
+- `src/grain_skate/language_detector.zig` - Language detection
+- `src/grain_skate/language_keywords.zig` - Language-specific keywords
+
+---
+
+### Phase 7: Bracket Matching ✅ **COMPLETE**
+
+**Date**: 2025-12-03-162613-pst
+
+**Completed Tasks**:
+- ✅ Bracket matching module (`src/grain_skate/bracket_matching.zig`)
+- ✅ Bracket type detection (parentheses, brackets, braces, angle brackets)
+- ✅ Matching bracket finding (iterative, stack-based algorithm, no recursion)
+- ✅ Forward search for closing brackets
+- ✅ Backward search for opening brackets
+- ✅ Nested bracket support (handles nested structures correctly)
+- ✅ Multi-line bracket matching
+- ✅ Bracket match highlighting (yellow highlight on matching bracket)
+- ✅ Automatic bracket matching when cursor is on bracket
+- ✅ Comprehensive tests (`tests/073_grain_skate_bracket_matching_test.zig`)
+
+**Key Modules**:
+- `src/grain_skate/bracket_matching.zig` - Bracket matching algorithm
+
+**Tests**:
+- `tests/073_grain_skate_bracket_matching_test.zig` - Bracket matching tests
+
+---
+
+### Phase 8: Main Entry Point ✅ **COMPLETE**
+
+**Date**: Recent
+
+**Completed Tasks**:
+- ✅ Main entry point (`src/grain_skate_main.zig`)
+- ✅ Application initialization (block storage, window, app)
+- ✅ Graph loading and rendering
+- ✅ Event loop integration
+- ✅ Keyboard event handling
+- ✅ Window resize handling
+- ✅ Auto-save functionality
+- ✅ Build configuration (`grain-skate` executable target)
+
+**Key Modules**:
+- `src/grain_skate_main.zig` - Main application entry point
+- `src/grain_skate/app.zig` - Application state and event handling
+
+---
+
+## References
+
+- **Master Tasks**: [`docs/tasks.md`](../tasks.md)
+- **Master Plan**: [`docs/plan.md`](../plan.md)
+- **Grain Style**: [`docs/grain_style.md`](../grain_style.md)
+- **Future Enhancements**: [`docs/grain_skate_future_enhancements.md`](../grain_skate_future_enhancements.md)
+- **Integration Readiness**: [`docs/grain_skate_integration_readiness.md`](../grain_skate_integration_readiness.md)
+

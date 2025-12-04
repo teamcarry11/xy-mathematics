@@ -35,6 +35,8 @@
 - Enhanced SysInfo (Phase 3.6) ✅
 - Process Priority Support (Phase 3.7) ✅
 - CPU Time Tracking (Phase 3.4) ✅
+- Process Groups and Sessions (Phase 3.13) ✅
+- Signal Delivery to Process Groups (Phase 3.14) ✅
 
 **Provides**: Kernel syscalls, VM capabilities, file I/O, network syscalls (planned)
 
@@ -43,15 +45,17 @@
 ### 2. Grain Aurora IDE Dream Browser Agent
 
 **Status**: Active — Editor and browser development  
-**Current Work**: Foundation components, shared modules  
+**Current Work**: Shared module refactoring (Phase 2)  
 **Details**: See [`docs/plans/plan_aurora.md`](plans/plan_aurora.md)
 
 **Recent Progress**:
-- Shared foundation components
-- DAG integration
-- Editor-browser integration
+- Font renderer migration (Phase 1.2) ✅
+- RenderResult Grain/Tiger Style refactoring ✅
+- LSP visual rendering features ✅
+- Complete LSP implementation ✅
+- Editor enhancements (undo/redo, go-to-definition, hover) ✅
 
-**Provides**: Editor framework, browser engine, AI provider integration
+**Provides**: Editor framework, browser engine, AI provider integration, shared modules
 
 ---
 
@@ -62,9 +66,12 @@
 **Details**: See [`docs/plans/plan_skate.md`](plans/plan_skate.md)
 
 **Recent Progress**:
-- Syntax highlighting ✅
-- Shared font renderer (Phase 1) ✅
-- Future enhancements plan
+- Bracket matching ✅ (2025-12-03-162613-pst)
+- Language-specific syntax highlighting ✅ (2025-12-03-141818-pst)
+- Shared font renderer (Phase 1.1) ✅ (2025-12-02-183358-pst)
+- Core editor features ✅
+- Graph visualization ✅
+- Main entry point ✅
 
 **Provides**: Knowledge graph application, terminal, shared modules
 
@@ -134,7 +141,7 @@
 ### 7. Grain Database Agent
 
 **Status**: Active — Database system  
-**Current Work**: Phase 5 — API and Integration (PLANNED)  
+**Current Work**: Integration with Grain OS Agent API Server (Phase 59)  
 **Details**: See [`docs/plans/plan_database.md`](plans/plan_database.md)
 
 **Recent Progress**:
@@ -143,9 +150,12 @@
 - Phase 2: Relational Layer ✅ (2025-12-03-164442-pst)
   - Table definitions, schema management, foreign keys, query parser
 - Phase 3: Graph Layer ✅ (2025-12-03-165223-pst)
+  - Graph data structure, relationship indexes, BFS/DFS traversal, reverse lookup
 - Phase 4: Full-Text Search ✅ (2025-12-03-173339-pst)
   - Inverted index, tokenization, stemming, search interface
-  - Graph data structure, relationship indexes, BFS/DFS traversal, reverse lookup
+- Phase 5: API and Integration ✅ (2025-12-03-175009-pst)
+  - REST API router, JSON serialization, rate limiting, CORS support
+  - API request/response structures, middleware support
 
 **Provides**: Database backend (for Mobile Agent), REST API (via Grain OS Agent)
 
@@ -154,7 +164,7 @@
 - **Provides**: Database backend (for Mobile Agent)
 
 **Next Phases**:
-- Phase 5: API and Integration (PLANNED)
+- All core database phases complete! Ready for integration with Grain OS Agent API Server.
 
 ---
 

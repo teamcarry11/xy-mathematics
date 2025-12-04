@@ -25,4 +25,15 @@ pub const GraphEdge = @import("graph.zig").GraphEdge;
 pub const InvertedIndex = @import("index.zig").InvertedIndex;
 pub const tokenize = @import("index.zig").tokenize;
 pub const stem = @import("index.zig").stem;
+pub const ApiRouter = @import("api.zig").ApiRouter;
+pub const ApiRequest = @import("api.zig").ApiRequest;
+pub const ApiResponse = @import("api.zig").ApiResponse;
+pub const ApiContext = @import("api.zig").ApiContext;
+pub const HttpMethod = @import("api.zig").HttpMethod;
+pub const RateLimiter = @import("api.zig").RateLimiter;
+pub const JsonSerializer = @import("api.zig").JsonSerializer;
+pub const add_cors_headers = @import("api.zig").add_cors_headers;
+pub const WebSocketManager = @import("api.zig").WebSocketManager;
+pub const WebSocketConnection = @import("api.zig").WebSocketConnection;
+pub const AuthMiddleware = @import("api.zig").AuthMiddleware;
 

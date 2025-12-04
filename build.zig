@@ -576,6 +576,28 @@ pub fn build(b: *std.Build) void {
         }),
     });
 
+    const grain_mobile_core_style_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/111_grain_mobile_core_style_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_mobile_core", .module = grain_mobile_core_module },
+            },
+        }),
+    });
+
+    const grain_mobile_core_style_ffi_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/112_grain_mobile_core_style_ffi_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_mobile_core", .module = grain_mobile_core_module },
+            },
+        }),
+    });
+
     const graindaemon_cli = b.addExecutable(.{
         .name = "graindaemon",
         .root_module = b.createModule(.{
@@ -762,6 +784,12 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&run_grain_mobile_core_validation_tests.step);
     const run_grain_mobile_core_crypto_auth_tests = b.addRunArtifact(grain_mobile_core_crypto_auth_tests);
     test_step.dependOn(&run_grain_mobile_core_crypto_auth_tests.step);
+    const run_grain_mobile_core_email_jwt_tests = b.addRunArtifact(grain_mobile_core_email_jwt_tests);
+    test_step.dependOn(&run_grain_mobile_core_email_jwt_tests.step);
+    const run_grain_mobile_core_style_tests = b.addRunArtifact(grain_mobile_core_style_tests);
+    test_step.dependOn(&run_grain_mobile_core_style_tests.step);
+    const run_grain_mobile_core_style_ffi_tests = b.addRunArtifact(grain_mobile_core_style_ffi_tests);
+    test_step.dependOn(&run_grain_mobile_core_style_ffi_tests.step);
 
     const fuzz_004_tests = b.addTest(.{
         .root_module = b.createModule(.{
@@ -2682,6 +2710,20 @@ pub fn build(b: *std.Build) void {
     const grain_workspace_package_manager_ui_tests_run = b.addRunArtifact(grain_workspace_package_manager_ui_tests);
     test_step.dependOn(&grain_workspace_package_manager_ui_tests_run.step);
 
+    const grain_workspace_file_manager_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/112_grain_workspace_file_manager_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_workspace", .module = grain_workspace_module },
+                .{ .name = "grain_os", .module = grain_os_module },
+            },
+        }),
+    });
+    const grain_workspace_file_manager_tests_run = b.addRunArtifact(grain_workspace_file_manager_tests);
+    test_step.dependOn(&grain_workspace_file_manager_tests_run.step);
+
     // Grain Database tests
     const grain_database_storage_engine_tests = b.addTest(.{
         .root_module = b.createModule(.{
@@ -2786,6 +2828,19 @@ pub fn build(b: *std.Build) void {
     });
     const grain_database_fulltext_tests_run = b.addRunArtifact(grain_database_fulltext_tests);
     test_step.dependOn(&grain_database_fulltext_tests_run.step);
+
+    const grain_database_api_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/109_grain_database_api_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_database", .module = grain_database_module },
+            },
+        }),
+    });
+    const grain_database_api_tests_run = b.addRunArtifact(grain_database_api_tests);
+    test_step.dependOn(&grain_database_api_tests_run.step);
 
     // RISC-V Logo Display Program
     const riscv_logo_exe = b.addExecutable(.{

@@ -3805,11 +3805,6 @@ pub const BasinKernel = struct {
         _ = _arg3;
         _ = _arg4;
         
-        // Assert: PID must be valid (non-zero).
-        if (pid == 0) {
-            return BasinError.invalid_argument;
-        }
-        
         // Assert: Signal number must be valid (< 32).
         if (signal_num >= 32) {
             return BasinError.invalid_argument;
@@ -3820,12 +3815,21 @@ pub const BasinKernel = struct {
         
         // Check if PID is negative (process group ID).
         // Why: POSIX allows negative PIDs to send signals to process groups.
-        // Note: We use signed comparison to detect negative values.
-        const pid_signed = @as(i64, @bitCast(pid));
-        if (pid_signed < 0) {
+        // Note: We interpret the high bit as a flag for process group delivery.
+        // If the most significant bit is set, treat as negative (process group).
+        if (pid & 0x8000000000000000 != 0) {
             // Negative PID: send signal to all processes in the process group.
-            const pgid = @as(u64, @bitCast(-pid_signed));
+            // Extract process group ID by clearing the sign bit.
+            const pgid = pid & 0x7FFFFFFFFFFFFFFF;
+            if (pgid == 0) {
+                return BasinError.invalid_argument; // Invalid process group ID
+            }
             return self.kill_process_group(pgid, signal);
+        }
+        
+        // Assert: PID must be valid (non-zero) for single process.
+        if (pid == 0) {
+            return BasinError.invalid_argument;
         }
         
         // Positive PID: send signal to single process (existing behavior).

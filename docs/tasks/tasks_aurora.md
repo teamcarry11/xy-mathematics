@@ -1,0 +1,191 @@
+# Aurora IDE Dream Browser Agent: Task List
+
+**Agent**: Grain Aurora IDE Dream Browser Agent (2nd Agent)  
+**Status**: Active — Foundation components, shared modules  
+**Last Updated**: 2025-12-03-174422-pst
+
+---
+
+## Current Work: Phase 2 - Shared Module Refactoring (Continued)
+
+**Priority**: **HIGH** — Code deduplication, shared maintenance  
+**Status**: **IN PROGRESS** — Phase 1.2 (Font Renderer) Complete  
+**Estimated Time**: Ongoing (multi-phase)
+
+### Tasks
+
+#### Phase 1.2: Font Renderer Unification ✅ **COMPLETE**
+
+- [x] Migrate `src/aurora_text_renderer.zig` to use shared font renderer
+- [x] Replace custom `getCharPattern()` with shared font renderer API
+- [x] Update `TextRenderer` to use `shared.FontRenderer` (8x8 font, ASCII basic)
+- [x] Add `init()` method for proper initialization
+- [x] Update `draw_char()` to use `render_char_to_pixels()` from shared module
+- [x] Remove duplicate font pattern code (195 lines removed)
+- [x] Update test to use `TextRenderer.init()` API
+- [x] Add shared module import to build.zig test configuration
+- [x] GrainStyle compliance (grain_case, u32 types, max 70 lines per function, max 73 chars per line)
+- [x] Verify all functions comply with line length limits (73 chars max)
+- [x] Update `docs/plan.md` and `docs/tasks.md` with completion
+- **Date**: 2025-12-03-162659-PST
+
+### Grain Style Requirements
+
+- All functions use `grain_case` naming
+- Bounded allocations: Fixed-size arrays for spans and strings
+- Minimum 2 assertions per function
+- Max 70 lines per function
+- Max 73 characters per line (graincard compatibility)
+- All compiler warnings enabled
+- Explicit types (`u32`/`u64`, no `usize`)
+
+### Dependencies
+
+- **Needs**: Shared font renderer from Grain Skate Agent (Phase 1) ✅ Complete
+- **Provides**: Font renderer migration example for Grain OS Agent (Phase 1.3)
+- **Coordinates with**: Grain Skate Agent (shared module plan), Grain OS Agent (font renderer migration)
+
+---
+
+## Planned: Phase 2 - Text Buffer Unification
+
+**Priority**: **MEDIUM** — Code deduplication  
+**Status**: **PLANNED**  
+**Estimated Time**: 1-2 weeks
+
+### Tasks
+
+- [ ] Coordinate with Grain Skate Agent on `GrainBuffer` API compatibility
+- [ ] Review Grain Skate `TextBuffer` implementation
+- [ ] Identify API differences and migration path
+- [ ] Create migration plan document
+- [ ] Migrate Grain Skate editor to use `GrainBuffer`
+- [ ] Update tests for unified text buffer
+- [ ] Remove duplicate text buffer code
+- [ ] Update documentation
+
+### Dependencies
+
+- **Needs**: Grain Skate Agent coordination
+- **Provides**: `GrainBuffer` API for Grain Skate
+- **Coordinates with**: Grain Skate Agent (text buffer migration)
+
+---
+
+## Planned: Phase 3 - DAG Integration
+
+**Priority**: **MEDIUM** — Event ordering and consensus  
+**Status**: **PLANNED**  
+**Estimated Time**: 2-3 weeks
+
+### Tasks
+
+- [ ] Integrate DAG Core into editor for event ordering
+- [ ] Integrate DAG Core into browser for event ordering
+- [ ] Implement consensus mechanism for collaborative editing
+- [ ] Implement state synchronization
+- [ ] Add DAG event handlers for editor operations
+- [ ] Add DAG event handlers for browser operations
+- [ ] Create tests for DAG integration
+- [ ] Update documentation
+
+### Dependencies
+
+- **Needs**: DAG Core (Phase 0.4) ✅ Complete
+- **Provides**: DAG integration example
+- **Coordinates with**: Grain Skate Agent (DAG integration)
+
+---
+
+## Planned: Phase 4 - UI Rendering Unification
+
+**Priority**: **LOW** — Component-based UI  
+**Status**: **PLANNED**  
+**Estimated Time**: 2-3 weeks
+
+### Tasks
+
+- [ ] Evaluate `GrainAurora` component-first rendering for Grain Skate
+- [ ] Coordinate with Grain Skate Agent on component API
+- [ ] Create unified component API if needed
+- [ ] Migrate Grain Skate to use `GrainAurora` components
+- [ ] Update tests for unified UI rendering
+- [ ] Remove duplicate UI rendering code
+- [ ] Update documentation
+
+### Dependencies
+
+- **Needs**: Grain Skate Agent evaluation
+- **Provides**: `GrainAurora` component API
+- **Coordinates with**: Grain Skate Agent (UI rendering unification)
+
+---
+
+## Completed Phases (Summary)
+
+### Phase 0: Shared Foundation ✅ **COMPLETE**
+
+- ✅ GrainBuffer Enhancement (0.1)
+- ✅ GLM-4.6 Client (0.2)
+- ✅ Dream Protocol (0.3)
+- ✅ DAG Core Foundation (0.4)
+
+### Phase 1: Dream Editor Core ✅ **COMPLETE**
+
+- ✅ Readonly Spans Integration (1.1)
+- ✅ Method Folding (1.2)
+- ✅ GLM-4.6 Integration (1.3)
+- ✅ Complete LSP Implementation (1.4)
+- ✅ LSP Visual Rendering Features (1.5)
+- ✅ RenderResult Grain/Tiger Style Refactoring (1.6)
+- ✅ Grain/Tiger Style Compliance (usize → u32) (1.7)
+- ✅ Magit-Style VCS (1.8)
+- ✅ Editor Enhancements (1.9)
+
+### Phase 2: Shared Module Refactoring ✅ **IN PROGRESS**
+
+- ✅ Font Renderer Unification (1.2) — Complete
+- 📋 Text Buffer Unification (2) — Planned
+- 📋 DAG Integration (3) — Planned
+- 📋 UI Rendering Unification (4) — Planned
+
+---
+
+## Coordination Tasks
+
+### With Grain OS Agent
+
+- [x] Font renderer migration (Phase 1.2) — Complete
+- [ ] Coordinate on Grain OS Agent font renderer migration (Phase 1.3)
+- [ ] Coordinate on text buffer unification (Phase 2)
+- [ ] Coordinate on DAG integration (Phase 3)
+- [ ] Coordinate on UI rendering unification (Phase 4)
+
+### With Grain Skate Agent
+
+- [x] Font renderer creation (Phase 1) — Complete
+- [ ] Coordinate on Grain Skate Agent font renderer migration (Phase 1.4)
+- [ ] Coordinate on text buffer unification (Phase 2)
+- [ ] Coordinate on DAG integration (Phase 3)
+- [ ] Coordinate on UI rendering unification (Phase 4)
+
+### With Other Agents
+
+- [ ] Coordinate with Kernel Agent on file I/O syscalls (if needed)
+- [ ] Coordinate with Database Agent on state persistence (if needed)
+- [ ] Coordinate with Mobile Agent on UI components (if needed)
+
+---
+
+## References
+
+- **Grain Style**: [`docs/grain_style.md`](../grain_style.md)
+- **Master Tasks**: [`docs/tasks.md`](../tasks.md)
+- **Grain OS Agent Tasks**: [`docs/tasks/tasks_os.md`](tasks_os.md)
+- **Grain Skate Future Enhancements**: [`docs/grain_skate_future_enhancements.md`](../grain_skate_future_enhancements.md)
+- **Shared Module Coordination**: [`docs/grain_os_font_renderer_coordination.md`](../grain_os_font_renderer_coordination.md)
+
+---
+
+**Note**: This is a detailed task list for the Aurora IDE Dream Browser Agent. For high-level overview, see [`docs/tasks.md`](../tasks.md).
+

@@ -36,8 +36,8 @@ test "kill process group with negative pid" {
     
     // Send signal to process group using negative PID.
     // Negative PID = process group ID (POSIX convention).
-    // We use bit manipulation to create a negative value in u64.
-    const negative_pgid = @as(u64, @bitCast(@as(i64, -@as(i64, @intCast(pgid)))));
+    // We set the high bit to indicate process group delivery.
+    const negative_pgid = pgid | 0x8000000000000000;
     const signal_num = @intFromEnum(Signal.sigterm);
     const result5 = kernel.syscall_kill(negative_pgid, signal_num, 0, 0);
     try testing.expect(result5 == .success);
@@ -74,7 +74,7 @@ test "kill invalid process group" {
     
     // Try to send signal to non-existent process group.
     const pgid: u64 = 999;
-    const negative_pgid = @as(u64, @bitCast(@as(i64, -@as(i64, @intCast(pgid)))));
+    const negative_pgid = pgid | 0x8000000000000000;
     const signal_num = @intFromEnum(Signal.sigterm);
     const result = kernel.syscall_kill(negative_pgid, signal_num, 0, 0);
     try testing.expect(result.err == BasinError.not_found); // Process group not found
@@ -105,7 +105,7 @@ test "kill process group with sigkill" {
     try testing.expect(result4 == .success);
     
     // Send SIGKILL to process group.
-    const negative_pgid = @as(u64, @bitCast(@as(i64, -@as(i64, @intCast(pgid)))));
+    const negative_pgid = pgid | 0x8000000000000000;
     const signal_num = @intFromEnum(Signal.sigkill);
     const result5 = kernel.syscall_kill(negative_pgid, signal_num, 0, 0);
     try testing.expect(result5 == .success);
@@ -125,7 +125,7 @@ test "kill empty process group" {
     // (Process groups are created when processes are assigned to them)
     // So we'll use a non-existent group ID.
     const pgid: u64 = 999;
-    const negative_pgid = @as(u64, @bitCast(@as(i64, -@as(i64, @intCast(pgid)))));
+    const negative_pgid = pgid | 0x8000000000000000;
     const signal_num = @intFromEnum(Signal.sigterm);
     const result = kernel.syscall_kill(negative_pgid, signal_num, 0, 0);
     try testing.expect(result.err == BasinError.not_found); // Process group not found or empty

@@ -55,6 +55,7 @@ const health_monitor = @import("health_monitor.zig");
 const process_supervision = @import("process_supervision.zig");
 const system_metrics = @import("system_metrics.zig");
 const system_diagnostics = @import("system_diagnostics.zig");
+const api_server = @import("api_server.zig");
 const keyboard_shortcuts = @import("keyboard_shortcuts.zig");
 const desktop_shell = @import("desktop_shell.zig");
 const runtime_config = @import("runtime_config.zig");
@@ -257,6 +258,7 @@ pub const Compositor = struct {
     process_supervisor: process_supervision.ProcessSupervisor,
     metrics_aggregator: system_metrics.MetricsAggregator,
     system_diagnostics: system_diagnostics.SystemDiagnostics,
+    api_server: api_server.ApiServer,
     border_width: u32, // Configurable border width
     title_bar_height: u32, // Configurable title bar height
 
@@ -320,6 +322,7 @@ pub const Compositor = struct {
             .process_supervisor = process_supervision.ProcessSupervisor.init(),
             .metrics_aggregator = system_metrics.MetricsAggregator.init(),
             .system_diagnostics = system_diagnostics.SystemDiagnostics.init(),
+            .api_server = api_server.ApiServer.init(8080),
             .border_width = BORDER_WIDTH, // Default border width
             .title_bar_height = TITLE_BAR_HEIGHT, // Default title bar height
         };
@@ -3080,6 +3083,36 @@ pub const Compositor = struct {
         severity: system_diagnostics.DiagnosticSeverity,
     ) void {
         self.system_diagnostics.clear_by_severity(severity);
+    }
+
+    // Register API server route.
+    pub fn register_api_route(
+        self: *Compositor,
+        method: api_server.HttpMethod,
+        path_pattern: []const u8,
+        handler: api_server.RouteHandler,
+    ) bool {
+        return self.api_server.register_route(method, path_pattern, handler);
+    }
+
+    // Start API server.
+    pub fn start_api_server(self: *Compositor) bool {
+        return self.api_server.start();
+    }
+
+    // Stop API server.
+    pub fn stop_api_server(self: *Compositor) void {
+        self.api_server.stop();
+    }
+
+    // Check if API server is running.
+    pub fn is_api_server_running(self: *const Compositor) bool {
+        return self.api_server.is_running();
+    }
+
+    // Get API server route count.
+    pub fn get_api_server_route_count(self: *const Compositor) u32 {
+        return self.api_server.get_route_count();
     }
 
     // Get resize handle at mouse position.

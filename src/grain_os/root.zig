@@ -62,4 +62,9 @@ pub const health_monitor = @import("health_monitor.zig");
 pub const process_supervision = @import("process_supervision.zig");
 pub const system_metrics = @import("system_metrics.zig");
 pub const system_diagnostics = @import("system_diagnostics.zig");
+pub const api_server = @import("api_server.zig");
+pub const json_helpers = @import("json_helpers.zig");
+pub const middleware = @import("middleware.zig");
+pub const connection_manager = @import("connection_manager.zig");
+pub const api_server_network = @import("api_server_network.zig");
 

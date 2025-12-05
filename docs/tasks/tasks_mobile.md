@@ -1,15 +1,15 @@
 # Grain Mobile Agent: Task List
 
 **Agent**: Grain Mobile Agent (6th Agent)  
-**Status**: Phase 4 Complete — Waiting for Grain OS Agent Infrastructure  
-**Last Updated**: 2025-12-04-102305-pst
+**Status**: Integration Pipeline Tests Complete — Phase 59 Ready  
+**Last Updated**: 2025-12-05-124416-pst
 
 ---
 
-## Current Work: API Client Module Preparation
+## Current Work: API Endpoint Preparation
 
 **Priority**: **MEDIUM** — Preparation for API Server integration  
-**Status**: **IN PROGRESS** — API client structure complete  
+**Status**: **IN PROGRESS** — Endpoint definitions complete  
 **Estimated Time**: 1-2 weeks
 
 ### Tasks
@@ -21,12 +21,50 @@
 - [x] Implement URL building
 - [x] Implement default headers support
 - [x] Create comprehensive API client tests
+- [x] Define API endpoint paths
+- [x] Create endpoint registry
+- [x] Create endpoint tests
+- [x] Acknowledge Grain OS Agent Phase 59 progress
 - [x] Update `build.zig` with module and tests
+- [x] Create API data models (request/response structures)
+- [x] Create response builder helpers (success/error/auth)
+- [x] Implement manual JSON construction (Grain Style compliant)
+- [x] Create comprehensive model tests
+- [x] Create handler function structures for all endpoints
+- [x] Create request validation helpers
+- [x] Create middleware helpers
+- [x] Create handler registry
+- [x] Create comprehensive validation and handler tests
+- [x] Create HTTP request/response adapters
+- [x] Create request extraction helpers (headers, auth tokens)
+- [x] Create response building helpers (status, headers, body, JSON)
+- [x] Create comprehensive integration tests
+- [x] Integrate middleware with Grain OS middleware framework
+- [x] Create mobile-specific middleware functions
+- [x] Create middleware configuration helpers
+- [x] Create comprehensive middleware integration tests
+- [x] Create route registration helpers
+- [x] Create endpoint configuration system
+- [x] Create handler adapter functions
+- [x] Create comprehensive route registration tests
+- [x] Create handler adapter implementations for all endpoints
+- [x] Create handler result to HTTP response conversion
+- [x] Create comprehensive handler adapter tests
+- [x] Integrate handler adapters with route registration
+- [x] Add request body parsing in adapters (using API server JSON parsing)
+- [x] Create OS integration module (`os_integration.zig`)
+- [x] Implement route registration with Grain OS Compositor
+- [x] Create handler adapter tests using `process_http_request()`
+- [x] Test handler adapters for all 10 endpoints
+- [x] Test bad request handling
+- [x] Test OS integration (endpoint registration with Compositor)
+- [x] Update `build.zig` with `grain_os` module import
+- [x] Update `docs/plans/plan_mobile.md` and `docs/tasks/tasks_mobile.md` with completion
+- [ ] End-to-end API testing with actual network connections (when network ready)
 - [ ] Implement HTTP client execution (when API Server available)
 - [ ] Add retry logic
 - [ ] Add timeout handling
 - [ ] Add response parsing helpers
-- [ ] Update `docs/plans/plan_mobile.md` and `docs/tasks/tasks_mobile.md` with completion
 
 ### Grain Style Requirements
 
@@ -301,6 +339,28 @@ All core modules are complete:
 - `src/grain_mobile_core/api/root.zig`
 - `src/grain_mobile_core/api/client.zig`
 - `tests/113_grain_mobile_core_api_client_test.zig`
+
+---
+
+### API Endpoint Definitions ✅ **COMPLETE** (2025-12-04-150157-pst)
+
+**Completed Tasks**:
+- ✅ Defined API endpoint paths (authentication, users)
+- ✅ Created endpoint registry
+- ✅ Acknowledged Grain OS Agent Phase 59 progress
+- ✅ Created endpoint tests
+- ✅ Updated `build.zig` with module and tests
+
+**Files**:
+- `src/grain_mobile_core/api/endpoints.zig`
+- `tests/114_grain_mobile_core_api_endpoints_test.zig`
+- `docs/agent-communications/mobile_agent_phase_59_acknowledgment.md`
+
+**Endpoint Paths**:
+- Authentication: register, login, logout, refresh
+- OTP: send, verify
+- 2FA: enable, verify
+- Users: profile (GET, PUT), settings (GET, PUT)
 
 **Completed Tasks**:
 - ✅ Implemented color palettes (light/dark themes)

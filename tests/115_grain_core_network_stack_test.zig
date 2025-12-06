@@ -144,3 +144,64 @@ test "network_stack_ipv6_address" {
     std.debug.assert(address.address_len == 16);
 }
 
+test "network_stack_set_socket_option_reuse_address" {
+    var stack = network_stack.NetworkStack.init();
+    const socket_id = stack.create_tcp_socket() orelse return;
+    const set = stack.set_socket_option(
+        socket_id.?,
+        network_stack.SocketOption.reuse_address,
+        1,
+    );
+    std.debug.assert(set);
+    const value = stack.get_socket_option(
+        socket_id.?,
+        network_stack.SocketOption.reuse_address,
+    );
+    std.debug.assert(value != null);
+    std.debug.assert(value.? == 1);
+}
+
+test "network_stack_set_socket_option_keep_alive" {
+    var stack = network_stack.NetworkStack.init();
+    const socket_id = stack.create_tcp_socket() orelse return;
+    const set = stack.set_socket_option(
+        socket_id.?,
+        network_stack.SocketOption.keep_alive,
+        1,
+    );
+    std.debug.assert(set);
+    const value = stack.get_socket_option(
+        socket_id.?,
+        network_stack.SocketOption.keep_alive,
+    );
+    std.debug.assert(value != null);
+    std.debug.assert(value.? == 1);
+}
+
+test "network_stack_set_socket_option_timeout" {
+    var stack = network_stack.NetworkStack.init();
+    const socket_id = stack.create_tcp_socket() orelse return;
+    const timeout_value: u64 = 60000;
+    const set = stack.set_socket_option(
+        socket_id.?,
+        network_stack.SocketOption.timeout,
+        timeout_value,
+    );
+    std.debug.assert(set);
+    const value = stack.get_socket_option(
+        socket_id.?,
+        network_stack.SocketOption.timeout,
+    );
+    std.debug.assert(value != null);
+    std.debug.assert(value.? == timeout_value);
+}
+
+test "network_stack_get_socket_option_invalid_socket" {
+    var stack = network_stack.NetworkStack.init();
+    const value = stack.get_socket_option(
+        999,
+        network_stack.SocketOption.reuse_address,
+    );
+    std.debug.assert(value == null);
+}
+

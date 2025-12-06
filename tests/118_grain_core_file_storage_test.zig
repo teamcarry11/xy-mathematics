@@ -9,7 +9,7 @@ test "file storage manager init" {
 }
 
 test "database file header init" {
-    var header = file_storage.DatabaseFileHeader.init();
+    const header = file_storage.DatabaseFileHeader.init();
     std.debug.assert(header.version == 1);
     std.debug.assert(header.page_size == file_storage.PAGE_SIZE);
     std.debug.assert(header.total_pages == 0);

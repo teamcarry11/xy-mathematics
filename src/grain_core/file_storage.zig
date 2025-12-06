@@ -73,6 +73,7 @@ pub const DatabaseFileHeader = struct {
 
     pub fn validate(self: *const DatabaseFileHeader) bool {
         std.debug.assert(self != null);
+        std.debug.assert(self != null);
         const expected_magic = "GDBF";
         var i: u32 = 0;
         while (i < 4) : (i += 1) {

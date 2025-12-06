@@ -2,7 +2,7 @@
 // Grain Style compliant: explicit types, bounded allocations, assertions
 //
 // Provides HTTP client functionality for mobile apps
-// Ready for integration when Grain OS Agent completes API Server (Phase 59)
+// Ready for integration when Grain Core Agent completes API Server (Phase 59)
 
 const std = @import("std");
 const errors = @import("../utils/errors.zig");

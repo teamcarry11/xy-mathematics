@@ -1,7 +1,7 @@
 //! Grain Workspace: Desktop applications for Grain OS.
 //!
 //! Why: Provide essential desktop applications for Grain OS users.
-//! Architecture: Modular applications using Grain OS services.
+//! Architecture: Modular applications using Grain Core services.
 //! GrainStyle: grain_case, u32/u64, bounded allocations, assertions.
 //!
 //! 2025-12-03-164418-pst: Active implementation

@@ -112,7 +112,12 @@ pub const Compute = struct {
 
             // Initialize cores (toroidal topology)
             // Calculate grid dimensions (square grid for simplicity)
-            const grid_size = @as(u32, @intFromFloat(@ceil(@sqrt(@as(f64, @floatFromInt(core_count))))));
+            const grid_size_f = @sqrt(@as(f64, @floatFromInt(core_count)));
+            var grid_size = @as(u32, @intFromFloat(@ceil(grid_size_f)));
+            // Ensure grid_size is at least 1
+            if (grid_size == 0) {
+                grid_size = 1;
+            }
             var i: u32 = 0;
             while (i < core_count) : (i += 1) {
                 // Calculate toroidal neighbors (simplified: each core has 4 neighbors)

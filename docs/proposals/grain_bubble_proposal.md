@@ -182,7 +182,7 @@ Leverage existing Grain Core modules:
 **Automation Integration**:
 - Export agent flows as executable code
 - Generate agent configuration files
-- Integrate with Grain OS agent system
+- Integrate with Grain Core agent system
 - Visual debugging of agent execution
 
 ---
@@ -228,7 +228,7 @@ Leverage existing Grain Core modules:
 2. **Automation**:
    - Export flows as executable code
    - Generate agent configuration
-   - Integrate with Grain OS agent system
+   - Integrate with Grain Core agent system
    - Visual flow monitoring
 
 ### Export Features

@@ -394,11 +394,11 @@ While waiting for Grain Core Agent's API Server (Phase 59), we can prepare the A
 - Add query parameter extraction
 - Add path parameter extraction integration
 
-### Completed: Middleware Integration with Grain OS ✅ (2025-12-05-083552-pst)
+### Completed: Middleware Integration with Grain Core ✅ (2025-12-05-083552-pst)
 
 **Key Achievements**:
 - Mobile-specific middleware functions (`src/grain_carry_core/api/middleware_integration.zig`)
-- Integration with Grain OS middleware framework
+- Integration with Grain Core middleware framework
 - Mobile authentication middleware (JWT token validation)
 - Mobile request validation middleware (Content-Type validation)
 - Mobile error/success response middleware
@@ -422,9 +422,9 @@ While waiting for Grain Core Agent's API Server (Phase 59), we can prepare the A
 - `for_protected_endpoint()` — Configuration for protected endpoints (auth + rate limiting)
 
 **Integration Features**:
-- Compatible with Grain OS middleware framework
-- Uses Grain OS HttpRequest/HttpResponse types
-- Integrates with Grain OS middleware execution chain
+- Compatible with Grain Core middleware framework
+- Uses Grain Core HttpRequest/HttpResponse types
+- Integrates with Grain Core middleware execution chain
 - Ready for route registration with middleware
 - Supports CORS, logging, auth, validation, rate limiting
 
@@ -448,7 +448,7 @@ While waiting for Grain Core Agent's API Server (Phase 59), we can prepare the A
 **Key Achievements**:
 - Route registration helpers (`src/grain_carry_core/api/route_registration.zig`)
 - Endpoint configuration system
-- Handler adapter functions (prepared for Grain OS integration)
+- Handler adapter functions (prepared for Grain Core integration)
 - Middleware configuration mapping
 - Comprehensive route registration tests
 
@@ -461,7 +461,7 @@ While waiting for Grain Core Agent's API Server (Phase 59), we can prepare the A
 - `register_all_mobile_endpoints()` — Register all 10 mobile endpoints at once
 - `get_endpoint_config()` — Get endpoint configuration by path
 - `get_middleware_config_for_endpoint()` — Get middleware configuration for endpoint
-- `create_handler_adapter()` — Create handler adapter for Grain OS RouteHandler
+- `create_handler_adapter()` — Create handler adapter for Grain Core RouteHandler
 
 **Endpoint Configuration**:
 - `EndpointConfig` — Configuration structure for each endpoint
@@ -484,7 +484,7 @@ While waiting for Grain Core Agent's API Server (Phase 59), we can prepare the A
 
 **Next Steps**:
 - Integrate with Grain Core API Server route registration (when HTTP server ready)
-- Implement handler adapter logic (when Grain OS types available)
+- Implement handler adapter logic (when Grain Core types available)
 - Test route registration with actual API server
 - Verify middleware chain execution with registered routes
 
@@ -492,7 +492,7 @@ While waiting for Grain Core Agent's API Server (Phase 59), we can prepare the A
 
 **Key Achievements**:
 - Authentication integration module (`src/grain_carry_core/api/auth_integration.zig`)
-- Integration with Grain OS Authentication Service (Phase 60)
+- Integration with Grain Core Authentication Service (Phase 60)
 - JWT token validation using AuthService
 - JWT token generation (access and refresh tokens)
 - Password hashing and verification using AuthService
@@ -575,7 +575,7 @@ While waiting for Grain Core Agent's API Server (Phase 59), we can prepare the A
 - `handle_users_settings_adapter()` — Adapter for user settings endpoint (GET /api/v1/users/settings)
 
 **OS Integration Functions**:
-- `register_mobile_endpoints_with_compositor()` — Register all 10 endpoints with Grain OS Compositor
+- `register_mobile_endpoints_with_compositor()` — Register all 10 endpoints with Grain Core Compositor
 
 **Response Conversion**:
 - `convert_handler_result_to_response()` — Converts HandlerResult enum to HTTP response
@@ -585,7 +585,7 @@ While waiting for Grain Core Agent's API Server (Phase 59), we can prepare the A
 
 **Integration Features**:
 - Compatible with Grain Core API Server RouteHandler signature
-- Uses Grain OS HttpRequest/HttpResponse types
+- Uses Grain Core HttpRequest/HttpResponse types
 - Integrates with handler context system
 - Ready for route registration with actual API server
 - Supports full request/response pipeline
@@ -618,7 +618,7 @@ While waiting for Grain Core Agent's API Server (Phase 59), we can prepare the A
 
 **Key Achievements**:
 - Auth service integration module (`src/grain_carry_core/api/auth_integration.zig`)
-- Integration with Grain OS Authentication Service (Phase 60)
+- Integration with Grain Core Authentication Service (Phase 60)
 - JWT token extraction and validation
 - Password hashing and verification
 - Session management
@@ -646,8 +646,8 @@ While waiting for Grain Core Agent's API Server (Phase 59), we can prepare the A
 - `revoke_user_token()` — Revoke token (logout)
 
 **Integration Features**:
-- Direct integration with Grain OS Authentication Service
-- Uses Grain OS AuthService for all authentication operations
+- Direct integration with Grain Core Authentication Service
+- Uses Grain Core AuthService for all authentication operations
 - JWT token management (access/refresh tokens, validation, revocation)
 - Password authentication (hashing, verification)
 - Session management (create, validate)
@@ -695,7 +695,7 @@ While waiting for Grain Core Agent's API Server (Phase 59), we can prepare the A
 
 **Integration Features**:
 - Uses `process_http_request()` for full pipeline testing
-- Tests route registration with Grain OS Compositor
+- Tests route registration with Grain Core Compositor
 - Tests middleware chain execution
 - Tests handler adapter execution
 - Tests HTTP request parsing
@@ -926,7 +926,7 @@ While waiting for Grain Core Agent's API Server (Phase 59), we can prepare the A
 - **API Integration**: When Grain Core Agent completes Phase 59, integrate Carry Agent's API clients
 - **Authentication**: When Grain Core Agent completes Phase 60, integrate secure authentication
 - **Network**: When Grain Core Agent completes Phase 61, integrate network capabilities
-- **Style System Unification**: Consult with Grain Core Agent about unifying mobile and desktop style systems (see `docs/grain_os_agent_style_unification_prompt.md`)
+- **Style System Unification**: Consult with Grain Core Agent about unifying mobile and desktop style systems (see `docs/grain_core_agent_style_unification_prompt.md`)
 
 ---
 
@@ -959,11 +959,11 @@ While waiting for Grain Core Agent's API Server (Phase 59), we can prepare the A
 **Integration Points**:
 - **Kernel File I/O**: Not directly used (mobile apps use platform file systems)
 - **Network Syscalls**: Not directly used (mobile apps use platform network stacks)
-- **Indirect Integration**: Mobile apps use Grain OS infrastructure, which uses kernel syscalls
+- **Indirect Integration**: Mobile apps use Grain Core infrastructure, which uses kernel syscalls
 
 **Coordination Notes**:
 - Mobile apps run on Android/iOS platforms, not directly on Grain OS kernel
-- Mobile apps use Grain OS infrastructure (API Server, Database) which uses kernel syscalls
+- Mobile apps use Grain Core infrastructure (API Server, Database) which uses kernel syscalls
 - No direct coordination needed — Grain Core Agent handles kernel integration
 
 ---

@@ -393,12 +393,14 @@ Grain Core Agent is responsible for building the desktop environment compositor 
    - Connection pooling
    - Request/response streaming
 
-3. **WebSocket Support**:
-   - WebSocket handshake (HTTP upgrade)
-   - WebSocket frame parsing (text, binary, ping, pong, close)
-   - WebSocket frame generation
-   - WebSocket connection management
-   - WebSocket server (for livestream coordination)
+3. **WebSocket Support** ✅ (2025-12-05-202227-pst):
+   - ✅ WebSocket handshake (HTTP upgrade) - `websocket_handshake.zig`
+   - ✅ WebSocket frame parsing (text, binary, ping, pong, close) - `parse_websocket_frame()`
+   - ✅ WebSocket frame generation - `generate_websocket_frame()`
+   - ✅ WebSocket connection management - `WebSocketManager`
+   - ✅ WebSocket accept key generation - `generate_websocket_accept()`
+   - ✅ WebSocket upgrade detection - `is_websocket_upgrade()`
+   - ✅ Comprehensive tests (`tests/116_grain_core_websocket_test.zig`)
 
 4. **DNS Resolution**:
    - DNS query (A, AAAA, MX records)

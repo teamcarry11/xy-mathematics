@@ -254,9 +254,9 @@ Leverage existing Grain Core modules:
 
 **Integration Points**:
 - Grain Bubble uses Grain Core compositor for window management
-- Canvas rendering uses Grain OS framebuffer renderer
-- Input events routed through Grain OS input handler
-- Text rendering uses Grain OS font renderer
+- Canvas rendering uses Grain Core framebuffer renderer
+- Input events routed through Grain Core input handler
+- Text rendering uses Grain Core font renderer
 
 **Coordination Tasks**:
 - Coordinate on compositor integration

@@ -1,6 +1,6 @@
-//! Grain Mobile Core Authentication Integration: Grain OS AuthService integration.
+//! Grain Carry Core Authentication Integration: Grain Core AuthService integration.
 //!
-//! Why: Integrate mobile handlers with Grain OS Authentication Service.
+//! Why: Integrate mobile handlers with Grain Core Authentication Service.
 //! Architecture: AuthService integration, JWT validation, password hashing.
 //! GrainStyle: grain_case, u32/u64, bounded allocations, assertions, max 70 lines.
 //!

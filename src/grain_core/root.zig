@@ -69,4 +69,6 @@ pub const connection_manager = @import("connection_manager.zig");
 pub const api_server_network = @import("api_server_network.zig");
 pub const auth_service = @import("auth_service.zig");
 pub const network_stack = @import("network_stack.zig");
+pub const websocket = @import("websocket.zig");
+pub const websocket_handshake = @import("websocket_handshake.zig");
 

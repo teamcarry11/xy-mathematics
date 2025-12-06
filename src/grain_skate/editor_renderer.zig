@@ -4,7 +4,7 @@
 //! Architecture: Pixel buffer rendering, monospace font, line-based layout.
 //! GrainStyle: grain_case, u32/u64, bounded allocations, assertions.
 //!
-//! 2025-12-02-142853-pst: Active implementation
+//! 2025-12-05-172208-pst: Active implementation (migrated to shared font renderer)
 
 const std = @import("std");
 const Editor = @import("editor.zig").Editor;
@@ -13,6 +13,7 @@ const Language = @import("language_detector.zig").Language;
 const LanguageKeywords = @import("language_keywords.zig").LanguageKeywords;
 const BracketMatcher = @import("bracket_matching.zig").BracketMatcher;
 const BracketMatch = @import("bracket_matching.zig").BracketMatch;
+const FontRenderer = @import("../shared/font_renderer.zig").FontRenderer;
 
 // Bounded: Max buffer width (explicit limit, in pixels)
 // 2025-12-02-142853-pst: Active constant
@@ -30,10 +31,10 @@ pub const MAX_VISIBLE_LINES: u32 = 1000;
 // 2025-12-02-142853-pst: Active constant
 pub const MAX_CHARS_PER_LINE: u32 = 200;
 
-// Font dimensions (5x7 bitmap font)
-// 2025-12-02-142853-pst: Active constants
-pub const CHAR_WIDTH: u32 = 6; // 5 pixels + 1 spacing
-pub const CHAR_HEIGHT: u32 = 8; // 7 pixels + 1 spacing
+// Font dimensions (8x8 bitmap font via shared font renderer)
+// 2025-12-05-172208-pst: Active constants (migrated to shared font renderer)
+pub const CHAR_WIDTH: u32 = 9; // 8 pixels + 1 spacing
+pub const CHAR_HEIGHT: u32 = 9; // 8 pixels + 1 spacing
 pub const LINE_SPACING: u32 = 2; // Additional spacing between lines
 
 // Color constants (RGBA format)
@@ -53,87 +54,8 @@ pub const COLOR_COMMENT: u32 = 0xFF6A9955; // Green for comments
 pub const COLOR_NUMBER: u32 = 0xFFB5CEA8; // Light green for numbers
 pub const COLOR_BRACKET_MATCH: u32 = 0xFFFFFF00; // Yellow for matching brackets
 
-// Letter patterns for 5x7 bitmap font (A-Z, 0-9).
-// 2025-12-02-142853-pst: Active constant
-const LETTER_PATTERNS = [26][7]u5{
-    // A
-    .{ 0b01110, 0b10001, 0b10001, 0b11111, 0b10001, 0b10001, 0b10001 },
-    // B
-    .{ 0b11110, 0b10001, 0b10001, 0b11110, 0b10001, 0b10001, 0b11110 },
-    // C
-    .{ 0b01110, 0b10001, 0b10000, 0b10000, 0b10000, 0b10001, 0b01110 },
-    // D
-    .{ 0b11110, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b11110 },
-    // E
-    .{ 0b11111, 0b10000, 0b10000, 0b11110, 0b10000, 0b10000, 0b11111 },
-    // F
-    .{ 0b11111, 0b10000, 0b10000, 0b11110, 0b10000, 0b10000, 0b10000 },
-    // G
-    .{ 0b01110, 0b10001, 0b10000, 0b10111, 0b10001, 0b10001, 0b01110 },
-    // H
-    .{ 0b10001, 0b10001, 0b10001, 0b11111, 0b10001, 0b10001, 0b10001 },
-    // I
-    .{ 0b01110, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b01110 },
-    // J
-    .{ 0b00111, 0b00010, 0b00010, 0b00010, 0b00010, 0b10010, 0b01100 },
-    // K
-    .{ 0b10001, 0b10010, 0b10100, 0b11000, 0b10100, 0b10010, 0b10001 },
-    // L
-    .{ 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b11111 },
-    // M
-    .{ 0b10001, 0b11011, 0b10101, 0b10001, 0b10001, 0b10001, 0b10001 },
-    // N
-    .{ 0b10001, 0b11001, 0b10101, 0b10011, 0b10001, 0b10001, 0b10001 },
-    // O
-    .{ 0b01110, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110 },
-    // P
-    .{ 0b11110, 0b10001, 0b10001, 0b11110, 0b10000, 0b10000, 0b10000 },
-    // Q
-    .{ 0b01110, 0b10001, 0b10001, 0b10001, 0b10101, 0b10010, 0b01101 },
-    // R
-    .{ 0b11110, 0b10001, 0b10001, 0b11110, 0b10100, 0b10010, 0b10001 },
-    // S
-    .{ 0b01110, 0b10001, 0b10000, 0b01110, 0b00001, 0b10001, 0b01110 },
-    // T
-    .{ 0b11111, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100 },
-    // U
-    .{ 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110 },
-    // V
-    .{ 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b01010, 0b00100 },
-    // W
-    .{ 0b10001, 0b10001, 0b10001, 0b10001, 0b10101, 0b11011, 0b10001 },
-    // X
-    .{ 0b10001, 0b01010, 0b00100, 0b00100, 0b00100, 0b01010, 0b10001 },
-    // Y
-    .{ 0b10001, 0b10001, 0b01010, 0b00100, 0b00100, 0b00100, 0b00100 },
-    // Z
-    .{ 0b11111, 0b00001, 0b00010, 0b00100, 0b01000, 0b10000, 0b11111 },
-};
-
-// Digit patterns for 5x7 bitmap font (0-9).
-// 2025-12-02-142853-pst: Active constant
-const DIGIT_PATTERNS = [10][7]u5{
-    // 0
-    .{ 0b01110, 0b10001, 0b10011, 0b10101, 0b11001, 0b10001, 0b01110 },
-    // 1
-    .{ 0b00100, 0b01100, 0b00100, 0b00100, 0b00100, 0b00100, 0b01110 },
-    // 2
-    .{ 0b01110, 0b10001, 0b00001, 0b00010, 0b00100, 0b01000, 0b11111 },
-    // 3
-    .{ 0b11111, 0b00010, 0b00100, 0b00010, 0b00001, 0b10001, 0b01110 },
-    // 4
-    .{ 0b00010, 0b00110, 0b01010, 0b10010, 0b11111, 0b00010, 0b00010 },
-    // 5
-    .{ 0b11111, 0b10000, 0b11110, 0b00001, 0b00001, 0b10001, 0b01110 },
-    // 6
-    .{ 0b01110, 0b10001, 0b10000, 0b11110, 0b10001, 0b10001, 0b01110 },
-    // 7
-    .{ 0b11111, 0b00001, 0b00010, 0b00100, 0b01000, 0b01000, 0b01000 },
-    // 8
-    .{ 0b01110, 0b10001, 0b10001, 0b01110, 0b10001, 0b10001, 0b01110 },
-    // 9
-    .{ 0b01110, 0b10001, 0b10001, 0b01111, 0b00001, 0b10001, 0b01110 },
-};
+// Font patterns removed - now using shared font renderer
+// 2025-12-05-172208-pst: Migrated to shared font renderer
 
 // Editor renderer state.
 // 2025-12-02-142853-pst: Active struct
@@ -152,13 +74,16 @@ pub const EditorRenderer = struct {
     detected_language: Language, // Detected programming language (for language-specific highlighting)
 
     /// Initialize editor renderer.
-    // 2025-12-02-142853-pst: Active function
+    // 2025-12-05-172208-pst: Active function (migrated to shared font renderer)
     pub fn init(editor: *Editor.EditorState, buffer_width: u32, buffer_height: u32) EditorRenderer {
         std.debug.assert(buffer_width > 0);
         std.debug.assert(buffer_width <= MAX_BUFFER_WIDTH);
         std.debug.assert(buffer_height > 0);
         std.debug.assert(buffer_height <= MAX_BUFFER_HEIGHT);
         std.debug.assert(editor.buffer.lines_len > 0 or editor.buffer.lines_len == 0);
+
+        // Initialize shared font renderer (8x8 font, ASCII basic character set)
+        const font_renderer = FontRenderer.init(.font_8x8, .ascii_basic);
 
         return EditorRenderer{
             .editor = editor,
@@ -172,6 +97,8 @@ pub const EditorRenderer = struct {
             .error_message = "",
             .error_message_timeout = 0,
             .syntax_highlighting_enabled = true, // Enable by default
+            .detected_language = .unknown, // Default to unknown language
+            .font_renderer = font_renderer,
         };
     }
 
@@ -860,9 +787,12 @@ pub const EditorRenderer = struct {
         }
     }
 
-    /// Draw text string.
-    // 2025-12-02-142853-pst: Active function
+    /// Draw text string (using shared font renderer).
+    // 2025-12-05-172208-pst: Active function (migrated to shared font renderer)
     fn draw_text(self: *const EditorRenderer, buffer: []u8, text: []const u8, x: u32, y: u32, r: u8, g: u8, b: u8, a: u8) void {
+        std.debug.assert(x < self.buffer_width); // Precondition
+        std.debug.assert(y < self.buffer_height); // Precondition
+        
         const text_len = @min(text.len, MAX_CHARS_PER_LINE);
         var char_x = x;
         var i: u32 = 0;
@@ -872,77 +802,56 @@ pub const EditorRenderer = struct {
                 char_x += CHAR_WIDTH;
             }
         }
+        
+        std.debug.assert(char_x <= x + (text_len * CHAR_WIDTH)); // Postcondition
     }
 
-    /// Draw single character.
-    // 2025-12-02-142853-pst: Active function
+    /// Draw single character (using shared font renderer).
+    // 2025-12-05-172208-pst: Active function (migrated to shared font renderer)
     fn draw_char(self: *const EditorRenderer, buffer: []u8, ch: u8, x: u32, y: u32, r: u8, g: u8, b: u8, a: u8) bool {
-        if (ch >= '0' and ch <= '9') {
-            self.draw_digit(buffer, ch, x, y, r, g, b, a);
-            return true;
+        std.debug.assert(x < self.buffer_width); // Precondition
+        std.debug.assert(y < self.buffer_height); // Precondition
+        
+        // Get background color from buffer at this position (or use default)
+        const bg_r = @as(u8, @truncate((COLOR_BACKGROUND >> 16) & 0xFF));
+        const bg_g = @as(u8, @truncate((COLOR_BACKGROUND >> 8) & 0xFF));
+        const bg_b = @as(u8, @truncate(COLOR_BACKGROUND & 0xFF));
+        const bg_a = @as(u8, @truncate((COLOR_BACKGROUND >> 24) & 0xFF));
+        
+        // Allocate temporary pixel buffer for character
+        const char_w = self.font_renderer.get_char_width();
+        const char_h = self.font_renderer.get_char_height();
+        var char_pixels: [9 * 9 * 4]u8 = undefined; // Max 9x9 pixels
+        const pixel_buf = char_pixels[0..(char_w * char_h * 4)];
+        
+        // Render character to pixel buffer
+        if (!self.font_renderer.render_char_to_pixels(ch, r, g, b, a, bg_r, bg_g, bg_b, bg_a, pixel_buf)) {
+            return false; // Character not supported
         }
-        if (ch == ' ') {
-            return true; // Space (no rendering)
-        }
-        if (ch >= 'A' and ch <= 'Z') {
-            self.draw_letter_upper(buffer, ch, x, y, r, g, b, a);
-            return true;
-        }
-        if (ch >= 'a' and ch <= 'z') {
-            const upper_ch = ch - ('a' - 'A');
-            self.draw_letter_upper(buffer, upper_ch, x, y, r, g, b, a);
-            return true;
-        }
-        // Basic punctuation support
-        if (ch == ':' or ch == '/' or ch == '?' or ch == '-' or ch == '_') {
-            // Render as simple patterns (placeholder - could be enhanced)
-            return true;
-        }
-        return false;
-    }
-
-    /// Draw digit (0-9).
-    // 2025-12-02-142853-pst: Active function
-    fn draw_digit(self: *const EditorRenderer, buffer: []u8, digit: u8, x: u32, y: u32, r: u8, g: u8, b: u8, a: u8) void {
-        if (digit < '0' or digit > '9') {
-            return;
-        }
-        const pattern_idx = digit - '0';
-        const pattern = DIGIT_PATTERNS[pattern_idx];
-        self.draw_pattern(buffer, pattern, x, y, r, g, b, a);
-    }
-
-    /// Draw uppercase letter.
-    // 2025-12-02-142853-pst: Active function
-    fn draw_letter_upper(self: *const EditorRenderer, buffer: []u8, letter: u8, x: u32, y: u32, r: u8, g: u8, b: u8, a: u8) void {
-        if (letter < 'A' or letter > 'Z') {
-            return;
-        }
-        const pattern_idx = letter - 'A';
-        const pattern = LETTER_PATTERNS[pattern_idx];
-        self.draw_pattern(buffer, pattern, x, y, r, g, b, a);
-    }
-
-    /// Draw 5x7 pattern to buffer.
-    // 2025-12-02-142853-pst: Active function
-    fn draw_pattern(self: *const EditorRenderer, buffer: []u8, pattern: [7]u5, x: u32, y: u32, r: u8, g: u8, b: u8, a: u8) void {
+        
+        // Copy pixel buffer to main buffer
         var row: u32 = 0;
-        while (row < 7) : (row += 1) {
+        while (row < char_h) : (row += 1) {
+            const py = y + row;
+            if (py >= self.buffer_height) {
+                break;
+            }
             var col: u32 = 0;
-            while (col < 5) : (col += 1) {
-                if ((pattern[row] & (@as(u5, 1) << @as(u3, @intCast(4 - col)))) != 0) {
-                    const px = x + col;
-                    const py = y + row;
-                    if (px < self.buffer_width and py < self.buffer_height) {
-                        const idx = (py * self.buffer_width + px) * 4;
-                        buffer[idx + 0] = r;
-                        buffer[idx + 1] = g;
-                        buffer[idx + 2] = b;
-                        buffer[idx + 3] = a;
-                    }
+            while (col < char_w) : (col += 1) {
+                const px = x + col;
+                if (px >= self.buffer_width) {
+                    break;
                 }
+                const src_idx = (row * char_w + col) * 4;
+                const dst_idx = (py * self.buffer_width + px) * 4;
+                buffer[dst_idx + 0] = pixel_buf[src_idx + 0];
+                buffer[dst_idx + 1] = pixel_buf[src_idx + 1];
+                buffer[dst_idx + 2] = pixel_buf[src_idx + 2];
+                buffer[dst_idx + 3] = pixel_buf[src_idx + 3];
             }
         }
+        
+        return true;
     }
 
     /// Format number as string (helper).

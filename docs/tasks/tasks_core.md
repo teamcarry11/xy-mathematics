@@ -150,7 +150,7 @@
 
 - [ ] Implement socket options (reuse address, keep-alive, timeout)
 - [ ] Implement HTTP client/server enhancements
-- [ ] Implement WebSocket support (handshake, frame parsing, connection management)
+- [x] Implement WebSocket support (handshake, frame parsing, connection management) ✅ (2025-12-05-202227-pst)
 - [ ] Implement DNS resolution (A, AAAA, MX records, caching)
 - [ ] Implement TLS/SSL support (optional, for secure endpoints)
 - [ ] Implement compositor integration

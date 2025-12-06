@@ -1,8 +1,8 @@
 # Grain Vantage Agent: Development Plan
 
 **Agent**: Grain Vantage Agent (1st Agent)  
-**Status**: Phase 3.16 Complete, Ready for Next Phase  
-**Last Updated**: 2025-12-05-152509-pst
+**Status**: Phase 3.17 Complete, Ready for Next Phase  
+**Last Updated**: 2025-12-06-000107-pst
 
 ---
 
@@ -394,6 +394,27 @@ Grain Vantage Agent is responsible for building the RISC-V64 virtual machine (Gr
 
 ---
 
+#### Phase 3.17: Process Group Resource Limits ✅
+
+**Date**: 2025-12-06-000107-pst
+
+**Completed Work**:
+- Process group resource limits module (`process_group_limits.zig`)
+- Resource limit structures (CPU time, memory, process count)
+- Limits manager with bounded allocation (MAX_PROCESS_GROUP_LIMITS: 64)
+- Limit enforcement in `syscall_spawn` (process count limits)
+- Limit enforcement in `syscall_map` (memory limits)
+- Limit checking functions (`can_spawn_process()`, `can_allocate_memory()`)
+- Unlimited limits by default (0 = unlimited)
+- Integration with process group manager
+
+**Files**:
+- `src/kernel/process_group_limits.zig` — Process group limits module
+- `src/kernel/basin_kernel.zig` — Limits integration and enforcement
+- `tests/085_process_group_limits_test.zig` — Comprehensive tests
+
+---
+
 ## Current Work: Ready for Next Phase
 
 **Status**: Phase 3.14 Complete  
@@ -521,7 +542,7 @@ Grain Vantage Agent is responsible for building the RISC-V64 virtual machine (Gr
 ## References
 
 - **Grain Style**: [`docs/grain_style.md`](../grain_style.md)
-- **Master Plan**: [`docs/plan.md`](../plan.md)
+- **Core Plan**: [`docs/plan.md`](../plan.md)
 - **Grain Core Agent Plan**: [`docs/plans/plan_core.md`](plan_core.md)
 - **Vantage Agent Response**: [`docs/kernel_agent_response_to_grain_os.md`](../kernel_agent_response_to_grain_os.md)
 - **Grain OS Integration Response**: [`docs/grain_os_kernel_integration_response.md`](../grain_os_kernel_integration_response.md)

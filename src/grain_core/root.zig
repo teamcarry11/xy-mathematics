@@ -72,4 +72,5 @@ pub const network_stack = @import("network_stack.zig");
 pub const websocket = @import("websocket.zig");
 pub const websocket_handshake = @import("websocket_handshake.zig");
 pub const dns_resolver = @import("dns_resolver.zig");
+pub const file_storage = @import("file_storage.zig");
 

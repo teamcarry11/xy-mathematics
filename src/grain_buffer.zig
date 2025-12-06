@@ -8,8 +8,8 @@ pub const GrainBuffer = struct {
     pub const max_segments: u32 = 1000;
 
     const Segment = struct {
-        start: usize,
-        end: usize,
+        start: u32,
+        end: u32,
     };
 
     allocator: std.mem.Allocator,
@@ -43,12 +43,13 @@ pub const GrainBuffer = struct {
         return self.text.items;
     }
 
-    pub fn markReadOnly(self: *GrainBuffer, start: usize, end: usize) !void {
+    pub fn markReadOnly(self: *GrainBuffer, start: u32, end: u32) !void {
         // Assert: Range must be valid
         std.debug.assert(start < end);
-        std.debug.assert(end <= self.text.items.len);
+        const text_len = @as(u32, @intCast(self.text.items.len));
+        std.debug.assert(end <= text_len);
         
-        if (start >= end or end > self.text.items.len) return error.InvalidRange;
+        if (start >= end or end > text_len) return error.InvalidRange;
         if (self.readonly_segments.items.len >= max_segments) return error.TooManySegments;
         
         const segment = Segment{ .start = start, .end = end };
@@ -59,9 +60,10 @@ pub const GrainBuffer = struct {
     }
     
     /// Check if a position is within a readonly span.
-    pub fn isReadOnly(self: *const GrainBuffer, pos: usize) bool {
+    pub fn isReadOnly(self: *const GrainBuffer, pos: u32) bool {
         // Assert: Position must be within buffer bounds
-        std.debug.assert(pos <= self.text.items.len);
+        const text_len = @as(u32, @intCast(self.text.items.len));
+        std.debug.assert(pos <= text_len);
         
         for (self.readonly_segments.items) |segment| {
             if (pos >= segment.start and pos < segment.end) {
@@ -77,10 +79,11 @@ pub const GrainBuffer = struct {
     }
     
     /// Check if a range intersects any readonly span (optimized with binary search).
-    pub fn intersectsReadonlyRange(self: *const GrainBuffer, start: usize, end: usize) bool {
+    pub fn intersectsReadonlyRange(self: *const GrainBuffer, start: u32, end: u32) bool {
         // Assert: Range must be valid
         std.debug.assert(start <= end);
-        std.debug.assert(end <= self.text.items.len);
+        const text_len = @as(u32, @intCast(self.text.items.len));
+        std.debug.assert(end <= text_len);
         
         // Binary search optimization for large segment lists
         if (self.readonly_segments.items.len == 0) return false;
@@ -91,12 +94,14 @@ pub const GrainBuffer = struct {
         }
         
         // Binary search: find first segment that might overlap
-        var left: usize = 0;
-        var right: usize = self.readonly_segments.items.len;
+        var left: u32 = 0;
+        const segments_len = @as(u32, @intCast(self.readonly_segments.items.len));
+        var right: u32 = segments_len;
         
         while (left < right) {
             const mid = left + (right - left) / 2;
-            const segment = self.readonly_segments.items[mid];
+            const mid_usize = @as(usize, @intCast(mid));
+            const segment = self.readonly_segments.items[mid_usize];
             
             if (end <= segment.start) {
                 right = mid;
@@ -115,61 +120,75 @@ pub const GrainBuffer = struct {
         try self.text.appendSlice(self.allocator, data);
     }
 
-    pub fn insert(self: *GrainBuffer, index: usize, data: []const u8) !void {
+    pub fn insert(self: *GrainBuffer, index: u32, data: []const u8) !void {
         // Assert: Index must be within bounds
-        std.debug.assert(index <= self.text.items.len);
+        const text_len = self.text.items.len;
+        const index_usize = @as(usize, @intCast(index));
+        std.debug.assert(index_usize <= text_len);
         
-        if (index > self.text.items.len) return error.OutOfBounds;
+        if (index_usize > text_len) return error.OutOfBounds;
         if (self.intersectsReadonly(index, index)) return error.ReadOnlyViolation;
         
-        try self.text.insertSlice(self.allocator, index, data);
-        try self.shiftSegments(index, @as(isize, @intCast(data.len)));
+        try self.text.insertSlice(self.allocator, index_usize, data);
+        const data_len = @as(u32, @intCast(data.len));
+        try self.shiftSegments(index, @as(i64, @intCast(data_len)));
         
         // Assert: Text must be inserted
-        std.debug.assert(self.text.items.len >= index + data.len);
+        std.debug.assert(self.text.items.len >= index_usize + data.len);
     }
 
-    pub fn overwrite(self: *GrainBuffer, index: usize, data: []const u8) !void {
-        const end = index + data.len;
+    pub fn overwrite(self: *GrainBuffer, index: u32, data: []const u8) !void {
+        const data_len = @as(u32, @intCast(data.len));
+        const end = index + data_len;
         
         // Assert: Range must be within bounds
-        std.debug.assert(end <= self.text.items.len);
+        const text_len = @as(u32, @intCast(self.text.items.len));
+        std.debug.assert(end <= text_len);
         
-        if (end > self.text.items.len) return error.OutOfBounds;
+        if (end > text_len) return error.OutOfBounds;
         if (self.intersectsReadonly(index, end)) return error.ReadOnlyViolation;
         
-        std.mem.copyForwards(u8, self.text.items[index..end], data);
+        const index_usize = @as(usize, @intCast(index));
+        const end_usize = @as(usize, @intCast(end));
+        std.mem.copyForwards(u8, self.text.items[index_usize..end_usize], data);
         
         // Assert: Data must be written
-        std.debug.assert(std.mem.eql(u8, self.text.items[index..end], data));
+        std.debug.assert(std.mem.eql(u8, self.text.items[index_usize..end_usize], data));
     }
 
-    pub fn overwriteSystem(self: *GrainBuffer, index: usize, data: []const u8) !void {
-        const end = index + data.len;
-        if (end > self.text.items.len) return error.OutOfBounds;
-        std.mem.copyForwards(u8, self.text.items[index..end], data);
+    pub fn overwriteSystem(self: *GrainBuffer, index: u32, data: []const u8) !void {
+        const data_len = @as(u32, @intCast(data.len));
+        const end = index + data_len;
+        const text_len = @as(u32, @intCast(self.text.items.len));
+        if (end > text_len) return error.OutOfBounds;
+        const index_usize = @as(usize, @intCast(index));
+        const end_usize = @as(usize, @intCast(end));
+        std.mem.copyForwards(u8, self.text.items[index_usize..end_usize], data);
     }
 
-    pub fn erase(self: *GrainBuffer, index: usize, count: usize) !void {
+    pub fn erase(self: *GrainBuffer, index: u32, count: u32) !void {
         if (count == 0) return;
         
         const end = index + count;
         
         // Assert: Range must be within bounds
-        std.debug.assert(end <= self.text.items.len);
+        const text_len = @as(u32, @intCast(self.text.items.len));
+        std.debug.assert(end <= text_len);
         
-        if (end > self.text.items.len) return error.OutOfBounds;
+        if (end > text_len) return error.OutOfBounds;
         if (self.intersectsReadonly(index, end)) return error.ReadOnlyViolation;
         
         const old_len = self.text.items.len;
-        try self.text.replaceRange(self.allocator, index, count, &.{});
-        try self.shiftSegments(index, -@as(isize, @intCast(count)));
+        const index_usize = @as(usize, @intCast(index));
+        const count_usize = @as(usize, @intCast(count));
+        try self.text.replaceRange(self.allocator, index_usize, count_usize, &.{});
+        try self.shiftSegments(index, -@as(i64, @intCast(count)));
         
         // Assert: Text must be erased
-        std.debug.assert(self.text.items.len == old_len - count);
+        std.debug.assert(self.text.items.len == old_len - count_usize);
     }
 
-    fn intersectsReadonly(self: *const GrainBuffer, start: usize, end: usize) bool {
+    fn intersectsReadonly(self: *const GrainBuffer, start: u32, end: u32) bool {
         for (self.readonly_segments.items) |segment| {
             if (!(end <= segment.start or start >= segment.end)) {
                 return true;
@@ -178,7 +197,7 @@ pub const GrainBuffer = struct {
         return false;
     }
 
-    fn shiftSegments(self: *GrainBuffer, pivot: usize, delta: isize) !void {
+    fn shiftSegments(self: *GrainBuffer, pivot: u32, delta: i64) !void {
         if (delta == 0) return;
         for (self.readonly_segments.items) |*segment| {
             if (segment.start >= pivot) {
@@ -188,11 +207,13 @@ pub const GrainBuffer = struct {
         }
     }
 
-    fn shiftIndex(value: usize, delta: isize) usize {
+    fn shiftIndex(value: u32, delta: i64) u32 {
         if (delta >= 0) {
-            return value + @as(usize, @intCast(delta));
+            const delta_u32 = @as(u32, @intCast(delta));
+            return value + delta_u32;
         }
-        const amount = @as(usize, @intCast(-delta));
+        const amount = @as(u32, @intCast(-delta));
+        std.debug.assert(value >= amount);
         return value - amount;
     }
 };
@@ -230,11 +251,11 @@ test "getReadonlySpans returns all segments" {
     try buffer.markReadOnly(6, 11);
     
     const spans = buffer.getReadonlySpans();
-    try std.testing.expectEqual(@as(usize, 2), spans.len);
-    try std.testing.expectEqual(@as(usize, 0), spans[0].start);
-    try std.testing.expectEqual(@as(usize, 5), spans[0].end);
-    try std.testing.expectEqual(@as(usize, 6), spans[1].start);
-    try std.testing.expectEqual(@as(usize, 11), spans[1].end);
+    try std.testing.expectEqual(@as(u32, 2), @as(u32, @intCast(spans.len)));
+    try std.testing.expectEqual(@as(u32, 0), spans[0].start);
+    try std.testing.expectEqual(@as(u32, 5), spans[0].end);
+    try std.testing.expectEqual(@as(u32, 6), spans[1].start);
+    try std.testing.expectEqual(@as(u32, 11), spans[1].end);
 }
 
 test "intersectsReadonlyRange with binary search" {
@@ -247,7 +268,7 @@ test "intersectsReadonlyRange with binary search" {
     defer buffer.deinit();
     
     // Create many readonly segments (triggers binary search path)
-    var i: usize = 0;
+    var i: u32 = 0;
     while (i < 100) : (i += 1) {
         try buffer.markReadOnly(i * 10, i * 10 + 5);
     }
@@ -265,7 +286,8 @@ test "mutable command edits succeed" {
     var buffer = try GrainBuffer.fromSlice(std.testing.allocator, "build\nstatus\n");
     defer buffer.deinit();
 
-    try buffer.markReadOnly(6, buffer.textSlice().len);
+    const text_len = @as(u32, @intCast(buffer.textSlice().len));
+    try buffer.markReadOnly(6, text_len);
     try buffer.overwrite(0, "test");
     try buffer.erase(4, 1);
     try std.testing.expectEqualStrings("test\nstatus\n", buffer.textSlice());
@@ -275,7 +297,8 @@ test "insert shifts readonly segments" {
     var buffer = try GrainBuffer.fromSlice(std.testing.allocator, "run\nstatus\n");
     defer buffer.deinit();
 
-    try buffer.markReadOnly(4, buffer.textSlice().len);
+    const text_len = @as(u32, @intCast(buffer.textSlice().len));
+    try buffer.markReadOnly(4, text_len);
     try buffer.insert(0, "zig ");
     try std.testing.expectEqualStrings("zig run\nstatus\n", buffer.textSlice());
     const result = buffer.overwrite(8, "READY");
@@ -286,7 +309,8 @@ test "system overwrite bypasses readonly" {
     var buffer = try GrainBuffer.fromSlice(std.testing.allocator, "cmd\nstatus\n");
     defer buffer.deinit();
 
-    try buffer.markReadOnly(4, buffer.textSlice().len);
+    const text_len = @as(u32, @intCast(buffer.textSlice().len));
+    try buffer.markReadOnly(4, text_len);
     try buffer.overwriteSystem(4, "STATUS");
     try std.testing.expectEqualStrings("cmd\nSTATUS\n", buffer.textSlice());
 }

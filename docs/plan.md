@@ -1,7 +1,7 @@
 # Grain OS Development Plan
 
-**Last Updated**: 2025-12-05-120808-pst  
-**Structure**: Hybrid approach with master overview and agent-specific plans  
+**Last Updated**: 2025-12-06-013750-pst  
+**Structure**: Hybrid approach with core overview and agent-specific plans  
 **See**: `docs/plans/plan_{agent}.md` for detailed agent plans
 
 ---
@@ -40,6 +40,7 @@
 - Signal Delivery to Process Groups (Phase 3.14) ✅
 - Signal Delivery to Sessions (Phase 3.15) ✅
 - Process Group Statistics (Phase 3.16) ✅
+- Process Group Resource Limits (Phase 3.17) ✅
 
 **Provides**: Kernel syscalls, VM capabilities, file I/O, network syscalls (planned)
 
@@ -102,14 +103,14 @@
 - Phase 59: HTTP/REST API Server ✅ (COMPLETE — 2025-12-05-120808-pst)
 - Phase 60: Authentication Service ✅ (COMPLETE — 2025-12-05-134449-pst)
 - Phase 61: Network Stack Enhancements 🔄 (IN PROGRESS — TCP/UDP socket support complete, WebSocket support complete, DNS resolution complete — 2025-12-05-231800-pst)
-- Phase 62: File System Enhancements (MEDIUM PRIORITY)
+- Phase 62: File System Enhancements 🔄 (IN PROGRESS — Core file storage module complete — 2025-12-06-023413-pst)
 
 ---
 
 ### 5. Grain Workspace Agent
 
 **Status**: Active — Desktop applications  
-**Current Work**: All Phases Complete ✅  
+**Current Work**: All Phases Complete ✅ (Phase 8.1 DNS Integration Complete)  
 **Details**: See [`docs/plans/plan_workspace.md`](plans/plan_workspace.md)
 
 - Phase 9: Grain DevTools ✅
@@ -127,8 +128,8 @@
 
 ### 6. Grain Carry Agent
 
-**Status**: Active — WebSocket Support Available  
-**Current Work**: WebSocket client implementation ready, all infrastructure complete  
+**Status**: Active — Network Stack Complete  
+**Current Work**: All network infrastructure complete (WebSocket, DNS), ready for full integration  
 **Details**: See [`docs/plans/plan_carry.md`](plans/plan_carry.md)
 
 **Recent Progress**:
@@ -180,10 +181,10 @@
 
 ---
 
-### 7. Grain Database Agent
+### 7. Grain Silo Agent
 
-**Status**: Active — Phase 5 Complete  
-**Current Work**: Integration with Grain Core Agent API Server (Phase 59)  
+**Status**: Active — Phase 6 Complete, Phase 9 In Progress  
+**Current Work**: Authentication Integration with Grain Core AuthService (Phase 60) — Permission helpers and tests complete  
 **Details**: See [`docs/plans/plan_database.md`](plans/plan_database.md)
 
 **Recent Progress**:
@@ -199,11 +200,20 @@
   - REST API router, JSON serialization, rate limiting, CORS support
   - WebSocket connection management, JWT authentication middleware
   - API request/response structures, middleware support
-- Phase 6: API Server Integration ✅ MIDDLEWARE INTEGRATED (2025-12-05-083545-pst)
-  - Handler logic complete for all 9 endpoints
+- Phase 6: API Server Integration ✅ COMPLETE (2025-12-06-010807-pst)
+  - All 9 handlers fully implemented
+  - Stub handlers completed (query execution, graph traversal, full-text search)
   - Middleware integration complete (rate limiting, CORS, auth, content-type)
   - Path parameter extraction, JSON parsing, proper status codes
   - Ready for HTTP server integration
+- Phase 9: Authentication Integration 🔄 IN PROGRESS (2025-12-06-013750-pst)
+  - AuthService integration module created (`src/grain_database/auth_integration.zig`)
+  - Enhanced auth middleware using AuthService (`database_auth_middleware_enhanced`)
+  - JWT validation and session management helpers
+  - User ID extraction from JWT tokens
+  - Permission-based access control helpers (`check_permission`, `check_permission_from_request`)
+  - Comprehensive auth integration tests (`tests/113_grain_database_auth_integration_test.zig`)
+  - Updated build.zig with grain_core import for grain_database module
 
 **Provides**: Database backend (for Mobile Agent), REST API (via Grain Core Agent)
 
@@ -223,12 +233,19 @@
 **Details**: See [`docs/plans/plan_bubble.md`](plans/plan_bubble.md)
 
 **Recent Progress**:
-- Phase 1: Core Canvas (SLC v1.0) ⏳ Starting (2025-12-05-143400-pst)
-  - Module structure created (`src/grain_bubble/`)
-  - Canvas engine with infinite canvas, zoom/pan
-  - Bubble renderer for rounded shapes
-  - PDF export framework
-  - Build system integration
+- Phase 1: Core Canvas (SLC v1.0) ⏳ In Progress (2025-12-06-011503-pst)
+  - Module structure created (`src/grain_bubble/`) ✅
+  - Canvas engine with infinite canvas, zoom/pan ✅
+  - Hit testing (point-in-shape detection) ✅
+  - Shape manipulation (move, resize) ✅
+  - Bubble renderer for rounded shapes (filled circles) ✅
+  - Canvas renderer (integration with framebuffer) ✅
+  - Input handling (mouse events, keyboard shortcuts, selection, pan, zoom) ✅
+  - Shape duplication and copy/paste ✅
+  - PDF export framework ✅
+  - Build system integration ✅
+  - Comprehensive tests ✅
+  - Integration with Grain Core compositor (pending)
 
 **Provides**: Native visual design tool with infinite canvas, vector graphics, layer management, and export capabilities
 

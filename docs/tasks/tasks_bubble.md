@@ -2,7 +2,7 @@
 
 **Agent**: Grain Bubble Agent (8th Agent)  
 **Status**: Phase 1 Starting — Core Canvas (SLC v1.0)  
-**Last Updated**: 2025-12-05-172143-pst
+**Last Updated**: 2025-12-06-014041-pst
 
 ---
 
@@ -17,46 +17,60 @@
 
 #### Module Structure & Build System
 
-- [ ] Create `src/grain_bubble/` directory structure
-- [ ] Create `src/grain_bubble/root.zig` module exports
-- [ ] Update `build/modules.zig` to add `grain_bubble` module
-- [ ] Update `build.zig` to include grain_bubble module and tests
-- [ ] Verify build system integration
+- [x] Create `src/grain_bubble/` directory structure ✅
+- [x] Create `src/grain_bubble/root.zig` module exports ✅
+- [x] Update `build/modules.zig` to add `grain_bubble` module ✅
+- [x] Update `build.zig` to include grain_bubble module and tests ✅
+- [x] Verify build system integration ✅
 
 #### Canvas Engine (`canvas.zig`)
 
-- [ ] Create `src/grain_bubble/canvas.zig` module structure
-- [ ] Implement infinite canvas data structure
-- [ ] Implement zoom/pan functionality (mouse wheel, drag)
-- [ ] Implement viewport transformation (world to screen coordinates)
-- [ ] Implement canvas bounds checking
-- [ ] Implement canvas state management (zoom level, pan offset)
-- [ ] Add comprehensive assertions (minimum 2 per function)
-- [ ] Follow Grain Style (grain_case, u32/u64, bounded allocations)
+- [x] Create `src/grain_bubble/canvas.zig` module structure ✅
+- [x] Implement infinite canvas data structure ✅
+- [x] Implement zoom/pan functionality (zoom_in, zoom_out, pan) ✅
+- [x] Implement viewport transformation (world to screen coordinates) ✅
+- [x] Implement canvas bounds checking ✅
+- [x] Implement canvas state management (zoom level, pan offset) ✅
+- [x] Implement hit testing (find_shape_at, is_point_in_shape) ✅
+- [x] Implement shape manipulation (move_shape, resize_shape) ✅
+- [x] Add comprehensive assertions (minimum 2 per function) ✅
+- [x] Follow Grain Style (grain_case, u32/u64, bounded allocations) ✅
 
 #### Bubble Renderer (`bubble_renderer.zig`)
 
-- [ ] Create `src/grain_bubble/bubble_renderer.zig` module structure
-- [ ] Implement rounded rectangle rendering ("bubbles")
-- [ ] Implement circle rendering
-- [ ] Implement rectangle rendering
-- [ ] Implement shape fill rendering
-- [ ] Implement shape stroke rendering
-- [ ] Integrate with Grain OS framebuffer renderer
-- [ ] Add comprehensive assertions
-- [ ] Follow Grain Style
+- [x] Create `src/grain_bubble/bubble_renderer.zig` module structure ✅
+- [x] Implement rounded rectangle rendering ("bubbles") ✅
+- [x] Implement circle rendering (filled) ✅
+- [x] Implement rectangle rendering (filled) ✅
+- [x] Implement shape fill rendering ✅
+- [ ] Implement shape stroke rendering (future enhancement)
+- [x] Integrate with draw function callback ✅
+- [x] Add comprehensive assertions ✅
+- [x] Follow Grain Style ✅
+
+#### Canvas Renderer (`canvas_renderer.zig`)
+
+- [x] Create `src/grain_bubble/canvas_renderer.zig` module structure ✅
+- [x] Integrate canvas with framebuffer renderer ✅
+- [x] Implement canvas rendering (layers, shapes, text) ✅
+- [x] Implement thread-local context for draw callbacks ✅
+- [x] Add comprehensive assertions ✅
+- [x] Follow Grain Style ✅
 
 #### Shape System
 
-- [ ] Define shape data structures (Rectangle, Circle, RoundedRectangle)
-- [ ] Implement shape creation (position, size, color, corner radius)
-- [ ] Implement shape selection (hit testing)
-- [ ] Implement shape manipulation (drag, resize, rotate)
-- [ ] Implement shape z-ordering (layer management)
-- [ ] Implement shape grouping
-- [ ] Add bounded allocations (MAX_SHAPES, MAX_LAYERS)
-- [ ] Add comprehensive assertions
-- [ ] Follow Grain Style
+- [x] Define shape data structures (Rectangle, Circle, RoundedRectangle) ✅
+- [x] Implement shape creation (position, size, color, corner radius) ✅
+- [x] Implement shape selection (hit testing) ✅
+- [x] Implement shape manipulation (move, resize) ✅
+- [x] Implement shape duplication ✅
+- [x] Implement shape copy/paste ✅
+- [ ] Implement shape rotation (future enhancement)
+- [x] Implement shape z-ordering (layer management) ✅
+- [ ] Implement shape grouping (future enhancement)
+- [x] Add bounded allocations (MAX_SHAPES, MAX_LAYERS) ✅
+- [x] Add comprehensive assertions ✅
+- [x] Follow Grain Style ✅
 
 #### Text Tool
 
@@ -83,15 +97,16 @@
 
 #### Selection & Manipulation
 
-- [ ] Implement single selection (click to select)
-- [ ] Implement multi-selection (shift+click, drag selection box)
-- [ ] Implement selection manipulation (drag, resize, rotate)
-- [ ] Implement selection bounds calculation
-- [ ] Implement selection deletion
-- [ ] Implement selection grouping
-- [ ] Add bounded allocations (MAX_SELECTION)
-- [ ] Add comprehensive assertions
-- [ ] Follow Grain Style
+- [x] Implement single selection (select_shape) ✅
+- [ ] Implement multi-selection (shift+click, drag selection box) (future)
+- [x] Implement selection manipulation (move, resize) ✅
+- [ ] Implement selection rotation (future enhancement)
+- [ ] Implement selection bounds calculation (future)
+- [ ] Implement selection deletion (future)
+- [ ] Implement selection grouping (future)
+- [x] Add bounded allocations (MAX_SELECTION) ✅
+- [x] Add comprehensive assertions ✅
+- [x] Follow Grain Style ✅
 
 #### PDF Export (`export_pdf.zig`)
 
@@ -105,29 +120,51 @@
 - [ ] Add comprehensive assertions
 - [ ] Follow Grain Style
 
+#### Canvas Input Handler (`canvas_input.zig`)
+
+- [x] Create `src/grain_bubble/canvas_input.zig` module structure ✅
+- [x] Implement mouse event handling (down, up, move, drag) ✅
+- [x] Implement keyboard event handling ✅
+- [x] Implement shape selection on click ✅
+- [x] Implement shape dragging ✅
+- [x] Implement canvas panning (pan mode) ✅
+- [x] Implement mouse wheel zoom ✅
+- [x] Implement keyboard shortcuts (delete, arrow keys, zoom, pan toggle) ✅
+- [x] Implement copy/paste shortcuts (Ctrl+C, Ctrl+V) ✅
+- [x] Implement duplicate shortcut (Ctrl+D) ✅
+- [x] Implement shape deletion ✅
+- [x] Implement input mode switching (select, pan) ✅
+- [x] Add comprehensive assertions ✅
+- [x] Follow Grain Style ✅
+
 #### Integration with Grain OS
 
 - [ ] Integrate with Grain Core compositor (window management)
-- [ ] Integrate with Grain OS framebuffer renderer (canvas rendering)
-- [ ] Integrate with Grain OS input handler (mouse, keyboard)
+- [x] Integrate with Grain OS framebuffer renderer (canvas rendering) ✅
+- [x] Integrate with Grain OS input handler (mouse, keyboard) ✅
 - [ ] Integrate with Grain OS font renderer (text rendering)
 - [ ] Integrate with Grain OS layout system (if needed)
-- [ ] Test integration points
-- [ ] Verify all dependencies work correctly
+- [x] Test integration points ✅
+- [x] Verify all dependencies work correctly ✅
 
 #### Testing
 
-- [ ] Create `tests/125_grain_bubble_canvas_test.zig` for canvas tests
-- [ ] Create `tests/126_grain_bubble_renderer_test.zig` for renderer tests
-- [ ] Create `tests/127_grain_bubble_export_test.zig` for export tests
-- [ ] Test canvas zoom/pan functionality
-- [ ] Test shape creation and manipulation
-- [ ] Test text tool functionality
-- [ ] Test layer management
-- [ ] Test selection and manipulation
-- [ ] Test PDF export (verify output quality)
-- [ ] Test integration with Grain Core modules
-- [ ] Ensure all tests pass with grainwrap-100 and grainvalidate-70
+- [x] Create `tests/125_grain_bubble_canvas_test.zig` for canvas tests ✅
+- [x] Create `tests/126_grain_bubble_canvas_renderer_test.zig` for canvas renderer tests ✅
+- [x] Create `tests/127_grain_bubble_canvas_input_test.zig` for canvas input tests ✅
+- [ ] Create `tests/128_grain_bubble_export_test.zig` for export tests (future)
+- [x] Test canvas zoom/pan functionality ✅
+- [x] Test shape creation and manipulation ✅
+- [x] Test hit testing (rectangle, circle) ✅
+- [x] Test shape move and resize ✅
+- [ ] Test text tool functionality (future)
+- [x] Test layer management ✅
+- [x] Test selection and manipulation ✅
+- [x] Test input handling (mouse events, selection, pan, zoom) ✅
+- [x] Test keyboard shortcuts (delete, arrow keys, pan toggle) ✅
+- [ ] Test PDF export (verify output quality) (future)
+- [ ] Test integration with Grain Core compositor (pending)
+- [x] Ensure all tests pass with grainwrap-100 and grainvalidate-70 ✅
 
 #### Documentation
 
@@ -287,8 +324,8 @@
 
 - **Grain Style**: [`docs/grain_style.md`](../grain_style.md)
 - **Proposal**: [`docs/proposals/grain_bubble_proposal.md`](../proposals/grain_bubble_proposal.md)
-- **Master Plan**: [`docs/plan.md`](../plan.md)
-- **Master Tasks**: [`docs/tasks.md`](../tasks.md)
+- **Core Plan**: [`docs/plan.md`](../plan.md)
+- **Core Tasks**: [`docs/tasks.md`](../tasks.md)
 - **Grain Bubble Agent Plan**: [`docs/plans/plan_bubble.md`](plan_bubble.md)
 
 ---

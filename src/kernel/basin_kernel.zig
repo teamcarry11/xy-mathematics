@@ -48,6 +48,8 @@ const process_group = @import("process_group.zig");
 const ProcessGroupManager = process_group.ProcessGroupManager;
 const process_group_stats = @import("process_group_stats.zig");
 const ProcessGroupStatsManager = process_group_stats.ProcessGroupStatsManager;
+const process_group_limits = @import("process_group_limits.zig");
+const ProcessGroupLimitsManager = process_group_limits.ProcessGroupLimitsManager;
 
 // Export resource_cleanup for tests.
 pub const resource_cleanup_module = resource_cleanup;
@@ -375,6 +377,7 @@ pub const BasinError = error{
     permission_denied,
     not_found,
     out_of_memory,
+    resource_exhausted,
     would_block,
     interrupted,
     invalid_syscall,
@@ -796,6 +799,7 @@ pub const BasinKernel = struct {
             .scheduler = Scheduler.init(),
             .process_group_manager = ProcessGroupManager.init(),
             .process_group_stats = ProcessGroupStatsManager.init(),
+            .process_group_limits = ProcessGroupLimitsManager.init(),
             .channels = ChannelTable.init(),
             .storage = Storage.init(),
             .keyboard = Keyboard.init(),
@@ -1485,10 +1489,42 @@ pub const BasinKernel = struct {
         // Get parent process ID from current process (if any).
         const current_pid = self.scheduler.get_current();
         self.processes[idx].parent_pid = if (current_pid > 0) current_pid else 0;
+        
+        // Get parent process group ID for limit checking.
+        var parent_pgid: u64 = 0;
+        if (current_pid > 0) {
+            var parent_idx: u32 = 0;
+            while (parent_idx < MAX_PROCESSES) : (parent_idx += 1) {
+                if (self.processes[parent_idx].allocated and self.processes[parent_idx].id == current_pid) {
+                    parent_pgid = self.processes[parent_idx].pgid;
+                    break;
+                }
+            }
+        }
+        
+        // Check process count limit before spawning.
+        // Why: Enforce process group resource limits.
+        if (parent_pgid != 0) {
+            // Count current processes in the group.
+            var process_count: u32 = 0;
+            var i: u32 = 0;
+            while (i < MAX_PROCESSES) : (i += 1) {
+                if (self.processes[i].allocated and self.processes[i].pgid == parent_pgid) {
+                    process_count += 1;
+                }
+            }
+            
+            // Check if spawning would exceed limit.
+            if (!self.process_group_limits.can_spawn_process(parent_pgid, process_count)) {
+                return BasinError.resource_exhausted; // Process count limit exceeded
+            }
+        }
+        
         // Initialize resource tracking.
         self.processes[idx].cpu_time_ns = 0;
         self.processes[idx].memory_used = executable_len; // Initial memory = executable size
         self.processes[idx].priority = 0; // Default priority (nice value 0)
+        self.processes[idx].pgid = parent_pgid; // Inherit parent's process group
         self.processes[idx].allocated = true;
         
         // Set as current running process in scheduler.
@@ -1801,6 +1837,36 @@ pub const BasinKernel = struct {
         // Check if mapping overlaps with existing mappings.
         if (self.check_overlap(mapping_addr, size)) {
             return BasinError.invalid_argument; // Overlapping mapping
+        }
+        
+        // Check memory limit for current process group.
+        // Why: Enforce process group resource limits.
+        const current_pid = self.scheduler.get_current();
+        if (current_pid > 0) {
+            var process_idx: u32 = 0;
+            var process_pgid: u64 = 0;
+            while (process_idx < MAX_PROCESSES) : (process_idx += 1) {
+                if (self.processes[process_idx].allocated and self.processes[process_idx].id == current_pid) {
+                    process_pgid = self.processes[process_idx].pgid;
+                    break;
+                }
+            }
+            
+            if (process_pgid != 0) {
+                // Get current memory usage for the process group.
+                var group_memory: u64 = 0;
+                var i: u32 = 0;
+                while (i < MAX_PROCESSES) : (i += 1) {
+                    if (self.processes[i].allocated and self.processes[i].pgid == process_pgid) {
+                        group_memory = group_memory +% self.processes[i].memory_used; // Saturating add
+                    }
+                }
+                
+                // Check if allocating this memory would exceed limit.
+                if (!self.process_group_limits.can_allocate_memory(process_pgid, group_memory, size)) {
+                    return BasinError.resource_exhausted; // Memory limit exceeded
+                }
+            }
         }
         
         // Find free mapping entry.
@@ -3514,7 +3580,7 @@ pub const BasinKernel = struct {
         return result;
     }
     
-    fn syscall_setpgid(
+    pub fn syscall_setpgid(
         self: *BasinKernel,
         pid: u64,
         pgid: u64,

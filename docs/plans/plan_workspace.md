@@ -1,8 +1,8 @@
 # Grain Workspace Agent: Development Plan
 
 **Agent**: Grain Workspace Agent (5th Agent)  
-**Status**: All Phases Complete ✅  
-**Last Updated**: 2025-12-05-214852-pst
+**Status**: All Phases Complete ✅ (Phase 8.1 DNS Integration Complete)  
+**Last Updated**: 2025-12-06-011616-pst
 
 ---
 
@@ -267,9 +267,42 @@ Grain Workspace Agent is responsible for building desktop applications for Grain
 - DNS tools (lookup, reverse lookup, cache management)
 
 **Dependencies**:
-- Uses Grain OS network manager (`src/grain_core/network_manager.zig`)
+- Uses Grain Core network manager (`src/grain_core/network_manager.zig`)
+- Uses Grain Core DNS resolver (`src/grain_core/dns_resolver.zig`) — integrated 2025-12-06-011616-pst
 - Uses Grain Core compositor for window management
 - Uses kernel network syscalls (when available)
+
+**Grain Style Compliance**:
+- `grain_case` function names
+- `u32`/`u64` types (no `usize`)
+- Bounded allocations
+- Assertions for preconditions
+- Max 70 lines per function
+- Max 100 characters per line
+
+---
+
+### Phase 8.1: DNS Resolver Integration ✅ **COMPLETE**
+
+**Date**: 2025-12-06-011616-pst
+
+**Completed Work**:
+1. **DNS Resolver Integration**:
+   - Integrated Grain Core DNS resolver into Network Tools
+   - Replaced stub DNS implementation with actual resolver
+   - Added DNS record type support (A, AAAA, MX)
+   - Enhanced DNS cache management with TTL support
+   - Updated tests to use DNS resolver API
+
+**Features**:
+- Integration with Grain Core DNS resolver
+- Support for A, AAAA, and MX record types
+- DNS cache management with TTL support
+- Expired cache entry cleanup
+
+**Dependencies**:
+- Uses Grain Core DNS resolver (`src/grain_core/dns_resolver.zig`)
+- Leverages Core Agent Phase 61 DNS Resolution
 
 **Grain Style Compliance**:
 - `grain_case` function names
@@ -328,6 +361,7 @@ All planned phases for Grain Workspace Agent have been completed:
 - Phase 6: Grain Package Manager UI ✅
 - Phase 7: Grain File Manager ✅
 - Phase 8: Grain Network Tools ✅
+- Phase 8.1: DNS Resolver Integration ✅ (2025-12-06-011616-pst)
 - Phase 9: Grain DevTools ✅
 
 **Future Enhancements**:
@@ -341,6 +375,10 @@ All planned phases for Grain Workspace Agent have been completed:
   - Live terminal output streaming
   - Real-time file system notifications
   - Live network statistics updates
+- DNS resolver integration (now available via Core Agent Phase 61 DNS Resolution)
+  - Enhanced DNS tools in Network Tools application
+  - Integration with Grain Core DNS resolver for actual DNS queries
+  - Improved DNS cache management
 
 ---
 
@@ -364,6 +402,11 @@ All planned phases for Grain Workspace Agent have been completed:
   - WebSocket support now available for real-time features
   - Can integrate WebSocket for live updates in Monitor, Terminal Plus, Network Tools
   - No blocking dependencies — can proceed when ready
+- **DNS Resolution**: Core Agent Phase 61 complete (2025-12-05-231800-pst)
+  - DNS resolver with bounded cache now available
+  - Can integrate DNS resolver in Network Tools application
+  - Supports A, AAAA, and MX record types
+  - DNS cache management with TTL support
 
 ### With Grain Skate Agent
 
@@ -401,7 +444,7 @@ All planned phases for Grain Workspace Agent have been completed:
 ## References
 
 - **Grain Style**: [`docs/grain_style.md`](../grain_style.md)
-- **Master Plan**: [`docs/plan.md`](../plan.md)
+- **Core Plan**: [`docs/plan.md`](../plan.md)
 - **Grain Workspace Agent Prompt**: [`docs/grain_workspace_agent_prompt.md`](../grain_workspace_agent_prompt.md)
 - **Grain Workspace Agent Background**: [`docs/grain_workspace_agent_background.md`](../grain_workspace_agent_background.md)
 - **Grain Core Agent Plan**: [`docs/plans/plan_core.md`](plan_core.md) — Example structure

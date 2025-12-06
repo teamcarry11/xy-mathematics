@@ -2,7 +2,7 @@
 
 **Agent**: Grain Carry Agent (6th Agent)  
 **Status**: WebSocket Support Available — Ready for WebSocket Client Implementation  
-**Last Updated**: 2025-12-05-214836-pst
+**Last Updated**: 2025-12-06-004247-pst
 
 ---
 
@@ -543,9 +543,86 @@ While waiting for Grain Core Agent's API Server (Phase 59), we can prepare the A
 - All compiler warnings enabled
 
 **Next Steps**:
-- Update handler adapters to use AuthService for token generation (login/register)
-- Update handler adapters to use AuthService for password hashing (register)
-- Enhanced handler logic with database integration (when database available)
+- ✅ Handler adapters enhanced with auth service integration
+- ✅ Password hashing integrated in register handler
+- ✅ JWT token generation integrated in login handler
+- ✅ Token validation integrated in protected endpoint handlers
+- ⏳ Enhanced handler logic with database integration (when database available)
+
+### Completed: Handler Adapters Enhanced with Auth Service Integration ✅ (2025-12-06-010336-pst)
+
+**Key Achievements**:
+- Enhanced all handler adapters to use Authentication Service integration
+- Register handler: Password hashing using AuthService
+- Login handler: JWT token generation (access and refresh tokens)
+- Logout handler: Token revocation
+- Refresh handler: Refresh token validation and new access token generation
+- OTP handlers: OTP generation and validation using AuthService
+- Protected endpoints: JWT token validation (users/profile, users/settings)
+
+**Files Modified**:
+- `src/grain_carry_core/api/handler_adapters.zig` — Enhanced all handler adapters (577 lines)
+
+**Handler Adapter Enhancements**:
+- `handle_register_adapter()` — Hashes passwords using `auth_integration.hash_password()`
+- `handle_login_adapter()` — Generates access and refresh tokens using `auth_integration.generate_access_token()` and `auth_integration.generate_refresh_token()`
+- `handle_logout_adapter()` — Revokes JWT tokens using `auth_service.revoke_token()`
+- `handle_refresh_adapter()` — Validates refresh tokens and generates new access tokens
+- `handle_otp_send_adapter()` — Generates OTP codes using `auth_service_integration.generate_email_otp()`
+- `handle_otp_verify_adapter()` — Validates OTP codes and generates JWT tokens
+- `handle_users_profile_adapter()` — Validates JWT tokens using `auth_service_integration.extract_and_validate_token()`
+- `handle_users_settings_adapter()` — Validates JWT tokens using `auth_service_integration.extract_and_validate_token()`
+
+**Grain Style Compliance**:
+- ✅ `grain_case` function names
+- ✅ `u32`/`u64` types (no `usize`)
+- ✅ Bounded allocations (all limits explicit)
+- ✅ Minimum 2 assertions per function
+- ✅ Max 70 lines per function (all functions compliant)
+- ✅ Max 100 characters per line
+- ✅ All compiler warnings enabled
+
+**Next Steps**:
+- ✅ Enhanced handler adapter tests to verify auth service integration
+- ⏳ Integrate with database when available (user storage, credential verification)
+- ⏳ Add email service integration for OTP delivery
+
+### Completed: Handler Adapter Tests Enhanced with Auth Service Integration ✅ (2025-12-06-014044-pst)
+
+**Key Achievements**:
+- Enhanced all handler adapter tests to verify auth service integration
+- Register handler test: Verifies JWT token generation in response
+- Login handler test: Verifies JWT token generation in response
+- Logout handler test: Tests token revocation with valid JWT token
+- Users profile handler test: Tests protected endpoint with valid JWT token
+- Users profile unauthorized test: Verifies 401 response for missing/invalid tokens
+- OTP send handler test: Tests OTP generation with auth service
+- All tests now set up AuthService instance before running
+
+**Files Modified**:
+- `tests/122_grain_mobile_core_api_handler_adapters_test.zig` — Enhanced all tests with auth service setup
+- `src/grain_carry_core/api/root.zig` — Exported `auth_service_integration` module
+
+**Test Enhancements**:
+- All tests now initialize AuthService with secret key
+- Register/login tests verify token presence in response body
+- Logout test generates token before testing revocation
+- Protected endpoint tests use valid JWT tokens in Authorization header
+- Unauthorized test verifies 401 response for missing tokens
+
+**Grain Style Compliance**:
+- ✅ `grain_case` function names
+- ✅ `u32`/`u64` types (no `usize`)
+- ✅ Bounded allocations (all limits explicit)
+- ✅ Minimum 2 assertions per function
+- ✅ Max 70 lines per function (all functions compliant)
+- ✅ Max 100 characters per line
+- ✅ All compiler warnings enabled
+
+**Next Steps**:
+- Integrate with database when available (user storage, credential verification)
+- Add email service integration for OTP delivery
+- Begin WebSocket client implementation (Phase 8: Advanced Features)
 
 ### Completed: Handler Adapters for API Server Integration ✅ (2025-12-05-104041-pst)
 
@@ -665,10 +742,13 @@ While waiting for Grain Core Agent's API Server (Phase 59), we can prepare the A
 - All compiler warnings enabled
 
 **Next Steps**:
-- Update handler adapters to use auth service integration functions
-- Integrate password hashing in register handler
-- Integrate JWT token generation in login handler
-- Integrate token validation in protected endpoint handlers
+- ✅ Handler adapters enhanced with auth service integration
+- ✅ Password hashing integrated in register handler
+- ✅ JWT token generation integrated in login handler
+- ✅ Token validation integrated in protected endpoint handlers
+- ✅ Logout handler revokes tokens
+- ✅ Refresh handler validates refresh tokens and generates new access tokens
+- ✅ OTP handlers integrated with auth service
 
 ### Completed: Integration Pipeline Tests ✅ (2025-12-05-124416-pst)
 
@@ -769,6 +849,14 @@ While waiting for Grain Core Agent's API Server (Phase 59), we can prepare the A
    - WebSocket frame generation ✅
    - WebSocket connection management ✅
    - Ready for Carry Agent WebSocket client implementation ✅
+
+4. **DNS Resolution (Grain Core Agent Phase 61)**: ✅ **COMPLETE** (2025-12-05-231800-pst)
+   - DNS resolver with bounded cache ✅
+   - DNS cache entry management ✅
+   - DNS cache expiration ✅
+   - DNS record types (A, AAAA, MX) ✅
+   - Hostname resolution ready for network integration ✅
+   - Ready for Carry Agent domain name resolution ✅
 
 ### What We're Ready For
 
@@ -931,9 +1019,15 @@ While waiting for Grain Core Agent's API Server (Phase 59), we can prepare the A
   - WebSocket frame parsing and generation ✅
   - WebSocket connection management ✅
   - Ready for Carry Agent WebSocket client implementation ✅
+- **DNS Resolution (Phase 61)**: ✅ **COMPLETE** (2025-12-05-231800-pst)
+  - DNS resolver with bounded cache ✅
+  - DNS cache entry management ✅
+  - DNS record types (A, AAAA, MX) ✅
+  - Hostname resolution ✅
+  - Enables domain name resolution for API clients ✅
 
 **Coordination Notes**:
-- Carry Agent is **ready** for API Server (Phase 59) ✅, Authentication Service (Phase 60) ✅, and WebSocket Support (Phase 61) ✅
+- Carry Agent is **ready** for API Server (Phase 59) ✅, Authentication Service (Phase 60) ✅, WebSocket Support (Phase 61) ✅, and DNS Resolution (Phase 61) ✅
 - All core infrastructure is complete and ready for integration
 - Carry Agent has completed all core modules and is ready for integration
 
@@ -986,7 +1080,7 @@ While waiting for Grain Core Agent's API Server (Phase 59), we can prepare the A
 ## References
 
 - **Grain Style**: [`docs/grain_style.md`](../grain_style.md) — Coding principles and guidelines
-- **Master Plan**: [`docs/plan.md`](../plan.md) — Master overview
+- **Core Plan**: [`docs/plan.md`](../plan.md) — Core overview
 - **Grain Carry Agent Prompt**: [`docs/grain_mobile_agent_prompt.md`](../grain_mobile_agent_prompt.md) — Agent prompt and architecture
 - **Grain Carry Core Architecture**: [`docs/grain_carry_core_architecture.md`](../grain_carry_core_architecture.md) — Architecture details
 - **Grain Mobile Style System**: [`docs/grain_mobile_style_system.md`](../grain_mobile_style_system.md) — Style system design

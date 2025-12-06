@@ -21,10 +21,6 @@ pub const MAX_PORTS: u32 = 65535;
 // 2025-12-04-102946-pst: Active constant
 pub const MAX_CONNECTIONS: u32 = 512;
 
-// Bounded: Max DNS cache entries (explicit limit)
-// 2025-12-04-102946-pst: Active constant
-pub const MAX_DNS_CACHE_ENTRIES: u32 = 256;
-
 // Bounded: Max hostname length (explicit limit, in bytes)
 // 2025-12-04-102946-pst: Active constant
 pub const MAX_HOSTNAME_LEN: u32 = 256;
@@ -85,51 +81,39 @@ pub const ConnectionInfo = struct {
     protocol: u8, // 6 = TCP, 17 = UDP
 };
 
-// DNS cache entry structure.
-// 2025-12-04-102946-pst: Active struct
-pub const DNSCacheEntry = struct {
-    hostname: [MAX_HOSTNAME_LEN]u8,
-    hostname_len: u32,
-    ip_address: [grain_core.network_manager.MAX_IP_LEN]u8,
-    ip_address_len: u32,
-    cached_at: u64,
-    ttl: u32, // Time to live in seconds
-    active: bool,
-};
-
 // Network Tools application state.
 // 2025-12-04-102946-pst: Active struct
 pub const NetworkToolsApp = struct {
     network_manager: *grain_core.network_manager.NetworkManager,
+    dns_resolver: *grain_core.dns_resolver.DnsResolver,
     devices: [MAX_NETWORK_DEVICES]?NetworkDevice,
     devices_len: u32,
     connections: [MAX_CONNECTIONS]?ConnectionInfo,
     connections_len: u32,
-    dns_cache: [MAX_DNS_CACHE_ENTRIES]?DNSCacheEntry,
-    dns_cache_len: u32,
     bandwidth_bytes_sent: u64,
     bandwidth_bytes_received: u64,
     bandwidth_timestamp: u64,
     allocator: std.mem.Allocator,
 
     /// Initialize network tools application.
-    // 2025-12-04-102946-pst: Active function
+    // 2025-12-06-011616-pst: Active function
     pub fn init(
         allocator: std.mem.Allocator,
         nm: *grain_core.network_manager.NetworkManager,
+        dns_res: *grain_core.dns_resolver.DnsResolver,
     ) NetworkToolsApp {
-        // Precondition: Allocator and manager must be valid
+        // Precondition: Allocator and managers must be valid
         std.debug.assert(allocator.ptr != null);
         std.debug.assert(@intFromPtr(nm) != 0);
+        std.debug.assert(@intFromPtr(dns_res) != 0);
 
         var app = NetworkToolsApp{
             .network_manager = nm,
+            .dns_resolver = dns_res,
             .devices = undefined,
             .devices_len = 0,
             .connections = undefined,
             .connections_len = 0,
-            .dns_cache = undefined,
-            .dns_cache_len = 0,
             .bandwidth_bytes_sent = 0,
             .bandwidth_bytes_received = 0,
             .bandwidth_timestamp = 0,
@@ -148,16 +132,9 @@ pub const NetworkToolsApp = struct {
             app.connections[i] = null;
         }
 
-        // Initialize DNS cache array
-        i = 0;
-        while (i < MAX_DNS_CACHE_ENTRIES) : (i += 1) {
-            app.dns_cache[i] = null;
-        }
-
         // Postcondition: App must be valid
         std.debug.assert(app.devices_len == 0);
         std.debug.assert(app.connections_len == 0);
-        std.debug.assert(app.dns_cache_len == 0);
 
         return app;
     }
@@ -358,107 +335,84 @@ pub const NetworkToolsApp = struct {
         return true;
     }
 
-    /// Get DNS lookup result (cached or new).
-    // 2025-12-04-102946-pst: Active function
+    /// Get DNS lookup result (using Grain Core DNS resolver).
+    // 2025-12-06-011616-pst: Active function
     pub fn dns_lookup(
         self: *NetworkToolsApp,
         hostname: []const u8,
+        record_type: grain_core.dns_resolver.DnsRecordType,
         ip_address: []u8,
         ip_address_len: *u32,
     ) bool {
         // Precondition: Hostname and buffer must be valid
         std.debug.assert(hostname.len > 0);
-        std.debug.assert(hostname.len <= MAX_HOSTNAME_LEN);
+        std.debug.assert(hostname.len <= grain_core.dns_resolver.MAX_HOSTNAME_LEN);
         std.debug.assert(ip_address.len > 0);
         std.debug.assert(ip_address_len != null);
 
         ip_address_len.* = 0;
 
-        // Check DNS cache first
-        var i: u32 = 0;
-        while (i < self.dns_cache_len) : (i += 1) {
-            if (self.dns_cache[i]) |entry| {
-                const cached_hostname = entry.hostname[0..entry.hostname_len];
-                if (std.mem.eql(u8, cached_hostname, hostname)) {
-                    // Check if cache entry is still valid (TTL)
-                    const now = @as(u64, @intCast(std.time.timestamp()));
-                    if (now - entry.cached_at < entry.ttl) {
-                        const ip_len = @min(entry.ip_address_len, ip_address.len);
-                        @memcpy(ip_address[0..ip_len], entry.ip_address[0..ip_len]);
-                        ip_address_len.* = ip_len;
-                        return true;
-                    }
-                }
-            }
+        // Use Grain Core DNS resolver
+        const now = @as(u64, @intCast(std.time.timestamp()));
+        var ip_buf: [grain_core.dns_resolver.MAX_IP_ADDRESS_LEN]u8 = undefined;
+        const found = self.dns_resolver.resolve_hostname(
+            hostname,
+            record_type,
+            now,
+            &ip_buf,
+        );
+
+        if (found) {
+            const ip_len = @min(grain_core.dns_resolver.MAX_IP_ADDRESS_LEN, ip_address.len);
+            @memcpy(ip_address[0..ip_len], ip_buf[0..ip_len]);
+            ip_address_len.* = ip_len;
+            return true;
         }
 
-        // In full implementation, would perform actual DNS lookup
-        // For now, return false (not found)
         return false;
     }
 
-    /// Add DNS cache entry.
-    // 2025-12-04-102946-pst: Active function
+    /// Add DNS cache entry (using Grain Core DNS resolver).
+    // 2025-12-06-011616-pst: Active function
     pub fn add_dns_cache_entry(
         self: *NetworkToolsApp,
         hostname: []const u8,
+        record_type: grain_core.dns_resolver.DnsRecordType,
         ip_address: []const u8,
-        ttl: u32,
     ) bool {
-        // Precondition: Must have space for cache entry
-        std.debug.assert(self.dns_cache_len < MAX_DNS_CACHE_ENTRIES);
+        // Precondition: Hostname and IP must be valid
         std.debug.assert(hostname.len > 0);
-        std.debug.assert(hostname.len <= MAX_HOSTNAME_LEN);
+        std.debug.assert(hostname.len <= grain_core.dns_resolver.MAX_HOSTNAME_LEN);
         std.debug.assert(ip_address.len > 0);
-        std.debug.assert(ip_address.len <= grain_core.network_manager.MAX_IP_LEN);
+        std.debug.assert(ip_address.len <= grain_core.dns_resolver.MAX_IP_ADDRESS_LEN);
 
         const now = @as(u64, @intCast(std.time.timestamp()));
-        var entry = DNSCacheEntry{
-            .hostname = undefined,
-            .hostname_len = @as(u32, @intCast(hostname.len)),
-            .ip_address = undefined,
-            .ip_address_len = @as(u32, @intCast(ip_address.len)),
-            .cached_at = now,
-            .ttl = ttl,
-            .active = true,
-        };
+        const result = self.dns_resolver.add_cache_entry(
+            hostname,
+            record_type,
+            ip_address,
+            now,
+        );
 
-        // Set hostname
-        @memset(&entry.hostname, 0);
-        const hostname_len = @min(hostname.len, MAX_HOSTNAME_LEN);
-        @memcpy(entry.hostname[0..hostname_len], hostname[0..hostname_len]);
-        entry.hostname_len = @as(u32, @intCast(hostname_len));
+        // Postcondition: Cache entry added if successful
+        std.debug.assert(result or self.dns_resolver.cache_len >= grain_core.dns_resolver.MAX_DNS_CACHE_ENTRIES);
 
-        // Set IP address
-        @memset(&entry.ip_address, 0);
-        const ip_len = @min(ip_address.len, grain_core.network_manager.MAX_IP_LEN);
-        @memcpy(entry.ip_address[0..ip_len], ip_address[0..ip_len]);
-        entry.ip_address_len = @as(u32, @intCast(ip_len));
-
-        self.dns_cache[self.dns_cache_len] = entry;
-        self.dns_cache_len += 1;
-
-        // Postcondition: Cache count increased
-        std.debug.assert(self.dns_cache_len > 0);
-        std.debug.assert(self.dns_cache_len <= MAX_DNS_CACHE_ENTRIES);
-
-        return true;
+        return result;
     }
 
-    /// Clear DNS cache.
-    // 2025-12-04-102946-pst: Active function
-    pub fn clear_dns_cache(self: *NetworkToolsApp) void {
+    /// Clear expired DNS cache entries.
+    // 2025-12-06-011616-pst: Active function
+    pub fn clear_expired_dns_cache(self: *NetworkToolsApp) u32 {
         // Precondition: App must be valid
         std.debug.assert(@intFromPtr(self) != 0);
 
-        self.dns_cache_len = 0;
-        var i: u32 = 0;
-        while (i < MAX_DNS_CACHE_ENTRIES) : (i += 1) {
-            self.dns_cache[i] = null;
-        }
+        const now = @as(u64, @intCast(std.time.timestamp()));
+        const cleared_count = self.dns_resolver.clear_expired_cache(now);
 
-        // Postcondition: Cache must be cleared
-        std.debug.assert(self.dns_cache_len == 0);
+        // Postcondition: Cleared count must be valid
+        std.debug.assert(cleared_count <= self.dns_resolver.cache_len);
+
+        return cleared_count;
     }
 };
 

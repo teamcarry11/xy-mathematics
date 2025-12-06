@@ -23,6 +23,9 @@ pub const MAX_TEXT_ITEMS: u32 = 256;
 // Bounded: Max selection count.
 pub const MAX_SELECTION: u32 = 64;
 
+// Bounded: Max clipboard shapes.
+pub const MAX_CLIPBOARD_SHAPES: u32 = 64;
+
 // Bounded: Min zoom level (10%).
 pub const MIN_ZOOM: f64 = 0.1;
 
@@ -100,6 +103,8 @@ pub const Canvas = struct {
     selection: [MAX_SELECTION]u32,
     selection_len: u32,
     selection_type: SelectionType,
+    clipboard: [MAX_CLIPBOARD_SHAPES]Shape,
+    clipboard_len: u32,
 
     const SelectionType = enum {
         shape,
@@ -110,7 +115,7 @@ pub const Canvas = struct {
     pub fn init(width: u32, height: u32) Canvas {
         std.debug.assert(width > 0);
         std.debug.assert(height > 0);
-        var canvas = Canvas{
+        const canvas = Canvas{
             .layers = undefined,
             .layers_len = 0,
             .next_shape_id = 1,
@@ -123,14 +128,16 @@ pub const Canvas = struct {
                 .width = width,
                 .height = height,
             },
-            .selection = undefined,
-            .selection_len = 0,
-            .selection_type = .none,
-        };
-        std.debug.assert(canvas.viewport.zoom >= MIN_ZOOM);
-        std.debug.assert(canvas.viewport.zoom <= MAX_ZOOM);
-        return canvas;
-    }
+                    .selection = undefined,
+                    .selection_len = 0,
+                    .selection_type = .none,
+                    .clipboard = undefined,
+                    .clipboard_len = 0,
+                };
+                std.debug.assert(canvas.viewport.zoom >= MIN_ZOOM);
+                std.debug.assert(canvas.viewport.zoom <= MAX_ZOOM);
+                return canvas;
+            }
 
     // World to screen coordinate transformation.
     pub fn world_to_screen(
@@ -265,7 +272,7 @@ pub const Canvas = struct {
             const shape_id = self.next_shape_id;
             self.next_shape_id += 1;
             const z_order = layer.shapes_len;
-            var shape = Shape{
+            const shape = Shape{
                 .id = shape_id,
                 .shape_type = shape_type,
                 .x = x,
@@ -347,6 +354,245 @@ pub const Canvas = struct {
         self.selection_type = .shape;
         std.debug.assert(self.selection_len <= MAX_SELECTION);
         return true;
+    }
+
+    // Find shape at world coordinates (hit testing).
+    pub fn find_shape_at(
+        self: *const Canvas,
+        world_x: f64,
+        world_y: f64,
+    ) ?u32 {
+        // Search layers in reverse z-order (top to bottom).
+        var layer_i: u32 = self.layers_len;
+        while (layer_i > 0) {
+            layer_i -= 1;
+            const layer = &self.layers[layer_i];
+            if (!layer.visible or layer.locked) {
+                continue;
+            }
+            // Search shapes in reverse z-order.
+            var shape_i: u32 = layer.shapes_len;
+            while (shape_i > 0) {
+                shape_i -= 1;
+                const shape = &layer.shapes[shape_i];
+                if (self.is_point_in_shape(world_x, world_y, shape)) {
+                    return shape.id;
+                }
+            }
+        }
+        return null;
+    }
+
+    // Check if point is inside shape (hit testing).
+    pub fn is_point_in_shape(
+        _: *const Canvas,
+        world_x: f64,
+        world_y: f64,
+        shape: *const Shape,
+    ) bool {
+        std.debug.assert(@intFromPtr(shape) != 0);
+        switch (shape.shape_type) {
+            .rectangle, .rounded_rectangle => {
+                return (world_x >= shape.x and world_x <= shape.x + shape.width and
+                    world_y >= shape.y and world_y <= shape.y + shape.height);
+            },
+            .circle => {
+                const center_x = shape.x + shape.width / 2.0;
+                const center_y = shape.y + shape.height / 2.0;
+                const radius = @min(shape.width, shape.height) / 2.0;
+                const dx = world_x - center_x;
+                const dy = world_y - center_y;
+                const distance_squared = dx * dx + dy * dy;
+                const radius_squared = radius * radius;
+                return distance_squared <= radius_squared;
+            },
+        }
+    }
+
+    // Move shape by offset.
+    pub fn move_shape(
+        self: *Canvas,
+        shape_id: u32,
+        dx: f64,
+        dy: f64,
+    ) bool {
+        std.debug.assert(shape_id > 0);
+        var layer_i: u32 = 0;
+        while (layer_i < self.layers_len) : (layer_i += 1) {
+            const layer = &self.layers[layer_i];
+            var shape_i: u32 = 0;
+            while (shape_i < layer.shapes_len) : (shape_i += 1) {
+                if (layer.shapes[shape_i].id == shape_id) {
+                    layer.shapes[shape_i].x += dx;
+                    layer.shapes[shape_i].y += dy;
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    // Resize shape.
+    pub fn resize_shape(
+        self: *Canvas,
+        shape_id: u32,
+        new_width: f64,
+        new_height: f64,
+    ) bool {
+        std.debug.assert(shape_id > 0);
+        std.debug.assert(new_width > 0.0);
+        std.debug.assert(new_height > 0.0);
+        var layer_i: u32 = 0;
+        while (layer_i < self.layers_len) : (layer_i += 1) {
+            const layer = &self.layers[layer_i];
+            var shape_i: u32 = 0;
+            while (shape_i < layer.shapes_len) : (shape_i += 1) {
+                if (layer.shapes[shape_i].id == shape_id) {
+                    layer.shapes[shape_i].width = new_width;
+                    layer.shapes[shape_i].height = new_height;
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    // Get shape by ID.
+    pub fn get_shape(self: *const Canvas, shape_id: u32) ?*const Shape {
+        std.debug.assert(shape_id > 0);
+        var layer_i: u32 = 0;
+        while (layer_i < self.layers_len) : (layer_i += 1) {
+            const layer = &self.layers[layer_i];
+            var shape_i: u32 = 0;
+            while (shape_i < layer.shapes_len) : (shape_i += 1) {
+                if (layer.shapes[shape_i].id == shape_id) {
+                    return &layer.shapes[shape_i];
+                }
+            }
+        }
+        return null;
+    }
+
+    // Duplicate shape by ID.
+    pub fn duplicate_shape(
+        self: *Canvas,
+        shape_id: u32,
+        offset_x: f64,
+        offset_y: f64,
+    ) ?u32 {
+        std.debug.assert(shape_id > 0);
+        var layer_i: u32 = 0;
+        while (layer_i < self.layers_len) : (layer_i += 1) {
+            const layer = &self.layers[layer_i];
+            var shape_i: u32 = 0;
+            while (shape_i < layer.shapes_len) : (shape_i += 1) {
+                if (layer.shapes[shape_i].id == shape_id) {
+                    const original = layer.shapes[shape_i];
+                    if (layer.shapes_len >= MAX_SHAPES) {
+                        return null;
+                    }
+                    const new_shape_id = self.next_shape_id;
+                    self.next_shape_id += 1;
+                    const new_shape = Shape{
+                        .id = new_shape_id,
+                        .shape_type = original.shape_type,
+                        .x = original.x + offset_x,
+                        .y = original.y + offset_y,
+                        .width = original.width,
+                        .height = original.height,
+                        .color = original.color,
+                        .corner_radius = original.corner_radius,
+                        .layer_id = original.layer_id,
+                        .z_order = layer.shapes_len,
+                    };
+                    layer.shapes[layer.shapes_len] = new_shape;
+                    layer.shapes_len += 1;
+                    std.debug.assert(layer.shapes_len <= MAX_SHAPES);
+                    return new_shape_id;
+                }
+            }
+        }
+        return null;
+    }
+
+    // Copy selected shapes to clipboard.
+    pub fn copy_selected_shapes(self: *Canvas) bool {
+        std.debug.assert(self.selection_len <= MAX_SELECTION);
+        if (self.selection_len == 0) {
+            return false;
+        }
+        self.clipboard_len = 0;
+        var i: u32 = 0;
+        while (i < self.selection_len and self.clipboard_len < MAX_CLIPBOARD_SHAPES) : (i += 1) {
+            const shape_id = self.selection[i];
+            if (self.get_shape(shape_id)) |shape| {
+                self.clipboard[self.clipboard_len] = shape.*;
+                self.clipboard_len += 1;
+            }
+        }
+        std.debug.assert(self.clipboard_len <= MAX_CLIPBOARD_SHAPES);
+        return self.clipboard_len > 0;
+    }
+
+    // Paste shapes from clipboard to layer.
+    pub fn paste_shapes(
+        self: *Canvas,
+        layer_id: u32,
+        offset_x: f64,
+        offset_y: f64,
+    ) u32 {
+        std.debug.assert(layer_id > 0);
+        if (self.clipboard_len == 0) {
+            return 0;
+        }
+        if (self.get_layer(layer_id)) |layer| {
+            var pasted_count: u32 = 0;
+            var i: u32 = 0;
+            while (i < self.clipboard_len and layer.shapes_len < MAX_SHAPES) : (i += 1) {
+                const clipboard_shape = self.clipboard[i];
+                const new_shape_id = self.next_shape_id;
+                self.next_shape_id += 1;
+                const new_shape = Shape{
+                    .id = new_shape_id,
+                    .shape_type = clipboard_shape.shape_type,
+                    .x = clipboard_shape.x + offset_x,
+                    .y = clipboard_shape.y + offset_y,
+                    .width = clipboard_shape.width,
+                    .height = clipboard_shape.height,
+                    .color = clipboard_shape.color,
+                    .corner_radius = clipboard_shape.corner_radius,
+                    .layer_id = layer_id,
+                    .z_order = layer.shapes_len,
+                };
+                layer.shapes[layer.shapes_len] = new_shape;
+                layer.shapes_len += 1;
+                pasted_count += 1;
+            }
+            std.debug.assert(layer.shapes_len <= MAX_SHAPES);
+            return pasted_count;
+        }
+        return 0;
+    }
+
+    // Duplicate selected shapes.
+    pub fn duplicate_selected_shapes(
+        self: *Canvas,
+        offset_x: f64,
+        offset_y: f64,
+    ) u32 {
+        std.debug.assert(self.selection_len <= MAX_SELECTION);
+        if (self.selection_len == 0) {
+            return 0;
+        }
+        var duplicated_count: u32 = 0;
+        var i: u32 = 0;
+        while (i < self.selection_len) : (i += 1) {
+            const shape_id = self.selection[i];
+            if (self.duplicate_shape(shape_id, offset_x, offset_y)) |_| {
+                duplicated_count += 1;
+            }
+        }
+        return duplicated_count;
     }
 };
 

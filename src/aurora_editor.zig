@@ -568,7 +568,8 @@ pub const Editor = struct {
         const pos = self.cursor_line * 80 + self.cursor_char;
         
         // Assert: Position must be within bounds
-        std.debug.assert(pos <= self.buffer.textSlice().len);
+        const text_len = @as(u32, @intCast(self.buffer.textSlice().len));
+        std.debug.assert(pos <= text_len);
         
         // Check if position is in readonly span
         if (self.buffer.isReadOnly(pos)) {
@@ -671,9 +672,10 @@ pub const Editor = struct {
         const buffer_text = self.buffer.textSlice();
         
         // Assert: Position and length must be valid
-        std.debug.assert(pos <= buffer_text.len);
+        const text_len = @as(u32, @intCast(buffer_text.len));
+        std.debug.assert(pos <= text_len);
         std.debug.assert(len > 0);
-        std.debug.assert(pos + len <= buffer_text.len);
+        std.debug.assert(pos + len <= text_len);
         
         // Check if position is in readonly span
         if (self.buffer.isReadOnly(pos)) {

@@ -68,7 +68,7 @@ fn extract_client_id(request: *grain_core_api_server.HttpRequest) ?[]const u8 {
 
 // Database authentication middleware adapter.
 // Uses Grain OS auth middleware (basic Authorization header check).
-// Full JWT validation can be added later when needed.
+// For enhanced JWT validation, use database_auth_middleware_enhanced from auth_integration.
 pub fn database_auth_middleware(
     request: *grain_core_api_server.HttpRequest,
     response: *grain_core_api_server.HttpResponse,

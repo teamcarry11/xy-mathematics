@@ -291,6 +291,17 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
         .imports = &.{
             .{ .name = "grain_silo", .module = grain_silo_module },
+            .{ .name = "grain_core", .module = grain_core_module },
+        },
+    });
+
+    // Grain Bubble module
+    const grain_bubble_module = b.addModule("grain_bubble", .{
+        .root_source_file = b.path("src/grain_bubble/root.zig"),
+        .target = target,
+        .optimize = optimize,
+        .imports = &.{
+            .{ .name = "grain_core", .module = grain_core_module },
         },
     });
 
@@ -1455,6 +1466,19 @@ pub fn build(b: *std.Build) void {
     });
     const process_group_stats_tests_run = b.addRunArtifact(process_group_stats_tests);
     test_step.dependOn(&process_group_stats_tests_run.step);
+
+    const process_group_limits_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/085_process_group_limits_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+            },
+        }),
+    });
+    const process_group_limits_tests_run = b.addRunArtifact(process_group_limits_tests);
+    test_step.dependOn(&process_group_limits_tests_run.step);
 
     const storage_filesystem_tests = b.addTest(.{
         .root_module = b.createModule(.{
@@ -3191,6 +3215,19 @@ pub fn build(b: *std.Build) void {
     const grain_core_dns_resolver_tests_run = b.addRunArtifact(grain_core_dns_resolver_tests);
     test_step.dependOn(&grain_core_dns_resolver_tests_run.step);
 
+    const grain_core_file_storage_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/118_grain_core_file_storage_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_core", .module = grain_core_module },
+            },
+        }),
+    });
+    const grain_core_file_storage_tests_run = b.addRunArtifact(grain_core_file_storage_tests);
+    test_step.dependOn(&grain_core_file_storage_tests_run.step);
+
     const grain_database_integration_os_tests = b.addTest(.{
         .root_module = b.createModule(.{
             .root_source_file = b.path("tests/109_grain_database_integration_os_test.zig"),
@@ -3203,6 +3240,20 @@ pub fn build(b: *std.Build) void {
     });
     const grain_database_integration_os_tests_run = b.addRunArtifact(grain_database_integration_os_tests);
     test_step.dependOn(&grain_database_integration_os_tests_run.step);
+
+    const grain_database_auth_integration_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/113_grain_database_auth_integration_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_database", .module = grain_database_module },
+                .{ .name = "grain_core", .module = grain_core_module },
+            },
+        }),
+    });
+    const grain_database_auth_integration_tests_run = b.addRunArtifact(grain_database_auth_integration_tests);
+    test_step.dependOn(&grain_database_auth_integration_tests_run.step);
 
     // RISC-V Logo Display Program
     const riscv_logo_exe = b.addExecutable(.{
@@ -3536,4 +3587,48 @@ pub fn build(b: *std.Build) void {
     });
     const run_fuzz_003_tests = b.addRunArtifact(fuzz_003_tests);
     test_step.dependOn(&run_fuzz_003_tests.step);
+
+    // Grain Bubble canvas tests
+    const grain_bubble_canvas_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/125_grain_bubble_canvas_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_bubble", .module = grain_bubble_module },
+            },
+        }),
+    });
+    const grain_bubble_canvas_tests_run = b.addRunArtifact(grain_bubble_canvas_tests);
+    test_step.dependOn(&grain_bubble_canvas_tests_run.step);
+
+    // Grain Bubble canvas renderer tests
+    const grain_bubble_canvas_renderer_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/126_grain_bubble_canvas_renderer_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_bubble", .module = grain_bubble_module },
+                .{ .name = "grain_core", .module = grain_core_module },
+            },
+        }),
+    });
+    const grain_bubble_canvas_renderer_tests_run = b.addRunArtifact(grain_bubble_canvas_renderer_tests);
+    test_step.dependOn(&grain_bubble_canvas_renderer_tests_run.step);
+
+    // Grain Bubble canvas input tests
+    const grain_bubble_canvas_input_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/127_grain_bubble_canvas_input_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_bubble", .module = grain_bubble_module },
+                .{ .name = "grain_core", .module = grain_core_module },
+            },
+        }),
+    });
+    const grain_bubble_canvas_input_tests_run = b.addRunArtifact(grain_bubble_canvas_input_tests);
+    test_step.dependOn(&grain_bubble_canvas_input_tests_run.step);
 }

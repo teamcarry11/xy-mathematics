@@ -4,7 +4,7 @@
 //! Architecture: Comprehensive test coverage for all public APIs.
 //! GrainStyle: grain_case, u32/u64, bounded allocations, assertions.
 //!
-//! 2025-12-04-102946-pst: Active implementation
+//! 2025-12-06-011616-pst: Active implementation
 
 const std = @import("std");
 const testing = std.testing;
@@ -16,12 +16,12 @@ const grain_core = @import("grain_core");
 test "network tools app initialization" {
     const allocator = testing.allocator;
     var nm = grain_core.network_manager.NetworkManager.init();
+    var dns_res = grain_core.dns_resolver.DnsResolver.init(3600);
 
-    var app = NetworkToolsApp.init(allocator, &nm);
+    var app = NetworkToolsApp.init(allocator, &nm, &dns_res);
 
     try testing.expect(app.devices_len == 0);
     try testing.expect(app.connections_len == 0);
-    try testing.expect(app.dns_cache_len == 0);
     try testing.expect(app.bandwidth_bytes_sent == 0);
     try testing.expect(app.bandwidth_bytes_received == 0);
 }
@@ -29,8 +29,9 @@ test "network tools app initialization" {
 test "scan network" {
     const allocator = testing.allocator;
     var nm = grain_core.network_manager.NetworkManager.init();
+    var dns_res = grain_core.dns_resolver.DnsResolver.init(3600);
 
-    var app = NetworkToolsApp.init(allocator, &nm);
+    var app = NetworkToolsApp.init(allocator, &nm, &dns_res);
     const device_count = app.scan_network("192.168.1.0", "255.255.255.0");
 
     try testing.expect(device_count > 0);
@@ -41,8 +42,9 @@ test "scan network" {
 test "scan ports" {
     const allocator = testing.allocator;
     var nm = grain_core.network_manager.NetworkManager.init();
+    var dns_res = grain_core.dns_resolver.DnsResolver.init(3600);
 
-    var app = NetworkToolsApp.init(allocator, &nm);
+    var app = NetworkToolsApp.init(allocator, &nm, &dns_res);
 
     var results: [10]NetworkToolsApp.PortScanResult = undefined;
     var results_len: u32 = 0;
@@ -56,8 +58,9 @@ test "scan ports" {
 test "update bandwidth" {
     const allocator = testing.allocator;
     var nm = grain_core.network_manager.NetworkManager.init();
+    var dns_res = grain_core.dns_resolver.DnsResolver.init(3600);
 
-    var app = NetworkToolsApp.init(allocator, &nm);
+    var app = NetworkToolsApp.init(allocator, &nm, &dns_res);
     app.update_bandwidth(1024, 2048);
 
     var bytes_sent: u64 = 0;
@@ -71,8 +74,9 @@ test "update bandwidth" {
 test "get bandwidth" {
     const allocator = testing.allocator;
     var nm = grain_core.network_manager.NetworkManager.init();
+    var dns_res = grain_core.dns_resolver.DnsResolver.init(3600);
 
-    var app = NetworkToolsApp.init(allocator, &nm);
+    var app = NetworkToolsApp.init(allocator, &nm, &dns_res);
     app.update_bandwidth(512, 1024);
 
     var bytes_sent: u64 = 0;
@@ -86,8 +90,9 @@ test "get bandwidth" {
 test "add connection" {
     const allocator = testing.allocator;
     var nm = grain_core.network_manager.NetworkManager.init();
+    var dns_res = grain_core.dns_resolver.DnsResolver.init(3600);
 
-    var app = NetworkToolsApp.init(allocator, &nm);
+    var app = NetworkToolsApp.init(allocator, &nm, &dns_res);
     const result = app.add_connection("127.0.0.1", 8080, "192.168.1.1", 80, .established, 6);
 
     try testing.expect(result == true);
@@ -101,13 +106,14 @@ test "add connection" {
 test "dns lookup" {
     const allocator = testing.allocator;
     var nm = grain_core.network_manager.NetworkManager.init();
+    var dns_res = grain_core.dns_resolver.DnsResolver.init(3600);
 
-    var app = NetworkToolsApp.init(allocator, &nm);
-    _ = app.add_dns_cache_entry("example.com", "93.184.216.34", 3600);
+    var app = NetworkToolsApp.init(allocator, &nm, &dns_res);
+    _ = app.add_dns_cache_entry("example.com", .a, "93.184.216.34");
 
-    var ip_address: [46]u8 = undefined;
+    var ip_address: [16]u8 = undefined;
     var ip_address_len: u32 = 0;
-    const found = app.dns_lookup("example.com", &ip_address, &ip_address_len);
+    const found = app.dns_lookup("example.com", .a, &ip_address, &ip_address_len);
 
     try testing.expect(found == true);
     try testing.expect(ip_address_len > 0);
@@ -116,33 +122,39 @@ test "dns lookup" {
 test "add dns cache entry" {
     const allocator = testing.allocator;
     var nm = grain_core.network_manager.NetworkManager.init();
+    var dns_res = grain_core.dns_resolver.DnsResolver.init(3600);
 
-    var app = NetworkToolsApp.init(allocator, &nm);
-    const result = app.add_dns_cache_entry("test.com", "192.168.1.1", 3600);
+    var app = NetworkToolsApp.init(allocator, &nm, &dns_res);
+    const result = app.add_dns_cache_entry("test.com", .a, "192.168.1.1");
 
     try testing.expect(result == true);
-    try testing.expect(app.dns_cache_len == 1);
-    try testing.expect(app.dns_cache[0] != null);
-    try testing.expect(std.mem.eql(u8, app.dns_cache[0].?.hostname[0..app.dns_cache[0].?.hostname_len], "test.com"));
+    try testing.expect(dns_res.cache_len == 1);
+    try testing.expect(dns_res.cache[0].active == true);
+    try testing.expect(std.mem.eql(u8, dns_res.cache[0].hostname[0..dns_res.cache[0].hostname_len], "test.com"));
 }
 
-test "clear dns cache" {
+test "clear expired dns cache" {
     const allocator = testing.allocator;
     var nm = grain_core.network_manager.NetworkManager.init();
+    var dns_res = grain_core.dns_resolver.DnsResolver.init(1); // 1 second TTL
 
-    var app = NetworkToolsApp.init(allocator, &nm);
-    _ = app.add_dns_cache_entry("test.com", "192.168.1.1", 3600);
-    try testing.expect(app.dns_cache_len == 1);
+    var app = NetworkToolsApp.init(allocator, &nm, &dns_res);
+    _ = app.add_dns_cache_entry("test.com", .a, "192.168.1.1");
+    try testing.expect(dns_res.cache_len == 1);
 
-    app.clear_dns_cache();
-    try testing.expect(app.dns_cache_len == 0);
+    // Wait for cache to expire
+    std.time.sleep(2000000000); // 2 seconds
+
+    const cleared = app.clear_expired_dns_cache();
+    try testing.expect(cleared == 1);
 }
 
 test "multiple connections" {
     const allocator = testing.allocator;
     var nm = grain_core.network_manager.NetworkManager.init();
+    var dns_res = grain_core.dns_resolver.DnsResolver.init(3600);
 
-    var app = NetworkToolsApp.init(allocator, &nm);
+    var app = NetworkToolsApp.init(allocator, &nm, &dns_res);
     _ = app.add_connection("127.0.0.1", 8080, "192.168.1.1", 80, .established, 6);
     _ = app.add_connection("127.0.0.1", 8081, "192.168.1.2", 443, .listening, 6);
 
@@ -154,13 +166,13 @@ test "multiple connections" {
 test "multiple dns cache entries" {
     const allocator = testing.allocator;
     var nm = grain_core.network_manager.NetworkManager.init();
+    var dns_res = grain_core.dns_resolver.DnsResolver.init(3600);
 
-    var app = NetworkToolsApp.init(allocator, &nm);
-    _ = app.add_dns_cache_entry("test1.com", "192.168.1.1", 3600);
-    _ = app.add_dns_cache_entry("test2.com", "192.168.1.2", 3600);
+    var app = NetworkToolsApp.init(allocator, &nm, &dns_res);
+    _ = app.add_dns_cache_entry("test1.com", .a, "192.168.1.1");
+    _ = app.add_dns_cache_entry("test2.com", .a, "192.168.1.2");
 
-    try testing.expect(app.dns_cache_len == 2);
-    try testing.expect(app.dns_cache[0] != null);
-    try testing.expect(app.dns_cache[1] != null);
+    try testing.expect(dns_res.cache_len == 2);
+    try testing.expect(dns_res.cache[0].active == true);
+    try testing.expect(dns_res.cache[1].active == true);
 }
-

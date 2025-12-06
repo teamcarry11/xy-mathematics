@@ -16,4 +16,5 @@ pub const route_registration = @import("route_registration.zig");
 pub const os_integration = @import("os_integration.zig");
 pub const handler_adapters = @import("handler_adapters.zig");
 pub const auth_integration = @import("auth_integration.zig");
+pub const auth_service_integration = @import("auth_service_integration.zig");
 

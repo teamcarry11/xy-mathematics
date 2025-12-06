@@ -2,7 +2,7 @@
 
 **Agent**: Grain Carry Agent (6th Agent)  
 **Status**: WebSocket Support Available — Ready for WebSocket Client Implementation  
-**Last Updated**: 2025-12-05-215654-pst
+**Last Updated**: 2025-12-06-010336-pst
 
 ---
 
@@ -67,7 +67,13 @@
 - [x] Integrate TOTP code generation and validation
 - [x] Create comprehensive auth service integration tests
 - [x] Update `docs/plans/plan_mobile.md` and `docs/tasks/tasks_carry.md` with completion
-- [ ] Update handler adapters to use auth service integration functions
+- [x] Update handler adapters to use auth service integration functions
+- [x] Integrate password hashing in register handler
+- [x] Integrate JWT token generation in login handler
+- [x] Integrate token validation in protected endpoint handlers
+- [x] Enhance logout handler to revoke tokens
+- [x] Enhance refresh handler to validate refresh tokens and generate new access tokens
+- [x] Enhance OTP handlers with auth service integration
 - [ ] End-to-end API testing with actual network connections (when network ready)
 - [ ] Implement HTTP client execution (when API Server available)
 - [ ] Add retry logic
@@ -430,8 +436,8 @@ All core modules are complete:
 ## References
 
 - **Grain Style**: [`docs/grain_style.md`](../grain_style.md) — Coding principles and guidelines
-- **Master Plan**: [`docs/plan.md`](../plan.md) — Master overview
-- **Master Tasks**: [`docs/tasks.md`](../tasks.md) — Master task list
+- **Core Plan**: [`docs/plan.md`](../plan.md) — Core overview
+- **Core Tasks**: [`docs/tasks.md`](../tasks.md) — Core task list
 - **Grain Carry Agent Prompt**: [`docs/grain_mobile_agent_prompt.md`](../grain_mobile_agent_prompt.md) — Agent prompt and architecture
 - **Grain Carry Core Architecture**: [`docs/grain_carry_core_architecture.md`](../grain_carry_core_architecture.md) — Architecture details
 - **Grain Mobile Style System**: [`docs/grain_mobile_style_system.md`](../grain_mobile_style_system.md) — Style system design

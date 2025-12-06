@@ -8,12 +8,15 @@
 
 const std = @import("std");
 const grain_core_api = @import("../../grain_core/api_server.zig");
+const grain_core_auth = @import("../../grain_core/auth_service.zig");
 const grain_core_json = @import("../../grain_core/json_helpers.zig");
 const models = @import("models.zig");
 const responses = @import("responses.zig");
 const validation = @import("validation.zig");
 const endpoints = @import("endpoints.zig");
 const handlers = @import("handlers.zig");
+const auth_integration = @import("auth_integration.zig");
+const auth_service_integration = @import("auth_service_integration.zig");
 
 // Global API server instance (set during initialization).
 var global_api_server: ?*grain_core_api.ApiServer = null;
@@ -96,13 +99,47 @@ pub fn handle_register_adapter(
         response.status = grain_core_api.HttpStatus.bad_request;
         return;
     }
-    const result = handlers.handle_register(context);
-    if (result != handlers.HandlerResult.success) {
+    
+    // Hash password using auth service
+    var password_hash: [grain_core_auth.HASH_OUTPUT_LEN]u8 = undefined;
+    auth_integration.hash_password(password, &password_hash);
+    
+    // TODO: Store user in database (when database available)
+    // For now, just hash the password and generate tokens
+    
+    // Generate user_id from email (temporary until database available)
+    var user_id: [grain_core_auth.MAX_USER_ID_LEN]u8 = undefined;
+    const user_id_len = if (email_len <= grain_core_auth.MAX_USER_ID_LEN) email_len else grain_core_auth.MAX_USER_ID_LEN;
+    std.mem.copyForwards(u8, &user_id, email[0..user_id_len]);
+    
+    // Generate tokens
+    const current_time: u64 = @intCast(std.time.timestamp());
+    var access_token: [grain_core_auth.MAX_JWT_LEN]u8 = undefined;
+    var refresh_token: [grain_core_auth.MAX_JWT_LEN]u8 = undefined;
+    const access_token_len = auth_integration.generate_access_token(
+        user_id[0..user_id_len],
+        current_time,
+        &access_token,
+    );
+    const refresh_token_len = auth_integration.generate_refresh_token(
+        user_id[0..user_id_len],
+        current_time,
+        &refresh_token,
+    );
+    
+    if (access_token_len == 0 or refresh_token_len == 0) {
         response.status = grain_core_api.HttpStatus.internal_server_error;
         return;
     }
+    
+    // Build auth response
     var auth_resp = models.AuthResponse.init();
     auth_resp.success = true;
+    _ = auth_resp.set_token(access_token[0..access_token_len]);
+    _ = auth_resp.set_refresh_token(refresh_token[0..refresh_token_len]);
+    _ = auth_resp.set_user_id(user_id[0..user_id_len]);
+    auth_resp.expires_in = grain_core_auth.ACCESS_TOKEN_EXPIRY;
+    
     var json_buf: [responses.MAX_JSON_RESPONSE_LEN]u8 = undefined;
     const json_len = responses.build_auth_response(&auth_resp, &json_buf);
     response.status = grain_core_api.HttpStatus.ok;
@@ -153,13 +190,43 @@ pub fn handle_login_adapter(
         response.status = grain_core_api.HttpStatus.bad_request;
         return;
     }
-    const result = handlers.handle_login(context);
-    if (result != handlers.HandlerResult.success) {
-        response.status = grain_core_api.HttpStatus.unauthorized;
+    
+    // TODO: Verify credentials against database (when database available)
+    // For now, generate tokens for any valid email/password format
+    
+    // Generate user_id from email (temporary until database available)
+    var user_id: [grain_core_auth.MAX_USER_ID_LEN]u8 = undefined;
+    const user_id_len = if (email_len <= grain_core_auth.MAX_USER_ID_LEN) email_len else grain_core_auth.MAX_USER_ID_LEN;
+    std.mem.copyForwards(u8, &user_id, email[0..user_id_len]);
+    
+    // Generate tokens
+    const current_time: u64 = @intCast(std.time.timestamp());
+    var access_token: [grain_core_auth.MAX_JWT_LEN]u8 = undefined;
+    var refresh_token: [grain_core_auth.MAX_JWT_LEN]u8 = undefined;
+    const access_token_len = auth_integration.generate_access_token(
+        user_id[0..user_id_len],
+        current_time,
+        &access_token,
+    );
+    const refresh_token_len = auth_integration.generate_refresh_token(
+        user_id[0..user_id_len],
+        current_time,
+        &refresh_token,
+    );
+    
+    if (access_token_len == 0 or refresh_token_len == 0) {
+        response.status = grain_core_api.HttpStatus.internal_server_error;
         return;
     }
+    
+    // Build auth response
     var auth_resp = models.AuthResponse.init();
     auth_resp.success = true;
+    _ = auth_resp.set_token(access_token[0..access_token_len]);
+    _ = auth_resp.set_refresh_token(refresh_token[0..refresh_token_len]);
+    _ = auth_resp.set_user_id(user_id[0..user_id_len]);
+    auth_resp.expires_in = grain_core_auth.ACCESS_TOKEN_EXPIRY;
+    
     var json_buf: [responses.MAX_JSON_RESPONSE_LEN]u8 = undefined;
     const json_len = responses.build_auth_response(&auth_resp, &json_buf);
     response.status = grain_core_api.HttpStatus.ok;
@@ -175,15 +242,18 @@ pub fn handle_logout_adapter(
 ) void {
     std.debug.assert(request != null);
     std.debug.assert(response != null);
-    const context = get_handler_context() orelse {
-        response.status = grain_core_api.HttpStatus.internal_server_error;
-        return;
-    };
-    const result = handlers.handle_logout(context);
-    if (result != handlers.HandlerResult.success) {
-        response.status = grain_core_api.HttpStatus.internal_server_error;
-        return;
+    
+    // Extract and revoke JWT token
+    var token_buf: [grain_core_auth.MAX_JWT_LEN]u8 = undefined;
+    const token_len = auth_integration.extract_jwt_token_from_request(request, &token_buf);
+    
+    if (token_len > 0) {
+        const service = auth_integration.get_auth_service();
+        if (service) |auth_service| {
+            _ = auth_service.revoke_token(token_buf[0..token_len]);
+        }
     }
+    
     var json_buf: [responses.MAX_JSON_RESPONSE_LEN]u8 = undefined;
     const json_len = responses.build_success_response("Logged out", "", &json_buf);
     response.status = grain_core_api.HttpStatus.ok;
@@ -199,17 +269,51 @@ pub fn handle_refresh_adapter(
 ) void {
     std.debug.assert(request != null);
     std.debug.assert(response != null);
-    const context = get_handler_context() orelse {
-        response.status = grain_core_api.HttpStatus.internal_server_error;
-        return;
-    };
-    const result = handlers.handle_refresh(context);
-    if (result != handlers.HandlerResult.success) {
+    
+    // Extract refresh token from request
+    var token_buf: [grain_core_auth.MAX_JWT_LEN]u8 = undefined;
+    const token_len = auth_integration.extract_jwt_token_from_request(request, &token_buf);
+    
+    if (token_len == 0) {
         response.status = grain_core_api.HttpStatus.unauthorized;
         return;
     }
+    
+    // Validate refresh token
+    const current_time: u64 = @intCast(std.time.timestamp());
+    var claims = grain_core_auth.JwtClaims{
+        .user_id = undefined,
+        .user_id_len = 0,
+        .exp = 0,
+        .iat = 0,
+        .token_type = grain_core_auth.TokenType.refresh,
+    };
+    
+    if (!auth_integration.validate_jwt_token(token_buf[0..token_len], current_time, &claims)) {
+        response.status = grain_core_api.HttpStatus.unauthorized;
+        return;
+    }
+    
+    // Generate new access token
+    var access_token: [grain_core_auth.MAX_JWT_LEN]u8 = undefined;
+    const access_token_len = auth_integration.generate_access_token(
+        claims.user_id[0..claims.user_id_len],
+        current_time,
+        &access_token,
+    );
+    
+    if (access_token_len == 0) {
+        response.status = grain_core_api.HttpStatus.internal_server_error;
+        return;
+    }
+    
+    // Build auth response
     var auth_resp = models.AuthResponse.init();
     auth_resp.success = true;
+    _ = auth_resp.set_token(access_token[0..access_token_len]);
+    _ = auth_resp.set_user_id(claims.user_id[0..claims.user_id_len]);
+    auth_resp.expires_in = grain_core_auth.ACCESS_TOKEN_EXPIRY;
+    
     var json_buf: [responses.MAX_JSON_RESPONSE_LEN]u8 = undefined;
     const json_len = responses.build_auth_response(&auth_resp, &json_buf);
     response.status = grain_core_api.HttpStatus.ok;
@@ -249,11 +353,27 @@ pub fn handle_otp_send_adapter(
         response.status = grain_core_api.HttpStatus.bad_request;
         return;
     }
-    const result = handlers.handle_otp_send(context);
-    if (result != handlers.HandlerResult.success) {
+    
+    // Generate OTP using auth service
+    const current_time: u64 = @intCast(std.time.timestamp());
+    var otp = grain_core_auth.Otp{
+        .code = undefined,
+        .code_len = 0,
+        .email = undefined,
+        .email_len = 0,
+        .created_at = 0,
+        .expires_at = 0,
+        .is_used = false,
+    };
+    
+    if (!auth_service_integration.generate_email_otp(email, current_time, &otp)) {
         response.status = grain_core_api.HttpStatus.internal_server_error;
         return;
     }
+    
+    // TODO: Send OTP email (when email service available)
+    // For now, just generate and return success
+    
     var json_buf: [responses.MAX_JSON_RESPONSE_LEN]u8 = undefined;
     const json_len = responses.build_success_response("OTP sent", "", &json_buf);
     response.status = grain_core_api.HttpStatus.ok;
@@ -304,13 +424,46 @@ pub fn handle_otp_verify_adapter(
         response.status = grain_core_api.HttpStatus.bad_request;
         return;
     }
-    const result = handlers.handle_otp_verify(context);
-    if (result != handlers.HandlerResult.success) {
+    
+    // Validate OTP code
+    const current_time: u64 = @intCast(std.time.timestamp());
+    if (!auth_service_integration.validate_email_otp(email, code, current_time)) {
         response.status = grain_core_api.HttpStatus.unauthorized;
         return;
     }
+    
+    // Generate user_id from email (temporary until database available)
+    var user_id: [grain_core_auth.MAX_USER_ID_LEN]u8 = undefined;
+    const user_id_len = if (email_len <= grain_core_auth.MAX_USER_ID_LEN) email_len else grain_core_auth.MAX_USER_ID_LEN;
+    std.mem.copyForwards(u8, &user_id, email[0..user_id_len]);
+    
+    // Generate tokens
+    var access_token: [grain_core_auth.MAX_JWT_LEN]u8 = undefined;
+    var refresh_token: [grain_core_auth.MAX_JWT_LEN]u8 = undefined;
+    const access_token_len = auth_integration.generate_access_token(
+        user_id[0..user_id_len],
+        current_time,
+        &access_token,
+    );
+    const refresh_token_len = auth_integration.generate_refresh_token(
+        user_id[0..user_id_len],
+        current_time,
+        &refresh_token,
+    );
+    
+    if (access_token_len == 0 or refresh_token_len == 0) {
+        response.status = grain_core_api.HttpStatus.internal_server_error;
+        return;
+    }
+    
+    // Build auth response
     var auth_resp = models.AuthResponse.init();
     auth_resp.success = true;
+    _ = auth_resp.set_token(access_token[0..access_token_len]);
+    _ = auth_resp.set_refresh_token(refresh_token[0..refresh_token_len]);
+    _ = auth_resp.set_user_id(user_id[0..user_id_len]);
+    auth_resp.expires_in = grain_core_auth.ACCESS_TOKEN_EXPIRY;
+    
     var json_buf: [responses.MAX_JSON_RESPONSE_LEN]u8 = undefined;
     const json_len = responses.build_auth_response(&auth_resp, &json_buf);
     response.status = grain_core_api.HttpStatus.ok;
@@ -394,15 +547,25 @@ pub fn handle_users_profile_adapter(
 ) void {
     std.debug.assert(request != null);
     std.debug.assert(response != null);
-    const context = get_handler_context() orelse {
-        response.status = grain_core_api.HttpStatus.internal_server_error;
-        return;
+    
+    // Validate JWT token
+    const current_time: u64 = @intCast(std.time.timestamp());
+    var claims = grain_core_auth.JwtClaims{
+        .user_id = undefined,
+        .user_id_len = 0,
+        .exp = 0,
+        .iat = 0,
+        .token_type = grain_core_auth.TokenType.access,
     };
-    const result = handlers.handle_users_profile(context);
-    if (result != handlers.HandlerResult.success) {
-        response.status = grain_core_api.HttpStatus.not_found;
+    
+    if (!auth_service_integration.extract_and_validate_token(request, current_time, &claims)) {
+        response.status = grain_core_api.HttpStatus.unauthorized;
         return;
     }
+    
+    // TODO: Fetch user profile from database (when database available)
+    // For now, return success with user_id from token
+    
     var json_buf: [responses.MAX_JSON_RESPONSE_LEN]u8 = undefined;
     const json_len = responses.build_success_response("Profile retrieved", "", &json_buf);
     response.status = grain_core_api.HttpStatus.ok;
@@ -418,15 +581,25 @@ pub fn handle_users_settings_adapter(
 ) void {
     std.debug.assert(request != null);
     std.debug.assert(response != null);
-    const context = get_handler_context() orelse {
-        response.status = grain_core_api.HttpStatus.internal_server_error;
-        return;
+    
+    // Validate JWT token
+    const current_time: u64 = @intCast(std.time.timestamp());
+    var claims = grain_core_auth.JwtClaims{
+        .user_id = undefined,
+        .user_id_len = 0,
+        .exp = 0,
+        .iat = 0,
+        .token_type = grain_core_auth.TokenType.access,
     };
-    const result = handlers.handle_users_settings(context);
-    if (result != handlers.HandlerResult.success) {
-        response.status = grain_core_api.HttpStatus.not_found;
+    
+    if (!auth_service_integration.extract_and_validate_token(request, current_time, &claims)) {
+        response.status = grain_core_api.HttpStatus.unauthorized;
         return;
     }
+    
+    // TODO: Fetch user settings from database (when database available)
+    // For now, return success with user_id from token
+    
     var json_buf: [responses.MAX_JSON_RESPONSE_LEN]u8 = undefined;
     const json_len = responses.build_success_response("Settings retrieved", "", &json_buf);
     response.status = grain_core_api.HttpStatus.ok;

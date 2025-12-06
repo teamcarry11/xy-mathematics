@@ -423,7 +423,7 @@ Grain Skate Terminal Silo Field Agent is responsible for building Grain Skate (k
 ## References
 
 - **Grain Style**: [`docs/grain_style.md`](../grain_style.md)
-- **Master Plan**: [`docs/plan.md`](../plan.md)
+- **Core Plan**: [`docs/plan.md`](../plan.md)
 - **Future Enhancements**: [`docs/grain_skate_future_enhancements.md`](../grain_skate_future_enhancements.md)
 - **Integration Readiness**: [`docs/grain_skate_integration_readiness.md`](../grain_skate_integration_readiness.md)
 - **Shared Module Plan**: [`docs/grain_skate_future_enhancements.md`](../grain_skate_future_enhancements.md#shared-module-refactoring-plan)

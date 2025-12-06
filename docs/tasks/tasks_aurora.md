@@ -2,7 +2,7 @@
 
 **Agent**: Grain Aurora IDE Dream Browser Agent (2nd Agent)  
 **Status**: Active — Foundation components, shared modules  
-**Last Updated**: 2025-12-05-214825-pst
+**Last Updated**: 2025-12-06-004609-pst
 
 ---
 
@@ -63,11 +63,13 @@
 ## Planned: Phase 2 - Text Buffer Unification
 
 **Priority**: **MEDIUM** — Code deduplication  
-**Status**: **PLANNED**  
+**Status**: **READY** (GrainBuffer u32/u64 compliant)  
 **Estimated Time**: 1-2 weeks
 
 ### Tasks
 
+- [x] Update `GrainBuffer` to use `u32`/`u64` instead of `usize`/`isize` — Complete (2025-12-06-004609-pst)
+- [x] Update `aurora_editor.zig` to use `u32` for GrainBuffer operations — Complete
 - [ ] Coordinate with Grain Skate Agent on `GrainBuffer` API compatibility
 - [ ] Review Grain Skate `TextBuffer` implementation
 - [ ] Identify API differences and migration path
@@ -80,8 +82,19 @@
 ### Dependencies
 
 - **Needs**: Grain Skate Agent coordination
-- **Provides**: `GrainBuffer` API for Grain Skate
+- **Provides**: `GrainBuffer` API for Grain Skate (u32/u64 compliant)
 - **Coordinates with**: Grain Skate Agent (text buffer migration)
+
+### Grain Style Compliance
+
+- ✅ **GrainBuffer u32/u64 Compliance** (2025-12-06-004609-pst) — Complete
+  - Updated all `usize`/`isize` to `u32`/`u64`/`i64` in `GrainBuffer`
+  - Updated `Segment` struct: `start: u32, end: u32`
+  - Updated function signatures: `markReadOnly(start: u32, end: u32)`, `isReadOnly(pos: u32)`, `insert(index: u32, ...)`, `erase(index: u32, count: u32)`, etc.
+  - Updated `shiftSegments(pivot: u32, delta: i64)` and `shiftIndex(value: u32, delta: i64)`
+  - Updated all tests to use `u32`
+  - Updated `aurora_editor.zig` to use `u32` for GrainBuffer operations
+  - **Unblocks**: Phase 2 Text Buffer Unification (no adapter layer needed)
 
 ---
 
@@ -194,7 +207,7 @@
 ## References
 
 - **Grain Style**: [`docs/grain_style.md`](../grain_style.md)
-- **Master Tasks**: [`docs/tasks.md`](../tasks.md)
+- **Core Tasks**: [`docs/tasks.md`](../tasks.md)
 - **Grain Core Agent Tasks**: [`docs/tasks/tasks_core.md`](tasks_core.md)
 - **Grain Skate Future Enhancements**: [`docs/grain_skate_future_enhancements.md`](../grain_skate_future_enhancements.md)
 - **Shared Module Coordination**: [`docs/grain_os_font_renderer_coordination.md`](../grain_os_font_renderer_coordination.md)

@@ -20,6 +20,9 @@ test "handler adapter register endpoint" {
     var api_server = grain_core.api_server.ApiServer.init(8080);
     var conn_mgr = grain_core.connection_manager.ConnectionManager.init();
     var handler_context = handlers.HandlerContext.init();
+    const secret = "test-secret-key-for-jwt-token-generation-12345678901234567890";
+    var auth_service = grain_core.auth_service.AuthService.init(secret);
+    grain_mobile.api.auth_integration.set_auth_service(&auth_service);
     handler_adapters.set_handler_context(&handler_context);
     handler_adapters.set_api_server(&api_server);
     _ = api_server.register_route(
@@ -42,6 +45,9 @@ test "handler adapter register endpoint" {
     const response = response_opt.?;
     try testing.expect(response.status == grain_core.api_server.HttpStatus.ok);
     try testing.expect(response.body_len > 0);
+    // Verify response contains token
+    const body_str = response.body[0..response.body_len];
+    try testing.expect(std.mem.indexOf(u8, body_str, "token") != null);
 }
 
 test "handler adapter login endpoint" {
@@ -49,6 +55,9 @@ test "handler adapter login endpoint" {
     var api_server = grain_core.api_server.ApiServer.init(8080);
     var conn_mgr = grain_core.connection_manager.ConnectionManager.init();
     var handler_context = handlers.HandlerContext.init();
+    const secret = "test-secret-key-for-jwt-token-generation-12345678901234567890";
+    var auth_service = grain_core.auth_service.AuthService.init(secret);
+    grain_mobile.api.auth_integration.set_auth_service(&auth_service);
     handler_adapters.set_handler_context(&handler_context);
     handler_adapters.set_api_server(&api_server);
     _ = api_server.register_route(
@@ -71,6 +80,9 @@ test "handler adapter login endpoint" {
     const response = response_opt.?;
     try testing.expect(response.status == grain_core.api_server.HttpStatus.ok);
     try testing.expect(response.body_len > 0);
+    // Verify response contains token
+    const body_str = response.body[0..response.body_len];
+    try testing.expect(std.mem.indexOf(u8, body_str, "token") != null);
 }
 
 test "handler adapter logout endpoint" {
@@ -78,6 +90,9 @@ test "handler adapter logout endpoint" {
     var api_server = grain_core.api_server.ApiServer.init(8080);
     var conn_mgr = grain_core.connection_manager.ConnectionManager.init();
     var handler_context = handlers.HandlerContext.init();
+    const secret = "test-secret-key-for-jwt-token-generation-12345678901234567890";
+    var auth_service = grain_core.auth_service.AuthService.init(secret);
+    grain_mobile.api.auth_integration.set_auth_service(&auth_service);
     handler_adapters.set_handler_context(&handler_context);
     handler_adapters.set_api_server(&api_server);
     _ = api_server.register_route(
@@ -85,8 +100,14 @@ test "handler adapter logout endpoint" {
         endpoints.AUTH_LOGOUT_PATH,
         handler_adapters.handle_logout_adapter,
     );
+    // Generate a token first
+    const current_time: u64 = @intCast(std.time.timestamp());
+    var token: [grain_core.auth_service.MAX_JWT_LEN]u8 = undefined;
+    const token_len = auth_service.generate_access_token("test-user-id", current_time, &token);
+    try testing.expect(token_len > 0);
     const raw_request = "POST /api/v1/auth/logout HTTP/1.1\r\n" ++
         "Content-Type: application/json\r\n" ++
+        "Authorization: Bearer " ++ token[0..token_len] ++ "\r\n" ++
         "Content-Length: 2\r\n" ++
         "\r\n" ++
         "{}";
@@ -107,6 +128,9 @@ test "handler adapter otp send endpoint" {
     var api_server = grain_core.api_server.ApiServer.init(8080);
     var conn_mgr = grain_core.connection_manager.ConnectionManager.init();
     var handler_context = handlers.HandlerContext.init();
+    const secret = "test-secret-key-for-jwt-token-generation-12345678901234567890";
+    var auth_service = grain_core.auth_service.AuthService.init(secret);
+    grain_mobile.api.auth_integration.set_auth_service(&auth_service);
     handler_adapters.set_handler_context(&handler_context);
     handler_adapters.set_api_server(&api_server);
     _ = api_server.register_route(
@@ -165,6 +189,9 @@ test "handler adapter users profile endpoint" {
     var api_server = grain_core.api_server.ApiServer.init(8080);
     var conn_mgr = grain_core.connection_manager.ConnectionManager.init();
     var handler_context = handlers.HandlerContext.init();
+    const secret = "test-secret-key-for-jwt-token-generation-12345678901234567890";
+    var auth_service = grain_core.auth_service.AuthService.init(secret);
+    grain_mobile.api.auth_integration.set_auth_service(&auth_service);
     handler_adapters.set_handler_context(&handler_context);
     handler_adapters.set_api_server(&api_server);
     _ = api_server.register_route(
@@ -172,8 +199,14 @@ test "handler adapter users profile endpoint" {
         endpoints.USERS_PROFILE_PATH,
         handler_adapters.handle_users_profile_adapter,
     );
+    // Generate a token first
+    const current_time: u64 = @intCast(std.time.timestamp());
+    var token: [grain_core.auth_service.MAX_JWT_LEN]u8 = undefined;
+    const token_len = auth_service.generate_access_token("test-user-id", current_time, &token);
+    try testing.expect(token_len > 0);
     const raw_request = "GET /api/v1/users/profile HTTP/1.1\r\n" ++
         "Content-Type: application/json\r\n" ++
+        "Authorization: Bearer " ++ token[0..token_len] ++ "\r\n" ++
         "\r\n";
     const response_opt = grain_core.api_server_network.process_http_request(
         &api_server,
@@ -185,6 +218,36 @@ test "handler adapter users profile endpoint" {
     const response = response_opt.?;
     try testing.expect(response.status == grain_core.api_server.HttpStatus.ok);
     try testing.expect(response.body_len > 0);
+}
+
+test "handler adapter users profile endpoint unauthorized" {
+    const allocator = testing.allocator;
+    var api_server = grain_core.api_server.ApiServer.init(8080);
+    var conn_mgr = grain_core.connection_manager.ConnectionManager.init();
+    var handler_context = handlers.HandlerContext.init();
+    const secret = "test-secret-key-for-jwt-token-generation-12345678901234567890";
+    var auth_service = grain_core.auth_service.AuthService.init(secret);
+    grain_mobile.api.auth_integration.set_auth_service(&auth_service);
+    handler_adapters.set_handler_context(&handler_context);
+    handler_adapters.set_api_server(&api_server);
+    _ = api_server.register_route(
+        grain_core.api_server.HttpMethod.get,
+        endpoints.USERS_PROFILE_PATH,
+        handler_adapters.handle_users_profile_adapter,
+    );
+    // Request without token
+    const raw_request = "GET /api/v1/users/profile HTTP/1.1\r\n" ++
+        "Content-Type: application/json\r\n" ++
+        "\r\n";
+    const response_opt = grain_core.api_server_network.process_http_request(
+        &api_server,
+        &conn_mgr,
+        raw_request,
+        null,
+    );
+    try testing.expect(response_opt != null);
+    const response = response_opt.?;
+    try testing.expect(response.status == grain_core.api_server.HttpStatus.unauthorized);
 }
 
 test "handler adapter bad request handling" {

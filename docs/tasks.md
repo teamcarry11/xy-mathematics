@@ -1,7 +1,7 @@
 # Grain OS Task List
 
-**Last Updated**: 2025-12-05-120808-pst  
-**Structure**: Hybrid approach with master overview and agent-specific tasks  
+**Last Updated**: 2025-12-06-013750-pst  
+**Structure**: Hybrid approach with core overview and agent-specific tasks  
 **See**: `docs/tasks/tasks_{agent}.md` for detailed agent tasks
 
 ---
@@ -92,8 +92,8 @@
 
 ### 5. Grain Workspace Agent
 
-**Status**: Active — All Phases Complete ✅  
-**Current Tasks**: All planned phases completed  
+**Status**: Active — All Phases Complete ✅ (Phase 8.1 DNS Integration Complete)  
+**Current Tasks**: All planned phases completed, DNS resolver integrated  
 **Details**: See [`docs/tasks/tasks_workspace.md`](tasks/tasks_workspace.md)
 
 **Key Tasks**:
@@ -160,10 +160,10 @@
 
 ---
 
-### 7. Grain Database Agent
+### 7. Grain Silo Agent
 
-**Status**: Active — Phase 5 Complete  
-**Current Tasks**: Integration with Grain Core Agent API Server (Phase 59)  
+**Status**: Active — Phase 6 Complete, Phase 9 In Progress  
+**Current Tasks**: Authentication Integration with Grain Core AuthService (Phase 60) — Permission helpers and tests complete  
 **Details**: See [`docs/tasks/tasks_database.md`](tasks/tasks_database.md)
 
 **Completed**:
@@ -180,14 +180,22 @@
   - WebSocket connection management, JWT authentication middleware
   - API request/response structures, middleware support
   - Integration with Grain Core Agent's API Server (Phase 59)
-- Phase 6: API Server Integration ✅ MIDDLEWARE INTEGRATED (2025-12-05-083545-pst)
+- Phase 6: API Server Integration ✅ COMPLETE (2025-12-06-010807-pst)
   - Handler logic complete for all 9 endpoints
   - Middleware integration complete (rate limiting, CORS, auth, content-type)
   - Path parameter extraction, JSON parsing, proper status codes
   - Ready for HTTP server integration
+- Phase 9: Authentication Integration 🔄 IN PROGRESS (2025-12-06-013750-pst)
+  - AuthService integration module created (`src/grain_database/auth_integration.zig`)
+  - Enhanced auth middleware using AuthService
+  - JWT validation and session management helpers
+  - Permission-based access control helpers
+  - Comprehensive auth integration tests
+  - Updated build.zig with grain_core import
 
 **Next Phases**:
-- All core database phases complete! Ready for integration with Grain Core Agent API Server.
+- Phase 9: Authentication Integration — Continue with OAuth 2.0 support (when needed)
+- Phase 8: Network Integration — Ready (Grain Core Agent Phase 61 complete)
 
 **Dependencies**:
 - **Needs**: API Server (Grain Core Agent — Phase 59), File Storage (Grain Core Agent — Phase 62)
@@ -210,11 +218,18 @@
 - [x] Create `src/grain_bubble/export_pdf.zig` PDF export ✅
 - [x] Update `build/modules.zig` with grain_bubble module ✅
 - [x] Create `tests/125_grain_bubble_canvas_test.zig` ✅
-- [ ] Complete canvas zoom/pan implementation
-- [ ] Complete shape rendering implementation
-- [ ] Complete PDF export implementation
-- [ ] Integration with Grain Core modules
-- [ ] Comprehensive testing
+- [x] Create `tests/126_grain_bubble_canvas_renderer_test.zig` ✅
+- [x] Create `tests/127_grain_bubble_canvas_input_test.zig` ✅
+- [x] Complete canvas zoom/pan implementation ✅
+- [x] Complete hit testing (point-in-shape) ✅
+- [x] Complete shape manipulation (move, resize) ✅
+- [x] Complete shape rendering (filled circles, rectangles) ✅
+- [x] Complete canvas renderer (framebuffer integration) ✅
+- [x] Complete input handling (mouse events, keyboard shortcuts, selection, pan, zoom) ✅
+- [x] Complete shape duplication and copy/paste ✅
+- [ ] Complete PDF export implementation (framework ready)
+- [ ] Integration with Grain Core compositor (pending)
+- [x] Comprehensive testing ✅
 
 **Next Phases**:
 - Phase 1: Core Canvas (SLC v1.0) ⏳ In Progress

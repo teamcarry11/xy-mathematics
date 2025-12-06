@@ -11,7 +11,7 @@ const testing = std.testing;
 const canvas = @import("grain_bubble").canvas;
 
 test "canvas init" {
-    var c = canvas.Canvas.init(1024, 768);
+    const c = canvas.Canvas.init(1024, 768);
     std.debug.assert(c.viewport.width == 1024);
     std.debug.assert(c.viewport.height == 768);
     std.debug.assert(c.viewport.zoom == canvas.DEFAULT_ZOOM);
@@ -142,5 +142,174 @@ test "canvas selection" {
     std.debug.assert(selected == true);
     std.debug.assert(c.selection_len == 1);
     std.debug.assert(c.selection[0] == shape_id.?);
+}
+
+test "canvas duplicate shape" {
+    var c = canvas.Canvas.init(1024, 768);
+    const layer_id = c.create_layer("Test Layer");
+    std.debug.assert(layer_id != null);
+    const shape_id = c.add_shape(
+        layer_id.?,
+        .rectangle,
+        10.0,
+        20.0,
+        100.0,
+        50.0,
+        0xFF0000FF,
+        0.0,
+    );
+    std.debug.assert(shape_id != null);
+    const duplicated_id = c.duplicate_shape(shape_id.?, 10.0, 10.0);
+    std.debug.assert(duplicated_id != null);
+    if (c.get_layer(layer_id.?)) |layer| {
+        std.debug.assert(layer.shapes_len == 2);
+        std.debug.assert(layer.shapes[1].x == 20.0);
+        std.debug.assert(layer.shapes[1].y == 30.0);
+    }
+}
+
+test "canvas copy and paste shapes" {
+    var c = canvas.Canvas.init(1024, 768);
+    const layer_id = c.create_layer("Test Layer");
+    std.debug.assert(layer_id != null);
+    const shape_id = c.add_shape(
+        layer_id.?,
+        .circle,
+        10.0,
+        20.0,
+        50.0,
+        50.0,
+        0x00FF00FF,
+        0.0,
+    );
+    std.debug.assert(shape_id != null);
+    _ = c.select_shape(shape_id.?);
+    const copied = c.copy_selected_shapes();
+    std.debug.assert(copied == true);
+    std.debug.assert(c.clipboard_len == 1);
+    const pasted = c.paste_shapes(layer_id.?, 100.0, 100.0);
+    std.debug.assert(pasted == 1);
+    if (c.get_layer(layer_id.?)) |layer| {
+        std.debug.assert(layer.shapes_len == 2);
+        std.debug.assert(layer.shapes[1].x == 110.0);
+        std.debug.assert(layer.shapes[1].y == 120.0);
+    }
+}
+
+test "canvas duplicate selected shapes" {
+    var c = canvas.Canvas.init(1024, 768);
+    const layer_id = c.create_layer("Test Layer");
+    std.debug.assert(layer_id != null);
+    const shape_id = c.add_shape(
+        layer_id.?,
+        .rectangle,
+        10.0,
+        20.0,
+        100.0,
+        50.0,
+        0xFF0000FF,
+        0.0,
+    );
+    std.debug.assert(shape_id != null);
+    _ = c.select_shape(shape_id.?);
+    const duplicated = c.duplicate_selected_shapes(5.0, 5.0);
+    std.debug.assert(duplicated == 1);
+    if (c.get_layer(layer_id.?)) |layer| {
+        std.debug.assert(layer.shapes_len == 2);
+    }
+}
+
+test "canvas hit testing rectangle" {
+    var c = canvas.Canvas.init(1024, 768);
+    const layer_id = c.create_layer("Test Layer");
+    std.debug.assert(layer_id != null);
+    const shape_id = c.add_shape(
+        layer_id.?,
+        .rectangle,
+        10.0,
+        20.0,
+        100.0,
+        50.0,
+        0xFF0000FF,
+        0.0,
+    );
+    std.debug.assert(shape_id != null);
+    // Point inside rectangle.
+    const found_id = c.find_shape_at(50.0, 40.0);
+    std.debug.assert(found_id != null);
+    std.debug.assert(found_id.? == shape_id.?);
+    // Point outside rectangle.
+    const not_found = c.find_shape_at(200.0, 200.0);
+    std.debug.assert(not_found == null);
+}
+
+test "canvas hit testing circle" {
+    var c = canvas.Canvas.init(1024, 768);
+    const layer_id = c.create_layer("Test Layer");
+    std.debug.assert(layer_id != null);
+    const shape_id = c.add_shape(
+        layer_id.?,
+        .circle,
+        10.0,
+        20.0,
+        50.0,
+        50.0,
+        0x00FF00FF,
+        0.0,
+    );
+    std.debug.assert(shape_id != null);
+    // Point inside circle (center).
+    const found_id = c.find_shape_at(35.0, 45.0);
+    std.debug.assert(found_id != null);
+    std.debug.assert(found_id.? == shape_id.?);
+    // Point outside circle.
+    const not_found = c.find_shape_at(100.0, 100.0);
+    std.debug.assert(not_found == null);
+}
+
+test "canvas move shape" {
+    var c = canvas.Canvas.init(1024, 768);
+    const layer_id = c.create_layer("Test Layer");
+    std.debug.assert(layer_id != null);
+    const shape_id = c.add_shape(
+        layer_id.?,
+        .rectangle,
+        10.0,
+        20.0,
+        100.0,
+        50.0,
+        0xFF0000FF,
+        0.0,
+    );
+    std.debug.assert(shape_id != null);
+    const moved = c.move_shape(shape_id.?, 5.0, 10.0);
+    std.debug.assert(moved == true);
+    if (c.get_layer(layer_id.?)) |layer| {
+        std.debug.assert(layer.shapes[0].x == 15.0);
+        std.debug.assert(layer.shapes[0].y == 30.0);
+    }
+}
+
+test "canvas resize shape" {
+    var c = canvas.Canvas.init(1024, 768);
+    const layer_id = c.create_layer("Test Layer");
+    std.debug.assert(layer_id != null);
+    const shape_id = c.add_shape(
+        layer_id.?,
+        .rectangle,
+        10.0,
+        20.0,
+        100.0,
+        50.0,
+        0xFF0000FF,
+        0.0,
+    );
+    std.debug.assert(shape_id != null);
+    const resized = c.resize_shape(shape_id.?, 150.0, 75.0);
+    std.debug.assert(resized == true);
+    if (c.get_layer(layer_id.?)) |layer| {
+        std.debug.assert(layer.shapes[0].width == 150.0);
+        std.debug.assert(layer.shapes[0].height == 75.0);
+    }
 }
 

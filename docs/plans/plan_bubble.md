@@ -1,8 +1,8 @@
 # Grain Bubble Agent: Development Plan
 
 **Agent**: Grain Bubble Agent (8th Agent)  
-**Status**: Phase 1 Starting — Core Canvas (SLC v1.0)  
-**Last Updated**: 2025-12-05-143400-pst
+**Status**: Phase 1 In Progress — Core Canvas (SLC v1.0)  
+**Last Updated**: 2025-12-06-015627-pst
 
 ---
 
@@ -34,19 +34,24 @@ Grain Bubble Agent is responsible for building Grain Bubble — a native visual 
 ### Phase 1: Core Canvas (SLC v1.0) ⏳ **IN PROGRESS**
 
 **Priority**: **HIGHEST** — Foundation for all features  
-**Status**: **STARTING**  
+**Status**: **IN PROGRESS**  
 **Estimated Time**: 4-6 weeks  
 **Date Started**: 2025-12-05-143400-pst
 
 **Goal**: Simple, lovable, complete design canvas
 
 **Features**:
-- Infinite canvas with zoom/pan
-- Basic shapes (rectangles, circles, rounded rectangles — "bubbles")
-- Text tool (typography, text styling)
-- Layer management (groups, z-ordering)
-- Selection and manipulation (drag, resize, rotate)
-- Export to PDF (high-quality vector graphics)
+- Infinite canvas with zoom/pan ✅
+- Basic shapes (rectangles, circles, rounded rectangles — "bubbles") ✅
+- Hit testing (point-in-shape detection) ✅
+- Shape manipulation (move, resize) ✅
+- Text tool (typography, text styling) ✅
+- Layer management (groups, z-ordering) ✅
+- Selection and manipulation (single selection, move, resize) ✅
+- Canvas renderer (integration with framebuffer) ✅
+- Input handling (mouse events, keyboard shortcuts, selection, pan, zoom) ✅
+- Shape duplication and copy/paste ✅
+- Export to PDF (framework ready, implementation pending) ⏳
 
 **Success Criteria**:
 - Can create a simple design (e.g., a button, a card) in under 5 minutes
@@ -346,7 +351,7 @@ Leverage existing Grain Core modules:
 
 - **Grain Style**: [`docs/grain_style.md`](../grain_style.md)
 - **Proposal**: [`docs/proposals/grain_bubble_proposal.md`](../proposals/grain_bubble_proposal.md)
-- **Master Plan**: [`docs/plan.md`](../plan.md)
+- **Core Plan**: [`docs/plan.md`](../plan.md)
 - **Grain OS Modules**: `src/grain_core/`
 - **Silo/Court**: `src/grain_silo/`, `src/grain_court/`
 - **Database**: `src/grain_database/`

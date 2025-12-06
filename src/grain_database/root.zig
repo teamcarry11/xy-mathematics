@@ -57,6 +57,7 @@ pub const handle_execute_query = @import("integration_os.zig").handle_execute_qu
 pub const handle_get_node = @import("integration_os.zig").handle_get_node;
 pub const handle_traverse_graph = @import("integration_os.zig").handle_traverse_graph;
 pub const handle_fulltext_search = @import("integration_os.zig").handle_fulltext_search;
+pub const auth_integration = @import("auth_integration.zig");
 pub const database_rate_limit_middleware = @import("middleware_integration.zig").database_rate_limit_middleware;
 pub const database_auth_middleware = @import("middleware_integration.zig").database_auth_middleware;
 pub const database_cors_middleware = @import("middleware_integration.zig").database_cors_middleware;

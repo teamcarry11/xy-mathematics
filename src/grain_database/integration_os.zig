@@ -14,6 +14,7 @@ const storage_engine = @import("storage_engine.zig");
 const relational = @import("relational.zig");
 const graph = @import("graph.zig");
 const index = @import("index.zig");
+const query = @import("query.zig");
 
 // Import Grain OS API Server types (when available).
 // For now, we define compatible types.
@@ -471,6 +472,23 @@ pub fn handle_list_tables(req: *HttpRequest, res: *HttpResponse) void {
     res.body_len = @as(u32, @intCast(stream.getPos()));
 }
 
+// Parse query from JSON body (simplified: expects {"query": "SELECT ..."}).
+fn parse_query_body(body: []const u8) ?[]const u8 {
+    std.debug.assert(body.len <= 65536);
+    var i: u32 = 0;
+    while (i + 7 < body.len) : (i += 1) {
+        if (std.mem.eql(u8, body[i..i + 8], "\"query\"")) {
+            i += 8;
+            while (i < body.len and body[i] != '"') : (i += 1) {}
+            i += 1;
+            const query_start = i;
+            while (i < body.len and body[i] != '"') : (i += 1) {}
+            return body[query_start..i];
+        }
+    }
+    return null;
+}
+
 // Handler: Execute SQL-like query.
 pub fn handle_execute_query(req: *HttpRequest, res: *HttpResponse) void {
     std.debug.assert(req != null);
@@ -486,10 +504,42 @@ pub fn handle_execute_query(req: *HttpRequest, res: *HttpResponse) void {
         _ = serializer.serialize_error("Missing query", res.body) catch {};
         return;
     }
+    const query_str = parse_query_body(body) orelse {
+        res.status = HttpStatus.bad_request;
+        var serializer = api.JsonSerializer.init(context.allocator);
+        _ = serializer.serialize_error("Invalid query format", res.body) catch {};
+        return;
+    };
+    if (query_str.len > query.MAX_QUERY_LEN) {
+        res.status = HttpStatus.bad_request;
+        var serializer = api.JsonSerializer.init(context.allocator);
+        _ = serializer.serialize_error("Query too long", res.body) catch {};
+        return;
+    }
+    var executor = query.QueryExecutor.init(
+        context.allocator,
+        context.schema,
+        context.storage,
+    );
+    var query_obj = query.Query.init(
+        context.allocator,
+        query.QueryType.select,
+        "default",
+    ) catch {
+        res.status = HttpStatus.internal_server_error;
+        return;
+    };
+    defer query_obj.deinit();
+    executor.execute_select(&query_obj) catch {
+        res.status = HttpStatus.internal_server_error;
+        var serializer = api.JsonSerializer.init(context.allocator);
+        _ = serializer.serialize_error("Query execution failed", res.body) catch {};
+        return;
+    };
     res.status = HttpStatus.ok;
     _ = res.add_header("Content-Type", "application/json");
     var serializer = api.JsonSerializer.init(context.allocator);
-    _ = serializer.serialize_error("Query execution not yet implemented", res.body) catch {
+    _ = serializer.serialize_error("Query executed (results not yet serialized)", res.body) catch {
         res.status = HttpStatus.internal_server_error;
         return;
     };
@@ -551,6 +601,24 @@ pub fn handle_get_node(req: *HttpRequest, res: *HttpResponse) void {
     }
 }
 
+// Parse traversal parameters from JSON body (simplified: expects {"start_node_id": 123}).
+fn parse_traversal_body(body: []const u8) ?u64 {
+    std.debug.assert(body.len <= 65536);
+    var i: u32 = 0;
+    while (i + 14 < body.len) : (i += 1) {
+        if (std.mem.eql(u8, body[i..i + 15], "\"start_node_id\"")) {
+            i += 15;
+            while (i < body.len and (body[i] == ' ' or body[i] == ':')) : (i += 1) {}
+            var node_id: u64 = 0;
+            while (i < body.len and body[i] >= '0' and body[i] <= '9') : (i += 1) {
+                node_id = node_id * 10 + @as(u64, body[i] - '0');
+            }
+            return if (node_id > 0) node_id else null;
+        }
+    }
+    return null;
+}
+
 // Handler: Traverse graph from node.
 pub fn handle_traverse_graph(req: *HttpRequest, res: *HttpResponse) void {
     std.debug.assert(req != null);
@@ -566,14 +634,35 @@ pub fn handle_traverse_graph(req: *HttpRequest, res: *HttpResponse) void {
         _ = serializer.serialize_error("Missing traversal parameters", res.body) catch {};
         return;
     }
+    const start_node_id = parse_traversal_body(body) orelse {
+        res.status = HttpStatus.bad_request;
+        var serializer = api.JsonSerializer.init(context.allocator);
+        _ = serializer.serialize_error("Invalid traversal parameters", res.body) catch {};
+        return;
+    };
+    var visited: [graph.MAX_NODES]bool = undefined;
+    var node_count: u32 = 0;
+    const visitor = struct {
+        fn visit(node_id: u64) void {
+            _ = node_id;
+            node_count += 1;
+        }
+    }.visit;
+    context.graph_db.traverse_bfs(start_node_id, visitor, &visited) catch {
+        res.status = HttpStatus.internal_server_error;
+        var serializer = api.JsonSerializer.init(context.allocator);
+        _ = serializer.serialize_error("Graph traversal failed", res.body) catch {};
+        return;
+    };
     res.status = HttpStatus.ok;
     _ = res.add_header("Content-Type", "application/json");
-    var serializer = api.JsonSerializer.init(context.allocator);
-    _ = serializer.serialize_error("Graph traversal not yet implemented", res.body) catch {
+    var stream = std.io.fixedBufferStream(res.body);
+    const writer = stream.writer();
+    writer.print("{{\"nodes_visited\":{}}}", .{node_count}) catch {
         res.status = HttpStatus.internal_server_error;
         return;
     };
-    res.body_len = 50;
+    res.body_len = @as(u32, @intCast(stream.getPos()));
 }
 
 // Handler: Full-text search.
@@ -584,20 +673,51 @@ pub fn handle_fulltext_search(req: *HttpRequest, res: *HttpResponse) void {
         res.status = HttpStatus.internal_server_error;
         return;
     };
-    const query = req.query[0..req.query_len];
-    if (query.len == 0) {
+    const search_query = req.query[0..req.query_len];
+    if (search_query.len == 0) {
         res.status = HttpStatus.bad_request;
         var serializer = api.JsonSerializer.init(context.allocator);
         _ = serializer.serialize_error("Missing search query", res.body) catch {};
         return;
     }
+    if (search_query.len > 10000) {
+        res.status = HttpStatus.bad_request;
+        var serializer = api.JsonSerializer.init(context.allocator);
+        _ = serializer.serialize_error("Search query too long", res.body) catch {};
+        return;
+    }
+    var results: [index.MAX_DOCS_PER_TOKEN]u64 = undefined;
+    const result_count = context.fulltext_index.search(search_query, &results) catch {
+        res.status = HttpStatus.internal_server_error;
+        var serializer = api.JsonSerializer.init(context.allocator);
+        _ = serializer.serialize_error("Search failed", res.body) catch {};
+        return;
+    };
     res.status = HttpStatus.ok;
     _ = res.add_header("Content-Type", "application/json");
-    var serializer = api.JsonSerializer.init(context.allocator);
-    _ = serializer.serialize_error("Full-text search not yet implemented", res.body) catch {
+    var stream = std.io.fixedBufferStream(res.body);
+    const writer = stream.writer();
+    writer.print("{{\"results\":[", .{}) catch {
         res.status = HttpStatus.internal_server_error;
         return;
     };
-    res.body_len = 50;
+    var i: u32 = 0;
+    while (i < result_count) : (i += 1) {
+        if (i > 0) {
+            writer.print(",", .{}) catch {
+                res.status = HttpStatus.internal_server_error;
+                return;
+            };
+        }
+        writer.print("{}", .{results[i]}) catch {
+            res.status = HttpStatus.internal_server_error;
+            return;
+        };
+    }
+    writer.print("],\"count\":{}}}", .{result_count}) catch {
+        res.status = HttpStatus.internal_server_error;
+        return;
+    };
+    res.body_len = @as(u32, @intCast(stream.getPos()));
 }
 

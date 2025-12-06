@@ -1,8 +1,8 @@
 # Grain Workspace Agent: Task List
 
 **Agent**: Grain Workspace Agent (5th Agent)  
-**Status**: All Phases Complete ✅  
-**Last Updated**: 2025-12-05-214852-pst
+**Status**: All Phases Complete ✅ (Phase 8.1 DNS Integration Complete)  
+**Last Updated**: 2025-12-06-011616-pst
 
 ---
 
@@ -190,6 +190,20 @@ All planned phases for Grain Workspace Agent have been completed. See completed 
 
 ---
 
+### Phase 8.1: DNS Resolver Integration ✅ (2025-12-06-011616-pst)
+
+**Completed Tasks**:
+- [x] Integrate Grain Core DNS resolver into Network Tools
+- [x] Update DNS lookup to use actual resolver
+- [x] Enhance DNS cache management
+- [x] Add DNS record type support (A, AAAA, MX)
+- [x] Update tests for DNS resolver integration
+- [x] Update documentation
+
+**Files**: Updated `src/grain_workspace/network_tools/app.zig`, `tests/113_grain_workspace_network_tools_test.zig`
+
+---
+
 ### Phase 9: Grain DevTools ✅ (2025-12-04-131701-pst)
 
 **Completed Tasks**:
@@ -243,8 +257,8 @@ All planned phases for Grain Workspace Agent have been completed. See completed 
 ## References
 
 - **Grain Style**: [`docs/grain_style.md`](../grain_style.md)
-- **Master Plan**: [`docs/plan.md`](../plan.md)
-- **Master Tasks**: [`docs/tasks.md`](../tasks.md)
+- **Core Plan**: [`docs/plan.md`](../plan.md)
+- **Core Tasks**: [`docs/tasks.md`](../tasks.md)
 - **Grain Workspace Agent Plan**: [`docs/plans/plan_workspace.md`](plan_workspace.md)
 - **Grain Workspace Agent Prompt**: [`docs/grain_workspace_agent_prompt.md`](../grain_workspace_agent_prompt.md)
 - **Grain Workspace Agent Background**: [`docs/grain_workspace_agent_background.md`](../grain_workspace_agent_background.md)

@@ -1,8 +1,8 @@
 # Grain Vantage Agent: Task List
 
 **Agent**: Grain Vantage Agent (1st Agent)  
-**Status**: Phase 3.16 Complete, Ready for Next Phase  
-**Last Updated**: 2025-12-05-152509-pst
+**Status**: Phase 3.17 Complete, Ready for Next Phase  
+**Last Updated**: 2025-12-06-000107-pst
 
 ---
 
@@ -157,7 +157,7 @@ All Phase 3 sub-phases complete (3.1 through 3.14). See `docs/plans/plan_vantage
 - Input: `read_input_event`
 - Framebuffer: `fb_clear`, `fb_draw_pixel`, `fb_draw_text`
 
-**Test Files**: `tests/075_*` through `tests/084_*`
+**Test Files**: `tests/075_*` through `tests/085_*`
 
 **Integration Status**:
 - ✅ Enhanced SysInfo integrated into Grain Core Agent ResourceMonitor (Phase 52)
@@ -198,8 +198,8 @@ All Phase 3 sub-phases complete (3.1 through 3.14). See `docs/plans/plan_vantage
 ## References
 
 - **Grain Style**: [`docs/grain_style.md`](../grain_style.md)
-- **Master Plan**: [`docs/plan.md`](../plan.md)
-- **Master Tasks**: [`docs/tasks.md`](../tasks.md)
+- **Core Plan**: [`docs/plan.md`](../plan.md)
+- **Core Tasks**: [`docs/tasks.md`](../tasks.md)
 - **Vantage Agent Plan**: [`docs/plans/plan_vantage.md`](plan_vantage.md)
 - **Grain Core Agent Plan**: [`docs/plans/plan_core.md`](plan_core.md)
 - **Vantage Agent Response**: [`docs/kernel_agent_response_to_grain_os.md`](../kernel_agent_response_to_grain_os.md)

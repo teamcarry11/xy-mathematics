@@ -93,7 +93,7 @@ pub const BubbleRenderer = struct {
         }
     }
 
-    // Render circle.
+    // Render circle (filled).
     pub fn render_circle(
         self: *const BubbleRenderer,
         center_x: i32,
@@ -107,22 +107,25 @@ pub const BubbleRenderer = struct {
         const center_x_f = @as(f64, @floatFromInt(center_x));
         const center_y_f = @as(f64, @floatFromInt(center_y));
         const radius_f = @as(f64, @floatFromInt(radius));
-        // Render circle using midpoint algorithm (simplified).
-        var angle: f64 = 0.0;
-        const angle_step = (2.0 * std.math.pi) / @as(f64, @floatFromInt(CIRCLE_SEGMENTS));
-        var i: u32 = 0;
-        while (i < CIRCLE_SEGMENTS) : (i += 1) {
-            const px = @as(i32, @intFromFloat(center_x_f + radius_f * std.math.cos(angle)));
-            const py = @as(i32, @intFromFloat(center_y_f + radius_f * std.math.sin(angle)));
-            if (px >= 0 and @as(u32, @intCast(px)) < self.framebuffer_width and
-                py >= 0 and @as(u32, @intCast(py)) < self.framebuffer_height)
-            {
-                draw_fn(@as(u32, @intCast(px)), @as(u32, @intCast(py)), color);
+        const radius_i = @as(i32, @intCast(radius));
+        // Fill circle using bounding box scan.
+        const start_y = @max(0, center_y - radius_i);
+        const end_y = @min(@as(i32, @intCast(self.framebuffer_height)), center_y + radius_i);
+        var py: i32 = start_y;
+        while (py < end_y) : (py += 1) {
+            const start_x = @max(0, center_x - radius_i);
+            const end_x = @min(@as(i32, @intCast(self.framebuffer_width)), center_x + radius_i);
+            var px: i32 = start_x;
+            while (px < end_x) : (px += 1) {
+                const dx = @as(f64, @floatFromInt(px)) - center_x_f;
+                const dy = @as(f64, @floatFromInt(py)) - center_y_f;
+                const distance_squared = dx * dx + dy * dy;
+                const radius_squared = radius_f * radius_f;
+                if (distance_squared <= radius_squared) {
+                    draw_fn(@as(u32, @intCast(px)), @as(u32, @intCast(py)), color);
+                }
             }
-            angle += angle_step;
         }
-        // Fill circle (simplified: draw lines from center to edge).
-        // TODO: Add proper circle fill in future iteration.
     }
 
     // Render shape from canvas.

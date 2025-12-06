@@ -112,12 +112,12 @@ Skate Agent (Knowledge Graph) [depends on Core/Basin via shared modules]
 | **Vantage** | macOS 26.1 Tahoe only | None (runs Basin, but not a dependency) | All (separate host layer) |
 | **Basin** | None (pure RISC-V) | Core, All agents | None (foundation layer) |
 | **Core** | **Basin** (RISC-V kernel) ✅ | Silo, Carry, Workspace, Bubble | Aurora, Skate |
-| **Silo** | Core (API ✅, WebSocket ✅, File System ✅ COMPLETE) | Carry | Aurora, Skate, Workspace, Bubble (Phase 1) |
-| **Carry** | Core (API ✅, Auth ✅, WebSocket ✅), Silo | None | Aurora, Skate, Workspace, Bubble (Phase 1) |
-| **Aurora** | None (shared modules) | Shared modules | All (except when coordinating shared modules) |
-| **Skate** | None (shared modules) | Shared modules | All (except when coordinating shared modules) |
-| **Workspace** | Core (System Services ✅) | None | Aurora, Skate, Bubble (Phase 1) |
-| **Bubble** | Core (Compositor ✅, Rendering ✅) | None | Aurora, Skate, Workspace |
+| **Silo** | **Core** (API ✅, WebSocket ✅, File System ✅ COMPLETE), **Basin** (via Core) | Carry | Aurora, Skate, Workspace, Bubble (Phase 1) |
+| **Carry** | **Core** (API ✅, Auth ✅, WebSocket ✅), **Basin** (via Core), Silo | None | Aurora, Skate, Workspace, Bubble (Phase 1) |
+| **Aurora** | **Core** (shared modules), **Basin** (via Core) | Shared modules | All (except when coordinating shared modules) |
+| **Skate** | **Core** (shared modules), **Basin** (via Core) | Shared modules | All (except when coordinating shared modules) |
+| **Workspace** | **Core** (System Services ✅), **Basin** (via Core) | None | Aurora, Skate, Bubble (Phase 1) |
+| **Bubble** | **Core** (Compositor ✅, Rendering ✅), **Basin** (via Core) | None | Aurora, Skate, Workspace |
 
 ---
 
@@ -165,14 +165,16 @@ Skate Agent (Knowledge Graph) [depends on Core/Basin via shared modules]
 ### Grain Vantage Agent
 
 **Current Priority**: Network Syscalls (Phase 4)
-- **Why**: Enables Core Agent network stack to use kernel syscalls
+- **Why**: Enables Core Agent network stack to use Basin kernel syscalls
 - **Blocks**: Core Agent network stack enhancements (optional, can use mock)
 - **Can Work In Parallel With**: Aurora, Skate, Workspace, Bubble Phase 1
 
 **Next Steps**:
-1. Implement TCP/UDP syscalls (socket, bind, listen, accept, connect, send, recv)
-2. Coordinate with Core Agent on syscall interface design
+1. Implement TCP/UDP syscalls in Basin kernel (socket, bind, listen, accept, connect, send, recv)
+2. Coordinate with Core Agent on Basin kernel syscall interface design
 3. Update documentation
+
+**Note**: Vantage Agent develops Basin Kernel (RISC-V), which Core Agent depends on. Vantage VM is just the macOS development host.
 
 ### Grain Aurora Agent
 

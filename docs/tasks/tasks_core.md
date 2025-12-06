@@ -177,7 +177,7 @@
 - [x] Create `src/grain_core/file_storage.zig` module or enhance kernel file I/O ✅ (2025-12-06-023413-pst)
 - [x] Implement database file format support (header, pages, indexes) ✅ (2025-12-06-023413-pst)
 - [x] Implement transaction log file management (WAL format, rotation, checkpoint, recovery) ✅ (2025-12-06-035857-pst)
-- [ ] Implement index file management (B-tree, hash index formats, recovery)
+- [x] Implement index file management (B-tree, hash index formats, recovery) ✅ (2025-12-06-045220-pst)
 - [ ] Implement backup/restore capabilities (full, incremental, scheduling)
 - [ ] Implement compositor integration
 - [ ] Create comprehensive tests

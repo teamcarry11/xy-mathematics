@@ -244,6 +244,64 @@ test "canvas duplicate selected shapes" {
     }
 }
 
+test "canvas add rounded rectangle" {
+    var c = canvas.Canvas.init(1024, 768);
+    const layer_id = c.create_layer("Test Layer");
+    std.debug.assert(layer_id != null);
+    const shape_id = c.add_shape(
+        layer_id.?,
+        .rounded_rectangle,
+        10.0,
+        20.0,
+        100.0,
+        50.0,
+        0xFF0000FF,
+        10.0,
+    );
+    std.debug.assert(shape_id != null);
+    if (c.get_layer(layer_id.?)) |layer| {
+        std.debug.assert(layer.shapes_len == 1);
+        std.debug.assert(layer.shapes[0].shape_type == .rounded_rectangle);
+        std.debug.assert(layer.shapes[0].corner_radius == 10.0);
+    }
+}
+
+test "canvas hit testing rounded rectangle" {
+    var c = canvas.Canvas.init(1024, 768);
+    const layer_id = c.create_layer("Test Layer");
+    std.debug.assert(layer_id != null);
+    const shape_id = c.add_shape(
+        layer_id.?,
+        .rounded_rectangle,
+        100.0,
+        100.0,
+        100.0,
+        100.0,
+        0xFF0000FF,
+        20.0,
+    );
+    std.debug.assert(shape_id != null);
+
+    // Test hit in main body (center).
+    const hit_center = c.find_shape_at(150.0, 150.0);
+    std.debug.assert(hit_center != null);
+    std.debug.assert(hit_center.? == shape_id.?);
+
+    // Test hit in top-left corner (within radius).
+    const hit_corner = c.find_shape_at(110.0, 110.0);
+    std.debug.assert(hit_corner != null);
+    std.debug.assert(hit_corner.? == shape_id.?);
+
+    // Test hit outside corner (outside radius).
+    const no_hit_corner = c.find_shape_at(105.0, 105.0);
+    std.debug.assert(no_hit_corner == null);
+
+    // Test hit in edge area (should hit).
+    const hit_edge = c.find_shape_at(120.0, 100.0);
+    std.debug.assert(hit_edge != null);
+    std.debug.assert(hit_edge.? == shape_id.?);
+}
+
 test "canvas hit testing rectangle" {
     var c = canvas.Canvas.init(1024, 768);
     const layer_id = c.create_layer("Test Layer");

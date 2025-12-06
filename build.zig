@@ -1796,6 +1796,19 @@ pub fn build(b: *std.Build) void {
     const grain_skate_editor_renderer_tests_run = b.addRunArtifact(grain_skate_editor_renderer_tests);
     test_step.dependOn(&grain_skate_editor_renderer_tests_run.step);
 
+    const grain_skate_line_buffer_adapter_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/121_grain_skate_line_buffer_adapter_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_skate", .module = grain_skate_module },
+            },
+        }),
+    });
+    const grain_skate_line_buffer_adapter_tests_run = b.addRunArtifact(grain_skate_line_buffer_adapter_tests);
+    test_step.dependOn(&grain_skate_line_buffer_adapter_tests_run.step);
+
     const shared_font_renderer_tests = b.addTest(.{
         .root_module = b.createModule(.{
             .root_source_file = b.path("tests/060_shared_font_renderer_test.zig"),
@@ -3267,6 +3280,19 @@ pub fn build(b: *std.Build) void {
     });
     const grain_core_index_manager_tests_run = b.addRunArtifact(grain_core_index_manager_tests);
     test_step.dependOn(&grain_core_index_manager_tests_run.step);
+
+    const grain_core_backup_manager_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/121_grain_core_backup_manager_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_core", .module = grain_core_module },
+            },
+        }),
+    });
+    const grain_core_backup_manager_tests_run = b.addRunArtifact(grain_core_backup_manager_tests);
+    test_step.dependOn(&grain_core_backup_manager_tests_run.step);
 
     const grain_database_integration_os_tests = b.addTest(.{
         .root_module = b.createModule(.{

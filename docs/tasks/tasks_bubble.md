@@ -2,7 +2,7 @@
 
 **Agent**: Grain Bubble Agent (8th Agent)  
 **Status**: Phase 1 Starting — Core Canvas (SLC v1.0)  
-**Last Updated**: 2025-12-06-025847-pst
+**Last Updated**: 2025-12-06-060230-pst
 
 ---
 
@@ -61,7 +61,9 @@
 
 - [x] Define shape data structures (Rectangle, Circle, RoundedRectangle) ✅
 - [x] Implement shape creation (position, size, color, corner radius) ✅
+- [x] Implement proper rounded rectangle rendering (quarter-circle corners) ✅
 - [x] Implement shape selection (hit testing) ✅
+- [x] Improve hit testing for rounded rectangles (corner radius support) ✅
 - [x] Implement shape manipulation (move, resize) ✅
 - [x] Implement shape duplication ✅
 - [x] Implement shape copy/paste ✅

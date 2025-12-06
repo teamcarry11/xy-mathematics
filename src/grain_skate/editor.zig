@@ -1,4 +1,5 @@
 const std = @import("std");
+const LineBufferAdapter = @import("line_buffer_adapter.zig").LineBufferAdapter;
 
 /// Grain Skate Editor: Text editor with Vim bindings for block editing.
 /// ~<~ Glow Airbend: explicit editor state, bounded text buffer.
@@ -46,164 +47,8 @@ pub const Editor = struct {
         backward, // Search backward (?)
     };
 
-    /// Text buffer structure.
-    pub const TextBuffer = struct {
-        lines: []const []const u8, // Text lines (bounded)
-        lines_len: u32,
-        allocator: std.mem.Allocator,
-
-        /// Initialize text buffer.
-        // 2025-11-23-114146-pst: Active function
-        pub fn init(allocator: std.mem.Allocator, content: []const u8) !TextBuffer {
-
-            // Assert: Content must be bounded
-            std.debug.assert(content.len <= MAX_BUFFER_SIZE);
-
-            // Split content into lines (bounded)
-            // Use fixed array instead of ArrayList for GrainStyle compliance
-            const MAX_LINES: u32 = MAX_BUFFER_SIZE / 64; // Max lines estimate
-            var lines: [MAX_LINES]?[]const u8 = undefined;
-            @memset(&lines, null);
-            var lines_len: u32 = 0;
-
-            var start: u32 = 0;
-            var i: u32 = 0;
-            while (i < content.len) : (i += 1) {
-                if (content[i] == '\n') {
-                    const line = content[start..i];
-                    if (line.len > MAX_LINE_LEN) {
-                        return error.LineTooLong;
-                    }
-                    if (lines_len >= MAX_LINES) {
-                        return error.TooManyLines;
-                    }
-                    lines[lines_len] = line;
-                    lines_len += 1;
-                    start = i + 1;
-                }
-            }
-
-            // Add last line if no trailing newline
-            if (start < content.len) {
-                const line = content[start..];
-                if (line.len > MAX_LINE_LEN) {
-                    return error.LineTooLong;
-                }
-                if (lines_len >= MAX_LINES) {
-                    return error.TooManyLines;
-                }
-                lines[lines_len] = line;
-                lines_len += 1;
-            } else if (content.len > 0 and content[content.len - 1] == '\n') {
-                // Empty line at end
-                if (lines_len >= MAX_LINES) {
-                    return error.TooManyLines;
-                }
-                lines[lines_len] = "";
-                lines_len += 1;
-            }
-
-            // Allocate lines slice from fixed array
-            const lines_slice = try allocator.alloc([]const u8, lines_len);
-            errdefer allocator.free(lines_slice);
-            var j: u32 = 0;
-            while (j < lines_len) : (j += 1) {
-                lines_slice[j] = lines[j] orelse "";
-            }
-
-            return TextBuffer{
-                .lines = lines_slice,
-                .lines_len = @as(u32, @intCast(lines_slice.len)),
-                .allocator = allocator,
-            };
-        }
-
-        /// Deinitialize text buffer and free memory.
-        pub fn deinit(self: *TextBuffer) void {
-            // Assert: Allocator must be valid
-            // Assert: Allocator must be valid (check by attempting deallocation)
-            _ = self.allocator;
-
-            // Free lines
-            self.allocator.free(self.lines);
-
-            self.* = undefined;
-        }
-
-        /// Get content as single string.
-        pub fn get_content(self: *const TextBuffer) ![]const u8 {
-            // Calculate total size
-            var total_size: u32 = 0;
-            var i: u32 = 0;
-            while (i < self.lines_len) : (i += 1) {
-                total_size += @as(u32, @intCast(self.lines[i].len)) + 1; // +1 for newline
-            }
-
-            // Allocate content buffer
-            const content = try self.allocator.alloc(u8, total_size);
-            errdefer self.allocator.free(content);
-
-            // Copy lines
-            var pos: u32 = 0;
-            i = 0;
-            while (i < self.lines_len) : (i += 1) {
-                @memcpy(content[pos..][0..self.lines[i].len], self.lines[i]);
-                pos += @as(u32, @intCast(self.lines[i].len));
-                if (i < self.lines_len - 1) {
-                    content[pos] = '\n';
-                    pos += 1;
-                }
-            }
-
-            return content[0..pos];
-        }
-
-        /// Replace a line in the buffer (creates new buffer with modified line).
-        // 2025-12-02-112844-pst: Active function
-        pub fn replace_line(self: *TextBuffer, line_index: u32, new_line: []const u8) !void {
-            std.debug.assert(line_index < self.lines_len);
-            std.debug.assert(new_line.len <= MAX_LINE_LEN);
-            // Create new lines array with modified line
-            const new_lines = try self.allocator.alloc([]const u8, self.lines_len);
-            errdefer self.allocator.free(new_lines);
-            var i: u32 = 0;
-            while (i < self.lines_len) : (i += 1) {
-                if (i == line_index) {
-                    new_lines[i] = new_line;
-                } else {
-                    new_lines[i] = self.lines[i];
-                }
-            }
-            // Free old lines and replace
-            self.allocator.free(self.lines);
-            self.lines = new_lines;
-        }
-
-        /// Remove a line from the buffer (creates new buffer without line).
-        // 2025-12-02-115753-pst: Active function
-        pub fn remove_line(self: *TextBuffer, line_index: u32) !void {
-            std.debug.assert(line_index < self.lines_len);
-            const new_lines_len = if (self.lines_len > 0)
-                self.lines_len - 1
-            else
-                0;
-            const new_lines = try self.allocator.alloc([]const u8, new_lines_len);
-            errdefer self.allocator.free(new_lines);
-            var i: u32 = 0;
-            while (i < line_index) : (i += 1) {
-                new_lines[i] = self.lines[i];
-            }
-            var j: u32 = line_index + 1;
-            while (j < self.lines_len) : (j += 1) {
-                new_lines[i] = self.lines[j];
-                i += 1;
-            }
-            // Free old lines and replace
-            self.allocator.free(self.lines);
-            self.lines = new_lines;
-            self.lines_len = new_lines_len;
-        }
-    };
+    // TextBuffer removed: Now using LineBufferAdapter (wraps GrainBuffer)
+    // 2025-12-06-060914-pst: Migrated to LineBufferAdapter for Phase 2: Text Buffer Unification
 
     /// Undo/redo operation structure.
     pub const UndoOperation = struct {
@@ -256,7 +101,7 @@ pub const Editor = struct {
 
     /// Editor state structure.
     pub const EditorState = struct {
-        buffer: TextBuffer, // Text buffer
+        buffer: LineBufferAdapter, // Text buffer (wraps GrainBuffer)
         mode: EditorMode, // Current mode
         cursor_line: u32, // Cursor line (0-indexed)
         cursor_column: u32, // Cursor column (0-indexed)
@@ -277,8 +122,8 @@ pub const Editor = struct {
         // 2025-11-23-122043-pst: Active function
         pub fn init(allocator: std.mem.Allocator, initial_content: []const u8) !EditorState {
 
-            // Initialize text buffer
-            var buffer = try TextBuffer.init(allocator, initial_content);
+            // Initialize text buffer (using LineBufferAdapter wrapping GrainBuffer)
+            var buffer = try LineBufferAdapter.init(allocator, initial_content);
             errdefer buffer.deinit();
 
             // Pre-allocate undo history

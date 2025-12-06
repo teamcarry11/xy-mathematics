@@ -1,6 +1,6 @@
 # Grain OS Task List
 
-**Last Updated**: 2025-12-06-013750-pst  
+**Last Updated**: 2025-12-06-060251-pst  
 **Structure**: Hybrid approach with core overview and agent-specific tasks  
 **See**: `docs/tasks/tasks_{agent}.md` for detailed agent tasks
 
@@ -185,13 +185,20 @@
   - Middleware integration complete (rate limiting, CORS, auth, content-type)
   - Path parameter extraction, JSON parsing, proper status codes
   - Ready for HTTP server integration
-- Phase 7: Database Persistence ✅ READY (2025-12-06-025807-pst)
-  - Unblocked by Grain Core Agent Phase 62 (File Storage Core) ✅
-  - File storage manager with bounded file handles available
-  - Database file header with validation available
-  - Page-based storage with SHA-256 checksums available
-  - File locking/unlocking support available
-  - Ready for database file format implementation
+- Phase 7: Database Persistence ✅ READY (2025-12-06-051817-pst)
+  - Unblocked by Grain Core Agent Phase 62 (File System Enhancements) ✅
+  - File Storage Core (2025-12-06-023413-pst) ✅
+    - File storage manager with bounded file handles available
+    - Database file header with validation available
+    - Page-based storage with SHA-256 checksums available
+    - File locking/unlocking support available
+  - Transaction Log File Management (WAL) (2025-12-06-035857-pst) ✅
+  - Index File Management (2025-12-06-045220-pst) ✅
+    - Index manager with bounded entries available
+    - B-tree and hash index types available
+    - Index creation, update, and deletion available
+    - Index lookup and recovery support available
+  - Ready for complete database persistence implementation
 - Phase 9: Authentication Integration 🔄 IN PROGRESS (2025-12-06-013750-pst)
   - AuthService integration module created (`src/grain_database/auth_integration.zig`)
   - Enhanced auth middleware using AuthService
@@ -230,6 +237,7 @@
 - [x] Create `tests/127_grain_bubble_canvas_input_test.zig` ✅
 - [x] Complete canvas zoom/pan implementation ✅
 - [x] Complete hit testing (point-in-shape) ✅
+- [x] Improve hit testing for rounded rectangles (corner radius support) ✅
 - [x] Complete shape manipulation (move, resize) ✅
 - [x] Complete shape rendering (filled circles, rectangles) ✅
 - [x] Complete canvas renderer (framebuffer integration) ✅

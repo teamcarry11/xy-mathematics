@@ -4,7 +4,7 @@
 //! Architecture: Vector graphics rendering via framebuffer.
 //! GrainStyle: grain_case, u32/u64, bounded allocations, assertions.
 //!
-//! 2025-12-05-143400-pst: Grain Bubble Agent
+//! 2025-12-06-055154-pst: Grain Bubble Agent
 
 const std = @import("std");
 const canvas = @import("canvas.zig");
@@ -54,11 +54,169 @@ pub const BubbleRenderer = struct {
             return;
         }
         const clamped_radius = @min(radius, MAX_CORNER_RADIUS);
-        // Render rounded rectangle (simplified: draw main rect + corners).
-        // For Phase 1, we'll use a simplified approach.
-        self.render_rect(x, y, width, height, color, draw_fn);
-        // TODO: Add proper rounded corner rendering in future iteration.
-        _ = clamped_radius; // Reserved for future rounded corner rendering
+        const clamped_radius_f = @as(f64, @floatFromInt(clamped_radius));
+        const radius_squared = clamped_radius_f * clamped_radius_f;
+        const x_f = @as(f64, @floatFromInt(x));
+        const y_f = @as(f64, @floatFromInt(y));
+        const width_f = @as(f64, @floatFromInt(width));
+        const height_f = @as(f64, @floatFromInt(height));
+        // Corner centers.
+        const top_left_cx = x_f + clamped_radius_f;
+        const top_left_cy = y_f + clamped_radius_f;
+        const top_right_cx = x_f + width_f - clamped_radius_f;
+        const top_right_cy = y_f + clamped_radius_f;
+        const bottom_left_cx = x_f + clamped_radius_f;
+        const bottom_left_cy = y_f + height_f - clamped_radius_f;
+        const bottom_right_cx = x_f + width_f - clamped_radius_f;
+        const bottom_right_cy = y_f + height_f - clamped_radius_f;
+        // Render main body (excluding corner areas).
+        const start_y = if (y < 0) 0 else @as(u32, @intCast(y));
+        const end_y = if (@as(u32, @intCast(y)) + height > self.framebuffer_height)
+            self.framebuffer_height
+        else
+            @as(u32, @intCast(y)) + height;
+        var py: u32 = start_y;
+        while (py < end_y) : (py += 1) {
+            const py_f = @as(f64, @floatFromInt(py));
+            const start_x = if (x < 0) 0 else @as(u32, @intCast(x));
+            const end_x = if (@as(u32, @intCast(x)) + width > self.framebuffer_width)
+                self.framebuffer_width
+            else
+                @as(u32, @intCast(x)) + width;
+            var px: u32 = start_x;
+            while (px < end_x) : (px += 1) {
+                const px_f = @as(f64, @floatFromInt(px));
+                var should_draw = true;
+                // Check if pixel is in corner exclusion zones.
+                if (px_f < top_left_cx and py_f < top_left_cy) {
+                    // Top-left corner.
+                    const dx = px_f - top_left_cx;
+                    const dy = py_f - top_left_cy;
+                    if (dx * dx + dy * dy > radius_squared) {
+                        should_draw = false;
+                    }
+                } else if (px_f >= top_right_cx and py_f < top_right_cy) {
+                    // Top-right corner.
+                    const dx = px_f - top_right_cx;
+                    const dy = py_f - top_right_cy;
+                    if (dx * dx + dy * dy > radius_squared) {
+                        should_draw = false;
+                    }
+                } else if (px_f < bottom_left_cx and py_f >= bottom_left_cy) {
+                    // Bottom-left corner.
+                    const dx = px_f - bottom_left_cx;
+                    const dy = py_f - bottom_left_cy;
+                    if (dx * dx + dy * dy > radius_squared) {
+                        should_draw = false;
+                    }
+                } else if (px_f >= bottom_right_cx and py_f >= bottom_right_cy) {
+                    // Bottom-right corner.
+                    const dx = px_f - bottom_right_cx;
+                    const dy = py_f - bottom_right_cy;
+                    if (dx * dx + dy * dy > radius_squared) {
+                        should_draw = false;
+                    }
+                }
+                if (should_draw) {
+                    draw_fn(px, py, color);
+                }
+            }
+        }
+        // Render corner quarter-circles.
+        self.render_quarter_circle(
+            @as(i32, @intFromFloat(top_left_cx)),
+            @as(i32, @intFromFloat(top_left_cy)),
+            clamped_radius,
+            color,
+            .top_left,
+            draw_fn,
+        );
+        self.render_quarter_circle(
+            @as(i32, @intFromFloat(top_right_cx)),
+            @as(i32, @intFromFloat(top_right_cy)),
+            clamped_radius,
+            color,
+            .top_right,
+            draw_fn,
+        );
+        self.render_quarter_circle(
+            @as(i32, @intFromFloat(bottom_left_cx)),
+            @as(i32, @intFromFloat(bottom_left_cy)),
+            clamped_radius,
+            color,
+            .bottom_left,
+            draw_fn,
+        );
+        self.render_quarter_circle(
+            @as(i32, @intFromFloat(bottom_right_cx)),
+            @as(i32, @intFromFloat(bottom_right_cy)),
+            clamped_radius,
+            color,
+            .bottom_right,
+            draw_fn,
+        );
+    }
+
+    // Quarter circle corner type.
+    const QuarterCorner = enum {
+        top_left,
+        top_right,
+        bottom_left,
+        bottom_right,
+    };
+
+    // Render quarter circle (for rounded rectangle corners).
+    fn render_quarter_circle(
+        self: *const BubbleRenderer,
+        center_x: i32,
+        center_y: i32,
+        radius: u32,
+        color: u32,
+        corner: QuarterCorner,
+        draw_fn: *const fn (u32, u32, u32) void,
+    ) void {
+        std.debug.assert(radius > 0);
+        std.debug.assert(@intFromPtr(draw_fn) != 0);
+        const center_x_f = @as(f64, @floatFromInt(center_x));
+        const center_y_f = @as(f64, @floatFromInt(center_y));
+        const radius_f = @as(f64, @floatFromInt(radius));
+        const radius_squared = radius_f * radius_f;
+        const radius_i = @as(i32, @intCast(radius));
+        // Determine bounding box based on corner type.
+        const start_x_i: i32 = switch (corner) {
+            .top_left, .bottom_left => center_x - radius_i,
+            .top_right, .bottom_right => center_x,
+        };
+        const end_x_i: i32 = switch (corner) {
+            .top_left, .bottom_left => center_x,
+            .top_right, .bottom_right => center_x + radius_i,
+        };
+        const start_y_i: i32 = switch (corner) {
+            .top_left, .top_right => center_y - radius_i,
+            .bottom_left, .bottom_right => center_y,
+        };
+        const end_y_i: i32 = switch (corner) {
+            .top_left, .top_right => center_y,
+            .bottom_left, .bottom_right => center_y + radius_i,
+        };
+        const start_x = @max(0, start_x_i);
+        const end_x = @min(@as(i32, @intCast(self.framebuffer_width)), end_x_i);
+        const start_y = @max(0, start_y_i);
+        const end_y = @min(@as(i32, @intCast(self.framebuffer_height)), end_y_i);
+        var py: i32 = start_y;
+        while (py < end_y) : (py += 1) {
+            var px: i32 = start_x;
+            while (px < end_x) : (px += 1) {
+                const px_f = @as(f64, @floatFromInt(px));
+                const py_f = @as(f64, @floatFromInt(py));
+                const dx = px_f - center_x_f;
+                const dy = py_f - center_y_f;
+                const distance_squared = dx * dx + dy * dy;
+                if (distance_squared <= radius_squared) {
+                    draw_fn(@as(u32, @intCast(px)), @as(u32, @intCast(py)), color);
+                }
+            }
+        }
     }
 
     // Render rectangle (filled).

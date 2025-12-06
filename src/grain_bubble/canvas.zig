@@ -425,9 +425,20 @@ pub const Canvas = struct {
     ) bool {
         std.debug.assert(@intFromPtr(shape) != 0);
         switch (shape.shape_type) {
-            .rectangle, .rounded_rectangle => {
+            .rectangle => {
                 return (world_x >= shape.x and world_x <= shape.x + shape.width and
                     world_y >= shape.y and world_y <= shape.y + shape.height);
+            },
+            .rounded_rectangle => {
+                return is_point_in_rounded_rect(
+                    world_x,
+                    world_y,
+                    shape.x,
+                    shape.y,
+                    shape.width,
+                    shape.height,
+                    shape.corner_radius,
+                );
             },
             .circle => {
                 const center_x = shape.x + shape.width / 2.0;
@@ -440,6 +451,84 @@ pub const Canvas = struct {
                 return distance_squared <= radius_squared;
             },
         }
+    }
+
+    // Check if point is inside rounded rectangle (with corner radius).
+    fn is_point_in_rounded_rect(
+        point_x: f64,
+        point_y: f64,
+        rect_x: f64,
+        rect_y: f64,
+        rect_width: f64,
+        rect_height: f64,
+        corner_radius: f64,
+    ) bool {
+        std.debug.assert(rect_width > 0.0);
+        std.debug.assert(rect_height > 0.0);
+        std.debug.assert(corner_radius >= 0.0);
+        const radius = @min(corner_radius, @min(rect_width, rect_height) / 2.0);
+        if (radius == 0.0) {
+            // Simple rectangle.
+            return (point_x >= rect_x and point_x <= rect_x + rect_width and
+                point_y >= rect_y and point_y <= rect_y + rect_height);
+        }
+        const radius_squared = radius * radius;
+        // Check if point is in main rectangular body (excluding corners).
+        const left_edge = rect_x + radius;
+        const right_edge = rect_x + rect_width - radius;
+        const top_edge = rect_y + radius;
+        const bottom_edge = rect_y + rect_height - radius;
+        if (point_x >= left_edge and point_x <= right_edge and
+            point_y >= top_edge and point_y <= bottom_edge)
+        {
+            return true;
+        }
+        // Check if point is in one of the four corner quarter-circles.
+        // Top-left corner.
+        if (point_x < left_edge and point_y < top_edge) {
+            const corner_center_x = left_edge;
+            const corner_center_y = top_edge;
+            const dx = point_x - corner_center_x;
+            const dy = point_y - corner_center_y;
+            const distance_squared = dx * dx + dy * dy;
+            if (distance_squared <= radius_squared) {
+                return true;
+            }
+        }
+        // Top-right corner.
+        if (point_x > right_edge and point_y < top_edge) {
+            const corner_center_x = right_edge;
+            const corner_center_y = top_edge;
+            const dx = point_x - corner_center_x;
+            const dy = point_y - corner_center_y;
+            const distance_squared = dx * dx + dy * dy;
+            if (distance_squared <= radius_squared) {
+                return true;
+            }
+        }
+        // Bottom-left corner.
+        if (point_x < left_edge and point_y > bottom_edge) {
+            const corner_center_x = left_edge;
+            const corner_center_y = bottom_edge;
+            const dx = point_x - corner_center_x;
+            const dy = point_y - corner_center_y;
+            const distance_squared = dx * dx + dy * dy;
+            if (distance_squared <= radius_squared) {
+                return true;
+            }
+        }
+        // Bottom-right corner.
+        if (point_x > right_edge and point_y > bottom_edge) {
+            const corner_center_x = right_edge;
+            const corner_center_y = bottom_edge;
+            const dx = point_x - corner_center_x;
+            const dy = point_y - corner_center_y;
+            const distance_squared = dx * dx + dy * dy;
+            if (distance_squared <= radius_squared) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // Move shape by offset.

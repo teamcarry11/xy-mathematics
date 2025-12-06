@@ -2,7 +2,7 @@
 
 **Agent**: Grain Carry Agent (6th Agent)  
 **Status**: WebSocket Support Available — Ready for WebSocket Client Implementation  
-**Last Updated**: 2025-12-06-033256-pst
+**Last Updated**: 2025-12-06-060852-pst
 
 ---
 
@@ -637,7 +637,7 @@ While waiting for Grain Core Agent's API Server (Phase 59), we can prepare the A
 - Comprehensive WebSocket client tests
 
 **Files Created**:
-- `src/grain_carry_core/websocket/client.zig` — WebSocket client module (269 lines)
+- `src/grain_carry_core/websocket/client.zig` — WebSocket client module (430 lines)
 - `src/grain_carry_core/websocket/root.zig` — WebSocket module root
 - `tests/125_grain_carry_core_websocket_client_test.zig` — WebSocket client tests
 
@@ -649,6 +649,14 @@ While waiting for Grain Core Agent's API Server (Phase 59), we can prepare the A
 - `send_text_message()` — Send text messages via WebSocket
 - `send_binary_message()` — Send binary messages via WebSocket
 - `parse_received_frame()` — Parse received WebSocket frames
+- `handle_received_frame()` — Handle received frames and update client state
+- `send_ping()` — Send ping frames for keepalive
+- `send_pong()` — Send pong frames in response to ping
+- `close_connection()` — Close connection with status code and reason
+- `set_connected()` — Update client state to connected
+- `set_disconnected()` — Update client state to disconnected
+- `extract_text_message()` — Extract text messages from received frames
+- `extract_binary_message()` — Extract binary messages from received frames
 
 **Grain Style Compliance**:
 - ✅ `grain_case` function names
@@ -666,12 +674,60 @@ While waiting for Grain Core Agent's API Server (Phase 59), we can prepare the A
 - Client key generation
 - Upgrade request building
 - Client finding and removal
+- Connection state management (set_connected, set_disconnected)
+- Ping/pong frame generation
+- Connection closing with status codes
+- Message extraction (text/binary)
+
+**Next Steps**:
+- ✅ Message receiving and handling complete
+- ✅ Ping/pong support for keepalive complete
+- ✅ Connection state management complete
+- ⏳ Complete connection management (TCP socket connection, handshake completion)
+- ⏳ Integrate with network stack when available
+
+### Completed: WebSocket Client Enhanced with Message Handling and Keepalive ✅ (2025-12-06-060251-pst)
+
+**Key Achievements**:
+- Enhanced WebSocket client with message receiving and handling
+- Ping/pong support for keepalive
+- Connection state management (set_connected, set_disconnected)
+- Connection closing with status codes
+- Text and binary message extraction from frames
+- Frame handling with activity tracking
+- Comprehensive tests for enhanced features
+
+**Files Modified**:
+- `src/grain_carry_core/websocket/client.zig` — Enhanced with message handling and keepalive (430 lines)
+- `tests/125_grain_carry_core_websocket_client_test.zig` — Added tests for enhanced features
+
+**New WebSocket Client Features**:
+- `handle_received_frame()` — Handle received frames and update client state
+- `send_ping()` — Send ping frames for keepalive
+- `send_pong()` — Send pong frames in response to ping
+- `close_connection()` — Close connection with status code and reason
+- `set_connected()` — Update client state to connected
+- `set_disconnected()` — Update client state to disconnected
+- `extract_text_message()` — Extract text messages from received frames
+- `extract_binary_message()` — Extract binary messages from received frames
+
+**Grain Style Compliance**:
+- ✅ `grain_case` function names
+- ✅ `u32`/`u64` types (no `usize`)
+- ✅ Bounded allocations (all limits explicit)
+- ✅ Minimum 2 assertions per function
+- ✅ Max 70 lines per function (all functions compliant)
+- ✅ Max 100 characters per line
+- ✅ All compiler warnings enabled
+
+**Test Coverage**:
+- Connection state management (set_connected, set_disconnected)
+- Ping/pong frame generation
+- Connection closing with status codes
+- Message extraction (text/binary)
 
 **Next Steps**:
 - Complete connection management (TCP socket connection, handshake completion)
-- Add message receiving and handling
-- Add ping/pong support for keepalive
-- Add connection state management
 - Integrate with network stack when available
 
 ### Completed: Handler Adapters for API Server Integration ✅ (2025-12-05-104041-pst)
@@ -912,7 +968,9 @@ While waiting for Grain Core Agent's API Server (Phase 59), we can prepare the A
    - Database file format with header validation ✅
    - Page-based storage with integrity checks ✅
    - File handle management with locking ✅
-   - Ready for Silo Agent database persistence ✅
+   - Transaction Log File Management (WAL) ✅ (2025-12-06-035857-pst)
+   - Index File Management ✅ (2025-12-06-045220-pst)
+   - Ready for Silo Agent database persistence with efficient query support ✅
    - Enables Carry Agent database integration when Silo Agent completes ✅
 
 ### What We're Ready For

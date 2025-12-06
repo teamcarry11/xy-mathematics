@@ -88,3 +88,68 @@ test "websocket client manager remove client" {
     try testing.expect(manager.clients_len == 0);
 }
 
+test "websocket client set connected" {
+    var manager = websocket.WebSocketClientManager.init();
+    const client = manager.create_client();
+    try testing.expect(client != null);
+    
+    websocket.set_connected(client.?);
+    
+    try testing.expect(client.?.state == websocket.ClientState.connected);
+    try testing.expect(client.?.created_at > 0);
+    try testing.expect(client.?.last_activity > 0);
+}
+
+test "websocket client set disconnected" {
+    var manager = websocket.WebSocketClientManager.init();
+    const client = manager.create_client();
+    try testing.expect(client != null);
+    websocket.set_connected(client.?);
+    
+    websocket.set_disconnected(client.?);
+    
+    try testing.expect(client.?.state == websocket.ClientState.disconnected);
+    try testing.expect(client.?.socket_fd == 0);
+}
+
+test "websocket client send ping" {
+    var manager = websocket.WebSocketClientManager.init();
+    const client = manager.create_client();
+    try testing.expect(client != null);
+    websocket.set_connected(client.?);
+    
+    var frame_buf: [1024]u8 = undefined;
+    const frame_len = websocket.send_ping(client.?, &frame_buf);
+    
+    try testing.expect(frame_len > 0);
+    try testing.expect(frame_len <= 1024);
+}
+
+test "websocket client send pong" {
+    var manager = websocket.WebSocketClientManager.init();
+    const client = manager.create_client();
+    try testing.expect(client != null);
+    websocket.set_connected(client.?);
+    
+    const ping_payload = "ping";
+    var frame_buf: [1024]u8 = undefined;
+    const frame_len = websocket.send_pong(client.?, ping_payload, &frame_buf);
+    
+    try testing.expect(frame_len > 0);
+    try testing.expect(frame_len <= 1024);
+}
+
+test "websocket client close connection" {
+    var manager = websocket.WebSocketClientManager.init();
+    const client = manager.create_client();
+    try testing.expect(client != null);
+    websocket.set_connected(client.?);
+    
+    var frame_buf: [1024]u8 = undefined;
+    const frame_len = websocket.close_connection(client.?, 1000, "Normal closure", &frame_buf);
+    
+    try testing.expect(frame_len > 0);
+    try testing.expect(frame_len <= 1024);
+    try testing.expect(client.?.state == websocket.ClientState.closing);
+}
+

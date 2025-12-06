@@ -75,4 +75,5 @@ pub const dns_resolver = @import("dns_resolver.zig");
 pub const file_storage = @import("file_storage.zig");
 pub const wal_manager = @import("wal_manager.zig");
 pub const index_manager = @import("index_manager.zig");
+pub const backup_manager = @import("backup_manager.zig");
 

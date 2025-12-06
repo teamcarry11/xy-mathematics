@@ -101,10 +101,10 @@ test "unlimited limits default" {
     
     // Spawn multiple processes (should work with unlimited limits).
     kernel.scheduler.set_current(pid1, 1000);
-    const result3 = kernel.syscall_spawn(executable, executable_len, 0, 0);
+    const result3 = try kernel.syscall_spawn(executable, executable_len, 0, 0);
     try testing.expect(result3 == .success);
     
-    const result4 = kernel.syscall_spawn(executable, executable_len, 0, 0);
+    const result4 = try kernel.syscall_spawn(executable, executable_len, 0, 0);
     try testing.expect(result4 == .success);
 }
 
@@ -115,7 +115,7 @@ test "limits with no process group" {
     // Spawn a process without a process group (pgid = 0).
     const executable: u64 = 0x10000;
     const executable_len: u64 = 1024;
-    const result1 = kernel.syscall_spawn(executable, executable_len, 0, 0);
+    const result1 = try kernel.syscall_spawn(executable, executable_len, 0, 0);
     try testing.expect(result1 == .success);
     const pid1 = result1.success;
     
@@ -124,6 +124,6 @@ test "limits with no process group" {
     
     // Spawn another process (should work).
     kernel.scheduler.set_current(pid1, 1000);
-    const result2 = kernel.syscall_spawn(executable, executable_len, 0, 0);
+    const result2 = try kernel.syscall_spawn(executable, executable_len, 0, 0);
     try testing.expect(result2 == .success);
 }

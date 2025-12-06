@@ -267,3 +267,164 @@ pub fn parse_received_frame(
     return grain_core_ws.parse_websocket_frame(buffer, frame);
 }
 
+// Handle received WebSocket frame (update client state).
+pub fn handle_received_frame(
+    client: *WebSocketClient,
+    frame: *const grain_core_ws.WebSocketFrame,
+) bool {
+    std.debug.assert(client != null);
+    std.debug.assert(frame != null);
+    if (client.state != ClientState.connected) {
+        return false;
+    }
+    const current_time: u64 = @intCast(std.time.timestamp());
+    client.last_activity = current_time;
+    std.debug.assert(client.last_activity > 0);
+    return true;
+}
+
+// Send ping frame for keepalive.
+pub fn send_ping(
+    client: *WebSocketClient,
+    frame_buf: []u8,
+) u32 {
+    std.debug.assert(client != null);
+    std.debug.assert(frame_buf.len >= grain_core_ws.MAX_FRAME_SIZE + 14);
+    if (client.state != ClientState.connected) {
+        return 0;
+    }
+    var frame = grain_core_ws.WebSocketFrame.init();
+    frame.flags.fin = true;
+    frame.flags.opcode = grain_core_ws.FrameOpcode.ping;
+    frame.flags.masked = true;
+    frame.flags.payload_len = 0;
+    std.crypto.random.bytes(&frame.flags.mask_key);
+    frame.payload_len = 0;
+    const frame_len = grain_core_ws.generate_websocket_frame(&frame, frame_buf);
+    std.debug.assert(frame_len > 0);
+    std.debug.assert(frame_len <= frame_buf.len);
+    return frame_len;
+}
+
+// Send pong frame in response to ping.
+pub fn send_pong(
+    client: *WebSocketClient,
+    ping_payload: []const u8,
+    frame_buf: []u8,
+) u32 {
+    std.debug.assert(client != null);
+    std.debug.assert(frame_buf.len >= grain_core_ws.MAX_FRAME_SIZE + 14);
+    if (client.state != ClientState.connected) {
+        return 0;
+    }
+    var frame = grain_core_ws.WebSocketFrame.init();
+    frame.flags.fin = true;
+    frame.flags.opcode = grain_core_ws.FrameOpcode.pong;
+    frame.flags.masked = true;
+    const payload_len = if (ping_payload.len <= grain_core_ws.MAX_FRAME_SIZE) ping_payload.len else grain_core_ws.MAX_FRAME_SIZE;
+    frame.flags.payload_len = payload_len;
+    std.crypto.random.bytes(&frame.flags.mask_key);
+    if (payload_len > 0) {
+        std.mem.copyForwards(u8, &frame.payload, ping_payload[0..payload_len]);
+    }
+    frame.payload_len = @intCast(payload_len);
+    const frame_len = grain_core_ws.generate_websocket_frame(&frame, frame_buf);
+    std.debug.assert(frame_len > 0);
+    std.debug.assert(frame_len <= frame_buf.len);
+    return frame_len;
+}
+
+// Close WebSocket connection.
+pub fn close_connection(
+    client: *WebSocketClient,
+    code: u16,
+    reason: []const u8,
+    frame_buf: []u8,
+) u32 {
+    std.debug.assert(client != null);
+    std.debug.assert(frame_buf.len >= grain_core_ws.MAX_FRAME_SIZE + 14);
+    if (client.state == ClientState.closed or client.state == ClientState.closing) {
+        return 0;
+    }
+    client.state = ClientState.closing;
+    var frame = grain_core_ws.WebSocketFrame.init();
+    frame.flags.fin = true;
+    frame.flags.opcode = grain_core_ws.FrameOpcode.close;
+    frame.flags.masked = true;
+    var payload_len: u32 = 2;
+    frame.payload[0] = @as(u8, @truncate(code >> 8));
+    frame.payload[1] = @as(u8, @truncate(code));
+    const reason_len = if (reason.len <= grain_core_ws.MAX_FRAME_SIZE - 2) reason.len else grain_core_ws.MAX_FRAME_SIZE - 2;
+    if (reason_len > 0) {
+        std.mem.copyForwards(u8, frame.payload[2..], reason[0..reason_len]);
+        payload_len += reason_len;
+    }
+    frame.flags.payload_len = payload_len;
+    std.crypto.random.bytes(&frame.flags.mask_key);
+    frame.payload_len = payload_len;
+    const frame_len = grain_core_ws.generate_websocket_frame(&frame, frame_buf);
+    std.debug.assert(frame_len > 0);
+    std.debug.assert(frame_len <= frame_buf.len);
+    return frame_len;
+}
+
+// Update client state to connected.
+pub fn set_connected(client: *WebSocketClient) void {
+    std.debug.assert(client != null);
+    client.state = ClientState.connected;
+    const current_time: u64 = @intCast(std.time.timestamp());
+    client.created_at = current_time;
+    client.last_activity = current_time;
+    std.debug.assert(client.state == ClientState.connected);
+    std.debug.assert(client.created_at > 0);
+    std.debug.assert(client.last_activity > 0);
+}
+
+// Update client state to disconnected.
+pub fn set_disconnected(client: *WebSocketClient) void {
+    std.debug.assert(client != null);
+    client.state = ClientState.disconnected;
+    client.socket_fd = 0;
+    std.debug.assert(client.state == ClientState.disconnected);
+}
+
+// Extract text message from received frame.
+pub fn extract_text_message(
+    frame: *const grain_core_ws.WebSocketFrame,
+    message_out: []u8,
+) u32 {
+    std.debug.assert(frame != null);
+    std.debug.assert(message_out.len >= MAX_CLIENT_MESSAGE_SIZE);
+    if (frame.flags.opcode != grain_core_ws.FrameOpcode.text) {
+        return 0;
+    }
+    if (frame.payload_len > MAX_CLIENT_MESSAGE_SIZE) {
+        return 0;
+    }
+    const msg_len = if (frame.payload_len <= message_out.len) frame.payload_len else message_out.len;
+    std.mem.copyForwards(u8, message_out[0..msg_len], frame.payload[0..frame.payload_len]);
+    std.debug.assert(msg_len > 0);
+    std.debug.assert(msg_len <= MAX_CLIENT_MESSAGE_SIZE);
+    return msg_len;
+}
+
+// Extract binary message from received frame.
+pub fn extract_binary_message(
+    frame: *const grain_core_ws.WebSocketFrame,
+    message_out: []u8,
+) u32 {
+    std.debug.assert(frame != null);
+    std.debug.assert(message_out.len >= MAX_CLIENT_MESSAGE_SIZE);
+    if (frame.flags.opcode != grain_core_ws.FrameOpcode.binary) {
+        return 0;
+    }
+    if (frame.payload_len > MAX_CLIENT_MESSAGE_SIZE) {
+        return 0;
+    }
+    const msg_len = if (frame.payload_len <= message_out.len) frame.payload_len else message_out.len;
+    std.mem.copyForwards(u8, message_out[0..msg_len], frame.payload[0..frame.payload_len]);
+    std.debug.assert(msg_len > 0);
+    std.debug.assert(msg_len <= MAX_CLIENT_MESSAGE_SIZE);
+    return msg_len;
+}
+

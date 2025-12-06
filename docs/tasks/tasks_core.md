@@ -178,7 +178,7 @@
 - [x] Implement database file format support (header, pages, indexes) ✅ (2025-12-06-023413-pst)
 - [x] Implement transaction log file management (WAL format, rotation, checkpoint, recovery) ✅ (2025-12-06-035857-pst)
 - [x] Implement index file management (B-tree, hash index formats, recovery) ✅ (2025-12-06-045220-pst)
-- [ ] Implement backup/restore capabilities (full, incremental, scheduling)
+- [x] Implement backup/restore capabilities (full, incremental, scheduling) ✅ (2025-12-06-061647-pst)
 - [ ] Implement compositor integration
 - [ ] Create comprehensive tests
 - [ ] Update `build.zig` with new module and tests

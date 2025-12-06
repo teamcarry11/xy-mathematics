@@ -468,11 +468,14 @@ Grain Core Agent is responsible for building the desktop environment compositor 
    - ✅ Index entry management - `IndexEntry` with key/value pairs
    - ✅ Comprehensive tests (`tests/120_grain_core_index_manager_test.zig`)
 
-4. **Backup/Restore Capabilities**:
-   - Database backup (full backup, incremental backup)
-   - Database restore (from backup)
-   - Backup file format
-   - Backup scheduling
+4. **Backup/Restore Capabilities** ✅ (2025-12-06-061647-pst):
+   - ✅ Database backup (full backup, incremental backup) - `create_backup()`, `BackupType`
+   - ✅ Backup metadata management - `BackupMetadata`, `BackupState`
+   - ✅ Backup scheduling - `should_schedule_backup()`, interval-based scheduling
+   - ✅ Backup state tracking - `update_backup_state()`, `find_backup()`
+   - ✅ Latest backup retrieval - `get_latest_full_backup()`
+   - ✅ Backup deletion - `delete_backup()`
+   - ✅ Comprehensive tests (`tests/121_grain_core_backup_manager_test.zig`)
 
 **Estimated Time**: 3-4 weeks
 

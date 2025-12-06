@@ -35,12 +35,27 @@
 ## Current Work: Phase 2 - Text Buffer Unification
 
 **Priority**: **HIGH** — Code deduplication and feature enhancement  
-**Status**: **PLANNED**  
-**Estimated Time**: 1-2 weeks
+**Status**: **IN PROGRESS** — Adapter layer implemented, editor migration in progress  
+**Estimated Time**: 1-2 weeks  
+**Last Updated**: 2025-12-06-060914-pst
 
 ### Tasks
 
-- [ ] Review `GrainBuffer` API (`src/grain_buffer.zig`) and ensure it meets Grain Skate needs
+- [x] Review `GrainBuffer` API (`src/grain_buffer.zig`) and ensure it meets Grain Skate needs
+- [x] Create adapter layer (`src/grain_skate/line_buffer_adapter.zig`) to wrap `GrainBuffer` with line-based API
+- [x] Implement line index cache (byte offsets of line starts)
+- [x] Implement `replace_line()` and `remove_line()` operations
+- [x] Add adapter to `src/grain_skate/root.zig` exports
+- [x] Create tests (`tests/121_grain_skate_line_buffer_adapter_test.zig`)
+- [x] Add tests to `build.zig`
+- [x] Migrate `EditorState.buffer` to use `LineBufferAdapter`
+- [x] Update `EditorState.init()` to use `LineBufferAdapter.init()`
+- [ ] Remove old `TextBuffer` implementation from `editor.zig`
+- [ ] Test thoroughly (undo/redo, visual mode, search, find/replace, cursor movement)
+- [ ] Update undo/redo system if needed (currently uses line/column, may need byte offsets)
+- [ ] Update visual mode operations if needed
+- [ ] Update tests (`tests/048_grain_skate_core_test.zig`) if needed
+- [ ] Update `docs/plans/plan_skate.md` and `docs/tasks/tasks_skate.md` with completion
 
 ### Grain Style Requirements
 
@@ -59,28 +74,9 @@
 
 ---
 
-## Planned: Phase 2 - Text Buffer Unification
+## Planned: Phase 2 - Text Buffer Unification (Duplicate Section - See "Current Work" Above)
 
-**Priority**: **HIGH** — Code deduplication and feature enhancement  
-**Status**: **READY** — GrainBuffer updated to u32/u64 ✅  
-**Estimated Time**: 1-2 weeks
-
-**Update**: GrainBuffer has been updated to use `u32`/`u64` for all public API functions and struct fields. Internal conversions to `usize` are only used when interfacing with Zig standard library, which is acceptable.
-
-**Coordination Request**: See `docs/agent-communications/aurora_agent_grainbuffer_u32_u64_update_request.md` (marked complete)
-
-### Tasks
-
-- [ ] Review `GrainBuffer` API (`src/grain_buffer.zig`) and ensure it meets Grain Skate needs
-- [ ] Create adapter layer if needed (wrap `GrainBuffer` for Grain Skate API)
-- [ ] Migrate Grain Skate editor (`src/grain_skate/editor.zig`) to use `GrainBuffer`
-- [ ] Update undo/redo system to work with `GrainBuffer`
-- [ ] Update visual mode operations to work with `GrainBuffer`
-- [ ] Remove duplicate `TextBuffer` implementation
-- [ ] Test thoroughly (undo/redo, visual mode, search, find/replace)
-- [ ] Update tests (`tests/048_grain_skate_core_test.zig`)
-- [ ] Update `build.zig` if needed
-- [ ] Update `docs/plans/plan_skate.md` and `docs/tasks/tasks_skate.md` with completion
+**Note**: This section is a duplicate. See "Current Work: Phase 2 - Text Buffer Unification" above for current status.
 
 ### Grain Style Requirements
 

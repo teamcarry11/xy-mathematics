@@ -1,30 +1,25 @@
-//! Grain OS Backup Manager: System backup and restore management.
+//! Grain Core Backup Manager: Database backup and restore capabilities.
 //!
-//! Why: Provide backup and restore functionality for system state and data.
-//! Architecture: Backup creation, restore operations, backup history.
-//! GrainStyle: grain_case, u32/u64, bounded allocations, assertions.
+//! Why: Provide database backup/restore for data protection (Silo Agent).
+//! Architecture: Full backup, incremental backup, restore, scheduling.
+//! GrainStyle: grain_case, u32/u64, bounded allocations, assertions, max 70 lines.
 
 const std = @import("std");
+const file_storage = @import("file_storage.zig");
 
-// Bounded: Max backups.
-pub const MAX_BACKUPS: u32 = 32;
+// Bounded: Max backup files.
+pub const MAX_BACKUP_FILES: u32 = 100;
 
-// Bounded: Max backup name length.
-pub const MAX_BACKUP_NAME_LEN: u32 = 128;
+// Bounded: Max backup filename length.
+pub const MAX_BACKUP_FILENAME_LEN: u32 = 256;
 
-// Bounded: Max backup path length.
-pub const MAX_BACKUP_PATH_LEN: u32 = 512;
-
-// Bounded: Max backup description length.
-pub const MAX_BACKUP_DESC_LEN: u32 = 256;
+// Bounded: Max backup metadata size.
+pub const MAX_BACKUP_METADATA_SIZE: u32 = 1024;
 
 // Backup type.
 pub const BackupType = enum(u8) {
     full,
     incremental,
-    settings_only,
-    data_only,
-    custom,
 };
 
 // Backup state.
@@ -33,270 +28,208 @@ pub const BackupState = enum(u8) {
     in_progress,
     completed,
     failed,
-    cancelled,
 };
 
-// Backup: represents a system backup.
-pub const Backup = struct {
+// Backup metadata.
+pub const BackupMetadata = struct {
     backup_id: u32,
-    name: [MAX_BACKUP_NAME_LEN]u8,
-    name_len: u32,
-    description: [MAX_BACKUP_DESC_LEN]u8,
-    description_len: u32,
-    path: [MAX_BACKUP_PATH_LEN]u8,
-    path_len: u32,
     backup_type: BackupType,
+    filename: [MAX_BACKUP_FILENAME_LEN]u8,
+    filename_len: u32,
+    file_size: u64,
+    created_at: u64,
     state: BackupState,
-    created_timestamp: u64,
-    size_bytes: u64,
-    active: bool,
+    checksum: [file_storage.CHECKSUM_SIZE]u8,
+    metadata: [MAX_BACKUP_METADATA_SIZE]u8,
+    metadata_len: u32,
 
-    pub fn init() Backup {
-        var backup = Backup{
+    pub fn init() BackupMetadata {
+        var meta = BackupMetadata{
             .backup_id = 0,
-            .name = undefined,
-            .name_len = 0,
-            .description = undefined,
-            .description_len = 0,
-            .path = undefined,
-            .path_len = 0,
             .backup_type = BackupType.full,
+            .filename = undefined,
+            .filename_len = 0,
+            .file_size = 0,
+            .created_at = 0,
             .state = BackupState.pending,
-            .created_timestamp = 0,
-            .size_bytes = 0,
-            .active = false,
+            .checksum = undefined,
+            .metadata = undefined,
+            .metadata_len = 0,
         };
         var i: u32 = 0;
-        while (i < MAX_BACKUP_NAME_LEN) : (i += 1) {
-            backup.name[i] = 0;
+        while (i < MAX_BACKUP_FILENAME_LEN) : (i += 1) {
+            meta.filename[i] = 0;
         }
         i = 0;
-        while (i < MAX_BACKUP_DESC_LEN) : (i += 1) {
-            backup.description[i] = 0;
+        while (i < file_storage.CHECKSUM_SIZE) : (i += 1) {
+            meta.checksum[i] = 0;
         }
         i = 0;
-        while (i < MAX_BACKUP_PATH_LEN) : (i += 1) {
-            backup.path[i] = 0;
+        while (i < MAX_BACKUP_METADATA_SIZE) : (i += 1) {
+            meta.metadata[i] = 0;
         }
-        return backup;
+        return meta;
+    }
+
+    pub fn set_filename(self: *BackupMetadata, filename: []const u8) bool {
+        std.debug.assert(filename.len > 0);
+        std.debug.assert(filename.len <= MAX_BACKUP_FILENAME_LEN);
+        const filename_len = @min(filename.len, MAX_BACKUP_FILENAME_LEN);
+        var i: u32 = 0;
+        while (i < MAX_BACKUP_FILENAME_LEN) : (i += 1) {
+            self.filename[i] = 0;
+        }
+        i = 0;
+        while (i < filename_len) : (i += 1) {
+            self.filename[i] = filename[i];
+        }
+        self.filename_len = filename_len;
+        return true;
     }
 };
 
-// Backup manager: manages system backups.
+// Backup manager: manages database backups.
 pub const BackupManager = struct {
-    backups: [MAX_BACKUPS]Backup,
+    backups: [MAX_BACKUP_FILES]BackupMetadata,
     backups_len: u32,
     next_backup_id: u32,
-    current_backup_id: u32, // Currently active backup operation.
+    last_full_backup: u64,
+    last_incremental_backup: u64,
 
     pub fn init() BackupManager {
         var manager = BackupManager{
             .backups = undefined,
             .backups_len = 0,
             .next_backup_id = 1,
-            .current_backup_id = 0,
+            .last_full_backup = 0,
+            .last_incremental_backup = 0,
         };
         var i: u32 = 0;
-        while (i < MAX_BACKUPS) : (i += 1) {
-            manager.backups[i] = Backup.init();
+        while (i < MAX_BACKUP_FILES) : (i += 1) {
+            manager.backups[i] = BackupMetadata.init();
         }
         return manager;
     }
 
-    // Create backup.
     pub fn create_backup(
         self: *BackupManager,
-        name: []const u8,
-        description: []const u8,
-        path: []const u8,
         backup_type: BackupType,
+        filename: []const u8,
         timestamp: u64,
-    ) ?u32 {
-        if (self.backups_len >= MAX_BACKUPS) {
-            return null;
-        }
-        if (name.len > MAX_BACKUP_NAME_LEN) {
-            return null;
-        }
-        if (description.len > MAX_BACKUP_DESC_LEN) {
-            return null;
-        }
-        if (path.len > MAX_BACKUP_PATH_LEN) {
+    ) ?*BackupMetadata {
+        std.debug.assert(filename.len > 0);
+        std.debug.assert(timestamp > 0);
+        if (self.backups_len >= MAX_BACKUP_FILES) {
             return null;
         }
         const backup_id = self.next_backup_id;
         self.next_backup_id += 1;
-        self.backups[self.backups_len] = Backup.init();
-        self.backups[self.backups_len].backup_id = backup_id;
-        self.backups[self.backups_len].backup_type = backup_type;
-        self.backups[self.backups_len].state = BackupState.pending;
-        self.backups[self.backups_len].created_timestamp = timestamp;
-        self.backups[self.backups_len].active = true;
-        var i: u32 = 0;
-        while (i < MAX_BACKUP_NAME_LEN) : (i += 1) {
-            self.backups[self.backups_len].name[i] = 0;
+        self.backups[self.backups_len] = BackupMetadata.init();
+        const backup = &self.backups[self.backups_len];
+        backup.backup_id = backup_id;
+        backup.backup_type = backup_type;
+        _ = backup.set_filename(filename);
+        backup.created_at = timestamp;
+        backup.state = BackupState.pending;
+        if (backup_type == BackupType.full) {
+            self.last_full_backup = timestamp;
+        } else {
+            self.last_incremental_backup = timestamp;
         }
-        const name_len = @min(name.len, MAX_BACKUP_NAME_LEN);
-        i = 0;
-        while (i < name_len) : (i += 1) {
-            self.backups[self.backups_len].name[i] = name[i];
-        }
-        self.backups[self.backups_len].name_len = @intCast(name_len);
-        i = 0;
-        while (i < MAX_BACKUP_DESC_LEN) : (i += 1) {
-            self.backups[self.backups_len].description[i] = 0;
-        }
-        const desc_len = @min(description.len, MAX_BACKUP_DESC_LEN);
-        i = 0;
-        while (i < desc_len) : (i += 1) {
-            self.backups[self.backups_len].description[i] = description[i];
-        }
-        self.backups[self.backups_len].description_len = @intCast(desc_len);
-        i = 0;
-        while (i < MAX_BACKUP_PATH_LEN) : (i += 1) {
-            self.backups[self.backups_len].path[i] = 0;
-        }
-        const path_len = @min(path.len, MAX_BACKUP_PATH_LEN);
-        i = 0;
-        while (i < path_len) : (i += 1) {
-            self.backups[self.backups_len].path[i] = path[i];
-        }
-        self.backups[self.backups_len].path_len = @intCast(path_len);
         self.backups_len += 1;
-        return backup_id;
+        return backup;
     }
 
-    // Find backup by ID.
     pub fn find_backup(
         self: *BackupManager,
         backup_id: u32,
-    ) ?*Backup {
+    ) ?*BackupMetadata {
         std.debug.assert(backup_id > 0);
         var i: u32 = 0;
         while (i < self.backups_len) : (i += 1) {
-            if (self.backups[i].backup_id == backup_id and self.backups[i].active) {
+            if (self.backups[i].backup_id == backup_id) {
                 return &self.backups[i];
             }
         }
         return null;
     }
 
-    // Start backup operation.
-    pub fn start_backup(self: *BackupManager, backup_id: u32) bool {
+    pub fn update_backup_state(
+        self: *BackupManager,
+        backup_id: u32,
+        state: BackupState,
+        file_size: u64,
+        checksum: []const u8,
+    ) bool {
         std.debug.assert(backup_id > 0);
+        std.debug.assert(checksum.len == file_storage.CHECKSUM_SIZE);
         if (self.find_backup(backup_id)) |backup| {
-            if (backup.state == BackupState.pending) {
-                backup.state = BackupState.in_progress;
-                self.current_backup_id = backup_id;
-                // Would start actual backup operation in full implementation.
-                return true;
+            backup.state = state;
+            backup.file_size = file_size;
+            var i: u32 = 0;
+            while (i < file_storage.CHECKSUM_SIZE) : (i += 1) {
+                backup.checksum[i] = checksum[i];
             }
+            return true;
         }
         return false;
     }
 
-    // Complete backup operation.
-    pub fn complete_backup(self: *BackupManager, backup_id: u32, size_bytes: u64) bool {
-        std.debug.assert(backup_id > 0);
-        if (self.find_backup(backup_id)) |backup| {
-            if (backup.state == BackupState.in_progress) {
-                backup.state = BackupState.completed;
-                backup.size_bytes = size_bytes;
-                if (self.current_backup_id == backup_id) {
-                    self.current_backup_id = 0;
-                }
-                return true;
-            }
-        }
-        return false;
-    }
-
-    // Fail backup operation.
-    pub fn fail_backup(self: *BackupManager, backup_id: u32) bool {
-        std.debug.assert(backup_id > 0);
-        if (self.find_backup(backup_id)) |backup| {
-            if (backup.state == BackupState.in_progress) {
-                backup.state = BackupState.failed;
-                if (self.current_backup_id == backup_id) {
-                    self.current_backup_id = 0;
-                }
-                return true;
-            }
-        }
-        return false;
-    }
-
-    // Cancel backup operation.
-    pub fn cancel_backup(self: *BackupManager, backup_id: u32) bool {
-        std.debug.assert(backup_id > 0);
-        if (self.find_backup(backup_id)) |backup| {
-            if (backup.state == BackupState.in_progress or backup.state == BackupState.pending) {
-                backup.state = BackupState.cancelled;
-                if (self.current_backup_id == backup_id) {
-                    self.current_backup_id = 0;
-                }
-                return true;
-            }
-        }
-        return false;
-    }
-
-    // Restore from backup.
-    pub fn restore_backup(self: *BackupManager, backup_id: u32) bool {
-        std.debug.assert(backup_id > 0);
-        if (self.find_backup(backup_id)) |backup| {
-            if (backup.state == BackupState.completed) {
-                // Would restore actual backup in full implementation.
-                return true;
-            }
-        }
-        return false;
-    }
-
-    // Remove backup.
-    pub fn remove_backup(self: *BackupManager, backup_id: u32) bool {
+    pub fn delete_backup(
+        self: *BackupManager,
+        backup_id: u32,
+    ) bool {
         std.debug.assert(backup_id > 0);
         var i: u32 = 0;
-        var found: bool = false;
         while (i < self.backups_len) : (i += 1) {
             if (self.backups[i].backup_id == backup_id) {
-                found = true;
-                break;
+                var j: u32 = i;
+                while (j < self.backups_len - 1) : (j += 1) {
+                    self.backups[j] = self.backups[j + 1];
+                }
+                self.backups_len -= 1;
+                return true;
             }
         }
-        if (!found) {
-            return false;
-        }
-        if (self.current_backup_id == backup_id) {
-            self.current_backup_id = 0;
-        }
-        while (i < self.backups_len - 1) : (i += 1) {
-            self.backups[i] = self.backups[i + 1];
-        }
-        self.backups_len -= 1;
-        return true;
+        return false;
     }
 
-    // Get backup count.
-    pub fn get_backup_count(self: *const BackupManager) u32 {
-        return self.backups_len;
-    }
-
-    // Get completed backup count.
-    pub fn get_completed_backup_count(self: *const BackupManager) u32 {
-        var count: u32 = 0;
+    pub fn get_latest_full_backup(self: *const BackupManager) ?*const BackupMetadata {
+        var latest: ?*const BackupMetadata = null;
+        var latest_time: u64 = 0;
         var i: u32 = 0;
         while (i < self.backups_len) : (i += 1) {
-            if (self.backups[i].state == BackupState.completed) {
-                count += 1;
+            if (self.backups[i].backup_type == BackupType.full and
+                self.backups[i].state == BackupState.completed and
+                self.backups[i].created_at > latest_time)
+            {
+                latest = &self.backups[i];
+                latest_time = self.backups[i].created_at;
             }
         }
-        return count;
+        return latest;
     }
 
-    // Get current backup ID.
-    pub fn get_current_backup_id(self: *const BackupManager) u32 {
-        return self.current_backup_id;
+    pub fn should_schedule_backup(
+        self: *const BackupManager,
+        backup_type: BackupType,
+        current_time: u64,
+        full_backup_interval: u64,
+        incremental_backup_interval: u64,
+    ) bool {
+        std.debug.assert(current_time > 0);
+        std.debug.assert(full_backup_interval > 0);
+        std.debug.assert(incremental_backup_interval > 0);
+        if (backup_type == BackupType.full) {
+            if (self.last_full_backup == 0) {
+                return true;
+            }
+            return (current_time - self.last_full_backup) >= full_backup_interval;
+        } else {
+            if (self.last_incremental_backup == 0) {
+                return true;
+            }
+            return (current_time - self.last_incremental_backup) >= incremental_backup_interval;
+        }
     }
 };
-

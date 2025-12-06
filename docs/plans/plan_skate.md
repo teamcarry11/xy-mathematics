@@ -262,10 +262,32 @@ Grain Skate Terminal Silo Field Agent is responsible for building Grain Skate (k
 ## Current Work: Phase 2 - Text Buffer Unification
 
 **Priority**: **HIGH** — Code deduplication and feature enhancement  
-**Status**: **READY** — GrainBuffer updated to u32/u64 ✅  
-**Estimated Time**: 1-2 weeks
+**Status**: **IN PROGRESS** — Adapter layer implemented, editor migration in progress  
+**Estimated Time**: 1-2 weeks  
+**Last Updated**: 2025-12-06-054343-pst
 
 **Update**: GrainBuffer has been updated to use `u32`/`u64` for all public API functions and struct fields. Internal conversions to `usize` are only used when interfacing with Zig standard library (`std.ArrayListUnmanaged`), which is acceptable per Grain Style guidelines.
+
+**Completed Work**:
+1. **Line Buffer Adapter** (`src/grain_skate/line_buffer_adapter.zig`):
+   - Wraps `GrainBuffer` with line-based API (compatible with editor's `TextBuffer` API)
+   - Maintains line index cache (byte offsets of line starts)
+   - Provides `lines` array and `lines_len` for direct line access
+   - Implements `replace_line()` and `remove_line()` operations
+   - Rebuilds line cache after buffer modifications
+   - Tests created (`tests/121_grain_skate_line_buffer_adapter_test.zig`)
+
+2. **Editor Migration** (in progress):
+   - Updated `EditorState.buffer` to use `LineBufferAdapter` instead of `TextBuffer`
+   - Updated `init()` to use `LineBufferAdapter.init()`
+   - Editor code uses same API (`buffer.lines`, `buffer.lines_len`, `replace_line()`, `remove_line()`)
+   - All existing editor operations should work without changes
+
+**Remaining Work**:
+- Remove old `TextBuffer` implementation from `editor.zig`
+- Test thoroughly (undo/redo, visual mode, search, find/replace, cursor movement)
+- Update undo/redo system if needed (currently uses line/column, may need byte offsets)
+- Update visual mode operations if needed
 
 **Coordination Request**: See `docs/agent-communications/aurora_agent_grainbuffer_u32_u64_update_request.md` (marked complete)
 

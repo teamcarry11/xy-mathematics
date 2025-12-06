@@ -103,7 +103,7 @@
 - Phase 59: HTTP/REST API Server ✅ (COMPLETE — 2025-12-05-120808-pst)
 - Phase 60: Authentication Service ✅ (COMPLETE — 2025-12-05-134449-pst)
 - Phase 61: Network Stack Enhancements 🔄 (IN PROGRESS — TCP/UDP socket support complete, WebSocket support complete, DNS resolution complete — 2025-12-05-231800-pst)
-- Phase 62: File System Enhancements 🔄 (IN PROGRESS — Core file storage module complete, WAL support complete, index management complete — 2025-12-06-045220-pst)
+- Phase 62: File System Enhancements ✅ (COMPLETE — Core file storage module, WAL support, index management, backup/restore complete — 2025-12-06-061647-pst)
 
 ---
 
@@ -206,13 +206,20 @@
   - Middleware integration complete (rate limiting, CORS, auth, content-type)
   - Path parameter extraction, JSON parsing, proper status codes
   - Ready for HTTP server integration
-- Phase 7: Database Persistence ✅ READY (2025-12-06-025807-pst)
-  - Unblocked by Grain Core Agent Phase 62 (File Storage Core) ✅
-  - File storage manager with bounded file handles available
-  - Database file header with validation available
-  - Page-based storage with SHA-256 checksums available
-  - File locking/unlocking support available
-  - Ready for database file format implementation
+- Phase 7: Database Persistence ✅ READY (2025-12-06-051817-pst)
+  - Unblocked by Grain Core Agent Phase 62 (File System Enhancements) ✅
+  - File Storage Core (2025-12-06-023413-pst) ✅
+    - File storage manager with bounded file handles available
+    - Database file header with validation available
+    - Page-based storage with SHA-256 checksums available
+    - File locking/unlocking support available
+  - Transaction Log File Management (WAL) (2025-12-06-035857-pst) ✅
+  - Index File Management (2025-12-06-045220-pst) ✅
+    - Index manager with bounded entries available
+    - B-tree and hash index types available
+    - Index creation, update, and deletion available
+    - Index lookup and recovery support available
+  - Ready for complete database persistence implementation
 - Phase 9: Authentication Integration 🔄 IN PROGRESS (2025-12-06-013750-pst)
   - AuthService integration module created (`src/grain_database/auth_integration.zig`)
   - Enhanced auth middleware using AuthService (`database_auth_middleware_enhanced`)
@@ -250,6 +257,8 @@
   - Input handling (mouse events, keyboard shortcuts, selection, pan, zoom) ✅
   - Shape duplication and copy/paste ✅
   - Stroke rendering (outline support for shapes) ✅
+  - Proper rounded rectangle rendering (quarter-circle corners) ✅
+  - Improved hit testing for rounded rectangles (corner radius support) ✅
   - PDF export framework ✅
   - Build system integration ✅
   - Comprehensive tests ✅

@@ -66,7 +66,7 @@ test "get log count by level" {
     _ = logger.log(LogLevel.info, "test_source", "Info message 2", 2000);
     _ = logger.log(.err, "test_source", "Error message", 3000);
     std.debug.assert(logger.get_log_count_by_level(LogLevel.info) == 2);
-    std.debug.assert(logger.get_log_count_by_level(LogLevel.error) == 1);
+    std.debug.assert(logger.get_log_count_by_level(LogLevel.err) == 1);
 }
 
 test "clear all logs" {
@@ -124,7 +124,7 @@ test "log levels" {
     std.debug.assert(@intFromEnum(LogLevel.debug) == 0);
     std.debug.assert(@intFromEnum(LogLevel.info) == 1);
     std.debug.assert(@intFromEnum(LogLevel.warning) == 2);
-    std.debug.assert(@intFromEnum(LogLevel.error) == 3);
+    std.debug.assert(@intFromEnum(LogLevel.err) == 3);
     std.debug.assert(@intFromEnum(LogLevel.critical) == 4);
 }
 

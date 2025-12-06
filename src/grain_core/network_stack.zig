@@ -380,6 +380,62 @@ pub const NetworkStack = struct {
         return false;
     }
 
+    // Set socket option
+    pub fn set_socket_option(
+        self: *NetworkStack,
+        socket_id: u32,
+        option: SocketOption,
+        value: u64,
+    ) bool {
+        std.debug.assert(socket_id > 0);
+        if (self.get_socket(socket_id)) |socket| {
+            switch (option) {
+                .reuse_address => {
+                    socket.reuse_address = (value != 0);
+                    return true;
+                },
+                .keep_alive => {
+                    socket.keep_alive = (value != 0);
+                    return true;
+                },
+                .timeout => {
+                    socket.timeout_ms = value;
+                    std.debug.assert(socket.timeout_ms > 0);
+                    return true;
+                },
+            }
+        }
+        return false;
+    }
+
+    // Get socket option
+    pub fn get_socket_option(
+        self: *const NetworkStack,
+        socket_id: u32,
+        option: SocketOption,
+    ) ?u64 {
+        std.debug.assert(socket_id > 0);
+        var i: u32 = 0;
+        while (i < MAX_SOCKETS) : (i += 1) {
+            if (self.sockets[i]) |*socket| {
+                if (socket.socket_id == socket_id) {
+                    switch (option) {
+                        .reuse_address => {
+                            return if (socket.reuse_address) 1 else 0;
+                        },
+                        .keep_alive => {
+                            return if (socket.keep_alive) 1 else 0;
+                        },
+                        .timeout => {
+                            return socket.timeout_ms;
+                        },
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
     // Get socket count
     pub fn get_socket_count(self: *const NetworkStack) u32 {
         std.debug.assert(self.socket_count <= MAX_SOCKETS);

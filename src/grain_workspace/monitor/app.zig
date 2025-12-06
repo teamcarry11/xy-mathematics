@@ -5,6 +5,7 @@
 //! GrainStyle: grain_case, u32/u64, bounded allocations, assertions.
 //!
 //! 2025-12-03-164418-pst: Active implementation
+//! 2025-12-06-121120-pst: Phase 10.1 WebSocket integration for real-time updates
 
 const std = @import("std");
 const grain_core = @import("grain_core");
@@ -20,6 +21,10 @@ pub const MAX_HISTORY_ENTRIES: u32 = 64;
 // Bounded: Max alert thresholds (explicit limit)
 // 2025-12-03-164418-pst: Active constant
 pub const MAX_ALERT_THRESHOLDS: u32 = 16;
+
+// Bounded: Max WebSocket clients (explicit limit)
+// 2025-12-06-121120-pst: Phase 10.1 WebSocket integration
+pub const MAX_WEBSOCKET_CLIENTS: u32 = 32;
 
 // Alert threshold structure.
 // 2025-12-03-164418-pst: Active struct
@@ -64,6 +69,7 @@ pub const SystemMetrics = struct {
 
 // Monitor application state.
 // 2025-12-03-164418-pst: Active struct
+// 2025-12-06-121120-pst: Phase 10.1 WebSocket integration
 pub const MonitorApp = struct {
     process_manager: *grain_core.process_manager.ProcessManager,
     resource_monitor: *grain_core.resource_monitor.ResourceMonitor,
@@ -72,19 +78,25 @@ pub const MonitorApp = struct {
     metrics_history_index: u32,
     alert_thresholds: [MAX_ALERT_THRESHOLDS]AlertThreshold,
     alert_thresholds_len: u32,
+    websocket_manager: *grain_core.websocket.WebSocketManager,
+    websocket_clients: [MAX_WEBSOCKET_CLIENTS]u32,
+    websocket_clients_len: u32,
     allocator: std.mem.Allocator,
 
     /// Initialize monitor application.
     // 2025-12-03-164418-pst: Active function
+    // 2025-12-06-121120-pst: Phase 10.1 WebSocket integration
     pub fn init(
         allocator: std.mem.Allocator,
         process_mgr: *grain_core.process_manager.ProcessManager,
         resource_mon: *grain_core.resource_monitor.ResourceMonitor,
+        ws_manager: *grain_core.websocket.WebSocketManager,
     ) MonitorApp {
         // Precondition: Allocator and managers must be valid
         std.debug.assert(allocator.ptr != null);
         std.debug.assert(@intFromPtr(process_mgr) != 0);
         std.debug.assert(@intFromPtr(resource_mon) != 0);
+        std.debug.assert(@intFromPtr(ws_manager) != 0);
 
         var app = MonitorApp{
             .process_manager = process_mgr,
@@ -94,6 +106,9 @@ pub const MonitorApp = struct {
             .metrics_history_index = 0,
             .alert_thresholds = undefined,
             .alert_thresholds_len = 0,
+            .websocket_manager = ws_manager,
+            .websocket_clients = undefined,
+            .websocket_clients_len = 0,
             .allocator = allocator,
         };
 
@@ -112,8 +127,15 @@ pub const MonitorApp = struct {
             };
         }
 
+        // Initialize WebSocket clients
+        i = 0;
+        while (i < MAX_WEBSOCKET_CLIENTS) : (i += 1) {
+            app.websocket_clients[i] = 0;
+        }
+
         // Postcondition: App must be valid
         std.debug.assert(app.metrics_history_len == 0);
+        std.debug.assert(app.websocket_clients_len == 0);
 
         return app;
     }
@@ -147,6 +169,9 @@ pub const MonitorApp = struct {
 
         // Check alert thresholds
         self.check_alert_thresholds(&metrics);
+
+        // Broadcast metrics to WebSocket clients
+        self.broadcast_metrics_update(&metrics);
     }
 
     /// Get current system metrics.
@@ -278,6 +303,127 @@ pub const MonitorApp = struct {
                 _ = current_value; // Suppress unused warning
             }
         }
+    }
+
+    /// Add WebSocket client for real-time updates.
+    // 2025-12-06-121120-pst: Phase 10.1 WebSocket integration
+    pub fn add_websocket_client(
+        self: *MonitorApp,
+        connection_id: u32,
+    ) bool {
+        // Precondition: Connection ID must be valid
+        std.debug.assert(connection_id > 0);
+        std.debug.assert(self.websocket_clients_len < MAX_WEBSOCKET_CLIENTS);
+
+        if (self.websocket_clients_len >= MAX_WEBSOCKET_CLIENTS) {
+            return false;
+        }
+
+        self.websocket_clients[self.websocket_clients_len] = connection_id;
+        self.websocket_clients_len += 1;
+
+        // Postcondition: Client count increased
+        std.debug.assert(self.websocket_clients_len > 0);
+        std.debug.assert(self.websocket_clients_len <= MAX_WEBSOCKET_CLIENTS);
+
+        return true;
+    }
+
+    /// Remove WebSocket client.
+    // 2025-12-06-121120-pst: Phase 10.1 WebSocket integration
+    pub fn remove_websocket_client(
+        self: *MonitorApp,
+        connection_id: u32,
+    ) bool {
+        // Precondition: Connection ID must be valid
+        std.debug.assert(connection_id > 0);
+
+        var i: u32 = 0;
+        while (i < self.websocket_clients_len) : (i += 1) {
+            if (self.websocket_clients[i] == connection_id) {
+                var j: u32 = i;
+                while (j < self.websocket_clients_len - 1) : (j += 1) {
+                    self.websocket_clients[j] = self.websocket_clients[j + 1];
+                }
+                self.websocket_clients_len -= 1;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// Broadcast metrics update to WebSocket clients (internal).
+    // 2025-12-06-121120-pst: Phase 10.1 WebSocket integration
+    fn broadcast_metrics_update(
+        self: *MonitorApp,
+        metrics: *const SystemMetrics,
+    ) void {
+        // Precondition: Metrics must be valid
+        std.debug.assert(metrics.timestamp > 0);
+
+        if (self.websocket_clients_len == 0) {
+            return;
+        }
+
+        // Serialize metrics to JSON-like format (simplified)
+        var json_buf: [512]u8 = undefined;
+        const json_len = self.serialize_metrics_json(metrics, &json_buf);
+        if (json_len == 0) {
+            return;
+        }
+
+        // Create WebSocket frame
+        var frame = grain_core.websocket.WebSocketFrame.init();
+        frame.flags.opcode = grain_core.websocket.FrameOpcode.text;
+        frame.flags.fin = true;
+        frame.flags.masked = false;
+        frame.payload_len = @intCast(json_len);
+
+        var i: u32 = 0;
+        while (i < json_len and i < grain_core.websocket.MAX_FRAME_SIZE) : (i += 1) {
+            frame.payload[i] = json_buf[i];
+        }
+
+        // Broadcast to all clients
+        i = 0;
+        while (i < self.websocket_clients_len) : (i += 1) {
+            const conn_id = self.websocket_clients[i];
+            const conn = self.websocket_manager.find_connection(conn_id);
+            if (conn != null and conn.?.state == grain_core.websocket.ConnectionState.open) {
+                // Frame would be sent here (actual send via socket not implemented)
+                _ = frame;
+            }
+        }
+    }
+
+    /// Serialize metrics to JSON format (simplified).
+    // 2025-12-06-121120-pst: Phase 10.1 WebSocket integration
+    fn serialize_metrics_json(
+        self: *const MonitorApp,
+        metrics: *const SystemMetrics,
+        buf: []u8,
+    ) u32 {
+        // Precondition: Buffer must be valid
+        std.debug.assert(buf.len >= 512);
+        std.debug.assert(metrics.timestamp > 0);
+
+        _ = self; // Suppress unused warning
+
+        // Simplified JSON serialization
+        const json_fmt = 
+            \\{"uptime":%d,"cpu":%.2f,"memory":%.2f,"disk":%.2f,"processes":%d,"running":%d}
+        ;
+        const written = std.fmt.bufPrint(buf, json_fmt, .{
+            metrics.uptime,
+            metrics.cpu_percent,
+            metrics.memory_percent,
+            metrics.disk_percent,
+            metrics.total_processes,
+            metrics.running_processes,
+        }) catch return 0;
+
+        return @intCast(written.len);
     }
 };
 

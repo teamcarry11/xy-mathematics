@@ -1,17 +1,18 @@
 # Grain Bubble Agent: Task List
 
 **Agent**: Grain Bubble Agent (8th Agent)  
-**Status**: Phase 1 Starting — Core Canvas (SLC v1.0)  
-**Last Updated**: 2025-12-06-062930-pst
+**Status**: Phase 1 Complete — Core Canvas (SLC v1.0) ✅  
+**Last Updated**: 2025-12-06-121132-pst
 
 ---
 
-## Phase 1: Core Canvas (SLC v1.0) ⏳ **IN PROGRESS**
+## Phase 1: Core Canvas (SLC v1.0) ✅ **COMPLETE**
 
 **Priority**: **HIGHEST** — Foundation for all features  
-**Status**: **STARTING**  
+**Status**: **COMPLETE**  
 **Estimated Time**: 4-6 weeks  
-**Date Started**: 2025-12-05-143400-pst
+**Date Started**: 2025-12-05-143400-pst  
+**Date Completed**: 2025-12-06-121132-pst
 
 ### Tasks
 
@@ -65,6 +66,7 @@
 - [x] Implement shape selection (hit testing) ✅
 - [x] Improve hit testing for rounded rectangles (corner radius support) ✅
 - [x] Implement undo/redo system (command pattern with bounded history) ✅
+- [x] Implement basic PDF export (shapes and text) ✅
 - [x] Implement shape manipulation (move, resize) ✅
 - [x] Implement shape duplication ✅
 - [x] Implement shape copy/paste ✅

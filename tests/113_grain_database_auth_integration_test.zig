@@ -16,6 +16,9 @@ const get_auth_service = auth_integration.get_auth_service;
 const database_auth_middleware_enhanced = auth_integration.database_auth_middleware_enhanced;
 const validate_session = auth_integration.validate_session;
 const get_user_id_from_request = auth_integration.get_user_id_from_request;
+const create_session_from_request = auth_integration.create_session_from_request;
+const revoke_session_from_request = auth_integration.revoke_session_from_request;
+const get_session_from_request = auth_integration.get_session_from_request;
 const AuthService = grain_core.auth_service.AuthService;
 const HttpRequest = grain_core.api_server.HttpRequest;
 const HttpResponse = grain_core.api_server.HttpResponse;
@@ -136,5 +139,97 @@ test "get user id from request with missing token" {
     var user_id_out: [grain_core.auth_service.MAX_USER_ID_LEN]u8 = undefined;
     const user_id_len = get_user_id_from_request(&request, &user_id_out);
     try testing.expect(user_id_len == 0);
+}
+
+test "create session from request with valid token" {
+    var auth_service = AuthService.init("test_secret_key_123");
+    set_auth_service(&auth_service);
+    const user_id = "test_user_123";
+    const current_time = @as(u64, @intCast(std.time.timestamp()));
+    var token_buf: [grain_core.auth_service.MAX_JWT_LEN]u8 = undefined;
+    const token_len = auth_service.generate_access_token(
+        user_id,
+        current_time,
+        &token_buf,
+    );
+    try testing.expect(token_len > 0);
+    var request = HttpRequest.init();
+    const auth_header = try std.fmt.allocPrint(
+        testing.allocator,
+        "Bearer {s}",
+        .{token_buf[0..token_len]},
+    );
+    defer testing.allocator.free(auth_header);
+    _ = request.add_header("Authorization", auth_header);
+    var session: grain_core.auth_service.Session = undefined;
+    const created = create_session_from_request(&request, &session);
+    try testing.expect(created);
+    try testing.expect(session.is_active);
+    try testing.expect(std.mem.eql(u8, session.user_id[0..session.user_id_len], user_id));
+}
+
+test "create session from request with missing token" {
+    var auth_service = AuthService.init("test_secret_key_123");
+    set_auth_service(&auth_service);
+    var request = HttpRequest.init();
+    var session: grain_core.auth_service.Session = undefined;
+    const created = create_session_from_request(&request, &session);
+    try testing.expect(!created);
+}
+
+test "revoke session from request with valid session" {
+    var auth_service = AuthService.init("test_secret_key_123");
+    set_auth_service(&auth_service);
+    const user_id = "test_user_123";
+    const current_time = @as(u64, @intCast(std.time.timestamp()));
+    var session: grain_core.auth_service.Session = undefined;
+    const created = auth_service.create_session(user_id, current_time, &session);
+    try testing.expect(created);
+    var request = HttpRequest.init();
+    const session_id = session.session_id[0..session.session_id_len];
+    var session_header_buf: [grain_core.auth_service.MAX_SESSION_ID_LEN]u8 = undefined;
+    std.mem.copyForwards(u8, &session_header_buf, session_id);
+    _ = request.add_header("X-Session-ID", session_header_buf[0..session.session_id_len]);
+    const revoked = revoke_session_from_request(&request);
+    try testing.expect(revoked);
+    const is_valid = auth_service.validate_session(session_id, current_time, null);
+    try testing.expect(!is_valid);
+}
+
+test "revoke session from request with missing session" {
+    var auth_service = AuthService.init("test_secret_key_123");
+    set_auth_service(&auth_service);
+    var request = HttpRequest.init();
+    const revoked = revoke_session_from_request(&request);
+    try testing.expect(!revoked);
+}
+
+test "get session from request with valid session" {
+    var auth_service = AuthService.init("test_secret_key_123");
+    set_auth_service(&auth_service);
+    const user_id = "test_user_123";
+    const current_time = @as(u64, @intCast(std.time.timestamp()));
+    var session: grain_core.auth_service.Session = undefined;
+    const created = auth_service.create_session(user_id, current_time, &session);
+    try testing.expect(created);
+    var request = HttpRequest.init();
+    const session_id = session.session_id[0..session.session_id_len];
+    var session_header_buf: [grain_core.auth_service.MAX_SESSION_ID_LEN]u8 = undefined;
+    std.mem.copyForwards(u8, &session_header_buf, session_id);
+    _ = request.add_header("X-Session-ID", session_header_buf[0..session.session_id_len]);
+    var session_out: grain_core.auth_service.Session = undefined;
+    const is_valid = get_session_from_request(&request, &session_out);
+    try testing.expect(is_valid);
+    try testing.expect(std.mem.eql(u8, session_out.user_id[0..session_out.user_id_len], user_id));
+    try testing.expect(session_out.is_active);
+}
+
+test "get session from request with missing session" {
+    var auth_service = AuthService.init("test_secret_key_123");
+    set_auth_service(&auth_service);
+    var request = HttpRequest.init();
+    var session_out: grain_core.auth_service.Session = undefined;
+    const is_valid = get_session_from_request(&request, &session_out);
+    try testing.expect(!is_valid);
 }
 

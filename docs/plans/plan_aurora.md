@@ -2,7 +2,7 @@
 
 **Agent**: Grain Aurora IDE Dream Browser Agent (2nd Agent)  
 **Status**: Active — Foundation components, shared modules  
-**Last Updated**: 2025-12-06-061647-pst
+**Last Updated**: 2025-12-06-113038-pst
 
 ---
 
@@ -267,13 +267,16 @@ Shared module refactoring eliminates code duplication and enables shared mainten
 - Build system integration (`build.zig`)
 - WebSocket support (Phase 61 complete) — Available for future use
 
-**WebSocket Support**:
-- ✅ Grain Core Agent Phase 61 (WebSocket Support) — Complete
+**Network Stack Support (Phase 61)**:
+- ✅ **Grain Core Agent Phase 61 — COMPLETE** (2025-12-06-113038-pst)
+  - TCP/UDP Socket Support
+  - WebSocket Support
+  - DNS Resolution
 - Note: Aurora Agent currently uses stdio for LSP (standard) and has WebSocket for Dream Protocol (Phase 0.3)
 - Future: May use Core Agent WebSocket for additional real-time features
 
-**File Storage Support**:
-- ✅ **Grain Core Agent Phase 62 — COMPLETE** (2025-12-06-061647-pst)
+**File Storage Support (Phase 62)**:
+- ✅ **Grain Core Agent Phase 62 — COMPLETE** (2025-12-06-113038-pst)
   - Database File Format Support
   - Page-based Storage with Checksums
   - File Locking Support

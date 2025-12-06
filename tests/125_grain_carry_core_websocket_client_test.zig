@@ -153,3 +153,68 @@ test "websocket client close connection" {
     try testing.expect(client.?.state == websocket.ClientState.closing);
 }
 
+test "websocket client parse url" {
+    var host_buf: [256]u8 = undefined;
+    var port: u16 = 0;
+    var path_buf: [256]u8 = undefined;
+    
+    const url1 = "ws://localhost:8080/ws";
+    const success1 = websocket.parse_websocket_url(url1, &host_buf, &port, &path_buf);
+    
+    try testing.expect(success1);
+    try testing.expect(port == 8080);
+    
+    const url2 = "ws://example.com/path";
+    const success2 = websocket.parse_websocket_url(url2, &host_buf, &port, &path_buf);
+    
+    try testing.expect(success2);
+    try testing.expect(port == 80);
+    
+    const url3 = "wss://secure.example.com:443/secure";
+    const success3 = websocket.parse_websocket_url(url3, &host_buf, &port, &path_buf);
+    
+    try testing.expect(success3);
+    try testing.expect(port == 443);
+}
+
+test "websocket client parse accept header" {
+    const response = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: dGhlIHNhbXBsZSBub25jZQ==\r\n\r\n";
+    var accept_buf: [32]u8 = undefined;
+    
+    const success = websocket.parse_accept_header(response, &accept_buf);
+    
+    try testing.expect(success);
+}
+
+test "websocket client validate accept key" {
+    var client_key_buf: [32]u8 = undefined;
+    const client_key_len = websocket.generate_client_key(&client_key_buf);
+    try testing.expect(client_key_len > 0);
+    
+    const grain_core = @import("grain_core");
+    var expected_accept: [32]u8 = undefined;
+    const expected_len = grain_core.websocket.generate_websocket_accept(
+        client_key_buf[0..client_key_len],
+        &expected_accept,
+    );
+    try testing.expect(expected_len > 0);
+    
+    const valid = websocket.validate_accept_key(
+        client_key_buf[0..client_key_len],
+        expected_accept[0..expected_len],
+    );
+    
+    try testing.expect(valid);
+}
+
+test "websocket client is upgrade successful" {
+    const success_response = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n\r\n";
+    const fail_response = "HTTP/1.1 400 Bad Request\r\n\r\n";
+    
+    const success1 = websocket.is_upgrade_successful(success_response);
+    const success2 = websocket.is_upgrade_successful(fail_response);
+    
+    try testing.expect(success1);
+    try testing.expect(!success2);
+}
+

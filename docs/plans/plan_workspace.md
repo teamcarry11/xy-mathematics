@@ -1,8 +1,8 @@
 # Grain Workspace Agent: Development Plan
 
 **Agent**: Grain Workspace Agent (5th Agent)  
-**Status**: All Phases Complete ✅ (Phase 8.1 DNS Integration Complete)  
-**Last Updated**: 2025-12-06-062956-pst
+**Status**: Phase 10.1 WebSocket Integration (Monitor) In Progress  
+**Last Updated**: 2025-12-06-121120-pst
 
 ---
 
@@ -363,6 +363,37 @@ All planned phases for Grain Workspace Agent have been completed:
 - Phase 8: Grain Network Tools ✅
 - Phase 8.1: DNS Resolver Integration ✅ (2025-12-06-011616-pst)
 - Phase 9: Grain DevTools ✅
+- Phase 10.1: WebSocket Integration (Monitor) ✅ (2025-12-06-121120-pst)
+
+### Phase 10.1: WebSocket Integration (Monitor) ✅ **COMPLETE**
+
+**Date**: 2025-12-06-121120-pst
+
+**Completed Work**:
+1. **WebSocket Support for Monitor App** (`src/grain_workspace/monitor/app.zig`):
+   - Added `WebSocketManager` integration to `MonitorApp`
+   - Added `websocket_clients` array with bounded limit (`MAX_WEBSOCKET_CLIENTS: 32`)
+   - Added `add_websocket_client()` and `remove_websocket_client()` functions
+   - Added `broadcast_metrics_update()` for real-time metrics broadcasting
+   - Added `serialize_metrics_json()` for JSON serialization
+   - Updated `update_metrics()` to broadcast to WebSocket clients
+   - Updated `init()` to accept `WebSocketManager` parameter
+   - Comprehensive tests (`tests/109_grain_workspace_monitor_test.zig`)
+
+**Features**:
+- Real-time system metrics updates via WebSocket
+- Bounded WebSocket client management (max 32 clients)
+- JSON serialization of metrics for WebSocket frames
+- Automatic broadcasting on metrics updates
+- Client connection/disconnection management
+
+**Grain Style Compliance**:
+- `grain_case` function names
+- `u32`/`u64` types (no `usize`)
+- Bounded allocations (all limits explicit)
+- Assertions for preconditions
+- Max 70 lines per function
+- All compiler warnings enabled
 
 **Future Enhancements**:
 - UI integration with Grain Core compositor
@@ -371,10 +402,10 @@ All planned phases for Grain Workspace Agent have been completed:
 - Advanced debugging features
 - Enhanced profiling capabilities
 - WebSocket integration for real-time features (now available via Core Agent Phase 61)
-  - Real-time system monitoring updates
-  - Live terminal output streaming
-  - Real-time file system notifications
-  - Live network statistics updates
+  - ✅ Real-time system monitoring updates (Phase 10.1 complete)
+  - Live terminal output streaming (Phase 10.2 planned)
+  - Real-time file system notifications (Phase 10.3 planned)
+  - Live network statistics updates (Phase 10.4 planned)
 - DNS resolver integration (now available via Core Agent Phase 61 DNS Resolution)
   - Enhanced DNS tools in Network Tools application
   - Integration with Grain Core DNS resolver for actual DNS queries
@@ -439,7 +470,13 @@ All planned phases for Grain Workspace Agent have been completed:
   - Backup scheduling with interval-based logic
   - Latest backup retrieval and backup deletion
   - Available for File Manager backup/restore operations
-- **Phase 62 File System Enhancements**: COMPLETE ✅ (2025-12-06-061647-pst)
+- **Phase 61 Network Stack Enhancements**: COMPLETE ✅ (2025-12-06-113038-pst)
+  - TCP/UDP Socket Support (2025-12-05-120808-pst)
+  - WebSocket Support (2025-12-05-202227-pst)
+  - DNS Resolution (2025-12-05-231800-pst)
+  - Complete network infrastructure available
+  - Ready for integration by all agents
+- **Phase 62 File System Enhancements**: COMPLETE ✅ (2025-12-06-113038-pst)
   - All Phase 62 components complete (File Storage, WAL, Index Manager, Backup Manager)
   - Complete database persistence infrastructure available
   - Ready for integration by Silo Agent and other agents

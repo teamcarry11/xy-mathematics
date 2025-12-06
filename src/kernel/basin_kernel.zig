@@ -52,6 +52,8 @@ const process_group_limits = @import("process_group_limits.zig");
 const ProcessGroupLimitsManager = process_group_limits.ProcessGroupLimitsManager;
 const network = @import("network.zig");
 const NetworkInterfaceManager = network.NetworkInterfaceManager;
+const tcp_socket = @import("tcp_socket.zig");
+const TcpSocketManager = tcp_socket.TcpSocketManager;
 
 // Export resource_cleanup for tests.
 pub const resource_cleanup_module = resource_cleanup;
@@ -124,6 +126,16 @@ pub const Syscall = enum(u32) {
     network_set_state = 91,
     network_set_ipv4 = 92,
     network_get_interface = 93,
+    
+    // TCP Socket Operations
+    tcp_socket = 100,
+    tcp_bind = 101,
+    tcp_listen = 102,
+    tcp_accept = 103,
+    tcp_connect = 104,
+    tcp_send = 105,
+    tcp_recv = 106,
+    tcp_close = 107,
 };
 
 /// Memory mapping flags.
@@ -737,6 +749,11 @@ pub const BasinKernel = struct {
     /// Grain Style: Static allocation, initialized at kernel boot.
     network_interfaces: NetworkInterfaceManager,
     
+    /// TCP socket manager.
+    /// Why: Manage TCP sockets for network communication.
+    /// Grain Style: Static allocation, initialized at kernel boot.
+    tcp_sockets: TcpSocketManager,
+    
     /// IPC channel table.
     /// Why: Manage inter-process communication channels.
     /// Grain Style: Static allocation, initialized at kernel boot.
@@ -819,6 +836,7 @@ pub const BasinKernel = struct {
             .process_group_stats = ProcessGroupStatsManager.init(),
             .process_group_limits = ProcessGroupLimitsManager.init(),
             .network_interfaces = NetworkInterfaceManager.init(),
+            .tcp_sockets = TcpSocketManager.init(),
             .channels = ChannelTable.init(),
             .storage = Storage.init(),
             .keyboard = Keyboard.init(),
@@ -1312,6 +1330,14 @@ pub const BasinKernel = struct {
             .network_set_state => self.syscall_network_set_state(arg1, arg2, arg3, arg4),
             .network_set_ipv4 => self.syscall_network_set_ipv4(arg1, arg2, arg3, arg4),
             .network_get_interface => self.syscall_network_get_interface(arg1, arg2, arg3, arg4),
+            .tcp_socket => self.syscall_tcp_socket(arg1, arg2, arg3, arg4),
+            .tcp_bind => self.syscall_tcp_bind(arg1, arg2, arg3, arg4),
+            .tcp_listen => self.syscall_tcp_listen(arg1, arg2, arg3, arg4),
+            .tcp_accept => self.syscall_tcp_accept(arg1, arg2, arg3, arg4),
+            .tcp_connect => self.syscall_tcp_connect(arg1, arg2, arg3, arg4),
+            .tcp_send => self.syscall_tcp_send(arg1, arg2, arg3, arg4),
+            .tcp_recv => self.syscall_tcp_recv(arg1, arg2, arg3, arg4),
+            .tcp_close => self.syscall_tcp_close(arg1, arg2, arg3, arg4),
         };
     }
     
@@ -4431,6 +4457,372 @@ pub const BasinKernel = struct {
         // For now, just return success.
         // Note: info_ptr and iface are validated but not used in stub implementation.
         _ = iface;
+        
+        const result = SyscallResult.ok(0);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
+    /// Create a TCP socket.
+    /// Why: Allocate a new TCP socket.
+    /// Contract: Returns socket ID.
+    pub fn syscall_tcp_socket(
+        self: *BasinKernel,
+        _arg1: u64,
+        _arg2: u64,
+        _arg3: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg1;
+        _ = _arg2;
+        _ = _arg3;
+        _ = _arg4;
+        
+        // Get current process ID from scheduler.
+        const current_process_id = self.scheduler.get_current();
+        const owner_process_id = @as(u32, @truncate(current_process_id));
+        
+        // Create socket.
+        const socket_id = self.tcp_sockets.create_socket(owner_process_id) orelse {
+            return BasinError.out_of_memory; // No free socket slot
+        };
+        
+        const result = SyscallResult.ok(socket_id);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
+    /// Bind TCP socket to local address and port.
+    /// Why: Configure local endpoint for socket.
+    /// Contract: socket_id, addr, and port must be valid.
+    pub fn syscall_tcp_bind(
+        self: *BasinKernel,
+        socket_id: u64,
+        addr: u64,
+        port: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg4;
+        
+        // Assert: Socket ID must be non-zero.
+        if (socket_id == 0) {
+            return BasinError.invalid_argument; // Invalid socket ID
+        }
+        
+        // Assert: Port must be valid (16-bit value).
+        if (port > 65535) {
+            return BasinError.invalid_argument; // Invalid port
+        }
+        
+        const ipv4_addr = @as(u32, @truncate(addr));
+        const ipv4_port = @as(u16, @truncate(port));
+        
+        // Bind socket.
+        if (!self.tcp_sockets.bind_socket(socket_id, ipv4_addr, ipv4_port)) {
+            return BasinError.not_found; // Socket not found or invalid state
+        }
+        
+        const result = SyscallResult.ok(0);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
+    /// Set TCP socket to listening state.
+    /// Why: Enable socket to accept incoming connections.
+    /// Contract: socket_id must be valid, socket must be bound.
+    pub fn syscall_tcp_listen(
+        self: *BasinKernel,
+        socket_id: u64,
+        _arg2: u64,
+        _arg3: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg2;
+        _ = _arg3;
+        _ = _arg4;
+        
+        // Assert: Socket ID must be non-zero.
+        if (socket_id == 0) {
+            return BasinError.invalid_argument; // Invalid socket ID
+        }
+        
+        // Set socket to listening state.
+        if (!self.tcp_sockets.listen_socket(socket_id)) {
+            return BasinError.not_found; // Socket not found or invalid state
+        }
+        
+        const result = SyscallResult.ok(0);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
+    /// Accept incoming connection on listening socket.
+    /// Why: Accept incoming connection and create new socket.
+    /// Contract: socket_id must be valid, socket must be listening.
+    pub fn syscall_tcp_accept(
+        self: *BasinKernel,
+        socket_id: u64,
+        _arg2: u64,
+        _arg3: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg2;
+        _ = _arg3;
+        _ = _arg4;
+        
+        // Assert: Socket ID must be non-zero.
+        if (socket_id == 0) {
+            return BasinError.invalid_argument; // Invalid socket ID
+        }
+        
+        // Get current process ID from scheduler.
+        const current_process_id = self.scheduler.get_current();
+        const owner_process_id = @as(u32, @truncate(current_process_id));
+        
+        // Accept connection.
+        const new_socket_id = self.tcp_sockets.accept_connection(socket_id, owner_process_id) orelse {
+            return BasinError.not_found; // Socket not found, not listening, or no connection
+        };
+        
+        const result = SyscallResult.ok(new_socket_id);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
+    /// Connect TCP socket to remote address and port.
+    /// Why: Establish connection to remote endpoint.
+    /// Contract: socket_id, addr, and port must be valid.
+    pub fn syscall_tcp_connect(
+        self: *BasinKernel,
+        socket_id: u64,
+        addr: u64,
+        port: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg4;
+        
+        // Assert: Socket ID must be non-zero.
+        if (socket_id == 0) {
+            return BasinError.invalid_argument; // Invalid socket ID
+        }
+        
+        // Assert: Port must be valid (16-bit value).
+        if (port > 65535) {
+            return BasinError.invalid_argument; // Invalid port
+        }
+        
+        const ipv4_addr = @as(u32, @truncate(addr));
+        const ipv4_port = @as(u16, @truncate(port));
+        
+        // Connect socket.
+        if (!self.tcp_sockets.connect_socket(socket_id, ipv4_addr, ipv4_port)) {
+            return BasinError.not_found; // Socket not found or invalid state
+        }
+        
+        const result = SyscallResult.ok(0);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
+    /// Send data on TCP socket.
+    /// Why: Transmit data on connected socket.
+    /// Contract: socket_id must be valid, data_ptr and data_len must be valid, socket must be connected.
+    pub fn syscall_tcp_send(
+        self: *BasinKernel,
+        socket_id: u64,
+        data_ptr: u64,
+        data_len: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg4;
+        
+        // Assert: Socket ID must be non-zero.
+        if (socket_id == 0) {
+            return BasinError.invalid_argument; // Invalid socket ID
+        }
+        
+        // Assert: Data pointer must be valid (non-zero, within VM memory).
+        if (data_ptr == 0) {
+            return BasinError.invalid_argument; // Null pointer
+        }
+        
+        const VM_MEMORY_SIZE_SEND: u64 = 4 * 1024 * 1024; // 4MB default
+        if (data_ptr >= VM_MEMORY_SIZE_SEND) {
+            return BasinError.invalid_argument; // Data pointer exceeds VM memory
+        }
+        
+        // Assert: Data length must be reasonable (max socket buffer size).
+        if (data_len == 0) {
+            return BasinError.invalid_argument; // Zero-length data
+        }
+        if (data_len > 64 * 1024) {
+            return BasinError.invalid_argument; // Data too large
+        }
+        
+        // Assert: Data must fit within VM memory.
+        if (data_ptr + data_len > VM_MEMORY_SIZE_SEND) {
+            return BasinError.invalid_argument; // Data exceeds VM memory
+        }
+        
+        // Read data from VM memory (stub: would use vm_memory_reader).
+        // For now, use a placeholder data slice.
+        const data = "test";
+        
+        // Send data.
+        const bytes_sent = self.tcp_sockets.send_data(socket_id, data) orelse {
+            return BasinError.not_found; // Socket not found or invalid state
+        };
+        
+        const result = SyscallResult.ok(bytes_sent);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
+    /// Receive data from TCP socket.
+    /// Why: Read incoming data from connected socket.
+    /// Contract: socket_id must be valid, buffer_ptr and buffer_len must be valid, socket must be connected.
+    pub fn syscall_tcp_recv(
+        self: *BasinKernel,
+        socket_id: u64,
+        buffer_ptr: u64,
+        buffer_len: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg4;
+        
+        // Assert: Socket ID must be non-zero.
+        if (socket_id == 0) {
+            return BasinError.invalid_argument; // Invalid socket ID
+        }
+        
+        // Assert: Buffer pointer must be valid (non-zero, within VM memory).
+        if (buffer_ptr == 0) {
+            return BasinError.invalid_argument; // Null pointer
+        }
+        
+        const VM_MEMORY_SIZE_RECV: u64 = 4 * 1024 * 1024; // 4MB default
+        if (buffer_ptr >= VM_MEMORY_SIZE_RECV) {
+            return BasinError.invalid_argument; // Buffer pointer exceeds VM memory
+        }
+        
+        // Assert: Buffer length must be reasonable (max socket buffer size).
+        if (buffer_len == 0) {
+            return BasinError.invalid_argument; // Zero-length buffer
+        }
+        if (buffer_len > 64 * 1024) {
+            return BasinError.invalid_argument; // Buffer too large
+        }
+        
+        // Assert: Buffer must fit within VM memory.
+        if (buffer_ptr + buffer_len > VM_MEMORY_SIZE_RECV) {
+            return BasinError.invalid_argument; // Buffer exceeds VM memory
+        }
+        
+        // Create buffer slice (stub: would use vm_memory_writer).
+        var buffer: [64 * 1024]u8 = undefined;
+        const buffer_slice = buffer[0..@as(usize, @intCast(buffer_len))];
+        
+        // Receive data.
+        const bytes_received = self.tcp_sockets.recv_data(socket_id, buffer_slice) orelse {
+            return BasinError.not_found; // Socket not found or invalid state
+        };
+        
+        // Write data to VM memory (stub: would use vm_memory_writer).
+        // For now, just return bytes received.
+        // Note: buffer_ptr is validated above but not written to in stub implementation.
+        
+        const result = SyscallResult.ok(bytes_received);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
+    /// Close TCP socket.
+    /// Why: Release socket resources.
+    /// Contract: socket_id must be valid.
+    pub fn syscall_tcp_close(
+        self: *BasinKernel,
+        socket_id: u64,
+        _arg2: u64,
+        _arg3: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg2;
+        _ = _arg3;
+        _ = _arg4;
+        
+        // Assert: Socket ID must be non-zero.
+        if (socket_id == 0) {
+            return BasinError.invalid_argument; // Invalid socket ID
+        }
+        
+        // Close socket.
+        if (!self.tcp_sockets.close_socket(socket_id)) {
+            return BasinError.not_found; // Socket not found
+        }
         
         const result = SyscallResult.ok(0);
         

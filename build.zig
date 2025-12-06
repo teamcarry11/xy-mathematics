@@ -1809,6 +1809,19 @@ pub fn build(b: *std.Build) void {
     const grain_skate_line_buffer_adapter_tests_run = b.addRunArtifact(grain_skate_line_buffer_adapter_tests);
     test_step.dependOn(&grain_skate_line_buffer_adapter_tests_run.step);
 
+    const grain_skate_editor_dag_integration_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/122_grain_skate_editor_dag_integration_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_skate", .module = grain_skate_module },
+            },
+        }),
+    });
+    const grain_skate_editor_dag_integration_tests_run = b.addRunArtifact(grain_skate_editor_dag_integration_tests);
+    test_step.dependOn(&grain_skate_editor_dag_integration_tests_run.step);
+
     const shared_font_renderer_tests = b.addTest(.{
         .root_module = b.createModule(.{
             .root_source_file = b.path("tests/060_shared_font_renderer_test.zig"),
@@ -3698,4 +3711,18 @@ pub fn build(b: *std.Build) void {
     });
     const grain_bubble_undo_redo_tests_run = b.addRunArtifact(grain_bubble_undo_redo_tests);
     test_step.dependOn(&grain_bubble_undo_redo_tests_run.step);
+
+    // Grain Bubble PDF export tests
+    const grain_bubble_export_pdf_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/129_grain_bubble_export_pdf_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_bubble", .module = grain_bubble_module },
+            },
+        }),
+    });
+    const grain_bubble_export_pdf_tests_run = b.addRunArtifact(grain_bubble_export_pdf_tests);
+    test_step.dependOn(&grain_bubble_export_pdf_tests_run.step);
 }

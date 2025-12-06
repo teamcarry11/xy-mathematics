@@ -15,4 +15,5 @@ pub const BracketMatcher = @import("bracket_matching.zig").BracketMatcher;
 pub const BracketMatch = @import("bracket_matching.zig").BracketMatch;
 pub const BracketType = @import("bracket_matching.zig").BracketType;
 pub const LineBufferAdapter = @import("line_buffer_adapter.zig").LineBufferAdapter;
+pub const EditorDagIntegration = @import("editor_dag_integration.zig").EditorDagIntegration;
 

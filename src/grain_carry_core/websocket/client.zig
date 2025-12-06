@@ -9,6 +9,7 @@
 const std = @import("std");
 const grain_core_ws = @import("../../../grain_core/websocket.zig");
 const grain_core_api = @import("../../../grain_core/api_server.zig");
+const grain_core_network = @import("../../../grain_core/network_stack.zig");
 
 // Bounded: Max WebSocket client connections.
 pub const MAX_CLIENT_CONNECTIONS: u32 = 16;
@@ -426,5 +427,238 @@ pub fn extract_binary_message(
     std.debug.assert(msg_len > 0);
     std.debug.assert(msg_len <= MAX_CLIENT_MESSAGE_SIZE);
     return msg_len;
+}
+
+// Parse port from URL string.
+fn parse_port_from_url(url: []const u8, start_idx: u32, port_out: *u16, path_start_out: *u32) bool {
+    std.debug.assert(start_idx < url.len);
+    std.debug.assert(port_out != null);
+    std.debug.assert(path_start_out != null);
+    var port_val: u32 = 0;
+    var j: u32 = start_idx;
+    var found_slash = false;
+    while (j < url.len) : (j += 1) {
+        const port_c = url[j];
+        if (port_c == '/') {
+            found_slash = true;
+            path_start_out.* = j;
+            break;
+        }
+        if (port_c < '0' or port_c > '9') {
+            return false;
+        }
+        port_val = port_val * 10 + (port_c - '0');
+        if (port_val > 65535) {
+            return false;
+        }
+    }
+    if (!found_slash) {
+        path_start_out.* = url.len;
+    }
+    if (port_val == 0) {
+        return false;
+    }
+    port_out.* = @intCast(port_val);
+    std.debug.assert(port_out.* > 0);
+    std.debug.assert(port_out.* <= 65535);
+    return true;
+}
+
+// Extract host, port, and path from URL components.
+fn extract_url_components(
+    url: []const u8,
+    url_offset: u32,
+    host_out: []u8,
+    port_out: *u16,
+    path_out: []u8,
+    host_end_out: *u32,
+    path_start_out: *u32,
+) bool {
+    std.debug.assert(url_offset < url.len);
+    std.debug.assert(host_out.len >= 256);
+    std.debug.assert(path_out.len >= 256);
+    std.debug.assert(port_out != null);
+    std.debug.assert(host_end_out != null);
+    std.debug.assert(path_start_out != null);
+    var host_start = url_offset;
+    var host_end: u32 = host_start;
+    var port: u16 = 80;
+    var path_start: u32 = url.len;
+    var found_colon = false;
+    var i: u32 = host_start;
+    while (i < url.len) : (i += 1) {
+        const c = url[i];
+        if (c == ':') {
+            if (found_colon) {
+                return false;
+            }
+            found_colon = true;
+            host_end = i;
+            if (i + 1 >= url.len) {
+                return false;
+            }
+            if (!parse_port_from_url(url, i + 1, &port, &path_start)) {
+                return false;
+            }
+            break;
+        } else if (c == '/') {
+            host_end = i;
+            path_start = i;
+            break;
+        }
+    }
+    if (!found_colon and path_start == url.len) {
+        host_end = url.len;
+    }
+    const host_len = host_end - host_start;
+    if (host_len == 0 or host_len > 255) {
+        return false;
+    }
+    if (host_len > host_out.len) {
+        return false;
+    }
+    std.mem.copyForwards(u8, host_out[0..host_len], url[host_start..host_end]);
+    const path_len = if (path_start < url.len) url.len - path_start else 0;
+    if (path_len > 0) {
+        if (path_len > path_out.len) {
+            return false;
+        }
+        std.mem.copyForwards(u8, path_out[0..path_len], url[path_start..]);
+    } else {
+        path_out[0] = '/';
+    }
+    port_out.* = port;
+    host_end_out.* = host_end;
+    path_start_out.* = path_start;
+    std.debug.assert(host_len > 0);
+    std.debug.assert(host_len <= 255);
+    std.debug.assert(port > 0);
+    std.debug.assert(port <= 65535);
+    return true;
+}
+
+// Parse WebSocket URL (ws://host:port/path or wss://host:port/path).
+pub fn parse_websocket_url(
+    url: []const u8,
+    host_out: []u8,
+    port_out: *u16,
+    path_out: []u8,
+) bool {
+    std.debug.assert(url.len > 0);
+    std.debug.assert(host_out.len >= 256);
+    std.debug.assert(path_out.len >= 256);
+    std.debug.assert(port_out != null);
+    if (url.len < 5) {
+        return false;
+    }
+    const ws_prefix = "ws://";
+    const wss_prefix = "wss://";
+    var url_offset: u32 = 0;
+    if (std.mem.startsWith(u8, url, ws_prefix)) {
+        url_offset = 5;
+    } else if (std.mem.startsWith(u8, url, wss_prefix)) {
+        url_offset = 6;
+    } else {
+        return false;
+    }
+    if (url_offset >= url.len) {
+        return false;
+    }
+    var host_end: u32 = 0;
+    var path_start: u32 = 0;
+    const success = extract_url_components(
+        url,
+        url_offset,
+        host_out,
+        port_out,
+        path_out,
+        &host_end,
+        &path_start,
+    );
+    std.debug.assert(host_end > 0);
+    return success;
+}
+
+// Parse HTTP response header to extract Sec-WebSocket-Accept.
+pub fn parse_accept_header(
+    response: []const u8,
+    accept_out: []u8,
+) bool {
+    std.debug.assert(response.len > 0);
+    std.debug.assert(accept_out.len >= grain_core_ws.MAX_WEBSOCKET_ACCEPT_LEN);
+    const accept_header = "Sec-WebSocket-Accept: ";
+    var i: u32 = 0;
+    while (i < response.len) : (i += 1) {
+        if (i + accept_header.len > response.len) {
+            break;
+        }
+        if (std.mem.eql(u8, response[i..i + accept_header.len], accept_header)) {
+            var accept_start = i + accept_header.len;
+            var accept_end: u32 = accept_start;
+            var j: u32 = accept_start;
+            while (j < response.len) : (j += 1) {
+                const c = response[j];
+                if (c == '\r' or c == '\n') {
+                    accept_end = j;
+                    break;
+                }
+            }
+            if (accept_end == accept_start) {
+                return false;
+            }
+            const accept_len = accept_end - accept_start;
+            if (accept_len > accept_out.len) {
+                return false;
+            }
+            if (accept_len > grain_core_ws.MAX_WEBSOCKET_ACCEPT_LEN) {
+                return false;
+            }
+            std.mem.copyForwards(u8, accept_out[0..accept_len], response[accept_start..accept_end]);
+            std.debug.assert(accept_len > 0);
+            std.debug.assert(accept_len <= grain_core_ws.MAX_WEBSOCKET_ACCEPT_LEN);
+            return true;
+        }
+    }
+    return false;
+}
+
+// Validate WebSocket accept key from server response.
+pub fn validate_accept_key(
+    client_key: []const u8,
+    server_accept: []const u8,
+) bool {
+    std.debug.assert(client_key.len > 0);
+    std.debug.assert(server_accept.len > 0);
+    var expected_accept: [grain_core_ws.MAX_WEBSOCKET_ACCEPT_LEN]u8 = undefined;
+    const expected_len = grain_core_ws.generate_websocket_accept(client_key, &expected_accept);
+    if (expected_len != server_accept.len) {
+        return false;
+    }
+    var i: u32 = 0;
+    while (i < expected_len) : (i += 1) {
+        if (expected_accept[i] != server_accept[i]) {
+            return false;
+        }
+    }
+    std.debug.assert(expected_len > 0);
+    std.debug.assert(expected_len <= grain_core_ws.MAX_WEBSOCKET_ACCEPT_LEN);
+    return true;
+}
+
+// Check if HTTP response indicates successful WebSocket upgrade.
+pub fn is_upgrade_successful(response: []const u8) bool {
+    std.debug.assert(response.len > 0);
+    const status_line = "HTTP/1.1 101";
+    if (response.len < status_line.len) {
+        return false;
+    }
+    var i: u32 = 0;
+    while (i < status_line.len) : (i += 1) {
+        if (response[i] != status_line[i]) {
+            return false;
+        }
+    }
+    std.debug.assert(response.len >= status_line.len);
+    return true;
 }
 

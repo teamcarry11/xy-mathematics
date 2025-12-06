@@ -71,6 +71,13 @@ pub const IpAddress = struct {
     }
 };
 
+// Socket option type
+pub const SocketOption = enum(u8) {
+    reuse_address,
+    keep_alive,
+    timeout,
+};
+
 // Socket structure
 pub const Socket = struct {
     socket_id: u32,
@@ -82,6 +89,9 @@ pub const Socket = struct {
     is_listening: bool,
     created_at: u64,
     last_activity: u64,
+    reuse_address: bool,
+    keep_alive: bool,
+    timeout_ms: u64,
 
     pub fn init(socket_id: u32, socket_type: SocketType) Socket {
         std.debug.assert(socket_id > 0);
@@ -95,6 +105,9 @@ pub const Socket = struct {
             .is_listening = false,
             .created_at = 0,
             .last_activity = 0,
+            .reuse_address = false,
+            .keep_alive = false,
+            .timeout_ms = SOCKET_TIMEOUT,
         };
         std.mem.set(u8, &socket.local_address.address, 0);
         socket.local_address.address_len = 0;

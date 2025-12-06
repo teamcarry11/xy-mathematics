@@ -178,3 +178,53 @@ pub fn check_permission_from_request(
     return check_permission(user_id_buf[0..user_id_len], permission);
 }
 
+// Create session for user from request.
+pub fn create_session_from_request(
+    request: *grain_core_api_server.HttpRequest,
+    session_out: *grain_core_auth_service.Session,
+) bool {
+    std.debug.assert(request != null);
+    std.debug.assert(session_out != null);
+    const auth_service = get_auth_service() orelse return false;
+    var user_id_buf: [grain_core_auth_service.MAX_USER_ID_LEN]u8 = undefined;
+    const user_id_len = get_user_id_from_request(request, &user_id_buf);
+    if (user_id_len == 0) {
+        return false;
+    }
+    const current_time = @as(u64, @intCast(std.time.timestamp()));
+    return auth_service.create_session(user_id_buf[0..user_id_len], current_time, session_out);
+}
+
+// Revoke session from request (logout).
+pub fn revoke_session_from_request(
+    request: *grain_core_api_server.HttpRequest,
+) bool {
+    std.debug.assert(request != null);
+    const auth_service = get_auth_service() orelse return false;
+    var session_id_buf: [grain_core_auth_service.MAX_SESSION_ID_LEN]u8 = undefined;
+    const session_header = request.get_header("X-Session-ID") orelse return false;
+    if (session_header.len == 0 or session_header.len > grain_core_auth_service.MAX_SESSION_ID_LEN) {
+        return false;
+    }
+    std.mem.copyForwards(u8, &session_id_buf, session_header);
+    return auth_service.revoke_session(session_id_buf[0..session_header.len]);
+}
+
+// Get session from request (validates and returns session).
+pub fn get_session_from_request(
+    request: *grain_core_api_server.HttpRequest,
+    session_out: *grain_core_auth_service.Session,
+) bool {
+    std.debug.assert(request != null);
+    std.debug.assert(session_out != null);
+    const auth_service = get_auth_service() orelse return false;
+    var session_id_buf: [grain_core_auth_service.MAX_SESSION_ID_LEN]u8 = undefined;
+    const session_header = request.get_header("X-Session-ID") orelse return false;
+    if (session_header.len == 0 or session_header.len > grain_core_auth_service.MAX_SESSION_ID_LEN) {
+        return false;
+    }
+    std.mem.copyForwards(u8, &session_id_buf, session_header);
+    const current_time = @as(u64, @intCast(std.time.timestamp()));
+    return auth_service.validate_session(session_id_buf[0..session_header.len], current_time, session_out);
+}
+

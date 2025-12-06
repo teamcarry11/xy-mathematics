@@ -194,9 +194,7 @@ pub const DnsResolver = struct {
             }
             return true;
         }
-        _ = record_type;
         _ = current_time;
-        _ = ip_out;
         return false;
     }
 };

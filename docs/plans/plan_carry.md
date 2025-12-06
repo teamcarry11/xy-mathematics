@@ -2,7 +2,7 @@
 
 **Agent**: Grain Carry Agent (6th Agent)  
 **Status**: WebSocket Support Available — Ready for WebSocket Client Implementation  
-**Last Updated**: 2025-12-06-004247-pst
+**Last Updated**: 2025-12-06-033256-pst
 
 ---
 
@@ -620,9 +620,59 @@ While waiting for Grain Core Agent's API Server (Phase 59), we can prepare the A
 - ✅ All compiler warnings enabled
 
 **Next Steps**:
-- Integrate with database when available (user storage, credential verification)
-- Add email service integration for OTP delivery
-- Begin WebSocket client implementation (Phase 8: Advanced Features)
+- ✅ WebSocket client core module complete
+- ⏳ Integrate with database when available (user storage, credential verification)
+- ⏳ Add email service integration for OTP delivery
+- ⏳ Complete WebSocket client with connection management and message handling
+
+### Completed: WebSocket Client Core Module ✅ (2025-12-06-033256-pst)
+
+**Key Achievements**:
+- WebSocket client module structure (`src/grain_carry_core/websocket/client.zig`)
+- WebSocket client connection management (`WebSocketClient`, `WebSocketClientManager`)
+- Client key generation for handshake
+- Upgrade request building for WebSocket handshake
+- Text and binary message sending functions
+- Frame parsing for received messages
+- Comprehensive WebSocket client tests
+
+**Files Created**:
+- `src/grain_carry_core/websocket/client.zig` — WebSocket client module (269 lines)
+- `src/grain_carry_core/websocket/root.zig` — WebSocket module root
+- `tests/125_grain_carry_core_websocket_client_test.zig` — WebSocket client tests
+
+**WebSocket Client Features**:
+- `WebSocketClient` — Client connection structure with state management
+- `WebSocketClientManager` — Manager for multiple client connections (max 16)
+- `generate_client_key()` — Generate WebSocket client key for handshake
+- `build_upgrade_request()` — Build HTTP upgrade request for WebSocket handshake
+- `send_text_message()` — Send text messages via WebSocket
+- `send_binary_message()` — Send binary messages via WebSocket
+- `parse_received_frame()` — Parse received WebSocket frames
+
+**Grain Style Compliance**:
+- ✅ `grain_case` function names
+- ✅ `u32`/`u64` types (no `usize`)
+- ✅ Bounded allocations (all limits explicit: `MAX_CLIENT_CONNECTIONS`, `MAX_CLIENT_MESSAGE_SIZE`)
+- ✅ Minimum 2 assertions per function
+- ✅ Max 70 lines per function (all functions compliant)
+- ✅ Max 100 characters per line
+- ✅ All compiler warnings enabled
+
+**Test Coverage**:
+- Client manager initialization
+- Client creation and management
+- URL setting
+- Client key generation
+- Upgrade request building
+- Client finding and removal
+
+**Next Steps**:
+- Complete connection management (TCP socket connection, handshake completion)
+- Add message receiving and handling
+- Add ping/pong support for keepalive
+- Add connection state management
+- Integrate with network stack when available
 
 ### Completed: Handler Adapters for API Server Integration ✅ (2025-12-05-104041-pst)
 
@@ -857,6 +907,13 @@ While waiting for Grain Core Agent's API Server (Phase 59), we can prepare the A
    - DNS record types (A, AAAA, MX) ✅
    - Hostname resolution ready for network integration ✅
    - Ready for Carry Agent domain name resolution ✅
+
+5. **File Storage (Grain Core Agent Phase 62)**: ✅ **COMPLETE** (2025-12-06-023413-pst)
+   - Database file format with header validation ✅
+   - Page-based storage with integrity checks ✅
+   - File handle management with locking ✅
+   - Ready for Silo Agent database persistence ✅
+   - Enables Carry Agent database integration when Silo Agent completes ✅
 
 ### What We're Ready For
 

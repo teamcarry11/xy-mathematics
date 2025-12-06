@@ -12,5 +12,6 @@ pub const email_auth = @import("auth/email.zig");
 pub const jwt = @import("auth/jwt.zig");
 pub const style = @import("style/root.zig");
 pub const api = @import("api/root.zig");
+pub const websocket = @import("websocket/root.zig");
 pub const c_api = @import("ffi/c_api.zig");
 

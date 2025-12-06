@@ -17,19 +17,13 @@ test "process group limits init" {
     // We can't directly access it, but we can test through syscalls.
     const executable: u64 = 0x10000;
     const executable_len: u64 = 1024;
-    const result = kernel.syscall_spawn(executable, executable_len, 0, 0) catch {
-        try testing.expect(false); // Should not fail
-        return;
-    };
+    const result = try kernel.syscall_spawn(executable, executable_len, 0, 0);
     try testing.expect(result == .success);
     const pid = result.success;
     
     // Set process group.
     const pgid: u64 = 10;
-    const result2 = kernel.syscall_setpgid(pid, pgid, 0, 0) catch {
-        try testing.expect(false); // Should not fail
-        return;
-    };
+    const result2 = try kernel.syscall_setpgid(pid, pgid, 0, 0);
     try testing.expect(result2 == .success);
 }
 
@@ -40,19 +34,13 @@ test "process count limit enforcement" {
     // Spawn a process.
     const executable: u64 = 0x10000;
     const executable_len: u64 = 1024;
-    const result1 = kernel.syscall_spawn(executable, executable_len, 0, 0) catch {
-        try testing.expect(false); // Should not fail
-        return;
-    };
+    const result1 = try kernel.syscall_spawn(executable, executable_len, 0, 0);
     try testing.expect(result1 == .success);
     const pid1 = result1.success;
     
     // Set process group.
     const pgid: u64 = 10;
-    const result2 = kernel.syscall_setpgid(pid1, pgid, 0, 0) catch {
-        try testing.expect(false); // Should not fail
-        return;
-    };
+    const result2 = try kernel.syscall_setpgid(pid1, pgid, 0, 0);
     try testing.expect(result2 == .success);
     
     // Set process count limit to 1.
@@ -62,12 +50,7 @@ test "process count limit enforcement" {
     
     // Spawn another process in the same group.
     kernel.scheduler.set_current(pid1, 1000);
-    const result3 = kernel.syscall_spawn(executable, executable_len, 0, 0) catch |err| {
-        // If limit is exceeded, we get resource_exhausted error.
-        // Otherwise, should succeed.
-        _ = err;
-        return;
-    };
+    const result3 = try kernel.syscall_spawn(executable, executable_len, 0, 0);
     // Should succeed if no limit is set.
     try testing.expect(result3 == .success);
 }
@@ -79,19 +62,13 @@ test "memory limit enforcement" {
     // Spawn a process.
     const executable: u64 = 0x10000;
     const executable_len: u64 = 1024;
-    const result1 = kernel.syscall_spawn(executable, executable_len, 0, 0) catch {
-        try testing.expect(false); // Should not fail
-        return;
-    };
+    const result1 = try kernel.syscall_spawn(executable, executable_len, 0, 0);
     try testing.expect(result1 == .success);
     const pid1 = result1.success;
     
     // Set process group.
     const pgid: u64 = 10;
-    const result2 = kernel.syscall_setpgid(pid1, pgid, 0, 0) catch {
-        try testing.expect(false); // Should not fail
-        return;
-    };
+    const result2 = try kernel.syscall_setpgid(pid1, pgid, 0, 0);
     try testing.expect(result2 == .success);
     
     // Set current process.
@@ -101,12 +78,7 @@ test "memory limit enforcement" {
     const addr: u64 = 0x200000;
     const size: u64 = 4096;
     const flags: u64 = 0b111; // read, write, execute
-    const result3 = kernel.syscall_map(addr, size, flags, 0) catch |err| {
-        // If limit is exceeded, we get resource_exhausted error.
-        // Otherwise, should succeed.
-        _ = err;
-        return;
-    };
+    const result3 = try kernel.syscall_map(addr, size, flags, 0);
     // Should succeed if no limit is set.
     try testing.expect(result3 == .success);
 }
@@ -118,33 +90,21 @@ test "unlimited limits default" {
     // Spawn processes without limits.
     const executable: u64 = 0x10000;
     const executable_len: u64 = 1024;
-    const result1 = kernel.syscall_spawn(executable, executable_len, 0, 0) catch {
-        try testing.expect(false); // Should not fail
-        return;
-    };
+    const result1 = try kernel.syscall_spawn(executable, executable_len, 0, 0);
     try testing.expect(result1 == .success);
     const pid1 = result1.success;
     
     // Set process group.
     const pgid: u64 = 10;
-    const result2 = kernel.syscall_setpgid(pid1, pgid, 0, 0) catch {
-        try testing.expect(false); // Should not fail
-        return;
-    };
+    const result2 = try kernel.syscall_setpgid(pid1, pgid, 0, 0);
     try testing.expect(result2 == .success);
     
     // Spawn multiple processes (should work with unlimited limits).
     kernel.scheduler.set_current(pid1, 1000);
-    const result3 = kernel.syscall_spawn(executable, executable_len, 0, 0) catch {
-        try testing.expect(false); // Should not fail
-        return;
-    };
+    const result3 = kernel.syscall_spawn(executable, executable_len, 0, 0);
     try testing.expect(result3 == .success);
     
-    const result4 = kernel.syscall_spawn(executable, executable_len, 0, 0) catch {
-        try testing.expect(false); // Should not fail
-        return;
-    };
+    const result4 = kernel.syscall_spawn(executable, executable_len, 0, 0);
     try testing.expect(result4 == .success);
 }
 
@@ -155,10 +115,7 @@ test "limits with no process group" {
     // Spawn a process without a process group (pgid = 0).
     const executable: u64 = 0x10000;
     const executable_len: u64 = 1024;
-    const result1 = kernel.syscall_spawn(executable, executable_len, 0, 0) catch {
-        try testing.expect(false); // Should not fail
-        return;
-    };
+    const result1 = kernel.syscall_spawn(executable, executable_len, 0, 0);
     try testing.expect(result1 == .success);
     const pid1 = result1.success;
     
@@ -167,9 +124,6 @@ test "limits with no process group" {
     
     // Spawn another process (should work).
     kernel.scheduler.set_current(pid1, 1000);
-    const result2 = kernel.syscall_spawn(executable, executable_len, 0, 0) catch {
-        try testing.expect(false); // Should not fail
-        return;
-    };
+    const result2 = kernel.syscall_spawn(executable, executable_len, 0, 0);
     try testing.expect(result2 == .success);
 }

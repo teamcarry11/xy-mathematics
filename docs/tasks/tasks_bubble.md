@@ -2,7 +2,7 @@
 
 **Agent**: Grain Bubble Agent (8th Agent)  
 **Status**: Phase 1 Starting — Core Canvas (SLC v1.0)  
-**Last Updated**: 2025-12-06-014041-pst
+**Last Updated**: 2025-12-06-025847-pst
 
 ---
 
@@ -65,6 +65,7 @@
 - [x] Implement shape manipulation (move, resize) ✅
 - [x] Implement shape duplication ✅
 - [x] Implement shape copy/paste ✅
+- [x] Implement stroke rendering (outline support) ✅
 - [ ] Implement shape rotation (future enhancement)
 - [x] Implement shape z-ordering (layer management) ✅
 - [ ] Implement shape grouping (future enhancement)

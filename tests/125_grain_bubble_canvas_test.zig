@@ -96,6 +96,31 @@ test "canvas add shape" {
         std.debug.assert(layer.shapes[0].shape_type == .rectangle);
         std.debug.assert(layer.shapes[0].x == 10.0);
         std.debug.assert(layer.shapes[0].y == 20.0);
+        std.debug.assert(layer.shapes[0].stroke_width == 0.0);
+    }
+}
+
+test "canvas add shape with stroke" {
+    var c = canvas.Canvas.init(1024, 768);
+    const layer_id = c.create_layer("Test Layer");
+    std.debug.assert(layer_id != null);
+    const shape_id = c.add_shape_with_stroke(
+        layer_id.?,
+        .rectangle,
+        10.0,
+        20.0,
+        100.0,
+        50.0,
+        0xFF0000FF,
+        0.0,
+        2.0,
+        0x000000FF,
+    );
+    std.debug.assert(shape_id != null);
+    if (c.get_layer(layer_id.?)) |layer| {
+        std.debug.assert(layer.shapes_len == 1);
+        std.debug.assert(layer.shapes[0].stroke_width == 2.0);
+        std.debug.assert(layer.shapes[0].stroke_color == 0x000000FF);
     }
 }
 

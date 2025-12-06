@@ -542,7 +542,7 @@ Grain Vantage Agent is responsible for building the RISC-V64 virtual machine (Gr
 ## References
 
 - **Grain Style**: [`docs/grain_style.md`](../grain_style.md)
-- **Core Plan**: [`docs/plan.md`](../plan.md)
+- **Master Plan**: [`docs/plan.md`](../plan.md)
 - **Grain Core Agent Plan**: [`docs/plans/plan_core.md`](plan_core.md)
 - **Vantage Agent Response**: [`docs/kernel_agent_response_to_grain_os.md`](../kernel_agent_response_to_grain_os.md)
 - **Grain OS Integration Response**: [`docs/grain_os_kernel_integration_response.md`](../grain_os_kernel_integration_response.md)

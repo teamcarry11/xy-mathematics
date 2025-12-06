@@ -719,6 +719,11 @@ pub const BasinKernel = struct {
     /// Grain Style: Static allocation, initialized at kernel boot.
     process_group_stats: ProcessGroupStatsManager,
     
+    /// Process group limits manager.
+    /// Why: Enforce resource limits for process groups.
+    /// Grain Style: Static allocation, initialized at kernel boot.
+    process_group_limits: ProcessGroupLimitsManager,
+    
     /// IPC channel table.
     /// Why: Manage inter-process communication channels.
     /// Grain Style: Static allocation, initialized at kernel boot.

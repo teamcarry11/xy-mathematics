@@ -2,7 +2,7 @@
 
 **Agent**: Grain Bubble Agent (8th Agent)  
 **Status**: Phase 1 In Progress — Core Canvas (SLC v1.0)  
-**Last Updated**: 2025-12-06-015627-pst
+**Last Updated**: 2025-12-06-025847-pst
 
 ---
 
@@ -51,6 +51,7 @@ Grain Bubble Agent is responsible for building Grain Bubble — a native visual 
 - Canvas renderer (integration with framebuffer) ✅
 - Input handling (mouse events, keyboard shortcuts, selection, pan, zoom) ✅
 - Shape duplication and copy/paste ✅
+- Stroke rendering (outline support for shapes) ✅
 - Export to PDF (framework ready, implementation pending) ⏳
 
 **Success Criteria**:

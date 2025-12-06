@@ -2,7 +2,7 @@
 
 **Agent**: Grain Aurora IDE Dream Browser Agent (2nd Agent)  
 **Status**: Active — Foundation components, shared modules  
-**Last Updated**: 2025-12-06-004609-pst
+**Last Updated**: 2025-12-06-025743-pst
 
 ---
 
@@ -271,6 +271,18 @@ Shared module refactoring eliminates code duplication and enables shared mainten
 - ✅ Grain Core Agent Phase 61 (WebSocket Support) — Complete
 - Note: Aurora Agent currently uses stdio for LSP (standard) and has WebSocket for Dream Protocol (Phase 0.3)
 - Future: May use Core Agent WebSocket for additional real-time features
+
+**File Storage Support**:
+- ✅ Grain Core Agent Phase 62 (File Storage Core) — Complete
+- Note: Aurora Agent does not directly use file storage (uses in-memory buffers)
+- Future: May use file storage for editor state persistence if needed
+
+**Grain Style u32/u64 Enforcement**:
+- ✅ **Aurora Agent Fully Compliant** (2025-12-06-004609-pst)
+- ✅ GrainBuffer updated to use `u32`/`u64` instead of `usize`/`isize`
+- ✅ All Aurora Agent code uses explicit types (`u32`/`u64`, no `usize`/`isize`)
+- ✅ Remaining `usize` in GrainBuffer are only for `std.ArrayListUnmanaged` conversions (acceptable)
+- ✅ Verified: No `usize`/`isize` in `src/aurora/` directory
 
 **Coordination Tasks**:
 - ✅ Font renderer migration (Phase 1.2) — Complete

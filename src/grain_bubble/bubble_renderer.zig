@@ -23,7 +23,7 @@ pub const BubbleRenderer = struct {
     pub fn init(width: u32, height: u32) BubbleRenderer {
         std.debug.assert(width > 0);
         std.debug.assert(height > 0);
-        var renderer = BubbleRenderer{
+        const renderer = BubbleRenderer{
             .framebuffer_width = width,
             .framebuffer_height = height,
         };
@@ -54,14 +54,14 @@ pub const BubbleRenderer = struct {
             return;
         }
         const clamped_radius = @min(radius, MAX_CORNER_RADIUS);
-        const clamped_radius_f = @as(f64, @floatFromInt(clamped_radius));
         // Render rounded rectangle (simplified: draw main rect + corners).
         // For Phase 1, we'll use a simplified approach.
         self.render_rect(x, y, width, height, color, draw_fn);
         // TODO: Add proper rounded corner rendering in future iteration.
+        _ = clamped_radius; // Reserved for future rounded corner rendering
     }
 
-    // Render rectangle.
+    // Render rectangle (filled).
     pub fn render_rect(
         self: *const BubbleRenderer,
         x: i32,
@@ -89,6 +89,85 @@ pub const BubbleRenderer = struct {
             var px: u32 = start_x;
             while (px < end_x) : (px += 1) {
                 draw_fn(px, py, color);
+            }
+        }
+    }
+
+    // Render rectangle stroke (outline only).
+    pub fn render_rect_stroke(
+        self: *const BubbleRenderer,
+        x: i32,
+        y: i32,
+        width: u32,
+        height: u32,
+        stroke_width: u32,
+        stroke_color: u32,
+        draw_fn: *const fn (u32, u32, u32) void,
+    ) void {
+        std.debug.assert(width > 0);
+        std.debug.assert(height > 0);
+        std.debug.assert(stroke_width > 0);
+        std.debug.assert(@intFromPtr(draw_fn) != 0);
+        const clamped_stroke = @min(stroke_width, width / 2);
+        const clamped_stroke_h = @min(stroke_width, height / 2);
+        // Top edge.
+        var i: u32 = 0;
+        while (i < clamped_stroke_h) : (i += 1) {
+            const py = if (y + @as(i32, @intCast(i)) < 0) 0 else @as(u32, @intCast(y + @as(i32, @intCast(i))));
+            if (py < self.framebuffer_height) {
+                var px: u32 = if (x < 0) 0 else @as(u32, @intCast(x));
+                const end_x = if (@as(u32, @intCast(x)) + width > self.framebuffer_width)
+                    self.framebuffer_width
+                else
+                    @as(u32, @intCast(x)) + width;
+                while (px < end_x) : (px += 1) {
+                    draw_fn(px, py, stroke_color);
+                }
+            }
+        }
+        // Bottom edge.
+        i = 0;
+        while (i < clamped_stroke_h) : (i += 1) {
+            const py = @as(u32, @intCast(y)) + height - clamped_stroke_h + i;
+            if (py < self.framebuffer_height) {
+                var px: u32 = if (x < 0) 0 else @as(u32, @intCast(x));
+                const end_x = if (@as(u32, @intCast(x)) + width > self.framebuffer_width)
+                    self.framebuffer_width
+                else
+                    @as(u32, @intCast(x)) + width;
+                while (px < end_x) : (px += 1) {
+                    draw_fn(px, py, stroke_color);
+                }
+            }
+        }
+        // Left edge.
+        i = 0;
+        while (i < clamped_stroke) : (i += 1) {
+            const px = if (x + @as(i32, @intCast(i)) < 0) 0 else @as(u32, @intCast(x + @as(i32, @intCast(i))));
+            if (px < self.framebuffer_width) {
+                var py: u32 = if (y < 0) 0 else @as(u32, @intCast(y));
+                const end_y = if (@as(u32, @intCast(y)) + height > self.framebuffer_height)
+                    self.framebuffer_height
+                else
+                    @as(u32, @intCast(y)) + height;
+                while (py < end_y) : (py += 1) {
+                    draw_fn(px, py, stroke_color);
+                }
+            }
+        }
+        // Right edge.
+        i = 0;
+        while (i < clamped_stroke) : (i += 1) {
+            const px = @as(u32, @intCast(x)) + width - clamped_stroke + i;
+            if (px < self.framebuffer_width) {
+                var py: u32 = if (y < 0) 0 else @as(u32, @intCast(y));
+                const end_y = if (@as(u32, @intCast(y)) + height > self.framebuffer_height)
+                    self.framebuffer_height
+                else
+                    @as(u32, @intCast(y)) + height;
+                while (py < end_y) : (py += 1) {
+                    draw_fn(px, py, stroke_color);
+                }
             }
         }
     }

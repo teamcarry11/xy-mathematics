@@ -995,6 +995,20 @@ pub fn build(b: *std.Build) void {
     const run_grain_carry_core_api_auth_service_integration_tests = b.addRunArtifact(grain_carry_core_api_auth_service_integration_tests);
     test_step.dependOn(&run_grain_carry_core_api_auth_service_integration_tests.step);
 
+    const grain_carry_core_websocket_client_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/125_grain_carry_core_websocket_client_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_carry_core", .module = grain_carry_core_module },
+                .{ .name = "grain_core", .module = grain_core_module },
+            },
+        }),
+    });
+    const run_grain_carry_core_websocket_client_tests = b.addRunArtifact(grain_carry_core_websocket_client_tests);
+    test_step.dependOn(&run_grain_carry_core_websocket_client_tests.step);
+
     const fuzz_004_tests = b.addTest(.{
         .root_module = b.createModule(.{
             .root_source_file = b.path("tests/004_fuzz.zig"),
@@ -3227,6 +3241,19 @@ pub fn build(b: *std.Build) void {
     });
     const grain_core_file_storage_tests_run = b.addRunArtifact(grain_core_file_storage_tests);
     test_step.dependOn(&grain_core_file_storage_tests_run.step);
+
+    const grain_core_wal_manager_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/119_grain_core_wal_manager_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_core", .module = grain_core_module },
+            },
+        }),
+    });
+    const grain_core_wal_manager_tests_run = b.addRunArtifact(grain_core_wal_manager_tests);
+    test_step.dependOn(&grain_core_wal_manager_tests_run.step);
 
     const grain_database_integration_os_tests = b.addTest(.{
         .root_module = b.createModule(.{

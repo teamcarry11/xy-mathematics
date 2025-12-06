@@ -452,11 +452,13 @@ Grain Core Agent is responsible for building the desktop environment compositor 
    - ✅ File locking (for concurrent access)
    - ✅ File integrity checks (checksums)
 
-2. **Transaction Log File Management**:
-   - Write-ahead log (WAL) file format
-   - WAL rotation (when log file reaches size limit)
-   - WAL checkpoint (merge WAL into database)
-   - WAL recovery (on database startup)
+2. **Transaction Log File Management** ✅ (2025-12-06-035857-pst):
+   - ✅ Write-ahead log (WAL) file format - `WalEntry`, `WalManager`
+   - ✅ WAL entry management - `add_entry()`, checksum calculation/verification
+   - ✅ WAL checkpoint (merge WAL into database) - `checkpoint()`, `needs_checkpoint()`
+   - ✅ WAL recovery (on database startup) - `get_recovery_entries()`
+   - ✅ WAL rotation (when log file reaches size limit) - `MAX_WAL_FILE_SIZE` check
+   - ✅ Comprehensive tests (`tests/119_grain_core_wal_manager_test.zig`)
 
 3. **Index File Management**:
    - B-tree index file format

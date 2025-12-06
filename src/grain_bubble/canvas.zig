@@ -52,6 +52,8 @@ pub const Shape = struct {
     height: f64,
     color: u32,
     corner_radius: f64,
+    stroke_width: f64,
+    stroke_color: u32,
     layer_id: u32,
     z_order: u32,
 };
@@ -261,10 +263,39 @@ pub const Canvas = struct {
         color: u32,
         corner_radius: f64,
     ) ?u32 {
+        return self.add_shape_with_stroke(
+            layer_id,
+            shape_type,
+            x,
+            y,
+            width,
+            height,
+            color,
+            corner_radius,
+            0.0,
+            0x000000FF,
+        );
+    }
+
+    // Add shape to layer with stroke.
+    pub fn add_shape_with_stroke(
+        self: *Canvas,
+        layer_id: u32,
+        shape_type: ShapeType,
+        x: f64,
+        y: f64,
+        width: f64,
+        height: f64,
+        color: u32,
+        corner_radius: f64,
+        stroke_width: f64,
+        stroke_color: u32,
+    ) ?u32 {
         std.debug.assert(layer_id > 0);
         std.debug.assert(width > 0.0);
         std.debug.assert(height > 0.0);
         std.debug.assert(corner_radius >= 0.0);
+        std.debug.assert(stroke_width >= 0.0);
         if (self.get_layer(layer_id)) |layer| {
             if (layer.shapes_len >= MAX_SHAPES) {
                 return null;
@@ -281,6 +312,8 @@ pub const Canvas = struct {
                 .height = height,
                 .color = color,
                 .corner_radius = corner_radius,
+                .stroke_width = stroke_width,
+                .stroke_color = stroke_color,
                 .layer_id = layer_id,
                 .z_order = z_order,
             };
@@ -502,6 +535,8 @@ pub const Canvas = struct {
                         .height = original.height,
                         .color = original.color,
                         .corner_radius = original.corner_radius,
+                        .stroke_width = original.stroke_width,
+                        .stroke_color = original.stroke_color,
                         .layer_id = original.layer_id,
                         .z_order = layer.shapes_len,
                     };
@@ -561,6 +596,8 @@ pub const Canvas = struct {
                     .height = clipboard_shape.height,
                     .color = clipboard_shape.color,
                     .corner_radius = clipboard_shape.corner_radius,
+                    .stroke_width = clipboard_shape.stroke_width,
+                    .stroke_color = clipboard_shape.stroke_color,
                     .layer_id = layer_id,
                     .z_order = layer.shapes_len,
                 };

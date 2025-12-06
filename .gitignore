@@ -1,5 +1,26 @@
+# Zig build artifacts
 .zig-cache/
 zig-cache/
 zig-out/
 
+# Build artifacts (libraries and executables)
+*.a
+tahoe_app
+window
+graincard
+
+# Temporary test files
+test_*.zig
+tmp_*.zig
+
+# Backup files
+*.backup
+*.old*
+*.bak
+
+# Output files
+*.txt.png
+*_output.txt
+
+# Grain store (external dependencies)
 grainstore/

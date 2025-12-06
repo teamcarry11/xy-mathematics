@@ -18,7 +18,7 @@
   1. Grain Vantage VM Basin Kernel Agent
   2. Grain Aurora IDE Dream Browser Agent
   3. Grain Skate Silo Field Agent
-  4. Grain OS Agent
+  4. Grain Core Agent
   5. Grain Workspace Agent
   6. Grain Mobile Agent
   7. Grain Database Agent
@@ -62,7 +62,7 @@
 - **Lost dependencies**: Agents might miss cross-agent dependencies
 - **Isolated work**: Agents might work in silos
 - **Missed integration points**: Harder to see where agents connect
-- **Example**: Database Agent needs API Server (Grain OS Agent) but might not see it
+- **Example**: Database Agent needs API Server (Grain Core Agent) but might not see it
 
 ### 2. Search Difficulty
 - **Cross-file search**: Harder to search across all agents
@@ -98,7 +98,7 @@ docs/
 │   ├── plan_kernel.md         # Kernel Agent detailed plan
 │   ├── plan_aurora.md         # Aurora Agent detailed plan
 │   ├── plan_skate.md          # Skate Agent detailed plan
-│   ├── plan_os.md             # OS Agent detailed plan
+│   ├── plan_core.md             # OS Agent detailed plan
 │   ├── plan_workspace.md      # Workspace Agent detailed plan
 │   ├── plan_mobile.md         # Mobile Agent detailed plan
 │   └── plan_database.md       # Database Agent detailed plan
@@ -106,7 +106,7 @@ docs/
     ├── tasks_kernel.md        # Kernel Agent detailed tasks
     ├── tasks_aurora.md         # Aurora Agent detailed tasks
     ├── tasks_skate.md          # Skate Agent detailed tasks
-    ├── tasks_os.md             # OS Agent detailed tasks
+    ├── tasks_core.md             # OS Agent detailed tasks
     ├── tasks_workspace.md      # Workspace Agent detailed tasks
     ├── tasks_mobile.md         # Mobile Agent detailed tasks
     └── tasks_database.md      # Database Agent detailed tasks
@@ -137,17 +137,17 @@ docs/
 
 ## Agent Status
 
-### Grain OS Agent
+### Grain Core Agent
 **Status**: Phase 58 complete, starting Phase 59  
 **Current Work**: HTTP/REST API Server  
 **Dependencies**: None  
 **Provides**: API Server, Auth Service (for Database/Mobile Agents)  
-**Details**: See `plans/plan_os.md`
+**Details**: See `plans/plan_core.md`
 
 ### Grain Database Agent
 **Status**: Starting Phase 1  
 **Current Work**: Database Foundation  
-**Dependencies**: API Server (Grain OS Agent), File Storage (Kernel Agent)  
+**Dependencies**: API Server (Grain Core Agent), File Storage (Kernel Agent)  
 **Provides**: Database backend (for Mobile Agent)  
 **Details**: See `plans/plan_database.md`
 
@@ -268,7 +268,7 @@ docs/
 
 **Example**:
 ```markdown
-Database Agent needs API Server from [Grain OS Agent](plans/plan_os.md#phase-59-api-server).
+Database Agent needs API Server from [Grain Core Agent](plans/plan_core.md#phase-59-api-server).
 ```
 
 ### 3. Dependency Tracking
@@ -278,7 +278,7 @@ Database Agent needs API Server from [Grain OS Agent](plans/plan_os.md#phase-59-
 **Format**:
 ```markdown
 ## Dependencies
-- **Needs**: API Server from [Grain OS Agent](plans/plan_os.md#phase-59)
+- **Needs**: API Server from [Grain Core Agent](plans/plan_core.md#phase-59)
 - **Provides**: Database backend to [Grain Mobile Agent](plans/plan_mobile.md#backend)
 ```
 

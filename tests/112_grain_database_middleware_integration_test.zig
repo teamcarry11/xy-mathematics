@@ -9,7 +9,7 @@
 const std = @import("std");
 const testing = std.testing;
 const grain_database = @import("grain_database");
-const grain_os = @import("grain_os");
+const grain_core = @import("grain_core");
 const StorageEngine = grain_database.StorageEngine;
 const Schema = grain_database.Schema;
 const Graph = grain_database.Graph;
@@ -52,19 +52,19 @@ test "database rate limit middleware allows request" {
 
     set_database_context(&context);
 
-    var req = grain_os.api_server.HttpRequest.init();
+    var req = grain_core.api_server.HttpRequest.init();
     _ = req.add_header("X-Client-ID", "test-client");
 
-    var res = grain_os.api_server.HttpResponse.init();
+    var res = grain_core.api_server.HttpResponse.init();
 
     const allowed = database_rate_limit_middleware(&req, &res);
     try testing.expect(allowed == true);
-    try testing.expect(res.status == grain_os.api_server.HttpStatus.ok);
+    try testing.expect(res.status == grain_core.api_server.HttpStatus.ok);
 }
 
 test "database cors middleware adds headers" {
-    var req = grain_os.api_server.HttpRequest.init();
-    var res = grain_os.api_server.HttpResponse.init();
+    var req = grain_core.api_server.HttpRequest.init();
+    var res = grain_core.api_server.HttpResponse.init();
 
     const allowed = database_cors_middleware(&req, &res);
     try testing.expect(allowed == true);
@@ -72,28 +72,28 @@ test "database cors middleware adds headers" {
 }
 
 test "database auth middleware checks authorization" {
-    var req = grain_os.api_server.HttpRequest.init();
+    var req = grain_core.api_server.HttpRequest.init();
     _ = req.add_header("Authorization", "Bearer test-token");
-    var res = grain_os.api_server.HttpResponse.init();
+    var res = grain_core.api_server.HttpResponse.init();
 
     const allowed = database_auth_middleware(&req, &res);
     try testing.expect(allowed == true);
 }
 
 test "database auth middleware rejects missing authorization" {
-    var req = grain_os.api_server.HttpRequest.init();
-    var res = grain_os.api_server.HttpResponse.init();
+    var req = grain_core.api_server.HttpRequest.init();
+    var res = grain_core.api_server.HttpResponse.init();
 
     const allowed = database_auth_middleware(&req, &res);
     try testing.expect(allowed == false);
-    try testing.expect(res.status == grain_os.api_server.HttpStatus.unauthorized);
+    try testing.expect(res.status == grain_core.api_server.HttpStatus.unauthorized);
 }
 
 test "database content type middleware validates json" {
-    var req = grain_os.api_server.HttpRequest.init();
-    req.method = grain_os.api_server.HttpMethod.post;
+    var req = grain_core.api_server.HttpRequest.init();
+    req.method = grain_core.api_server.HttpMethod.post;
     _ = req.add_header("Content-Type", "application/json");
-    var res = grain_os.api_server.HttpResponse.init();
+    var res = grain_core.api_server.HttpResponse.init();
 
     const allowed = database_content_type_middleware(&req, &res);
     try testing.expect(allowed == true);
@@ -106,9 +106,9 @@ test "register database middleware" {
         count: *u32,
         fn register(
             self: *@This(),
-            method: grain_os.api_server.HttpMethod,
+            method: grain_core.api_server.HttpMethod,
             path: []const u8,
-            middleware: grain_os.api_server.Middleware,
+            middleware: grain_core.api_server.Middleware,
         ) bool {
             _ = method;
             _ = path;
@@ -123,9 +123,9 @@ test "register database middleware" {
         mock_ptr: *MockRegister,
         fn call(
             self: *const @This(),
-            method: grain_os.api_server.HttpMethod,
+            method: grain_core.api_server.HttpMethod,
             path: []const u8,
-            middleware: grain_os.api_server.Middleware,
+            middleware: grain_core.api_server.Middleware,
         ) bool {
             return self.mock_ptr.register(method, path, middleware);
         }

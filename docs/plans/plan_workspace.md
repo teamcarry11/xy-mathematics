@@ -15,7 +15,7 @@ Grain Workspace Agent is responsible for building desktop applications for Grain
 - System management tools (Monitor, Package Manager)
 - Development tools (Terminal Plus, DevTools)
 - Network utilities (Network Tools)
-- Integration with Grain OS compositor and system services
+- Integration with Grain Core compositor and system services
 
 ---
 
@@ -123,8 +123,8 @@ Grain Workspace Agent is responsible for building desktop applications for Grain
 - Alert system (notifications for resource thresholds)
 
 **Dependencies**:
-- Uses Grain OS system APIs (`src/grain_os/process_manager.zig`, `src/grain_os/resource_monitor.zig`)
-- Uses Grain OS compositor for window management
+- Uses Grain OS system APIs (`src/grain_core/process_manager.zig`, `src/grain_core/resource_monitor.zig`)
+- Uses Grain Core compositor for window management
 - Uses kernel syscalls for process enumeration and resource queries
 
 **Grain Style Compliance**:
@@ -158,7 +158,7 @@ Grain Workspace Agent is responsible for building desktop applications for Grain
 
 **Dependencies**:
 - Uses Grain Terminal (`src/grain_terminal/`) as foundation
-- Uses Grain OS compositor for window management
+- Uses Grain Core compositor for window management
 - Uses kernel syscalls for process management (`spawn`, `exit`, `wait`)
 
 **Grain Style Compliance**:
@@ -191,8 +191,8 @@ Grain Workspace Agent is responsible for building desktop applications for Grain
 - Package information (descriptions, versions, dependencies)
 
 **Dependencies**:
-- Uses Grain OS package manager (`src/grain_os/package_manager.zig`)
-- Uses Grain OS compositor for window management
+- Uses Grain OS package manager (`src/grain_core/package_manager.zig`)
+- Uses Grain Core compositor for window management
 - Uses kernel file I/O syscalls for package installation
 
 **Grain Style Compliance**:
@@ -228,8 +228,8 @@ Grain Workspace Agent is responsible for building desktop applications for Grain
 - Integration with Grain OS FileManager
 
 **Dependencies**:
-- Uses Grain OS file manager (`src/grain_os/file_manager.zig`)
-- Uses Grain OS compositor for window management
+- Uses Grain OS file manager (`src/grain_core/file_manager.zig`)
+- Uses Grain Core compositor for window management
 - Uses kernel file I/O syscalls (`open`, `read`, `write`, `close`, `opendir`, `readdir`)
 
 **Grain Style Compliance**:
@@ -267,8 +267,8 @@ Grain Workspace Agent is responsible for building desktop applications for Grain
 - DNS tools (lookup, reverse lookup, cache management)
 
 **Dependencies**:
-- Uses Grain OS network manager (`src/grain_os/network_manager.zig`)
-- Uses Grain OS compositor for window management
+- Uses Grain OS network manager (`src/grain_core/network_manager.zig`)
+- Uses Grain Core compositor for window management
 - Uses kernel network syscalls (when available)
 
 **Grain Style Compliance**:
@@ -304,7 +304,7 @@ Grain Workspace Agent is responsible for building desktop applications for Grain
 **Dependencies**:
 - Works with Aurora IDE (`src/aurora_*.zig`) — integration planned
 - Works with Grain Skate components — integration planned
-- Uses Grain OS compositor for window management
+- Uses Grain Core compositor for window management
 - Uses kernel syscalls for process debugging (`spawn`, `kill`, `signal`)
 
 **Grain Style Compliance**:
@@ -331,7 +331,7 @@ All planned phases for Grain Workspace Agent have been completed:
 - Phase 9: Grain DevTools ✅
 
 **Future Enhancements**:
-- UI integration with Grain OS compositor
+- UI integration with Grain Core compositor
 - Enhanced code formatter implementations
 - Full Aurora IDE integration
 - Advanced debugging features
@@ -349,8 +349,8 @@ All planned phases for Grain Workspace Agent have been completed:
 - DNS tools (lookup, reverse lookup, cache management)
 
 **Dependencies**:
-- Uses Grain OS network manager (`src/grain_os/network_manager.zig`)
-- Uses Grain OS compositor for window management
+- Uses Grain OS network manager (`src/grain_core/network_manager.zig`)
+- Uses Grain Core compositor for window management
 - Uses kernel network syscalls (when available)
 
 ---
@@ -370,23 +370,23 @@ All planned phases for Grain Workspace Agent have been completed:
 
 **Dependencies**:
 - Works with Aurora IDE (`src/aurora_*.zig`) and Grain Skate
-- Uses Grain OS compositor for window management
+- Uses Grain Core compositor for window management
 - Uses kernel syscalls for process debugging (`spawn`, `kill`, `signal`)
 
 ---
 
 ## Coordination Points
 
-### With Grain OS Agent
+### With Grain Core Agent
 
 **Shared Components**:
 - Compositor for window management
 - System services (Process Manager, Resource Monitor, Package Manager, File Manager, Network Manager)
 
 **Integration Points**:
-- All applications use Grain OS compositor for window management
+- All applications use Grain Core compositor for window management
 - Applications use Grain OS system services for functionality
-- Applications use kernel syscalls via Grain OS compositor
+- Applications use kernel syscalls via Grain Core compositor
 
 **Coordination Tasks**:
 - Coordinate on network manager API for Network Tools application
@@ -395,7 +395,7 @@ All planned phases for Grain Workspace Agent have been completed:
 
 **Future Coordination**:
 - **Network Tools Application** (Planned — Phase 8):
-  - Uses Grain OS network manager (`src/grain_os/network_manager.zig`)
+  - Uses Grain OS network manager (`src/grain_core/network_manager.zig`)
   - Uses kernel network syscalls (when available)
   - Coordination needed on network manager API
 
@@ -411,10 +411,10 @@ All planned phases for Grain Workspace Agent have been completed:
 - Both use Grain Silo for storage
 - No conflicts expected — separate applications
 
-### With Vantage VM Basin Kernel Agent
+### With Vantage Agent
 
 **Kernel Integration**:
-- Applications use kernel syscalls via Grain OS compositor:
+- Applications use kernel syscalls via Grain Core compositor:
   - File I/O: `open`, `read`, `write`, `close`, `unlink`, `rename`
   - Process management: `spawn`, `exit`, `wait`, `kill`
   - IPC channels: `channel_create`, `channel_send`, `channel_recv`
@@ -423,8 +423,8 @@ All planned phases for Grain Workspace Agent have been completed:
 
 **Coordination Notes**:
 - All required syscalls are implemented and ready
-- Applications use syscalls via Grain OS compositor (not directly)
-- No direct coordination needed — Grain OS Agent handles kernel integration
+- Applications use syscalls via Grain Core compositor (not directly)
+- No direct coordination needed — Grain Core Agent handles kernel integration
 
 ---
 
@@ -434,9 +434,9 @@ All planned phases for Grain Workspace Agent have been completed:
 - **Master Plan**: [`docs/plan.md`](../plan.md)
 - **Grain Workspace Agent Prompt**: [`docs/grain_workspace_agent_prompt.md`](../grain_workspace_agent_prompt.md)
 - **Grain Workspace Agent Background**: [`docs/grain_workspace_agent_background.md`](../grain_workspace_agent_background.md)
-- **Grain OS Agent Plan**: [`docs/plans/plan_os.md`](plan_os.md) — Example structure
+- **Grain Core Agent Plan**: [`docs/plans/plan_core.md`](plan_core.md) — Example structure
 
 ---
 
-**Note**: This plan focuses on desktop applications for Grain OS. All applications integrate with the Grain OS compositor and system services, providing a cohesive user experience.
+**Note**: This plan focuses on desktop applications for Grain OS. All applications integrate with the Grain Core compositor and system services, providing a cohesive user experience.
 

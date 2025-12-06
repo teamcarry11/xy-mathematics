@@ -1,7 +1,7 @@
-# Grain OS Agent: Next Work Priorities
+# Grain Core Agent: Next Work Priorities
 
 **Date**: 2025-12-03-163301-pst  
-**Agent**: Grain OS Agent  
+**Agent**: Grain Core Agent  
 **Status**: Planning Next Phases  
 **Context**: Phases 52-58 Complete, Database Agent and Mobile Agent Need Infrastructure
 
@@ -34,7 +34,7 @@
 
 **Why**: Grain Database Agent needs REST API server for mobile backend. Grain Mobile Agent needs API endpoints for mobile apps.
 
-**Module**: `src/grain_os/api_server.zig`
+**Module**: `src/grain_core/api_server.zig`
 
 **Features**:
 1. **HTTP Server**:
@@ -76,7 +76,7 @@
 - All compiler warnings enabled
 
 **Deliverables**:
-- `src/grain_os/api_server.zig` module
+- `src/grain_core/api_server.zig` module
 - REST endpoint routing
 - JSON request/response handling
 - Middleware support
@@ -91,7 +91,7 @@
 
 **Why**: Grain Mobile Agent needs authentication for mobile apps. Grain Database Agent needs authentication for API endpoints.
 
-**Module**: `src/grain_os/auth_service.zig`
+**Module**: `src/grain_core/auth_service.zig`
 
 **Features**:
 1. **OAuth 2.0 Integration**:
@@ -146,7 +146,7 @@
 - Secure cryptographic operations (use Zig crypto libraries)
 
 **Deliverables**:
-- `src/grain_os/auth_service.zig` module
+- `src/grain_core/auth_service.zig` module
 - OAuth 2.0 integration
 - JWT token management
 - Password authentication
@@ -166,7 +166,7 @@
 
 **Why**: Both Database Agent and Mobile Agent need enhanced network capabilities (TCP/UDP, WebSocket).
 
-**Current State**: `src/grain_os/network_manager.zig` exists but only handles interface management.
+**Current State**: `src/grain_core/network_manager.zig` exists but only handles interface management.
 
 **Enhancements**:
 
@@ -204,7 +204,7 @@
    - TLS handshake
    - TLS error handling
 
-**Module**: `src/grain_os/network_stack.zig` (new) or enhance `network_manager.zig`
+**Module**: `src/grain_core/network_stack.zig` (new) or enhance `network_manager.zig`
 
 **Grain Style Requirements**:
 - All functions use `grain_case` naming
@@ -215,7 +215,7 @@
 - All compiler warnings enabled
 
 **Deliverables**:
-- Enhanced `src/grain_os/network_manager.zig` or new `network_stack.zig`
+- Enhanced `src/grain_core/network_manager.zig` or new `network_stack.zig`
 - TCP/UDP socket support
 - HTTP client/server
 - WebSocket support
@@ -260,7 +260,7 @@
    - Backup file format
    - Backup scheduling
 
-**Module**: `src/grain_os/file_storage.zig` (new) or enhance kernel file I/O
+**Module**: `src/grain_core/file_storage.zig` (new) or enhance kernel file I/O
 
 **Grain Style Requirements**:
 - All functions use `grain_case` naming
@@ -271,7 +271,7 @@
 - All compiler warnings enabled
 
 **Deliverables**:
-- `src/grain_os/file_storage.zig` module (or kernel enhancements)
+- `src/grain_core/file_storage.zig` module (or kernel enhancements)
 - Database file format support
 - Transaction log file management
 - Index file management
@@ -463,8 +463,8 @@
 - **Grain Database Agent Prompt**: [`docs/grain_database_agent_prompt.md`](grain_database_agent_prompt.md) - Database agent requirements
 - **Grain Mobile Agent Prompt**: [`docs/grain_mobile_agent_prompt.md`](grain_mobile_agent_prompt.md) - Mobile agent requirements
 - **HTTP Client**: `src/dream_http_client.zig` - HTTP patterns
-- **Network Manager**: `src/grain_os/network_manager.zig` - Network infrastructure
-- **Compositor**: `src/grain_os/compositor.zig` - System integration point
+- **Network Manager**: `src/grain_core/network_manager.zig` - Network infrastructure
+- **Compositor**: `src/grain_core/compositor.zig` - System integration point
 
 ---
 

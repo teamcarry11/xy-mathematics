@@ -23,46 +23,46 @@ Implement River-like dynamic tiling and window management features for Grain OS,
 ### 1. Dynamic Tiling
 - **River Feature**: Automatic window tiling based on layout
 - **Grain Implementation**: Custom tiling algorithm in Zig
-- **Files**: `src/grain_os/tiling.zig`
+- **Files**: `src/grain_core/tiling.zig`
 - **Grain Style**: Bounded allocations, explicit types (u32/u64), no recursion
 
 ### 2. Layout Generators
 - **River Feature**: Modular layout generators (separate processes)
 - **Grain Implementation**: Layout generator API, built-in layouts
-- **Files**: `src/grain_os/layout.zig`, `src/grain_os/layouts/`
+- **Files**: `src/grain_core/layout.zig`, `src/grain_core/layouts/`
 - **Grain Style**: Static allocation, bounded operations
 
 ### 3. Runtime Configuration (riverctl-like)
 - **River Feature**: `riverctl` command-line tool for runtime configuration
 - **Grain Implementation**: `grainctl` or IPC-based configuration API
-- **Files**: `src/grain_os/config.zig`, `src/grain_os/ipc.zig`
+- **Files**: `src/grain_core/config.zig`, `src/grain_core/ipc.zig`
 - **Grain Style**: Explicit types, bounded message sizes
 
 ### 4. Window Management Policy Separation
 - **River Feature**: Policy separated from compositor core (0.4.0 roadmap)
 - **Grain Implementation**: Clean separation from the start
-- **Files**: `src/grain_os/policy.zig`, `src/grain_os/compositor.zig`
+- **Files**: `src/grain_core/policy.zig`, `src/grain_core/compositor.zig`
 - **Grain Style**: Single responsibility, explicit interfaces
 
 ### 5. Moonglow Keybindings
 - **River Feature**: Customizable keybindings
 - **Grain Implementation**: Keybinding system with Moonglow defaults
-- **Files**: `src/grain_os/keybindings.zig`
+- **Files**: `src/grain_core/keybindings.zig`
 - **Grain Style**: Static keybinding table, bounded operations
 
 ## Implementation Phases
 
 ### Phase 2.1: Dynamic Tiling Foundation ✅ **COMPLETE**
-- ✅ Basic compositor structure (`src/grain_os/compositor.zig`)
-- ✅ Wayland protocol structures (`src/grain_os/wayland/protocol.zig`)
-- ✅ Tiling algorithm (vertical/horizontal splits) (`src/grain_os/tiling.zig`)
+- ✅ Basic compositor structure (`src/grain_core/compositor.zig`)
+- ✅ Wayland protocol structures (`src/grain_core/wayland/protocol.zig`)
+- ✅ Tiling algorithm (vertical/horizontal splits) (`src/grain_core/tiling.zig`)
 - ✅ Window tree structure (container-based, not binary tree - more flexible)
 - ✅ Layout calculation (iterative, stack-based traversal - no recursion)
 - ✅ Tag system (bitmask-based, 32 tags max)
 - ✅ Comprehensive tests (`tests/053_grain_os_tiling_test.zig`)
 
 ### Phase 2.2: Layout Generators ✅ **COMPLETE**
-- ✅ Layout generator API (`src/grain_os/layout.zig`)
+- ✅ Layout generator API (`src/grain_core/layout.zig`)
 - ✅ Built-in layouts (tall, wide, grid, monocle)
 - ✅ Layout registry (manages available layouts)
 - ✅ Layout function interface (vtable-style function pointers)

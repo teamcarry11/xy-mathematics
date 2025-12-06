@@ -7,7 +7,7 @@
 //! 2025-12-04-131701-pst: Active implementation
 
 const std = @import("std");
-const grain_os = @import("grain_os");
+const grain_core = @import("grain_core");
 
 // Bounded: Max breakpoints (explicit limit)
 // 2025-12-04-131701-pst: Active constant

@@ -17,14 +17,14 @@ docs/
 ├── plan.md                    # Master overview (high-level, all agents)
 ├── tasks.md                   # Master task list (high-level, all agents)
 ├── plans/
-│   ├── plan_os.md            # Grain OS Agent detailed plan
+│   ├── plan_core.md            # Grain Core Agent detailed plan
 │   ├── plan_aurora.md        # Aurora Agent detailed plan
 │   ├── plan_skate.md         # Skate Agent detailed plan
 │   ├── plan_workspace.md     # Workspace Agent detailed plan
 │   ├── plan_kernel.md        # Kernel Agent detailed plan
 │   └── plan_database.md     # YOUR FILE (to be created)
 └── tasks/
-    ├── tasks_os.md           # Grain OS Agent detailed tasks
+    ├── tasks_core.md           # Grain Core Agent detailed tasks
     ├── tasks_aurora.md       # Aurora Agent detailed tasks
     ├── tasks_skate.md        # Skate Agent detailed tasks
     ├── tasks_workspace.md   # Workspace Agent detailed tasks
@@ -45,15 +45,15 @@ docs/
 
 ## Your Task
 
-Create two files following the Grain OS Agent's example:
+Create two files following the Grain Core Agent's example:
 
 1. **`docs/plans/plan_database.md`** — Detailed development plan
 2. **`docs/tasks/tasks_database.md`** — Detailed task list
 
 ### Reference Files
 
-- **Example Plan**: [`docs/plans/plan_os.md`](plans/plan_os.md) — Grain OS Agent plan (448 lines)
-- **Example Tasks**: [`docs/tasks/tasks_os.md`](tasks/tasks_os.md) — Grain OS Agent tasks (188 lines)
+- **Example Plan**: [`docs/plans/plan_core.md`](plans/plan_core.md) — Grain Core Agent plan (448 lines)
+- **Example Tasks**: [`docs/tasks/tasks_core.md`](tasks/tasks_core.md) — Grain Core Agent tasks (188 lines)
 - **Master Plan**: [`docs/plan.md`](plan.md) — Master overview (236 lines)
 - **Master Tasks**: [`docs/tasks.md`](tasks.md) — Master task list (195 lines)
 
@@ -133,7 +133,7 @@ Create two files following the Grain OS Agent's example:
 
 ## Coordination Points
 
-### With Grain OS Agent
+### With Grain Core Agent
 
 **Integration Points**:
 - API Server (Phase 59) for REST API integration
@@ -142,7 +142,7 @@ Create two files following the Grain OS Agent's example:
 - Authentication Service (Phase 60) for secure API access
 
 **Coordination Notes**:
-- Waiting for Grain OS Agent's API Server (Phase 59) to integrate REST API
+- Waiting for Grain Core Agent's API Server (Phase 59) to integrate REST API
 - Database persistence depends on File Storage (Phase 62)
 - Network capabilities depend on Network Stack (Phase 61)
 
@@ -391,7 +391,7 @@ Create two files following the Grain OS Agent's example:
 - CORS support (allow cross-origin requests)
 - API request/response structures
 - Middleware support (authentication, logging, error handling)
-- Integration with Grain OS Agent's API Server (Phase 59)
+- Integration with Grain Core Agent's API Server (Phase 59)
 
 **Files**:
 - `src/grain_database/api.zig` — REST API implementation
@@ -405,48 +405,48 @@ Create two files following the Grain OS Agent's example:
 - Max 100 characters per line
 
 **Integration Status**:
-- API layer complete, waiting for Grain OS Agent's API Server (Phase 59)
+- API layer complete, waiting for Grain Core Agent's API Server (Phase 59)
 - Ready for integration when API Server is available
 
 ---
 
 ## Coordination with Other Agents
 
-### With Grain OS Agent
+### With Grain Core Agent
 
 **Integration Points**:
-- **API Server (Phase 59)**: Database Agent's REST API integrates with Grain OS Agent's API Server
+- **API Server (Phase 59)**: Database Agent's REST API integrates with Grain Core Agent's API Server
   - Database Agent provides API handlers
-  - Grain OS Agent provides HTTP server infrastructure
+  - Grain Core Agent provides HTTP server infrastructure
   - Coordination on API contracts and middleware
-- **File Storage (Phase 62)**: Database persistence depends on Grain OS Agent's file storage
+- **File Storage (Phase 62)**: Database persistence depends on Grain Core Agent's file storage
   - Database files (tables, indexes, WAL)
   - Transaction log persistence
   - Backup/restore functionality
-- **Network Stack (Phase 61)**: Network capabilities depend on Grain OS Agent's network stack
+- **Network Stack (Phase 61)**: Network capabilities depend on Grain Core Agent's network stack
   - TCP/UDP support for API server
   - WebSocket support (for livestream coordination)
   - TLS support (for secure API endpoints)
-- **Authentication Service (Phase 60)**: Secure API access depends on Grain OS Agent's authentication
+- **Authentication Service (Phase 60)**: Secure API access depends on Grain Core Agent's authentication
   - JWT token validation
   - OAuth integration
   - 2FA support
 
 **Coordination Notes**:
-- Database Agent's REST API is complete, waiting for Grain OS Agent's API Server (Phase 59)
+- Database Agent's REST API is complete, waiting for Grain Core Agent's API Server (Phase 59)
 - Database persistence depends on File Storage (Phase 62)
 - Network capabilities depend on Network Stack (Phase 61)
 - Secure API access depends on Authentication Service (Phase 60)
 
 **Recent Coordination**:
 - Database Agent completed Phase 5 (API and Integration) and is ready for integration
-- Waiting for Grain OS Agent to complete Phase 59 (HTTP/REST API Server)
+- Waiting for Grain Core Agent to complete Phase 59 (HTTP/REST API Server)
 
 **Future Coordination**:
-- **API Integration**: When Grain OS Agent completes Phase 59, integrate Database Agent's REST API
-- **File Storage**: When Grain OS Agent completes Phase 62, integrate database persistence
-- **Network Stack**: When Grain OS Agent completes Phase 61, integrate network capabilities
-- **Authentication**: When Grain OS Agent completes Phase 60, integrate secure API access
+- **API Integration**: When Grain Core Agent completes Phase 59, integrate Database Agent's REST API
+- **File Storage**: When Grain Core Agent completes Phase 62, integrate database persistence
+- **Network Stack**: When Grain Core Agent completes Phase 61, integrate network capabilities
+- **Authentication**: When Grain Core Agent completes Phase 60, integrate secure API access
 
 ### With Grain Mobile Agent
 
@@ -463,10 +463,10 @@ Create two files following the Grain OS Agent's example:
 **Coordination Notes**:
 - Mobile Agent depends on Database Agent's REST API
 - Database Agent provides backend for mobile applications
-- Both agents depend on Grain OS Agent's API Server (Phase 59)
+- Both agents depend on Grain Core Agent's API Server (Phase 59)
 
 **Future Coordination**:
-- **API Integration**: When Grain OS Agent completes Phase 59, Mobile Agent can connect to Database Agent's REST API
+- **API Integration**: When Grain Core Agent completes Phase 59, Mobile Agent can connect to Database Agent's REST API
 - **Data Models**: Coordinate on data models for mobile app (user profiles, policy stances, etc.)
 - **Authentication**: Coordinate on authentication flow (JWT, OAuth, 2FA)
 
@@ -485,7 +485,7 @@ Create two files following the Grain OS Agent's example:
 **Coordination Notes**:
 - Database uses kernel file I/O for storage
 - Network capabilities depend on kernel network syscalls (not yet implemented)
-- No direct coordination needed — Grain OS Agent handles kernel integration
+- No direct coordination needed — Grain Core Agent handles kernel integration
 
 ---
 
@@ -561,26 +561,26 @@ Extract:
 
 ### Planned Phases
 
-**Phase 6: Integration with Grain OS Agent API Server** (PLANNED)
-- Integrate Database Agent's REST API with Grain OS Agent's API Server (Phase 59)
+**Phase 6: Integration with Grain Core Agent API Server** (PLANNED)
+- Integrate Database Agent's REST API with Grain Core Agent's API Server (Phase 59)
 - API endpoint registration
 - Middleware integration (authentication, logging)
 - API testing and validation
 
 **Phase 7: Database Persistence** (PLANNED)
-- Integrate with Grain OS Agent's File Storage (Phase 62)
+- Integrate with Grain Core Agent's File Storage (Phase 62)
 - Database file persistence
 - Transaction log persistence
 - Backup/restore functionality
 
 **Phase 8: Network Integration** (PLANNED)
-- Integrate with Grain OS Agent's Network Stack (Phase 61)
+- Integrate with Grain Core Agent's Network Stack (Phase 61)
 - TCP/UDP support for API server
 - WebSocket support (for livestream coordination)
 - TLS support (for secure API endpoints)
 
 **Phase 9: Authentication Integration** (PLANNED)
-- Integrate with Grain OS Agent's Authentication Service (Phase 60)
+- Integrate with Grain Core Agent's Authentication Service (Phase 60)
 - JWT token validation
 - OAuth integration
 - 2FA support
@@ -611,7 +611,7 @@ Extract:
 ### Cross-References
 
 - Link to master files: `[Master Plan](../plan.md)`
-- Link to other agent files: `[Grain OS Plan](../plans/plan_os.md)`
+- Link to other agent files: `[Grain OS Plan](../plans/plan_core.md)`
 - Link to shared docs: `[Grain Style](../grain_style.md)`
 - Link to agent prompt: `[Grain Database Agent Prompt](../grain_database_agent_prompt.md)`
 
@@ -620,8 +620,8 @@ Extract:
 ## Steps to Complete
 
 1. **Read Reference Files**:
-   - Read `docs/plans/plan_os.md` to understand structure
-   - Read `docs/tasks/tasks_os.md` to understand task format
+   - Read `docs/plans/plan_core.md` to understand structure
+   - Read `docs/tasks/tasks_core.md` to understand task format
    - Read `docs/documentation_structure_recommendation.md` for rationale
    - Read `docs/grain_database_agent_prompt.md` for database details
 
@@ -632,13 +632,13 @@ Extract:
 
 3. **Create Plan File**:
    - Create `docs/plans/plan_database.md`
-   - Follow structure from `plan_os.md`
+   - Follow structure from `plan_core.md`
    - Include completed phases (1-5), current work, planned phases (6-10)
-   - Include coordination points (especially with Grain OS Agent and Mobile Agent)
+   - Include coordination points (especially with Grain Core Agent and Mobile Agent)
 
 4. **Create Tasks File**:
    - Create `docs/tasks/tasks_database.md`
-   - Follow structure from `tasks_os.md`
+   - Follow structure from `tasks_core.md`
    - Include task lists for each phase
    - Include coordination tasks
 
@@ -662,7 +662,7 @@ After creating your files, the master `docs/plan.md` should have an entry like:
 ### 7. Grain Database Agent
 
 **Status**: Active — Database system  
-**Current Work**: Integration with Grain OS Agent API Server (Phase 59)  
+**Current Work**: Integration with Grain Core Agent API Server (Phase 59)  
 **Details**: See [`docs/plans/plan_database.md`](plans/plan_database.md)
 
 **Recent Progress**:
@@ -672,7 +672,7 @@ After creating your files, the master `docs/plan.md` should have an entry like:
 - Phase 4: Full-Text Search ✅ (2025-12-03-173339-pst)
 - Phase 5: API and Integration ✅ (2025-12-03-175009-pst)
 
-**Provides**: Database backend (for Mobile Agent), REST API (via Grain OS Agent)
+**Provides**: Database backend (for Mobile Agent), REST API (via Grain Core Agent)
 ```
 
 ---
@@ -689,17 +689,17 @@ After creating your files, the master `docs/plan.md` should have an entry like:
 
 2. **What is your current work?**
    - Current phase, status, priority, estimated time
-   - Waiting for Grain OS Agent's API Server (Phase 59) for integration
+   - Waiting for Grain Core Agent's API Server (Phase 59) for integration
 
 3. **What phases are planned?**
-   - Phase 6: Integration with Grain OS Agent API Server (PLANNED)
+   - Phase 6: Integration with Grain Core Agent API Server (PLANNED)
    - Phase 7: Database Persistence (PLANNED)
    - Phase 8: Network Integration (PLANNED)
    - Phase 9: Authentication Integration (PLANNED)
    - Phase 10: AArch64 Cloud Deployment (PLANNED)
 
 4. **What do you coordinate with other agents?**
-   - Grain OS Agent (API Server, File Storage, Network Stack, Authentication Service)
+   - Grain Core Agent (API Server, File Storage, Network Stack, Authentication Service)
    - Grain Mobile Agent (REST API, database backend)
    - Kernel Agent (file I/O, network syscalls)
 
@@ -715,7 +715,7 @@ After creating your files, the master `docs/plan.md` should have an entry like:
 ✅ Tasks file created (`docs/tasks/tasks_database.md`)  
 ✅ Files follow structure from reference files  
 ✅ Recent work (all 5 completed phases) included  
-✅ Coordination points documented (especially with Grain OS Agent and Mobile Agent)  
+✅ Coordination points documented (especially with Grain Core Agent and Mobile Agent)  
 ✅ Master files updated (if needed)  
 ✅ File sizes reasonable (~400-600 lines for plan, ~300-500 for tasks)  
 ✅ Cross-references work  
@@ -726,8 +726,8 @@ After creating your files, the master `docs/plan.md` should have an entry like:
 ## References
 
 - **Documentation Structure**: [`docs/documentation_structure_recommendation.md`](documentation_structure_recommendation.md)
-- **Grain OS Agent Plan**: [`docs/plans/plan_os.md`](plans/plan_os.md) — Example structure
-- **Grain OS Agent Tasks**: [`docs/tasks/tasks_os.md`](tasks/tasks_os.md) — Example structure
+- **Grain Core Agent Plan**: [`docs/plans/plan_core.md`](plans/plan_core.md) — Example structure
+- **Grain Core Agent Tasks**: [`docs/tasks/tasks_core.md`](tasks/tasks_core.md) — Example structure
 - **Master Plan**: [`docs/plan.md`](plan.md) — Master overview
 - **Master Tasks**: [`docs/tasks.md`](tasks.md) — Master task list
 - **Grain Style**: [`docs/grain_style.md`](grain_style.md) — Coding principles
@@ -736,7 +736,7 @@ After creating your files, the master `docs/plan.md` should have an entry like:
 
 ---
 
-**Your Mission**: Create `docs/plans/plan_database.md` and `docs/tasks/tasks_database.md` following the hybrid documentation structure, including your recent work (all 5 completed phases) and coordination points with Grain OS Agent, Mobile Agent, and Kernel Agent.
+**Your Mission**: Create `docs/plans/plan_database.md` and `docs/tasks/tasks_database.md` following the hybrid documentation structure, including your recent work (all 5 completed phases) and coordination points with Grain Core Agent, Mobile Agent, and Kernel Agent.
 
 **Remember**: Be detailed, be specific, be coordinated. The goal is to have focused agent files while maintaining coordination through master files. Your database is the backend foundation for mobile applications and the Grain OS ecosystem!
 

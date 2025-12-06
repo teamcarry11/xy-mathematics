@@ -17,11 +17,11 @@ docs/
 ├── plan.md                    # Master overview (high-level, all agents)
 ├── tasks.md                   # Master task list (high-level, all agents)
 ├── plans/
-│   ├── plan_os.md            # Grain OS Agent detailed plan
+│   ├── plan_core.md            # Grain Core Agent detailed plan
 │   ├── plan_aurora.md        # Aurora Agent detailed plan
 │   └── plan_skate.md         # YOUR FILE (to be created)
 └── tasks/
-    ├── tasks_os.md           # Grain OS Agent detailed tasks
+    ├── tasks_core.md           # Grain Core Agent detailed tasks
     ├── tasks_aurora.md       # Aurora Agent detailed tasks
     └── tasks_skate.md        # YOUR FILE (to be created)
 ```
@@ -39,15 +39,15 @@ docs/
 
 ## Your Task
 
-Create two files following the Grain OS Agent's example:
+Create two files following the Grain Core Agent's example:
 
 1. **`docs/plans/plan_skate.md`** — Detailed development plan
 2. **`docs/tasks/tasks_skate.md`** — Detailed task list
 
 ### Reference Files
 
-- **Example Plan**: [`docs/plans/plan_os.md`](plans/plan_os.md) — Grain OS Agent plan (448 lines)
-- **Example Tasks**: [`docs/tasks/tasks_os.md`](tasks/tasks_os.md) — Grain OS Agent tasks (188 lines)
+- **Example Plan**: [`docs/plans/plan_core.md`](plans/plan_core.md) — Grain Core Agent plan (448 lines)
+- **Example Tasks**: [`docs/tasks/tasks_core.md`](tasks/tasks_core.md) — Grain Core Agent tasks (188 lines)
 - **Master Plan**: [`docs/plan.md`](plan.md) — Master overview (236 lines)
 - **Master Tasks**: [`docs/tasks.md`](tasks.md) — Master task list (195 lines)
 
@@ -121,7 +121,7 @@ Create two files following the Grain OS Agent's example:
 
 ## Coordination Points
 
-### With Grain OS Agent
+### With Grain Core Agent
 
 **Shared Components**:
 - [Shared components]
@@ -233,7 +233,7 @@ Create two files following the Grain OS Agent's example:
 **Coordination**:
 - Phase 1.1: Shared font renderer created ✅
 - Phase 1.2: Aurora Agent migrated ✅ (2025-12-03-162659-PST)
-- Phase 1.3: Grain OS Agent ready to migrate (see `docs/grain_os_font_renderer_coordination.md`)
+- Phase 1.3: Grain Core Agent ready to migrate (see `docs/grain_os_font_renderer_coordination.md`)
 - Phase 1.4: Grain Skate Agent to migrate `src/grain_skate/editor_renderer.zig` (PLANNED)
 
 ---
@@ -300,7 +300,7 @@ Create two files following the Grain OS Agent's example:
 
 ### Completed: Grain Skate Main Entry Point ✅
 
-**Date**: Recent (from Grain OS Agent work)
+**Date**: Recent (from Grain Core Agent work)
 
 **Completed Work**:
 1. **Main entry point** (`src/grain_skate_main.zig`):
@@ -317,18 +317,18 @@ Create two files following the Grain OS Agent's example:
 
 ## Coordination with Other Agents
 
-### With Grain OS Agent
+### With Grain Core Agent
 
 **Shared Module Refactoring**:
 - **Phase 1.1**: Shared font renderer created ✅ (Grain Skate Agent)
 - **Phase 1.2**: Aurora Agent migrated ✅
-- **Phase 1.3**: Grain OS Agent ready to migrate (coordination document created)
+- **Phase 1.3**: Grain Core Agent ready to migrate (coordination document created)
 - **Phase 1.4**: Grain Skate Agent to migrate `src/grain_skate/editor_renderer.zig` (PLANNED)
 
 **Coordination Notes**:
 - Grain Skate Agent created shared font renderer
 - Aurora Agent completed migration
-- Grain OS Agent is aware and ready (see `docs/grain_os_font_renderer_coordination.md`)
+- Grain Core Agent is aware and ready (see `docs/grain_os_font_renderer_coordination.md`)
 - Grain Skate Agent should migrate its own editor renderer next
 
 **Future Coordination**:
@@ -348,7 +348,7 @@ Create two files following the Grain OS Agent's example:
   - Coordination needed on component API
 
 **Integration Points**:
-- Grain Skate can integrate with Grain OS compositor (optional)
+- Grain Skate can integrate with Grain Core compositor (optional)
 - Grain Skate can use Grain OS system services (optional)
 - Grain Skate uses kernel syscalls for file I/O (when running on Grain OS)
 
@@ -385,7 +385,7 @@ Create two files following the Grain OS Agent's example:
 **Coordination Notes**:
 - All required syscalls are implemented and ready
 - See `docs/grain_terminal_kernel_ready.md` for API contracts
-- Use syscall function pointers (similar to Grain OS compositor)
+- Use syscall function pointers (similar to Grain Core compositor)
 
 ---
 
@@ -428,7 +428,7 @@ Extract:
 **Phase 1: Font Rendering Unification** ✅ **COMPLETE**
 - ✅ Phase 1.1: Created shared font renderer (`src/shared/font_renderer.zig`)
 - ✅ Phase 1.2: Aurora Agent migrated (2025-12-03-162659-PST)
-- ⏳ Phase 1.3: Grain OS Agent ready to migrate
+- ⏳ Phase 1.3: Grain Core Agent ready to migrate
 - 📋 Phase 1.4: Grain Skate Agent to migrate `src/grain_skate/editor_renderer.zig` (PLANNED)
 
 **Phase 2: Text Buffer Unification** (PLANNED)
@@ -470,7 +470,7 @@ Extract:
 ### Cross-References
 
 - Link to master files: `[Master Plan](../plan.md)`
-- Link to other agent files: `[Grain OS Plan](../plans/plan_os.md)`, `[Aurora Plan](../plans/plan_aurora.md)`
+- Link to other agent files: `[Grain OS Plan](../plans/plan_core.md)`, `[Aurora Plan](../plans/plan_aurora.md)`
 - Link to shared docs: `[Grain Style](../grain_style.md)`
 - Link to future enhancements: `[Future Enhancements](../grain_skate_future_enhancements.md)`
 
@@ -479,8 +479,8 @@ Extract:
 ## Steps to Complete
 
 1. **Read Reference Files**:
-   - Read `docs/plans/plan_os.md` to understand structure
-   - Read `docs/tasks/tasks_os.md` to understand task format
+   - Read `docs/plans/plan_core.md` to understand structure
+   - Read `docs/tasks/tasks_core.md` to understand task format
    - Read `docs/documentation_structure_recommendation.md` for rationale
    - Read `docs/grain_skate_future_enhancements.md` for shared module plan
 
@@ -491,13 +491,13 @@ Extract:
 
 3. **Create Plan File**:
    - Create `docs/plans/plan_skate.md`
-   - Follow structure from `plan_os.md`
+   - Follow structure from `plan_core.md`
    - Include completed phases, current work, planned phases
    - Include coordination points (especially shared module refactoring)
 
 4. **Create Tasks File**:
    - Create `docs/tasks/tasks_skate.md`
-   - Follow structure from `tasks_os.md`
+   - Follow structure from `tasks_core.md`
    - Include task lists for each phase
    - Include coordination tasks
 
@@ -556,7 +556,7 @@ After creating your files, the master `docs/plan.md` should have an entry like:
    - Phase 5: Shared Utilities
 
 4. **What do you coordinate with other agents?**
-   - Shared module refactoring (Aurora Agent, Grain OS Agent)
+   - Shared module refactoring (Aurora Agent, Grain Core Agent)
    - Kernel integration (Kernel Agent)
    - Future enhancements coordination
 
@@ -583,8 +583,8 @@ After creating your files, the master `docs/plan.md` should have an entry like:
 ## References
 
 - **Documentation Structure**: [`docs/documentation_structure_recommendation.md`](documentation_structure_recommendation.md)
-- **Grain OS Agent Plan**: [`docs/plans/plan_os.md`](plans/plan_os.md) — Example structure
-- **Grain OS Agent Tasks**: [`docs/tasks/tasks_os.md`](tasks/tasks_os.md) — Example structure
+- **Grain Core Agent Plan**: [`docs/plans/plan_core.md`](plans/plan_core.md) — Example structure
+- **Grain Core Agent Tasks**: [`docs/tasks/tasks_core.md`](tasks/tasks_core.md) — Example structure
 - **Master Plan**: [`docs/plan.md`](plan.md) — Master overview
 - **Master Tasks**: [`docs/tasks.md`](tasks.md) — Master task list
 - **Grain Style**: [`docs/grain_style.md`](grain_style.md) — Coding principles
@@ -594,7 +594,7 @@ After creating your files, the master `docs/plan.md` should have an entry like:
 
 ---
 
-**Your Mission**: Create `docs/plans/plan_skate.md` and `docs/tasks/tasks_skate.md` following the hybrid documentation structure, including your recent shared font renderer work, syntax highlighting, and coordination points with Aurora Agent and Grain OS Agent.
+**Your Mission**: Create `docs/plans/plan_skate.md` and `docs/tasks/tasks_skate.md` following the hybrid documentation structure, including your recent shared font renderer work, syntax highlighting, and coordination points with Aurora Agent and Grain Core Agent.
 
 **Remember**: Be detailed, be specific, be coordinated. The goal is to have focused agent files while maintaining coordination through master files. Your shared module refactoring work is critical for the ecosystem!
 

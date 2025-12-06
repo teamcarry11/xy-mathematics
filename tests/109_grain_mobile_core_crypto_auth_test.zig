@@ -4,11 +4,11 @@
 //! GrainStyle: grain_case, u32/u64, bounded operations, assertions.
 
 const std = @import("std");
-const grain_mobile_core = @import("grain_mobile_core");
-const random = grain_mobile_core.random;
-const hash = grain_mobile_core.hash;
-const otp = grain_mobile_core.otp;
-const totp = grain_mobile_core.totp;
+const grain_carry_core = @import("grain_carry_core");
+const random = grain_carry_core.random;
+const hash = grain_carry_core.hash;
+const otp = grain_carry_core.otp;
+const totp = grain_carry_core.totp;
 
 test "random generation" {
     var bytes: [32]u8 = undefined;

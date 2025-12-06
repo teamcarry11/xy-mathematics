@@ -8,18 +8,18 @@
 
 ## Overall Task Status
 
-**Active Agents**: 7 agents working in parallel  
-**Current Focus**: Infrastructure for mobile/database backends
+**Active Agents**: 8 agents working in parallel  
+**Current Focus**: Infrastructure for mobile/database backends, visual design tool
 
 ---
 
 ## Agent Task Summaries
 
-### 1. Grain Vantage VM Basin Kernel Agent
+### 1. Grain Vantage Agent
 
 **Status**: Active  
 **Current Tasks**: Kernel features, VM integration  
-**Details**: See [`docs/tasks/tasks_kernel.md`](tasks/tasks_kernel.md)
+**Details**: See [`docs/tasks/tasks_vantage.md`](tasks/tasks_vantage.md)
 
 **Key Tasks**:
 - Kernel syscall implementation
@@ -58,17 +58,17 @@
 
 ---
 
-### 4. Grain OS Agent
+### 4. Grain Core Agent
 
 **Status**: Active — Phase 59 Starting  
 **Current Tasks**: HTTP/REST API Server (HIGHEST PRIORITY)  
-**Details**: See [`docs/tasks/tasks_os.md`](tasks/tasks_os.md)
+**Details**: See [`docs/tasks/tasks_core.md`](tasks/tasks_core.md)
 
 **Current Phase**: Phase 59 — HTTP/REST API Server
 
 **Key Tasks**:
 - [x] Build System Refactoring (Phase 58.5) ✅ Complete
-- [x] Create `src/grain_os/api_server.zig` module (Phase 59) ✅
+- [x] Create `src/grain_core/api_server.zig` module (Phase 59) ✅
 - [x] Implement REST endpoint routing (Phase 59) ✅
 - [x] Implement compositor integration (Phase 59) ✅
 - [ ] Implement HTTP/1.1 server (Phase 59) ⏳
@@ -81,7 +81,8 @@
 
 **Next Phases**:
 - Phase 59: HTTP/REST API Server (HIGHEST PRIORITY) — Starting
-- Phase 60: Authentication Service (HIGH PRIORITY)
+- Phase 60: Authentication Service ✅ (COMPLETE — 2025-12-05-134449-pst)
+- Phase 61: Network Stack Enhancements 🔄 (IN PROGRESS — TCP/UDP socket support — 2025-12-05-143449-pst)
 - Phase 61: Network Stack Enhancements (MEDIUM PRIORITY)
 - Phase 62: File System Enhancements (MEDIUM PRIORITY)
 
@@ -107,20 +108,21 @@
 
 ---
 
-### 6. Grain Mobile Agent
+### 6. Grain Carry Agent
 
 **Status**: Active — Handler Adapters Complete  
 **Current Tasks**: Handler adapter tests complete, ready for end-to-end testing  
-**Details**: See [`docs/tasks/tasks_mobile.md`](tasks/tasks_mobile.md)
+**Details**: See [`docs/tasks/tasks_carry.md`](tasks/tasks_carry.md)
 
 **Key Tasks**:
 - Handler Adapters & OS Integration ✅ (2025-12-05-104028-pst)
 - Handler Adapter Tests ✅ (2025-12-05-122910-pst)
-- End-to-end API testing (when HTTP server running) ⏳
+- Authentication Service Integration ✅ (2025-12-05-140857-pst)
+- Enhanced handlers with AuthService (when database available) ⏳
 
 **Status**: Active  
-**Current Tasks**: Handler Adapter Tests Complete — Ready for End-to-End Testing  
-**Details**: See [`docs/tasks/tasks_mobile.md`](tasks/tasks_mobile.md)
+**Current Tasks**: Authentication Service Integration Complete — Ready for Enhanced Handlers  
+**Details**: See [`docs/tasks/tasks_carry.md`](tasks/tasks_carry.md)
 
 **Key Tasks**:
 - Grain Mobile Core architecture ✅
@@ -149,19 +151,19 @@
   - Ready for HTTP implementation when API Server available
 - API Endpoint Definitions ✅ (2025-12-04-150157-pst)
   - Endpoint path definitions (authentication, users)
-  - Endpoint registry, acknowledgment of Grain OS Agent Phase 59 progress
+  - Endpoint registry, acknowledgment of Grain Core Agent Phase 59 progress
   - Ready for handler implementation when JSON support available
 - FFI layer ✅
 
 **Dependencies**:
-- **Needs**: API Server (Grain OS Agent — Phase 59), Authentication Service (Grain OS Agent — Phase 60)
+- **Needs**: API Server (Grain Core Agent — Phase 59 ✅), Authentication Service (Grain Core Agent — Phase 60 ✅)
 
 ---
 
 ### 7. Grain Database Agent
 
 **Status**: Active — Phase 5 Complete  
-**Current Tasks**: Integration with Grain OS Agent API Server (Phase 59)  
+**Current Tasks**: Integration with Grain Core Agent API Server (Phase 59)  
 **Details**: See [`docs/tasks/tasks_database.md`](tasks/tasks_database.md)
 
 **Completed**:
@@ -177,7 +179,7 @@
   - REST API router, JSON serialization, rate limiting, CORS support
   - WebSocket connection management, JWT authentication middleware
   - API request/response structures, middleware support
-  - Integration with Grain OS Agent's API Server (Phase 59)
+  - Integration with Grain Core Agent's API Server (Phase 59)
 - Phase 6: API Server Integration ✅ MIDDLEWARE INTEGRATED (2025-12-05-083545-pst)
   - Handler logic complete for all 9 endpoints
   - Middleware integration complete (rate limiting, CORS, auth, content-type)
@@ -185,10 +187,44 @@
   - Ready for HTTP server integration
 
 **Next Phases**:
-- All core database phases complete! Ready for integration with Grain OS Agent API Server.
+- All core database phases complete! Ready for integration with Grain Core Agent API Server.
 
 **Dependencies**:
-- **Needs**: API Server (Grain OS Agent — Phase 59), File Storage (Grain OS Agent — Phase 62)
+- **Needs**: API Server (Grain Core Agent — Phase 59), File Storage (Grain Core Agent — Phase 62)
+
+---
+
+### 8. Grain Bubble Agent
+
+**Status**: Active — Phase 1 Starting  
+**Current Tasks**: Core Canvas (SLC v1.0) — Foundation implementation  
+**Details**: See [`docs/tasks/tasks_bubble.md`](tasks/tasks_bubble.md)
+
+**Current Phase**: Phase 1 — Core Canvas (SLC v1.0)
+
+**Key Tasks**:
+- [x] Create `src/grain_bubble/` directory structure ✅
+- [x] Create `src/grain_bubble/root.zig` module exports ✅
+- [x] Create `src/grain_bubble/canvas.zig` canvas engine ✅
+- [x] Create `src/grain_bubble/bubble_renderer.zig` renderer ✅
+- [x] Create `src/grain_bubble/export_pdf.zig` PDF export ✅
+- [x] Update `build/modules.zig` with grain_bubble module ✅
+- [x] Create `tests/125_grain_bubble_canvas_test.zig` ✅
+- [ ] Complete canvas zoom/pan implementation
+- [ ] Complete shape rendering implementation
+- [ ] Complete PDF export implementation
+- [ ] Integration with Grain Core modules
+- [ ] Comprehensive testing
+
+**Next Phases**:
+- Phase 1: Core Canvas (SLC v1.0) ⏳ In Progress
+- Phase 2: Component System (PLANNED)
+- Phase 3: Silo/Field Integration (PLANNED)
+- Phase 4: Export Pipeline (PLANNED)
+- Phase 5: Agent Flow Design (PLANNED)
+
+**Dependencies**:
+- **Needs**: Grain Core compositor, framebuffer renderer, input handler, font renderer
 
 ---
 
@@ -196,27 +232,27 @@
 
 ### Immediate (Next 2-3 Weeks)
 
-1. **Grain OS Agent — Phase 59: HTTP/REST API Server** (HIGHEST PRIORITY)
+1. **Grain Core Agent — Phase 59: HTTP/REST API Server** (HIGHEST PRIORITY)
    - Blocks: Database Agent (Phase 5), Mobile Agent (backend connection)
    - Enables: All API-based features
 
 ### Short-Term (Next Month)
 
-2. **Grain OS Agent — Phase 60: Authentication Service** (HIGH PRIORITY)
+2. **Grain Core Agent — Phase 60: Authentication Service** ✅ (COMPLETE — 2025-12-05-134449-pst)
    - Blocks: Mobile Agent (secure authentication)
    - Enables: Production-ready authentication
 
 3. **Grain Database Agent — Phase 2: Relational Layer**
-   - Depends on: API Server (Grain OS Agent — Phase 59)
+   - Depends on: API Server (Grain Core Agent — Phase 59)
    - Enables: Structured data queries
 
 ### Medium-Term (Next Quarter)
 
-4. **Grain OS Agent — Phase 61: Network Stack Enhancements**
+4. **Grain Core Agent — Phase 61: Network Stack Enhancements**
    - Enables: WebSocket for livestream coordination
    - Enables: Secure API endpoints (TLS)
 
-5. **Grain OS Agent — Phase 62: File System Enhancements**
+5. **Grain Core Agent — Phase 62: File System Enhancements**
    - Enables: Database persistence
    - Enables: Backup/restore
 
@@ -224,21 +260,21 @@
 
 ## Cross-Agent Coordination Tasks
 
-### Grain OS Agent ↔ Database Agent
+### Grain Core Agent ↔ Database Agent
 
 - [ ] Define API server interface (routes, handlers, middleware)
 - [ ] Define authentication flow (JWT, OAuth, 2FA)
 - [ ] Define file storage interface (database files, transaction logs)
 - [ ] Test integration
 
-### Grain OS Agent ↔ Mobile Agent
+### Grain Core Agent ↔ Mobile Agent
 
 - [ ] Define REST API contracts (endpoints, request/response formats)
 - [ ] Define authentication flow (OAuth, JWT, 2FA, magic email)
 - [ ] Define WebSocket protocol (for livestream coordination)
 - [ ] Test integration
 
-### Grain OS Agent ↔ Kernel Agent
+### Grain Core Agent ↔ Vantage Agent
 
 - [ ] Coordinate on file system integration (database files, transaction logs)
 - [ ] Coordinate on network stack (HTTP server, WebSocket)

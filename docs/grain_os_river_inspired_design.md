@@ -27,9 +27,9 @@
 - Window arrangement algorithms (master-stack, grid, etc.)
 
 **Files to Create**:
-- `src/grain_os/layout/tiler.zig` - Tiling algorithms
-- `src/grain_os/layout/generator.zig` - Layout generator interface
-- `src/grain_os/layout/policy.zig` - Layout policies (master-stack, grid, etc.)
+- `src/grain_core/layout/tiler.zig` - Tiling algorithms
+- `src/grain_core/layout/generator.zig` - Layout generator interface
+- `src/grain_core/layout/policy.zig` - Layout policies (master-stack, grid, etc.)
 
 **GrainStyle Requirements**:
 - Bounded window arrays (MAX_WINDOWS: 256)
@@ -49,8 +49,8 @@
 - Workspace state persistence
 
 **Files to Create**:
-- `src/grain_os/workspace/manager.zig` - Workspace management
-- `src/grain_os/workspace/state.zig` - Workspace state tracking
+- `src/grain_core/workspace/manager.zig` - Workspace management
+- `src/grain_core/workspace/state.zig` - Workspace state tracking
 
 **GrainStyle Requirements**:
 - Bounded workspace array (MAX_WORKSPACES: 10)
@@ -69,9 +69,9 @@
 - Hot-reloadable configuration
 
 **Files to Create**:
-- `src/grain_os/config/ipc.zig` - IPC configuration interface
-- `src/grain_os/config/parser.zig` - Command parser
-- `src/grain_os/config/state.zig` - Configuration state
+- `src/grain_core/config/ipc.zig` - IPC configuration interface
+- `src/grain_core/config/parser.zig` - Command parser
+- `src/grain_core/config/state.zig` - Configuration state
 
 **GrainStyle Requirements**:
 - Bounded command buffer (MAX_COMMAND_LEN: 1024)
@@ -90,8 +90,8 @@
 - Generator lifecycle management
 
 **Files to Create**:
-- `src/grain_os/layout/generator_interface.zig` - Generator protocol
-- `src/grain_os/layout/generator_manager.zig` - Generator process management
+- `src/grain_core/layout/generator_interface.zig` - Generator protocol
+- `src/grain_core/layout/generator_manager.zig` - Generator process management
 
 **GrainStyle Requirements**:
 - Bounded generator array (MAX_GENERATORS: 16)
@@ -110,9 +110,9 @@
 - Mouse pointer tracking
 
 **Files to Create**:
-- `src/grain_os/input/router.zig` - Input event routing
-- `src/grain_os/input/focus.zig` - Focus management
-- `src/grain_os/input/shortcuts.zig` - Keyboard shortcuts
+- `src/grain_core/input/router.zig` - Input event routing
+- `src/grain_core/input/focus.zig` - Focus management
+- `src/grain_core/input/shortcuts.zig` - Keyboard shortcuts
 
 **GrainStyle Requirements**:
 - Bounded input queue (MAX_INPUT_EVENTS: 256)
@@ -126,7 +126,7 @@
 **Goal**: Implement basic workspace switching and window assignment
 
 **Tasks**:
-1. Create workspace manager (`src/grain_os/workspace/manager.zig`)
+1. Create workspace manager (`src/grain_core/workspace/manager.zig`)
 2. Implement workspace switching
 3. Window assignment to workspaces
 4. Workspace state tracking
@@ -139,7 +139,7 @@
 **Goal**: Implement master-stack tiling layout
 
 **Tasks**:
-1. Create tiler module (`src/grain_os/layout/tiler.zig`)
+1. Create tiler module (`src/grain_core/layout/tiler.zig`)
 2. Implement master-stack algorithm
 3. Window arrangement logic
 4. Layout updates on window changes
@@ -152,7 +152,7 @@
 **Goal**: Separate layout generators from compositor core
 
 **Tasks**:
-1. Create generator interface (`src/grain_os/layout/generator_interface.zig`)
+1. Create generator interface (`src/grain_core/layout/generator_interface.zig`)
 2. Implement generator protocol
 3. Generator process management
 4. Policy vs. implementation separation
@@ -165,8 +165,8 @@
 **Goal**: Implement riverctl-like configuration interface
 
 **Tasks**:
-1. Create IPC configuration interface (`src/grain_os/config/ipc.zig`)
-2. Command parser (`src/grain_os/config/parser.zig`)
+1. Create IPC configuration interface (`src/grain_core/config/ipc.zig`)
+2. Command parser (`src/grain_core/config/parser.zig`)
 3. Configuration state management
 4. Hot-reloadable configuration
 5. Tests (`tests/056_grain_os_config_test.zig`)
@@ -178,9 +178,9 @@
 **Goal**: Implement input routing and focus management
 
 **Tasks**:
-1. Create input router (`src/grain_os/input/router.zig`)
-2. Focus management (`src/grain_os/input/focus.zig`)
-3. Keyboard shortcuts (`src/grain_os/input/shortcuts.zig`)
+1. Create input router (`src/grain_core/input/router.zig`)
+2. Focus management (`src/grain_core/input/focus.zig`)
+3. Keyboard shortcuts (`src/grain_core/input/shortcuts.zig`)
 4. Mouse pointer tracking
 5. Tests (`tests/057_grain_os_input_test.zig`)
 

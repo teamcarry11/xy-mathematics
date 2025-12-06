@@ -9,7 +9,7 @@
 const std = @import("std");
 const grain_silo = @import("grain_silo");
 const grain_skate = @import("grain_skate");
-const grain_os = @import("grain_os");
+const grain_core = @import("grain_core");
 
 // Bounded: Max notes (explicit limit)
 // 2025-12-03-154648-pst: Active constant

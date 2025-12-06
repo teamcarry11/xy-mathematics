@@ -10,11 +10,11 @@ const std = @import("std");
 const testing = std.testing;
 const PackageManagerUI = @import("../src/grain_workspace/package_manager_ui/app.zig").PackageManagerUI;
 const PackageCategory = @import("../src/grain_workspace/package_manager_ui/app.zig").PackageCategory;
-const grain_os = @import("grain_os");
+const grain_core = @import("grain_core");
 
 test "package manager ui initialization" {
     const allocator = testing.allocator;
-    var pkg_mgr = grain_os.package_manager.PackageManager.init();
+    var pkg_mgr = grain_core.package_manager.PackageManager.init();
 
     var ui = PackageManagerUI.init(allocator, &pkg_mgr);
 
@@ -25,7 +25,7 @@ test "package manager ui initialization" {
 
 test "set search query" {
     const allocator = testing.allocator;
-    var pkg_mgr = grain_os.package_manager.PackageManager.init();
+    var pkg_mgr = grain_core.package_manager.PackageManager.init();
 
     var ui = PackageManagerUI.init(allocator, &pkg_mgr);
     ui.set_search_query("test");
@@ -36,7 +36,7 @@ test "set search query" {
 
 test "set category" {
     const allocator = testing.allocator;
-    var pkg_mgr = grain_os.package_manager.PackageManager.init();
+    var pkg_mgr = grain_core.package_manager.PackageManager.init();
 
     var ui = PackageManagerUI.init(allocator, &pkg_mgr);
     ui.set_category(.development);
@@ -46,7 +46,7 @@ test "set category" {
 
 test "get all packages" {
     const allocator = testing.allocator;
-    var pkg_mgr = grain_os.package_manager.PackageManager.init();
+    var pkg_mgr = grain_core.package_manager.PackageManager.init();
 
     _ = pkg_mgr.add_package("test-pkg", "1.0.0", "Test package", 1024);
     _ = pkg_mgr.add_package("dev-tool", "2.0.0", "Dev tool", 2048);
@@ -64,7 +64,7 @@ test "get all packages" {
 
 test "get package info" {
     const allocator = testing.allocator;
-    var pkg_mgr = grain_os.package_manager.PackageManager.init();
+    var pkg_mgr = grain_core.package_manager.PackageManager.init();
 
     const pkg_id = pkg_mgr.add_package("test-pkg", "1.0.0", "Test package", 1024);
     try testing.expect(pkg_id != null);
@@ -82,7 +82,7 @@ test "get package info" {
 
 test "search packages" {
     const allocator = testing.allocator;
-    var pkg_mgr = grain_os.package_manager.PackageManager.init();
+    var pkg_mgr = grain_core.package_manager.PackageManager.init();
 
     _ = pkg_mgr.add_package("test-pkg", "1.0.0", "Test package", 1024);
     _ = pkg_mgr.add_package("other-pkg", "2.0.0", "Other package", 2048);
@@ -100,7 +100,7 @@ test "search packages" {
 
 test "install package" {
     const allocator = testing.allocator;
-    var pkg_mgr = grain_os.package_manager.PackageManager.init();
+    var pkg_mgr = grain_core.package_manager.PackageManager.init();
 
     const pkg_id = pkg_mgr.add_package("test-pkg", "1.0.0", "Test package", 1024);
     try testing.expect(pkg_id != null);
@@ -115,7 +115,7 @@ test "install package" {
 
 test "remove package" {
     const allocator = testing.allocator;
-    var pkg_mgr = grain_os.package_manager.PackageManager.init();
+    var pkg_mgr = grain_core.package_manager.PackageManager.init();
 
     const pkg_id = pkg_mgr.add_package("test-pkg", "1.0.0", "Test package", 1024);
     try testing.expect(pkg_id != null);
@@ -131,7 +131,7 @@ test "remove package" {
 
 test "get package dependencies" {
     const allocator = testing.allocator;
-    var pkg_mgr = grain_os.package_manager.PackageManager.init();
+    var pkg_mgr = grain_core.package_manager.PackageManager.init();
 
     const pkg_id1 = pkg_mgr.add_package("pkg1", "1.0.0", "Package 1", 1024);
     const pkg_id2 = pkg_mgr.add_package("pkg2", "2.0.0", "Package 2", 2048);
@@ -153,7 +153,7 @@ test "get package dependencies" {
 
 test "build dependency graph" {
     const allocator = testing.allocator;
-    var pkg_mgr = grain_os.package_manager.PackageManager.init();
+    var pkg_mgr = grain_core.package_manager.PackageManager.init();
 
     const pkg_id1 = pkg_mgr.add_package("pkg1", "1.0.0", "Package 1", 1024);
     const pkg_id2 = pkg_mgr.add_package("pkg2", "2.0.0", "Package 2", 2048);
@@ -175,7 +175,7 @@ test "build dependency graph" {
 
 test "category filtering" {
     const allocator = testing.allocator;
-    var pkg_mgr = grain_os.package_manager.PackageManager.init();
+    var pkg_mgr = grain_core.package_manager.PackageManager.init();
 
     _ = pkg_mgr.add_package("kernel-module", "1.0.0", "Kernel module", 1024);
     _ = pkg_mgr.add_package("dev-tool", "2.0.0", "Dev tool", 2048);

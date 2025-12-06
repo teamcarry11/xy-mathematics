@@ -1,14 +1,14 @@
-# Grain OS Agent: Next Priorities for Mobile and Kernel Support
+# Grain Core Agent: Next Priorities for Mobile and Kernel Support
 
 **Date**: 2025-12-03-154452-pst  
-**Agent**: Grain OS Agent  
+**Agent**: Grain Core Agent  
 **Purpose**: Strategic recommendations for work that helps Grain Mobile Agent and Vantage VM Basin Kernel Agent
 
 ---
 
 ## Executive Summary
 
-The Grain OS Agent should prioritize **database foundation** and **API infrastructure** work that enables both:
+The Grain Core Agent should prioritize **database foundation** and **API infrastructure** work that enables both:
 1. **Grain Mobile Agent**: Cloud backend for mobile applications (election app, etc.)
 2. **Vantage VM Basin Kernel Agent**: Database integration for kernel-level storage and cloud deployment
 
@@ -162,7 +162,7 @@ src/grain_database/
 
 **Why**: Both agents need network capabilities
 
-**Current State**: `grain_os/network_manager.zig` exists but may need enhancements
+**Current State**: `grain_core/network_manager.zig` exists but may need enhancements
 
 **Enhancements**:
 - TCP/UDP socket support
@@ -366,7 +366,7 @@ src/grain_database/
 
 ### Phase 1: Database Foundation (Weeks 1-4) — **HIGHEST PRIORITY**
 
-**Grain OS Agent Work**:
+**Grain Core Agent Work**:
 1. Create `grain_database` module structure
 2. Implement key-value storage engine (extend Grain Silo)
 3. Implement B-tree indexes for foreign keys
@@ -381,7 +381,7 @@ src/grain_database/
 
 ### Phase 2: Relational Layer (Weeks 5-8)
 
-**Grain OS Agent Work**:
+**Grain Core Agent Work**:
 1. Table definitions and schema
 2. Foreign key relationships
 3. SQL-like query parser (simplified)
@@ -395,7 +395,7 @@ src/grain_database/
 
 ### Phase 3: Graph Layer (Weeks 9-12)
 
-**Grain OS Agent Work**:
+**Grain Core Agent Work**:
 1. Graph data structure
 2. Relationship indexes
 3. Graph traversal algorithms
@@ -408,7 +408,7 @@ src/grain_database/
 
 ### Phase 4: API and Integration (Weeks 13-16)
 
-**Grain OS Agent Work**:
+**Grain Core Agent Work**:
 1. REST API server
 2. JSON serialization/deserialization
 3. Authentication middleware
@@ -501,7 +501,7 @@ src/grain_database/
 - **Grain Style**: `docs/grain_style.md` - Coding principles
 - **Grain Mobile Core**: `docs/grain_mobile_core_architecture.md` - Mobile architecture
 - **HTTP Client**: `src/dream_http_client.zig` - HTTP patterns
-- **Network Manager**: `src/grain_os/network_manager.zig` - Network infrastructure
+- **Network Manager**: `src/grain_core/network_manager.zig` - Network infrastructure
 
 ---
 

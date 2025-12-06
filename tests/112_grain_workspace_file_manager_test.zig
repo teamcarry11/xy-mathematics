@@ -9,11 +9,11 @@
 const std = @import("std");
 const testing = std.testing;
 const FileManagerUI = @import("../src/grain_workspace/file_manager/app.zig").FileManagerUI;
-const grain_os = @import("grain_os");
+const grain_core = @import("grain_core");
 
 test "file manager ui initialization" {
     const allocator = testing.allocator;
-    var fm = grain_os.file_manager.FileManager.init();
+    var fm = grain_core.file_manager.FileManager.init();
 
     var ui = FileManagerUI.init(allocator, &fm);
 
@@ -24,7 +24,7 @@ test "file manager ui initialization" {
 
 test "set search query" {
     const allocator = testing.allocator;
-    var fm = grain_os.file_manager.FileManager.init();
+    var fm = grain_core.file_manager.FileManager.init();
 
     var ui = FileManagerUI.init(allocator, &fm);
     ui.set_search_query("test");
@@ -35,7 +35,7 @@ test "set search query" {
 
 test "navigate to directory" {
     const allocator = testing.allocator;
-    var fm = grain_os.file_manager.FileManager.init();
+    var fm = grain_core.file_manager.FileManager.init();
 
     var ui = FileManagerUI.init(allocator, &fm);
     const result = ui.navigate_to_directory("/home");
@@ -46,7 +46,7 @@ test "navigate to directory" {
 
 test "get current directory" {
     const allocator = testing.allocator;
-    var fm = grain_os.file_manager.FileManager.init();
+    var fm = grain_core.file_manager.FileManager.init();
 
     var ui = FileManagerUI.init(allocator, &fm);
     const current_dir = ui.get_current_directory();
@@ -56,14 +56,14 @@ test "get current directory" {
 
 test "get file entries" {
     const allocator = testing.allocator;
-    var fm = grain_os.file_manager.FileManager.init();
+    var fm = grain_core.file_manager.FileManager.init();
 
     _ = fm.add_file_entry("file1.txt", "/file1.txt", .regular, 1024, 0);
     _ = fm.add_file_entry("dir1", "/dir1", .directory, 0, 0);
 
     var ui = FileManagerUI.init(allocator, &fm);
 
-    var entries: [10]*grain_os.file_manager.FileEntry = undefined;
+    var entries: [10]*grain_core.file_manager.FileEntry = undefined;
     var entries_len: u32 = 0;
     ui.get_file_entries(&entries, &entries_len);
 
@@ -74,7 +74,7 @@ test "get file entries" {
 
 test "search files" {
     const allocator = testing.allocator;
-    var fm = grain_os.file_manager.FileManager.init();
+    var fm = grain_core.file_manager.FileManager.init();
 
     _ = fm.add_file_entry("test-file.txt", "/test-file.txt", .regular, 1024, 0);
     _ = fm.add_file_entry("other-file.txt", "/other-file.txt", .regular, 2048, 0);
@@ -92,7 +92,7 @@ test "search files" {
 
 test "copy to clipboard" {
     const allocator = testing.allocator;
-    var fm = grain_os.file_manager.FileManager.init();
+    var fm = grain_core.file_manager.FileManager.init();
 
     const entry_id = fm.add_file_entry("file.txt", "/file.txt", .regular, 1024, 0);
     try testing.expect(entry_id != null);
@@ -108,7 +108,7 @@ test "copy to clipboard" {
 
 test "move to clipboard" {
     const allocator = testing.allocator;
-    var fm = grain_os.file_manager.FileManager.init();
+    var fm = grain_core.file_manager.FileManager.init();
 
     const entry_id = fm.add_file_entry("file.txt", "/file.txt", .regular, 1024, 0);
     try testing.expect(entry_id != null);
@@ -124,7 +124,7 @@ test "move to clipboard" {
 
 test "paste from clipboard" {
     const allocator = testing.allocator;
-    var fm = grain_os.file_manager.FileManager.init();
+    var fm = grain_core.file_manager.FileManager.init();
 
     const entry_id = fm.add_file_entry("file.txt", "/file.txt", .regular, 1024, 0);
     try testing.expect(entry_id != null);
@@ -140,7 +140,7 @@ test "paste from clipboard" {
 
 test "delete file" {
     const allocator = testing.allocator;
-    var fm = grain_os.file_manager.FileManager.init();
+    var fm = grain_core.file_manager.FileManager.init();
 
     const entry_id = fm.add_file_entry("file.txt", "/file.txt", .regular, 1024, 0);
     try testing.expect(entry_id != null);
@@ -154,7 +154,7 @@ test "delete file" {
 
 test "rename file" {
     const allocator = testing.allocator;
-    var fm = grain_os.file_manager.FileManager.init();
+    var fm = grain_core.file_manager.FileManager.init();
 
     const entry_id = fm.add_file_entry("old-name.txt", "/old-name.txt", .regular, 1024, 0);
     try testing.expect(entry_id != null);
@@ -170,7 +170,7 @@ test "rename file" {
 
 test "get file preview" {
     const allocator = testing.allocator;
-    var fm = grain_os.file_manager.FileManager.init();
+    var fm = grain_core.file_manager.FileManager.init();
 
     const entry_id = fm.add_file_entry("file.txt", "/file.txt", .regular, 1024, 0);
     try testing.expect(entry_id != null);
@@ -186,7 +186,7 @@ test "get file preview" {
 
 test "clear clipboard" {
     const allocator = testing.allocator;
-    var fm = grain_os.file_manager.FileManager.init();
+    var fm = grain_core.file_manager.FileManager.init();
 
     const entry_id = fm.add_file_entry("file.txt", "/file.txt", .regular, 1024, 0);
     try testing.expect(entry_id != null);

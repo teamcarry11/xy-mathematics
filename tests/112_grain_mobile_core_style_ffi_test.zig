@@ -4,9 +4,9 @@
 //! GrainStyle: grain_case, u32/u64, bounded operations, assertions.
 
 const std = @import("std");
-const grain_mobile_core = @import("grain_mobile_core");
-const style = grain_mobile_core.style;
-const style_api = grain_mobile_core.c_api.style_api;
+const grain_carry_core = @import("grain_carry_core");
+const style = grain_carry_core.style;
+const style_api = grain_carry_core.c_api.style_api;
 
 test "FFI breakpoint query" {
     const bp = style_api.grain_mobile_get_breakpoint(375, 667);

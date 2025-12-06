@@ -2,7 +2,7 @@
 
 **Agent**: Grain Skate Terminal Silo Field Agent (3rd Agent)  
 **Status**: Core Features Complete, Shared Module Refactoring In Progress  
-**Last Updated**: 2025-12-04-095210-pst
+**Last Updated**: 2025-12-05-145359-pst
 
 ---
 
@@ -37,7 +37,7 @@
 
 - **Needs**: Shared font renderer (Phase 1.1) ✅ Complete
 - **Provides**: Consistent font rendering across all applications
-- **Coordinates with**: Aurora Agent (already migrated), Grain OS Agent (ready to migrate)
+- **Coordinates with**: Aurora Agent (already migrated), Grain Core Agent (ready to migrate)
 
 ---
 
@@ -178,7 +178,7 @@
 
 - **Needs**: None (new modules)
 - **Provides**: Shared utilities for all applications
-- **Coordinates with**: Aurora Agent, Grain OS Agent (shared usage)
+- **Coordinates with**: Aurora Agent, Grain Core Agent (shared usage)
 
 ---
 
@@ -266,14 +266,14 @@
 - ✅ Block storage (`src/grain_skate/block.zig`)
 - ✅ Storage integration (`src/grain_skate/storage_integration.zig`)
 - ✅ Block-to-object mapping (Grain Silo integration)
-- ✅ Hot cache promotion/demotion (Grain Field SRAM integration)
+- ✅ Hot cache promotion/demotion (Grain Court SRAM integration)
 - ✅ Persist/load blocks from Grain Silo
 - ✅ Block linking (bidirectional links)
 - ✅ Comprehensive tests (`tests/048_grain_skate_core_test.zig`)
 
 **Key Modules**:
 - `src/grain_skate/block.zig` - Block storage and management
-- `src/grain_skate/storage_integration.zig` - Grain Silo and Grain Field integration
+- `src/grain_skate/storage_integration.zig` - Grain Silo and Grain Court integration
 
 **Tests**:
 - `tests/048_grain_skate_core_test.zig` - Block storage tests

@@ -4,8 +4,8 @@
 //! GrainStyle: grain_case, u32/u64, bounded operations, assertions.
 
 const std = @import("std");
-const grain_mobile_core = @import("grain_mobile_core");
-const style = grain_mobile_core.style;
+const grain_carry_core = @import("grain_carry_core");
+const style = grain_carry_core.style;
 
 test "color initialization" {
     const color = style.colors.Color.init(255, 128, 64, 200);

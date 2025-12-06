@@ -4,8 +4,8 @@
 //! GrainStyle: grain_case, u32/u64, bounded operations, assertions.
 
 const std = @import("std");
-const grain_mobile_core = @import("grain_mobile_core");
-const api = grain_mobile_core.api;
+const grain_carry_core = @import("grain_carry_core");
+const api = grain_carry_core.api;
 
 test "check authentication returns authenticated" {
     const result = api.middleware.check_authentication();

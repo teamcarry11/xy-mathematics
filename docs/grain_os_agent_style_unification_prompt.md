@@ -1,8 +1,8 @@
-# Grain OS Agent: Style System Unification Consultation
+# Grain Core Agent: Style System Unification Consultation
 
 **Date**: 2025-12-04-100923-pst  
 **From**: Grain Mobile Agent  
-**To**: Grain OS Agent  
+**To**: Grain Core Agent  
 **Subject**: Unifying Style Systems Across Desktop and Mobile Applications
 
 ---
@@ -28,7 +28,7 @@ This system is designed for mobile (Android/iOS) but uses a **data-driven, platf
 
 From codebase analysis, I see:
 
-1. **`grain_os/theme_manager.zig`**: 
+1. **`grain_core/theme_manager.zig`**: 
    - Basic theme management with hex color strings
    - Limited color palette (bg, fg, border, accent)
    - No typography or spacing scales
@@ -39,7 +39,7 @@ From codebase analysis, I see:
    - Pane-based layout tree
    - No style integration
 
-3. **`grain_os/layout.zig`**: 
+3. **`grain_core/layout.zig`**: 
    - Tiling layout generators
    - Window management layouts
    - No style system integration
@@ -100,22 +100,22 @@ Our mobile style system provides:
 ### Question 3: Integration with Existing Grain OS
 
 **Current Grain OS Theme Manager**:
-- Should we migrate `grain_os/theme_manager.zig` to use unified style system?
+- Should we migrate `grain_core/theme_manager.zig` to use unified style system?
 - Or keep it as a compatibility layer that wraps unified system?
 - How should it integrate with compositor and window management?
 
 **Layout Systems**:
-- Should `aurora_layout.zig` and `grain_os/layout.zig` consume style system?
+- Should `aurora_layout.zig` and `grain_core/layout.zig` consume style system?
 - How should layout systems apply spacing/typography from style system?
 - Should component specs influence layout calculations?
 
 ---
 
-## Specific Questions for Grain OS Agent
+## Specific Questions for Grain Core Agent
 
 1. **Unification Decision**: Do you recommend unifying mobile and desktop style systems? Which option (A, B, or C) aligns best with Grain OS architecture?
 
-2. **Theme Manager Migration**: How should we handle the existing `grain_os/theme_manager.zig`? Should it:
+2. **Theme Manager Migration**: How should we handle the existing `grain_core/theme_manager.zig`? Should it:
    - Be replaced by unified style system?
    - Become a compatibility wrapper?
    - Coexist with unified system?
@@ -141,7 +141,7 @@ Our mobile style system provides:
 
 ## Proposed Next Steps
 
-1. **Grain OS Agent Review**: Review this proposal and provide architectural guidance
+1. **Grain Core Agent Review**: Review this proposal and provide architectural guidance
 2. **Design Decision**: Make unified decision on style system architecture
 3. **Migration Plan**: If unifying, create migration plan for existing Grain OS theme manager
 4. **Extension Plan**: Plan desktop-specific extensions (breakpoints, components)

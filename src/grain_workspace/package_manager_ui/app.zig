@@ -7,7 +7,7 @@
 //! 2025-12-03-173505-pst: Active implementation
 
 const std = @import("std");
-const grain_os = @import("grain_os");
+const grain_core = @import("grain_core");
 
 // Bounded: Max search results (explicit limit)
 // 2025-12-03-173505-pst: Active constant
@@ -43,7 +43,7 @@ pub const PackageInfo = struct {
     version_len: u32,
     description: []const u8,
     description_len: u32,
-    state: grain_os.package_manager.PackageState,
+    state: grain_core.package_manager.PackageState,
     size_bytes: u64,
     category: PackageCategory,
 };
@@ -58,7 +58,7 @@ pub const DependencyNode = struct {
 // Package Manager UI application state.
 // 2025-12-03-173505-pst: Active struct
 pub const PackageManagerUI = struct {
-    package_manager: *grain_os.package_manager.PackageManager,
+    package_manager: *grain_core.package_manager.PackageManager,
     search_query: [MAX_PACKAGE_NAME_LEN]u8,
     search_query_len: u32,
     selected_category: PackageCategory,
@@ -69,7 +69,7 @@ pub const PackageManagerUI = struct {
     // 2025-12-03-173505-pst: Active function
     pub fn init(
         allocator: std.mem.Allocator,
-        pkg_mgr: *grain_os.package_manager.PackageManager,
+        pkg_mgr: *grain_core.package_manager.PackageManager,
     ) PackageManagerUI {
         // Precondition: Allocator and manager must be valid
         std.debug.assert(allocator.ptr != null);
@@ -393,7 +393,7 @@ pub const PackageManagerUI = struct {
 // Categorize package (internal helper).
 // 2025-12-03-173505-pst: Active function
 fn categorize_package(
-    pkg: *const grain_os.package_manager.Package,
+    pkg: *const grain_core.package_manager.Package,
 ) PackageCategory {
     // Precondition: Package must be valid
     std.debug.assert(pkg.package_id > 0);

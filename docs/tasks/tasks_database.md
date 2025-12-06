@@ -48,7 +48,7 @@
 ### Integration Work Complete ✅ (2025-12-04-153056-pst)
 
 - [x] Create integration module (`src/grain_database/integration.zig`)
-- [x] Create Grain OS API Server integration module (`src/grain_database/integration_os.zig`)
+- [x] Create Grain Core API Server integration module (`src/grain_database/integration_os.zig`)
 - [x] Implement endpoint registry
 - [x] Define API endpoint contracts
 - [x] Create helper function for endpoint registration
@@ -59,8 +59,8 @@
 
 ### Tasks Complete ✅
 
-- [x] Coordinate with Grain OS Agent on API Server interface (completed)
-- [x] Integrate database API router with Grain OS API Server (integration code ready)
+- [x] Coordinate with Grain Core Agent on API Server interface (completed)
+- [x] Integrate database API router with Grain Core API Server (integration code ready)
 - [x] Register database endpoints with API Server (helper function ready, can register now)
 - [x] Create handler function stubs (all 9 endpoints ready)
 
@@ -74,9 +74,9 @@
 
 ### Dependencies
 
-- **Needs**: Grain OS Agent Phase 59 (HTTP/REST API Server) — **BLOCKED**
-- **Needs**: Grain OS Agent Phase 60 (Authentication Service) — **BLOCKED**
-- **Provides**: Database backend for Mobile Agent
+- **Needs**: Grain Core Agent Phase 59 (HTTP/REST API Server) — **BLOCKED**
+- **Needs**: Grain Core Agent Phase 60 (Authentication Service) — **BLOCKED**
+- **Provides**: Database backend for Carry Agent
 
 ---
 
@@ -193,7 +193,7 @@
 
 **Integration Work** (2025-12-04-153056-pst):
 - [x] Create integration module (`src/grain_database/integration.zig`)
-- [x] Create Grain OS API Server integration module (`src/grain_database/integration_os.zig`)
+- [x] Create Grain Core API Server integration module (`src/grain_database/integration_os.zig`)
 - [x] Implement endpoint registry
 - [x] Define API endpoint contracts
 - [x] Create helper function for endpoint registration
@@ -202,8 +202,8 @@
 - [x] Fix compilation errors and ensure Grain Style compliance
 
 **Tasks Complete**:
-- [x] Coordinate with Grain OS Agent on API Server interface
-- [x] Integrate database API router with Grain OS API Server (integration code ready)
+- [x] Coordinate with Grain Core Agent on API Server interface
+- [x] Integrate database API router with Grain Core API Server (integration code ready)
 - [x] Register database endpoints with API Server (helper function ready, can register now)
 - [x] Create handler function stubs (all 9 endpoints ready)
 
@@ -235,9 +235,9 @@
 - [ ] Complete full-text search integration (when inverted index is ready)
 
 **Dependencies**:
-- ✅ Grain OS Agent Phase 59 (HTTP/REST API Server Core) — **COMPLETE** (route registration ready)
-- ⏳ Grain OS Agent Phase 59 (HTTP Server Implementation) — **IN PROGRESS** (estimated 1 week)
-- ⏳ Grain OS Agent Phase 60 (Authentication Service) — **PLANNED**
+- ✅ Grain Core Agent Phase 59 (HTTP/REST API Server Core) — **COMPLETE** (route registration ready)
+- ⏳ Grain Core Agent Phase 59 (HTTP Server Implementation) — **IN PROGRESS** (estimated 1 week)
+- ⏳ Grain Core Agent Phase 60 (Authentication Service) — **PLANNED**
 
 ### Phase 7: Database Persistence (PLANNED)
 **Priority**: **HIGH**  
@@ -254,7 +254,7 @@
 - [ ] Update documentation
 
 **Dependencies**:
-- Grain OS Agent Phase 62 (File System Enhancements) — **BLOCKED**
+- Grain Core Agent Phase 62 (File System Enhancements) — **BLOCKED**
 
 ### Phase 8: Network Integration (PLANNED)
 **Priority**: **MEDIUM**  
@@ -270,7 +270,7 @@
 - [ ] Update documentation
 
 **Dependencies**:
-- Grain OS Agent Phase 61 (Network Stack Enhancements) — **BLOCKED**
+- Grain Core Agent Phase 61 (Network Stack Enhancements) — **BLOCKED**
 
 ### Phase 9: Authentication Integration (PLANNED)
 **Priority**: **HIGH**  
@@ -286,7 +286,7 @@
 - [ ] Update documentation
 
 **Dependencies**:
-- Grain OS Agent Phase 60 (Authentication Service) — **BLOCKED**
+- Grain Core Agent Phase 60 (Authentication Service) — **BLOCKED**
 
 ### Phase 10: AArch64 Cloud Deployment (PLANNED)
 **Priority**: **MEDIUM**  
@@ -302,8 +302,8 @@
 - [ ] Update documentation
 
 **Dependencies**:
-- Vantage VM Basin Kernel Agent (VM integration)
-- Grain OS Agent (cloud deployment support)
+- Vantage Agent (VM integration)
+- Grain Core Agent (cloud deployment support)
 
 ---
 
@@ -328,18 +328,18 @@ All database code must follow Grain Style guidelines:
 
 ## Coordination Points
 
-### With Grain OS Agent
+### With Grain Core Agent
 - **API Server (Phase 59)**: Database API router integration — **BLOCKED**
 - **Authentication Service (Phase 60)**: JWT validation integration — **BLOCKED**
 - **File Storage (Phase 62)**: Database file persistence — **BLOCKED**
 - **Network Stack (Phase 61)**: API endpoint networking — **BLOCKED**
 
-### With Grain Mobile Agent
+### With Grain Carry Agent
 - **REST API Contracts**: Define mobile backend endpoints
 - **Authentication Flow**: Coordinate JWT token usage
 - **Data Models**: Align database schema with mobile app needs
 
-### With Vantage VM Basin Kernel Agent
+### With Vantage Agent
 - **VM Integration**: Database hosting in VMs
 - **AArch64 Deployment**: Cloud hardware deployment
 

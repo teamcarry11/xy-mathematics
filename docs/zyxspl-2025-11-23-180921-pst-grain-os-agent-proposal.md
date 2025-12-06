@@ -1,4 +1,4 @@
-# Grain OS Agent Proposal
+# Grain Core Agent Proposal
 
 **Date**: 2025-11-23-180921-pst  
 **Agent**: Grain OS (Fourth Agent)  

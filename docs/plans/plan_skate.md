@@ -2,7 +2,7 @@
 
 **Agent**: Grain Skate Terminal Silo Field Agent (3rd Agent)  
 **Status**: Core Features Complete, Shared Module Refactoring In Progress  
-**Last Updated**: 2025-12-04-095210-pst
+**Last Updated**: 2025-12-05-145359-pst
 
 ---
 
@@ -15,7 +15,7 @@ Grain Skate Terminal Silo Field Agent is responsible for building Grain Skate (k
 - Terminal emulator for Grain OS
 - Scripting language (Grainscript) for automation
 - Shared module refactoring (font renderer, text buffer, DAG integration)
-- Integration with Grain OS compositor and kernel syscalls
+- Integration with Grain Core compositor and kernel syscalls
 
 ---
 
@@ -48,7 +48,7 @@ Grain Skate Terminal Silo Field Agent is responsible for building Grain Skate (k
 **Coordination**:
 - Phase 1.1: Shared font renderer created ✅ (Grain Skate Agent)
 - Phase 1.2: Aurora Agent migrated ✅ (2025-12-03-162659-PST)
-- Phase 1.3: Grain OS Agent ready to migrate (see `docs/grain_os_font_renderer_coordination.md`)
+- Phase 1.3: Grain Core Agent ready to migrate (see `docs/grain_os_font_renderer_coordination.md`)
 - Phase 1.4: Grain Skate Agent to migrate `src/grain_skate/editor_renderer.zig` (PLANNED)
 
 ---
@@ -120,12 +120,12 @@ Grain Skate Terminal Silo Field Agent is responsible for building Grain Skate (k
    - Block storage management (create, get, update, delete)
    - Block linking (bidirectional links)
    - Grain Silo integration (object storage)
-   - Grain Field integration (hot cache promotion/demotion)
+   - Grain Court integration (hot cache promotion/demotion)
    - Comprehensive tests (`tests/048_grain_skate_core_test.zig`)
 
 2. **Storage integration** (`src/grain_skate/storage_integration.zig`):
    - Block-to-object mapping (Grain Silo integration)
-   - Hot cache promotion/demotion (Grain Field SRAM integration)
+   - Hot cache promotion/demotion (Grain Court SRAM integration)
    - Persist/load blocks from Grain Silo
    - Block storage lifecycle management
 
@@ -257,7 +257,7 @@ Grain Skate Terminal Silo Field Agent is responsible for building Grain Skate (k
 
 - **Needs**: Shared font renderer (Phase 1.1) ✅ Complete
 - **Provides**: Consistent font rendering across all applications
-- **Coordinates with**: Aurora Agent (already migrated), Grain OS Agent (ready to migrate)
+- **Coordinates with**: Aurora Agent (already migrated), Grain Core Agent (ready to migrate)
 
 ---
 
@@ -354,22 +354,22 @@ Grain Skate Terminal Silo Field Agent is responsible for building Grain Skate (k
 
 ## Coordination Points
 
-### With Grain OS Agent
+### With Grain Core Agent
 
 **Shared Module Refactoring**:
 - **Phase 1.1**: Shared font renderer created ✅ (Grain Skate Agent)
 - **Phase 1.2**: Aurora Agent migrated ✅
-- **Phase 1.3**: Grain OS Agent ready to migrate (coordination document created)
+- **Phase 1.3**: Grain Core Agent ready to migrate (coordination document created)
 - **Phase 1.4**: Grain Skate Agent to migrate `src/grain_skate/editor_renderer.zig` (PLANNED)
 
 **Coordination Notes**:
 - Grain Skate Agent created shared font renderer
 - Aurora Agent completed migration
-- Grain OS Agent is aware and ready (see `docs/grain_os_font_renderer_coordination.md`)
+- Grain Core Agent is aware and ready (see `docs/grain_os_font_renderer_coordination.md`)
 - Grain Skate Agent should migrate its own editor renderer next
 
 **Future Coordination**:
-- **Compositor Integration**: Grain Skate needs to register its window with the Grain OS compositor
+- **Compositor Integration**: Grain Skate needs to register its window with the Grain Core compositor
 - **System Services**: Potential integration with Grain OS system services (file manager, notifications)
 
 ---
@@ -391,7 +391,7 @@ Grain Skate Terminal Silo Field Agent is responsible for building Grain Skate (k
 
 ---
 
-### With Vantage VM Basin Kernel Agent
+### With Vantage Agent
 
 **Kernel Syscalls (Required for Grain OS target)**:
 - File I/O syscalls (open, read, write, close, unlink, rename)
@@ -404,7 +404,7 @@ Grain Skate Terminal Silo Field Agent is responsible for building Grain Skate (k
 
 **Coordination**: See `docs/grain_terminal_kernel_ready.md` for API contracts
 
-**Integration**: Use syscall function pointers (similar to Grain OS compositor)
+**Integration**: Use syscall function pointers (similar to Grain Core compositor)
 
 ---
 

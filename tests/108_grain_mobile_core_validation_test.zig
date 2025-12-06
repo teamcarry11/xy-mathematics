@@ -4,9 +4,9 @@
 //! GrainStyle: grain_case, u32/u64, bounded operations, assertions.
 
 const std = @import("std");
-const grain_mobile_core = @import("grain_mobile_core");
-const email_validation = grain_mobile_core.email_validation;
-const password_validation = grain_mobile_core.password_validation;
+const grain_carry_core = @import("grain_carry_core");
+const email_validation = grain_carry_core.email_validation;
+const password_validation = grain_carry_core.password_validation;
 
 test "email validation - valid email" {
     const valid_emails = [_][]const u8{

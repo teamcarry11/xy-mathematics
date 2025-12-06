@@ -17,13 +17,13 @@ docs/
 ├── plan.md                    # Master overview (high-level, all agents)
 ├── tasks.md                   # Master task list (high-level, all agents)
 ├── plans/
-│   ├── plan_os.md            # Grain OS Agent detailed plan
+│   ├── plan_core.md            # Grain Core Agent detailed plan
 │   ├── plan_aurora.md        # Aurora Agent detailed plan
 │   ├── plan_skate.md         # Skate Agent detailed plan
 │   ├── plan_workspace.md     # Workspace Agent detailed plan
 │   └── plan_kernel.md        # YOUR FILE (to be created)
 └── tasks/
-    ├── tasks_os.md           # Grain OS Agent detailed tasks
+    ├── tasks_core.md           # Grain Core Agent detailed tasks
     ├── tasks_aurora.md       # Aurora Agent detailed tasks
     ├── tasks_skate.md        # Skate Agent detailed tasks
     ├── tasks_workspace.md    # Workspace Agent detailed tasks
@@ -43,15 +43,15 @@ docs/
 
 ## Your Task
 
-Create two files following the Grain OS Agent's example:
+Create two files following the Grain Core Agent's example:
 
 1. **`docs/plans/plan_kernel.md`** — Detailed development plan
 2. **`docs/tasks/tasks_kernel.md`** — Detailed task list
 
 ### Reference Files
 
-- **Example Plan**: [`docs/plans/plan_os.md`](plans/plan_os.md) — Grain OS Agent plan (448 lines)
-- **Example Tasks**: [`docs/tasks/tasks_os.md`](tasks/tasks_os.md) — Grain OS Agent tasks (188 lines)
+- **Example Plan**: [`docs/plans/plan_core.md`](plans/plan_core.md) — Grain Core Agent plan (448 lines)
+- **Example Tasks**: [`docs/tasks/tasks_core.md`](tasks/tasks_core.md) — Grain Core Agent tasks (188 lines)
 - **Master Plan**: [`docs/plan.md`](plan.md) — Master overview (236 lines)
 - **Master Tasks**: [`docs/tasks.md`](tasks.md) — Master task list (195 lines)
 
@@ -130,7 +130,7 @@ Create two files following the Grain OS Agent's example:
 
 ## Coordination Points
 
-### With Grain OS Agent
+### With Grain Core Agent
 
 **Integration Points**:
 - Kernel syscalls for system services
@@ -140,7 +140,7 @@ Create two files following the Grain OS Agent's example:
 - Network syscalls (planned)
 
 **Coordination Notes**:
-- Grain OS Agent uses kernel syscalls via compositor
+- Grain Core Agent uses kernel syscalls via compositor
 - Kernel provides syscall interface for userspace
 - Coordination on syscall API design
 
@@ -303,7 +303,7 @@ Create two files following the Grain OS Agent's example:
 - CPU time statistics for resource monitoring
 
 **Integration**:
-- Used by Grain OS Agent's ProcessManager
+- Used by Grain Core Agent's ProcessManager
 - Available via `get_process_info` syscall
 
 **Files**:
@@ -333,12 +333,12 @@ Create two files following the Grain OS Agent's example:
 - CPU cores, uptime, load average
 
 **Integration**:
-- Used by Grain OS Agent's ResourceMonitor
+- Used by Grain Core Agent's ResourceMonitor
 - Integrated in Phase 52 (Enhanced SysInfo Integration)
 
 **Files**:
 - `src/kernel/basin_kernel.zig` — SysInfo structure and syscall
-- `src/grain_os/resource_monitor.zig` — Userspace integration
+- `src/grain_core/resource_monitor.zig` — Userspace integration
 - Test files for enhanced sysinfo
 
 ---
@@ -363,7 +363,7 @@ Create two files following the Grain OS Agent's example:
 - Ready for scheduler integration (future enhancement)
 
 **Integration**:
-- Used by Grain OS Agent's ProcessManager
+- Used by Grain Core Agent's ProcessManager
 - Integrated in Phase 57 (Process Priority Kernel Integration)
 
 **Files**:
@@ -383,10 +383,10 @@ Create two files following the Grain OS Agent's example:
 
 ## Coordination with Other Agents
 
-### With Grain OS Agent
+### With Grain Core Agent
 
 **Integration Points**:
-- **Kernel Syscalls**: Grain OS Agent uses kernel syscalls via compositor:
+- **Kernel Syscalls**: Grain Core Agent uses kernel syscalls via compositor:
   - Process management: `spawn`, `exit`, `wait`, `kill`
   - Resource monitoring: `sysinfo`, `get_process_info`
   - Process priority: `set_priority`, `get_priority`
@@ -399,30 +399,30 @@ Create two files following the Grain OS Agent's example:
 
 **Coordination Notes**:
 - Kernel provides syscall interface for userspace
-- Grain OS Agent uses syscalls via compositor (not directly)
+- Grain Core Agent uses syscalls via compositor (not directly)
 - Coordination needed on syscall API design and feature priorities
 
 **Recent Coordination**:
-- **Phase 3.6 (Enhanced SysInfo)**: Integrated by Grain OS Agent in Phase 52
-- **Phase 3.7 (Process Priority)**: Integrated by Grain OS Agent in Phase 57
+- **Phase 3.6 (Enhanced SysInfo)**: Integrated by Grain Core Agent in Phase 52
+- **Phase 3.7 (Process Priority)**: Integrated by Grain Core Agent in Phase 57
 - **Response Document**: Created `docs/kernel_agent_response_to_grain_os.md` detailing available and planned features
 
 **Future Coordination**:
-- **Per-Process Resource Tracking**: When implemented, Grain OS Agent will integrate
-- **Process Enumeration**: Already available, Grain OS Agent can use
-- **Network Syscalls**: When implemented, Grain OS Agent will integrate
-- **Audio Device Management**: When implemented, Grain OS Agent will integrate
+- **Per-Process Resource Tracking**: When implemented, Grain Core Agent will integrate
+- **Process Enumeration**: Already available, Grain Core Agent can use
+- **Network Syscalls**: When implemented, Grain Core Agent will integrate
+- **Audio Device Management**: When implemented, Grain Core Agent will integrate
 
 ### With Grain Workspace Agent
 
 **Integration Points**:
-- Applications use kernel syscalls via Grain OS compositor
-- No direct coordination needed — Grain OS Agent handles kernel integration
+- Applications use kernel syscalls via Grain Core compositor
+- No direct coordination needed — Grain Core Agent handles kernel integration
 
 ### With Other Agents
 
 **Integration Points**:
-- All agents use kernel syscalls via Grain OS compositor
+- All agents use kernel syscalls via Grain Core compositor
 - Kernel provides foundation for all userspace applications
 
 ---
@@ -538,7 +538,7 @@ Extract:
 ### Cross-References
 
 - Link to master files: `[Master Plan](../plan.md)`
-- Link to other agent files: `[Grain OS Plan](../plans/plan_os.md)`
+- Link to other agent files: `[Grain OS Plan](../plans/plan_core.md)`
 - Link to shared docs: `[Grain Style](../grain_style.md)`
 - Link to coordination docs: `[Kernel Agent Response](../kernel_agent_response_to_grain_os.md)`
 
@@ -547,8 +547,8 @@ Extract:
 ## Steps to Complete
 
 1. **Read Reference Files**:
-   - Read `docs/plans/plan_os.md` to understand structure
-   - Read `docs/tasks/tasks_os.md` to understand task format
+   - Read `docs/plans/plan_core.md` to understand structure
+   - Read `docs/tasks/tasks_core.md` to understand task format
    - Read `docs/documentation_structure_recommendation.md` for rationale
    - Read `archaeology/docs/plan_tasks_archive/plan_2025-12-03-165133-pst.md` for your old plan
 
@@ -560,13 +560,13 @@ Extract:
 
 3. **Create Plan File**:
    - Create `docs/plans/plan_kernel.md`
-   - Follow structure from `plan_os.md`
+   - Follow structure from `plan_core.md`
    - Include completed phases (Phase 2.x, Phase 3.x), current work, planned phases
-   - Include coordination points (especially with Grain OS Agent)
+   - Include coordination points (especially with Grain Core Agent)
 
 4. **Create Tasks File**:
    - Create `docs/tasks/tasks_kernel.md`
-   - Follow structure from `tasks_os.md`
+   - Follow structure from `tasks_core.md`
    - Include task lists for each phase
    - Include coordination tasks
 
@@ -624,8 +624,8 @@ After creating your files, the master `docs/plan.md` should have an entry like:
    - AArch64 support
 
 4. **What do you coordinate with other agents?**
-   - Grain OS Agent (syscall API design, feature priorities)
-   - Other agents (via Grain OS compositor)
+   - Grain Core Agent (syscall API design, feature priorities)
+   - Other agents (via Grain Core compositor)
 
 5. **What dependencies do you have?**
    - What you need from other agents (feature priorities, API feedback)
@@ -639,7 +639,7 @@ After creating your files, the master `docs/plan.md` should have an entry like:
 ✅ Tasks file created (`docs/tasks/tasks_kernel.md`)  
 ✅ Files follow structure from reference files  
 ✅ Recent work (Phase 3.6, 3.7, and other recent phases) included  
-✅ Coordination points documented (especially with Grain OS Agent)  
+✅ Coordination points documented (especially with Grain Core Agent)  
 ✅ Master files updated (if needed)  
 ✅ File sizes reasonable (~400-600 lines for plan, ~300-500 for tasks)  
 ✅ Cross-references work  
@@ -650,8 +650,8 @@ After creating your files, the master `docs/plan.md` should have an entry like:
 ## References
 
 - **Documentation Structure**: [`docs/documentation_structure_recommendation.md`](documentation_structure_recommendation.md)
-- **Grain OS Agent Plan**: [`docs/plans/plan_os.md`](plans/plan_os.md) — Example structure
-- **Grain OS Agent Tasks**: [`docs/tasks/tasks_os.md`](tasks/tasks_os.md) — Example structure
+- **Grain Core Agent Plan**: [`docs/plans/plan_core.md`](plans/plan_core.md) — Example structure
+- **Grain Core Agent Tasks**: [`docs/tasks/tasks_core.md`](tasks/tasks_core.md) — Example structure
 - **Master Plan**: [`docs/plan.md`](plan.md) — Master overview
 - **Master Tasks**: [`docs/tasks.md`](tasks.md) — Master task list
 - **Grain Style**: [`docs/grain_style.md`](grain_style.md) — Coding principles
@@ -660,7 +660,7 @@ After creating your files, the master `docs/plan.md` should have an entry like:
 
 ---
 
-**Your Mission**: Create `docs/plans/plan_kernel.md` and `docs/tasks/tasks_kernel.md` following the hybrid documentation structure, including your recent work (Phase 3.6, 3.7, and other recent phases) and coordination points with Grain OS Agent and other agents.
+**Your Mission**: Create `docs/plans/plan_kernel.md` and `docs/tasks/tasks_kernel.md` following the hybrid documentation structure, including your recent work (Phase 3.6, 3.7, and other recent phases) and coordination points with Grain Core Agent and other agents.
 
 **Remember**: Be detailed, be specific, be coordinated. The goal is to have focused agent files while maintaining coordination through master files. Your kernel and VM are the foundation for all Grain OS applications!
 

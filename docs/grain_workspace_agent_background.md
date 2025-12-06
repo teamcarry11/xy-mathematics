@@ -39,7 +39,7 @@ xy-mathematics/
 ├── src/
 │   ├── kernel/              # Grain Basin Kernel (VM/Kernel Agent)
 │   ├── kernel_vm/           # Grain Vantage VM (VM/Kernel Agent)
-│   ├── grain_os/            # Desktop environment (Grain OS Agent)
+│   ├── grain_core/            # Desktop environment (Grain Core Agent)
 │   ├── aurora_*.zig         # Editor components (Aurora/Dream Agent)
 │   ├── dream_*.zig          # Browser components (Aurora/Dream Agent)
 │   ├── grain_skate/         # Knowledge graph editor (Grain Skate Agent)
@@ -61,7 +61,7 @@ You work alongside **four other agents**:
 1. **Grain Vantage VM Basin Kernel Agent** — Kernel and VM development
 2. **Aurora IDE Dream Browser Agent** — Editor and browser implementation
 3. **Grain Skate Terminal Silo Field Agent** — Terminal, knowledge graph, scripting
-4. **Grain OS Agent** — Desktop environment compositor and system services
+4. **Grain Core Agent** — Desktop environment compositor and system services
 5. **Grain Workspace Agent (YOU)** — Desktop applications
 
 **Coordination**: Check `docs/plan.md` before starting work. Update it when you begin/complete phases.
@@ -554,7 +554,7 @@ pub const monitor = @import("monitor/app.zig");
 
 ### Grain OS Compositor
 
-**Location**: `src/grain_os/compositor.zig`
+**Location**: `src/grain_core/compositor.zig`
 
 **Usage**: Create windows, handle input, render to framebuffer
 
@@ -575,7 +575,7 @@ try compositor.render_to_framebuffer();
 
 ### Grain OS System Services
 
-**Location**: `src/grain_os/*_manager.zig`
+**Location**: `src/grain_core/*_manager.zig`
 
 **Available Services**:
 - `process_manager.zig` — Process tracking and management
@@ -695,7 +695,7 @@ your agent name is: Grain Workspace Agent
 3. **Master Plan**: `docs/plan.md`
 4. **Task List**: `docs/tasks.md`
 5. **Kernel Syscalls**: `docs/grain_terminal_kernel_ready.md`
-6. **Grain OS APIs**: `src/grain_os/` directory
+6. **Grain OS APIs**: `src/grain_core/` directory
 
 ---
 

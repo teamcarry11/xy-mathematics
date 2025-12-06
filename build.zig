@@ -234,9 +234,9 @@ pub fn build(b: *std.Build) void {
         },
     });
 
-    // Grain Field module
-    const grain_field_module = b.addModule("grain_field", .{
-        .root_source_file = b.path("src/grain_field/root.zig"),
+    // Grain Court module (formerly Grain Field)
+    const grain_court_module = b.addModule("grain_court", .{
+        .root_source_file = b.path("src/grain_court/root.zig"),
         .target = target,
         .optimize = optimize,
     });
@@ -256,8 +256,8 @@ pub fn build(b: *std.Build) void {
     });
 
     // Grain OS module
-    const grain_os_module = b.addModule("grain_os", .{
-        .root_source_file = b.path("src/grain_os/root.zig"),
+    const grain_core_module = b.addModule("grain_core", .{
+        .root_source_file = b.path("src/grain_core/root.zig"),
         .target = target,
         .optimize = optimize,
         .imports = &.{
@@ -266,8 +266,8 @@ pub fn build(b: *std.Build) void {
     });
 
     // Grain Mobile Core module
-    const grain_mobile_core_module = b.addModule("grain_mobile_core", .{
-        .root_source_file = b.path("src/grain_mobile_core/root.zig"),
+    const grain_carry_core_module = b.addModule("grain_carry_core", .{
+        .root_source_file = b.path("src/grain_carry_core/root.zig"),
         .target = target,
         .optimize = optimize,
     });
@@ -280,7 +280,7 @@ pub fn build(b: *std.Build) void {
         .imports = &.{
             .{ .name = "grain_silo", .module = grain_silo_module },
             .{ .name = "grain_skate", .module = grain_skate_module },
-            .{ .name = "grain_os", .module = grain_os_module },
+            .{ .name = "grain_core", .module = grain_core_module },
         },
     });
 
@@ -561,134 +561,134 @@ pub fn build(b: *std.Build) void {
         }),
     });
 
-    const grain_mobile_core_validation_tests = b.addTest(.{
+    const grain_carry_core_validation_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/108_grain_mobile_core_validation_test.zig"),
+            .root_source_file = b.path("tests/108_grain_carry_core_validation_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_mobile_core", .module = grain_mobile_core_module },
+                .{ .name = "grain_carry_core", .module = grain_carry_core_module },
             },
         }),
     });
 
-    const grain_mobile_core_crypto_auth_tests = b.addTest(.{
+    const grain_carry_core_crypto_auth_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/109_grain_mobile_core_crypto_auth_test.zig"),
+            .root_source_file = b.path("tests/109_grain_carry_core_crypto_auth_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_mobile_core", .module = grain_mobile_core_module },
+                .{ .name = "grain_carry_core", .module = grain_carry_core_module },
             },
         }),
     });
 
-    const grain_mobile_core_email_jwt_tests = b.addTest(.{
+    const grain_carry_core_email_jwt_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/110_grain_mobile_core_email_jwt_test.zig"),
+            .root_source_file = b.path("tests/110_grain_carry_core_email_jwt_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_mobile_core", .module = grain_mobile_core_module },
+                .{ .name = "grain_carry_core", .module = grain_carry_core_module },
             },
         }),
     });
 
-    const grain_mobile_core_style_tests = b.addTest(.{
+    const grain_carry_core_style_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/111_grain_mobile_core_style_test.zig"),
+            .root_source_file = b.path("tests/111_grain_carry_core_style_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_mobile_core", .module = grain_mobile_core_module },
+                .{ .name = "grain_carry_core", .module = grain_carry_core_module },
             },
         }),
     });
 
-    const grain_mobile_core_style_ffi_tests = b.addTest(.{
+    const grain_carry_core_style_ffi_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/112_grain_mobile_core_style_ffi_test.zig"),
+            .root_source_file = b.path("tests/112_grain_carry_core_style_ffi_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_mobile_core", .module = grain_mobile_core_module },
+                .{ .name = "grain_carry_core", .module = grain_carry_core_module },
             },
         }),
     });
 
-    const grain_mobile_core_api_client_tests = b.addTest(.{
+    const grain_carry_core_api_client_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/113_grain_mobile_core_api_client_test.zig"),
+            .root_source_file = b.path("tests/113_grain_carry_core_api_client_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_mobile_core", .module = grain_mobile_core_module },
+                .{ .name = "grain_carry_core", .module = grain_carry_core_module },
             },
         }),
     });
 
-    const grain_mobile_core_api_endpoints_tests = b.addTest(.{
+    const grain_carry_core_api_endpoints_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/114_grain_mobile_core_api_endpoints_test.zig"),
+            .root_source_file = b.path("tests/114_grain_carry_core_api_endpoints_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_mobile_core", .module = grain_mobile_core_module },
+                .{ .name = "grain_carry_core", .module = grain_carry_core_module },
             },
         }),
     });
 
-    const grain_mobile_core_api_models_tests = b.addTest(.{
+    const grain_carry_core_api_models_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/115_grain_mobile_core_api_models_test.zig"),
+            .root_source_file = b.path("tests/115_grain_carry_core_api_models_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_mobile_core", .module = grain_mobile_core_module },
+                .{ .name = "grain_carry_core", .module = grain_carry_core_module },
             },
         }),
     });
 
-    const grain_mobile_core_api_validation_tests = b.addTest(.{
+    const grain_carry_core_api_validation_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/116_grain_mobile_core_api_validation_test.zig"),
+            .root_source_file = b.path("tests/116_grain_carry_core_api_validation_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_mobile_core", .module = grain_mobile_core_module },
+                .{ .name = "grain_carry_core", .module = grain_carry_core_module },
             },
         }),
     });
 
-    const grain_mobile_core_api_handlers_tests = b.addTest(.{
+    const grain_carry_core_api_handlers_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/117_grain_mobile_core_api_handlers_test.zig"),
+            .root_source_file = b.path("tests/117_grain_carry_core_api_handlers_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_mobile_core", .module = grain_mobile_core_module },
+                .{ .name = "grain_carry_core", .module = grain_carry_core_module },
             },
         }),
     });
 
-    const grain_mobile_core_api_middleware_tests = b.addTest(.{
+    const grain_carry_core_api_middleware_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/118_grain_mobile_core_api_middleware_test.zig"),
+            .root_source_file = b.path("tests/118_grain_carry_core_api_middleware_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_mobile_core", .module = grain_mobile_core_module },
+                .{ .name = "grain_carry_core", .module = grain_carry_core_module },
             },
         }),
     });
 
-    const grain_mobile_core_api_integration_tests = b.addTest(.{
+    const grain_carry_core_api_integration_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/119_grain_mobile_core_api_integration_test.zig"),
+            .root_source_file = b.path("tests/119_grain_carry_core_api_integration_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_mobile_core", .module = grain_mobile_core_module },
+                .{ .name = "grain_carry_core", .module = grain_carry_core_module },
             },
         }),
     });
@@ -877,84 +877,112 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&run_riscv_tests.step);
     const run_outputs_tests = b.addRunArtifact(outputs_tests);
     test_step.dependOn(&run_outputs_tests.step);
-    const run_grain_mobile_core_validation_tests = b.addRunArtifact(grain_mobile_core_validation_tests);
-    test_step.dependOn(&run_grain_mobile_core_validation_tests.step);
-    const run_grain_mobile_core_crypto_auth_tests = b.addRunArtifact(grain_mobile_core_crypto_auth_tests);
-    test_step.dependOn(&run_grain_mobile_core_crypto_auth_tests.step);
-    const run_grain_mobile_core_email_jwt_tests = b.addRunArtifact(grain_mobile_core_email_jwt_tests);
-    test_step.dependOn(&run_grain_mobile_core_email_jwt_tests.step);
-    const run_grain_mobile_core_style_tests = b.addRunArtifact(grain_mobile_core_style_tests);
-    test_step.dependOn(&run_grain_mobile_core_style_tests.step);
-    const run_grain_mobile_core_style_ffi_tests = b.addRunArtifact(grain_mobile_core_style_ffi_tests);
-    test_step.dependOn(&run_grain_mobile_core_style_ffi_tests.step);
-    const run_grain_mobile_core_api_client_tests = b.addRunArtifact(grain_mobile_core_api_client_tests);
-    test_step.dependOn(&run_grain_mobile_core_api_client_tests.step);
-    const run_grain_mobile_core_api_endpoints_tests = b.addRunArtifact(grain_mobile_core_api_endpoints_tests);
-    test_step.dependOn(&run_grain_mobile_core_api_endpoints_tests.step);
-    const run_grain_mobile_core_api_models_tests = b.addRunArtifact(grain_mobile_core_api_models_tests);
-    test_step.dependOn(&run_grain_mobile_core_api_models_tests.step);
-    const run_grain_mobile_core_api_validation_tests = b.addRunArtifact(grain_mobile_core_api_validation_tests);
-    test_step.dependOn(&run_grain_mobile_core_api_validation_tests.step);
-    const run_grain_mobile_core_api_handlers_tests = b.addRunArtifact(grain_mobile_core_api_handlers_tests);
-    test_step.dependOn(&run_grain_mobile_core_api_handlers_tests.step);
-    const run_grain_mobile_core_api_middleware_tests = b.addRunArtifact(grain_mobile_core_api_middleware_tests);
-    test_step.dependOn(&run_grain_mobile_core_api_middleware_tests.step);
-    const run_grain_mobile_core_api_integration_tests = b.addRunArtifact(grain_mobile_core_api_integration_tests);
-    test_step.dependOn(&run_grain_mobile_core_api_integration_tests.step);
+    const run_grain_carry_core_validation_tests = b.addRunArtifact(grain_carry_core_validation_tests);
+    test_step.dependOn(&run_grain_carry_core_validation_tests.step);
+    const run_grain_carry_core_crypto_auth_tests = b.addRunArtifact(grain_carry_core_crypto_auth_tests);
+    test_step.dependOn(&run_grain_carry_core_crypto_auth_tests.step);
+    const run_grain_carry_core_email_jwt_tests = b.addRunArtifact(grain_carry_core_email_jwt_tests);
+    test_step.dependOn(&run_grain_carry_core_email_jwt_tests.step);
+    const run_grain_carry_core_style_tests = b.addRunArtifact(grain_carry_core_style_tests);
+    test_step.dependOn(&run_grain_carry_core_style_tests.step);
+    const run_grain_carry_core_style_ffi_tests = b.addRunArtifact(grain_carry_core_style_ffi_tests);
+    test_step.dependOn(&run_grain_carry_core_style_ffi_tests.step);
+    const run_grain_carry_core_api_client_tests = b.addRunArtifact(grain_carry_core_api_client_tests);
+    test_step.dependOn(&run_grain_carry_core_api_client_tests.step);
+    const run_grain_carry_core_api_endpoints_tests = b.addRunArtifact(grain_carry_core_api_endpoints_tests);
+    test_step.dependOn(&run_grain_carry_core_api_endpoints_tests.step);
+    const run_grain_carry_core_api_models_tests = b.addRunArtifact(grain_carry_core_api_models_tests);
+    test_step.dependOn(&run_grain_carry_core_api_models_tests.step);
+    const run_grain_carry_core_api_validation_tests = b.addRunArtifact(grain_carry_core_api_validation_tests);
+    test_step.dependOn(&run_grain_carry_core_api_validation_tests.step);
+    const run_grain_carry_core_api_handlers_tests = b.addRunArtifact(grain_carry_core_api_handlers_tests);
+    test_step.dependOn(&run_grain_carry_core_api_handlers_tests.step);
+    const run_grain_carry_core_api_middleware_tests = b.addRunArtifact(grain_carry_core_api_middleware_tests);
+    test_step.dependOn(&run_grain_carry_core_api_middleware_tests.step);
+    const run_grain_carry_core_api_integration_tests = b.addRunArtifact(grain_carry_core_api_integration_tests);
+    test_step.dependOn(&run_grain_carry_core_api_integration_tests.step);
 
-    const grain_mobile_core_api_middleware_integration_tests = b.addTest(.{
+    const grain_carry_core_api_middleware_integration_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/120_grain_mobile_core_api_middleware_integration_test.zig"),
+            .root_source_file = b.path("tests/120_grain_carry_core_api_middleware_integration_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_mobile_core", .module = grain_mobile_core_module },
+                .{ .name = "grain_carry_core", .module = grain_carry_core_module },
             },
         }),
     });
-    const run_grain_mobile_core_api_middleware_integration_tests = b.addRunArtifact(grain_mobile_core_api_middleware_integration_tests);
-    test_step.dependOn(&run_grain_mobile_core_api_middleware_integration_tests.step);
+    const run_grain_carry_core_api_middleware_integration_tests = b.addRunArtifact(grain_carry_core_api_middleware_integration_tests);
+    test_step.dependOn(&run_grain_carry_core_api_middleware_integration_tests.step);
 
-    const grain_mobile_core_api_route_registration_tests = b.addTest(.{
+    const grain_carry_core_api_route_registration_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/121_grain_mobile_core_api_route_registration_test.zig"),
+            .root_source_file = b.path("tests/121_grain_carry_core_api_route_registration_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_mobile_core", .module = grain_mobile_core_module },
+                .{ .name = "grain_carry_core", .module = grain_carry_core_module },
             },
         }),
     });
-    const run_grain_mobile_core_api_route_registration_tests = b.addRunArtifact(grain_mobile_core_api_route_registration_tests);
-    test_step.dependOn(&run_grain_mobile_core_api_route_registration_tests.step);
+    const run_grain_carry_core_api_route_registration_tests = b.addRunArtifact(grain_carry_core_api_route_registration_tests);
+    test_step.dependOn(&run_grain_carry_core_api_route_registration_tests.step);
 
-    const grain_mobile_core_api_handler_adapters_tests = b.addTest(.{
+    const grain_carry_core_api_handler_adapters_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/122_grain_mobile_core_api_handler_adapters_test.zig"),
+            .root_source_file = b.path("tests/122_grain_carry_core_api_handler_adapters_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_mobile_core", .module = grain_mobile_core_module },
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_carry_core", .module = grain_carry_core_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const run_grain_mobile_core_api_handler_adapters_tests = b.addRunArtifact(grain_mobile_core_api_handler_adapters_tests);
-    test_step.dependOn(&run_grain_mobile_core_api_handler_adapters_tests.step);
+    const run_grain_carry_core_api_handler_adapters_tests = b.addRunArtifact(grain_carry_core_api_handler_adapters_tests);
+    test_step.dependOn(&run_grain_carry_core_api_handler_adapters_tests.step);
 
-    const grain_mobile_core_api_integration_pipeline_tests = b.addTest(.{
+    const grain_carry_core_auth_integration_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/123_grain_mobile_core_api_integration_pipeline_test.zig"),
+            .root_source_file = b.path("tests/123_grain_carry_core_auth_integration_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_mobile_core", .module = grain_mobile_core_module },
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_carry_core", .module = grain_carry_core_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const run_grain_mobile_core_api_integration_pipeline_tests = b.addRunArtifact(grain_mobile_core_api_integration_pipeline_tests);
-    test_step.dependOn(&run_grain_mobile_core_api_integration_pipeline_tests.step);
+    const run_grain_carry_core_auth_integration_tests = b.addRunArtifact(grain_carry_core_auth_integration_tests);
+    test_step.dependOn(&run_grain_carry_core_auth_integration_tests.step);
+
+    const grain_carry_core_api_integration_pipeline_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/123_grain_carry_core_api_integration_pipeline_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_carry_core", .module = grain_carry_core_module },
+                .{ .name = "grain_core", .module = grain_core_module },
+            },
+        }),
+    });
+    const run_grain_carry_core_api_integration_pipeline_tests = b.addRunArtifact(grain_carry_core_api_integration_pipeline_tests);
+    test_step.dependOn(&run_grain_carry_core_api_integration_pipeline_tests.step);
+
+    const grain_carry_core_api_auth_service_integration_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/124_grain_carry_core_api_auth_service_integration_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_carry_core", .module = grain_carry_core_module },
+                .{ .name = "grain_core", .module = grain_core_module },
+            },
+        }),
+    });
+    const run_grain_carry_core_api_auth_service_integration_tests = b.addRunArtifact(grain_carry_core_api_auth_service_integration_tests);
+    test_step.dependOn(&run_grain_carry_core_api_auth_service_integration_tests.step);
 
     const fuzz_004_tests = b.addTest(.{
         .root_module = b.createModule(.{
@@ -1415,6 +1443,19 @@ pub fn build(b: *std.Build) void {
     const signal_session_tests_run = b.addRunArtifact(signal_session_tests);
     test_step.dependOn(&signal_session_tests_run.step);
 
+    const process_group_stats_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/084_process_group_stats_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+            },
+        }),
+    });
+    const process_group_stats_tests_run = b.addRunArtifact(process_group_stats_tests);
+    test_step.dependOn(&process_group_stats_tests_run.step);
+
     const storage_filesystem_tests = b.addTest(.{
         .root_module = b.createModule(.{
             .root_source_file = b.path("tests/025_storage_filesystem_test.zig"),
@@ -1769,18 +1810,18 @@ pub fn build(b: *std.Build) void {
     const grain_skate_bracket_matching_tests_run = b.addRunArtifact(grain_skate_bracket_matching_tests);
     test_step.dependOn(&grain_skate_bracket_matching_tests_run.step);
 
-    const grain_field_tests = b.addTest(.{
+    const grain_court_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/049_grain_field_test.zig"),
+            .root_source_file = b.path("tests/049_grain_court_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_field", .module = grain_field_module },
+                .{ .name = "grain_court", .module = grain_court_module },
             },
         }),
     });
-    const grain_field_tests_run = b.addRunArtifact(grain_field_tests);
-    test_step.dependOn(&grain_field_tests_run.step);
+    const grain_court_tests_run = b.addRunArtifact(grain_court_tests);
+    test_step.dependOn(&grain_court_tests_run.step);
 
     const grain_silo_tests = b.addTest(.{
         .root_module = b.createModule(.{
@@ -1795,54 +1836,54 @@ pub fn build(b: *std.Build) void {
     const grain_silo_tests_run = b.addRunArtifact(grain_silo_tests);
     test_step.dependOn(&grain_silo_tests_run.step);
 
-    const grain_os_compositor_tests = b.addTest(.{
+    const grain_core_compositor_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/052_grain_os_compositor_test.zig"),
+            .root_source_file = b.path("tests/052_grain_core_compositor_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_tiling_tests = b.addTest(.{
+    const grain_core_tiling_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/053_grain_os_tiling_test.zig"),
+            .root_source_file = b.path("tests/053_grain_core_tiling_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_compositor_tests_run = b.addRunArtifact(grain_os_compositor_tests);
-    test_step.dependOn(&grain_os_compositor_tests_run.step);
-    const grain_os_tiling_tests_run = b.addRunArtifact(grain_os_tiling_tests);
-    test_step.dependOn(&grain_os_tiling_tests_run.step);
-    const grain_os_layout_generator_tests = b.addTest(.{
+    const grain_core_compositor_tests_run = b.addRunArtifact(grain_core_compositor_tests);
+    test_step.dependOn(&grain_core_compositor_tests_run.step);
+    const grain_core_tiling_tests_run = b.addRunArtifact(grain_core_tiling_tests);
+    test_step.dependOn(&grain_core_tiling_tests_run.step);
+    const grain_core_layout_generator_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/056_grain_os_layout_generator_test.zig"),
+            .root_source_file = b.path("tests/056_grain_core_layout_generator_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_layout_generator_tests_run = b.addRunArtifact(grain_os_layout_generator_tests);
-    test_step.dependOn(&grain_os_layout_generator_tests_run.step);
-    const grain_os_workspace_tests = b.addTest(.{
+    const grain_core_layout_generator_tests_run = b.addRunArtifact(grain_core_layout_generator_tests);
+    test_step.dependOn(&grain_core_layout_generator_tests_run.step);
+    const grain_core_workspace_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/057_grain_os_workspace_test.zig"),
+            .root_source_file = b.path("tests/057_grain_core_workspace_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_workspace_tests_run = b.addRunArtifact(grain_os_workspace_tests);
-    test_step.dependOn(&grain_os_workspace_tests_run.step);
+    const grain_core_workspace_tests_run = b.addRunArtifact(grain_core_workspace_tests);
+    test_step.dependOn(&grain_core_workspace_tests_run.step);
     const kernel_boot_jit_tests = b.addTest(.{
         .root_module = b.createModule(.{
             .root_source_file = b.path("tests/058_kernel_boot_jit_test.zig"),
@@ -2158,694 +2199,694 @@ pub fn build(b: *std.Build) void {
     const vm_memory_protection_tests_run = b.addRunArtifact(vm_memory_protection_tests);
     test_step.dependOn(&vm_memory_protection_tests_run.step);
 
-    const grain_os_layout_tests = b.addTest(.{
+    const grain_core_layout_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/053_grain_os_layout_test.zig"),
+            .root_source_file = b.path("tests/053_grain_core_layout_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_layout_tests_run = b.addRunArtifact(grain_os_layout_tests);
-    test_step.dependOn(&grain_os_layout_tests_run.step);
+    const grain_core_layout_tests_run = b.addRunArtifact(grain_core_layout_tests);
+    test_step.dependOn(&grain_core_layout_tests_run.step);
 
-    const grain_os_framebuffer_renderer_tests = b.addTest(.{
+    const grain_core_framebuffer_renderer_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/054_grain_os_framebuffer_renderer_test.zig"),
+            .root_source_file = b.path("tests/054_grain_core_framebuffer_renderer_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_framebuffer_renderer_tests_run = b.addRunArtifact(grain_os_framebuffer_renderer_tests);
-    test_step.dependOn(&grain_os_framebuffer_renderer_tests_run.step);
+    const grain_core_framebuffer_renderer_tests_run = b.addRunArtifact(grain_core_framebuffer_renderer_tests);
+    test_step.dependOn(&grain_core_framebuffer_renderer_tests_run.step);
 
-    const grain_os_input_handler_tests = b.addTest(.{
+    const grain_core_input_handler_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/055_grain_os_input_handler_test.zig"),
+            .root_source_file = b.path("tests/055_grain_core_input_handler_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_input_handler_tests_run = b.addRunArtifact(grain_os_input_handler_tests);
-    test_step.dependOn(&grain_os_input_handler_tests_run.step);
+    const grain_core_input_handler_tests_run = b.addRunArtifact(grain_core_input_handler_tests);
+    test_step.dependOn(&grain_core_input_handler_tests_run.step);
 
-    const grain_os_input_routing_tests = b.addTest(.{
+    const grain_core_input_routing_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/056_grain_os_input_routing_test.zig"),
+            .root_source_file = b.path("tests/056_grain_core_input_routing_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_input_routing_tests_run = b.addRunArtifact(grain_os_input_routing_tests);
-    test_step.dependOn(&grain_os_input_routing_tests_run.step);
+    const grain_core_input_routing_tests_run = b.addRunArtifact(grain_core_input_routing_tests);
+    test_step.dependOn(&grain_core_input_routing_tests_run.step);
 
-    const grain_os_window_decorations_tests = b.addTest(.{
+    const grain_core_window_decorations_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/058_grain_os_window_decorations_test.zig"),
+            .root_source_file = b.path("tests/058_grain_core_window_decorations_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_window_decorations_tests_run = b.addRunArtifact(grain_os_window_decorations_tests);
-    test_step.dependOn(&grain_os_window_decorations_tests_run.step);
+    const grain_core_window_decorations_tests_run = b.addRunArtifact(grain_core_window_decorations_tests);
+    test_step.dependOn(&grain_core_window_decorations_tests_run.step);
 
-    const grain_os_keyboard_shortcuts_tests = b.addTest(.{
+    const grain_core_keyboard_shortcuts_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/059_grain_os_keyboard_shortcuts_test.zig"),
+            .root_source_file = b.path("tests/059_grain_core_keyboard_shortcuts_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_keyboard_shortcuts_tests_run = b.addRunArtifact(grain_os_keyboard_shortcuts_tests);
-    test_step.dependOn(&grain_os_keyboard_shortcuts_tests_run.step);
+    const grain_core_keyboard_shortcuts_tests_run = b.addRunArtifact(grain_core_keyboard_shortcuts_tests);
+    test_step.dependOn(&grain_core_keyboard_shortcuts_tests_run.step);
 
-    const grain_os_runtime_config_tests = b.addTest(.{
+    const grain_core_runtime_config_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/060_grain_os_runtime_config_test.zig"),
+            .root_source_file = b.path("tests/060_grain_core_runtime_config_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_runtime_config_tests_run = b.addRunArtifact(grain_os_runtime_config_tests);
-    test_step.dependOn(&grain_os_runtime_config_tests_run.step);
+    const grain_core_runtime_config_tests_run = b.addRunArtifact(grain_core_runtime_config_tests);
+    test_step.dependOn(&grain_core_runtime_config_tests_run.step);
 
-    const grain_os_desktop_shell_tests = b.addTest(.{
+    const grain_core_desktop_shell_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/061_grain_os_desktop_shell_test.zig"),
+            .root_source_file = b.path("tests/061_grain_core_desktop_shell_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_desktop_shell_tests_run = b.addRunArtifact(grain_os_desktop_shell_tests);
-    test_step.dependOn(&grain_os_desktop_shell_tests_run.step);
+    const grain_core_desktop_shell_tests_run = b.addRunArtifact(grain_core_desktop_shell_tests);
+    test_step.dependOn(&grain_core_desktop_shell_tests_run.step);
 
-    const grain_os_application_tests = b.addTest(.{
+    const grain_core_application_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/062_grain_os_application_test.zig"),
+            .root_source_file = b.path("tests/062_grain_core_application_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_application_tests_run = b.addRunArtifact(grain_os_application_tests);
-    test_step.dependOn(&grain_os_application_tests_run.step);
+    const grain_core_application_tests_run = b.addRunArtifact(grain_core_application_tests);
+    test_step.dependOn(&grain_core_application_tests_run.step);
 
-    const grain_os_launcher_integration_tests = b.addTest(.{
+    const grain_core_launcher_integration_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/063_grain_os_launcher_integration_test.zig"),
+            .root_source_file = b.path("tests/063_grain_core_launcher_integration_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_launcher_integration_tests_run = b.addRunArtifact(grain_os_launcher_integration_tests);
-    test_step.dependOn(&grain_os_launcher_integration_tests_run.step);
+    const grain_core_launcher_integration_tests_run = b.addRunArtifact(grain_core_launcher_integration_tests);
+    test_step.dependOn(&grain_core_launcher_integration_tests_run.step);
 
-    const grain_os_window_resize_drag_tests = b.addTest(.{
+    const grain_core_window_resize_drag_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/064_grain_os_window_resize_drag_test.zig"),
+            .root_source_file = b.path("tests/064_grain_core_window_resize_drag_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_window_resize_drag_tests_run = b.addRunArtifact(grain_os_window_resize_drag_tests);
-    test_step.dependOn(&grain_os_window_resize_drag_tests_run.step);
+    const grain_core_window_resize_drag_tests_run = b.addRunArtifact(grain_core_window_resize_drag_tests);
+    test_step.dependOn(&grain_core_window_resize_drag_tests_run.step);
 
-    const grain_os_window_snapping_tests = b.addTest(.{
+    const grain_core_window_snapping_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/065_grain_os_window_snapping_test.zig"),
+            .root_source_file = b.path("tests/065_grain_core_window_snapping_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_window_snapping_tests_run = b.addRunArtifact(grain_os_window_snapping_tests);
-    test_step.dependOn(&grain_os_window_snapping_tests_run.step);
+    const grain_core_window_snapping_tests_run = b.addRunArtifact(grain_core_window_snapping_tests);
+    test_step.dependOn(&grain_core_window_snapping_tests_run.step);
 
-    const grain_os_window_switching_tests = b.addTest(.{
+    const grain_core_window_switching_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/066_grain_os_window_switching_test.zig"),
+            .root_source_file = b.path("tests/066_grain_core_window_switching_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_window_switching_tests_run = b.addRunArtifact(grain_os_window_switching_tests);
-    test_step.dependOn(&grain_os_window_switching_tests_run.step);
+    const grain_core_window_switching_tests_run = b.addRunArtifact(grain_core_window_switching_tests);
+    test_step.dependOn(&grain_core_window_switching_tests_run.step);
 
-    const grain_os_window_state_tests = b.addTest(.{
+    const grain_core_window_state_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/067_grain_os_window_state_test.zig"),
+            .root_source_file = b.path("tests/067_grain_core_window_state_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_window_state_tests_run = b.addRunArtifact(grain_os_window_state_tests);
-    test_step.dependOn(&grain_os_window_state_tests_run.step);
+    const grain_core_window_state_tests_run = b.addRunArtifact(grain_core_window_state_tests);
+    test_step.dependOn(&grain_core_window_state_tests_run.step);
 
-    const grain_os_window_preview_tests = b.addTest(.{
+    const grain_core_window_preview_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/068_grain_os_window_preview_test.zig"),
+            .root_source_file = b.path("tests/068_grain_core_window_preview_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_window_preview_tests_run = b.addRunArtifact(grain_os_window_preview_tests);
-    test_step.dependOn(&grain_os_window_preview_tests_run.step);
+    const grain_core_window_preview_tests_run = b.addRunArtifact(grain_core_window_preview_tests);
+    test_step.dependOn(&grain_core_window_preview_tests_run.step);
 
-    const grain_os_window_visual_tests = b.addTest(.{
+    const grain_core_window_visual_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/069_grain_os_window_visual_test.zig"),
+            .root_source_file = b.path("tests/069_grain_core_window_visual_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_window_visual_tests_run = b.addRunArtifact(grain_os_window_visual_tests);
-    test_step.dependOn(&grain_os_window_visual_tests_run.step);
+    const grain_core_window_visual_tests_run = b.addRunArtifact(grain_core_window_visual_tests);
+    test_step.dependOn(&grain_core_window_visual_tests_run.step);
 
-    const grain_os_window_stacking_tests = b.addTest(.{
+    const grain_core_window_stacking_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/070_grain_os_window_stacking_test.zig"),
+            .root_source_file = b.path("tests/070_grain_core_window_stacking_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_window_stacking_tests_run = b.addRunArtifact(grain_os_window_stacking_tests);
-    test_step.dependOn(&grain_os_window_stacking_tests_run.step);
+    const grain_core_window_stacking_tests_run = b.addRunArtifact(grain_core_window_stacking_tests);
+    test_step.dependOn(&grain_core_window_stacking_tests_run.step);
 
-    const grain_os_window_opacity_tests = b.addTest(.{
+    const grain_core_window_opacity_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/071_grain_os_window_opacity_test.zig"),
+            .root_source_file = b.path("tests/071_grain_core_window_opacity_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_window_opacity_tests_run = b.addRunArtifact(grain_os_window_opacity_tests);
-    test_step.dependOn(&grain_os_window_opacity_tests_run.step);
+    const grain_core_window_opacity_tests_run = b.addRunArtifact(grain_core_window_opacity_tests);
+    test_step.dependOn(&grain_core_window_opacity_tests_run.step);
 
-    const grain_os_window_animation_tests = b.addTest(.{
+    const grain_core_window_animation_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/072_grain_os_window_animation_test.zig"),
+            .root_source_file = b.path("tests/072_grain_core_window_animation_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_window_animation_tests_run = b.addRunArtifact(grain_os_window_animation_tests);
-    test_step.dependOn(&grain_os_window_animation_tests_run.step);
+    const grain_core_window_animation_tests_run = b.addRunArtifact(grain_core_window_animation_tests);
+    test_step.dependOn(&grain_core_window_animation_tests_run.step);
 
-    const grain_os_window_constraints_tests = b.addTest(.{
+    const grain_core_window_constraints_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/074_grain_os_window_constraints_test.zig"),
+            .root_source_file = b.path("tests/074_grain_core_window_constraints_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_window_constraints_tests_run = b.addRunArtifact(grain_os_window_constraints_tests);
-    test_step.dependOn(&grain_os_window_constraints_tests_run.step);
+    const grain_core_window_constraints_tests_run = b.addRunArtifact(grain_core_window_constraints_tests);
+    test_step.dependOn(&grain_core_window_constraints_tests_run.step);
 
-    const grain_os_window_grouping_tests = b.addTest(.{
+    const grain_core_window_grouping_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/075_grain_os_window_grouping_test.zig"),
+            .root_source_file = b.path("tests/075_grain_core_window_grouping_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_window_grouping_tests_run = b.addRunArtifact(grain_os_window_grouping_tests);
-    test_step.dependOn(&grain_os_window_grouping_tests_run.step);
+    const grain_core_window_grouping_tests_run = b.addRunArtifact(grain_core_window_grouping_tests);
+    test_step.dependOn(&grain_core_window_grouping_tests_run.step);
 
-    const grain_os_window_focus_tests = b.addTest(.{
+    const grain_core_window_focus_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/076_grain_os_window_focus_test.zig"),
+            .root_source_file = b.path("tests/076_grain_core_window_focus_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_window_focus_tests_run = b.addRunArtifact(grain_os_window_focus_tests);
-    test_step.dependOn(&grain_os_window_focus_tests_run.step);
+    const grain_core_window_focus_tests_run = b.addRunArtifact(grain_core_window_focus_tests);
+    test_step.dependOn(&grain_core_window_focus_tests_run.step);
 
-    const grain_os_window_effects_tests = b.addTest(.{
+    const grain_core_window_effects_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/077_grain_os_window_effects_test.zig"),
+            .root_source_file = b.path("tests/077_grain_core_window_effects_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_window_effects_tests_run = b.addRunArtifact(grain_os_window_effects_tests);
-    test_step.dependOn(&grain_os_window_effects_tests_run.step);
+    const grain_core_window_effects_tests_run = b.addRunArtifact(grain_core_window_effects_tests);
+    test_step.dependOn(&grain_core_window_effects_tests_run.step);
 
-    const grain_os_window_drag_drop_tests = b.addTest(.{
+    const grain_core_window_drag_drop_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/078_grain_os_window_drag_drop_test.zig"),
+            .root_source_file = b.path("tests/078_grain_core_window_drag_drop_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_window_drag_drop_tests_run = b.addRunArtifact(grain_os_window_drag_drop_tests);
-    test_step.dependOn(&grain_os_window_drag_drop_tests_run.step);
+    const grain_core_window_drag_drop_tests_run = b.addRunArtifact(grain_core_window_drag_drop_tests);
+    test_step.dependOn(&grain_core_window_drag_drop_tests_run.step);
 
-    const grain_os_tiling_config_tests = b.addTest(.{
+    const grain_core_tiling_config_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/079_grain_os_tiling_config_test.zig"),
+            .root_source_file = b.path("tests/079_grain_core_tiling_config_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_tiling_config_tests_run = b.addRunArtifact(grain_os_tiling_config_tests);
-    test_step.dependOn(&grain_os_tiling_config_tests_run.step);
+    const grain_core_tiling_config_tests_run = b.addRunArtifact(grain_core_tiling_config_tests);
+    test_step.dependOn(&grain_core_tiling_config_tests_run.step);
 
-    const grain_os_window_rules_tests = b.addTest(.{
+    const grain_core_window_rules_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/080_grain_os_window_rules_test.zig"),
+            .root_source_file = b.path("tests/080_grain_core_window_rules_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_window_rules_tests_run = b.addRunArtifact(grain_os_window_rules_tests);
-    test_step.dependOn(&grain_os_window_rules_tests_run.step);
+    const grain_core_window_rules_tests_run = b.addRunArtifact(grain_core_window_rules_tests);
+    test_step.dependOn(&grain_core_window_rules_tests_run.step);
 
-    const grain_os_window_events_tests = b.addTest(.{
+    const grain_core_window_events_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/081_grain_os_window_events_test.zig"),
+            .root_source_file = b.path("tests/081_grain_core_window_events_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_window_events_tests_run = b.addRunArtifact(grain_os_window_events_tests);
-    test_step.dependOn(&grain_os_window_events_tests_run.step);
+    const grain_core_window_events_tests_run = b.addRunArtifact(grain_core_window_events_tests);
+    test_step.dependOn(&grain_core_window_events_tests_run.step);
 
-    const grain_os_window_session_tests = b.addTest(.{
+    const grain_core_window_session_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/082_grain_os_window_session_test.zig"),
+            .root_source_file = b.path("tests/082_grain_core_window_session_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_window_session_tests_run = b.addRunArtifact(grain_os_window_session_tests);
-    test_step.dependOn(&grain_os_window_session_tests_run.step);
+    const grain_core_window_session_tests_run = b.addRunArtifact(grain_core_window_session_tests);
+    test_step.dependOn(&grain_core_window_session_tests_run.step);
 
-    const grain_os_lock_screen_tests = b.addTest(.{
+    const grain_core_lock_screen_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/083_grain_os_lock_screen_test.zig"),
+            .root_source_file = b.path("tests/083_grain_core_lock_screen_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_lock_screen_tests_run = b.addRunArtifact(grain_os_lock_screen_tests);
-    test_step.dependOn(&grain_os_lock_screen_tests_run.step);
+    const grain_core_lock_screen_tests_run = b.addRunArtifact(grain_core_lock_screen_tests);
+    test_step.dependOn(&grain_core_lock_screen_tests_run.step);
 
-    const grain_os_notification_tests = b.addTest(.{
+    const grain_core_notification_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/084_grain_os_notification_test.zig"),
+            .root_source_file = b.path("tests/084_grain_core_notification_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_notification_tests_run = b.addRunArtifact(grain_os_notification_tests);
-    test_step.dependOn(&grain_os_notification_tests_run.step);
+    const grain_core_notification_tests_run = b.addRunArtifact(grain_core_notification_tests);
+    test_step.dependOn(&grain_core_notification_tests_run.step);
 
-    const grain_os_clipboard_tests = b.addTest(.{
+    const grain_core_clipboard_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/085_grain_os_clipboard_test.zig"),
+            .root_source_file = b.path("tests/085_grain_core_clipboard_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_clipboard_tests_run = b.addRunArtifact(grain_os_clipboard_tests);
-    test_step.dependOn(&grain_os_clipboard_tests_run.step);
+    const grain_core_clipboard_tests_run = b.addRunArtifact(grain_core_clipboard_tests);
+    test_step.dependOn(&grain_core_clipboard_tests_run.step);
 
-    const grain_os_app_launcher_tests = b.addTest(.{
+    const grain_core_app_launcher_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/086_grain_os_app_launcher_test.zig"),
+            .root_source_file = b.path("tests/086_grain_core_app_launcher_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_app_launcher_tests_run = b.addRunArtifact(grain_os_app_launcher_tests);
-    test_step.dependOn(&grain_os_app_launcher_tests_run.step);
+    const grain_core_app_launcher_tests_run = b.addRunArtifact(grain_core_app_launcher_tests);
+    test_step.dependOn(&grain_core_app_launcher_tests_run.step);
 
-    const grain_os_system_tray_tests = b.addTest(.{
+    const grain_core_system_tray_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/087_grain_os_system_tray_test.zig"),
+            .root_source_file = b.path("tests/087_grain_core_system_tray_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_system_tray_tests_run = b.addRunArtifact(grain_os_system_tray_tests);
-    test_step.dependOn(&grain_os_system_tray_tests_run.step);
+    const grain_core_system_tray_tests_run = b.addRunArtifact(grain_core_system_tray_tests);
+    test_step.dependOn(&grain_core_system_tray_tests_run.step);
 
-    const grain_os_power_management_tests = b.addTest(.{
+    const grain_core_power_management_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/088_grain_os_power_management_test.zig"),
+            .root_source_file = b.path("tests/088_grain_core_power_management_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_power_management_tests_run = b.addRunArtifact(grain_os_power_management_tests);
-    test_step.dependOn(&grain_os_power_management_tests_run.step);
+    const grain_core_power_management_tests_run = b.addRunArtifact(grain_core_power_management_tests);
+    test_step.dependOn(&grain_core_power_management_tests_run.step);
 
-    const grain_os_display_management_tests = b.addTest(.{
+    const grain_core_display_management_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/089_grain_os_display_management_test.zig"),
+            .root_source_file = b.path("tests/089_grain_core_display_management_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_display_management_tests_run = b.addRunArtifact(grain_os_display_management_tests);
-    test_step.dependOn(&grain_os_display_management_tests_run.step);
+    const grain_core_display_management_tests_run = b.addRunArtifact(grain_core_display_management_tests);
+    test_step.dependOn(&grain_core_display_management_tests_run.step);
 
-    const grain_os_settings_manager_tests = b.addTest(.{
+    const grain_core_settings_manager_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/090_grain_os_settings_manager_test.zig"),
+            .root_source_file = b.path("tests/090_grain_core_settings_manager_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_settings_manager_tests_run = b.addRunArtifact(grain_os_settings_manager_tests);
-    test_step.dependOn(&grain_os_settings_manager_tests_run.step);
+    const grain_core_settings_manager_tests_run = b.addRunArtifact(grain_core_settings_manager_tests);
+    test_step.dependOn(&grain_core_settings_manager_tests_run.step);
 
-    const grain_os_theme_manager_tests = b.addTest(.{
+    const grain_core_theme_manager_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/091_grain_os_theme_manager_test.zig"),
+            .root_source_file = b.path("tests/091_grain_core_theme_manager_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_theme_manager_tests_run = b.addRunArtifact(grain_os_theme_manager_tests);
-    test_step.dependOn(&grain_os_theme_manager_tests_run.step);
+    const grain_core_theme_manager_tests_run = b.addRunArtifact(grain_core_theme_manager_tests);
+    test_step.dependOn(&grain_core_theme_manager_tests_run.step);
 
-    const grain_os_screen_capture_tests = b.addTest(.{
+    const grain_core_screen_capture_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/092_grain_os_screen_capture_test.zig"),
+            .root_source_file = b.path("tests/092_grain_core_screen_capture_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_screen_capture_tests_run = b.addRunArtifact(grain_os_screen_capture_tests);
-    test_step.dependOn(&grain_os_screen_capture_tests_run.step);
+    const grain_core_screen_capture_tests_run = b.addRunArtifact(grain_core_screen_capture_tests);
+    test_step.dependOn(&grain_core_screen_capture_tests_run.step);
 
-    const grain_os_file_manager_tests = b.addTest(.{
+    const grain_core_file_manager_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/093_grain_os_file_manager_test.zig"),
+            .root_source_file = b.path("tests/093_grain_core_file_manager_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_file_manager_tests_run = b.addRunArtifact(grain_os_file_manager_tests);
-    test_step.dependOn(&grain_os_file_manager_tests_run.step);
+    const grain_core_file_manager_tests_run = b.addRunArtifact(grain_core_file_manager_tests);
+    test_step.dependOn(&grain_core_file_manager_tests_run.step);
 
-    const grain_os_resource_monitor_tests = b.addTest(.{
+    const grain_core_resource_monitor_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/094_grain_os_resource_monitor_test.zig"),
+            .root_source_file = b.path("tests/094_grain_core_resource_monitor_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_resource_monitor_tests_run = b.addRunArtifact(grain_os_resource_monitor_tests);
-    test_step.dependOn(&grain_os_resource_monitor_tests_run.step);
+    const grain_core_resource_monitor_tests_run = b.addRunArtifact(grain_core_resource_monitor_tests);
+    test_step.dependOn(&grain_core_resource_monitor_tests_run.step);
 
-    const grain_os_network_manager_tests = b.addTest(.{
+    const grain_core_network_manager_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/095_grain_os_network_manager_test.zig"),
+            .root_source_file = b.path("tests/095_grain_core_network_manager_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_network_manager_tests_run = b.addRunArtifact(grain_os_network_manager_tests);
-    test_step.dependOn(&grain_os_network_manager_tests_run.step);
+    const grain_core_network_manager_tests_run = b.addRunArtifact(grain_core_network_manager_tests);
+    test_step.dependOn(&grain_core_network_manager_tests_run.step);
 
-    const grain_os_process_manager_tests = b.addTest(.{
+    const grain_core_process_manager_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/096_grain_os_process_manager_test.zig"),
+            .root_source_file = b.path("tests/096_grain_core_process_manager_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_process_manager_tests_run = b.addRunArtifact(grain_os_process_manager_tests);
-    test_step.dependOn(&grain_os_process_manager_tests_run.step);
+    const grain_core_process_manager_tests_run = b.addRunArtifact(grain_core_process_manager_tests);
+    test_step.dependOn(&grain_core_process_manager_tests_run.step);
 
-    const grain_os_system_logger_tests = b.addTest(.{
+    const grain_core_system_logger_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/097_grain_os_system_logger_test.zig"),
+            .root_source_file = b.path("tests/097_grain_core_system_logger_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_system_logger_tests_run = b.addRunArtifact(grain_os_system_logger_tests);
-    test_step.dependOn(&grain_os_system_logger_tests_run.step);
+    const grain_core_system_logger_tests_run = b.addRunArtifact(grain_core_system_logger_tests);
+    test_step.dependOn(&grain_core_system_logger_tests_run.step);
 
-    const grain_os_kernel_integration_tests = b.addTest(.{
+    const grain_core_kernel_integration_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/098_grain_os_kernel_integration_test.zig"),
+            .root_source_file = b.path("tests/098_grain_core_kernel_integration_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_kernel_integration_tests_run = b.addRunArtifact(grain_os_kernel_integration_tests);
-    test_step.dependOn(&grain_os_kernel_integration_tests_run.step);
+    const grain_core_kernel_integration_tests_run = b.addRunArtifact(grain_core_kernel_integration_tests);
+    test_step.dependOn(&grain_core_kernel_integration_tests_run.step);
 
-    const grain_os_security_manager_tests = b.addTest(.{
+    const grain_core_security_manager_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/099_grain_os_security_manager_test.zig"),
+            .root_source_file = b.path("tests/099_grain_core_security_manager_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_security_manager_tests_run = b.addRunArtifact(grain_os_security_manager_tests);
-    test_step.dependOn(&grain_os_security_manager_tests_run.step);
+    const grain_core_security_manager_tests_run = b.addRunArtifact(grain_core_security_manager_tests);
+    test_step.dependOn(&grain_core_security_manager_tests_run.step);
 
-    const grain_os_service_manager_tests = b.addTest(.{
+    const grain_core_service_manager_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/100_grain_os_service_manager_test.zig"),
+            .root_source_file = b.path("tests/100_grain_core_service_manager_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_service_manager_tests_run = b.addRunArtifact(grain_os_service_manager_tests);
-    test_step.dependOn(&grain_os_service_manager_tests_run.step);
+    const grain_core_service_manager_tests_run = b.addRunArtifact(grain_core_service_manager_tests);
+    test_step.dependOn(&grain_core_service_manager_tests_run.step);
 
-    const grain_os_backup_manager_tests = b.addTest(.{
+    const grain_core_backup_manager_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/101_grain_os_backup_manager_test.zig"),
+            .root_source_file = b.path("tests/101_grain_core_backup_manager_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_backup_manager_tests_run = b.addRunArtifact(grain_os_backup_manager_tests);
-    test_step.dependOn(&grain_os_backup_manager_tests_run.step);
+    const grain_core_backup_manager_tests_run = b.addRunArtifact(grain_core_backup_manager_tests);
+    test_step.dependOn(&grain_core_backup_manager_tests_run.step);
 
-    const grain_os_update_manager_tests = b.addTest(.{
+    const grain_core_update_manager_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/102_grain_os_update_manager_test.zig"),
+            .root_source_file = b.path("tests/102_grain_core_update_manager_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_update_manager_tests_run = b.addRunArtifact(grain_os_update_manager_tests);
-    test_step.dependOn(&grain_os_update_manager_tests_run.step);
+    const grain_core_update_manager_tests_run = b.addRunArtifact(grain_core_update_manager_tests);
+    test_step.dependOn(&grain_core_update_manager_tests_run.step);
 
-    const grain_os_package_manager_tests = b.addTest(.{
+    const grain_core_package_manager_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/103_grain_os_package_manager_test.zig"),
+            .root_source_file = b.path("tests/103_grain_core_package_manager_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_package_manager_tests_run = b.addRunArtifact(grain_os_package_manager_tests);
-    test_step.dependOn(&grain_os_package_manager_tests_run.step);
+    const grain_core_package_manager_tests_run = b.addRunArtifact(grain_core_package_manager_tests);
+    test_step.dependOn(&grain_core_package_manager_tests_run.step);
 
-    const grain_os_health_monitor_tests = b.addTest(.{
+    const grain_core_health_monitor_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/104_grain_os_health_monitor_test.zig"),
+            .root_source_file = b.path("tests/104_grain_core_health_monitor_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_health_monitor_tests_run = b.addRunArtifact(grain_os_health_monitor_tests);
-    test_step.dependOn(&grain_os_health_monitor_tests_run.step);
+    const grain_core_health_monitor_tests_run = b.addRunArtifact(grain_core_health_monitor_tests);
+    test_step.dependOn(&grain_core_health_monitor_tests_run.step);
 
-    const grain_os_process_supervision_tests = b.addTest(.{
+    const grain_core_process_supervision_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/105_grain_os_process_supervision_test.zig"),
+            .root_source_file = b.path("tests/105_grain_core_process_supervision_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_process_supervision_tests_run = b.addRunArtifact(grain_os_process_supervision_tests);
-    test_step.dependOn(&grain_os_process_supervision_tests_run.step);
+    const grain_core_process_supervision_tests_run = b.addRunArtifact(grain_core_process_supervision_tests);
+    test_step.dependOn(&grain_core_process_supervision_tests_run.step);
 
-    const grain_os_system_metrics_tests = b.addTest(.{
+    const grain_core_system_metrics_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/106_grain_os_system_metrics_test.zig"),
+            .root_source_file = b.path("tests/106_grain_core_system_metrics_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_system_metrics_tests_run = b.addRunArtifact(grain_os_system_metrics_tests);
-    test_step.dependOn(&grain_os_system_metrics_tests_run.step);
+    const grain_core_system_metrics_tests_run = b.addRunArtifact(grain_core_system_metrics_tests);
+    test_step.dependOn(&grain_core_system_metrics_tests_run.step);
 
-    const grain_os_system_diagnostics_tests = b.addTest(.{
+    const grain_core_system_diagnostics_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/107_grain_os_system_diagnostics_test.zig"),
+            .root_source_file = b.path("tests/107_grain_core_system_diagnostics_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_system_diagnostics_tests_run = b.addRunArtifact(grain_os_system_diagnostics_tests);
-    test_step.dependOn(&grain_os_system_diagnostics_tests_run.step);
+    const grain_core_system_diagnostics_tests_run = b.addRunArtifact(grain_core_system_diagnostics_tests);
+    test_step.dependOn(&grain_core_system_diagnostics_tests_run.step);
 
     const grain_workspace_notes_tests = b.addTest(.{
         .root_module = b.createModule(.{
@@ -2867,7 +2908,7 @@ pub fn build(b: *std.Build) void {
             .optimize = optimize,
             .imports = &.{
                 .{ .name = "grain_workspace", .module = grain_workspace_module },
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
@@ -2881,7 +2922,7 @@ pub fn build(b: *std.Build) void {
             .optimize = optimize,
             .imports = &.{
                 .{ .name = "grain_workspace", .module = grain_workspace_module },
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
@@ -2895,7 +2936,7 @@ pub fn build(b: *std.Build) void {
             .optimize = optimize,
             .imports = &.{
                 .{ .name = "grain_workspace", .module = grain_workspace_module },
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
@@ -3033,70 +3074,96 @@ pub fn build(b: *std.Build) void {
     const grain_database_api_tests_run = b.addRunArtifact(grain_database_api_tests);
     test_step.dependOn(&grain_database_api_tests_run.step);
 
-    const grain_os_api_server_tests = b.addTest(.{
+    const grain_core_api_server_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/109_grain_os_api_server_test.zig"),
+            .root_source_file = b.path("tests/109_grain_core_api_server_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_api_server_tests_run = b.addRunArtifact(grain_os_api_server_tests);
-    test_step.dependOn(&grain_os_api_server_tests_run.step);
+    const grain_core_api_server_tests_run = b.addRunArtifact(grain_core_api_server_tests);
+    test_step.dependOn(&grain_core_api_server_tests_run.step);
 
-    const grain_os_middleware_tests = b.addTest(.{
+    const grain_core_middleware_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/111_grain_os_middleware_test.zig"),
+            .root_source_file = b.path("tests/111_grain_core_middleware_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_middleware_tests_run = b.addRunArtifact(grain_os_middleware_tests);
-    test_step.dependOn(&grain_os_middleware_tests_run.step);
+    const grain_core_middleware_tests_run = b.addRunArtifact(grain_core_middleware_tests);
+    test_step.dependOn(&grain_core_middleware_tests_run.step);
 
-    const grain_os_json_helpers_tests = b.addTest(.{
+    const grain_core_json_helpers_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/110_grain_os_json_helpers_test.zig"),
+            .root_source_file = b.path("tests/110_grain_core_json_helpers_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_json_helpers_tests_run = b.addRunArtifact(grain_os_json_helpers_tests);
-    test_step.dependOn(&grain_os_json_helpers_tests_run.step);
+    const grain_core_json_helpers_tests_run = b.addRunArtifact(grain_core_json_helpers_tests);
+    test_step.dependOn(&grain_core_json_helpers_tests_run.step);
 
-    const grain_os_connection_manager_tests = b.addTest(.{
+    const grain_core_connection_manager_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/112_grain_os_connection_manager_test.zig"),
+            .root_source_file = b.path("tests/112_grain_core_connection_manager_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_connection_manager_tests_run = b.addRunArtifact(grain_os_connection_manager_tests);
-    test_step.dependOn(&grain_os_connection_manager_tests_run.step);
+    const grain_core_connection_manager_tests_run = b.addRunArtifact(grain_core_connection_manager_tests);
+    test_step.dependOn(&grain_core_connection_manager_tests_run.step);
 
-    const grain_os_api_server_network_tests = b.addTest(.{
+    const grain_core_api_server_network_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/113_grain_os_api_server_network_test.zig"),
+            .root_source_file = b.path("tests/113_grain_core_api_server_network_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "grain_os", .module = grain_os_module },
+                .{ .name = "grain_core", .module = grain_core_module },
             },
         }),
     });
-    const grain_os_api_server_network_tests_run = b.addRunArtifact(grain_os_api_server_network_tests);
-    test_step.dependOn(&grain_os_api_server_network_tests_run.step);
+    const grain_core_api_server_network_tests_run = b.addRunArtifact(grain_core_api_server_network_tests);
+    test_step.dependOn(&grain_core_api_server_network_tests_run.step);
+
+    const grain_core_auth_service_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/114_grain_core_auth_service_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_core", .module = grain_core_module },
+            },
+        }),
+    });
+    const grain_core_auth_service_tests_run = b.addRunArtifact(grain_core_auth_service_tests);
+    test_step.dependOn(&grain_core_auth_service_tests_run.step);
+
+    const grain_core_network_stack_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/115_grain_core_network_stack_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_core", .module = grain_core_module },
+            },
+        }),
+    });
+    const grain_core_network_stack_tests_run = b.addRunArtifact(grain_core_network_stack_tests);
+    test_step.dependOn(&grain_core_network_stack_tests_run.step);
 
     const grain_database_integration_os_tests = b.addTest(.{
         .root_module = b.createModule(.{

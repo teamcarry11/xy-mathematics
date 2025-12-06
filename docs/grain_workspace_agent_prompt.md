@@ -24,7 +24,7 @@ You'll be working alongside four other agents:
 1. **Grain Vantage VM Basin Kernel Agent** — VM emulator and kernel development
 2. **Aurora IDE Dream Browser Agent** — Editor and browser implementation
 3. **Grain Skate Terminal Silo Field Agent** — Terminal, knowledge graph, and scripting
-4. **Grain OS Agent** — Desktop environment compositor and system services
+4. **Grain Core Agent** — Desktop environment compositor and system services
 
 **Your Domain**: Desktop applications (`src/grain_workspace/`) — user-facing tools and utilities
 
@@ -47,7 +47,7 @@ Based on the product ideas documented in `docs/plan.md` (section "🚀 Future Gr
   - Integration with Grain Terminal core (`src/grain_terminal/`)
 - **Dependencies**: 
   - Uses Grain Terminal (`src/grain_terminal/`) as foundation
-  - Uses Grain OS compositor for window management
+  - Uses Grain Core compositor for window management
   - Uses kernel syscalls for process management (`spawn`, `exit`, `wait`)
 - **Status**: Concept — ready for implementation
 
@@ -63,7 +63,7 @@ Based on the product ideas documented in `docs/plan.md` (section "🚀 Future Gr
 - **Dependencies**:
   - Uses Grain Silo (`src/grain_silo/`) for storage
   - Uses Grain Skate graph rendering (`src/grain_skate/graph_renderer.zig`)
-  - Uses Grain OS compositor for window management
+  - Uses Grain Core compositor for window management
   - Uses kernel file I/O syscalls (`open`, `read`, `write`, `close`)
 - **Status**: Concept — ready for implementation
 
@@ -79,8 +79,8 @@ Based on the product ideas documented in `docs/plan.md` (section "🚀 Future Gr
   - System metrics (uptime, load average, temperature)
   - Alert system (notifications for resource thresholds)
 - **Dependencies**:
-  - Uses Grain OS system APIs (`src/grain_os/process_manager.zig`, `src/grain_os/resource_monitor.zig`)
-  - Uses Grain OS compositor for window management
+  - Uses Grain OS system APIs (`src/grain_core/process_manager.zig`, `src/grain_core/resource_monitor.zig`)
+  - Uses Grain Core compositor for window management
   - Uses kernel syscalls for process enumeration and resource queries
 - **Status**: Concept — ready for implementation
 
@@ -94,8 +94,8 @@ Based on the product ideas documented in `docs/plan.md` (section "🚀 Future Gr
   - Update management (check for updates, install updates)
   - Package information (descriptions, versions, dependencies)
 - **Dependencies**:
-  - Uses Grain OS package manager (`src/grain_os/package_manager.zig`)
-  - Uses Grain OS compositor for window management
+  - Uses Grain OS package manager (`src/grain_core/package_manager.zig`)
+  - Uses Grain Core compositor for window management
   - Uses kernel file I/O syscalls for package installation
 - **Status**: Concept — ready for implementation
 
@@ -112,7 +112,7 @@ Based on the product ideas documented in `docs/plan.md` (section "🚀 Future Gr
   - Test runner (unit tests, integration tests)
 - **Dependencies**:
   - Works with Aurora IDE (`src/aurora_*.zig`) and Grain Skate
-  - Uses Grain OS compositor for window management
+  - Uses Grain Core compositor for window management
   - Uses kernel syscalls for process debugging (`spawn`, `kill`, `signal`)
 - **Status**: Concept — ready for implementation
 
@@ -126,8 +126,8 @@ Based on the product ideas documented in `docs/plan.md` (section "🚀 Future Gr
   - Search (find files by name, content, metadata)
   - Integration with Grain Terminal (open terminal in directory)
 - **Dependencies**:
-  - Uses Grain OS file manager (`src/grain_os/file_manager.zig`)
-  - Uses Grain OS compositor for window management
+  - Uses Grain OS file manager (`src/grain_core/file_manager.zig`)
+  - Uses Grain Core compositor for window management
   - Uses kernel file I/O syscalls (`open`, `read`, `write`, `close`, `opendir`, `readdir`)
 - **Status**: Concept — ready for implementation
 
@@ -141,8 +141,8 @@ Based on the product ideas documented in `docs/plan.md` (section "🚀 Future Gr
   - Connection manager (active connections, firewall rules)
   - DNS tools (lookup, reverse lookup, cache management)
 - **Dependencies**:
-  - Uses Grain OS network manager (`src/grain_os/network_manager.zig`)
-  - Uses Grain OS compositor for window management
+  - Uses Grain OS network manager (`src/grain_core/network_manager.zig`)
+  - Uses Grain Core compositor for window management
   - Uses kernel network syscalls (when available)
 - **Status**: Concept — ready for implementation
 
@@ -154,7 +154,7 @@ All applications must use the Grain OS contract interfaces and kernel system cal
 
 ### 1. Compositor Integration
 
-**Location**: `src/grain_os/compositor.zig`
+**Location**: `src/grain_core/compositor.zig`
 
 **Key APIs**:
 - Window creation: `compositor.create_window()`
@@ -177,11 +177,11 @@ compositor.process_input(); // Polls for keyboard/mouse events
 try compositor.render_to_framebuffer();
 ```
 
-**Documentation**: See `src/grain_os/compositor.zig` for full API
+**Documentation**: See `src/grain_core/compositor.zig` for full API
 
 ### 2. System Service APIs
 
-**Available Services** (from `src/grain_os/`):
+**Available Services** (from `src/grain_core/`):
 - **Process Manager**: `process_manager.zig` — Process tracking, state management, priority
 - **File Manager**: `file_manager.zig` — File operations, directory management
 - **Network Manager**: `network_manager.zig` — Network interface management, IP configuration
@@ -205,7 +205,7 @@ const process = process_manager.find_process(process_id);
 const cpu_usage = process_manager.get_cpu_usage(process_id);
 ```
 
-**Documentation**: See individual service modules in `src/grain_os/` for full APIs
+**Documentation**: See individual service modules in `src/grain_core/` for full APIs
 
 ### 3. Kernel System Calls
 
@@ -267,7 +267,7 @@ Your work should **NOT** conflict with other agents. Here's what to avoid:
 1. **Kernel/VM Code** (`src/kernel/`, `src/kernel_vm/`) — Vantage VM Basin Kernel Agent domain
 2. **Aurora/Dream Code** (`src/aurora_*.zig`, `src/dream_*.zig`) — Aurora IDE Dream Browser Agent domain
 3. **Grain Skate Core** (`src/grain_skate/`) — Grain Skate Terminal Silo Field Agent domain
-4. **Grain OS Core** (`src/grain_os/compositor.zig`, `src/grain_os/*_manager.zig`) — Grain OS Agent domain
+4. **Grain OS Core** (`src/grain_core/compositor.zig`, `src/grain_core/*_manager.zig`) — Grain Core Agent domain
 5. **Build System** (`build.zig`) — Coordinate before modifying
 
 ### ✅ Your Safe Domain
@@ -450,9 +450,9 @@ test "application initialization" {
 ## 📖 Key Documentation References
 
 1. **Background & Style Guide**: `docs/grain_workspace_agent_background.md` — **READ FIRST** — Grain Style rules, code templates, workflow
-2. **Grain OS APIs**: `src/grain_os/` — All system service modules
+2. **Grain OS APIs**: `src/grain_core/` — All system service modules
 3. **Kernel Syscalls**: `docs/grain_terminal_kernel_ready.md` — Full syscall reference
-4. **Compositor API**: `src/grain_os/compositor.zig` — Window management
+4. **Compositor API**: `src/grain_core/compositor.zig` — Window management
 5. **Shared Modules**: `src/shared/` — Font renderer and utilities
 6. **Product Ideas**: `docs/plan.md` (section "🚀 Future Grain OS Product Ideas")
 7. **GrainStyle Guide**: https://github.com/tigerbeetle/tigerbeetle/blob/main/docs/TIGER_STYLE.md
@@ -481,7 +481,7 @@ test "application initialization" {
 - Check in with other agents before major changes
 
 **Agent Contacts** (via documentation):
-- **Grain OS Agent**: See `docs/grain_os_*.md` for coordination
+- **Grain Core Agent**: See `docs/grain_os_*.md` for coordination
 - **Vantage VM Agent**: See `docs/agent_work_summary.md` for kernel APIs
 - **Aurora/Dream Agent**: See `docs/dream_editor_agent_summary.md` for shared modules
 - **Grain Skate Agent**: See `docs/grain_skate_*.md` for terminal/graph APIs
@@ -495,7 +495,7 @@ Your work is successful when:
 1. ✅ All applications compile without errors
 2. ✅ All tests pass (`zig build test`)
 3. ✅ All code follows GrainStyle guidelines (grainwrap-100, grainvalidate-70)
-4. ✅ All applications integrate with Grain OS compositor
+4. ✅ All applications integrate with Grain Core compositor
 5. ✅ All applications use Grain OS contract interfaces correctly
 6. ✅ All applications use kernel syscalls correctly (for RISC-V target)
 7. ✅ Documentation is complete and up-to-date

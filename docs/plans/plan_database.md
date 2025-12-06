@@ -15,7 +15,7 @@ Grain Database Agent is responsible for building a general-purpose, Grain Style-
 - REST API layer for mobile backend integration
 - ACID transaction support
 - High performance and Grain Style compliance
-- Integration with Grain OS Agent's API Server
+- Integration with Grain Core Agent's API Server
 
 ---
 
@@ -113,7 +113,7 @@ Grain Database Agent is responsible for building a general-purpose, Grain Style-
 
 ## Current Status
 
-**Phase 5 Complete**: All core database phases are complete. The database is ready for integration with Grain OS Agent's API Server (Phase 59).
+**Phase 5 Complete**: All core database phases are complete. The database is ready for integration with Grain Core Agent's API Server (Phase 59).
 
 **Phase 6 Preparation Complete**: Integration interfaces and endpoint contracts are ready. API Server core structure is complete (Phase 59), route registration can begin immediately.
 
@@ -135,7 +135,7 @@ Grain Database Agent is responsible for building a general-purpose, Grain Style-
 **Estimated Time**: 1-2 weeks (reduced due to preparation work)
 
 **Integration Work Complete** (2025-12-04-153056-pst):
-- ✅ Grain OS API Server integration module (`src/grain_database/integration_os.zig`) created
+- ✅ Grain Core API Server integration module (`src/grain_database/integration_os.zig`) created
 - ✅ Compatible `HttpRequest` and `HttpResponse` structures matching API Server types
 - ✅ `RouteHandler` type matching API Server signature
 - ✅ Database context management for handler functions
@@ -169,27 +169,27 @@ Grain Database Agent is responsible for building a general-purpose, Grain Style-
 - ⏳ End-to-end API testing (waiting for HTTP server implementation)
 
 **Objectives**:
-1. ✅ Integrate database API router with Grain OS API Server (integration code ready)
+1. ✅ Integrate database API router with Grain Core API Server (integration code ready)
 2. ✅ Register database endpoints with API Server (helper function ready, can register now)
 3. ✅ Implement handler logic for all 9 endpoints (complete)
-4. ✅ Integrate middleware with Grain OS API Server (rate limiting, CORS, auth, content-type)
+4. ✅ Integrate middleware with Grain Core API Server (rate limiting, CORS, auth, content-type)
 5. ⏳ End-to-end API testing (waiting for HTTP server implementation)
 
 **Dependencies**:
-- ✅ Grain OS Agent Phase 59 (HTTP/REST API Server) — **CORE STRUCTURE COMPLETE** (route registration ready)
-- ⏳ Grain OS Agent Phase 59 (HTTP Server Implementation) — **IN PROGRESS** (estimated 1 week)
-- ⏳ Grain OS Agent Phase 60 (Authentication Service) — **PLANNED**
+- ✅ Grain Core Agent Phase 59 (HTTP/REST API Server) — **CORE STRUCTURE COMPLETE** (route registration ready)
+- ⏳ Grain Core Agent Phase 59 (HTTP Server Implementation) — **IN PROGRESS** (estimated 1 week)
+- ⏳ Grain Core Agent Phase 60 (Authentication Service) — **PLANNED**
 
 **Modules**:
 - `src/grain_database/integration.zig` — Original integration module (endpoint registry)
-- `src/grain_database/integration_os.zig` — Grain OS API Server integration (route registration)
+- `src/grain_database/integration_os.zig` — Grain Core API Server integration (route registration)
 - Database endpoint definitions (method, path, handler, auth requirement)
 - Pre-defined endpoints for key-value, relational, graph, and full-text search
 - API contract definitions (RecordResponse, ErrorResponse, QueryRequest, QueryResponse)
 
 **Tests**: 
 - `tests/109_grain_database_integration_test.zig` — Original integration tests
-- `tests/109_grain_database_integration_os_test.zig` — Grain OS API Server integration tests
+- `tests/109_grain_database_integration_os_test.zig` — Grain Core API Server integration tests
 - `tests/112_grain_database_middleware_integration_test.zig` — Middleware integration tests
 
 ### Phase 7: Database Persistence (PLANNED)
@@ -203,7 +203,7 @@ Grain Database Agent is responsible for building a general-purpose, Grain Style-
 4. Database file format specification
 
 **Dependencies**:
-- Grain OS Agent Phase 62 (File System Enhancements) — **BLOCKED**
+- Grain Core Agent Phase 62 (File System Enhancements) — **BLOCKED**
 
 ### Phase 8: Network Integration (PLANNED)
 **Status**: Planned  
@@ -215,7 +215,7 @@ Grain Database Agent is responsible for building a general-purpose, Grain Style-
 3. Connection pooling and management
 
 **Dependencies**:
-- Grain OS Agent Phase 61 (Network Stack Enhancements) — **BLOCKED**
+- Grain Core Agent Phase 61 (Network Stack Enhancements) — **BLOCKED**
 
 ### Phase 9: Authentication Integration (PLANNED)
 **Status**: Planned  
@@ -228,7 +228,7 @@ Grain Database Agent is responsible for building a general-purpose, Grain Style-
 4. Permission-based access control
 
 **Dependencies**:
-- Grain OS Agent Phase 60 (Authentication Service) — **BLOCKED**
+- Grain Core Agent Phase 60 (Authentication Service) — **BLOCKED**
 
 ### Phase 10: AArch64 Cloud Deployment (PLANNED)
 **Status**: Planned  
@@ -241,8 +241,8 @@ Grain Database Agent is responsible for building a general-purpose, Grain Style-
 4. Cloud deployment documentation
 
 **Dependencies**:
-- Vantage VM Basin Kernel Agent (VM integration)
-- Grain OS Agent (cloud deployment support)
+- Vantage Agent (VM integration)
+- Grain Core Agent (cloud deployment support)
 
 ---
 
@@ -268,9 +268,9 @@ The Grain Database combines multiple data models:
 
 ### Integration Points
 
-- **Grain OS Agent**: API Server (Phase 59), Authentication Service (Phase 60), File Storage (Phase 62), Network Stack (Phase 61)
-- **Grain Mobile Agent**: REST API contracts for mobile backend
-- **Vantage VM Basin Kernel Agent**: VM integration for cloud deployment
+- **Grain Core Agent**: API Server (Phase 59), Authentication Service (Phase 60), File Storage (Phase 62), Network Stack (Phase 61)
+- **Grain Carry Agent**: REST API contracts for mobile backend
+- **Vantage Agent**: VM integration for cloud deployment
 
 ---
 
@@ -298,18 +298,18 @@ The Grain Database combines multiple data models:
 
 ## Coordination Points
 
-### With Grain OS Agent
+### With Grain Core Agent
 - **API Server (Phase 59)**: Database API router integration
 - **Authentication Service (Phase 60)**: JWT validation integration
 - **File Storage (Phase 62)**: Database file persistence
 - **Network Stack (Phase 61)**: API endpoint networking
 
-### With Grain Mobile Agent
+### With Grain Carry Agent
 - **REST API Contracts**: Define mobile backend endpoints
 - **Authentication Flow**: Coordinate JWT token usage
 - **Data Models**: Align database schema with mobile app needs
 
-### With Vantage VM Basin Kernel Agent
+### With Vantage Agent
 - **VM Integration**: Database hosting in VMs
 - **AArch64 Deployment**: Cloud hardware deployment
 

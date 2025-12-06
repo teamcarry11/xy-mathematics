@@ -1,7 +1,7 @@
 # Build System Refactoring Progress
 
 **Date**: 2025-12-04-135819-pst  
-**Agent**: Grain OS Agent  
+**Agent**: Grain Core Agent  
 **Status**: ~90% Complete
 
 ---
@@ -124,6 +124,6 @@ build/
 
 ---
 
-**Grain OS Agent**  
+**Grain Core Agent**  
 2025-12-04-135819-pst
 

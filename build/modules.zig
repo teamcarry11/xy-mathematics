@@ -31,11 +31,12 @@ pub const SharedModules = struct {
 
 // Agent-specific modules structure.
 pub const AgentModules = struct {
-    grain_os: *Build.Module,
+    grain_core: *Build.Module,
     grain_skate: *Build.Module,
     grain_workspace: *Build.Module,
-    grain_mobile_core: *Build.Module,
+    grain_carry_core: *Build.Module,
     grain_database: *Build.Module,
+    grain_bubble: *Build.Module,
     aurora_layout: *Build.Module,
 };
 
@@ -139,10 +140,10 @@ pub fn create_agent_modules(
     shared_modules: SharedModules,
     kernel_modules: kernel.KernelModules,
 ) AgentModules {
-    const grain_os_mod = helpers.add_module(
+    const grain_core_mod = helpers.add_module(
         ctx,
-        "grain_os",
-        "src/grain_os/root.zig",
+        "grain_core",
+        "src/grain_core/root.zig",
         &.{.{ .name = "basin_kernel", .module = kernel_modules.basin_kernel }},
     );
     const grain_skate_mod = helpers.add_module(
@@ -161,19 +162,25 @@ pub fn create_agent_modules(
         &.{
             .{ .name = "grain_silo", .module = shared_modules.grain_silo },
             .{ .name = "grain_skate", .module = grain_skate_mod },
-            .{ .name = "grain_os", .module = grain_os_mod },
+            .{ .name = "grain_core", .module = grain_core_mod },
         },
     );
-    const grain_mobile_core_mod = helpers.add_simple_module(
+    const grain_carry_core_mod = helpers.add_simple_module(
         ctx,
-        "grain_mobile_core",
-        "src/grain_mobile_core/root.zig",
+        "grain_carry_core",
+        "src/grain_carry_core/root.zig",
     );
     const grain_database_mod = helpers.add_module(
         ctx,
         "grain_database",
         "src/grain_database/root.zig",
         &.{.{ .name = "grain_silo", .module = shared_modules.grain_silo }},
+    );
+    const grain_bubble_mod = helpers.add_module(
+        ctx,
+        "grain_bubble",
+        "src/grain_bubble/root.zig",
+        &.{.{ .name = "grain_core", .module = grain_core_mod }},
     );
     const aurora_layout_mod = helpers.add_simple_module(
         ctx,
@@ -182,11 +189,12 @@ pub fn create_agent_modules(
     );
     
     return AgentModules{
-        .grain_os = grain_os_mod,
+        .grain_core = grain_core_mod,
         .grain_skate = grain_skate_mod,
         .grain_workspace = grain_workspace_mod,
-        .grain_mobile_core = grain_mobile_core_mod,
+        .grain_carry_core = grain_carry_core_mod,
         .grain_database = grain_database_mod,
+        .grain_bubble = grain_bubble_mod,
         .aurora_layout = aurora_layout_mod,
     };
 }

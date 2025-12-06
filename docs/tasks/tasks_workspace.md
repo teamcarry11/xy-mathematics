@@ -21,8 +21,8 @@ All planned phases for Grain Workspace Agent have been completed. See completed 
 
 ### Dependencies
 
-- **Needs**: Grain OS network manager (`src/grain_os/network_manager.zig`)
-- **Needs**: Grain OS compositor for window management
+- **Needs**: Grain OS network manager (`src/grain_core/network_manager.zig`)
+- **Needs**: Grain Core compositor for window management
 - **Needs**: Kernel network syscalls (when available)
 - **Provides**: Network utilities for system administration
 
@@ -43,7 +43,7 @@ All planned phases for Grain Workspace Agent have been completed. See completed 
 - [ ] Implement performance profiler (execution time, memory usage)
 - [ ] Implement test runner (unit tests, integration tests)
 - [ ] Integrate with Aurora IDE and Grain Skate
-- [ ] Integrate with Grain OS compositor for window management
+- [ ] Integrate with Grain Core compositor for window management
 - [ ] Create comprehensive tests (`tests/114_grain_workspace_devtools_test.zig`)
 - [ ] Update `build.zig` with new module and tests
 - [ ] Update `docs/plans/plan_workspace.md` and `docs/tasks/tasks_workspace.md` with completion
@@ -52,7 +52,7 @@ All planned phases for Grain Workspace Agent have been completed. See completed 
 
 - **Needs**: Aurora IDE (`src/aurora_*.zig`)
 - **Needs**: Grain Skate components
-- **Needs**: Grain OS compositor for window management
+- **Needs**: Grain Core compositor for window management
 - **Needs**: Kernel syscalls for process debugging (`spawn`, `kill`, `signal`)
 - **Provides**: Development utilities for Grain OS
 
@@ -209,7 +209,7 @@ All planned phases for Grain Workspace Agent have been completed. See completed 
 
 ## Coordination Tasks
 
-### With Grain OS Agent
+### With Grain Core Agent
 
 **Integration Tasks**:
 - [x] Coordinate on file manager API for File Manager application
@@ -232,11 +232,11 @@ All planned phases for Grain Workspace Agent have been completed. See completed 
 - Both use Grain Silo for storage
 - No conflicts expected — separate applications
 
-### With Vantage VM Basin Kernel Agent
+### With Vantage Agent
 
 **Kernel Integration**:
-- Applications use kernel syscalls via Grain OS compositor
-- No direct coordination needed — Grain OS Agent handles kernel integration
+- Applications use kernel syscalls via Grain Core compositor
+- No direct coordination needed — Grain Core Agent handles kernel integration
 
 ---
 
@@ -251,5 +251,5 @@ All planned phases for Grain Workspace Agent have been completed. See completed 
 
 ---
 
-**Note**: This task list focuses on desktop applications for Grain OS. All tasks follow Grain Style guidelines and integrate with Grain OS compositor and system services.
+**Note**: This task list focuses on desktop applications for Grain OS. All tasks follow Grain Style guidelines and integrate with Grain Core compositor and system services.
 

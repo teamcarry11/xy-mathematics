@@ -15,7 +15,7 @@ const kernel = @import("kernel.zig");
 // Agent modules structure.
 pub const AgentModules = struct {
     grain_skate: *Build.Module,
-    grain_os: *Build.Module,
+    grain_core: *Build.Module,
     grain_mobile_core: *Build.Module,
     grain_workspace: *Build.Module,
     grain_database: *Build.Module,
@@ -36,10 +36,10 @@ pub fn create_agent_modules(
             .{ .name = "events", .module = shared_modules.events },
         },
     );
-    const grain_os_mod = helpers.add_module(
+    const grain_core_mod = helpers.add_module(
         ctx,
-        "grain_os",
-        "src/grain_os/root.zig",
+        "grain_core",
+        "src/grain_core/root.zig",
         &.{
             .{ .name = "basin_kernel", .module = kernel_modules.basin_kernel },
         },
@@ -56,7 +56,7 @@ pub fn create_agent_modules(
         &.{
             .{ .name = "grain_silo", .module = shared_modules.grain_silo },
             .{ .name = "grain_skate", .module = grain_skate_mod },
-            .{ .name = "grain_os", .module = grain_os_mod },
+            .{ .name = "grain_core", .module = grain_core_mod },
         },
     );
     const grain_database_mod = helpers.add_module(
@@ -70,7 +70,7 @@ pub fn create_agent_modules(
     
     return AgentModules{
         .grain_skate = grain_skate_mod,
-        .grain_os = grain_os_mod,
+        .grain_core = grain_core_mod,
         .grain_mobile_core = grain_mobile_core_mod,
         .grain_workspace = grain_workspace_mod,
         .grain_database = grain_database_mod,

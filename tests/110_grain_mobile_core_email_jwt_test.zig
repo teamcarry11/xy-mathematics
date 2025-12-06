@@ -4,9 +4,9 @@
 //! GrainStyle: grain_case, u32/u64, bounded operations, assertions.
 
 const std = @import("std");
-const grain_mobile_core = @import("grain_mobile_core");
-const email_auth = grain_mobile_core.email_auth;
-const jwt = grain_mobile_core.jwt;
+const grain_carry_core = @import("grain_carry_core");
+const email_auth = grain_carry_core.email_auth;
+const jwt = grain_carry_core.jwt;
 
 test "create user account" {
     const email = "user@example.com";

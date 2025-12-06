@@ -7,7 +7,7 @@
 //! 2025-12-04-092542-pst: Active implementation
 
 const std = @import("std");
-const grain_os = @import("grain_os");
+const grain_core = @import("grain_core");
 
 // Bounded: Max search results (explicit limit)
 // 2025-12-04-092542-pst: Active constant
@@ -35,15 +35,15 @@ pub const FileOperation = enum(u8) {
 pub const ClipboardEntry = struct {
     entry_id: u32,
     operation: FileOperation,
-    path: [grain_os.file_manager.MAX_PATH_LEN]u8,
+    path: [grain_core.file_manager.MAX_PATH_LEN]u8,
     path_len: u32,
 };
 
 // File Manager UI application state.
 // 2025-12-04-092542-pst: Active struct
 pub const FileManagerUI = struct {
-    file_manager: *grain_os.file_manager.FileManager,
-    search_query: [grain_os.file_manager.MAX_NAME_LEN]u8,
+    file_manager: *grain_core.file_manager.FileManager,
+    search_query: [grain_core.file_manager.MAX_NAME_LEN]u8,
     search_query_len: u32,
     selected_entry_id: u32,
     clipboard: [MAX_CLIPBOARD_ENTRIES]?ClipboardEntry,
@@ -56,7 +56,7 @@ pub const FileManagerUI = struct {
     // 2025-12-04-092542-pst: Active function
     pub fn init(
         allocator: std.mem.Allocator,
-        fm: *grain_os.file_manager.FileManager,
+        fm: *grain_core.file_manager.FileManager,
     ) FileManagerUI {
         // Precondition: Allocator and manager must be valid
         std.debug.assert(allocator.ptr != null);
@@ -100,17 +100,17 @@ pub const FileManagerUI = struct {
         query: []const u8,
     ) void {
         // Precondition: Query must be bounded
-        std.debug.assert(query.len <= grain_os.file_manager.MAX_NAME_LEN);
+        std.debug.assert(query.len <= grain_core.file_manager.MAX_NAME_LEN);
 
         @memset(&self.search_query, 0);
-        const query_len = @min(query.len, grain_os.file_manager.MAX_NAME_LEN);
+        const query_len = @min(query.len, grain_core.file_manager.MAX_NAME_LEN);
         if (query_len > 0) {
             @memcpy(self.search_query[0..query_len], query[0..query_len]);
         }
         self.search_query_len = @as(u32, @intCast(query_len));
 
         // Postcondition: Query must be valid
-        std.debug.assert(self.search_query_len <= grain_os.file_manager.MAX_NAME_LEN);
+        std.debug.assert(self.search_query_len <= grain_core.file_manager.MAX_NAME_LEN);
     }
 
     /// Navigate to directory.
@@ -146,7 +146,7 @@ pub const FileManagerUI = struct {
     // 2025-12-04-092542-pst: Active function
     pub fn get_file_entries(
         self: *const FileManagerUI,
-        entries: []*grain_os.file_manager.FileEntry,
+        entries: []*grain_core.file_manager.FileEntry,
         entries_len: *u32,
     ) void {
         // Precondition: Entries buffer must be valid
@@ -277,7 +277,7 @@ pub const FileManagerUI = struct {
     ) u32 {
         // Precondition: Destination path must be valid
         std.debug.assert(destination_path.len > 0);
-        std.debug.assert(destination_path.len <= grain_os.file_manager.MAX_PATH_LEN);
+        std.debug.assert(destination_path.len <= grain_core.file_manager.MAX_PATH_LEN);
 
         var pasted_count: u32 = 0;
 
@@ -338,7 +338,7 @@ pub const FileManagerUI = struct {
         // Precondition: Entry ID and name must be valid
         std.debug.assert(entry_id > 0);
         std.debug.assert(new_name.len > 0);
-        std.debug.assert(new_name.len <= grain_os.file_manager.MAX_NAME_LEN);
+        std.debug.assert(new_name.len <= grain_core.file_manager.MAX_NAME_LEN);
 
         const entry = self.file_manager.find_file_entry(entry_id);
         if (entry == null) {
@@ -347,7 +347,7 @@ pub const FileManagerUI = struct {
 
         // Update name
         @memset(&entry.?.name, 0);
-        const name_len = @min(new_name.len, grain_os.file_manager.MAX_NAME_LEN);
+        const name_len = @min(new_name.len, grain_core.file_manager.MAX_NAME_LEN);
         @memcpy(entry.?.name[0..name_len], new_name[0..name_len]);
         entry.?.name_len = @as(u32, @intCast(name_len));
 

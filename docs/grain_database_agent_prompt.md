@@ -473,7 +473,7 @@ src/grain_database/
 - Coordinate on network stack (HTTP server, WebSocket)
 - Coordinate on AArch64 deployment (VM integration)
 
-### With Grain OS Agent
+### With Grain Core Agent
 
 **Shared Components**:
 - Grain Silo (object storage foundation)
@@ -584,12 +584,12 @@ lines per function, max 100 characters per line, all compiler warnings.
 - **Grain Silo**: `src/grain_silo/storage.zig` - Object storage foundation
 - **Grain Mobile Core**: [`docs/grain_mobile_core_architecture.md`](grain_mobile_core_architecture.md) - Mobile architecture
 - **HTTP Client**: `src/dream_http_client.zig` - HTTP patterns
-- **Network Manager**: `src/grain_os/network_manager.zig` - Network infrastructure
+- **Network Manager**: `src/grain_core/network_manager.zig` - Network infrastructure
 
 ### Key Modules
 
 - **Grain Silo**: `src/grain_silo/storage.zig` - Use as key-value storage foundation
-- **Grain OS**: `src/grain_os/` - System services and compositor
+- **Grain OS**: `src/grain_core/` - System services and compositor
 - **Kernel**: `src/kernel/` - Kernel syscalls and file I/O
 
 ### External References

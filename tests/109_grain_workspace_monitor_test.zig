@@ -9,12 +9,12 @@
 const std = @import("std");
 const testing = std.testing;
 const MonitorApp = @import("../src/grain_workspace/monitor/app.zig").MonitorApp;
-const grain_os = @import("grain_os");
+const grain_core = @import("grain_core");
 
 test "monitor app initialization" {
     const allocator = testing.allocator;
-    var process_mgr = grain_os.process_manager.ProcessManager.init();
-    var resource_mon = grain_os.resource_monitor.ResourceMonitor.init();
+    var process_mgr = grain_core.process_manager.ProcessManager.init();
+    var resource_mon = grain_core.resource_monitor.ResourceMonitor.init();
 
     var app = MonitorApp.init(allocator, &process_mgr, &resource_mon);
 
@@ -24,8 +24,8 @@ test "monitor app initialization" {
 
 test "update metrics" {
     const allocator = testing.allocator;
-    var process_mgr = grain_os.process_manager.ProcessManager.init();
-    var resource_mon = grain_os.resource_monitor.ResourceMonitor.init();
+    var process_mgr = grain_core.process_manager.ProcessManager.init();
+    var resource_mon = grain_core.resource_monitor.ResourceMonitor.init();
 
     resource_mon.update_usage(50.0, 1024 * 1024, 4 * 1024 * 1024, 0, 0, 1234567890);
     resource_mon.update_usage_with_processes(50.0, 1024 * 1024, 4 * 1024 * 1024, 0, 0, 10, 8, 2, 1234567890);
@@ -44,8 +44,8 @@ test "update metrics" {
 
 test "get current metrics" {
     const allocator = testing.allocator;
-    var process_mgr = grain_os.process_manager.ProcessManager.init();
-    var resource_mon = grain_os.resource_monitor.ResourceMonitor.init();
+    var process_mgr = grain_core.process_manager.ProcessManager.init();
+    var resource_mon = grain_core.resource_monitor.ResourceMonitor.init();
 
     resource_mon.update_usage(75.0, 2048 * 1024, 8 * 1024 * 1024, 0, 0, 1234567890);
     resource_mon.update_usage_with_processes(75.0, 2048 * 1024, 8 * 1024 * 1024, 0, 0, 20, 15, 5, 1234567890);
@@ -61,11 +61,11 @@ test "get current metrics" {
 
 test "get all processes" {
     const allocator = testing.allocator;
-    var process_mgr = grain_os.process_manager.ProcessManager.init();
-    var resource_mon = grain_os.resource_monitor.ResourceMonitor.init();
+    var process_mgr = grain_core.process_manager.ProcessManager.init();
+    var resource_mon = grain_core.resource_monitor.ResourceMonitor.init();
 
     // Add a test process
-    var proc = grain_os.process_manager.Process.init();
+    var proc = grain_core.process_manager.Process.init();
     proc.process_id = 1;
     proc.name_len = 4;
     @memcpy(proc.name[0..4], "test");
@@ -86,8 +86,8 @@ test "get all processes" {
 
 test "add alert threshold" {
     const allocator = testing.allocator;
-    var process_mgr = grain_os.process_manager.ProcessManager.init();
-    var resource_mon = grain_os.resource_monitor.ResourceMonitor.init();
+    var process_mgr = grain_core.process_manager.ProcessManager.init();
+    var resource_mon = grain_core.resource_monitor.ResourceMonitor.init();
 
     var app = MonitorApp.init(allocator, &process_mgr, &resource_mon);
 
@@ -105,8 +105,8 @@ test "add alert threshold" {
 
 test "metrics history" {
     const allocator = testing.allocator;
-    var process_mgr = grain_os.process_manager.ProcessManager.init();
-    var resource_mon = grain_os.resource_monitor.ResourceMonitor.init();
+    var process_mgr = grain_core.process_manager.ProcessManager.init();
+    var resource_mon = grain_core.resource_monitor.ResourceMonitor.init();
 
     var app = MonitorApp.init(allocator, &process_mgr, &resource_mon);
 
@@ -123,8 +123,8 @@ test "metrics history" {
 
 test "alert threshold checking" {
     const allocator = testing.allocator;
-    var process_mgr = grain_os.process_manager.ProcessManager.init();
-    var resource_mon = grain_os.resource_monitor.ResourceMonitor.init();
+    var process_mgr = grain_core.process_manager.ProcessManager.init();
+    var resource_mon = grain_core.resource_monitor.ResourceMonitor.init();
 
     var app = MonitorApp.init(allocator, &process_mgr, &resource_mon);
 

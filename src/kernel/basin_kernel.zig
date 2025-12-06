@@ -46,6 +46,8 @@ const KernelLogLevel = @import("kernel_log_buffer.zig").KernelLogLevel;
 const scheduler_stats = @import("scheduler_stats.zig");
 const process_group = @import("process_group.zig");
 const ProcessGroupManager = process_group.ProcessGroupManager;
+const process_group_stats = @import("process_group_stats.zig");
+const ProcessGroupStatsManager = process_group_stats.ProcessGroupStatsManager;
 
 // Export resource_cleanup for tests.
 pub const resource_cleanup_module = resource_cleanup;
@@ -709,6 +711,11 @@ pub const BasinKernel = struct {
     /// Grain Style: Static allocation, initialized at kernel boot.
     process_group_manager: ProcessGroupManager,
     
+    /// Process group statistics manager.
+    /// Why: Track statistics for process groups.
+    /// Grain Style: Static allocation, initialized at kernel boot.
+    process_group_stats: ProcessGroupStatsManager,
+    
     /// IPC channel table.
     /// Why: Manage inter-process communication channels.
     /// Grain Style: Static allocation, initialized at kernel boot.
@@ -788,6 +795,7 @@ pub const BasinKernel = struct {
             .interrupt_controller = InterruptController.init(),
             .scheduler = Scheduler.init(),
             .process_group_manager = ProcessGroupManager.init(),
+            .process_group_stats = ProcessGroupStatsManager.init(),
             .channels = ChannelTable.init(),
             .storage = Storage.init(),
             .keyboard = Keyboard.init(),
@@ -1548,9 +1556,31 @@ pub const BasinKernel = struct {
         }
         
         if (found) |idx| {
+            const process = &self.processes[idx];
+            
+            // Update process group statistics.
+            // Why: Track exited processes in groups.
+            if (process.pgid != 0) {
+                self.process_group_stats.increment_exited_count(process.pgid);
+                
+                // Update process count in group.
+                var process_count: u32 = 0;
+                var i: u32 = 0;
+                while (i < MAX_PROCESSES) : (i += 1) {
+                    if (self.processes[i].allocated and self.processes[i].pgid == process.pgid) {
+                        process_count += 1;
+                    }
+                }
+                // Decrement count since this process is exiting.
+                if (process_count > 0) {
+                    process_count -= 1;
+                }
+                self.process_group_stats.update_process_count(process.pgid, process_count);
+            }
+            
             // Mark process as exited.
-            self.processes[idx].state = .exited;
-            self.processes[idx].exit_status = exit_status;
+            process.state = .exited;
+            process.exit_status = exit_status;
             
             // Clear from scheduler if it's the current process.
             if (self.scheduler.is_current(current_process_id)) {
@@ -3527,6 +3557,17 @@ pub const BasinKernel = struct {
         // Set process group ID.
         // Why: Assign process to a process group.
         self.processes[idx].pgid = pgid;
+        
+        // Update process group statistics.
+        // Why: Track process count in groups.
+        var process_count: u32 = 0;
+        var i: u32 = 0;
+        while (i < MAX_PROCESSES) : (i += 1) {
+            if (self.processes[i].allocated and self.processes[i].pgid == pgid) {
+                process_count += 1;
+            }
+        }
+        self.process_group_stats.update_process_count(pgid, process_count);
         
         // Return success.
         return SyscallResult.ok(0);

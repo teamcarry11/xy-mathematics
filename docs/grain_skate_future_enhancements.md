@@ -48,7 +48,7 @@
 - Memory usage optimization (reduce allocations)
 
 ### 6. Integration Enhancements
-- Grain OS compositor integration (run as Grain OS application)
+- Grain Core compositor integration (run as Grain OS application)
 - Grain Terminal integration (embed terminal in editor)
 - Aurora IDE integration (share editor components)
 - Dream Browser integration (embed web content in blocks)
@@ -56,7 +56,7 @@
 
 ## Integration Dependencies
 
-### From Grain OS Agent
+### From Grain Core Agent
 
 #### Compositor Integration (Optional)
 - Window management API (create, destroy, resize windows)
@@ -64,7 +64,7 @@
 - Framebuffer rendering (if running on Grain OS)
 - Workspace management (multi-workspace support)
 - Window decorations (title bar, borders, controls)
-- **Status**: Grain OS compositor is ready, integration pending
+- **Status**: Grain Core compositor is ready, integration pending
 - **Coordination**: Check with Grain OS agent before integration
 
 #### System Services (Optional)
@@ -85,7 +85,7 @@
 - Framebuffer operations (fb_clear, fb_draw_pixel, fb_draw_text)
 - **Status**: All required syscalls are implemented and ready
 - **Coordination**: See `docs/grain_terminal_kernel_ready.md` for API contracts
-- **Integration**: Use syscall function pointers (similar to Grain OS compositor)
+- **Integration**: Use syscall function pointers (similar to Grain Core compositor)
 
 #### VM Integration (Required for RISC-V target)
 - RISC-V64 compilation target
@@ -130,7 +130,7 @@ Currently, Grain Skate, Aurora IDE, and Dream Browser have duplicate implementat
 **Current State**:
 - Grain Skate: `src/grain_skate/editor_renderer.zig` - 5x7 bitmap font (A-Z, 0-9)
 - Aurora: `src/aurora_text_renderer.zig` - 8x8 bitmap font (ASCII 32-126)
-- Grain OS: `src/grain_os/font_renderer.zig` - 8x8 bitmap font (ASCII 32-126)
+- Grain OS: `src/grain_core/font_renderer.zig` - 8x8 bitmap font (ASCII 32-126)
 
 **Proposed Solution**:
 - Create `src/shared/font_renderer.zig` - Unified font renderer
@@ -237,7 +237,7 @@ Currently, Grain Skate, Aurora IDE, and Dream Browser have duplicate implementat
 ### Coordination Requirements
 
 - **With Aurora/Dream Agent**: Coordinate on shared module APIs, ensure backward compatibility
-- **With Grain OS Agent**: Coordinate on font renderer migration, ensure no conflicts
+- **With Grain Core Agent**: Coordinate on font renderer migration, ensure no conflicts
 - **With Vantage VM Agent**: No coordination needed (refactoring is userspace only)
 
 ### Benefits After Refactoring

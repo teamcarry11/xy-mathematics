@@ -11,11 +11,11 @@ const testing = std.testing;
 const NetworkToolsApp = @import("../src/grain_workspace/network_tools/app.zig").NetworkToolsApp;
 const PortState = @import("../src/grain_workspace/network_tools/app.zig").PortState;
 const ConnectionState = @import("../src/grain_workspace/network_tools/app.zig").ConnectionState;
-const grain_os = @import("grain_os");
+const grain_core = @import("grain_core");
 
 test "network tools app initialization" {
     const allocator = testing.allocator;
-    var nm = grain_os.network_manager.NetworkManager.init();
+    var nm = grain_core.network_manager.NetworkManager.init();
 
     var app = NetworkToolsApp.init(allocator, &nm);
 
@@ -28,7 +28,7 @@ test "network tools app initialization" {
 
 test "scan network" {
     const allocator = testing.allocator;
-    var nm = grain_os.network_manager.NetworkManager.init();
+    var nm = grain_core.network_manager.NetworkManager.init();
 
     var app = NetworkToolsApp.init(allocator, &nm);
     const device_count = app.scan_network("192.168.1.0", "255.255.255.0");
@@ -40,7 +40,7 @@ test "scan network" {
 
 test "scan ports" {
     const allocator = testing.allocator;
-    var nm = grain_os.network_manager.NetworkManager.init();
+    var nm = grain_core.network_manager.NetworkManager.init();
 
     var app = NetworkToolsApp.init(allocator, &nm);
 
@@ -55,7 +55,7 @@ test "scan ports" {
 
 test "update bandwidth" {
     const allocator = testing.allocator;
-    var nm = grain_os.network_manager.NetworkManager.init();
+    var nm = grain_core.network_manager.NetworkManager.init();
 
     var app = NetworkToolsApp.init(allocator, &nm);
     app.update_bandwidth(1024, 2048);
@@ -70,7 +70,7 @@ test "update bandwidth" {
 
 test "get bandwidth" {
     const allocator = testing.allocator;
-    var nm = grain_os.network_manager.NetworkManager.init();
+    var nm = grain_core.network_manager.NetworkManager.init();
 
     var app = NetworkToolsApp.init(allocator, &nm);
     app.update_bandwidth(512, 1024);
@@ -85,7 +85,7 @@ test "get bandwidth" {
 
 test "add connection" {
     const allocator = testing.allocator;
-    var nm = grain_os.network_manager.NetworkManager.init();
+    var nm = grain_core.network_manager.NetworkManager.init();
 
     var app = NetworkToolsApp.init(allocator, &nm);
     const result = app.add_connection("127.0.0.1", 8080, "192.168.1.1", 80, .established, 6);
@@ -100,7 +100,7 @@ test "add connection" {
 
 test "dns lookup" {
     const allocator = testing.allocator;
-    var nm = grain_os.network_manager.NetworkManager.init();
+    var nm = grain_core.network_manager.NetworkManager.init();
 
     var app = NetworkToolsApp.init(allocator, &nm);
     _ = app.add_dns_cache_entry("example.com", "93.184.216.34", 3600);
@@ -115,7 +115,7 @@ test "dns lookup" {
 
 test "add dns cache entry" {
     const allocator = testing.allocator;
-    var nm = grain_os.network_manager.NetworkManager.init();
+    var nm = grain_core.network_manager.NetworkManager.init();
 
     var app = NetworkToolsApp.init(allocator, &nm);
     const result = app.add_dns_cache_entry("test.com", "192.168.1.1", 3600);
@@ -128,7 +128,7 @@ test "add dns cache entry" {
 
 test "clear dns cache" {
     const allocator = testing.allocator;
-    var nm = grain_os.network_manager.NetworkManager.init();
+    var nm = grain_core.network_manager.NetworkManager.init();
 
     var app = NetworkToolsApp.init(allocator, &nm);
     _ = app.add_dns_cache_entry("test.com", "192.168.1.1", 3600);
@@ -140,7 +140,7 @@ test "clear dns cache" {
 
 test "multiple connections" {
     const allocator = testing.allocator;
-    var nm = grain_os.network_manager.NetworkManager.init();
+    var nm = grain_core.network_manager.NetworkManager.init();
 
     var app = NetworkToolsApp.init(allocator, &nm);
     _ = app.add_connection("127.0.0.1", 8080, "192.168.1.1", 80, .established, 6);
@@ -153,7 +153,7 @@ test "multiple connections" {
 
 test "multiple dns cache entries" {
     const allocator = testing.allocator;
-    var nm = grain_os.network_manager.NetworkManager.init();
+    var nm = grain_core.network_manager.NetworkManager.init();
 
     var app = NetworkToolsApp.init(allocator, &nm);
     _ = app.add_dns_cache_entry("test1.com", "192.168.1.1", 3600);

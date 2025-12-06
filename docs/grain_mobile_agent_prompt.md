@@ -508,7 +508,7 @@ ios_app/
 1. **Kernel/VM Code** (`src/kernel/`, `src/kernel_vm/`) — Vantage VM Basin Kernel Agent domain
 2. **Aurora/Dream Code** (`src/aurora_*.zig`, `src/dream_*.zig`) — Aurora IDE Dream Browser Agent domain
 3. **Grain Skate Core** (`src/grain_skate/`) — Grain Skate Terminal Silo Field Agent domain
-4. **Grain OS Core** (`src/grain_os/`) — Grain OS Agent domain
+4. **Grain OS Core** (`src/grain_core/`) — Grain Core Agent domain
 5. **Build System** (`build.zig`) — Coordinate before modifying
 
 ### Your Safe Domain

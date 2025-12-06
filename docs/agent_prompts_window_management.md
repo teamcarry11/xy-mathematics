@@ -62,8 +62,8 @@ You are integrating your application with Grain OS's window management system. T
 
 ### Technical Details
 
-- Keybindings are registered in `src/grain_os/keyboard_shortcuts.zig`
-- Window actions are implemented in `src/grain_os/window_actions.zig`
+- Keybindings are registered in `src/grain_core/keyboard_shortcuts.zig`
+- Window actions are implemented in `src/grain_core/window_actions.zig`
 - The compositor processes these shortcuts before routing events to applications
 - Window IDs are managed by the compositor
 

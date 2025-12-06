@@ -17,12 +17,12 @@ docs/
 ├── plan.md                    # Master overview (high-level, all agents)
 ├── tasks.md                   # Master task list (high-level, all agents)
 ├── plans/
-│   ├── plan_os.md            # Grain OS Agent detailed plan
+│   ├── plan_core.md            # Grain Core Agent detailed plan
 │   ├── plan_aurora.md        # Aurora Agent detailed plan
 │   ├── plan_skate.md         # Skate Agent detailed plan
 │   └── plan_workspace.md     # YOUR FILE (to be created)
 └── tasks/
-    ├── tasks_os.md           # Grain OS Agent detailed tasks
+    ├── tasks_core.md           # Grain Core Agent detailed tasks
     ├── tasks_aurora.md       # Aurora Agent detailed tasks
     ├── tasks_skate.md        # Skate Agent detailed tasks
     └── tasks_workspace.md    # YOUR FILE (to be created)
@@ -41,15 +41,15 @@ docs/
 
 ## Your Task
 
-Create two files following the Grain OS Agent's example:
+Create two files following the Grain Core Agent's example:
 
 1. **`docs/plans/plan_workspace.md`** — Detailed development plan
 2. **`docs/tasks/tasks_workspace.md`** — Detailed task list
 
 ### Reference Files
 
-- **Example Plan**: [`docs/plans/plan_os.md`](plans/plan_os.md) — Grain OS Agent plan (448 lines)
-- **Example Tasks**: [`docs/tasks/tasks_os.md`](tasks/tasks_os.md) — Grain OS Agent tasks (188 lines)
+- **Example Plan**: [`docs/plans/plan_core.md`](plans/plan_core.md) — Grain Core Agent plan (448 lines)
+- **Example Tasks**: [`docs/tasks/tasks_core.md`](tasks/tasks_core.md) — Grain Core Agent tasks (188 lines)
 - **Master Plan**: [`docs/plan.md`](plan.md) — Master overview (236 lines)
 - **Master Tasks**: [`docs/tasks.md`](tasks.md) — Master task list (195 lines)
 
@@ -126,16 +126,16 @@ Create two files following the Grain OS Agent's example:
 
 ## Coordination Points
 
-### With Grain OS Agent
+### With Grain Core Agent
 
 **Shared Components**:
 - Compositor for window management
 - System services (Process Manager, Resource Monitor, Package Manager, File Manager, Network Manager)
 
 **Integration Points**:
-- All applications use Grain OS compositor for window management
+- All applications use Grain Core compositor for window management
 - Applications use Grain OS system services for functionality
-- Applications use kernel syscalls via Grain OS compositor
+- Applications use kernel syscalls via Grain Core compositor
 
 **Coordination Tasks**:
 - Coordinate on file manager API for File Manager application
@@ -155,7 +155,7 @@ Create two files following the Grain OS Agent's example:
 ### With Vantage VM Basin Kernel Agent
 
 **Kernel Integration**:
-- Applications use kernel syscalls via Grain OS compositor:
+- Applications use kernel syscalls via Grain Core compositor:
   - File I/O: `open`, `read`, `write`, `close`, `unlink`, `rename`
   - Process management: `spawn`, `exit`, `wait`, `kill`
   - IPC channels: `channel_create`, `channel_send`, `channel_recv`
@@ -164,8 +164,8 @@ Create two files following the Grain OS Agent's example:
 
 **Coordination Notes**:
 - All required syscalls are implemented and ready
-- Applications use syscalls via Grain OS compositor (not directly)
-- No direct coordination needed — Grain OS Agent handles kernel integration
+- Applications use syscalls via Grain Core compositor (not directly)
+- No direct coordination needed — Grain Core Agent handles kernel integration
 
 ---
 
@@ -329,8 +329,8 @@ Create two files following the Grain OS Agent's example:
 - Alert system (notifications for resource thresholds)
 
 **Dependencies**:
-- Uses Grain OS system APIs (`src/grain_os/process_manager.zig`, `src/grain_os/resource_monitor.zig`)
-- Uses Grain OS compositor for window management
+- Uses Grain OS system APIs (`src/grain_core/process_manager.zig`, `src/grain_core/resource_monitor.zig`)
+- Uses Grain Core compositor for window management
 - Uses kernel syscalls for process enumeration and resource queries
 
 **Grain Style Compliance**:
@@ -364,7 +364,7 @@ Create two files following the Grain OS Agent's example:
 
 **Dependencies**:
 - Uses Grain Terminal (`src/grain_terminal/`) as foundation
-- Uses Grain OS compositor for window management
+- Uses Grain Core compositor for window management
 - Uses kernel syscalls for process management (`spawn`, `exit`, `wait`)
 
 **Grain Style Compliance**:
@@ -398,8 +398,8 @@ Create two files following the Grain OS Agent's example:
 - Package information (descriptions, versions, dependencies)
 
 **Dependencies**:
-- Uses Grain OS package manager (`src/grain_os/package_manager.zig`)
-- Uses Grain OS compositor for window management
+- Uses Grain OS package manager (`src/grain_core/package_manager.zig`)
+- Uses Grain Core compositor for window management
 - Uses kernel file I/O syscalls for package installation
 
 **Grain Style Compliance**:
@@ -435,8 +435,8 @@ Create two files following the Grain OS Agent's example:
 - Integration with Grain OS FileManager
 
 **Dependencies**:
-- Uses Grain OS file manager (`src/grain_os/file_manager.zig`)
-- Uses Grain OS compositor for window management
+- Uses Grain OS file manager (`src/grain_core/file_manager.zig`)
+- Uses Grain Core compositor for window management
 - Uses kernel file I/O syscalls (`open`, `read`, `write`, `close`, `opendir`, `readdir`)
 
 **Grain Style Compliance**:
@@ -451,26 +451,26 @@ Create two files following the Grain OS Agent's example:
 
 ## Coordination with Other Agents
 
-### With Grain OS Agent
+### With Grain Core Agent
 
 **Integration Points**:
-- **Compositor**: All applications use Grain OS compositor for window management
+- **Compositor**: All applications use Grain Core compositor for window management
 - **System Services**: Applications use Grain OS system services:
-  - Process Manager (`src/grain_os/process_manager.zig`)
-  - Resource Monitor (`src/grain_os/resource_monitor.zig`)
-  - Package Manager (`src/grain_os/package_manager.zig`)
-  - File Manager (`src/grain_os/file_manager.zig`)
-  - Network Manager (`src/grain_os/network_manager.zig`)
-- **Kernel Syscalls**: Applications use kernel syscalls via Grain OS compositor
+  - Process Manager (`src/grain_core/process_manager.zig`)
+  - Resource Monitor (`src/grain_core/resource_monitor.zig`)
+  - Package Manager (`src/grain_core/package_manager.zig`)
+  - File Manager (`src/grain_core/file_manager.zig`)
+  - Network Manager (`src/grain_core/network_manager.zig`)
+- **Kernel Syscalls**: Applications use kernel syscalls via Grain Core compositor
 
 **Coordination Notes**:
-- All applications integrate with Grain OS compositor
+- All applications integrate with Grain Core compositor
 - Applications use Grain OS system services for functionality
 - No conflicts expected — applications are separate modules
 
 **Future Coordination**:
 - **Network Tools Application** (Planned — Phase 8):
-  - Uses Grain OS network manager (`src/grain_os/network_manager.zig`)
+  - Uses Grain OS network manager (`src/grain_core/network_manager.zig`)
   - Uses kernel network syscalls (when available)
   - Coordination needed on network manager API
 
@@ -489,7 +489,7 @@ Create two files following the Grain OS Agent's example:
 ### With Vantage VM Basin Kernel Agent
 
 **Kernel Integration**:
-- Applications use kernel syscalls via Grain OS compositor:
+- Applications use kernel syscalls via Grain Core compositor:
   - File I/O: `open`, `read`, `write`, `close`, `unlink`, `rename`
   - Process management: `spawn`, `exit`, `wait`, `kill`
   - IPC channels: `channel_create`, `channel_send`, `channel_recv`
@@ -498,8 +498,8 @@ Create two files following the Grain OS Agent's example:
 
 **Coordination Notes**:
 - All required syscalls are implemented and ready
-- Applications use syscalls via Grain OS compositor (not directly)
-- No direct coordination needed — Grain OS Agent handles kernel integration
+- Applications use syscalls via Grain Core compositor (not directly)
+- No direct coordination needed — Grain Core Agent handles kernel integration
 
 ---
 
@@ -619,7 +619,7 @@ Extract:
 ### Cross-References
 
 - Link to master files: `[Master Plan](../plan.md)`
-- Link to other agent files: `[Grain OS Plan](../plans/plan_os.md)`
+- Link to other agent files: `[Grain OS Plan](../plans/plan_core.md)`
 - Link to shared docs: `[Grain Style](../grain_style.md)`
 - Link to agent prompt: `[Grain Workspace Agent Prompt](../grain_workspace_agent_prompt.md)`
 
@@ -628,8 +628,8 @@ Extract:
 ## Steps to Complete
 
 1. **Read Reference Files**:
-   - Read `docs/plans/plan_os.md` to understand structure
-   - Read `docs/tasks/tasks_os.md` to understand task format
+   - Read `docs/plans/plan_core.md` to understand structure
+   - Read `docs/tasks/tasks_core.md` to understand task format
    - Read `docs/documentation_structure_recommendation.md` for rationale
    - Read `docs/grain_workspace_agent_prompt.md` for application details
 
@@ -640,13 +640,13 @@ Extract:
 
 3. **Create Plan File**:
    - Create `docs/plans/plan_workspace.md`
-   - Follow structure from `plan_os.md`
+   - Follow structure from `plan_core.md`
    - Include completed phases (1-7), current work, planned phases (8-9)
-   - Include coordination points (especially with Grain OS Agent)
+   - Include coordination points (especially with Grain Core Agent)
 
 4. **Create Tasks File**:
    - Create `docs/tasks/tasks_workspace.md`
-   - Follow structure from `tasks_os.md`
+   - Follow structure from `tasks_core.md`
    - Include task lists for each phase
    - Include coordination tasks
 
@@ -708,12 +708,12 @@ After creating your files, the master `docs/plan.md` should have an entry like:
    - Phase 9: Grain DevTools (PLANNED)
 
 4. **What do you coordinate with other agents?**
-   - Grain OS Agent (compositor, system services)
+   - Grain Core Agent (compositor, system services)
    - Grain Skate Agent (block structure, Grain Silo)
    - Kernel Agent (syscalls via Grain OS)
 
 5. **What dependencies do you have?**
-   - What you need from other agents (Grain OS compositor, system services)
+   - What you need from other agents (Grain Core compositor, system services)
    - What you provide to other agents (desktop applications)
 
 ---
@@ -724,7 +724,7 @@ After creating your files, the master `docs/plan.md` should have an entry like:
 ✅ Tasks file created (`docs/tasks/tasks_workspace.md`)  
 ✅ Files follow structure from reference files  
 ✅ Recent work (all 7 completed phases) included  
-✅ Coordination points documented (especially with Grain OS Agent)  
+✅ Coordination points documented (especially with Grain Core Agent)  
 ✅ Master files updated (if needed)  
 ✅ File sizes reasonable (~300-500 lines for plan, ~200-400 for tasks)  
 ✅ Cross-references work  
@@ -735,8 +735,8 @@ After creating your files, the master `docs/plan.md` should have an entry like:
 ## References
 
 - **Documentation Structure**: [`docs/documentation_structure_recommendation.md`](documentation_structure_recommendation.md)
-- **Grain OS Agent Plan**: [`docs/plans/plan_os.md`](plans/plan_os.md) — Example structure
-- **Grain OS Agent Tasks**: [`docs/tasks/tasks_os.md`](tasks/tasks_os.md) — Example structure
+- **Grain Core Agent Plan**: [`docs/plans/plan_core.md`](plans/plan_core.md) — Example structure
+- **Grain Core Agent Tasks**: [`docs/tasks/tasks_core.md`](tasks/tasks_core.md) — Example structure
 - **Master Plan**: [`docs/plan.md`](plan.md) — Master overview
 - **Master Tasks**: [`docs/tasks.md`](tasks.md) — Master task list
 - **Grain Style**: [`docs/grain_style.md`](grain_style.md) — Coding principles
@@ -746,7 +746,7 @@ After creating your files, the master `docs/plan.md` should have an entry like:
 
 ---
 
-**Your Mission**: Create `docs/plans/plan_workspace.md` and `docs/tasks/tasks_workspace.md` following the hybrid documentation structure, including your recent work (all 7 completed phases) and coordination points with Grain OS Agent and other agents.
+**Your Mission**: Create `docs/plans/plan_workspace.md` and `docs/tasks/tasks_workspace.md` following the hybrid documentation structure, including your recent work (all 7 completed phases) and coordination points with Grain Core Agent and other agents.
 
 **Remember**: Be detailed, be specific, be coordinated. The goal is to have focused agent files while maintaining coordination through master files. Your desktop applications are essential user-facing tools for Grain OS!
 

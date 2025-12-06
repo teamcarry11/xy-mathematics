@@ -161,7 +161,7 @@ Given the limited availability of permissively-licensed Zig Wayland libraries:
 3. **Reference Wayland protocol specs** (MIT/X11 licensed)
 4. **Study wlroots architecture** (MIT, can reference design patterns)
 
-**Current Implementation**: We're already building a pure Zig Wayland compositor in `src/grain_os/` - this is the right approach for zero dependencies!
+**Current Implementation**: We're already building a pure Zig Wayland compositor in `src/grain_core/` - this is the right approach for zero dependencies!
 
 ## 🔗 Useful Links
 

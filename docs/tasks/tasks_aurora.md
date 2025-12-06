@@ -2,7 +2,7 @@
 
 **Agent**: Grain Aurora IDE Dream Browser Agent (2nd Agent)  
 **Status**: Active — Foundation components, shared modules  
-**Last Updated**: 2025-12-04-095411-pst
+**Last Updated**: 2025-12-05-152716-pst
 
 ---
 
@@ -55,8 +55,8 @@
 ### Dependencies
 
 - **Needs**: Shared font renderer from Grain Skate Agent (Phase 1) ✅ Complete
-- **Provides**: Font renderer migration example for Grain OS Agent (Phase 1.3)
-- **Coordinates with**: Grain Skate Agent (shared module plan), Grain OS Agent (font renderer migration)
+- **Provides**: Font renderer migration example for Grain Core Agent (Phase 1.3)
+- **Coordinates with**: Grain Skate Agent (shared module plan), Grain Core Agent (font renderer migration)
 
 ---
 
@@ -166,10 +166,10 @@
 
 ## Coordination Tasks
 
-### With Grain OS Agent
+### With Grain Core Agent
 
 - [x] Font renderer migration (Phase 1.2) — Complete
-- [ ] Coordinate on Grain OS Agent font renderer migration (Phase 1.3)
+- [ ] Coordinate on Grain Core Agent font renderer migration (Phase 1.3)
 - [ ] Coordinate on text buffer unification (Phase 2)
 - [ ] Coordinate on DAG integration (Phase 3)
 - [ ] Coordinate on UI rendering unification (Phase 4)
@@ -184,9 +184,9 @@
 
 ### With Other Agents
 
-- [ ] Coordinate with Kernel Agent on file I/O syscalls (if needed)
+- [ ] Coordinate with Vantage Agent on file I/O syscalls (if needed)
 - [ ] Coordinate with Database Agent on state persistence (if needed)
-- [ ] Coordinate with Mobile Agent on UI components (if needed)
+- [ ] Coordinate with Carry Agent on UI components (if needed)
 
 ---
 
@@ -194,7 +194,7 @@
 
 - **Grain Style**: [`docs/grain_style.md`](../grain_style.md)
 - **Master Tasks**: [`docs/tasks.md`](../tasks.md)
-- **Grain OS Agent Tasks**: [`docs/tasks/tasks_os.md`](tasks_os.md)
+- **Grain Core Agent Tasks**: [`docs/tasks/tasks_core.md`](tasks_core.md)
 - **Grain Skate Future Enhancements**: [`docs/grain_skate_future_enhancements.md`](../grain_skate_future_enhancements.md)
 - **Shared Module Coordination**: [`docs/grain_os_font_renderer_coordination.md`](../grain_os_font_renderer_coordination.md)
 

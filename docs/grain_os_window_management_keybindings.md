@@ -6,11 +6,11 @@
 
 ## Overview
 
-Grain OS implements a Rectangle-inspired window management system with keyboard shortcuts for positioning and resizing windows. These keybindings are available system-wide and should be respected by all applications running in the Grain OS compositor.
+Grain OS implements a Rectangle-inspired window management system with keyboard shortcuts for positioning and resizing windows. These keybindings are available system-wide and should be respected by all applications running in the Grain Core compositor.
 
 ## Keybinding System
 
-The window management system uses **Ctrl+Alt** (or **Ctrl+Alt+Shift** for some actions) as the modifier combination. All keybindings are registered in `src/grain_os/keyboard_shortcuts.zig` and implemented in `src/grain_os/window_actions.zig`.
+The window management system uses **Ctrl+Alt** (or **Ctrl+Alt+Shift** for some actions) as the modifier combination. All keybindings are registered in `src/grain_core/keyboard_shortcuts.zig` and implemented in `src/grain_core/window_actions.zig`.
 
 ## Available Keybindings
 
@@ -89,7 +89,7 @@ MODIFIER_META: u8 = 0x08
 
 ### Window Actions
 
-All window actions are implemented as functions in `src/grain_os/window_actions.zig`:
+All window actions are implemented as functions in `src/grain_core/window_actions.zig`:
 
 - `action_left_half(comp: *Compositor, window_id: u32) bool`
 - `action_right_half(comp: *Compositor, window_id: u32) bool`
@@ -194,9 +194,9 @@ Potential additions to the keybinding system:
 
 ## References
 
-- `src/grain_os/keyboard_shortcuts.zig` - Keybinding registry
-- `src/grain_os/window_actions.zig` - Window action implementations
-- `src/grain_os/compositor.zig` - Compositor integration
+- `src/grain_core/keyboard_shortcuts.zig` - Keybinding registry
+- `src/grain_core/window_actions.zig` - Window action implementations
+- `src/grain_core/compositor.zig` - Compositor integration
 - `tests/059_grain_os_keyboard_shortcuts_test.zig` - Test suite
 
 ---

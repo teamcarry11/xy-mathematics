@@ -8,7 +8,7 @@
 
 const std = @import("std");
 const grain_terminal = @import("grain_terminal");
-const grain_os = @import("grain_os");
+const grain_core = @import("grain_core");
 
 // Bounded: Max sessions (explicit limit)
 // 2025-12-03-165209-pst: Active constant

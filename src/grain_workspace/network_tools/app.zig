@@ -7,7 +7,7 @@
 //! 2025-12-04-102946-pst: Active implementation
 
 const std = @import("std");
-const grain_os = @import("grain_os");
+const grain_core = @import("grain_core");
 
 // Bounded: Max network devices (explicit limit)
 // 2025-12-04-102946-pst: Active constant
@@ -52,7 +52,7 @@ pub const ConnectionState = enum(u8) {
 // 2025-12-04-102946-pst: Active struct
 pub const NetworkDevice = struct {
     device_id: u32,
-    ip_address: [grain_os.network_manager.MAX_IP_LEN]u8,
+    ip_address: [grain_core.network_manager.MAX_IP_LEN]u8,
     ip_address_len: u32,
     hostname: [MAX_HOSTNAME_LEN]u8,
     hostname_len: u32,
@@ -75,10 +75,10 @@ pub const PortScanResult = struct {
 // 2025-12-04-102946-pst: Active struct
 pub const ConnectionInfo = struct {
     connection_id: u32,
-    local_ip: [grain_os.network_manager.MAX_IP_LEN]u8,
+    local_ip: [grain_core.network_manager.MAX_IP_LEN]u8,
     local_ip_len: u32,
     local_port: u16,
-    remote_ip: [grain_os.network_manager.MAX_IP_LEN]u8,
+    remote_ip: [grain_core.network_manager.MAX_IP_LEN]u8,
     remote_ip_len: u32,
     remote_port: u16,
     state: ConnectionState,
@@ -90,7 +90,7 @@ pub const ConnectionInfo = struct {
 pub const DNSCacheEntry = struct {
     hostname: [MAX_HOSTNAME_LEN]u8,
     hostname_len: u32,
-    ip_address: [grain_os.network_manager.MAX_IP_LEN]u8,
+    ip_address: [grain_core.network_manager.MAX_IP_LEN]u8,
     ip_address_len: u32,
     cached_at: u64,
     ttl: u32, // Time to live in seconds
@@ -100,7 +100,7 @@ pub const DNSCacheEntry = struct {
 // Network Tools application state.
 // 2025-12-04-102946-pst: Active struct
 pub const NetworkToolsApp = struct {
-    network_manager: *grain_os.network_manager.NetworkManager,
+    network_manager: *grain_core.network_manager.NetworkManager,
     devices: [MAX_NETWORK_DEVICES]?NetworkDevice,
     devices_len: u32,
     connections: [MAX_CONNECTIONS]?ConnectionInfo,
@@ -116,7 +116,7 @@ pub const NetworkToolsApp = struct {
     // 2025-12-04-102946-pst: Active function
     pub fn init(
         allocator: std.mem.Allocator,
-        nm: *grain_os.network_manager.NetworkManager,
+        nm: *grain_core.network_manager.NetworkManager,
     ) NetworkToolsApp {
         // Precondition: Allocator and manager must be valid
         std.debug.assert(allocator.ptr != null);
@@ -197,7 +197,7 @@ pub const NetworkToolsApp = struct {
             };
 
             // Set IP address
-            const ip_len = @min(network_ip.len, grain_os.network_manager.MAX_IP_LEN);
+            const ip_len = @min(network_ip.len, grain_core.network_manager.MAX_IP_LEN);
             @memset(&device.ip_address, 0);
             @memcpy(device.ip_address[0..ip_len], network_ip[0..ip_len]);
             device.ip_address_len = @as(u32, @intCast(ip_len));
@@ -337,13 +337,13 @@ pub const NetworkToolsApp = struct {
         };
 
         // Set local IP
-        const local_ip_len = @min(local_ip.len, grain_os.network_manager.MAX_IP_LEN);
+        const local_ip_len = @min(local_ip.len, grain_core.network_manager.MAX_IP_LEN);
         @memset(&conn.local_ip, 0);
         @memcpy(conn.local_ip[0..local_ip_len], local_ip[0..local_ip_len]);
         conn.local_ip_len = @as(u32, @intCast(local_ip_len));
 
         // Set remote IP
-        const remote_ip_len = @min(remote_ip.len, grain_os.network_manager.MAX_IP_LEN);
+        const remote_ip_len = @min(remote_ip.len, grain_core.network_manager.MAX_IP_LEN);
         @memset(&conn.remote_ip, 0);
         @memcpy(conn.remote_ip[0..remote_ip_len], remote_ip[0..remote_ip_len]);
         conn.remote_ip_len = @as(u32, @intCast(remote_ip_len));
@@ -410,7 +410,7 @@ pub const NetworkToolsApp = struct {
         std.debug.assert(hostname.len > 0);
         std.debug.assert(hostname.len <= MAX_HOSTNAME_LEN);
         std.debug.assert(ip_address.len > 0);
-        std.debug.assert(ip_address.len <= grain_os.network_manager.MAX_IP_LEN);
+        std.debug.assert(ip_address.len <= grain_core.network_manager.MAX_IP_LEN);
 
         const now = @as(u64, @intCast(std.time.timestamp()));
         var entry = DNSCacheEntry{
@@ -431,7 +431,7 @@ pub const NetworkToolsApp = struct {
 
         // Set IP address
         @memset(&entry.ip_address, 0);
-        const ip_len = @min(ip_address.len, grain_os.network_manager.MAX_IP_LEN);
+        const ip_len = @min(ip_address.len, grain_core.network_manager.MAX_IP_LEN);
         @memcpy(entry.ip_address[0..ip_len], ip_address[0..ip_len]);
         entry.ip_address_len = @as(u32, @intCast(ip_len));
 

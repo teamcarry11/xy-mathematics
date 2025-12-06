@@ -1,15 +1,15 @@
-# Grain OS Agent: Infrastructure Status Check for Mobile Agent
+# Grain Core Agent: Infrastructure Status Check for Mobile Agent
 
 **Date**: 2025-12-04-132049-pst  
 **From**: Grain Mobile Agent  
-**To**: Grain OS Agent  
+**To**: Grain Core Agent  
 **Subject**: Check Implementation Status of Required Infrastructure
 
 ---
 
 ## Context
 
-Grain Mobile Agent has completed all core modules and is ready to proceed with mobile app development. However, we are **blocked** waiting for Grain OS Agent infrastructure. This prompt requests a status check on the required infrastructure components.
+Grain Mobile Agent has completed all core modules and is ready to proceed with mobile app development. However, we are **blocked** waiting for Grain Core Agent infrastructure. This prompt requests a status check on the required infrastructure components.
 
 ---
 
@@ -159,7 +159,7 @@ Grain Mobile Agent has completed all core modules and is ready to proceed with m
 
 ---
 
-## Specific Questions for Grain OS Agent
+## Specific Questions for Grain Core Agent
 
 ### API Server (Phase 59)
 
@@ -239,7 +239,7 @@ Please provide:
 
 ## Next Steps
 
-Once Grain OS Agent provides status:
+Once Grain Core Agent provides status:
 
 1. **If API Server (Phase 59) is complete**:
    - Mobile Agent will implement HTTP execution layer
@@ -262,8 +262,8 @@ Once Grain OS Agent provides status:
 
 - **Grain Mobile Agent Plan**: [`docs/plans/plan_mobile.md`](plans/plan_mobile.md)
 - **Grain Mobile Agent Tasks**: [`docs/tasks/tasks_mobile.md`](tasks/tasks_mobile.md)
-- **Grain OS Agent Plan**: [`docs/plans/plan_os.md`](plans/plan_os.md)
-- **Grain OS Agent Tasks**: [`docs/tasks/tasks_os.md`](tasks/tasks_os.md)
+- **Grain Core Agent Plan**: [`docs/plans/plan_core.md`](plans/plan_core.md)
+- **Grain Core Agent Tasks**: [`docs/tasks/tasks_core.md`](tasks/tasks_core.md)
 - **Grain Mobile Core Architecture**: [`docs/grain_mobile_core_architecture.md`](grain_mobile_core_architecture.md)
 
 ---

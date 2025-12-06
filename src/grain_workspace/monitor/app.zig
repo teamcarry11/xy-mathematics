@@ -7,7 +7,7 @@
 //! 2025-12-03-164418-pst: Active implementation
 
 const std = @import("std");
-const grain_os = @import("grain_os");
+const grain_core = @import("grain_core");
 
 // Bounded: Max processes to monitor (explicit limit)
 // 2025-12-03-164418-pst: Active constant
@@ -46,7 +46,7 @@ pub const ProcessInfo = struct {
     name_len: u32,
     cpu_usage: f64,
     memory_usage: u64,
-    state: grain_os.process_manager.ProcessState,
+    state: grain_core.process_manager.ProcessState,
 };
 
 // System metrics structure.
@@ -65,8 +65,8 @@ pub const SystemMetrics = struct {
 // Monitor application state.
 // 2025-12-03-164418-pst: Active struct
 pub const MonitorApp = struct {
-    process_manager: *grain_os.process_manager.ProcessManager,
-    resource_monitor: *grain_os.resource_monitor.ResourceMonitor,
+    process_manager: *grain_core.process_manager.ProcessManager,
+    resource_monitor: *grain_core.resource_monitor.ResourceMonitor,
     metrics_history: [MAX_HISTORY_ENTRIES]SystemMetrics,
     metrics_history_len: u32,
     metrics_history_index: u32,
@@ -78,8 +78,8 @@ pub const MonitorApp = struct {
     // 2025-12-03-164418-pst: Active function
     pub fn init(
         allocator: std.mem.Allocator,
-        process_mgr: *grain_os.process_manager.ProcessManager,
-        resource_mon: *grain_os.resource_monitor.ResourceMonitor,
+        process_mgr: *grain_core.process_manager.ProcessManager,
+        resource_mon: *grain_core.resource_monitor.ResourceMonitor,
     ) MonitorApp {
         // Precondition: Allocator and managers must be valid
         std.debug.assert(allocator.ptr != null);

@@ -1,11 +1,11 @@
 const std = @import("std");
 const Block = @import("block.zig").Block;
-const grain_field = @import("grain_field");
+const grain_court = @import("grain_court");
 const grain_silo = @import("grain_silo");
-const FieldCompute = grain_field.Compute.FieldCompute;
+const CourtCompute = grain_court.Compute.CourtCompute;
 const ObjectStorage = grain_silo.Storage.ObjectStorage;
 
-/// Grain Skate Storage Integration: Integrates Grain Field and Grain Silo with block storage.
+/// Grain Skate Storage Integration: Integrates Grain Court and Grain Silo with block storage.
 /// ~<~ Glow Airbend: explicit integration state, bounded block-to-object mapping.
 /// ~~~~ Glow Waterbend: deterministic storage operations, iterative algorithms.
 ///
@@ -27,7 +27,7 @@ pub const StorageIntegration = struct {
         block_id: u32, // Block ID
         object_key: []const u8, // Object key in Grain Silo
         object_key_len: u32,
-        is_hot: bool, // Is block in hot cache (Grain Field SRAM)?
+        is_hot: bool, // Is block in hot cache (Grain Court SRAM)?
         hot_cache_offset: ?u64, // Hot cache offset (if in SRAM)
         allocator: std.mem.Allocator,
 
@@ -68,7 +68,7 @@ pub const StorageIntegration = struct {
     // 2025-11-23-114146-pst: Active struct
     pub const Integration = struct {
         block_storage: *Block.BlockStorage, // Block storage
-        field_compute: *FieldCompute, // Grain Field compute layer
+        court_compute: *CourtCompute, // Grain Court compute layer
         object_storage: *ObjectStorage, // Grain Silo object storage
         mappings: []BlockMapping, // Block-to-object mappings (bounded)
         mappings_len: u32, // Number of mappings
@@ -79,7 +79,7 @@ pub const StorageIntegration = struct {
         pub fn init(
             allocator: std.mem.Allocator,
             block_storage: *Block.BlockStorage,
-            field_compute: *FieldCompute,
+            court_compute: *CourtCompute,
             object_storage: *ObjectStorage,
         ) !Integration {
             // Assert: Allocator must be valid (check by attempting allocation)
@@ -91,7 +91,7 @@ pub const StorageIntegration = struct {
 
             return Integration{
                 .block_storage = block_storage,
-                .field_compute = field_compute,
+                .court_compute = court_compute,
                 .object_storage = object_storage,
                 .mappings = mappings,
                 .mappings_len = 0,
@@ -173,8 +173,8 @@ pub const StorageIntegration = struct {
             return error.MappingNotFound;
         }
 
-        /// Promote block to hot cache (Grain Field SRAM).
-        // 2025-11-23-114146-pst: Active function
+        /// Promote block to hot cache (Grain Court SRAM).
+        // 2025-12-05-145359-pst: Active function
         pub fn promote_block_to_hot(self: *Integration, block_id: u32) !void {
             // Find mapping
             var i: u32 = 0;
@@ -185,7 +185,7 @@ pub const StorageIntegration = struct {
                     // Get block
                     if (self.block_storage.get_block(block_id)) |block| {
                         // Allocate SRAM for block content
-                        const cache_offset = try self.field_compute.allocate_sram(0, @as(u64, @intCast(block.content_len)));
+                        const cache_offset = try self.court_compute.allocate_sram(0, @as(u64, @intCast(block.content_len)));
 
                         // Promote object to hot cache
                         try self.object_storage.promote_to_hot(mapping.object_key, cache_offset);

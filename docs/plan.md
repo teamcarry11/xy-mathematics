@@ -12,24 +12,25 @@
 
 **Current Status**: Multiple agents working in parallel on different components.
 
-**Active Agents**: 7 agents
-1. Grain Vantage VM Basin Kernel Agent
+**Active Agents**: 8 agents
+1. Grain Vantage Agent
 2. Grain Aurora IDE Dream Browser Agent
 3. Grain Skate Silo Field Agent
-4. Grain OS Agent
+4. Grain Core Agent
 5. Grain Workspace Agent
-6. Grain Mobile Agent
+6. Grain Carry Agent
 7. Grain Database Agent
+8. Grain Bubble Agent
 
 ---
 
 ## Agent Status Summary
 
-### 1. Grain Vantage VM Basin Kernel Agent
+### 1. Grain Vantage Agent
 
 **Status**: Active — Kernel and VM development  
 **Current Work**: Kernel features, VM integration, AArch64 support  
-**Details**: See [`docs/plans/plan_kernel.md`](plans/plan_kernel.md)
+**Details**: See [`docs/plans/plan_vantage.md`](plans/plan_vantage.md)
 
 **Recent Progress**:
 - Enhanced SysInfo (Phase 3.6) ✅
@@ -38,6 +39,7 @@
 - Process Groups and Sessions (Phase 3.13) ✅
 - Signal Delivery to Process Groups (Phase 3.14) ✅
 - Signal Delivery to Sessions (Phase 3.15) ✅
+- Process Group Statistics (Phase 3.16) ✅
 
 **Provides**: Kernel syscalls, VM capabilities, file I/O, network syscalls (planned)
 
@@ -79,27 +81,27 @@
 
 ---
 
-### 4. Grain OS Agent
+### 4. Grain Core Agent
 
 **Status**: Active — Desktop environment and system services  
 **Current Work**: Phase 59 — HTTP/REST API Server (STARTING)  
-**Details**: See [`docs/plans/plan_os.md`](plans/plan_os.md)
+**Details**: See [`docs/plans/plan_core.md`](plans/plan_core.md)
 
 **Recent Progress**:
 - Phase 59 (HTTP/REST API Server) ⏳ In Progress - Core structure complete
 - Build System Refactoring (Phase 58.5) ✅ Complete
 - Phase 52-58 Complete ✅ (Enhanced SysInfo, Health Monitoring, Process Supervision, System Metrics, Diagnostics)
 
-**Provides**: Compositor, system services, API server (Phase 59), authentication (Phase 60), network stack (Phase 61)
+**Provides**: Compositor, system services, API server (Phase 59 ✅), authentication (Phase 60 ✅), network stack (Phase 61)
 
 **Dependencies**:
 - **Needs**: Network Manager (exists), Process Manager (exists)
-- **Provides**: API Server (for Database Agent, Mobile Agent), Authentication Service (planned)
+- **Provides**: API Server (for Database Agent, Mobile Agent) ✅, Authentication Service ✅
 
 **Next Phases**:
-- Phase 59: HTTP/REST API Server (HIGHEST PRIORITY) — Starting
-- Phase 60: Authentication Service (HIGH PRIORITY)
-- Phase 61: Network Stack Enhancements (MEDIUM PRIORITY)
+- Phase 59: HTTP/REST API Server ✅ (COMPLETE — 2025-12-05-120808-pst)
+- Phase 60: Authentication Service ✅ (COMPLETE — 2025-12-05-134449-pst)
+- Phase 61: Network Stack Enhancements 🔄 (IN PROGRESS — TCP/UDP socket support complete — 2025-12-05-143449-pst)
 - Phase 62: File System Enhancements (MEDIUM PRIORITY)
 
 ---
@@ -123,11 +125,11 @@
 
 ---
 
-### 6. Grain Mobile Agent
+### 6. Grain Carry Agent
 
 **Status**: Active — Handler Adapters Complete  
 **Current Work**: Handler adapter tests complete, ready for end-to-end testing  
-**Details**: See [`docs/plans/plan_mobile.md`](plans/plan_mobile.md)
+**Details**: See [`docs/plans/plan_carry.md`](plans/plan_carry.md)
 
 **Recent Progress**:
 - Handler Adapters & OS Integration ✅ (2025-12-05-104028-pst)
@@ -135,9 +137,9 @@
 
 **Provides**: Mobile app backend API (authentication, user management)
 
-**Status**: Active — Handler Adapter Tests Complete  
-**Current Work**: Handler adapter tests complete, ready for end-to-end testing  
-**Details**: See [`docs/plans/plan_mobile.md`](plans/plan_mobile.md)
+**Status**: Active — Authentication Service Integration Complete  
+**Current Work**: Authentication service integration complete, ready for enhanced handlers  
+**Details**: See [`docs/plans/plan_carry.md`](plans/plan_carry.md)
 
 **Recent Progress**:
 - Grain Mobile Core architecture ✅
@@ -166,14 +168,14 @@
   - Ready for HTTP implementation when API Server available
 - API Endpoint Definitions ✅ (2025-12-04-150157-pst)
   - Endpoint path definitions (authentication, users)
-  - Endpoint registry, acknowledgment of Grain OS Agent Phase 59 progress
+  - Endpoint registry, acknowledgment of Grain Core Agent Phase 59 progress
   - Ready for handler implementation when JSON support available
 - FFI layer ✅
 
 **Provides**: Mobile app framework, shared business logic (Zig), platform bindings
 
 **Dependencies**:
-- **Needs**: API Server (Grain OS Agent — Phase 59), Authentication Service (Grain OS Agent — Phase 60)
+- **Needs**: API Server (Grain Core Agent — Phase 59 ✅), Authentication Service (Grain Core Agent — Phase 60 ✅)
 - **Provides**: Mobile applications (Android, iOS)
 
 ---
@@ -181,7 +183,7 @@
 ### 7. Grain Database Agent
 
 **Status**: Active — Phase 5 Complete  
-**Current Work**: Integration with Grain OS Agent API Server (Phase 59)  
+**Current Work**: Integration with Grain Core Agent API Server (Phase 59)  
 **Details**: See [`docs/plans/plan_database.md`](plans/plan_database.md)
 
 **Recent Progress**:
@@ -203,14 +205,43 @@
   - Path parameter extraction, JSON parsing, proper status codes
   - Ready for HTTP server integration
 
-**Provides**: Database backend (for Mobile Agent), REST API (via Grain OS Agent)
+**Provides**: Database backend (for Mobile Agent), REST API (via Grain Core Agent)
 
 **Dependencies**:
-- **Needs**: API Server (Grain OS Agent — Phase 59), File Storage (Grain OS Agent — Phase 62), Network Stack (Grain OS Agent — Phase 61)
+- **Needs**: API Server (Grain Core Agent — Phase 59), File Storage (Grain Core Agent — Phase 62), Network Stack (Grain Core Agent — Phase 61)
 - **Provides**: Database backend (for Mobile Agent)
 
 **Next Phases**:
-- All core database phases complete! Ready for integration with Grain OS Agent API Server.
+- All core database phases complete! Ready for integration with Grain Core Agent API Server.
+
+---
+
+### 8. Grain Bubble Agent
+
+**Status**: Active — Phase 1 Starting  
+**Current Work**: Core Canvas (SLC v1.0) — Foundation implementation  
+**Details**: See [`docs/plans/plan_bubble.md`](plans/plan_bubble.md)
+
+**Recent Progress**:
+- Phase 1: Core Canvas (SLC v1.0) ⏳ Starting (2025-12-05-143400-pst)
+  - Module structure created (`src/grain_bubble/`)
+  - Canvas engine with infinite canvas, zoom/pan
+  - Bubble renderer for rounded shapes
+  - PDF export framework
+  - Build system integration
+
+**Provides**: Native visual design tool with infinite canvas, vector graphics, layer management, and export capabilities
+
+**Dependencies**:
+- **Needs**: Grain Core compositor, framebuffer renderer, input handler, font renderer
+- **Provides**: Design tool for creating visual designs and exporting to PDF/HTML
+
+**Next Phases**:
+- Phase 1: Core Canvas (SLC v1.0) ⏳ In Progress
+- Phase 2: Component System (PLANNED)
+- Phase 3: Silo/Field Integration (PLANNED)
+- Phase 4: Export Pipeline (PLANNED)
+- Phase 5: Agent Flow Design (PLANNED)
 
 ---
 
@@ -218,19 +249,19 @@
 
 ### Critical Path
 
-1. **Grain OS Agent → Database Agent**:
+1. **Grain Core Agent → Database Agent**:
    - API Server (Phase 59) enables Database Agent REST API
    - File Storage (Phase 62) enables database persistence
    - Network Stack (Phase 61) enables WebSocket for livestream
 
-2. **Grain OS Agent → Mobile Agent**:
+2. **Grain Core Agent → Mobile Agent**:
    - API Server (Phase 59) enables mobile app backend connection
-   - Authentication Service (Phase 60) enables secure mobile app authentication
+   - Authentication Service (Phase 60 ✅) enables secure mobile app authentication
    - Network Stack (Phase 61) enables HTTP/WebSocket for mobile apps
 
 3. **Database Agent → Mobile Agent**:
    - Database backend provides data for mobile apps
-   - REST API (via Grain OS Agent) provides endpoints for mobile apps
+   - REST API (via Grain Core Agent) provides endpoints for mobile apps
 
 ### Integration Points
 
@@ -244,9 +275,9 @@
 
 ### Active Coordination
 
-- **Grain OS Agent ↔ Database Agent**: API contracts, authentication flow, file storage interface
-- **Grain OS Agent ↔ Mobile Agent**: REST API contracts, authentication flow, WebSocket protocol
-- **Grain OS Agent ↔ Kernel Agent**: File system integration, network stack, AArch64 deployment
+- **Grain Core Agent ↔ Database Agent**: API contracts, authentication flow, file storage interface
+- **Grain Core Agent ↔ Mobile Agent**: REST API contracts, authentication flow, WebSocket protocol
+- **Grain Core Agent ↔ Vantage Agent**: File system integration, network stack, AArch64 deployment
 
 ### Shared Modules
 
@@ -261,13 +292,13 @@
 
 ### Immediate (Next 2-3 Weeks)
 
-1. **Grain OS Agent**: Phase 59 — HTTP/REST API Server (HIGHEST PRIORITY)
+1. **Grain Core Agent**: Phase 59 — HTTP/REST API Server (HIGHEST PRIORITY)
    - Enables Database Agent and Mobile Agent
    - Foundation for all API-based features
 
 ### Short-Term (Next Month)
 
-2. **Grain OS Agent**: Phase 60 — Authentication Service
+2. **Grain Core Agent**: Phase 60 — Authentication Service ✅ (COMPLETE — 2025-12-05-134449-pst)
    - Enables secure mobile app authentication
    - Required for production deployment
 
@@ -277,11 +308,11 @@
 
 ### Medium-Term (Next Quarter)
 
-4. **Grain OS Agent**: Phase 61 — Network Stack Enhancements
+4. **Grain Core Agent**: Phase 61 — Network Stack Enhancements
    - Enables WebSocket for livestream coordination
    - Enables secure API endpoints (TLS)
 
-5. **Grain OS Agent**: Phase 62 — File System Enhancements
+5. **Grain Core Agent**: Phase 62 — File System Enhancements
    - Enables database persistence
    - Enables backup/restore
 

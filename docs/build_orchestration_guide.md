@@ -1,7 +1,7 @@
 # Build System Orchestration Guide
 
 **Date**: 2025-12-04-141613-pst  
-**Agent**: Grain OS Agent  
+**Agent**: Grain Core Agent  
 **Status**: Modular structure complete, orchestration guide ready
 
 ---
@@ -162,6 +162,6 @@ pub fn build(b: *std.Build) void {
 
 ---
 
-**Grain OS Agent**  
+**Grain Core Agent**  
 2025-12-04-141613-pst
 

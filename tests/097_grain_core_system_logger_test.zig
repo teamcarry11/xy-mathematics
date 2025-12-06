@@ -115,9 +115,9 @@ test "compositor get log count by level" {
 
     var comp = Compositor.init(allocator);
     _ = comp.log_system_event(LogLevel.info, "test_source", "Info message", 1000);
-    _ = comp.log_system_event(LogLevel.error, "test_source", "Error message", 2000);
+    _ = comp.log_system_event(LogLevel.err, "test_source", "Error message", 2000);
     std.debug.assert(comp.get_log_count_by_level(LogLevel.info) == 1);
-    std.debug.assert(comp.get_log_count_by_level(LogLevel.error) == 1);
+    std.debug.assert(comp.get_log_count_by_level(LogLevel.err) == 1);
 }
 
 test "log levels" {

@@ -72,8 +72,6 @@ pub const DatabaseFileHeader = struct {
     }
 
     pub fn validate(self: *const DatabaseFileHeader) bool {
-        std.debug.assert(self != null);
-        std.debug.assert(self != null);
         const expected_magic = "GDBF";
         var i: u32 = 0;
         while (i < 4) : (i += 1) {
@@ -120,10 +118,9 @@ pub const FilePage = struct {
         return page;
     }
 
-    pub fn calculate_checksum(self: *const FilePage) void {
-        std.debug.assert(self != null);
+    pub fn calculate_checksum(self: *FilePage) void {
         var hash: [CHECKSUM_SIZE]u8 = undefined;
-        std.crypto.hash.Sha256.hash(&self.data, &hash, .{});
+        std.crypto.hash.sha2.Sha256.hash(&self.data, &hash, .{});
         var i: u32 = 0;
         while (i < CHECKSUM_SIZE) : (i += 1) {
             self.checksum[i] = hash[i];
@@ -131,10 +128,8 @@ pub const FilePage = struct {
     }
 
     pub fn verify_checksum(self: *const FilePage) bool {
-        std.debug.assert(self != null);
-        std.debug.assert(self != null);
         var computed: [CHECKSUM_SIZE]u8 = undefined;
-        std.crypto.hash.Sha256.hash(&self.data, &computed, .{});
+        std.crypto.hash.sha2.Sha256.hash(&self.data, &computed, .{});
         var i: u32 = 0;
         while (i < CHECKSUM_SIZE) : (i += 1) {
             if (computed[i] != self.checksum[i]) {

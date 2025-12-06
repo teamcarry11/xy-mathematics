@@ -2,7 +2,7 @@
 
 **Agent**: Grain Bubble Agent (8th Agent)  
 **Status**: Phase 1 In Progress — Core Canvas (SLC v1.0)  
-**Last Updated**: 2025-12-06-060230-pst
+**Last Updated**: 2025-12-06-062930-pst
 
 ---
 
@@ -54,6 +54,7 @@ Grain Bubble Agent is responsible for building Grain Bubble — a native visual 
 - Stroke rendering (outline support for shapes) ✅
 - Proper rounded rectangle rendering (quarter-circle corners) ✅
 - Improved hit testing for rounded rectangles (corner radius support) ✅
+- Undo/redo system (command pattern with bounded history) ✅
 - Export to PDF (framework ready, implementation pending) ⏳
 
 **Success Criteria**:

@@ -235,15 +235,11 @@ pub const CanvasInputHandler = struct {
             // Delete selected shapes.
             self.delete_selected_shapes();
         } else if ((modifiers & MODIFIER_CTRL) != 0 and key_code == KEY_Z) {
-            // Ctrl+Z: Undo (placeholder).
-            // TODO: Implement undo/redo system.
-            // Placeholder: will use self.canvas for undo operation.
-            _ = self.canvas;
+            // Ctrl+Z: Undo.
+            _ = self.canvas.undo();
         } else if ((modifiers & MODIFIER_CTRL) != 0 and key_code == KEY_Y) {
-            // Ctrl+Y: Redo (placeholder).
-            // TODO: Implement undo/redo system.
-            // Placeholder: will use self.canvas for redo operation.
-            _ = self.canvas;
+            // Ctrl+Y: Redo.
+            _ = self.canvas.redo();
         } else if ((modifiers & MODIFIER_CTRL) != 0 and key_code == KEY_C) {
             // Ctrl+C: Copy selected shapes.
             self.canvas.copy_selected_shapes();

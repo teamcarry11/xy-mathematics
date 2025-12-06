@@ -4,9 +4,10 @@
 //! Architecture: Viewport transformation, world coordinates.
 //! GrainStyle: grain_case, u32/u64, bounded allocations, assertions.
 //!
-//! 2025-12-05-143400-pst: Grain Bubble Agent
+//! 2025-12-06-060230-pst: Grain Bubble Agent
 
 const std = @import("std");
+const undo_redo = @import("undo_redo.zig");
 
 // Bounded: Max number of layers.
 pub const MAX_LAYERS: u32 = 256;
@@ -107,6 +108,7 @@ pub const Canvas = struct {
     selection_type: SelectionType,
     clipboard: [MAX_CLIPBOARD_SHAPES]Shape,
     clipboard_len: u32,
+    undo_redo: ?*undo_redo.UndoRedoManager,
 
     const SelectionType = enum {
         shape,
@@ -135,6 +137,7 @@ pub const Canvas = struct {
                     .selection_type = .none,
                     .clipboard = undefined,
                     .clipboard_len = 0,
+                    .undo_redo = null,
                 };
                 std.debug.assert(canvas.viewport.zoom >= MIN_ZOOM);
                 std.debug.assert(canvas.viewport.zoom <= MAX_ZOOM);
@@ -319,6 +322,15 @@ pub const Canvas = struct {
             };
             layer.shapes[layer.shapes_len] = shape;
             layer.shapes_len += 1;
+            // Record undo command.
+            if (self.undo_redo) |manager| {
+                var command = undo_redo.Command.init();
+                command.command_type = .add_shape;
+                command.shape_id = shape_id;
+                command.shape_data = shape;
+                command.layer_id = layer_id;
+                manager.push_undo(command);
+            }
             std.debug.assert(layer.shapes_len <= MAX_SHAPES);
             return shape_id;
         }
@@ -545,8 +557,21 @@ pub const Canvas = struct {
             var shape_i: u32 = 0;
             while (shape_i < layer.shapes_len) : (shape_i += 1) {
                 if (layer.shapes[shape_i].id == shape_id) {
-                    layer.shapes[shape_i].x += dx;
-                    layer.shapes[shape_i].y += dy;
+                    const shape = &layer.shapes[shape_i];
+                    // Record undo command.
+                    if (self.undo_redo) |manager| {
+                        var command = undo_redo.Command.init();
+                        command.command_type = .move_shape;
+                        command.shape_id = shape_id;
+                        command.old_x = shape.x;
+                        command.old_y = shape.y;
+                        command.new_x = shape.x + dx;
+                        command.new_y = shape.y + dy;
+                        command.layer_id = shape.layer_id;
+                        manager.push_undo(command);
+                    }
+                    shape.x += dx;
+                    shape.y += dy;
                     return true;
                 }
             }
@@ -719,6 +744,170 @@ pub const Canvas = struct {
             }
         }
         return duplicated_count;
+    }
+
+    // Set undo/redo manager.
+    pub fn set_undo_redo_manager(self: *Canvas, manager: *undo_redo.UndoRedoManager) void {
+        std.debug.assert(@intFromPtr(manager) != 0);
+        self.undo_redo = manager;
+        std.debug.assert(self.undo_redo != null);
+    }
+
+    // Undo last operation.
+    pub fn undo(self: *Canvas) bool {
+        if (self.undo_redo) |manager| {
+            if (!manager.can_undo()) {
+                return false;
+            }
+            const command_opt = manager.pop_undo();
+            if (command_opt) |command| {
+                return self.execute_undo_command(command, manager);
+            }
+        }
+        return false;
+    }
+
+    // Redo last undone operation.
+    pub fn redo(self: *Canvas) bool {
+        if (self.undo_redo) |manager| {
+            if (!manager.can_redo()) {
+                return false;
+            }
+            const command_opt = manager.pop_redo();
+            if (command_opt) |command| {
+                return self.execute_redo_command(command, manager);
+            }
+        }
+        return false;
+    }
+
+    // Execute undo command.
+    fn execute_undo_command(
+        self: *Canvas,
+        command: undo_redo.Command,
+        manager: *undo_redo.UndoRedoManager,
+    ) bool {
+        _ = manager; // Reserved for future use (e.g., recording redo).
+        switch (command.command_type) {
+            .add_shape => {
+                // Undo add: delete the shape.
+                self.delete_shape_without_undo(command.shape_id);
+                return true;
+            },
+            .delete_shape => {
+                // Undo delete: restore the shape.
+                if (self.get_layer(command.layer_id)) |layer| {
+                    if (layer.shapes_len < MAX_SHAPES) {
+                        layer.shapes[layer.shapes_len] = command.shape_data;
+                        layer.shapes_len += 1;
+                        return true;
+                    }
+                }
+                return false;
+            },
+            .move_shape => {
+                // Undo move: restore old position.
+                if (self.get_shape_mut(command.shape_id)) |shape| {
+                    shape.x = command.old_x;
+                    shape.y = command.old_y;
+                    return true;
+                }
+                return false;
+            },
+            else => {
+                // Other operations not yet implemented.
+                return false;
+            },
+        }
+    }
+
+    // Execute redo command.
+    fn execute_redo_command(
+        self: *Canvas,
+        command: undo_redo.Command,
+        manager: *undo_redo.UndoRedoManager,
+    ) bool {
+        _ = manager; // Reserved for future use (e.g., recording undo).
+        switch (command.command_type) {
+            .add_shape => {
+                // Redo add: restore the shape.
+                if (self.get_layer(command.layer_id)) |layer| {
+                    if (layer.shapes_len < MAX_SHAPES) {
+                        layer.shapes[layer.shapes_len] = command.shape_data;
+                        layer.shapes_len += 1;
+                        return true;
+                    }
+                }
+                return false;
+            },
+            .delete_shape => {
+                // Redo delete: delete the shape.
+                self.delete_shape_without_undo(command.shape_id);
+                return true;
+            },
+            .move_shape => {
+                // Redo move: apply new position.
+                if (self.get_shape_mut(command.shape_id)) |shape| {
+                    shape.x = command.new_x;
+                    shape.y = command.new_y;
+                    return true;
+                }
+                return false;
+            },
+            else => {
+                // Other operations not yet implemented.
+                return false;
+            },
+        }
+    }
+
+    // Delete shape without recording undo (for undo/redo operations).
+    fn delete_shape_without_undo(self: *Canvas, shape_id: u32) void {
+        var layer_i: u32 = 0;
+        while (layer_i < self.layers_len) : (layer_i += 1) {
+            var layer = &self.layers[layer_i];
+            var shape_i: u32 = 0;
+            while (shape_i < layer.shapes_len) : (shape_i += 1) {
+                if (layer.shapes[shape_i].id == shape_id) {
+                    // Shift elements to remove the shape.
+                    var j: u32 = shape_i;
+                    while (j < layer.shapes_len - 1) : (j += 1) {
+                        layer.shapes[j] = layer.shapes[j + 1];
+                    }
+                    layer.shapes_len -= 1;
+                    return;
+                }
+            }
+        }
+    }
+
+    // Delete a single shape (with undo recording).
+    pub fn delete_shape(self: *Canvas, shape_id: u32) void {
+        var layer_i: u32 = 0;
+        while (layer_i < self.layers_len) : (layer_i += 1) {
+            var layer = &self.layers[layer_i];
+            var shape_i: u32 = 0;
+            while (shape_i < layer.shapes_len) : (shape_i += 1) {
+                if (layer.shapes[shape_i].id == shape_id) {
+                    // Record undo command.
+                    if (self.undo_redo) |manager| {
+                        var command = undo_redo.Command.init();
+                        command.command_type = .delete_shape;
+                        command.shape_id = shape_id;
+                        command.shape_data = layer.shapes[shape_i];
+                        command.layer_id = layer.id;
+                        manager.push_undo(command);
+                    }
+                    // Shift elements to remove the shape.
+                    var j: u32 = shape_i;
+                    while (j < layer.shapes_len - 1) : (j += 1) {
+                        layer.shapes[j] = layer.shapes[j + 1];
+                    }
+                    layer.shapes_len -= 1;
+                    return;
+                }
+            }
+        }
     }
 };
 

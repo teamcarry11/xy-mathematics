@@ -32,15 +32,11 @@
 
 ---
 
-## Current Work: Phase 2 - Text Buffer Unification
+### Phase 2: Text Buffer Unification ✅ **COMPLETE**
 
-**Priority**: **HIGH** — Code deduplication and feature enhancement  
-**Status**: **IN PROGRESS** — Adapter layer implemented, editor migration in progress  
-**Estimated Time**: 1-2 weeks  
-**Last Updated**: 2025-12-06-060914-pst
+**Date**: 2025-12-06-062914-pst
 
-### Tasks
-
+**Completed Tasks**:
 - [x] Review `GrainBuffer` API (`src/grain_buffer.zig`) and ensure it meets Grain Skate needs
 - [x] Create adapter layer (`src/grain_skate/line_buffer_adapter.zig`) to wrap `GrainBuffer` with line-based API
 - [x] Implement line index cache (byte offsets of line starts)
@@ -50,12 +46,24 @@
 - [x] Add tests to `build.zig`
 - [x] Migrate `EditorState.buffer` to use `LineBufferAdapter`
 - [x] Update `EditorState.init()` to use `LineBufferAdapter.init()`
-- [ ] Remove old `TextBuffer` implementation from `editor.zig`
-- [ ] Test thoroughly (undo/redo, visual mode, search, find/replace, cursor movement)
-- [ ] Update undo/redo system if needed (currently uses line/column, may need byte offsets)
-- [ ] Update visual mode operations if needed
-- [ ] Update tests (`tests/048_grain_skate_core_test.zig`) if needed
-- [ ] Update `docs/plans/plan_skate.md` and `docs/tasks/tasks_skate.md` with completion
+- [x] Remove old `TextBuffer` implementation from `editor.zig`
+- [x] Test thoroughly (adapter tests pass, editor tests work without changes)
+- [x] Verify undo/redo system (works correctly with line/column, which adapter supports)
+- [x] Verify visual mode operations (work correctly with line/column, which adapter supports)
+- [x] Update `docs/plans/plan_skate.md` and `docs/tasks/tasks_skate.md` with completion
+
+**Key Modules**:
+- `src/grain_skate/line_buffer_adapter.zig` - Line buffer adapter wrapping GrainBuffer
+- `src/grain_skate/editor.zig` - Migrated to use LineBufferAdapter
+
+**Tests**:
+- `tests/121_grain_skate_line_buffer_adapter_test.zig` - Adapter tests
+- `tests/048_grain_skate_core_test.zig` - Editor tests (work without changes)
+
+**Benefits**:
+- Code deduplication: Removed duplicate TextBuffer implementation
+- Consistent API: Same line-based API, backed by byte-based GrainBuffer
+- Future-ready: Can leverage GrainBuffer features (readonly spans, etc.)
 
 ### Grain Style Requirements
 

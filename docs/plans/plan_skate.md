@@ -259,14 +259,9 @@ Grain Skate Terminal Silo Field Agent is responsible for building Grain Skate (k
 
 ---
 
-## Current Work: Phase 2 - Text Buffer Unification
+### Phase 2: Text Buffer Unification ✅ **COMPLETE**
 
-**Priority**: **HIGH** — Code deduplication and feature enhancement  
-**Status**: **IN PROGRESS** — Adapter layer implemented, editor migration in progress  
-**Estimated Time**: 1-2 weeks  
-**Last Updated**: 2025-12-06-054343-pst
-
-**Update**: GrainBuffer has been updated to use `u32`/`u64` for all public API functions and struct fields. Internal conversions to `usize` are only used when interfacing with Zig standard library (`std.ArrayListUnmanaged`), which is acceptable per Grain Style guidelines.
+**Date**: 2025-12-06-062914-pst
 
 **Completed Work**:
 1. **Line Buffer Adapter** (`src/grain_skate/line_buffer_adapter.zig`):
@@ -276,20 +271,25 @@ Grain Skate Terminal Silo Field Agent is responsible for building Grain Skate (k
    - Implements `replace_line()` and `remove_line()` operations
    - Rebuilds line cache after buffer modifications
    - Tests created (`tests/121_grain_skate_line_buffer_adapter_test.zig`)
+   - Added to `src/grain_skate/root.zig` exports
+   - Added tests to `build.zig`
 
-2. **Editor Migration** (in progress):
+2. **Editor Migration**:
    - Updated `EditorState.buffer` to use `LineBufferAdapter` instead of `TextBuffer`
    - Updated `init()` to use `LineBufferAdapter.init()`
+   - Removed old `TextBuffer` implementation from `editor.zig`
    - Editor code uses same API (`buffer.lines`, `buffer.lines_len`, `replace_line()`, `remove_line()`)
-   - All existing editor operations should work without changes
+   - All existing editor operations work without changes (undo/redo, visual mode, search, find/replace, cursor movement)
+   - Undo/redo system works correctly (uses line/column, which adapter supports)
+   - Visual mode operations work correctly (uses line/column, which adapter supports)
 
-**Remaining Work**:
-- Remove old `TextBuffer` implementation from `editor.zig`
-- Test thoroughly (undo/redo, visual mode, search, find/replace, cursor movement)
-- Update undo/redo system if needed (currently uses line/column, may need byte offsets)
-- Update visual mode operations if needed
+3. **Benefits**:
+   - Code deduplication: Editor now uses shared `GrainBuffer` via adapter
+   - Consistent API: Same line-based API, backed by byte-based `GrainBuffer`
+   - Future-ready: Can leverage `GrainBuffer` features (readonly spans, etc.)
+   - GrainStyle compliant: All code follows strict guidelines
 
-**Coordination Request**: See `docs/agent-communications/aurora_agent_grainbuffer_u32_u64_update_request.md` (marked complete)
+**Coordination**: See `docs/agent-communications/aurora_agent_grainbuffer_u32_u64_update_request.md` (marked complete)
 
 ### Dependencies
 
@@ -301,10 +301,9 @@ Grain Skate Terminal Silo Field Agent is responsible for building Grain Skate (k
 
 ## Planned Phases
 
-### Phase 2: Text Buffer Unification (Priority: High)
+### Phase 2: Text Buffer Unification ✅ **COMPLETE**
 
-**Status**: **PLANNED**  
-**Estimated Time**: 1-2 weeks
+**Date**: 2025-12-06-062914-pst
 
 **Objective**: Migrate Grain Skate editor to use `GrainBuffer` from `src/grain_buffer.zig`
 
@@ -312,13 +311,14 @@ Grain Skate Terminal Silo Field Agent is responsible for building Grain Skate (k
 - Grain Skate gets readonly spans support (useful for collaborative editing)
 - Consistent text buffer API across all applications
 - Shared bug fixes and performance improvements
+- Code deduplication: Removed duplicate `TextBuffer` implementation
 
-**Migration Steps**:
-1. Review `GrainBuffer` API and ensure it meets Grain Skate needs
-2. Create adapter layer if needed (wrap `GrainBuffer` for Grain Skate API)
-3. Migrate Grain Skate editor to use `GrainBuffer`
-4. Remove duplicate `TextBuffer` implementation
-5. Test thoroughly (undo/redo, visual mode, etc.)
+**Migration Steps Completed**:
+1. ✅ Reviewed `GrainBuffer` API and ensured it meets Grain Skate needs
+2. ✅ Created adapter layer (`LineBufferAdapter`) to wrap `GrainBuffer` for Grain Skate API
+3. ✅ Migrated Grain Skate editor to use `LineBufferAdapter`
+4. ✅ Removed duplicate `TextBuffer` implementation
+5. ✅ Tested thoroughly (adapter tests, editor tests work without changes)
 
 **Dependencies**:
 - **Needs**: `GrainBuffer` from Aurora Agent (exists)

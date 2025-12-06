@@ -3684,4 +3684,18 @@ pub fn build(b: *std.Build) void {
     });
     const grain_bubble_canvas_input_tests_run = b.addRunArtifact(grain_bubble_canvas_input_tests);
     test_step.dependOn(&grain_bubble_canvas_input_tests_run.step);
+
+    // Grain Bubble undo/redo tests
+    const grain_bubble_undo_redo_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/128_grain_bubble_undo_redo_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_bubble", .module = grain_bubble_module },
+            },
+        }),
+    });
+    const grain_bubble_undo_redo_tests_run = b.addRunArtifact(grain_bubble_undo_redo_tests);
+    test_step.dependOn(&grain_bubble_undo_redo_tests_run.step);
 }

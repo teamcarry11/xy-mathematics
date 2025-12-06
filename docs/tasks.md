@@ -1,6 +1,6 @@
 # Grain OS Task List
 
-**Last Updated**: 2025-12-06-060251-pst  
+**Last Updated**: 2025-12-06-061647-pst  
 **Structure**: Hybrid approach with core overview and agent-specific tasks  
 **See**: `docs/tasks/tasks_{agent}.md` for detailed agent tasks
 
@@ -185,8 +185,8 @@
   - Middleware integration complete (rate limiting, CORS, auth, content-type)
   - Path parameter extraction, JSON parsing, proper status codes
   - Ready for HTTP server integration
-- Phase 7: Database Persistence ✅ READY (2025-12-06-051817-pst)
-  - Unblocked by Grain Core Agent Phase 62 (File System Enhancements) ✅
+- Phase 7: Database Persistence ✅ READY (2025-12-06-061647-pst)
+  - Unblocked by Grain Core Agent Phase 62 (File System Enhancements) ✅ **COMPLETE**
   - File Storage Core (2025-12-06-023413-pst) ✅
     - File storage manager with bounded file handles available
     - Database file header with validation available
@@ -198,7 +198,13 @@
     - B-tree and hash index types available
     - Index creation, update, and deletion available
     - Index lookup and recovery support available
-  - Ready for complete database persistence implementation
+  - Backup/Restore Capabilities (2025-12-06-061647-pst) ✅
+    - Backup manager with bounded backup files available
+    - Full and incremental backup types available
+    - Backup metadata management with state tracking available
+    - Backup scheduling with interval-based logic available
+    - Backup state updates and checksum verification available
+  - Ready for complete database persistence implementation with ACID guarantees, efficient queries, and data protection
 - Phase 9: Authentication Integration 🔄 IN PROGRESS (2025-12-06-013750-pst)
   - AuthService integration module created (`src/grain_database/auth_integration.zig`)
   - Enhanced auth middleware using AuthService
@@ -238,6 +244,7 @@
 - [x] Complete canvas zoom/pan implementation ✅
 - [x] Complete hit testing (point-in-shape) ✅
 - [x] Improve hit testing for rounded rectangles (corner radius support) ✅
+- [x] Implement undo/redo system (command pattern with bounded history) ✅
 - [x] Complete shape manipulation (move, resize) ✅
 - [x] Complete shape rendering (filled circles, rectangles) ✅
 - [x] Complete canvas renderer (framebuffer integration) ✅

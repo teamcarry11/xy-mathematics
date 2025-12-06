@@ -50,6 +50,8 @@ const process_group_stats = @import("process_group_stats.zig");
 const ProcessGroupStatsManager = process_group_stats.ProcessGroupStatsManager;
 const process_group_limits = @import("process_group_limits.zig");
 const ProcessGroupLimitsManager = process_group_limits.ProcessGroupLimitsManager;
+const network = @import("network.zig");
+const NetworkInterfaceManager = network.NetworkInterfaceManager;
 
 // Export resource_cleanup for tests.
 pub const resource_cleanup_module = resource_cleanup;
@@ -116,6 +118,12 @@ pub const Syscall = enum(u32) {
     kill = 80,
     signal = 81,
     sigaction = 82,
+    
+    // Network Operations
+    network_create_interface = 90,
+    network_set_state = 91,
+    network_set_ipv4 = 92,
+    network_get_interface = 93,
 };
 
 /// Memory mapping flags.
@@ -724,6 +732,11 @@ pub const BasinKernel = struct {
     /// Grain Style: Static allocation, initialized at kernel boot.
     process_group_limits: ProcessGroupLimitsManager,
     
+    /// Network interface manager.
+    /// Why: Manage network interfaces for TCP/UDP syscalls.
+    /// Grain Style: Static allocation, initialized at kernel boot.
+    network_interfaces: NetworkInterfaceManager,
+    
     /// IPC channel table.
     /// Why: Manage inter-process communication channels.
     /// Grain Style: Static allocation, initialized at kernel boot.
@@ -805,6 +818,7 @@ pub const BasinKernel = struct {
             .process_group_manager = ProcessGroupManager.init(),
             .process_group_stats = ProcessGroupStatsManager.init(),
             .process_group_limits = ProcessGroupLimitsManager.init(),
+            .network_interfaces = NetworkInterfaceManager.init(),
             .channels = ChannelTable.init(),
             .storage = Storage.init(),
             .keyboard = Keyboard.init(),
@@ -1294,6 +1308,10 @@ pub const BasinKernel = struct {
             .kill => self.syscall_kill(arg1, arg2, arg3, arg4),
             .signal => self.syscall_signal(arg1, arg2, arg3, arg4),
             .sigaction => self.syscall_sigaction(arg1, arg2, arg3, arg4),
+            .network_create_interface => self.syscall_network_create_interface(arg1, arg2, arg3, arg4),
+            .network_set_state => self.syscall_network_set_state(arg1, arg2, arg3, arg4),
+            .network_set_ipv4 => self.syscall_network_set_ipv4(arg1, arg2, arg3, arg4),
+            .network_get_interface => self.syscall_network_get_interface(arg1, arg2, arg3, arg4),
         };
     }
     
@@ -4217,6 +4235,209 @@ pub const BasinKernel = struct {
         }
         
         return SyscallResult.ok(0);
+    }
+    
+    /// Create a network interface.
+    /// Why: Add a new network interface.
+    /// Contract: name_ptr must be valid VM address, name_len must be valid.
+    pub fn syscall_network_create_interface(
+        self: *BasinKernel,
+        name_ptr: u64,
+        name_len: u64,
+        _arg3: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg3;
+        _ = _arg4;
+        
+        // Assert: name pointer must be valid (non-zero, within VM memory).
+        if (name_ptr == 0) {
+            return BasinError.invalid_argument; // Null pointer
+        }
+        
+        const VM_MEMORY_SIZE: u64 = 4 * 1024 * 1024; // 4MB default
+        if (name_ptr >= VM_MEMORY_SIZE) {
+            return BasinError.invalid_argument; // Name pointer exceeds VM memory
+        }
+        
+        // Assert: name length must be reasonable (max interface name length).
+        if (name_len == 0) {
+            return BasinError.invalid_argument; // Zero-length name
+        }
+        if (name_len > 16) {
+            return BasinError.invalid_argument; // Name too long
+        }
+        
+        // Assert: name must fit within VM memory.
+        if (name_ptr + name_len > VM_MEMORY_SIZE) {
+            return BasinError.invalid_argument; // Name exceeds VM memory
+        }
+        
+        // Read interface name from VM memory (stub: would use vm_memory_reader).
+        // For now, use a placeholder name.
+        const name = "eth0";
+        
+        // Create interface.
+        const iface_idx = self.network_interfaces.create_interface(name) orelse {
+            return BasinError.out_of_memory; // No free interface slot
+        };
+        
+        const result = SyscallResult.ok(iface_idx);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
+    /// Set network interface state (up/down).
+    /// Why: Control interface state.
+    /// Contract: iface_idx and state must be valid.
+    pub fn syscall_network_set_state(
+        self: *BasinKernel,
+        iface_idx: u64,
+        state: u64,
+        _arg3: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg3;
+        _ = _arg4;
+        
+        // Assert: Interface index must be valid (within bounds).
+        const idx = @as(u32, @truncate(iface_idx));
+        if (idx >= 8) {
+            return BasinError.invalid_argument; // Invalid interface index
+        }
+        
+        // Assert: State must be valid (0 = down, 1 = up).
+        if (state > 1) {
+            return BasinError.invalid_argument; // Invalid state
+        }
+        
+        const iface_state = if (state == 0) network.InterfaceState.down else network.InterfaceState.up;
+        
+        // Set interface state.
+        if (!self.network_interfaces.set_interface_state(idx, iface_state)) {
+            return BasinError.not_found; // Interface not found
+        }
+        
+        const result = SyscallResult.ok(0);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
+    /// Set IPv4 address for network interface.
+    /// Why: Configure IPv4 address, netmask, and gateway.
+    /// Contract: iface_idx, addr, netmask, and gateway must be valid.
+    pub fn syscall_network_set_ipv4(
+        self: *BasinKernel,
+        iface_idx: u64,
+        addr: u64,
+        netmask: u64,
+        gateway: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        // Assert: Interface index must be valid (within bounds).
+        const idx = @as(u32, @truncate(iface_idx));
+        if (idx >= 8) {
+            return BasinError.invalid_argument; // Invalid interface index
+        }
+        
+        // Assert: Address, netmask, and gateway must be valid (32-bit values).
+        const ipv4_addr = @as(u32, @truncate(addr));
+        const ipv4_netmask = @as(u32, @truncate(netmask));
+        const ipv4_gateway = @as(u32, @truncate(gateway));
+        
+        // Set IPv4 address.
+        if (!self.network_interfaces.set_ipv4_address(idx, ipv4_addr)) {
+            return BasinError.not_found; // Interface not found
+        }
+        
+        // Set IPv4 netmask.
+        if (!self.network_interfaces.set_ipv4_netmask(idx, ipv4_netmask)) {
+            return BasinError.not_found; // Interface not found
+        }
+        
+        // Set IPv4 gateway.
+        if (!self.network_interfaces.set_ipv4_gateway(idx, ipv4_gateway)) {
+            return BasinError.not_found; // Interface not found
+        }
+        
+        const result = SyscallResult.ok(0);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
+    /// Get network interface information.
+    /// Why: Retrieve interface configuration.
+    /// Contract: iface_idx must be valid, info_ptr must be valid VM address.
+    pub fn syscall_network_get_interface(
+        self: *BasinKernel,
+        iface_idx: u64,
+        info_ptr: u64,
+        _arg3: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg3;
+        _ = _arg4;
+        
+        // Assert: Interface index must be valid (within bounds).
+        const idx = @as(u32, @truncate(iface_idx));
+        if (idx >= 8) {
+            return BasinError.invalid_argument; // Invalid interface index
+        }
+        
+        // Assert: Info pointer must be valid (non-zero, within VM memory).
+        if (info_ptr == 0) {
+            return BasinError.invalid_argument; // Null pointer
+        }
+        
+        const VM_MEMORY_SIZE_GET: u64 = 4 * 1024 * 1024; // 4MB default
+        if (info_ptr >= VM_MEMORY_SIZE_GET) {
+            return BasinError.invalid_argument; // Info pointer exceeds VM memory
+        }
+        
+        // Get interface.
+        const iface = self.network_interfaces.get_interface(idx) orelse {
+            return BasinError.not_found; // Interface not found
+        };
+        
+        // Write interface information to VM memory (stub: would use vm_memory_writer).
+        // For now, just return success.
+        // Note: info_ptr and iface are validated but not used in stub implementation.
+        _ = iface;
+        
+        const result = SyscallResult.ok(0);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
     }
 };
 

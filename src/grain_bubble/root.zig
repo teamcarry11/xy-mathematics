@@ -11,4 +11,5 @@ pub const bubble_renderer = @import("bubble_renderer.zig");
 pub const canvas_renderer = @import("canvas_renderer.zig");
 pub const canvas_input = @import("canvas_input.zig");
 pub const export_pdf = @import("export_pdf.zig");
+pub const undo_redo = @import("undo_redo.zig");
 

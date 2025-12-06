@@ -151,7 +151,7 @@
 - [ ] Implement socket options (reuse address, keep-alive, timeout)
 - [ ] Implement HTTP client/server enhancements
 - [x] Implement WebSocket support (handshake, frame parsing, connection management) ✅ (2025-12-05-202227-pst)
-- [ ] Implement DNS resolution (A, AAAA, MX records, caching)
+- [x] Implement DNS resolution (A, AAAA, MX records, caching) ✅ (2025-12-05-231800-pst)
 - [ ] Implement TLS/SSL support (optional, for secure endpoints)
 - [ ] Implement compositor integration
 - [ ] Create comprehensive tests

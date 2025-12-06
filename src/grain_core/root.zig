@@ -71,4 +71,5 @@ pub const auth_service = @import("auth_service.zig");
 pub const network_stack = @import("network_stack.zig");
 pub const websocket = @import("websocket.zig");
 pub const websocket_handshake = @import("websocket_handshake.zig");
+pub const dns_resolver = @import("dns_resolver.zig");
 

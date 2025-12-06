@@ -375,7 +375,8 @@ pub fn generate_websocket_frame(
         offset += 1;
         var i: u32 = 0;
         while (i < 8) : (i += 1) {
-            const shift_amt: u6 = @intCast(56 - (i * 8));
+            const byte_idx: u32 = 7 - i;
+            const shift_amt: u6 = @intCast(byte_idx * 8);
             buffer[offset] = @as(u8, @truncate(payload_len >> shift_amt));
             offset += 1;
         }

@@ -402,11 +402,14 @@ Grain Core Agent is responsible for building the desktop environment compositor 
    - ✅ WebSocket upgrade detection - `is_websocket_upgrade()`
    - ✅ Comprehensive tests (`tests/116_grain_core_websocket_test.zig`)
 
-4. **DNS Resolution**:
-   - DNS query (A, AAAA, MX records)
-   - DNS cache (bounded cache size)
-   - DNS error handling
-   - DNS timeout handling
+4. **DNS Resolution** ✅ (2025-12-05-231800-pst):
+   - ✅ DNS cache (bounded cache size) - `DnsResolver` with `MAX_DNS_CACHE_ENTRIES`
+   - ✅ DNS cache entry management - `add_cache_entry()`, `find_cache_entry()`
+   - ✅ DNS cache expiration - `clear_expired_cache()`
+   - ✅ DNS record types (A, AAAA, MX) - `DnsRecordType` enum
+   - ✅ Hostname resolution stub - `resolve_hostname()` (ready for network implementation)
+   - ✅ Comprehensive tests (`tests/117_grain_core_dns_resolver_test.zig`)
+   - ⏳ DNS query implementation (requires network stack integration) — PENDING
 
 5. **TLS/SSL Support** (Optional):
    - TLS client (HTTPS support)

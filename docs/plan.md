@@ -127,8 +127,8 @@
 
 ### 6. Grain Carry Agent
 
-**Status**: Active — Handler Adapters Complete  
-**Current Work**: Handler adapter tests complete, ready for end-to-end testing  
+**Status**: Active — WebSocket Support Available  
+**Current Work**: WebSocket client implementation ready, all infrastructure complete  
 **Details**: See [`docs/plans/plan_carry.md`](plans/plan_carry.md)
 
 **Recent Progress**:

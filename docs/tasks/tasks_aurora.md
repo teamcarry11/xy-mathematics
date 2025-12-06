@@ -2,7 +2,7 @@
 
 **Agent**: Grain Aurora IDE Dream Browser Agent (2nd Agent)  
 **Status**: Active — Foundation components, shared modules  
-**Last Updated**: 2025-12-05-172246-pst
+**Last Updated**: 2025-12-05-214825-pst
 
 ---
 
@@ -173,6 +173,7 @@
 - [ ] Coordinate on text buffer unification (Phase 2)
 - [ ] Coordinate on DAG integration (Phase 3)
 - [ ] Coordinate on UI rendering unification (Phase 4)
+- [x] Acknowledge WebSocket support (Phase 61) — Complete (not immediately needed)
 
 ### With Grain Skate Agent
 

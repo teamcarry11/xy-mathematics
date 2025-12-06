@@ -2,7 +2,7 @@
 
 **Agent**: Grain Aurora IDE Dream Browser Agent (2nd Agent)  
 **Status**: Active — Foundation components, shared modules  
-**Last Updated**: 2025-12-05-172246-pst
+**Last Updated**: 2025-12-05-214825-pst
 
 ---
 
@@ -256,6 +256,12 @@ Shared module refactoring eliminates code duplication and enables shared mainten
 **Integration Points**:
 - Shared font renderer API (`src/shared/font_renderer.zig`)
 - Build system integration (`build.zig`)
+- WebSocket support (Phase 61 complete) — Available for future use
+
+**WebSocket Support**:
+- ✅ Grain Core Agent Phase 61 (WebSocket Support) — Complete
+- Note: Aurora Agent currently uses stdio for LSP (standard) and has WebSocket for Dream Protocol (Phase 0.3)
+- Future: May use Core Agent WebSocket for additional real-time features
 
 **Coordination Tasks**:
 - ✅ Font renderer migration (Phase 1.2) — Complete

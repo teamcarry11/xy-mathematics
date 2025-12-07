@@ -1,8 +1,8 @@
 # Grain Workspace Agent: Development Plan
 
 **Agent**: Grain Workspace Agent (5th Agent)  
-**Status**: Phase 10.4 WebSocket Integration (File Manager) Complete ✅  
-**Last Updated**: 2025-12-07-053107-pst  
+**Status**: Phase 12 HTTP Client Integration (Package Manager UI) Complete ✅  
+**Last Updated**: 2025-12-07-060853-pst  
 **Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-07-053107-pst.md`
 
 ---
@@ -369,6 +369,8 @@ All planned phases for Grain Workspace Agent have been completed:
   - Phase 10.2: WebSocket Integration (Terminal Plus) ✅ (2025-12-06-232601-pst)
   - Phase 10.3: WebSocket Integration (Network Tools) ✅ (2025-12-07-020824-pst)
   - Phase 10.4: WebSocket Integration (File Manager) ✅ (2025-12-07-025947-pst)
+- Phase 11: HTTP Client Integration (Network Tools) ✅ (2025-12-07-054458-pst)
+- Phase 12: HTTP Client Integration (Package Manager UI) ✅ (2025-12-07-060853-pst)
 
 ### Phase 10.1: WebSocket Integration (Monitor) ✅ **COMPLETE**
 
@@ -523,6 +525,68 @@ All planned phases for Grain Workspace Agent have been completed:
 - All code uses bounded allocations with explicit limits
 - All code includes assertions for preconditions
 - All functions respect max 70 lines per function
+- All compiler warnings enabled
+
+### Phase 11: HTTP Client Integration (Network Tools) ✅ **COMPLETE**
+
+**Date**: 2025-12-07-054458-pst
+
+**Completed Work**:
+1. **HTTP Client Support for Network Tools App** (`src/grain_workspace/network_tools/app.zig`):
+   - Added `HttpClient` integration to `NetworkToolsApp`
+   - Added `HttpTestResult` struct for tracking HTTP endpoint test results
+   - Added `http_test_results` array with bounded limit (`MAX_HTTP_TEST_RESULTS: 64`)
+   - Added `test_http_endpoint()` function for creating HTTP requests and tracking results
+   - Added `get_http_test_result()` function for retrieving test results by ID
+   - Added `get_all_http_test_results()` function for retrieving all test results
+   - Added `clear_http_test_results()` function for clearing test history
+   - Updated `init()` to accept `HttpClient` parameter
+   - Comprehensive tests (`tests/113_grain_workspace_network_tools_test.zig`)
+
+**Features**:
+- HTTP endpoint testing (GET, POST, PUT, DELETE methods)
+- Test result tracking with status codes and response times
+- Bounded test result storage (max 64 results)
+- Test result retrieval and management
+- Integration with Grain Core HTTP Client (Phase 61)
+
+**Grain Style Compliance**:
+- `grain_case` function names
+- `u32`/`u64` types (no `usize`)
+- Bounded allocations (all limits explicit)
+- Assertions for preconditions
+- Max 70 lines per function
+- All compiler warnings enabled
+
+### Phase 12: HTTP Client Integration (Package Manager UI) ✅ **COMPLETE**
+
+**Date**: 2025-12-07-060853-pst
+
+**Completed Work**:
+1. **HTTP Client Support for Package Manager UI** (`src/grain_workspace/package_manager_ui/app.zig`):
+   - Added `HttpClient` integration to `PackageManagerUI`
+   - Added `RepositoryUrl` struct for managing package repository URLs
+   - Added `repository_urls` array with bounded limit (`MAX_REPOSITORY_URLS: 16`)
+   - Added `add_repository_url()` function for adding repository URLs
+   - Added `fetch_packages_from_repository()` function for fetching packages via HTTP
+   - Added `get_repository_urls()` function for retrieving repository URLs
+   - Added `remove_repository_url()` function for removing repository URLs
+   - Updated `init()` to accept `HttpClient` parameter
+   - Added `MAX_PACKAGE_NAME_LEN` constant (128, matches package_manager)
+   - Comprehensive tests (`tests/111_grain_workspace_package_manager_ui_test.zig`)
+
+**Features**:
+- Repository URL management (add, remove, list)
+- HTTP-based package fetching from remote repositories
+- Bounded repository URL storage (max 16 URLs)
+- Integration with Grain Core HTTP Client (Phase 61)
+
+**Grain Style Compliance**:
+- `grain_case` function names
+- `u32`/`u64` types (no `usize`)
+- Bounded allocations (all limits explicit)
+- Assertions for preconditions
+- Max 70 lines per function
 - All compiler warnings enabled
 
 **Future Enhancements**:

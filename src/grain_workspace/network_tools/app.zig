@@ -589,5 +589,125 @@ pub const NetworkToolsApp = struct {
 
         return @intCast(written.len);
     }
+
+    /// Test HTTP endpoint (create request and track result).
+    // 2025-12-07-054458-pst: Phase 11 HTTP Client integration
+    pub fn test_http_endpoint(
+        self: *NetworkToolsApp,
+        method: grain_core.api_server.HttpMethod,
+        url: []const u8,
+    ) ?u32 {
+        // Precondition: URL must be valid
+        std.debug.assert(url.len > 0);
+        std.debug.assert(url.len <= grain_core.http_client.MAX_URL_LEN);
+        std.debug.assert(self.http_test_results_len < MAX_HTTP_TEST_RESULTS);
+
+        if (self.http_test_results_len >= MAX_HTTP_TEST_RESULTS) {
+            return null;
+        }
+
+        // Create HTTP request
+        const request = self.http_client.create_request(method, url);
+        if (request == null) {
+            return null;
+        }
+
+        // Create test result
+        const test_id = self.next_http_test_id;
+        self.next_http_test_id += 1;
+
+        var test_result = HttpTestResult{
+            .test_id = test_id,
+            .url = undefined,
+            .url_len = @as(u32, @intCast(url.len)),
+            .method = method,
+            .status_code = 0,
+            .response_time_ms = 0,
+            .success = false,
+            .timestamp = @as(u64, @intCast(std.time.timestamp())),
+        };
+
+        @memset(&test_result.url, 0);
+        const url_len = @min(url.len, grain_core.http_client.MAX_URL_LEN);
+        @memcpy(test_result.url[0..url_len], url[0..url_len]);
+
+        // Store test result
+        var i: u32 = 0;
+        while (i < MAX_HTTP_TEST_RESULTS) : (i += 1) {
+            if (self.http_test_results[i] == null) {
+                self.http_test_results[i] = test_result;
+                self.http_test_results_len += 1;
+                break;
+            }
+        }
+
+        // Postcondition: Test result must be stored
+        std.debug.assert(self.http_test_results_len > 0);
+
+        return test_id;
+    }
+
+    /// Get HTTP test result by test ID.
+    // 2025-12-07-054458-pst: Phase 11 HTTP Client integration
+    pub fn get_http_test_result(
+        self: *const NetworkToolsApp,
+        test_id: u32,
+    ) ?*const HttpTestResult {
+        // Precondition: Test ID must be valid
+        std.debug.assert(test_id > 0);
+
+        var i: u32 = 0;
+        while (i < self.http_test_results_len) : (i += 1) {
+            if (self.http_test_results[i]) |*result| {
+                if (result.test_id == test_id) {
+                    return result;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /// Get all HTTP test results.
+    // 2025-12-07-054458-pst: Phase 11 HTTP Client integration
+    pub fn get_all_http_test_results(
+        self: *const NetworkToolsApp,
+        results: []?*const HttpTestResult,
+        results_len: *u32,
+    ) void {
+        // Precondition: Results buffer must be valid
+        std.debug.assert(results.len > 0);
+        std.debug.assert(results_len != null);
+
+        results_len.* = 0;
+
+        var i: u32 = 0;
+        while (i < self.http_test_results_len and results_len.* < results.len) : (i += 1) {
+            if (self.http_test_results[i]) |*result| {
+                results[results_len.*] = result;
+                results_len.* += 1;
+            }
+        }
+    }
+
+    /// Clear HTTP test results.
+    // 2025-12-07-054458-pst: Phase 11 HTTP Client integration
+    pub fn clear_http_test_results(self: *NetworkToolsApp) u32 {
+        // Precondition: App must be valid
+        std.debug.assert(@intFromPtr(self) != 0);
+
+        const cleared_count = self.http_test_results_len;
+        self.http_test_results_len = 0;
+
+        var i: u32 = 0;
+        while (i < MAX_HTTP_TEST_RESULTS) : (i += 1) {
+            self.http_test_results[i] = null;
+        }
+
+        // Postcondition: All results must be cleared
+        std.debug.assert(self.http_test_results_len == 0);
+
+        return cleared_count;
+    }
 };
 

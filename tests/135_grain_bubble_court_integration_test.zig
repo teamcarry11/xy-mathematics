@@ -1,0 +1,86 @@
+//! Grain Bubble Court Integration Tests.
+//!
+//! Why: Test Court integration for vector search and LLM suggestions.
+//! Architecture: Unit tests for Court integration.
+//! GrainStyle: grain_case, u32/u64, bounded allocations, assertions.
+//!
+//! 2025-12-07-054259-pst: Grain Bubble Agent
+
+const std = @import("std");
+const testing = std.testing;
+const canvas = @import("grain_bubble").canvas;
+const component = @import("grain_bubble").component;
+const court_integration = @import("grain_bubble").court_integration;
+
+test "court integration init" {
+    const integration = court_integration.CourtIntegration.init();
+    std.debug.assert(integration.compute == null);
+    std.debug.assert(integration.next_suggestion_id == 1);
+}
+
+test "court integration set compute" {
+    var integration = court_integration.CourtIntegration.init();
+    // Note: In real implementation, would create actual CourtCompute instance.
+    // For Phase 3, testing interface structure.
+    std.debug.assert(integration.compute == null);
+}
+
+test "court integration search similar components" {
+    var integration = court_integration.CourtIntegration.init();
+    var query_vector: [128]f32 = undefined;
+    @memset(query_vector[0..], 0.0);
+    var results: [8]court_integration.ComponentMatch = undefined;
+    var i: u32 = 0;
+    while (i < results.len) : (i += 1) {
+        results[i] = court_integration.ComponentMatch.init();
+    }
+    const count = integration.search_similar_components(
+        query_vector[0..],
+        results[0..],
+    );
+    // Returns 0 when compute not set (expected for Phase 3).
+    std.debug.assert(count == 0);
+}
+
+test "court integration get design suggestions" {
+    var integration = court_integration.CourtIntegration.init();
+    const context = "Create a button component";
+    var suggestions: [4]court_integration.DesignSuggestion = undefined;
+    var i: u32 = 0;
+    while (i < suggestions.len) : (i += 1) {
+        suggestions[i] = court_integration.DesignSuggestion.init();
+    }
+    const count = integration.get_design_suggestions(
+        context,
+        suggestions[0..],
+    );
+    // Returns 0 when compute not set (expected for Phase 3).
+    std.debug.assert(count == 0);
+}
+
+test "court integration generate component embedding" {
+    var canvas_data = canvas.Canvas.init(1024, 768);
+    var library = component.ComponentLibrary.init();
+    const layer_id = canvas_data.create_layer("Test Layer").?;
+    const shape_id = canvas_data.add_shape(
+        layer_id,
+        .rectangle,
+        10.0,
+        20.0,
+        100.0,
+        50.0,
+        0xFF0000FF,
+        0.0,
+    ).?;
+    _ = canvas_data.select_shape(shape_id);
+    const component_id = library.create_component_from_selection(&canvas_data, "Button").?;
+    var integration = court_integration.CourtIntegration.init();
+    if (library.get_component(component_id)) |comp| {
+        var embedding: [128]f32 = undefined;
+        @memset(embedding[0..], 0.0);
+        const result = integration.generate_component_embedding(comp, embedding[0..]);
+        // Returns false when compute not set (expected for Phase 3).
+        std.debug.assert(result == false);
+    }
+}
+

@@ -1,6 +1,6 @@
 # Grain OS Development Plan
 
-**Last Updated**: 2025-12-07-042228-pst  
+**Last Updated**: 2025-12-07-053107-pst  
 **Structure**: Hybrid approach with core overview and agent-specific plans  
 **See**: `docs/plans/plan_{agent}.md` for detailed agent plans
 
@@ -12,7 +12,7 @@
 
 **Current Status**: Multiple agents working in parallel on different components.
 
-**Active Agents**: 8 agents
+**Active Agents**: 10 agents
 1. Grain Vantage Agent
 2. Grain Aurora IDE Dream Browser Agent
 3. Grain Skate Silo Field Agent
@@ -21,6 +21,8 @@
 6. Grain Carry Agent
 7. Grain Database Agent
 8. Grain Bubble Agent
+9. Grain Flow Agent
+10. Grain Research Agent
 
 ---
 
@@ -214,7 +216,7 @@
   - Middleware integration complete (rate limiting, CORS, auth, content-type)
   - Path parameter extraction, JSON parsing, proper status codes
   - Ready for HTTP server integration
-- Phase 7: Database Persistence 🔄 IN PROGRESS (2025-12-07-042255-pst)
+- Phase 7: Database Persistence 🔄 IN PROGRESS (2025-12-07-053910-pst)
   - Persistence module created (`src/grain_database/persistence.zig`)
   - FileStorageManager integration ✅
   - WalManager integration ✅
@@ -228,6 +230,8 @@
   - Binary format for file page storage ✅
   - Page I/O operations (write/read records to/from pages) ✅
   - Database file format specification (`docs/database_file_format.md`) ✅
+  - Index entry serialization (`src/grain_database/index_entry_serialization.zig`) ✅
+  - Index file persistence (write/read index entries to/from pages) ✅
   - Comprehensive tests ✅
   - Unblocked by Grain Core Agent Phase 62 (File System Enhancements) ✅ **COMPLETE**
   - File Storage Core (2025-12-06-023413-pst) ✅
@@ -306,6 +310,59 @@
 - Phase 3: Silo/Field Integration (PLANNED)
 - Phase 4: Export Pipeline (PLANNED)
 - Phase 5: Agent Flow Design (PLANNED)
+
+---
+
+### 9. Grain Flow Agent
+
+**Status**: Active — Phase 1 Event Bus Foundation COMPLETE ✅  
+**Current Work**: Ready for Phase 2 (Agent Coordinator)  
+**Details**: See [`docs/plans/plan_flow.md`](plans/plan_flow.md)
+
+**Recent Progress**:
+- Phase 1: Event Bus Foundation ✅ COMPLETE (2025-12-07-054000-pst)
+  - Event type definitions (enum-based, 13 event types) ✅
+  - Event structure (type, source, destination, payload, timestamp) ✅
+  - Event publishing API (`publish_event()`, `publish_event_with_payload()`) ✅
+  - Event subscription API (`subscribe()`, `unsubscribe()`) ✅
+  - Event routing engine (iterative matching, no recursion) ✅
+  - Bounded event queue (MAX_EVENTS: u32 = 10000) ✅
+  - Bounded subscribers per event type (MAX_SUBSCRIBERS: u32 = 256) ✅
+  - Event filtering (by type, source, destination) ✅
+  - Event processing (iterative, no recursion) ✅
+  - Comprehensive tests (11 test cases) ✅
+  - Build system integration ✅
+
+**Provides**: Workflow orchestration, agent coordination, event bus services
+
+**Dependencies**:
+- **Needs**: Core Agent API Server ✅, WebSocket ✅, Auth ✅
+- **Provides**: Event bus and workflow orchestration (for all agents)
+
+**Next Phases**:
+- Phase 2: Agent Coordinator (Ready to start)
+
+---
+
+### 10. Grain Research Agent
+
+**Status**: Active — Initial Planning  
+**Current Work**: Ready for Phase 1 (Research Engine Foundation)  
+**Details**: See [`docs/plans/plan_research.md`](plans/plan_research.md)
+
+**Recent Progress**:
+- Initial planning complete ✅
+- Plan document created (`docs/plans/plan_research.md`) ✅
+- Task list created (`docs/tasks/tasks_research.md`) ✅
+
+**Provides**: Research capabilities, data analysis, insights generation
+
+**Dependencies**:
+- **Needs**: Core Agent File System (optional) ✅, HTTP Client (optional) ✅
+- **Provides**: Research insights and analysis (for all agents)
+
+**Next Phases**:
+- Phase 1: Research Engine Foundation (Ready to start)
 
 ---
 

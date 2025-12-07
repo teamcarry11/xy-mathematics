@@ -10,6 +10,7 @@ pub const otp = @import("auth/otp.zig");
 pub const totp = @import("auth/totp.zig");
 pub const email_auth = @import("auth/email.zig");
 pub const jwt = @import("auth/jwt.zig");
+pub const oauth = @import("auth/oauth.zig");
 pub const style = @import("style/root.zig");
 pub const api = @import("api/root.zig");
 pub const websocket = @import("websocket/root.zig");

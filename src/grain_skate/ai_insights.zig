@@ -1,6 +1,7 @@
 const std = @import("std");
 const EditorDagIntegration = @import("editor_dag_integration.zig").EditorDagIntegration;
 const Block = @import("block.zig").Block;
+const Glm46Client = @import("../aurora_glm46.zig").Glm46Client;
 
 /// AI-Powered Graph Insights: GLM-4.6 powered insights for knowledge graph.
 /// ~<~ Glow Airbend: explicit AI suggestions, bounded analysis.
@@ -16,6 +17,7 @@ pub const AiInsights = struct {
     allocator: std.mem.Allocator,
     dag_integration: *EditorDagIntegration,
     block_storage: *Block.BlockStorage,
+    glm46_client: ?Glm46Client, // Optional GLM-4.6 client (if API key provided)
     
     // Bounded: Max 100 AI suggestions per session
     pub const MAX_AI_SUGGESTIONS: u32 = 100;
@@ -40,7 +42,7 @@ pub const AiInsights = struct {
         confidence: f32, // 0.0 to 1.0
     };
     
-    /// Initialize AI insights.
+    /// Initialize AI insights (without GLM-4.6 client).
     pub fn init(
         allocator: std.mem.Allocator,
         dag_integration: *EditorDagIntegration,
@@ -59,12 +61,81 @@ pub const AiInsights = struct {
             .allocator = allocator,
             .dag_integration = dag_integration,
             .block_storage = block_storage,
+            .glm46_client = null,
         };
+    }
+    
+    /// Initialize AI insights with GLM-4.6 client (for AI-powered features).
+    pub fn init_with_glm46(
+        allocator: std.mem.Allocator,
+        dag_integration: *EditorDagIntegration,
+        block_storage: *Block.BlockStorage,
+        api_key: []const u8,
+    ) AiInsights {
+        // Assert: Allocator must be valid
+        std.debug.assert(allocator.ptr != null);
+        
+        // Assert: DAG integration must be valid
+        std.debug.assert(dag_integration.buffer_node_id != null);
+        
+        // Assert: API key must be provided
+        std.debug.assert(api_key.len > 0);
+        
+        // Assert: Block storage must be valid
+        _ = block_storage;
+        
+        const glm46_client = Glm46Client.init(allocator, api_key);
+        
+        return AiInsights{
+            .allocator = allocator,
+            .dag_integration = dag_integration,
+            .block_storage = block_storage,
+            .glm46_client = glm46_client,
+        };
+    }
+    
+    /// Deinitialize AI insights (cleanup GLM-4.6 client if present).
+    pub fn deinit(self: *AiInsights) void {
+        if (self.glm46_client) |*client| {
+            client.deinit();
+        }
+        self.* = undefined;
+    }
+    
+    /// Context for collecting streaming GLM-4.6 response.
+    const ResponseCollector = struct {
+        buffer: *std.ArrayList(u8),
+        
+        fn callback(ctx: *ResponseCollector, chunk: []const u8) void {
+            ctx.buffer.writer().writeAll(chunk) catch {};
+        }
+    };
+    
+    /// Collect streaming GLM-4.6 response into a single string.
+    fn collect_glm46_response(
+        self: *AiInsights,
+        messages: []const Glm46Client.Message,
+    ) ![]const u8 {
+        // Assert: GLM-4.6 client must be available
+        std.debug.assert(self.glm46_client != null);
+        
+        // Assert: Messages must be within bounds
+        std.debug.assert(messages.len > 0);
+        
+        var response_buffer = std.ArrayList(u8).init(self.allocator);
+        errdefer response_buffer.deinit();
+        
+        const client = &self.glm46_client.?;
+        
+        // Collect streaming chunks
+        var collector = ResponseCollector{ .buffer = &response_buffer };
+        try client.requestCompletion(messages, ResponseCollector.callback, &collector);
+        
+        return try response_buffer.toOwnedSlice();
     }
     
     /// Analyze blocks and suggest connections (semantic similarity).
     /// Returns array of connection suggestions.
-    /// Note: This is a placeholder - actual GLM-4.6 integration pending.
     pub fn suggest_connections(
         self: *AiInsights,
         block_ids: []const u64,
@@ -75,13 +146,87 @@ pub const AiInsights = struct {
         // Assert: Block count must be at least 2 for connections
         std.debug.assert(block_ids.len >= 2);
         
-        // Placeholder: Return empty suggestions for now
-        // TODO: Integrate with GLM-4.6 client for semantic analysis
-        _ = self;
-        _ = block_ids;
+        // If GLM-4.6 client not available, return empty suggestions
+        if (self.glm46_client == null) {
+            return &[_]ConnectionSuggestion{};
+        }
         
-        // Return empty array (caller should allocate result)
-        return &[_]ConnectionSuggestion{};
+        // Get block contents
+        var block_contents = std.ArrayList([]const u8).init(self.allocator);
+        defer {
+            for (block_contents.items) |content| {
+                self.allocator.free(content);
+            }
+            block_contents.deinit();
+        }
+        
+        for (block_ids) |block_id| {
+            const block = self.block_storage.get_block(@as(u32, @intCast(block_id))) orelse continue;
+            const content = try self.allocator.dupe(u8, block.content[0..block.content_len]);
+            try block_contents.append(content);
+        }
+        
+        // Build prompt for GLM-4.6
+        var prompt = std.ArrayList(u8).init(self.allocator);
+        defer prompt.deinit();
+        
+        const writer = prompt.writer();
+        try writer.writeAll("Analyze these knowledge graph blocks and suggest connections between them based on semantic similarity. For each suggested connection, provide: block1_id, block2_id, confidence (0.0-1.0), and reason.\n\n");
+        
+        for (block_ids, 0..) |block_id, i| {
+            if (i < block_contents.items.len) {
+                try writer.print("Block {d}:\n{s}\n\n", .{ block_id, block_contents.items[i] });
+            }
+        }
+        
+        try writer.writeAll("Format: block1_id,block2_id,confidence,reason (one per line)");
+        
+        const messages = [_]Glm46Client.Message{
+            .{ .role = "system", .content = "You are a knowledge graph analysis assistant. Analyze blocks and suggest semantic connections." },
+            .{ .role = "user", .content = try prompt.toOwnedSlice() },
+        };
+        defer self.allocator.free(messages[1].content);
+        
+        // Get AI response
+        const response = try self.collect_glm46_response(&messages);
+        defer self.allocator.free(response);
+        
+        // Parse response (simple CSV-like format)
+        var suggestions = std.ArrayList(ConnectionSuggestion).init(self.allocator);
+        errdefer {
+            for (suggestions.items) |*suggestion| {
+                self.allocator.free(suggestion.reason);
+            }
+            suggestions.deinit();
+        }
+        
+        // Parse lines (simple implementation)
+        var lines = std.mem.split(u8, response, "\n");
+        while (lines.next()) |line| {
+            if (line.len == 0) continue;
+            
+            var fields = std.mem.split(u8, line, ",");
+            const from_id_str = fields.next() orelse continue;
+            const to_id_str = fields.next() orelse continue;
+            const conf_str = fields.next() orelse continue;
+            const reason_str = fields.rest();
+            
+            const from_id = std.fmt.parseInt(u64, from_id_str, 10) catch continue;
+            const to_id = std.fmt.parseInt(u64, to_id_str, 10) catch continue;
+            const confidence = std.fmt.parseFloat(f32, conf_str) catch 0.5;
+            
+            const reason = try self.allocator.dupe(u8, reason_str);
+            
+            try suggestions.append(ConnectionSuggestion{
+                .from_block_id = from_id,
+                .to_block_id = to_id,
+                .confidence = confidence,
+                .reason = reason,
+                .reason_len = @as(u32, @intCast(reason.len)),
+            });
+        }
+        
+        return try suggestions.toOwnedSlice();
     }
     
     /// Detect knowledge gaps (missing links between related blocks).
@@ -105,7 +250,6 @@ pub const AiInsights = struct {
     
     /// Generate block title from content (auto-titling).
     /// Returns suggested title for the block.
-    /// Note: This is a placeholder - actual GLM-4.6 integration pending.
     pub fn suggest_title(
         self: *AiInsights,
         block_id: u64,
@@ -113,11 +257,42 @@ pub const AiInsights = struct {
         // Assert: Block ID must be valid
         _ = block_id;
         
-        // Placeholder: Return null for now
-        // TODO: Integrate with GLM-4.6 client for title generation
-        _ = self;
+        // If GLM-4.6 client not available, return null
+        if (self.glm46_client == null) {
+            return null;
+        }
         
-        return null;
+        // Get block content
+        const block = self.block_storage.get_block(@as(u32, @intCast(block_id))) orelse return null;
+        
+        // Build prompt for GLM-4.6
+        var prompt = std.ArrayList(u8).init(self.allocator);
+        defer prompt.deinit();
+        
+        const writer = prompt.writer();
+        try writer.print("Generate a concise title (max 50 characters) for this knowledge graph block:\n\n{s}\n\nTitle only, no explanation.", .{block.content[0..block.content_len]});
+        
+        const messages = [_]Glm46Client.Message{
+            .{ .role = "system", .content = "You are a knowledge graph assistant. Generate concise, descriptive titles for blocks." },
+            .{ .role = "user", .content = try prompt.toOwnedSlice() },
+        };
+        defer self.allocator.free(messages[1].content);
+        
+        // Get AI response
+        const response = try self.collect_glm46_response(&messages);
+        defer self.allocator.free(response);
+        
+        // Trim whitespace and limit length
+        const trimmed = std.mem.trim(u8, response, " \n\r\t");
+        const max_len = @min(trimmed.len, Block.MAX_BLOCK_TITLE);
+        const title = try self.allocator.dupe(u8, trimmed[0..max_len]);
+        
+        return TitleSuggestion{
+            .block_id = block_id,
+            .suggested_title = title,
+            .title_len = @as(u32, @intCast(max_len)),
+            .confidence = 0.8, // Default confidence
+        };
     }
     
     /// Summarize subgraph (AI-generated summary).

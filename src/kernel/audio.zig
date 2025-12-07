@@ -13,6 +13,10 @@ const MAX_AUDIO_DEVICES: u32 = 16;
 /// Why: Bounded string storage for device names.
 const MAX_DEVICE_NAME_LEN: u32 = 128;
 
+/// Maximum audio buffer size (64KB).
+/// Why: Bounded allocation for audio I/O buffers.
+const MAX_AUDIO_BUFFER_SIZE: u32 = 64 * 1024;
+
 /// Audio device type.
 /// Why: Categorize audio devices (speaker, headphone, microphone, etc.).
 pub const AudioDeviceType = enum(u8) {
@@ -31,6 +35,55 @@ pub const AudioDeviceState = enum(u8) {
     connected = 1,
     active = 2,
     disabled = 3,
+};
+
+/// Audio format.
+/// Why: Specify audio format (sample rate, channels, bit depth).
+/// Grain Style: Explicit types, bounded values.
+pub const AudioFormat = struct {
+    /// Sample rate in Hz (e.g., 44100, 48000).
+    sample_rate: u32,
+    
+    /// Number of channels (1 = mono, 2 = stereo).
+    channels: u32,
+    
+    /// Bit depth (8, 16, 24, 32).
+    bit_depth: u32,
+    
+    /// Initialize audio format with defaults.
+    /// Why: Explicit initialization, clear state.
+    pub fn init() AudioFormat {
+        return AudioFormat{
+            .sample_rate = 44100,
+            .channels = 2,
+            .bit_depth = 16,
+        };
+    }
+    
+    /// Validate audio format.
+    /// Why: Ensure format is valid.
+    /// Contract: sample_rate, channels, bit_depth must be valid.
+    pub fn is_valid(self: *const AudioFormat) bool {
+        // Assert: Sample rate must be reasonable (8kHz to 192kHz).
+        if (self.sample_rate < 8000 or self.sample_rate > 192000) {
+            return false;
+        }
+        
+        // Assert: Channels must be reasonable (1 to 8).
+        if (self.channels == 0 or self.channels > 8) {
+            return false;
+        }
+        
+        // Assert: Bit depth must be valid (8, 16, 24, 32).
+        if (self.bit_depth != 8 and
+            self.bit_depth != 16 and
+            self.bit_depth != 24 and
+            self.bit_depth != 32) {
+            return false;
+        }
+        
+        return true;
+    }
 };
 
 /// Audio device entry.
@@ -61,6 +114,24 @@ pub const AudioDevice = struct {
     /// Owner process ID (0 = kernel-owned, non-zero = process-owned).
     /// Why: Track which process owns this device for resource cleanup.
     owner_process_id: u32,
+    
+    /// Audio format (sample rate, channels, bit depth).
+    /// Why: Specify audio format for I/O operations.
+    format: AudioFormat,
+    
+    /// Input buffer (for recording/input devices).
+    /// Why: Buffer incoming audio data.
+    input_buffer: [MAX_AUDIO_BUFFER_SIZE]u8,
+    
+    /// Input buffer size (actual data length).
+    input_buffer_len: u32,
+    
+    /// Output buffer (for playback/output devices).
+    /// Why: Buffer outgoing audio data.
+    output_buffer: [MAX_AUDIO_BUFFER_SIZE]u8,
+    
+    /// Output buffer size (actual data length).
+    output_buffer_len: u32,
     
     /// Initialize empty audio device entry.
     /// Why: Explicit initialization, clear state.

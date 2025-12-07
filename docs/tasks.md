@@ -1,6 +1,6 @@
 # Grain OS Task List
 
-**Last Updated**: 2025-12-07-042228-pst  
+**Last Updated**: 2025-12-07-053107-pst  
 **Structure**: Hybrid approach with core overview and agent-specific tasks  
 **See**: `docs/tasks/tasks_{agent}.md` for detailed agent tasks
 
@@ -8,8 +8,8 @@
 
 ## Overall Task Status
 
-**Active Agents**: 8 agents working in parallel  
-**Current Focus**: Infrastructure for mobile/database backends, visual design tool
+**Active Agents**: 10 agents working in parallel  
+**Current Focus**: Infrastructure for mobile/database backends, visual design tool, workflow orchestration
 
 ---
 
@@ -183,7 +183,7 @@
   - Middleware integration complete (rate limiting, CORS, auth, content-type)
   - Path parameter extraction, JSON parsing, proper status codes
   - Ready for HTTP server integration
-- Phase 7: Database Persistence 🔄 IN PROGRESS (2025-12-07-042255-pst)
+- Phase 7: Database Persistence 🔄 IN PROGRESS (2025-12-07-053910-pst)
   - Persistence module created (`src/grain_database/persistence.zig`)
   - FileStorageManager integration ✅
   - WalManager integration ✅
@@ -197,6 +197,8 @@
   - Binary format for file page storage ✅
   - Page I/O operations (write/read records to/from pages) ✅
   - Database file format specification (`docs/database_file_format.md`) ✅
+  - Index entry serialization (`src/grain_database/index_entry_serialization.zig`) ✅
+  - Index file persistence (write/read index entries to/from pages) ✅
   - Comprehensive tests ✅
   - Unblocked by Grain Core Agent Phase 62 (File System Enhancements) ✅ **COMPLETE**
   - File Storage Core (2025-12-06-023413-pst) ✅
@@ -241,6 +243,40 @@
 **Status**: Active — Phase 2 In Progress 🔄  
 **Current Tasks**: Component System — Foundation implementation  
 **Details**: See [`docs/tasks/tasks_bubble.md`](tasks/tasks_bubble.md)
+
+---
+
+### 9. Grain Flow Agent
+
+**Status**: Active — Phase 1 Event Bus Foundation COMPLETE ✅  
+**Current Tasks**: Ready for Phase 2 (Agent Coordinator)  
+**Details**: See [`docs/tasks/tasks_flow.md`](tasks/tasks_flow.md)
+
+**Key Tasks**:
+- [x] Phase 1: Event Bus Foundation ✅ COMPLETE (2025-12-07-054000-pst)
+  - Event type definitions ✅
+  - Event publishing/subscription APIs ✅
+  - Event routing engine ✅
+  - Comprehensive tests ✅
+
+**Next Phases**:
+- Phase 2: Agent Coordinator (Ready to start)
+
+---
+
+### 10. Grain Research Agent
+
+**Status**: Active — Initial Planning  
+**Current Tasks**: Ready for Phase 1 (Research Engine Foundation)  
+**Details**: See [`docs/tasks/tasks_research.md`](tasks/tasks_research.md)
+
+**Key Tasks**:
+- [x] Initial planning complete ✅
+- [x] Plan document created ✅
+- [x] Task list created ✅
+
+**Next Phases**:
+- Phase 1: Research Engine Foundation (Ready to start)
 
 **Current Phase**: Phase 2 — Component System 🔄 IN PROGRESS
 

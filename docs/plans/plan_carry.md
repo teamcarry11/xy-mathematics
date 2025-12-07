@@ -1152,7 +1152,8 @@ While waiting for Grain Core Agent's API Server (Phase 59), we can prepare the A
 1. **Android App Development** (Phase 5): Native Kotlin app with Jetpack Compose
 2. **iOS App Development** (Phase 6): Native Swift app with SwiftUI
 3. **OAuth Integration** (Phase 7): Google, Facebook, GitHub, Apple Sign-In
-4. **API Client Integration**: Connect to Grain Core API Server
+4. **API Client Integration**: ✅ Complete — ApiClient enhanced with external request support
+5. **WebSocket Client Integration**: ✅ Complete — WebSocket client implementation complete with connection management
 
 ---
 
@@ -1330,7 +1331,8 @@ While waiting for Grain Core Agent's API Server (Phase 59), we can prepare the A
 - **API Integration**: ✅ Complete — Carry Agent's API clients integrated with Grain Core API Server
 - **Authentication**: ✅ Complete — Secure authentication integrated with Grain Core Authentication Service
 - **WebSocket**: ✅ Complete — WebSocket client implementation complete with message handling, keepalive, and connection management
-- **HTTP Client**: ✅ Complete — HTTP client available for API client integration and external API calls
+- **HTTP Client**: ✅ Complete — HTTP client integration complete, ApiClient enhanced with external request support
+- **Email Service**: ✅ Complete — Email service for OTP delivery complete
 - **Style System Unification**: Consult with Grain Core Agent about unifying mobile and desktop style systems (see `docs/grain_core_agent_style_unification_prompt.md`)
 
 ---

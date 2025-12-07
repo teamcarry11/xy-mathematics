@@ -5,6 +5,7 @@
 //! GrainStyle: grain_case, u32/u64, bounded allocations, assertions.
 //!
 //! 2025-12-03-173505-pst: Active implementation
+//! 2025-12-07-060853-pst: Phase 12 HTTP Client integration tests
 
 const std = @import("std");
 const testing = std.testing;
@@ -15,19 +16,26 @@ const grain_core = @import("grain_core");
 test "package manager ui initialization" {
     const allocator = testing.allocator;
     var pkg_mgr = grain_core.package_manager.PackageManager.init();
+    var net_stack = grain_core.network_stack.NetworkStack.init();
+    var dns_res = grain_core.dns_resolver.DnsResolver.init(3600);
+    var http_client = grain_core.http_client.HttpClient.init(&net_stack, &dns_res);
 
-    var ui = PackageManagerUI.init(allocator, &pkg_mgr);
+    var ui = PackageManagerUI.init(allocator, &pkg_mgr, &http_client);
 
     try testing.expect(ui.search_query_len == 0);
     try testing.expect(ui.selected_category == .all);
     try testing.expect(ui.selected_package_id == 0);
+    try testing.expect(ui.repository_urls_len == 0);
 }
 
 test "set search query" {
     const allocator = testing.allocator;
     var pkg_mgr = grain_core.package_manager.PackageManager.init();
 
-    var ui = PackageManagerUI.init(allocator, &pkg_mgr);
+    var net_stack = grain_core.network_stack.NetworkStack.init();
+    var dns_res = grain_core.dns_resolver.DnsResolver.init(3600);
+    var http_client = grain_core.http_client.HttpClient.init(&net_stack, &dns_res);
+    var ui = PackageManagerUI.init(allocator, &pkg_mgr, &http_client);
     ui.set_search_query("test");
 
     try testing.expect(ui.search_query_len == 4);
@@ -38,7 +46,10 @@ test "set category" {
     const allocator = testing.allocator;
     var pkg_mgr = grain_core.package_manager.PackageManager.init();
 
-    var ui = PackageManagerUI.init(allocator, &pkg_mgr);
+    var net_stack = grain_core.network_stack.NetworkStack.init();
+    var dns_res = grain_core.dns_resolver.DnsResolver.init(3600);
+    var http_client = grain_core.http_client.HttpClient.init(&net_stack, &dns_res);
+    var ui = PackageManagerUI.init(allocator, &pkg_mgr, &http_client);
     ui.set_category(.development);
 
     try testing.expect(ui.selected_category == .development);
@@ -51,7 +62,10 @@ test "get all packages" {
     _ = pkg_mgr.add_package("test-pkg", "1.0.0", "Test package", 1024);
     _ = pkg_mgr.add_package("dev-tool", "2.0.0", "Dev tool", 2048);
 
-    var ui = PackageManagerUI.init(allocator, &pkg_mgr);
+    var net_stack = grain_core.network_stack.NetworkStack.init();
+    var dns_res = grain_core.dns_resolver.DnsResolver.init(3600);
+    var http_client = grain_core.http_client.HttpClient.init(&net_stack, &dns_res);
+    var ui = PackageManagerUI.init(allocator, &pkg_mgr, &http_client);
 
     var packages: [10]PackageManagerUI.PackageInfo = undefined;
     var packages_len: u32 = 0;
@@ -69,7 +83,10 @@ test "get package info" {
     const pkg_id = pkg_mgr.add_package("test-pkg", "1.0.0", "Test package", 1024);
     try testing.expect(pkg_id != null);
 
-    var ui = PackageManagerUI.init(allocator, &pkg_mgr);
+    var net_stack = grain_core.network_stack.NetworkStack.init();
+    var dns_res = grain_core.dns_resolver.DnsResolver.init(3600);
+    var http_client = grain_core.http_client.HttpClient.init(&net_stack, &dns_res);
+    var ui = PackageManagerUI.init(allocator, &pkg_mgr, &http_client);
 
     var info: PackageManagerUI.PackageInfo = undefined;
     const found = ui.get_package_info(pkg_id.?, &info);
@@ -87,7 +104,10 @@ test "search packages" {
     _ = pkg_mgr.add_package("test-pkg", "1.0.0", "Test package", 1024);
     _ = pkg_mgr.add_package("other-pkg", "2.0.0", "Other package", 2048);
 
-    var ui = PackageManagerUI.init(allocator, &pkg_mgr);
+    var net_stack = grain_core.network_stack.NetworkStack.init();
+    var dns_res = grain_core.dns_resolver.DnsResolver.init(3600);
+    var http_client = grain_core.http_client.HttpClient.init(&net_stack, &dns_res);
+    var ui = PackageManagerUI.init(allocator, &pkg_mgr, &http_client);
     ui.set_search_query("test");
 
     var results: [10]u32 = undefined;
@@ -105,7 +125,10 @@ test "install package" {
     const pkg_id = pkg_mgr.add_package("test-pkg", "1.0.0", "Test package", 1024);
     try testing.expect(pkg_id != null);
 
-    var ui = PackageManagerUI.init(allocator, &pkg_mgr);
+    var net_stack = grain_core.network_stack.NetworkStack.init();
+    var dns_res = grain_core.dns_resolver.DnsResolver.init(3600);
+    var http_client = grain_core.http_client.HttpClient.init(&net_stack, &dns_res);
+    var ui = PackageManagerUI.init(allocator, &pkg_mgr, &http_client);
     try ui.install_package(pkg_id.?);
 
     const pkg = pkg_mgr.find_package(pkg_id.?);
@@ -120,7 +143,10 @@ test "remove package" {
     const pkg_id = pkg_mgr.add_package("test-pkg", "1.0.0", "Test package", 1024);
     try testing.expect(pkg_id != null);
 
-    var ui = PackageManagerUI.init(allocator, &pkg_mgr);
+    var net_stack = grain_core.network_stack.NetworkStack.init();
+    var dns_res = grain_core.dns_resolver.DnsResolver.init(3600);
+    var http_client = grain_core.http_client.HttpClient.init(&net_stack, &dns_res);
+    var ui = PackageManagerUI.init(allocator, &pkg_mgr, &http_client);
     try ui.install_package(pkg_id.?);
     try ui.remove_package(pkg_id.?);
 
@@ -140,7 +166,10 @@ test "get package dependencies" {
 
     _ = pkg_mgr.add_dependency(pkg_id1.?, pkg_id2.?);
 
-    var ui = PackageManagerUI.init(allocator, &pkg_mgr);
+    var net_stack = grain_core.network_stack.NetworkStack.init();
+    var dns_res = grain_core.dns_resolver.DnsResolver.init(3600);
+    var http_client = grain_core.http_client.HttpClient.init(&net_stack, &dns_res);
+    var ui = PackageManagerUI.init(allocator, &pkg_mgr, &http_client);
 
     var deps: [10]u32 = undefined;
     var deps_len: u32 = 0;
@@ -162,7 +191,10 @@ test "build dependency graph" {
 
     _ = pkg_mgr.add_dependency(pkg_id1.?, pkg_id2.?);
 
-    var ui = PackageManagerUI.init(allocator, &pkg_mgr);
+    var net_stack = grain_core.network_stack.NetworkStack.init();
+    var dns_res = grain_core.dns_resolver.DnsResolver.init(3600);
+    var http_client = grain_core.http_client.HttpClient.init(&net_stack, &dns_res);
+    var ui = PackageManagerUI.init(allocator, &pkg_mgr, &http_client);
 
     var nodes: [10]PackageManagerUI.DependencyNode = undefined;
     var nodes_len: u32 = 0;
@@ -180,7 +212,10 @@ test "category filtering" {
     _ = pkg_mgr.add_package("kernel-module", "1.0.0", "Kernel module", 1024);
     _ = pkg_mgr.add_package("dev-tool", "2.0.0", "Dev tool", 2048);
 
-    var ui = PackageManagerUI.init(allocator, &pkg_mgr);
+    var net_stack = grain_core.network_stack.NetworkStack.init();
+    var dns_res = grain_core.dns_resolver.DnsResolver.init(3600);
+    var http_client = grain_core.http_client.HttpClient.init(&net_stack, &dns_res);
+    var ui = PackageManagerUI.init(allocator, &pkg_mgr, &http_client);
     ui.set_category(.system);
 
     var packages: [10]PackageManagerUI.PackageInfo = undefined;
@@ -189,5 +224,40 @@ test "category filtering" {
 
     try testing.expect(packages_len == 1);
     try testing.expect(packages[0].category == .system);
+}
+
+test "repository url management" {
+    const allocator = testing.allocator;
+    var pkg_mgr = grain_core.package_manager.PackageManager.init();
+    var net_stack = grain_core.network_stack.NetworkStack.init();
+    var dns_res = grain_core.dns_resolver.DnsResolver.init(3600);
+    var http_client = grain_core.http_client.HttpClient.init(&net_stack, &dns_res);
+
+    var ui = PackageManagerUI.init(allocator, &pkg_mgr, &http_client);
+
+    // Add repository URL
+    const added1 = ui.add_repository_url("http://repo.example.com/packages");
+    try testing.expect(added1 == true);
+    try testing.expect(ui.repository_urls_len == 1);
+
+    // Add another repository URL
+    const added2 = ui.add_repository_url("http://repo2.example.com/packages");
+    try testing.expect(added2 == true);
+    try testing.expect(ui.repository_urls_len == 2);
+
+    // Get repository URLs
+    var urls: [10]?*const PackageManagerUI.RepositoryUrl = undefined;
+    var urls_len: u32 = 0;
+    ui.get_repository_urls(&urls, &urls_len);
+    try testing.expect(urls_len == 2);
+
+    // Fetch packages from repository
+    const request_id = ui.fetch_packages_from_repository(0);
+    try testing.expect(request_id != null);
+
+    // Remove repository URL
+    const removed = ui.remove_repository_url(0);
+    try testing.expect(removed == true);
+    try testing.expect(ui.repository_urls_len == 1);
 }
 

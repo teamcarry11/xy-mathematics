@@ -5,6 +5,7 @@
 //! GrainStyle: grain_case, u32/u64, bounded allocations, assertions.
 //!
 //! 2025-12-03-173505-pst: Active implementation
+//! 2025-12-07-060853-pst: Phase 12 HTTP Client integration for repository access
 
 const std = @import("std");
 const grain_core = @import("grain_core");
@@ -20,6 +21,14 @@ pub const MAX_CATEGORIES: u32 = 32;
 // Bounded: Max category name length (explicit limit, in bytes)
 // 2025-12-03-173505-pst: Active constant
 pub const MAX_CATEGORY_NAME_LEN: u32 = 64;
+
+// Bounded: Max package name length (explicit limit, in bytes)
+// 2025-12-03-173505-pst: Active constant (matches package_manager)
+pub const MAX_PACKAGE_NAME_LEN: u32 = 128;
+
+// Bounded: Max repository URLs (explicit limit)
+// 2025-12-07-060853-pst: Phase 12 HTTP Client integration
+pub const MAX_REPOSITORY_URLS: u32 = 16;
 
 // Package category enumeration.
 // 2025-12-03-173505-pst: Active enum
@@ -55,40 +64,65 @@ pub const DependencyNode = struct {
     level: u32, // Depth in dependency tree
 };
 
+// Repository URL structure.
+// 2025-12-07-060853-pst: Phase 12 HTTP Client integration
+pub const RepositoryUrl = struct {
+    url: [grain_core.http_client.MAX_URL_LEN]u8,
+    url_len: u32,
+    active: bool,
+};
+
 // Package Manager UI application state.
 // 2025-12-03-173505-pst: Active struct
+// 2025-12-07-060853-pst: Phase 12 HTTP Client integration
 pub const PackageManagerUI = struct {
     package_manager: *grain_core.package_manager.PackageManager,
+    http_client: *grain_core.http_client.HttpClient,
     search_query: [MAX_PACKAGE_NAME_LEN]u8,
     search_query_len: u32,
     selected_category: PackageCategory,
     selected_package_id: u32,
+    repository_urls: [MAX_REPOSITORY_URLS]?RepositoryUrl,
+    repository_urls_len: u32,
     allocator: std.mem.Allocator,
 
     /// Initialize package manager UI.
     // 2025-12-03-173505-pst: Active function
+    // 2025-12-07-060853-pst: Phase 12 HTTP Client integration
     pub fn init(
         allocator: std.mem.Allocator,
         pkg_mgr: *grain_core.package_manager.PackageManager,
+        http_cli: *grain_core.http_client.HttpClient,
     ) PackageManagerUI {
-        // Precondition: Allocator and manager must be valid
+        // Precondition: Allocator and managers must be valid
         std.debug.assert(allocator.ptr != null);
         std.debug.assert(@intFromPtr(pkg_mgr) != 0);
+        std.debug.assert(@intFromPtr(http_cli) != 0);
 
         var ui = PackageManagerUI{
             .package_manager = pkg_mgr,
+            .http_client = http_cli,
             .search_query = undefined,
             .search_query_len = 0,
             .selected_category = .all,
             .selected_package_id = 0,
+            .repository_urls = undefined,
+            .repository_urls_len = 0,
             .allocator = allocator,
         };
 
         // Initialize search query
         @memset(&ui.search_query, 0);
 
+        // Initialize repository URLs array
+        var i: u32 = 0;
+        while (i < MAX_REPOSITORY_URLS) : (i += 1) {
+            ui.repository_urls[i] = null;
+        }
+
         // Postcondition: UI must be valid
         std.debug.assert(ui.search_query_len == 0);
+        std.debug.assert(ui.repository_urls_len == 0);
 
         return ui;
     }
@@ -416,5 +450,123 @@ fn categorize_package(
     }
 
     return .other;
+}
+
+// Package Manager UI HTTP Client functions.
+// 2025-12-07-060853-pst: Phase 12 HTTP Client integration
+
+/// Add repository URL.
+// 2025-12-07-060853-pst: Phase 12 HTTP Client integration
+pub fn add_repository_url(
+    self: *PackageManagerUI,
+    url: []const u8,
+) bool {
+    // Precondition: URL must be valid
+    std.debug.assert(url.len > 0);
+    std.debug.assert(url.len <= grain_core.http_client.MAX_URL_LEN);
+    std.debug.assert(self.repository_urls_len < MAX_REPOSITORY_URLS);
+
+    if (self.repository_urls_len >= MAX_REPOSITORY_URLS) {
+        return false;
+    }
+
+    var repo_url = RepositoryUrl{
+        .url = undefined,
+        .url_len = @as(u32, @intCast(url.len)),
+        .active = true,
+    };
+
+    @memset(&repo_url.url, 0);
+    const url_len = @min(url.len, grain_core.http_client.MAX_URL_LEN);
+    @memcpy(repo_url.url[0..url_len], url[0..url_len]);
+
+    var i: u32 = 0;
+    while (i < MAX_REPOSITORY_URLS) : (i += 1) {
+        if (self.repository_urls[i] == null) {
+            self.repository_urls[i] = repo_url;
+            self.repository_urls_len += 1;
+            break;
+        }
+    }
+
+    // Postcondition: Repository URL must be added
+    std.debug.assert(self.repository_urls_len > 0);
+
+    return true;
+}
+
+/// Fetch package list from repository.
+// 2025-12-07-060853-pst: Phase 12 HTTP Client integration
+pub fn fetch_packages_from_repository(
+    self: *PackageManagerUI,
+    repository_index: u32,
+) ?u32 {
+    // Precondition: Repository index must be valid
+    std.debug.assert(repository_index < MAX_REPOSITORY_URLS);
+    std.debug.assert(self.repository_urls_len > 0);
+
+    if (repository_index >= self.repository_urls_len) {
+        return null;
+    }
+
+    const repo = self.repository_urls[repository_index];
+    if (repo == null or !repo.?.active) {
+        return null;
+    }
+
+    const url_slice = repo.?.url[0..repo.?.url_len];
+    const request = self.http_client.create_request(.get, url_slice);
+    if (request == null) {
+        return null;
+    }
+
+    // Return request ID for tracking
+    return request.?.request_id;
+}
+
+/// Get repository URLs.
+// 2025-12-07-060853-pst: Phase 12 HTTP Client integration
+pub fn get_repository_urls(
+    self: *const PackageManagerUI,
+    urls: []?*const RepositoryUrl,
+    urls_len: *u32,
+) void {
+    // Precondition: URLs buffer must be valid
+    std.debug.assert(urls.len > 0);
+    std.debug.assert(urls_len != null);
+
+    urls_len.* = 0;
+
+    var i: u32 = 0;
+    while (i < self.repository_urls_len and urls_len.* < urls.len) : (i += 1) {
+        if (self.repository_urls[i]) |*repo| {
+            if (repo.active) {
+                urls[urls_len.*] = repo;
+                urls_len.* += 1;
+            }
+        }
+    }
+}
+
+/// Remove repository URL.
+// 2025-12-07-060853-pst: Phase 12 HTTP Client integration
+pub fn remove_repository_url(
+    self: *PackageManagerUI,
+    repository_index: u32,
+) bool {
+    // Precondition: Repository index must be valid
+    std.debug.assert(repository_index < MAX_REPOSITORY_URLS);
+
+    if (repository_index >= self.repository_urls_len) {
+        return false;
+    }
+
+    if (self.repository_urls[repository_index]) |*repo| {
+        repo.active = false;
+        self.repository_urls_len -= 1;
+        return true;
+    }
+
+    return false;
 }
 

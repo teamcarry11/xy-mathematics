@@ -305,6 +305,16 @@ pub fn build(b: *std.Build) void {
         },
     });
 
+    // Grain Flow module
+    const grain_flow_module = b.addModule("grain_flow", .{
+        .root_source_file = b.path("src/grain_flow/root.zig"),
+        .target = target,
+        .optimize = optimize,
+        .imports = &.{
+            .{ .name = "grain_core", .module = grain_core_module },
+        },
+    });
+
     // Kernel VM test executable (for testing VM functionality).
     const kernel_vm_test_exe = b.addExecutable(.{
         .name = "kernel_vm_test",
@@ -3457,6 +3467,34 @@ pub fn build(b: *std.Build) void {
     const grain_database_record_serialization_tests_run = b.addRunArtifact(grain_database_record_serialization_tests);
     test_step.dependOn(&grain_database_record_serialization_tests_run.step);
 
+    // Grain Database Index Entry Serialization Tests
+    const grain_database_index_entry_serialization_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/117_grain_database_index_entry_serialization_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_database", .module = grain_database_module },
+            },
+        }),
+    });
+    const grain_database_index_entry_serialization_tests_run = b.addRunArtifact(grain_database_index_entry_serialization_tests);
+    test_step.dependOn(&grain_database_index_entry_serialization_tests_run.step);
+
+    // Grain Database Index Persistence Tests
+    const grain_database_index_persistence_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/118_grain_database_index_persistence_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_database", .module = grain_database_module },
+            },
+        }),
+    });
+    const grain_database_index_persistence_tests_run = b.addRunArtifact(grain_database_index_persistence_tests);
+    test_step.dependOn(&grain_database_index_persistence_tests_run.step);
+
     // RISC-V Logo Display Program
     const riscv_logo_exe = b.addExecutable(.{
         .name = "riscv_logo",
@@ -3900,6 +3938,20 @@ pub fn build(b: *std.Build) void {
     });
     const grain_bubble_export_slc_tests_run = b.addRunArtifact(grain_bubble_export_slc_tests);
     test_step.dependOn(&grain_bubble_export_slc_tests_run.step);
+
+    // Grain Flow event bus tests
+    const grain_flow_event_bus_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/134_grain_flow_event_bus_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_flow", .module = grain_flow_module },
+            },
+        }),
+    });
+    const grain_flow_event_bus_tests_run = b.addRunArtifact(grain_flow_event_bus_tests);
+    test_step.dependOn(&grain_flow_event_bus_tests_run.step);
 
     // Grain Bubble component tests
     const grain_bubble_component_tests = b.addTest(.{

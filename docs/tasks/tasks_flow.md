@@ -1,34 +1,34 @@
 # Grain Flow Agent: Task List
 
-**Agent**: Grain Flow Agent (10th Agent)  
-**Status**: Initial Planning — Ready for Phase 1  
-**Last Updated**: 2025-12-07-040000-pst
+**Agent**: Grain Flow Agent (9th Agent)  
+**Status**: Phase 1 Event Bus Foundation COMPLETE ✅  
+**Last Updated**: 2025-12-07-054000-pst
 
 ---
 
-## Current Work: Phase 1 - Event Bus Foundation
+## Completed: Phase 1 - Event Bus Foundation ✅
 
 **Priority**: **HIGHEST** — Foundation for all workflow orchestration  
-**Status**: **PLANNED** — Ready to start  
+**Status**: **COMPLETE** ✅ (2025-12-07-054000-pst)  
 **Estimated Time**: 2-3 weeks
 
-### Tasks
+### Completed Tasks
 
-- [ ] Create `src/grain_flow/` directory structure
-- [ ] Create `src/grain_flow/root.zig` module root
-- [ ] Create `src/grain_flow/event_bus.zig` module structure
-- [ ] Implement event type definitions (enum-based)
-- [ ] Implement event structure (type, source, destination, payload)
-- [ ] Implement event publishing API (`publish_event()`)
-- [ ] Implement event subscription API (`subscribe()`, `unsubscribe()`)
-- [ ] Implement event routing engine (iterative matching)
-- [ ] Implement bounded event queue (MAX_EVENTS: u32 = 10000)
-- [ ] Implement bounded subscribers per event type (MAX_SUBSCRIBERS: u32 = 256)
-- [ ] Implement event filtering (by type, source, destination)
-- [ ] Implement event processing (iterative, no recursion)
-- [ ] Create comprehensive tests (`tests/132_grain_flow_event_bus_test.zig`)
-- [ ] Update `build.zig` with new module and tests
-- [ ] Update `docs/plans/plan_flow.md` and `docs/tasks/tasks_flow.md` with progress
+- [x] Create `src/grain_flow/` directory structure
+- [x] Create `src/grain_flow/root.zig` module root
+- [x] Create `src/grain_flow/event_bus.zig` module structure
+- [x] Implement event type definitions (enum-based, 13 event types)
+- [x] Implement event structure (type, source, destination, payload)
+- [x] Implement event publishing API (`publish_event()`, `publish_event_with_payload()`)
+- [x] Implement event subscription API (`subscribe()`, `unsubscribe()`)
+- [x] Implement event routing engine (iterative matching)
+- [x] Implement bounded event queue (MAX_EVENTS: u32 = 10000)
+- [x] Implement bounded subscribers per event type (MAX_SUBSCRIBERS: u32 = 256)
+- [x] Implement event filtering (by type, source, destination)
+- [x] Implement event processing (iterative, no recursion)
+- [x] Create comprehensive tests (`tests/134_grain_flow_event_bus_test.zig` - 11 test cases)
+- [x] Update `build.zig` with new module and tests
+- [x] Update `docs/plans/plan_flow.md` and `docs/tasks/tasks_flow.md` with progress
 
 ### Grain Style Requirements
 

@@ -67,7 +67,7 @@ pub const SiloIntegration = struct {
     next_asset_id: u32,
 
     pub fn init() SiloIntegration {
-        var integration = SiloIntegration{
+        const integration = SiloIntegration{
             .storage = null,
             .next_asset_id = 1,
         };

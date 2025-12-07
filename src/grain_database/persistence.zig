@@ -82,8 +82,13 @@ pub const PersistenceManager = struct {
         var header = file_storage.DatabaseFileHeader.init();
         header.created_at = current_time;
         header.updated_at = current_time;
+        header.total_pages = 0;
+        header.page_size = file_storage.PAGE_SIZE;
+        header.version = 1;
         self.is_initialized = true;
         std.debug.assert(self.is_initialized);
+        std.debug.assert(header.version == 1);
+        std.debug.assert(header.page_size == file_storage.PAGE_SIZE);
         return true;
     }
 

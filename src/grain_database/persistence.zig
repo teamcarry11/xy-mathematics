@@ -479,5 +479,92 @@ pub const PersistenceManager = struct {
         }
         return null;
     }
+
+    // Write record to multiple pages (for large records).
+    pub fn write_record_multi_page(
+        self: *PersistenceManager,
+        record: *const storage_engine.Record,
+        pages: []file_storage.FilePage,
+        first_page_id: u32,
+    ) bool {
+        std.debug.assert(self.is_initialized);
+        std.debug.assert(record != null);
+        std.debug.assert(pages.len > 0);
+        std.debug.assert(first_page_id < file_storage.MAX_PAGES);
+        const serialized_size = record_serialization.calculate_serialized_size(
+            record.key_len,
+            record.value_len,
+        );
+        const page_count = multi_page_record.MultiPageRecordManager.calculate_page_count(serialized_size);
+        if (pages.len < page_count) {
+            return false;
+        }
+        var buffer: [file_storage.PAGE_SIZE * multi_page_record.MAX_PAGES_PER_RECORD]u8 = undefined;
+        const written = record_serialization.serialize_record(record, &buffer);
+        if (written != serialized_size) {
+            return false;
+        }
+        var offset: u32 = 0;
+        var page_idx: u32 = 0;
+        while (page_idx < page_count) : (page_idx += 1) {
+            const page_offset = @min(file_storage.PAGE_SIZE, serialized_size - offset);
+            var i: u32 = 0;
+            while (i < page_offset) : (i += 1) {
+                pages[page_idx].data[i] = buffer[offset + i];
+            }
+            pages[page_idx].page_id = first_page_id + page_idx;
+            pages[page_idx].is_dirty = true;
+            pages[page_idx].calculate_checksum();
+            offset += page_offset;
+        }
+        const current_time = @as(u64, @intCast(std.time.timestamp()));
+        const added = self.multi_page_manager.add_metadata(
+            record.record_id,
+            first_page_id,
+            page_count,
+            serialized_size,
+            current_time,
+        );
+        std.debug.assert(added);
+        std.debug.assert(offset == serialized_size);
+        return true;
+    }
+
+    // Read record from multiple pages (for large records).
+    pub fn read_record_multi_page(
+        self: *PersistenceManager,
+        allocator: std.mem.Allocator,
+        pages: []const file_storage.FilePage,
+        record_id: u64,
+    ) ?storage_engine.Record {
+        std.debug.assert(self.is_initialized);
+        std.debug.assert(pages.len > 0);
+        std.debug.assert(record_id > 0);
+        const metadata = self.multi_page_manager.find_metadata(record_id);
+        if (metadata == null) {
+            return null;
+        }
+        if (pages.len < metadata.?.page_count) {
+            return null;
+        }
+        var buffer: [file_storage.PAGE_SIZE * multi_page_record.MAX_PAGES_PER_RECORD]u8 = undefined;
+        var offset: u32 = 0;
+        var page_idx: u32 = 0;
+        while (page_idx < metadata.?.page_count) : (page_idx += 1) {
+            const page_offset = @min(file_storage.PAGE_SIZE, metadata.?.total_size - offset);
+            var i: u32 = 0;
+            while (i < page_offset) : (i += 1) {
+                buffer[offset + i] = pages[page_idx].data[i];
+            }
+            offset += page_offset;
+        }
+        const record = record_serialization.deserialize_record(
+            allocator,
+            buffer[0..metadata.?.total_size],
+        ) catch return null;
+        std.debug.assert(record.record_id == record_id);
+        std.debug.assert(offset == metadata.?.total_size);
+        return record;
+    }
 };
 

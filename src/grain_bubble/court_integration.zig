@@ -33,7 +33,7 @@ pub const ComponentMatch = struct {
     };
 
     pub fn init() ComponentMatch {
-        var match = ComponentMatch{
+        const match = ComponentMatch{
             .component_id = 0,
             .similarity = 0.0,
             .match_type = .similar,
@@ -80,7 +80,7 @@ pub const CourtIntegration = struct {
     next_suggestion_id: u32,
 
     pub fn init() CourtIntegration {
-        var integration = CourtIntegration{
+        const integration = CourtIntegration{
             .compute = null,
             .next_suggestion_id = 1,
         };
@@ -109,8 +109,8 @@ pub const CourtIntegration = struct {
         }
         // Vector search via Court compute (simplified for Phase 3).
         // Full implementation will use Court's vector_search operation.
-        _ = query_vector;
-        _ = results;
+        std.debug.assert(query_vector.len > 0);
+        std.debug.assert(results.len <= MAX_SEARCH_RESULTS);
         return 0;
     }
 
@@ -127,8 +127,8 @@ pub const CourtIntegration = struct {
         }
         // LLM inference via Court compute (simplified for Phase 3).
         // Full implementation will use Court's llm_inference operation.
-        _ = context;
-        _ = suggestions;
+        std.debug.assert(context.len > 0);
+        std.debug.assert(suggestions.len <= MAX_SEARCH_RESULTS);
         return 0;
     }
 
@@ -146,8 +146,8 @@ pub const CourtIntegration = struct {
         }
         // Generate embedding via Court compute (simplified for Phase 3).
         // Full implementation will use Court's data_transform operation.
-        _ = comp;
-        _ = embedding;
+        std.debug.assert(@intFromPtr(comp) != 0);
+        std.debug.assert(embedding.len > 0);
         return true;
     }
 };

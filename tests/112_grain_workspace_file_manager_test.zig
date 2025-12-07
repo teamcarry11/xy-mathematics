@@ -6,6 +6,7 @@
 //!
 //! 2025-12-04-092542-pst: Active implementation
 //! 2025-12-07-025947-pst: Phase 10.4 WebSocket integration tests
+//! 2025-12-07-071409-pst: Phase 13 File Storage integration tests
 
 const std = @import("std");
 const testing = std.testing;
@@ -16,13 +17,15 @@ test "file manager ui initialization" {
     const allocator = testing.allocator;
     var fm = grain_core.file_manager.FileManager.init();
     var ws_manager = grain_core.websocket.WebSocketManager.init();
+    var storage_mgr = grain_core.file_storage.FileStorageManager.init();
 
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager);
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr);
 
     try testing.expect(ui.search_query_len == 0);
     try testing.expect(ui.selected_entry_id == 0);
     try testing.expect(ui.clipboard_len == 0);
     try testing.expect(ui.websocket_clients_len == 0);
+    try testing.expect(ui.database_file_handles_len == 0);
 }
 
 test "set search query" {
@@ -30,7 +33,8 @@ test "set search query" {
     var fm = grain_core.file_manager.FileManager.init();
     var ws_manager = grain_core.websocket.WebSocketManager.init();
 
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager);
+    var storage_mgr = grain_core.file_storage.FileStorageManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr);
     ui.set_search_query("test");
 
     try testing.expect(ui.search_query_len == 4);
@@ -42,7 +46,8 @@ test "navigate to directory" {
     var fm = grain_core.file_manager.FileManager.init();
     var ws_manager = grain_core.websocket.WebSocketManager.init();
 
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager);
+    var storage_mgr = grain_core.file_storage.FileStorageManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr);
     const result = ui.navigate_to_directory("/home");
 
     try testing.expect(result == true);
@@ -54,7 +59,8 @@ test "get current directory" {
     var fm = grain_core.file_manager.FileManager.init();
     var ws_manager = grain_core.websocket.WebSocketManager.init();
 
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager);
+    var storage_mgr = grain_core.file_storage.FileStorageManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr);
     const current_dir = ui.get_current_directory();
 
     try testing.expect(std.mem.eql(u8, current_dir, "/"));
@@ -68,7 +74,8 @@ test "get file entries" {
     _ = fm.add_file_entry("dir1", "/dir1", .directory, 0, 0);
 
     var ws_manager = grain_core.websocket.WebSocketManager.init();
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager);
+    var storage_mgr = grain_core.file_storage.FileStorageManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr);
 
     var entries: [10]*grain_core.file_manager.FileEntry = undefined;
     var entries_len: u32 = 0;
@@ -87,7 +94,8 @@ test "search files" {
     _ = fm.add_file_entry("other-file.txt", "/other-file.txt", .regular, 2048, 0);
 
     var ws_manager = grain_core.websocket.WebSocketManager.init();
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager);
+    var storage_mgr = grain_core.file_storage.FileStorageManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr);
     ui.set_search_query("test");
 
     var results: [10]u32 = undefined;
@@ -106,7 +114,8 @@ test "copy to clipboard" {
     try testing.expect(entry_id != null);
 
     var ws_manager = grain_core.websocket.WebSocketManager.init();
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager);
+    var storage_mgr = grain_core.file_storage.FileStorageManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr);
     const result = ui.copy_to_clipboard(entry_id.?);
 
     try testing.expect(result == true);
@@ -123,7 +132,8 @@ test "move to clipboard" {
     try testing.expect(entry_id != null);
 
     var ws_manager = grain_core.websocket.WebSocketManager.init();
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager);
+    var storage_mgr = grain_core.file_storage.FileStorageManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr);
     const result = ui.move_to_clipboard(entry_id.?);
 
     try testing.expect(result == true);
@@ -140,7 +150,8 @@ test "paste from clipboard" {
     try testing.expect(entry_id != null);
 
     var ws_manager = grain_core.websocket.WebSocketManager.init();
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager);
+    var storage_mgr = grain_core.file_storage.FileStorageManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr);
     _ = ui.copy_to_clipboard(entry_id.?);
 
     const pasted_count = ui.paste_from_clipboard("/dest");
@@ -157,7 +168,8 @@ test "delete file" {
     try testing.expect(entry_id != null);
 
     var ws_manager = grain_core.websocket.WebSocketManager.init();
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager);
+    var storage_mgr = grain_core.file_storage.FileStorageManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr);
     const result = ui.delete_file(entry_id.?);
 
     try testing.expect(result == true);
@@ -171,7 +183,9 @@ test "rename file" {
     const entry_id = fm.add_file_entry("old-name.txt", "/old-name.txt", .regular, 1024, 0);
     try testing.expect(entry_id != null);
 
-    var ui = FileManagerUI.init(allocator, &fm);
+    var ws_manager = grain_core.websocket.WebSocketManager.init();
+    var storage_mgr = grain_core.file_storage.FileStorageManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr);
     const result = ui.rename_file(entry_id.?, "new-name.txt");
 
     try testing.expect(result == true);
@@ -188,7 +202,8 @@ test "get file preview" {
     try testing.expect(entry_id != null);
 
     var ws_manager = grain_core.websocket.WebSocketManager.init();
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager);
+    var storage_mgr = grain_core.file_storage.FileStorageManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr);
 
     var preview: [100]u8 = undefined;
     var preview_len: u32 = 0;
@@ -205,7 +220,8 @@ test "clear clipboard" {
     try testing.expect(entry_id != null);
 
     var ws_manager = grain_core.websocket.WebSocketManager.init();
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager);
+    var storage_mgr = grain_core.file_storage.FileStorageManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr);
     _ = ui.copy_to_clipboard(entry_id.?);
     try testing.expect(ui.clipboard_len == 1);
 
@@ -218,7 +234,8 @@ test "websocket client management" {
     var fm = grain_core.file_manager.FileManager.init();
     var ws_manager = grain_core.websocket.WebSocketManager.init();
 
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager);
+    var storage_mgr = grain_core.file_storage.FileStorageManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr);
 
     // Add WebSocket client
     const conn1 = ws_manager.add_connection(1);
@@ -246,5 +263,43 @@ test "websocket client management" {
         try testing.expect(removed == true);
         try testing.expect(ui.websocket_clients_len == 1);
     }
+}
+
+test "database file management" {
+    const allocator = testing.allocator;
+    var fm = grain_core.file_manager.FileManager.init();
+    var ws_manager = grain_core.websocket.WebSocketManager.init();
+    var storage_mgr = grain_core.file_storage.FileStorageManager.init();
+
+    const entry_id = fm.add_file_entry("database.db", "/database.db", .regular, 4096, 0);
+    try testing.expect(entry_id != null);
+
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr);
+
+    // Check if file is a database file
+    const is_db = ui.is_database_file(entry_id.?);
+    try testing.expect(is_db == true);
+
+    // Open database file
+    const handle_id = ui.open_database_file(entry_id.?, .read_write);
+    try testing.expect(handle_id != null);
+    try testing.expect(ui.database_file_handles_len == 1);
+
+    // Get database file handle
+    const db_handle = ui.get_database_file_handle(entry_id.?);
+    try testing.expect(db_handle != null);
+    try testing.expect(db_handle.?.handle_id == handle_id.?);
+    try testing.expect(db_handle.?.entry_id == entry_id.?);
+
+    // Get all database file handles
+    var handles: [10]?*const FileManagerUI.DatabaseFileHandle = undefined;
+    var handles_len: u32 = 0;
+    ui.get_all_database_file_handles(&handles, &handles_len);
+    try testing.expect(handles_len == 1);
+
+    // Close database file
+    const closed = ui.close_database_file(handle_id.?);
+    try testing.expect(closed == true);
+    try testing.expect(ui.database_file_handles_len == 0);
 }
 

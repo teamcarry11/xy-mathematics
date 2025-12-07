@@ -371,6 +371,7 @@ All planned phases for Grain Workspace Agent have been completed:
   - Phase 10.4: WebSocket Integration (File Manager) ✅ (2025-12-07-025947-pst)
 - Phase 11: HTTP Client Integration (Network Tools) ✅ (2025-12-07-054458-pst)
 - Phase 12: HTTP Client Integration (Package Manager UI) ✅ (2025-12-07-060853-pst)
+- Phase 13: File Storage Integration (File Manager) ✅ (2025-12-07-071409-pst)
 
 ### Phase 10.1: WebSocket Integration (Monitor) ✅ **COMPLETE**
 
@@ -580,6 +581,37 @@ All planned phases for Grain Workspace Agent have been completed:
 - HTTP-based package fetching from remote repositories
 - Bounded repository URL storage (max 16 URLs)
 - Integration with Grain Core HTTP Client (Phase 61)
+
+**Grain Style Compliance**:
+- `grain_case` function names
+- `u32`/`u64` types (no `usize`)
+- Bounded allocations (all limits explicit)
+- Assertions for preconditions
+- Max 70 lines per function
+- All compiler warnings enabled
+
+### Phase 13: File Storage Integration (File Manager) ✅ **COMPLETE**
+
+**Date**: 2025-12-07-071409-pst
+
+**Completed Work**:
+1. **File Storage Support for File Manager App** (`src/grain_workspace/file_manager/app.zig`):
+   - Added `FileStorageManager` integration to `FileManagerUI`
+   - Added `DatabaseFileHandle` struct for tracking database file handles
+   - Added `database_file_handles` array with bounded limit (`MAX_DATABASE_FILE_HANDLES: 32`)
+   - Added `open_database_file()` function for opening database files with File Storage
+   - Added `close_database_file()` function for closing database files
+   - Added `get_database_file_handle()` function for retrieving handles by entry ID
+   - Added `get_all_database_file_handles()` function for retrieving all open handles
+   - Added `is_database_file()` function for detecting database files by extension
+   - Updated `init()` to accept `FileStorageManager` parameter
+   - Comprehensive tests (`tests/112_grain_workspace_file_manager_test.zig`)
+
+**Features**:
+- Database file detection (by .db and .sqlite extensions)
+- Database file handle management (open, close, track)
+- Bounded database file handle storage (max 32 handles)
+- Integration with Grain Core File Storage (Phase 62)
 
 **Grain Style Compliance**:
 - `grain_case` function names

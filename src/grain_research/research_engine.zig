@@ -122,7 +122,7 @@ pub const QueryFilter = struct {
 
 // Query result: Contains matching entries.
 pub const QueryResult = struct {
-    entries: []const ResearchEntry,
+    entries: []ResearchEntry,
     entries_len: u32,
     total_matched: u32,
     allocator: std.mem.Allocator,
@@ -130,7 +130,7 @@ pub const QueryResult = struct {
     // Initialize query result.
     pub fn init(
         allocator: std.mem.Allocator,
-        entries: []const ResearchEntry,
+        entries: []ResearchEntry,
         total_matched: u32,
     ) !QueryResult {
         std.debug.assert(entries.len <= MAX_QUERY_RESULTS);
@@ -154,6 +154,10 @@ pub const QueryResult = struct {
 
     // Deinitialize query result and free memory.
     pub fn deinit(self: *QueryResult) void {
+        var i: u32 = 0;
+        while (i < self.entries_len) : (i += 1) {
+            self.entries[i].deinit();
+        }
         if (self.entries_len > 0) {
             self.allocator.free(self.entries);
         }

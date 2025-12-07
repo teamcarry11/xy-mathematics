@@ -486,6 +486,260 @@ Grain Core Agent is responsible for building the desktop environment compositor 
 
 ---
 
+## Planned Phases: Agent Coordination Infrastructure
+
+### Phase 63: API Contracts Registry & Breaking Changes Protocol
+
+**Priority**: **HIGH** — Prevents integration conflicts and breaking changes  
+**Status**: **PLANNED** (Queued for next coordination cycle)  
+**Estimated Time**: 1-2 weeks
+
+**Why**: Centralized documentation of all inter-agent API contracts prevents breaking changes and clarifies dependencies. Breaking changes protocol ensures smooth transitions when APIs evolve.
+
+**Core Agent Tasks**:
+- [ ] Create `docs/agent-communications/api_contracts_registry.md` template
+- [ ] Document all Core Agent → Other Agent APIs (API Server, Auth Service, File System, HTTP Client, WebSocket)
+- [ ] Create breaking changes protocol document (`docs/agent-communications/breaking_changes_protocol.md`)
+- [ ] Define deprecation timeline (e.g., 2 coordination cycles minimum)
+- [ ] Define migration path documentation requirements
+- [ ] Define versioning strategy (semantic versioning for APIs)
+- [ ] Define backward compatibility requirements
+- [ ] Create API contract template for agents to fill out
+- [ ] Update coordination plan with API contract registry link
+
+**Delegated to Other Agents** (in next coordination plan):
+- **Silo Agent**: Document Database → Core APIs (file storage, WAL, index, backup interfaces)
+- **Carry Agent**: Document Mobile → Core APIs (API client, auth, WebSocket interfaces)
+- **Flow Agent**: Document Flow → Core APIs (event bus, agent coordinator interfaces)
+- **Skate Agent**: Document Skate → Core APIs (HTTP client for AI, WebSocket interfaces)
+- **Research Agent**: Document Research → Core APIs (data access interfaces, if any)
+- **Aurora Agent**: Document Aurora → Core APIs (shared module interfaces, if any)
+- **Workspace Agent**: Document Workspace → Core APIs (system services interfaces)
+- **Bubble Agent**: Document Bubble → Core APIs (compositor, rendering interfaces)
+- **Vantage Agent**: Document Vantage → Core APIs (syscall interfaces, kernel contracts)
+
+**Deliverables**:
+- `docs/agent-communications/api_contracts_registry.md` — Central registry of all inter-agent APIs
+- `docs/agent-communications/breaking_changes_protocol.md` — Protocol for handling breaking changes
+- API contract templates for each agent
+- Updated coordination plan with registry links
+
+**Dependencies**:
+- **Needs**: All agents to document their APIs
+- **Provides**: Centralized API documentation for all agents
+- **Coordinates with**: All agents (API documentation)
+
+---
+
+### Phase 64: Integration Test Infrastructure
+
+**Priority**: **HIGH** — Catches integration issues early  
+**Status**: **PLANNED** (Queued for next coordination cycle)  
+**Estimated Time**: 2-3 weeks
+
+**Why**: Centralized integration test suite that runs all cross-agent tests together catches integration issues before they reach production.
+
+**Core Agent Tasks**:
+- [ ] Create `tests/integration/` directory structure
+- [ ] Create integration test runner (`tests/integration/runner.zig`)
+- [ ] Create integration test framework (setup/teardown, test isolation)
+- [ ] Create Core → Silo integration tests (API Server + Database)
+- [ ] Create Core → Carry integration tests (API Server + Auth + Mobile)
+- [ ] Create Core → Flow integration tests (API Server + WebSocket + Event Bus)
+- [ ] Create Core → Skate integration tests (HTTP Client + AI)
+- [ ] Create Core → Workspace integration tests (System Services)
+- [ ] Create Core → Bubble integration tests (Compositor + Rendering)
+- [ ] Document integration test standards (`docs/testing/integration_test_standards.md`)
+- [ ] Update `build.zig` with integration test suite
+- [ ] Create CI/CD integration test runner (if applicable)
+
+**Delegated to Other Agents** (in next coordination plan):
+- **Silo Agent**: Create Silo → Core integration tests (file storage, WAL, index, backup)
+- **Carry Agent**: Create Carry → Core integration tests (API client, auth, WebSocket)
+- **Flow Agent**: Create Flow → Core integration tests (event bus, agent coordinator)
+- **Skate Agent**: Create Skate → Core integration tests (HTTP client for AI)
+- **Research Agent**: Create Research → Core integration tests (data access, if any)
+- **Aurora Agent**: Create Aurora → Core integration tests (shared modules, if any)
+- **Workspace Agent**: Create Workspace → Core integration tests (system services)
+- **Bubble Agent**: Create Bubble → Core integration tests (compositor, rendering)
+- **Vantage Agent**: Create Vantage → Core integration tests (syscall contracts)
+
+**Deliverables**:
+- `tests/integration/` directory with all cross-agent integration tests
+- Integration test runner framework
+- Integration test standards document
+- Updated `build.zig` with integration test suite
+
+**Dependencies**:
+- **Needs**: All agents to create their integration tests
+- **Provides**: Centralized integration test infrastructure
+- **Coordinates with**: All agents (integration test creation)
+
+---
+
+### Phase 65: Performance Monitoring & Benchmarks
+
+**Priority**: **MEDIUM** — System-wide performance tracking  
+**Status**: **PLANNED** (Queued for next coordination cycle)  
+**Estimated Time**: 2-3 weeks
+
+**Why**: System-wide performance tracking identifies bottlenecks early and ensures system meets performance requirements.
+
+**Core Agent Tasks**:
+- [ ] Create `src/grain_core/performance_monitor.zig` module
+- [ ] Implement API response time tracking
+- [ ] Implement resource usage tracking (memory, CPU per agent)
+- [ ] Implement throughput metrics (requests/second, operations/second)
+- [ ] Create performance benchmark framework (`tests/performance/benchmark_runner.zig`)
+- [ ] Create Core Agent performance benchmarks (API Server, Auth Service, File System)
+- [ ] Document performance standards (`docs/performance/performance_standards.md`)
+- [ ] Create performance dashboard (if applicable)
+- [ ] Integrate with System Metrics (Phase 55)
+
+**Delegated to Other Agents** (in next coordination plan):
+- **Silo Agent**: Create database performance benchmarks (query latency, throughput)
+- **Carry Agent**: Create mobile app performance benchmarks (API call latency, UI responsiveness)
+- **Flow Agent**: Create workflow performance benchmarks (event processing latency, throughput)
+- **Skate Agent**: Create knowledge graph performance benchmarks (graph operations, AI API calls)
+- **Research Agent**: Create research performance benchmarks (analysis latency, data processing)
+- **Aurora Agent**: Create IDE/browser performance benchmarks (rendering latency, LSP response time)
+- **Workspace Agent**: Create desktop app performance benchmarks (app launch time, responsiveness)
+- **Bubble Agent**: Create design tool performance benchmarks (canvas rendering, export speed)
+- **Vantage Agent**: Create kernel/VM performance benchmarks (syscall latency, VM execution speed)
+
+**Deliverables**:
+- `src/grain_core/performance_monitor.zig` — Performance monitoring module
+- `tests/performance/` directory with all performance benchmarks
+- Performance standards document
+- Performance dashboard (if applicable)
+
+**Dependencies**:
+- **Needs**: All agents to create their performance benchmarks
+- **Provides**: System-wide performance monitoring
+- **Coordinates with**: All agents (performance benchmark creation)
+
+---
+
+### Phase 66: Error Handling & Logging Standards
+
+**Priority**: **MEDIUM** — Consistent error handling and logging  
+**Status**: **PLANNED** (Queued for next coordination cycle)  
+**Estimated Time**: 1-2 weeks
+
+**Why**: Consistent error handling and logging patterns across all agents improve debuggability and maintainability.
+
+**Core Agent Tasks**:
+- [ ] Create error handling standards document (`docs/standards/error_handling_standards.md`)
+- [ ] Define error code standards (error code ranges per agent)
+- [ ] Define error propagation patterns (when to return errors, when to log)
+- [ ] Create logging standards document (`docs/standards/logging_standards.md`)
+- [ ] Define log levels (debug, info, warning, error, critical)
+- [ ] Define structured logging format (JSON, key-value pairs)
+- [ ] Create logging infrastructure (`src/grain_core/logger.zig`) if needed
+- [ ] Update Core Agent modules to follow standards
+- [ ] Create example error handling patterns
+- [ ] Create example logging patterns
+
+**Delegated to Other Agents** (in next coordination plan):
+- **All Agents**: Update their modules to follow error handling standards
+- **All Agents**: Update their modules to follow logging standards
+- **All Agents**: Create error handling examples for their domain
+- **All Agents**: Create logging examples for their domain
+
+**Deliverables**:
+- `docs/standards/error_handling_standards.md` — Error handling standards
+- `docs/standards/logging_standards.md` — Logging standards
+- Error handling examples
+- Logging examples
+- Updated Core Agent modules
+
+**Dependencies**:
+- **Needs**: All agents to update their modules
+- **Provides**: Consistent error handling and logging across system
+- **Coordinates with**: All agents (standards adoption)
+
+---
+
+### Phase 67: Security Guidelines & Resource Limits
+
+**Priority**: **MEDIUM** — Security and resource management  
+**Status**: **PLANNED** (Queued for next coordination cycle)  
+**Estimated Time**: 2-3 weeks
+
+**Why**: Security guidelines ensure secure inter-agent communication, and resource limits prevent resource exhaustion.
+
+**Core Agent Tasks**:
+- [ ] Create security guidelines document (`docs/security/security_guidelines.md`)
+- [ ] Define input validation standards
+- [ ] Define authentication/authorization patterns
+- [ ] Define data encryption requirements
+- [ ] Create security audit checklist
+- [ ] Create resource limits coordination document (`docs/coordination/resource_limits.md`)
+- [ ] Define memory limits per agent
+- [ ] Define CPU quotas per agent
+- [ ] Define network bandwidth limits per agent
+- [ ] Implement resource limit enforcement (if needed)
+- [ ] Integrate with System Metrics (Phase 55)
+
+**Delegated to Other Agents** (in next coordination plan):
+- **All Agents**: Review and implement security guidelines
+- **All Agents**: Implement input validation per standards
+- **All Agents**: Implement authentication/authorization per patterns
+- **All Agents**: Implement data encryption per requirements
+- **All Agents**: Conduct security audit per checklist
+- **All Agents**: Implement resource limits per coordination document
+
+**Deliverables**:
+- `docs/security/security_guidelines.md` — Security guidelines
+- `docs/coordination/resource_limits.md` — Resource limits coordination
+- Security audit checklist
+- Resource limit enforcement (if needed)
+
+**Dependencies**:
+- **Needs**: All agents to implement security guidelines
+- **Provides**: System-wide security and resource management
+- **Coordinates with**: All agents (security and resource limits)
+
+---
+
+### Phase 68: Release Coordination & Shared Module Versioning
+
+**Priority**: **LOW** — Release process and module versioning  
+**Status**: **PLANNED** (Queued for next coordination cycle)  
+**Estimated Time**: 1-2 weeks
+
+**Why**: Release coordination ensures smooth releases across agents, and shared module versioning prevents compatibility issues.
+
+**Core Agent Tasks**:
+- [ ] Create release coordination document (`docs/coordination/release_coordination.md`)
+- [ ] Define release cadence (e.g., bi-weekly, monthly)
+- [ ] Define dependency ordering (which agents release first)
+- [ ] Define rollback procedures
+- [ ] Create shared module versioning strategy (`docs/coordination/shared_module_versioning.md`)
+- [ ] Define semantic versioning for shared modules
+- [ ] Define compatibility guarantees (backward compatibility requirements)
+- [ ] Create migration guides template
+- [ ] Document current shared modules and their versions
+
+**Delegated to Other Agents** (in next coordination plan):
+- **All Agents**: Review and follow release coordination process
+- **All Agents**: Review and follow shared module versioning strategy
+- **All Agents**: Create migration guides when APIs change
+- **Shared Module Owners** (Aurora, Skate): Implement versioning for shared modules
+
+**Deliverables**:
+- `docs/coordination/release_coordination.md` — Release coordination process
+- `docs/coordination/shared_module_versioning.md` — Shared module versioning strategy
+- Migration guides template
+- Shared module version registry
+
+**Dependencies**:
+- **Needs**: All agents to follow release coordination
+- **Provides**: Smooth release process and module versioning
+- **Coordinates with**: All agents (release coordination)
+
+---
+
 ## Coordination Points
 
 ### With Grain Database Agent

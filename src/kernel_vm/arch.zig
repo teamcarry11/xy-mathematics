@@ -3,7 +3,6 @@
 //! Grain Style: Explicit types (u32/u64 not usize), static allocation, comprehensive assertions.
 
 const std = @import("std");
-const Debug = @import("debug.zig");
 
 /// Target architecture.
 /// Why: Specify which architecture to emulate.

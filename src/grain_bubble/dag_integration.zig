@@ -128,7 +128,7 @@ pub const DagIntegration = struct {
         }
         // Record event in DAG (simplified for Phase 3).
         // Full implementation will create DAG event node.
-        _ = event;
+        std.debug.assert(@intFromPtr(event) != 0);
         return true;
     }
 

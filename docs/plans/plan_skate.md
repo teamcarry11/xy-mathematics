@@ -475,10 +475,11 @@ Grain Skate Terminal Silo Field Agent is responsible for building Grain Skate (k
 **Implementation Steps**:
 1. ✅ Create AI insights module foundation
 2. ✅ Store AI suggestions as DAG events
-3. ⏳ Integrate with `src/aurora_glm46.zig` (GLM-4.6 client from Aurora)
-4. ⏳ Use vector embeddings for semantic similarity (Grain Court integration)
-5. ⏳ Visual indicators for AI-suggested connections
-6. ⏳ Test thoroughly with actual AI integration
+3. ✅ Integrate with `src/aurora_glm46.zig` (GLM-4.6 client from Aurora)
+4. ✅ Implement actual AI analysis (replace placeholders with GLM-4.6 calls)
+5. ⏳ Visual indicators for AI-suggested connections (graph renderer integration)
+6. ⏳ Use vector embeddings for semantic similarity (Grain Court integration - Future)
+7. ⏳ Test thoroughly with actual AI API calls (requires API key)
 
 **Dependencies**:
 - **Needs**: GLM-4.6 client from Aurora Agent (exists) ✅

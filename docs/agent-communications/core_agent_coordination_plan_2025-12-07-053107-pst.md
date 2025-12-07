@@ -267,15 +267,34 @@ Grain Research Agent (Research & Analysis) [Mostly independent, may integrate wi
 
 ### Grain Skate Agent
 
-**Current Priority**: Continue independent work
--   **Why**: Mostly independent, shared modules already coordinated
--   **Can Work In Parallel With**: All agents (except when coordinating shared modules)
+**Current Status**: Phase 4 & Phase 5 IN PROGRESS — Core Complete, UI/GLM-4.6 Integration Pending
+- Phase 2: Text Buffer Unification ✅ COMPLETE
+- Phase 3: DAG Integration ✅ COMPLETE
+- Phase 4: Temporal Knowledge Graph 🔄 IN PROGRESS (Core Complete, UI Pending)
+- Phase 5: AI-Powered Graph Insights 🔄 IN PROGRESS (Foundation Complete, GLM-4.6 Integration Pending)
+
+**Available from Grain Core Agent**:
+- ✅ HTTP Client (Phase 61) — Complete (for AI API calls)
+- ✅ WebSocket Support (Phase 61) — Complete (for future collaborative features)
+
+**Your Instructions**:
+1. Continue as you best recommend, given the context
+2. Remember to follow Grain Style (`~/xy-mathematics/docs/grain_style.md`) with `grain_case` function names and all the strict rules with all compiler warnings turned on
+3. Specifically enforce `grainwrap-100` and `grain validate-70`
+4. Use explicitly bound `u32`/`u64` not `usize`/`isize`, so our code is consistent across all compile target platforms
+5. Continue the next phase of implementation and when you're done update your `docs/plans/plan_skate.md` and `docs/tasks/tasks_skate.md` keeping the general summary `docs/plan.md` and `docs/tasks.md` in thinking
+6. Let us know when you need to check in with me about upcoming integration steps with the other agents so that we prevent accidental conflicts
+7. Make sure that all your agent-specific and integration new tests as well as existing tests pass that implement their API contracts
 
 **Next Steps**:
-1.  Continue syntax highlighting improvements
-2.  Continue graph features
-3.  Continue terminal improvements
-4.  Coordinate only when modifying shared modules
+- Phase 4: Add time slider UI component to graph renderer
+- Phase 4: Add animated transitions showing graph growth
+- Phase 5: Integrate with `src/aurora_glm46.zig` (GLM-4.6 client from Aurora)
+- Phase 5: Implement actual AI analysis (replace placeholders with GLM-4.6 calls)
+- Phase 5: Add visual indicators for AI-suggested connections
+- Test thoroughly with UI and AI integration
+
+**Can Work In Parallel With**: All agents (except when coordinating shared modules or Aurora's GLM-4.6 client)
 
 ### Grain Workspace Agent
 

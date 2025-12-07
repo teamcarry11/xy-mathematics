@@ -88,6 +88,7 @@ pub const SiloIntegration = struct {
         canvas_state: *const canvas.Canvas,
         buffer: []u8,
     ) u32 {
+        std.debug.assert(@intFromPtr(self) != 0);
         std.debug.assert(@intFromPtr(canvas_state) != 0);
         std.debug.assert(buffer.len >= MAX_SERIALIZED_CANVAS_SIZE);
         var offset: u32 = 0;
@@ -208,6 +209,7 @@ pub const SiloIntegration = struct {
         buffer: []const u8,
         canvas_state: *canvas.Canvas,
     ) bool {
+        std.debug.assert(@intFromPtr(self) != 0);
         std.debug.assert(@intFromPtr(canvas_state) != 0);
         std.debug.assert(buffer.len >= 12);
         var offset: u32 = 0;
@@ -364,9 +366,9 @@ pub const SiloIntegration = struct {
         const metadata = "canvas";
         // Store in Silo (simplified for Phase 3 - actual storage requires allocator).
         // Full implementation will use storage.put() with proper error handling.
-        _ = key;
-        _ = buffer[0..serialized_len];
-        _ = metadata;
+        std.debug.assert(key.len > 0);
+        std.debug.assert(serialized_len > 0);
+        std.debug.assert(metadata.len > 0);
         return true;
     }
 
@@ -385,7 +387,7 @@ pub const SiloIntegration = struct {
         var buffer: [MAX_SERIALIZED_CANVAS_SIZE]u8 = undefined;
         // Load from Silo (simplified for Phase 3 - actual loading requires allocator).
         // Full implementation will use storage.get() with proper error handling.
-        _ = key;
+        std.debug.assert(key.len > 0);
         const buffer_len: u32 = 0;
         if (buffer_len == 0) {
             return false;
@@ -399,6 +401,7 @@ pub const SiloIntegration = struct {
         comp: *const component.Component,
         buffer: []u8,
     ) u32 {
+        std.debug.assert(@intFromPtr(self) != 0);
         std.debug.assert(@intFromPtr(comp) != 0);
         std.debug.assert(buffer.len >= MAX_SERIALIZED_COMPONENT_SIZE);
         var offset: u32 = 0;
@@ -432,6 +435,7 @@ pub const SiloIntegration = struct {
         buffer: []const u8,
         comp: *component.Component,
     ) bool {
+        std.debug.assert(@intFromPtr(self) != 0);
         std.debug.assert(@intFromPtr(comp) != 0);
         std.debug.assert(buffer.len >= 16);
         var offset: u32 = 0;
@@ -492,9 +496,9 @@ pub const SiloIntegration = struct {
         const metadata = "component";
         // Store in Silo (simplified for Phase 3 - actual storage requires allocator).
         // Full implementation will use storage.put() with proper error handling.
-        _ = key;
-        _ = buffer[0..serialized_len];
-        _ = metadata;
+        std.debug.assert(key.len > 0);
+        std.debug.assert(serialized_len > 0);
+        std.debug.assert(metadata.len > 0);
         return true;
     }
 
@@ -513,7 +517,7 @@ pub const SiloIntegration = struct {
         var buffer: [MAX_SERIALIZED_COMPONENT_SIZE]u8 = undefined;
         // Load from Silo (simplified for Phase 3 - actual loading requires allocator).
         // Full implementation will use storage.get() with proper error handling.
-        _ = key;
+        std.debug.assert(key.len > 0);
         const buffer_len: u32 = 0;
         if (buffer_len == 0) {
             return false;

@@ -681,5 +681,156 @@ pub const FileManagerUI = struct {
 
         return @intCast(written.len);
     }
+
+    /// Open database file for storage operations.
+    // 2025-12-07-071409-pst: Phase 13 File Storage integration
+    pub fn open_database_file(
+        self: *FileManagerUI,
+        entry_id: u32,
+        mode: grain_core.file_storage.FileMode,
+    ) ?u32 {
+        // Precondition: Entry ID must be valid
+        std.debug.assert(entry_id > 0);
+        std.debug.assert(self.database_file_handles_len < MAX_DATABASE_FILE_HANDLES);
+
+        const entry = self.file_manager.find_file_entry(entry_id);
+        if (entry == null) {
+            return null;
+        }
+
+        if (self.database_file_handles_len >= MAX_DATABASE_FILE_HANDLES) {
+            return null;
+        }
+
+        const path_slice = entry.?.path[0..entry.?.path_len];
+        const current_time = @as(u64, @intCast(std.time.timestamp()));
+        const handle = self.file_storage_manager.open_file(path_slice, mode, current_time);
+        if (handle == null) {
+            return null;
+        }
+
+        var db_handle = DatabaseFileHandle{
+            .handle_id = handle.?.handle_id,
+            .entry_id = entry_id,
+            .filename = undefined,
+            .filename_len = handle.?.filename_len,
+            .active = true,
+        };
+
+        @memset(&db_handle.filename, 0);
+        const filename_len = @min(handle.?.filename_len, grain_core.file_storage.MAX_FILENAME_LEN);
+        @memcpy(db_handle.filename[0..filename_len], handle.?.filename[0..filename_len]);
+
+        var i: u32 = 0;
+        while (i < MAX_DATABASE_FILE_HANDLES) : (i += 1) {
+            if (self.database_file_handles[i] == null) {
+                self.database_file_handles[i] = db_handle;
+                self.database_file_handles_len += 1;
+                break;
+            }
+        }
+
+        // Postcondition: Database file handle must be added
+        std.debug.assert(self.database_file_handles_len > 0);
+
+        return handle.?.handle_id;
+    }
+
+    /// Close database file.
+    // 2025-12-07-071409-pst: Phase 13 File Storage integration
+    pub fn close_database_file(
+        self: *FileManagerUI,
+        handle_id: u32,
+    ) bool {
+        // Precondition: Handle ID must be valid
+        std.debug.assert(handle_id > 0);
+
+        const closed = self.file_storage_manager.close_file(handle_id);
+        if (!closed) {
+            return false;
+        }
+
+        var i: u32 = 0;
+        while (i < self.database_file_handles_len) : (i += 1) {
+            if (self.database_file_handles[i]) |*db_handle| {
+                if (db_handle.handle_id == handle_id) {
+                    db_handle.active = false;
+                    self.database_file_handles_len -= 1;
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /// Get database file handle by entry ID.
+    // 2025-12-07-071409-pst: Phase 13 File Storage integration
+    pub fn get_database_file_handle(
+        self: *const FileManagerUI,
+        entry_id: u32,
+    ) ?*const DatabaseFileHandle {
+        // Precondition: Entry ID must be valid
+        std.debug.assert(entry_id > 0);
+
+        var i: u32 = 0;
+        while (i < self.database_file_handles_len) : (i += 1) {
+            if (self.database_file_handles[i]) |*db_handle| {
+                if (db_handle.entry_id == entry_id and db_handle.active) {
+                    return db_handle;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /// Get all open database file handles.
+    // 2025-12-07-071409-pst: Phase 13 File Storage integration
+    pub fn get_all_database_file_handles(
+        self: *const FileManagerUI,
+        handles: []?*const DatabaseFileHandle,
+        handles_len: *u32,
+    ) void {
+        // Precondition: Handles buffer must be valid
+        std.debug.assert(handles.len > 0);
+        std.debug.assert(handles_len != null);
+
+        handles_len.* = 0;
+
+        var i: u32 = 0;
+        while (i < self.database_file_handles_len and handles_len.* < handles.len) : (i += 1) {
+            if (self.database_file_handles[i]) |*db_handle| {
+                if (db_handle.active) {
+                    handles[handles_len.*] = db_handle;
+                    handles_len.* += 1;
+                }
+            }
+        }
+    }
+
+    /// Check if file is a database file (by extension).
+    // 2025-12-07-071409-pst: Phase 13 File Storage integration
+    pub fn is_database_file(
+        self: *const FileManagerUI,
+        entry_id: u32,
+    ) bool {
+        // Precondition: Entry ID must be valid
+        std.debug.assert(entry_id > 0);
+
+        _ = self; // Suppress unused warning
+
+        const entry = self.file_manager.find_file_entry(entry_id);
+        if (entry == null) {
+            return false;
+        }
+
+        const name_slice = entry.?.name[0..entry.?.name_len];
+        if (std.mem.endsWith(u8, name_slice, ".db") or std.mem.endsWith(u8, name_slice, ".sqlite")) {
+            return true;
+        }
+
+        return false;
+    }
 };
 

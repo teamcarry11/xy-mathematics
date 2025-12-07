@@ -79,7 +79,7 @@ test "query by tag" {
     _ = try engine.collect(title3, content3, &tags3);
 
     const filter = QueryFilter{ .tag = "common" };
-    const result = try engine.query(filter);
+    var result = try engine.query(filter);
     defer result.deinit();
 
     try testing.expect(result.entries_len == 2);
@@ -102,7 +102,7 @@ test "query by title contains" {
     _ = try engine.collect(title2, content2, &tags2);
 
     const filter = QueryFilter{ .title_contains = "Python" };
-    const result = try engine.query(filter);
+    var result = try engine.query(filter);
     defer result.deinit();
 
     try testing.expect(result.entries_len == 1);
@@ -125,7 +125,7 @@ test "query by content contains" {
     _ = try engine.collect(title2, content2, &tags2);
 
     const filter = QueryFilter{ .content_contains = "research" };
-    const result = try engine.query(filter);
+    var result = try engine.query(filter);
     defer result.deinit();
 
     try testing.expect(result.entries_len == 1);
@@ -150,7 +150,7 @@ test "query by date range" {
         .created_after = before,
         .created_before = after,
     };
-    const result = try engine.query(filter);
+    var result = try engine.query(filter);
     defer result.deinit();
 
     try testing.expect(result.entries_len == 1);
@@ -175,7 +175,7 @@ test "query with multiple filters" {
         .tag = "research",
         .title_contains = "Python",
     };
-    const result = try engine.query(filter);
+    var result = try engine.query(filter);
     defer result.deinit();
 
     try testing.expect(result.entries_len == 1);
@@ -188,7 +188,7 @@ test "query returns empty result" {
     defer engine.deinit();
 
     const filter = QueryFilter{ .tag = "nonexistent" };
-    const result = try engine.query(filter);
+    var result = try engine.query(filter);
     defer result.deinit();
 
     try testing.expect(result.entries_len == 0);
@@ -210,7 +210,7 @@ test "query limits results" {
     }
 
     const filter = QueryFilter{ .tag = "test" };
-    const result = try engine.query(filter);
+    var result = try engine.query(filter);
     defer result.deinit();
 
     try testing.expect(result.entries_len <= MAX_QUERY_RESULTS);
@@ -246,7 +246,7 @@ test "query result deinit" {
     _ = try engine.collect(title, content, &tags);
 
     const filter = QueryFilter{ .tag = "test" };
-    const result = try engine.query(filter);
+    var result = try engine.query(filter);
 
     try testing.expect(result.entries_len == 1);
     result.deinit();

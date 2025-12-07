@@ -21,7 +21,7 @@ const std = @import("std");
 pub const event_bus = @import("event_bus.zig");
 
 // Agent coordinator for agent registry and coordination.
-// pub const agent_coordinator = @import("agent_coordinator.zig");
+pub const agent_coordinator = @import("agent_coordinator.zig");
 
 // Workflow engine for DAG-based workflow execution.
 // pub const workflow_engine = @import("workflow_engine.zig");
@@ -34,6 +34,10 @@ pub const EventBus = event_bus.EventBus;
 pub const EventType = event_bus.EventType;
 pub const Event = event_bus.Event;
 
-// pub const AgentCoordinator = agent_coordinator.AgentCoordinator;
+pub const AgentCoordinator = agent_coordinator.AgentCoordinator;
+pub const Agent = agent_coordinator.Agent;
+pub const AgentStatus = agent_coordinator.AgentStatus;
+pub const AgentCapability = agent_coordinator.AgentCapability;
+pub const RpcRequest = agent_coordinator.RpcRequest;
 // pub const WorkflowEngine = workflow_engine.WorkflowEngine;
 // pub const WorkflowVisualizer = workflow_visualizer.WorkflowVisualizer;

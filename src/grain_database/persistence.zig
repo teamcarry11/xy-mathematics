@@ -39,6 +39,7 @@ pub const PersistenceManager = struct {
             .wal_manager = wal_manager.WalManager.init(),
             .index_manager = index_manager.IndexManager.init(),
             .backup_manager = backup_manager.BackupManager.init(),
+            .multi_page_manager = multi_page_record.MultiPageRecordManager.init(),
             .database_filename = undefined,
             .database_filename_len = 0,
             .is_initialized = false,

@@ -70,3 +70,51 @@ test "dag integration multiple versions" {
     std.debug.assert(version2.? != version3.?);
 }
 
+test "dag integration get event history" {
+    var integration = dag_integration.DagIntegration.init();
+    var events: [8]dag_integration.DesignEvent = undefined;
+    var i: u32 = 0;
+    while (i < events.len) : (i += 1) {
+        events[i] = dag_integration.DesignEvent.init();
+    }
+    const canvas_id: u32 = 1;
+    const count = integration.get_event_history(canvas_id, events[0..]);
+    // Returns 0 when DAG not set (expected for Phase 3).
+    std.debug.assert(count == 0);
+}
+
+test "dag integration create version snapshot" {
+    var integration = dag_integration.DagIntegration.init();
+    const canvas_id: u32 = 1;
+    const event_id: u64 = 100;
+    const description = "Snapshot at event 100";
+    const version_id = integration.create_version_snapshot(
+        canvas_id,
+        event_id,
+        description,
+    );
+    std.debug.assert(version_id != null);
+    std.debug.assert(version_id.? > 0);
+    std.debug.assert(integration.design_history_len == 1);
+    if (integration.get_version(version_id.?)) |version| {
+        std.debug.assert(version.event_id == event_id);
+        std.debug.assert(version.canvas_id == canvas_id);
+    }
+}
+
+test "dag integration load version snapshot" {
+    var integration = dag_integration.DagIntegration.init();
+    const canvas_id: u32 = 1;
+    const event_id: u64 = 200;
+    const description = "Snapshot at event 200";
+    const version_id = integration.create_version_snapshot(
+        canvas_id,
+        event_id,
+        description,
+    );
+    std.debug.assert(version_id != null);
+    const loaded_event_id = integration.load_version_snapshot(version_id.?);
+    std.debug.assert(loaded_event_id != null);
+    std.debug.assert(loaded_event_id.? == event_id);
+}
+

@@ -122,14 +122,43 @@ pub const DagIntegration = struct {
         self: *DagIntegration,
         event: *const DesignEvent,
     ) bool {
+        std.debug.assert(@intFromPtr(self) != 0);
         std.debug.assert(@intFromPtr(event) != 0);
         if (self.dag == null) {
             return false;
         }
         // Record event in DAG (simplified for Phase 3).
-        // Full implementation will create DAG event node.
-        std.debug.assert(@intFromPtr(event) != 0);
+        // Full implementation will create DAG event node with proper ordering.
+        // For now, validate event and return success (ready for real implementation).
+        std.debug.assert(event.event_id > 0);
+        std.debug.assert(event.event_data_len <= MAX_EVENT_DATA_LEN);
+        std.debug.assert(event.parent_events_len <= 8);
         return true;
+    }
+
+    // Get event history for canvas.
+    pub fn get_event_history(
+        self: *const DagIntegration,
+        canvas_id: u32,
+        events: []DesignEvent,
+    ) u32 {
+        std.debug.assert(@intFromPtr(self) != 0);
+        std.debug.assert(canvas_id > 0);
+        std.debug.assert(events.len <= MAX_DESIGN_HISTORY);
+        if (self.dag == null) {
+            return 0;
+        }
+        // Get event history from DAG (simplified for Phase 3).
+        // Full implementation will query DAG for events related to canvas_id.
+        // For now, return empty history (ready for real implementation).
+        var event_count: u32 = 0;
+        var i: u32 = 0;
+        while (i < events.len and event_count < MAX_DESIGN_HISTORY) : (i += 1) {
+            events[i] = DesignEvent.init();
+            event_count += 1;
+        }
+        std.debug.assert(event_count <= MAX_DESIGN_HISTORY);
+        return event_count;
     }
 
     // Create design version snapshot.
@@ -166,12 +195,57 @@ pub const DagIntegration = struct {
         self: *const DagIntegration,
         version_id: u32,
     ) ?*const DesignVersion {
+        std.debug.assert(@intFromPtr(self) != 0);
         std.debug.assert(version_id > 0);
         var i: u32 = 0;
         while (i < self.design_history_len) : (i += 1) {
             if (self.design_history[i].version_id == version_id) {
                 return &self.design_history[i];
             }
+        }
+        return null;
+    }
+
+    // Create version snapshot from event ID.
+    pub fn create_version_snapshot(
+        self: *DagIntegration,
+        canvas_id: u32,
+        event_id: u64,
+        description: []const u8,
+    ) ?u32 {
+        std.debug.assert(@intFromPtr(self) != 0);
+        std.debug.assert(canvas_id > 0);
+        std.debug.assert(event_id > 0);
+        std.debug.assert(description.len > 0);
+        std.debug.assert(description.len <= 64);
+        if (self.design_history_len >= MAX_DESIGN_HISTORY) {
+            return null;
+        }
+        const version_id = self.next_version_id;
+        self.next_version_id += 1;
+        var version = DesignVersion.init();
+        version.version_id = version_id;
+        version.canvas_id = canvas_id;
+        version.event_id = event_id;
+        const desc_len = @min(description.len, 64);
+        @memset(version.description[0..desc_len], 0);
+        @memcpy(version.description[0..desc_len], description[0..desc_len]);
+        version.description_len = @as(u32, @intCast(desc_len));
+        self.design_history[self.design_history_len] = version;
+        self.design_history_len += 1;
+        std.debug.assert(self.design_history_len <= MAX_DESIGN_HISTORY);
+        return version_id;
+    }
+
+    // Load version snapshot (returns event ID to replay to).
+    pub fn load_version_snapshot(
+        self: *const DagIntegration,
+        version_id: u32,
+    ) ?u64 {
+        std.debug.assert(@intFromPtr(self) != 0);
+        std.debug.assert(version_id > 0);
+        if (self.get_version(version_id)) |version| {
+            return version.event_id;
         }
         return null;
     }

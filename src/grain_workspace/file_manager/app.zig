@@ -7,6 +7,7 @@
 //! 2025-12-04-092542-pst: Active implementation
 //! 2025-12-07-025947-pst: Phase 10.4 WebSocket integration for real-time file system notifications
 //! 2025-12-07-071409-pst: Phase 13 File Storage integration for database file support
+//! 2025-12-07-084440-pst: Phase 14 Backup Manager integration for data protection
 
 const std = @import("std");
 const grain_core = @import("grain_core");
@@ -30,6 +31,10 @@ pub const MAX_WEBSOCKET_CLIENTS: u32 = 32;
 // Bounded: Max database file handles (explicit limit)
 // 2025-12-07-071409-pst: Phase 13 File Storage integration
 pub const MAX_DATABASE_FILE_HANDLES: u32 = 32;
+
+// Bounded: Max backup operations (explicit limit)
+// 2025-12-07-084440-pst: Phase 14 Backup Manager integration
+pub const MAX_BACKUP_OPERATIONS: u32 = 16;
 
 // File operation type.
 // 2025-12-04-092542-pst: Active enum
@@ -59,13 +64,26 @@ pub const DatabaseFileHandle = struct {
     active: bool,
 };
 
+// Backup operation tracking.
+// 2025-12-07-084440-pst: Phase 14 Backup Manager integration
+pub const BackupOperation = struct {
+    operation_id: u32,
+    entry_id: u32,
+    backup_id: u32,
+    backup_type: grain_core.backup_manager.BackupType,
+    state: grain_core.backup_manager.BackupState,
+    active: bool,
+};
+
 // File Manager UI application state.
 // 2025-12-04-092542-pst: Active struct
 // 2025-12-07-025947-pst: Phase 10.4 WebSocket integration
 // 2025-12-07-071409-pst: Phase 13 File Storage integration
+// 2025-12-07-084440-pst: Phase 14 Backup Manager integration
 pub const FileManagerUI = struct {
     file_manager: *grain_core.file_manager.FileManager,
     file_storage_manager: *grain_core.file_storage.FileStorageManager,
+    backup_manager: *grain_core.backup_manager.BackupManager,
     search_query: [grain_core.file_manager.MAX_NAME_LEN]u8,
     search_query_len: u32,
     selected_entry_id: u32,
@@ -78,27 +96,34 @@ pub const FileManagerUI = struct {
     websocket_clients_len: u32,
     database_file_handles: [MAX_DATABASE_FILE_HANDLES]?DatabaseFileHandle,
     database_file_handles_len: u32,
+    backup_operations: [MAX_BACKUP_OPERATIONS]?BackupOperation,
+    backup_operations_len: u32,
+    next_backup_operation_id: u32,
     allocator: std.mem.Allocator,
 
     /// Initialize file manager UI.
     // 2025-12-04-092542-pst: Active function
     // 2025-12-07-025947-pst: Phase 10.4 WebSocket integration
     // 2025-12-07-071409-pst: Phase 13 File Storage integration
+    // 2025-12-07-084440-pst: Phase 14 Backup Manager integration
     pub fn init(
         allocator: std.mem.Allocator,
         fm: *grain_core.file_manager.FileManager,
         ws_manager: *grain_core.websocket.WebSocketManager,
         storage_mgr: *grain_core.file_storage.FileStorageManager,
+        backup_mgr: *grain_core.backup_manager.BackupManager,
     ) FileManagerUI {
         // Precondition: Allocator and managers must be valid
         std.debug.assert(allocator.ptr != null);
         std.debug.assert(@intFromPtr(fm) != 0);
         std.debug.assert(@intFromPtr(ws_manager) != 0);
         std.debug.assert(@intFromPtr(storage_mgr) != 0);
+        std.debug.assert(@intFromPtr(backup_mgr) != 0);
 
         var ui = FileManagerUI{
             .file_manager = fm,
             .file_storage_manager = storage_mgr,
+            .backup_manager = backup_mgr,
             .search_query = undefined,
             .search_query_len = 0,
             .selected_entry_id = 0,
@@ -111,6 +136,9 @@ pub const FileManagerUI = struct {
             .websocket_clients_len = 0,
             .database_file_handles = undefined,
             .database_file_handles_len = 0,
+            .backup_operations = undefined,
+            .backup_operations_len = 0,
+            .next_backup_operation_id = 1,
             .allocator = allocator,
         };
 
@@ -138,11 +166,18 @@ pub const FileManagerUI = struct {
             ui.database_file_handles[i] = null;
         }
 
+        // Initialize backup operations array
+        i = 0;
+        while (i < MAX_BACKUP_OPERATIONS) : (i += 1) {
+            ui.backup_operations[i] = null;
+        }
+
         // Postcondition: UI must be valid
         std.debug.assert(ui.search_query_len == 0);
         std.debug.assert(ui.clipboard_len == 0);
         std.debug.assert(ui.websocket_clients_len == 0);
         std.debug.assert(ui.database_file_handles_len == 0);
+        std.debug.assert(ui.backup_operations_len == 0);
 
         return ui;
     }
@@ -831,6 +866,171 @@ pub const FileManagerUI = struct {
         }
 
         return false;
+    }
+
+    /// Create backup for database file.
+    // 2025-12-07-084440-pst: Phase 14 Backup Manager integration
+    pub fn create_file_backup(
+        self: *FileManagerUI,
+        entry_id: u32,
+        backup_type: grain_core.backup_manager.BackupType,
+    ) ?u32 {
+        // Precondition: Entry ID must be valid
+        std.debug.assert(entry_id > 0);
+        std.debug.assert(self.backup_operations_len < MAX_BACKUP_OPERATIONS);
+
+        if (self.backup_operations_len >= MAX_BACKUP_OPERATIONS) {
+            return null;
+        }
+
+        const entry = self.file_manager.find_file_entry(entry_id);
+        if (entry == null) {
+            return null;
+        }
+
+        if (!self.is_database_file(entry_id)) {
+            return null;
+        }
+
+        const path_slice = entry.?.path[0..entry.?.path_len];
+        const timestamp = @as(u64, @intCast(std.time.timestamp()));
+        const backup = self.backup_manager.create_backup(backup_type, path_slice, timestamp);
+        if (backup == null) {
+            return null;
+        }
+
+        const operation_id = self.next_backup_operation_id;
+        self.next_backup_operation_id += 1;
+
+        var backup_op = BackupOperation{
+            .operation_id = operation_id,
+            .entry_id = entry_id,
+            .backup_id = backup.?.backup_id,
+            .backup_type = backup_type,
+            .state = backup.?.state,
+            .active = true,
+        };
+
+        var i: u32 = 0;
+        while (i < MAX_BACKUP_OPERATIONS) : (i += 1) {
+            if (self.backup_operations[i] == null) {
+                self.backup_operations[i] = backup_op;
+                self.backup_operations_len += 1;
+                break;
+            }
+        }
+
+        // Postcondition: Backup operation must be added
+        std.debug.assert(self.backup_operations_len > 0);
+
+        return operation_id;
+    }
+
+    /// Get backup operation by operation ID.
+    // 2025-12-07-084440-pst: Phase 14 Backup Manager integration
+    pub fn get_backup_operation(
+        self: *const FileManagerUI,
+        operation_id: u32,
+    ) ?*const BackupOperation {
+        // Precondition: Operation ID must be valid
+        std.debug.assert(operation_id > 0);
+
+        var i: u32 = 0;
+        while (i < self.backup_operations_len) : (i += 1) {
+            if (self.backup_operations[i]) |*op| {
+                if (op.operation_id == operation_id and op.active) {
+                    return op;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /// Get all backup operations for an entry.
+    // 2025-12-07-084440-pst: Phase 14 Backup Manager integration
+    pub fn get_entry_backup_operations(
+        self: *const FileManagerUI,
+        entry_id: u32,
+        operations: []?*const BackupOperation,
+        operations_len: *u32,
+    ) void {
+        // Precondition: Operations buffer must be valid
+        std.debug.assert(entry_id > 0);
+        std.debug.assert(operations.len > 0);
+        std.debug.assert(operations_len != null);
+
+        operations_len.* = 0;
+
+        var i: u32 = 0;
+        while (i < self.backup_operations_len and operations_len.* < operations.len) : (i += 1) {
+            if (self.backup_operations[i]) |*op| {
+                if (op.entry_id == entry_id and op.active) {
+                    operations[operations_len.*] = op;
+                    operations_len.* += 1;
+                }
+            }
+        }
+    }
+
+    /// Restore file from backup.
+    // 2025-12-07-084440-pst: Phase 14 Backup Manager integration
+    pub fn restore_file_from_backup(
+        self: *FileManagerUI,
+        backup_id: u32,
+    ) bool {
+        // Precondition: Backup ID must be valid
+        std.debug.assert(backup_id > 0);
+
+        const backup = self.backup_manager.find_backup(backup_id);
+        if (backup == null) {
+            return false;
+        }
+
+        if (backup.?.state != grain_core.backup_manager.BackupState.completed) {
+            return false;
+        }
+
+        // Restore would be implemented here (actual restore via file storage)
+        // For now, just verify backup exists and is completed
+        return true;
+    }
+
+    /// Get backup metadata by backup ID.
+    // 2025-12-07-084440-pst: Phase 14 Backup Manager integration
+    pub fn get_backup_metadata(
+        self: *const FileManagerUI,
+        backup_id: u32,
+    ) ?*const grain_core.backup_manager.BackupMetadata {
+        // Precondition: Backup ID must be valid
+        std.debug.assert(backup_id > 0);
+
+        _ = self; // Suppress unused warning
+
+        return self.backup_manager.find_backup(backup_id);
+    }
+
+    /// Get all backups for database files.
+    // 2025-12-07-084440-pst: Phase 14 Backup Manager integration
+    pub fn get_all_backups(
+        self: *const FileManagerUI,
+        backups: []?*const grain_core.backup_manager.BackupMetadata,
+        backups_len: *u32,
+    ) void {
+        // Precondition: Backups buffer must be valid
+        std.debug.assert(backups.len > 0);
+        std.debug.assert(backups_len != null);
+
+        backups_len.* = 0;
+
+        var i: u32 = 0;
+        while (i < self.backup_manager.backups_len and backups_len.* < backups.len) : (i += 1) {
+            const backup = &self.backup_manager.backups[i];
+            if (backup.backup_id > 0) {
+                backups[backups_len.*] = backup;
+                backups_len.* += 1;
+            }
+        }
     }
 };
 

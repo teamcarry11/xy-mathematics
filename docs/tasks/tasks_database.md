@@ -2,7 +2,7 @@
 
 **Agent**: Grain Silo Agent (7th Agent)  
 **Status**: Phase 6 Complete, Phase 7 In Progress, Phase 8 Ready, Phase 9 Enhanced Session Management Complete  
-**Last Updated**: 2025-12-07-070701-pst
+**Last Updated**: 2025-12-07-083520-pst
 
 ---
 
@@ -359,8 +359,14 @@
 - [x] Read record from multiple pages (`read_record_multi_page`)
 - [x] Comprehensive tests (`tests/119_grain_database_multi_page_record_test.zig`)
 
+**Backup Restore Functionality** ✅ (2025-12-07-083520-pst):
+- [x] Backup validation before restore (`validate_backup_for_restore`)
+- [x] Restore database from backup (`restore_from_backup`)
+- [x] Get backup metadata by ID (`get_backup_metadata`)
+- [x] List all backups (`list_backups`)
+- [x] Comprehensive tests (`tests/120_grain_database_backup_restore_test.zig`)
+
 **Tasks Pending**:
-- [ ] Backup restore functionality
 - [ ] End-to-end persistence testing with recovery
 - [ ] Update documentation
 

@@ -3550,6 +3550,20 @@ pub fn build(b: *std.Build) void {
     const grain_database_multi_page_record_tests_run = b.addRunArtifact(grain_database_multi_page_record_tests);
     test_step.dependOn(&grain_database_multi_page_record_tests_run.step);
 
+    // Grain Database Backup Restore Tests
+    const grain_database_backup_restore_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/120_grain_database_backup_restore_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_database", .module = grain_database_module },
+            },
+        }),
+    });
+    const grain_database_backup_restore_tests_run = b.addRunArtifact(grain_database_backup_restore_tests);
+    test_step.dependOn(&grain_database_backup_restore_tests_run.step);
+
     // RISC-V Logo Display Program
     const riscv_logo_exe = b.addExecutable(.{
         .name = "riscv_logo",

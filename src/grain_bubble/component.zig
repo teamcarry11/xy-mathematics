@@ -228,6 +228,21 @@ pub const ComponentLibrary = struct {
         return null;
     }
 
+    // Get component by ID (mutable).
+    pub fn get_component_mut(
+        self: *ComponentLibrary,
+        component_id: u32,
+    ) ?*Component {
+        std.debug.assert(component_id > 0);
+        var i: u32 = 0;
+        while (i < self.components_len) : (i += 1) {
+            if (self.components[i].id == component_id) {
+                return &self.components[i];
+            }
+        }
+        return null;
+    }
+
     // Get component by name.
     pub fn get_component_by_name(
         self: *const ComponentLibrary,

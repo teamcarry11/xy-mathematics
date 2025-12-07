@@ -114,6 +114,7 @@ This document outlines creative enhancements for Grain Skate Agent, integrating 
 
 **Implementation**:
 - Integrate with `src/aurora_glm46.zig` (GLM-4.6 client from Aurora)
+- Use HTTP client (`src/grain_core/http_client.zig`) for external AI API calls if needed
 - Use vector embeddings for semantic similarity (Grain Court integration)
 - Store AI suggestions as DAG events (accept/reject tracking)
 - Visual indicators for AI-suggested connections
@@ -575,10 +576,12 @@ This document outlines creative enhancements for Grain Skate Agent, integrating 
 - **Export Pipeline**: PDF/HTML export patterns
 
 ### With Core Agent
-- **WebSocket**: Real-time collaboration (Phase 61 complete)
+- **WebSocket**: Real-time collaboration (Phase 61 complete) ✅
+- **HTTP Client**: External API calls for AI services, integrations (Phase 61 complete) ✅
 - **Grain Court**: Vector search for semantic similarity
 - **System Metrics**: Resource monitoring for terminal visualization
 - **Network Stack**: Network activity visualization
+- **DNS Resolver**: Hostname resolution for API endpoints (Phase 61 complete) ✅
 
 ### With Workspace Agent
 - **Desktop Apps**: Knowledge graph integration in desktop apps

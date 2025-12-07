@@ -432,8 +432,9 @@ Grain Skate Terminal Silo Field Agent is responsible for building Grain Skate (k
 
 **Dependencies**:
 - **Needs**: GLM-4.6 client from Aurora Agent (exists) ✅
+- **Needs**: HTTP client from Core Agent (Phase 61 complete) ✅
 - **Needs**: Grain Court (WSE spatial computing) for vector search
-- **Coordinates with**: Aurora Agent (GLM-4.6), Core Agent (Grain Court), Bubble Agent (visual design)
+- **Coordinates with**: Aurora Agent (GLM-4.6), Core Agent (HTTP client, Grain Court), Bubble Agent (visual design)
 
 **Cross-Platform**:
 - **Carry (Mobile)**: AI insights in mobile knowledge graph view
@@ -563,15 +564,23 @@ Grain Skate Terminal Silo Field Agent is responsible for building Grain Skate (k
 - **Phase 1.3**: Grain Core Agent ready to migrate (coordination document created)
 - **Phase 1.4**: Grain Skate Agent migrated `src/grain_skate/editor_renderer.zig` ✅ (2025-12-05-172208-pst)
 
+**Network Stack Integration** (Phase 61 Complete):
+- **WebSocket Support**: Real-time collaboration (Phase 6) ✅
+- **HTTP Client**: External API calls for AI services, integrations (Phase 5) ✅
+- **DNS Resolver**: Hostname resolution for API endpoints ✅
+- **Network Stack**: Network activity visualization (terminal features)
+
 **Coordination Notes**:
 - Grain Skate Agent created shared font renderer (Phase 1.1) ✅
 - Aurora Agent completed migration (Phase 1.2) ✅
 - Grain Core Agent is aware and ready (Phase 1.3)
 - Grain Skate Agent completed migration (Phase 1.4) ✅
+- Core Agent Phase 61 complete: HTTP client, WebSocket, DNS resolver available ✅
 
 **Future Coordination**:
 - **Compositor Integration**: Grain Skate needs to register its window with the Grain Core compositor
 - **System Services**: Potential integration with Grain OS system services (file manager, notifications)
+- **Grain Court**: Vector search for semantic similarity (AI-powered insights)
 
 ---
 

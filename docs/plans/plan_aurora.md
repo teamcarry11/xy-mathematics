@@ -2,7 +2,7 @@
 
 **Agent**: Grain Aurora IDE Dream Browser Agent (2nd Agent)  
 **Status**: Active — Foundation components, shared modules  
-**Last Updated**: 2025-12-06-232932-pst
+**Last Updated**: 2025-12-07-004326-pst
 
 ---
 
@@ -293,13 +293,14 @@ See [`docs/agent-communications/bubble_aurora_dag_sharing_analysis.md`](../agent
 - WebSocket support (Phase 61 complete) — Available for future use
 
 **Network Stack Support (Phase 61)**:
-- ✅ **Grain Core Agent Phase 61 — COMPLETE** (2025-12-06-131112-pst)
+- ✅ **Grain Core Agent Phase 61 — COMPLETE** (2025-12-07-004326-pst)
   - TCP/UDP Socket Support
   - WebSocket Support
   - DNS Resolution
   - Socket Options (reuse address, keep-alive, timeout)
+  - HTTP Client (GET, POST, PUT, DELETE requests)
 - Note: Aurora Agent currently uses stdio for LSP (standard) and has WebSocket for Dream Protocol (Phase 0.3)
-- Future: May use Core Agent WebSocket for additional real-time features
+- Future: May use Core Agent HTTP Client for external API calls or WebSocket for additional real-time features
 
 **File Storage Support (Phase 62)**:
 - ✅ **Grain Core Agent Phase 62 — COMPLETE** (2025-12-06-113038-pst)

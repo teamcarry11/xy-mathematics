@@ -201,3 +201,40 @@ test "find backup" {
     try testing.expect(found.?.backup_id == backup.?.backup_id);
 }
 
+test "get database handle id" {
+    var manager = PersistenceManager.init("test_handle.db");
+    _ = manager.create_database_file();
+    const handle_id = manager.get_database_handle_id();
+    try testing.expect(handle_id != null);
+}
+
+test "lock and unlock database file" {
+    var manager = PersistenceManager.init("test_lock.db");
+    _ = manager.create_database_file();
+    const handle_id = manager.get_database_handle_id();
+    try testing.expect(handle_id != null);
+    const locked = manager.lock_database_file(handle_id.?);
+    try testing.expect(locked);
+    const unlocked = manager.unlock_database_file(handle_id.?);
+    try testing.expect(unlocked);
+}
+
+test "close database file" {
+    var manager = PersistenceManager.init("test_close.db");
+    _ = manager.create_database_file();
+    const handle_id = manager.get_database_handle_id();
+    try testing.expect(handle_id != null);
+    const closed = manager.close_database_file(handle_id.?);
+    try testing.expect(closed);
+}
+
+test "validate database header" {
+    var manager = PersistenceManager.init("test_header.db");
+    _ = manager.create_database_file();
+    var header = file_storage.DatabaseFileHeader.init();
+    header.version = 1;
+    header.page_size = file_storage.PAGE_SIZE;
+    const valid = manager.validate_database_header(&header);
+    try testing.expect(valid);
+}
+

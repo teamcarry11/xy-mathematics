@@ -8,6 +8,7 @@
 
 const std = @import("std");
 const canvas = @import("canvas.zig");
+const component = @import("component.zig");
 
 // Bounded: Max PDF page width (points, 1 point = 1/72 inch).
 pub const MAX_PDF_WIDTH: u32 = 10000;
@@ -313,6 +314,38 @@ pub const PdfDocument = struct {
             }
         }
         self.write_footer();
+    }
+
+    // Export component variant to PDF.
+    pub fn export_component_variant(
+        self: *PdfDocument,
+        variant: *const component.ComponentVariant,
+    ) void {
+        std.debug.assert(@intFromPtr(variant) != 0);
+        // Export shapes from variant.
+        var shape_i: u32 = 0;
+        while (shape_i < variant.shapes_len) : (shape_i += 1) {
+            self.export_shape(&variant.shapes[shape_i]);
+        }
+        // Export texts from variant.
+        var text_i: u32 = 0;
+        while (text_i < variant.texts_len) : (text_i += 1) {
+            self.export_text(&variant.texts[text_i]);
+        }
+    }
+
+    // Export component to PDF (exports default variant).
+    pub fn export_component(
+        self: *PdfDocument,
+        comp: *const component.Component,
+    ) void {
+        std.debug.assert(@intFromPtr(comp) != 0);
+        if (comp.variants_len == 0) {
+            return;
+        }
+        // Export default variant (first variant).
+        const default_variant = &comp.variants[0];
+        self.export_component_variant(default_variant);
     }
 
     // Get PDF content as slice.

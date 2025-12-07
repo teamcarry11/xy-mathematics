@@ -184,6 +184,7 @@
 ### Tasks
 
 - [ ] Integrate with `src/aurora_glm46.zig` (GLM-4.6 client from Aurora)
+- [ ] Use HTTP client (`src/grain_core/http_client.zig`) for external AI API calls if needed
 - [ ] Use vector embeddings for semantic similarity (Grain Court integration)
 - [ ] Store AI suggestions as DAG events (accept/reject tracking)
 - [ ] Visual indicators for AI-suggested connections
@@ -209,8 +210,9 @@
 ### Dependencies
 
 - **Needs**: GLM-4.6 client from Aurora Agent (exists) ✅
+- **Needs**: HTTP client from Core Agent (Phase 61 complete) ✅
 - **Needs**: Grain Court (WSE spatial computing) for vector search
-- **Coordinates with**: Aurora Agent (GLM-4.6), Core Agent (Grain Court), Bubble Agent (visual design)
+- **Coordinates with**: Aurora Agent (GLM-4.6), Core Agent (HTTP client, Grain Court), Bubble Agent (visual design)
 
 ### Cross-Platform
 

@@ -594,6 +594,24 @@ pub fn build(b: *std.Build) void {
         }),
     });
 
+    // Dream Browser Parser module (for test imports)
+    const dream_browser_parser_module = b.addModule("dream_browser_parser", .{
+        .root_source_file = b.path("src/dream_browser_parser.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
+    const parser_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/115_dream_browser_parser_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "dream_browser_parser", .module = dream_browser_parser_module },
+            },
+        }),
+    });
+
     const route_tests = b.addTest(.{
         .root_module = b.createModule(.{
             .root_source_file = b.path("src/grain_route.zig"),
@@ -938,6 +956,8 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&run_editor_test_file.step);
     const run_viewport_tests = b.addRunArtifact(viewport_tests);
     test_step.dependOn(&run_viewport_tests.step);
+    const run_parser_tests = b.addRunArtifact(parser_tests);
+    test_step.dependOn(&run_parser_tests.step);
     const run_route_tests = b.addRunArtifact(route_tests);
     test_step.dependOn(&run_route_tests.step);
     const run_orchestrator_tests = b.addRunArtifact(orchestrator_tests);

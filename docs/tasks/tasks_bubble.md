@@ -248,7 +248,9 @@
 - [x] Update documentation ✅
 - [x] Implement canvas serialization/deserialization (binary format) ✅
 - [x] Implement component serialization/deserialization (binary format) ✅
-- [ ] Implement full shape/text serialization
+- [x] Implement full shape serialization/deserialization ✅
+- [x] Implement full text serialization/deserialization ✅
+- [x] Implement full layer serialization/deserialization ✅
 - [ ] Implement full vector search with Court compute
 - [ ] Implement full LLM inference with Court compute
 - [ ] Implement full DAG event recording

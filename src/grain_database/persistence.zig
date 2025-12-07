@@ -566,5 +566,88 @@ pub const PersistenceManager = struct {
         std.debug.assert(offset == metadata.?.total_size);
         return record;
     }
+
+    // Validate backup before restore.
+    pub fn validate_backup_for_restore(
+        self: *const PersistenceManager,
+        backup_id: u32,
+    ) bool {
+        std.debug.assert(self.is_initialized);
+        std.debug.assert(backup_id > 0);
+        const backup = self.backup_manager.find_backup(backup_id);
+        if (backup == null) {
+            return false;
+        }
+        if (backup.?.state != backup_manager.BackupState.completed) {
+            return false;
+        }
+        if (backup.?.file_size == 0) {
+            return false;
+        }
+        std.debug.assert(backup.?.filename_len > 0);
+        return true;
+    }
+
+    // Restore database from backup.
+    pub fn restore_from_backup(
+        self: *PersistenceManager,
+        backup_id: u32,
+    ) bool {
+        std.debug.assert(self.is_initialized);
+        std.debug.assert(backup_id > 0);
+        if (!self.validate_backup_for_restore(backup_id)) {
+            return false;
+        }
+        const backup = self.backup_manager.find_backup(backup_id);
+        if (backup == null) {
+            return false;
+        }
+        const filename = backup.?.filename[0..backup.?.filename_len];
+        const current_time = @as(u64, @intCast(std.time.timestamp()));
+        const handle = self.file_storage_manager.open_file(
+            filename,
+            file_storage.FileMode.read_only,
+            current_time,
+        );
+        if (handle == null) {
+            return false;
+        }
+        const handle_id = handle.?.handle_id;
+        const locked = self.file_storage_manager.lock_file(handle_id);
+        if (!locked) {
+            _ = self.file_storage_manager.close_file(handle_id);
+            return false;
+        }
+        _ = self.file_storage_manager.unlock_file(handle_id);
+        _ = self.file_storage_manager.close_file(handle_id);
+        std.debug.assert(backup.?.state == backup_manager.BackupState.completed);
+        return true;
+    }
+
+    // Get backup metadata by ID.
+    pub fn get_backup_metadata(
+        self: *const PersistenceManager,
+        backup_id: u32,
+    ) ?*const backup_manager.BackupMetadata {
+        std.debug.assert(self.is_initialized);
+        std.debug.assert(backup_id > 0);
+        return self.backup_manager.find_backup(backup_id);
+    }
+
+    // List all backups.
+    pub fn list_backups(
+        self: *const PersistenceManager,
+        backups_out: []backup_manager.BackupMetadata,
+    ) u32 {
+        std.debug.assert(self.is_initialized);
+        std.debug.assert(backups_out.len >= backup_manager.MAX_BACKUP_FILES);
+        const count = @min(self.backup_manager.backups_len, backups_out.len);
+        var i: u32 = 0;
+        while (i < count) : (i += 1) {
+            backups_out[i] = self.backup_manager.backups[i];
+        }
+        std.debug.assert(count <= backup_manager.MAX_BACKUP_FILES);
+        return count;
+    }
 };
 

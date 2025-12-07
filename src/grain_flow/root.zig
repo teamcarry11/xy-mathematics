@@ -24,7 +24,7 @@ pub const event_bus = @import("event_bus.zig");
 pub const agent_coordinator = @import("agent_coordinator.zig");
 
 // Workflow engine for DAG-based workflow execution.
-// pub const workflow_engine = @import("workflow_engine.zig");
+pub const workflow_engine = @import("workflow_engine.zig");
 
 // Workflow visualizer for visual workflow representation.
 // pub const workflow_visualizer = @import("workflow_visualizer.zig");
@@ -39,5 +39,11 @@ pub const Agent = agent_coordinator.Agent;
 pub const AgentStatus = agent_coordinator.AgentStatus;
 pub const AgentCapability = agent_coordinator.AgentCapability;
 pub const RpcRequest = agent_coordinator.RpcRequest;
-// pub const WorkflowEngine = workflow_engine.WorkflowEngine;
+pub const WorkflowEngine = workflow_engine.WorkflowEngine;
+pub const Workflow = workflow_engine.Workflow;
+pub const WorkflowNode = workflow_engine.WorkflowNode;
+pub const WorkflowEdge = workflow_engine.WorkflowEdge;
+pub const WorkflowStatus = workflow_engine.WorkflowStatus;
+pub const NodeStatus = workflow_engine.NodeStatus;
+pub const EdgeType = workflow_engine.EdgeType;
 // pub const WorkflowVisualizer = workflow_visualizer.WorkflowVisualizer;

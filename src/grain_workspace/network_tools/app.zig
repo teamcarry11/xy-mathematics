@@ -6,6 +6,7 @@
 //!
 //! 2025-12-04-102946-pst: Active implementation
 //! 2025-12-07-020824-pst: Phase 10.3 WebSocket integration for live statistics
+//! 2025-12-07-054458-pst: Phase 11 HTTP Client integration for API endpoint testing
 
 const std = @import("std");
 const grain_core = @import("grain_core");
@@ -86,12 +87,31 @@ pub const ConnectionInfo = struct {
     protocol: u8, // 6 = TCP, 17 = UDP
 };
 
+// HTTP test result structure.
+// 2025-12-07-054458-pst: Phase 11 HTTP Client integration
+pub const HttpTestResult = struct {
+    test_id: u32,
+    url: [grain_core.http_client.MAX_URL_LEN]u8,
+    url_len: u32,
+    method: grain_core.api_server.HttpMethod,
+    status_code: u16,
+    response_time_ms: u32,
+    success: bool,
+    timestamp: u64,
+};
+
+// Bounded: Max HTTP test results (explicit limit)
+// 2025-12-07-054458-pst: Phase 11 HTTP Client integration
+pub const MAX_HTTP_TEST_RESULTS: u32 = 64;
+
 // Network Tools application state.
 // 2025-12-04-102946-pst: Active struct
 // 2025-12-07-020824-pst: Phase 10.3 WebSocket integration
+// 2025-12-07-054458-pst: Phase 11 HTTP Client integration
 pub const NetworkToolsApp = struct {
     network_manager: *grain_core.network_manager.NetworkManager,
     dns_resolver: *grain_core.dns_resolver.DnsResolver,
+    http_client: *grain_core.http_client.HttpClient,
     devices: [MAX_NETWORK_DEVICES]?NetworkDevice,
     devices_len: u32,
     connections: [MAX_CONNECTIONS]?ConnectionInfo,
@@ -102,26 +122,33 @@ pub const NetworkToolsApp = struct {
     websocket_manager: *grain_core.websocket.WebSocketManager,
     websocket_clients: [MAX_WEBSOCKET_CLIENTS]u32,
     websocket_clients_len: u32,
+    http_test_results: [MAX_HTTP_TEST_RESULTS]?HttpTestResult,
+    http_test_results_len: u32,
+    next_http_test_id: u32,
     allocator: std.mem.Allocator,
 
     /// Initialize network tools application.
     // 2025-12-06-011616-pst: Active function
     // 2025-12-07-020824-pst: Phase 10.3 WebSocket integration
+    // 2025-12-07-054458-pst: Phase 11 HTTP Client integration
     pub fn init(
         allocator: std.mem.Allocator,
         nm: *grain_core.network_manager.NetworkManager,
         dns_res: *grain_core.dns_resolver.DnsResolver,
         ws_manager: *grain_core.websocket.WebSocketManager,
+        http_cli: *grain_core.http_client.HttpClient,
     ) NetworkToolsApp {
         // Precondition: Allocator and managers must be valid
         std.debug.assert(allocator.ptr != null);
         std.debug.assert(@intFromPtr(nm) != 0);
         std.debug.assert(@intFromPtr(dns_res) != 0);
         std.debug.assert(@intFromPtr(ws_manager) != 0);
+        std.debug.assert(@intFromPtr(http_cli) != 0);
 
         var app = NetworkToolsApp{
             .network_manager = nm,
             .dns_resolver = dns_res,
+            .http_client = http_cli,
             .devices = undefined,
             .devices_len = 0,
             .connections = undefined,
@@ -132,6 +159,9 @@ pub const NetworkToolsApp = struct {
             .websocket_manager = ws_manager,
             .websocket_clients = undefined,
             .websocket_clients_len = 0,
+            .http_test_results = undefined,
+            .http_test_results_len = 0,
+            .next_http_test_id = 1,
             .allocator = allocator,
         };
 
@@ -153,10 +183,17 @@ pub const NetworkToolsApp = struct {
             app.websocket_clients[i] = 0;
         }
 
+        // Initialize HTTP test results array
+        i = 0;
+        while (i < MAX_HTTP_TEST_RESULTS) : (i += 1) {
+            app.http_test_results[i] = null;
+        }
+
         // Postcondition: App must be valid
         std.debug.assert(app.devices_len == 0);
         std.debug.assert(app.connections_len == 0);
         std.debug.assert(app.websocket_clients_len == 0);
+        std.debug.assert(app.http_test_results_len == 0);
 
         return app;
     }

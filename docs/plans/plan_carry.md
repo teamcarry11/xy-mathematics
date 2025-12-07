@@ -1117,7 +1117,7 @@ While waiting for Grain Core Agent's API Server (Phase 59), we can prepare the A
    - Concurrent request support (max 32 requests) ✅
    - URL and header handling ✅
    - Integration with network stack and DNS resolver ✅
-   - Ready for Carry Agent API client integration ✅
+   - Carry Agent API client integration ✅ **COMPLETE** (2025-12-07-030339-pst)
 
 6. **DNS Resolution (Grain Core Agent Phase 61)**: ✅ **COMPLETE** (2025-12-05-231800-pst)
    - DNS resolver with bounded cache ✅

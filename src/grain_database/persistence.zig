@@ -13,6 +13,7 @@ const wal_manager = grain_core.wal_manager;
 const index_manager = grain_core.index_manager;
 const backup_manager = grain_core.backup_manager;
 const record_serialization = @import("record_serialization.zig");
+const index_entry_serialization = @import("index_entry_serialization.zig");
 const storage_engine = @import("storage_engine.zig");
 
 // Database persistence manager.
@@ -382,6 +383,96 @@ pub const PersistenceManager = struct {
                 value_len,
             );
             offset += record_size;
+        }
+        return null;
+    }
+
+    // Write index entry to file page.
+    pub fn write_index_entry_to_page(
+        self: *PersistenceManager,
+        entry: *const index_manager.IndexEntry,
+        page: *file_storage.FilePage,
+        offset: u32,
+    ) bool {
+        std.debug.assert(self.is_initialized);
+        std.debug.assert(entry != null);
+        std.debug.assert(page != null);
+        std.debug.assert(offset < file_storage.PAGE_SIZE);
+        const serialized_size = index_entry_serialization.calculate_serialized_size(
+            entry.key_len,
+            entry.value_len,
+        );
+        if (offset + serialized_size > file_storage.PAGE_SIZE) {
+            return false;
+        }
+        const written = index_entry_serialization.serialize_index_entry(
+            entry,
+            page.data[offset..],
+        );
+        if (written != serialized_size) {
+            return false;
+        }
+        page.is_dirty = true;
+        page.calculate_checksum();
+        std.debug.assert(written == serialized_size);
+        return true;
+    }
+
+    // Read index entry from file page.
+    pub fn read_index_entry_from_page(
+        self: *PersistenceManager,
+        page: *const file_storage.FilePage,
+        offset: u32,
+    ) ?index_manager.IndexEntry {
+        std.debug.assert(self.is_initialized);
+        std.debug.assert(page != null);
+        std.debug.assert(offset < file_storage.PAGE_SIZE);
+        if (offset + index_entry_serialization.INDEX_ENTRY_HEADER_SIZE > file_storage.PAGE_SIZE) {
+            return null;
+        }
+        const key_len = std.mem.readInt(u32, page.data[offset + 8..][0..4], .little);
+        const value_len = std.mem.readInt(u32, page.data[offset + 12..][0..4], .little);
+        const serialized_size = index_entry_serialization.calculate_serialized_size(
+            key_len,
+            value_len,
+        );
+        if (offset + serialized_size > file_storage.PAGE_SIZE) {
+            return null;
+        }
+        const entry = index_entry_serialization.deserialize_index_entry(
+            page.data[offset..][0..serialized_size],
+        );
+        return entry;
+    }
+
+    // Find index entry offset in page by record_id.
+    pub fn find_index_entry_offset_in_page(
+        self: *const PersistenceManager,
+        page: *const file_storage.FilePage,
+        record_id: u64,
+    ) ?u32 {
+        std.debug.assert(self.is_initialized);
+        std.debug.assert(page != null);
+        std.debug.assert(record_id > 0);
+        var offset: u32 = 0;
+        while (offset < file_storage.PAGE_SIZE) {
+            if (offset + index_entry_serialization.INDEX_ENTRY_HEADER_SIZE > file_storage.PAGE_SIZE) {
+                break;
+            }
+            const page_record_id = std.mem.readInt(u64, page.data[offset..][0..8], .little);
+            if (page_record_id == 0) {
+                break;
+            }
+            if (page_record_id == record_id) {
+                return offset;
+            }
+            const key_len = std.mem.readInt(u32, page.data[offset + 8..][0..4], .little);
+            const value_len = std.mem.readInt(u32, page.data[offset + 12..][0..4], .little);
+            const entry_size = index_entry_serialization.calculate_serialized_size(
+                key_len,
+                value_len,
+            );
+            offset += entry_size;
         }
         return null;
     }

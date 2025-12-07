@@ -1319,14 +1319,17 @@ While waiting for Grain Core Agent's API Server (Phase 59), we can prepare the A
 - Carry Agent is **ready** for API Server (Phase 59) ✅, Authentication Service (Phase 60) ✅, WebSocket Support (Phase 61) ✅, Socket Options (Phase 61) ✅, HTTP Client (Phase 61) ✅, DNS Resolution (Phase 61) ✅, and File System Enhancements (Phase 62) ✅
 - All core infrastructure is complete and ready for integration
 - Carry Agent has completed all core modules and is ready for integration
-- WebSocket client implementation is complete with message handling, keepalive, and connection management
+- WebSocket client implementation is complete with message handling, keepalive, and connection management ✅
+- ApiClient enhanced with external request support ✅
+- Email service for OTP delivery complete ✅
+- Acknowledged new Flow Agent (Workflow Orchestration) and Research Agent (Research & Analysis)
 - Socket options available for WebSocket client socket configuration
 - HTTP client available for API client integration and external API calls
 
 **Future Coordination**:
 - **API Integration**: ✅ Complete — Carry Agent's API clients integrated with Grain Core API Server
 - **Authentication**: ✅ Complete — Secure authentication integrated with Grain Core Authentication Service
-- **WebSocket**: ✅ Complete — WebSocket support available, ready for Carry Agent WebSocket client implementation
+- **WebSocket**: ✅ Complete — WebSocket client implementation complete with message handling, keepalive, and connection management
 - **HTTP Client**: ✅ Complete — HTTP client available for API client integration and external API calls
 - **Style System Unification**: Consult with Grain Core Agent about unifying mobile and desktop style systems (see `docs/grain_core_agent_style_unification_prompt.md`)
 
@@ -1353,6 +1356,31 @@ While waiting for Grain Core Agent's API Server (Phase 59), we can prepare the A
 - **API Integration**: When Grain Core Agent completes Phase 59, Carry Agent can connect to Database Agent's REST API
 - **Data Models**: Coordinate on data models for mobile app (user profiles, policy stances, etc.)
 - **Authentication**: Coordinate on authentication flow (JWT, OAuth, 2FA)
+
+---
+
+### With Grain Flow Agent (Workflow Orchestration)
+
+**Integration Points**:
+- **Event Bus**: May integrate with Flow Agent's event bus for mobile app event coordination
+- **Workflow Orchestration**: May use Flow Agent for complex mobile app workflows
+- **WebSocket**: Both agents use Core Agent's WebSocket support
+
+**Coordination Notes**:
+- Flow Agent is new and in initial planning phase
+- Potential integration for mobile app event coordination
+- Coordinate when Flow Agent's event bus is ready
+
+### With Grain Research Agent (Research & Analysis)
+
+**Integration Points**:
+- **Data Access**: May use Research Agent for research and analysis features in mobile apps
+- **API Integration**: Both agents may use Core Agent's API Server and HTTP Client
+
+**Coordination Notes**:
+- Research Agent is new and in initial planning phase
+- Potential integration for research features in mobile apps
+- Coordinate when Research Agent's capabilities are defined
 
 ---
 

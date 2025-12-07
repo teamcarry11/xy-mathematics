@@ -1,8 +1,8 @@
 # Grain Vantage Agent: Development Plan
 
 **Agent**: Grain Vantage Agent (1st Agent)  
-**Status**: Phase 5.1 Complete, Ready for Next Phase  
-**Last Updated**: 2025-12-07-033535-pst
+**Status**: Phase 5.4 Complete, Ready for Next Phase  
+**Last Updated**: 2025-12-07-042228-pst
 
 ---
 
@@ -415,9 +415,9 @@ Grain Vantage Agent is responsible for building the RISC-V64 virtual machine (Gr
 
 ---
 
-## Current Work: Phase 5.1 Complete, Ready for Next Phase
+## Current Work: Phase 5.4 Complete, Ready for Next Phase
 
-**Status**: Phase 5.1 Complete (Audio Device Management)  
+**Status**: Phase 5.4 Complete (Audio Device Management & Tests)  
 **Next Priority**: Coordinate with Grain Core Agent on audio API integration or plan next kernel feature
 
 ### Potential Next Phases
@@ -479,9 +479,11 @@ Grain Vantage Agent is responsible for building the RISC-V64 virtual machine (Gr
 - ✅ Audio device control (volume, mute) (Phase 5.1 - COMPLETE)
 - ⏳ Audio I/O syscalls (Phase 5.3 - PLANNED)
 - ✅ Device selection (output/input) (Phase 5.1 - COMPLETE)
+- ✅ Comprehensive tests (Phase 5.4 - COMPLETE)
 
 **Completed Work**:
 - **Phase 5.1: Audio Device Management** (2025-12-07-033535-pst) ✅ **COMPLETE**
+- **Phase 5.4: Audio Tests** (2025-12-07-042228-pst) ✅ **COMPLETE**
   - Audio device management module (`src/kernel/audio.zig`)
   - Device structures (`AudioDevice`, `AudioDeviceType`, `AudioDeviceState`)
   - Device manager with bounded allocation (MAX_AUDIO_DEVICES: 16)
@@ -498,6 +500,8 @@ Grain Vantage Agent is responsible for building the RISC-V64 virtual machine (Gr
     - `audio_set_master_volume` (#126) — Set master volume
     - `audio_set_master_mute` (#127) — Set master mute state
     - `audio_get_device` (#128) — Get device information
+  - Comprehensive test suite (`tests/089_audio_device_test.zig`)
+  - Tests cover device creation, volume/mute control, state management, active device selection, master controls, error handling, and multiple device scenarios
 
 **Dependencies**:
 - **Provides**: Audio syscalls (for Grain Core Agent Audio Manager)

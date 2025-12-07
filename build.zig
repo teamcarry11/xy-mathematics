@@ -498,19 +498,6 @@ pub fn build(b: *std.Build) void {
         }),
     });
 
-    // Editor test file (separate test file for editor operations)
-    // Note: Tests editor functionality without requiring LSP server
-    const editor_test_file = b.addTest(.{
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/113_aurora_editor_test.zig"),
-            .target = target,
-            .optimize = optimize,
-            .imports = &.{
-                .{ .name = "aurora_editor", .module = aurora_editor_module },
-            },
-        }),
-    });
-
     const ai_provider_tests = b.addTest(.{
         .root_module = b.createModule(.{
             .root_source_file = b.path("src/aurora_ai_provider.zig"),
@@ -567,6 +554,24 @@ pub fn build(b: *std.Build) void {
             .optimize = optimize,
             .imports = &.{
                 .{ .name = "aurora_editor", .module = aurora_editor_module },
+            },
+        }),
+    });
+
+    // Dream Browser Viewport module (for test imports)
+    const dream_browser_viewport_module = b.addModule("dream_browser_viewport", .{
+        .root_source_file = b.path("src/dream_browser_viewport.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
+    const viewport_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/114_dream_browser_viewport_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "dream_browser_viewport", .module = dream_browser_viewport_module },
             },
         }),
     });
@@ -913,6 +918,8 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&run_layout_tests.step);
     const run_editor_test_file = b.addRunArtifact(editor_test_file);
     test_step.dependOn(&run_editor_test_file.step);
+    const run_viewport_tests = b.addRunArtifact(viewport_tests);
+    test_step.dependOn(&run_viewport_tests.step);
     const run_route_tests = b.addRunArtifact(route_tests);
     test_step.dependOn(&run_route_tests.step);
     const run_orchestrator_tests = b.addRunArtifact(orchestrator_tests);

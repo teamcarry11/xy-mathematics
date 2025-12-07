@@ -148,11 +148,11 @@ test "viewport scroll bounds checking" {
     defer viewport.deinit();
 
     // Set content size
-    viewport.set_viewport_dimensions(800, 600);
+    viewport.set_viewport_size(800, 600);
     viewport.set_content_size(800, 1000);
 
     // Try to scroll beyond content
-    viewport.scroll_down(10000);
+    viewport.scroll_by(0, 10000);
 
     // Assert: Scroll position clamped to content bounds
     const max_scroll = viewport.viewport_state.content_height - 
@@ -169,14 +169,14 @@ test "viewport can scroll down" {
     defer viewport.deinit();
 
     // Set content size larger than viewport
-    viewport.set_viewport_dimensions(800, 600);
+    viewport.set_viewport_size(800, 600);
     viewport.set_content_size(800, 2000);
 
     // Assert: Can scroll down
     std.debug.assert(viewport.can_scroll_down() == true);
 
     // Scroll to bottom
-    viewport.scroll_down(10000);
+    viewport.scroll_by(0, 10000);
 
     // Assert: Cannot scroll down further
     std.debug.assert(viewport.can_scroll_down() == false);
@@ -191,14 +191,14 @@ test "viewport can scroll up" {
     defer viewport.deinit();
 
     // Set content size
-    viewport.set_viewport_dimensions(800, 600);
+    viewport.set_viewport_size(800, 600);
     viewport.set_content_size(800, 2000);
 
     // Assert: Cannot scroll up initially
     std.debug.assert(viewport.can_scroll_up() == false);
 
     // Scroll down
-    viewport.scroll_down(100);
+    viewport.scroll_by(0, 100);
 
     // Assert: Can scroll up
     std.debug.assert(viewport.can_scroll_up() == true);
@@ -357,11 +357,10 @@ test "viewport get viewport state" {
     var viewport = DreamBrowserViewport.init(allocator);
     defer viewport.deinit();
 
-    // Set viewport and content dimensions
-    viewport.set_viewport_dimensions(1024, 768);
+    // Set viewport and content size
+    viewport.set_viewport_size(1024, 768);
     viewport.set_content_size(2000, 3000);
-    viewport.scroll_down(100);
-    viewport.scroll_right(50);
+    viewport.scroll_by(50, 100);
 
     // Get viewport state
     const state = viewport.get_viewport_state();

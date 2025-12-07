@@ -2,7 +2,7 @@
 
 **Agent**: Grain Aurora IDE Dream Browser Agent (2nd Agent)  
 **Status**: Active — Foundation components, shared modules  
-**Last Updated**: 2025-12-07-015717-pst
+**Last Updated**: 2025-12-07-041522-pst
 
 ---
 
@@ -178,6 +178,19 @@ Grain Aurora IDE Dream Browser Agent is responsible for building the unified IDE
 - **Files**: `tests/113_aurora_editor_test.zig`, `build.zig`
 - **Date**: 2025-12-06-232932-PST
 
+#### 2.4: Dream Browser Viewport Comprehensive Tests ✅ **COMPLETE**
+- ✅ Created comprehensive test suite (`tests/114_dream_browser_viewport_test.zig`)
+- ✅ Tests for viewport initialization, size setting, content size
+- ✅ Tests for scrolling operations (scroll_by, scroll_to)
+- ✅ Tests for scroll bounds checking and can_scroll methods
+- ✅ Tests for navigation history (add, back, forward, can_navigate)
+- ✅ Tests for viewport state retrieval
+- ✅ Added `dream_browser_viewport_module` to build.zig
+- ✅ GrainStyle compliance (grain_case, u32 types, max 73 chars per line)
+- ✅ All tests pass with proper assertions
+- **Files**: `tests/114_dream_browser_viewport_test.zig`, `build.zig`
+- **Date**: 2025-12-07-042307-PST
+
 ---
 
 ## Current Work: Phase 2 - Shared Module Refactoring (Continued)
@@ -352,13 +365,21 @@ See [`docs/agent-communications/bubble_aurora_dag_sharing_analysis.md`](../agent
 - No direct dependencies
 - May use kernel syscalls for file I/O in future
 
-**Database Agent**:
+**Database Agent (Silo Agent)**:
 - No direct dependencies
 - May use database for editor state persistence in future
 
 **Carry Agent**:
 - No direct dependencies
 - May share UI components in future
+
+**Flow Agent** (NEW):
+- No direct dependencies
+- Future: May integrate workflow orchestration for editor/browser automation
+
+**Research Agent** (NEW):
+- No direct dependencies
+- Future: May integrate research tools for code analysis
 
 **Grain Court (formerly Grain Field)**:
 - No current references to Grain Field/Court in Aurora Agent codebase

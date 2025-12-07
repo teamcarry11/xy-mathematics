@@ -96,7 +96,10 @@ Core Agent (System Services) [Layer 3: System Services]
     └─→ Bubble Agent (Design Tool) [needs: Compositor ✅, Rendering ✅]
 
 Aurora Agent (IDE/Browser) [depends on Core/Basin via shared modules]
+  └─→ Coordinates with Bubble Agent on DAG integration (see `docs/agent-communications/bubble_aurora_dag_sharing_analysis.md`)
 Skate Agent (Knowledge Graph) [depends on Core/Basin via shared modules]
+Bubble Agent (Design Tool) [depends on Core/Basin via shared modules]
+  └─→ Coordinates with Aurora Agent on DAG integration (see `docs/agent-communications/bubble_aurora_dag_sharing_analysis.md`)
 ```
 
 **Key Points**:

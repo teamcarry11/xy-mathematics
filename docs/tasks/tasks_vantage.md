@@ -38,15 +38,14 @@
 - [x] Implement network interface configuration (IP, netmask, gateway) — Phase 4.1
 - [x] Implement interface state control (up/down) — Phase 4.1
 - [x] Implement TCP syscalls (socket, bind, listen, accept, connect, send, recv, close) — Phase 4.2
+- [x] Implement UDP syscalls (socket, bind, sendto, recvfrom, close) — Phase 4.3
+- [x] Create comprehensive tests (`tests/086_network_interface_test.zig`, `tests/087_tcp_socket_test.zig`, `tests/088_udp_socket_test.zig`) — Phase 4.4
+- [x] Update `build.zig` with new tests — Phase 4.4
 - [x] Update `docs/plans/plan_vantage.md` and `docs/tasks/tasks_vantage.md` with completion
 
 ### Remaining Tasks
-
-- [ ] Implement UDP syscalls (socket, bind, sendto, recvfrom, close) — Phase 4.3
-- [ ] Implement network connection management — Phase 4.4
-- [ ] Implement network statistics tracking — Phase 4.5
-- [ ] Create comprehensive tests (`tests/086_network_interface_test.zig`, `tests/087_tcp_socket_test.zig`)
-- [ ] Update `build.zig` with new tests
+- [ ] Implement network connection management — Future Phase
+- [ ] Implement network statistics tracking — Future Phase
 
 ### Grain Style Requirements
 

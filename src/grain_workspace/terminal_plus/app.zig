@@ -5,6 +5,7 @@
 //! GrainStyle: grain_case, u32/u64, bounded allocations, assertions.
 //!
 //! 2025-12-03-165209-pst: Active implementation
+//! 2025-12-06-232601-pst: Phase 10.2 WebSocket integration for live output streaming
 
 const std = @import("std");
 const grain_terminal = @import("grain_terminal");
@@ -26,6 +27,10 @@ pub const MAX_PANES_PER_TAB: u32 = 16;
 // 2025-12-03-165209-pst: Active constant
 pub const MAX_SESSION_NAME_LEN: u32 = 256;
 
+// Bounded: Max WebSocket clients per pane (explicit limit)
+// 2025-12-06-232601-pst: Phase 10.2 WebSocket integration
+pub const MAX_WEBSOCKET_CLIENTS_PER_PANE: u32 = 16;
+
 // Split direction enumeration.
 // 2025-12-03-165209-pst: Active enum
 pub const SplitDirection = enum(u8) {
@@ -35,6 +40,7 @@ pub const SplitDirection = enum(u8) {
 
 // Pane structure for split panes.
 // 2025-12-03-165209-pst: Active struct
+// 2025-12-06-232601-pst: Phase 10.2 WebSocket integration
 pub const TerminalPane = struct {
     pane_id: u32,
     terminal: grain_terminal.Terminal,
@@ -43,6 +49,8 @@ pub const TerminalPane = struct {
     x: u32, // X position in parent
     y: u32, // Y position in parent
     active: bool,
+    websocket_clients: [MAX_WEBSOCKET_CLIENTS_PER_PANE]u32,
+    websocket_clients_len: u32,
 };
 
 // Tab structure for tab management.
@@ -94,7 +102,7 @@ pub const TerminalTab = struct {
         }
 
         // Create initial pane
-        const initial_pane = TerminalPane{
+        var initial_pane = TerminalPane{
             .pane_id = 0,
             .terminal = grain_terminal.Terminal.init(width, height),
             .width = width,
@@ -102,7 +110,14 @@ pub const TerminalTab = struct {
             .x = 0,
             .y = 0,
             .active = true,
+            .websocket_clients = undefined,
+            .websocket_clients_len = 0,
         };
+        // Initialize WebSocket clients array
+        var j: u32 = 0;
+        while (j < MAX_WEBSOCKET_CLIENTS_PER_PANE) : (j += 1) {
+            initial_pane.websocket_clients[j] = 0;
+        }
         tab.panes[0] = initial_pane;
         tab.panes_len = 1;
         tab.active_pane_id = 0;
@@ -148,7 +163,7 @@ pub const TerminalTab = struct {
         }
 
         // Create new pane
-        const new_pane = TerminalPane{
+        var new_pane = TerminalPane{
             .pane_id = new_pane_id,
             .terminal = grain_terminal.Terminal.init(new_width, new_height),
             .width = new_width,
@@ -156,7 +171,14 @@ pub const TerminalTab = struct {
             .x = new_x,
             .y = new_y,
             .active = false,
+            .websocket_clients = undefined,
+            .websocket_clients_len = 0,
         };
+        // Initialize WebSocket clients array
+        var j: u32 = 0;
+        while (j < MAX_WEBSOCKET_CLIENTS_PER_PANE) : (j += 1) {
+            new_pane.websocket_clients[j] = 0;
+        }
 
         self.panes[new_pane_id] = new_pane;
         self.panes_len += 1;
@@ -279,22 +301,30 @@ pub const TerminalSession = struct {
 
 // Terminal Plus application state.
 // 2025-12-03-165209-pst: Active struct
+// 2025-12-06-232601-pst: Phase 10.2 WebSocket integration
 pub const TerminalPlusApp = struct {
     sessions: [MAX_SESSIONS]?TerminalSession,
     sessions_len: u32,
     next_session_id: u32,
+    websocket_manager: *grain_core.websocket.WebSocketManager,
     allocator: std.mem.Allocator,
 
     /// Initialize terminal plus application.
     // 2025-12-03-165209-pst: Active function
-    pub fn init(allocator: std.mem.Allocator) TerminalPlusApp {
-        // Precondition: Allocator must be valid
+    // 2025-12-06-232601-pst: Phase 10.2 WebSocket integration
+    pub fn init(
+        allocator: std.mem.Allocator,
+        ws_manager: *grain_core.websocket.WebSocketManager,
+    ) TerminalPlusApp {
+        // Precondition: Allocator and WebSocket manager must be valid
         std.debug.assert(allocator.ptr != null);
+        std.debug.assert(@intFromPtr(ws_manager) != 0);
 
         var app = TerminalPlusApp{
             .sessions = undefined,
             .sessions_len = 0,
             .next_session_id = 1,
+            .websocket_manager = ws_manager,
             .allocator = allocator,
         };
 
@@ -378,6 +408,177 @@ pub const TerminalPlusApp = struct {
                     self.sessions_len -= 1;
                     return;
                 }
+            }
+        }
+    }
+
+    /// Add WebSocket client to pane for live output streaming.
+    // 2025-12-06-232601-pst: Phase 10.2 WebSocket integration
+    pub fn add_pane_websocket_client(
+        self: *TerminalPlusApp,
+        session_id: u32,
+        tab_id: u32,
+        pane_id: u32,
+        connection_id: u32,
+    ) bool {
+        // Precondition: IDs must be valid
+        std.debug.assert(session_id > 0);
+        std.debug.assert(connection_id > 0);
+
+        const session = self.get_session(session_id);
+        if (session == null) {
+            return false;
+        }
+
+        if (tab_id >= session.?.tabs_len) {
+            return false;
+        }
+
+        const tab_opt = session.?.tabs[tab_id];
+        if (tab_opt == null) {
+            return false;
+        }
+        var tab = &tab_opt.?;
+
+        if (pane_id >= tab.panes_len) {
+            return false;
+        }
+
+        const pane_opt = tab.panes[pane_id];
+        if (pane_opt == null) {
+            return false;
+        }
+        var pane = &tab.panes[pane_id].?;
+
+        if (pane.websocket_clients_len >= MAX_WEBSOCKET_CLIENTS_PER_PANE) {
+            return false;
+        }
+
+        pane.websocket_clients[pane.websocket_clients_len] = connection_id;
+        pane.websocket_clients_len += 1;
+
+        // Postcondition: Client count increased
+        std.debug.assert(pane.websocket_clients_len > 0);
+        std.debug.assert(pane.websocket_clients_len <= MAX_WEBSOCKET_CLIENTS_PER_PANE);
+
+        return true;
+    }
+
+    /// Remove WebSocket client from pane.
+    // 2025-12-06-232601-pst: Phase 10.2 WebSocket integration
+    pub fn remove_pane_websocket_client(
+        self: *TerminalPlusApp,
+        session_id: u32,
+        tab_id: u32,
+        pane_id: u32,
+        connection_id: u32,
+    ) bool {
+        // Precondition: IDs must be valid
+        std.debug.assert(session_id > 0);
+        std.debug.assert(connection_id > 0);
+
+        const session = self.get_session(session_id);
+        if (session == null) {
+            return false;
+        }
+
+        if (tab_id >= session.?.tabs_len) {
+            return false;
+        }
+
+        const tab_opt = session.?.tabs[tab_id];
+        if (tab_opt == null) {
+            return false;
+        }
+        var tab = &tab_opt.?;
+
+        if (pane_id >= tab.panes_len) {
+            return false;
+        }
+
+        const pane_opt = tab.panes[pane_id];
+        if (pane_opt == null) {
+            return false;
+        }
+        var pane = &tab.panes[pane_id].?;
+
+        var i: u32 = 0;
+        while (i < pane.websocket_clients_len) : (i += 1) {
+            if (pane.websocket_clients[i] == connection_id) {
+                var j: u32 = i;
+                while (j < pane.websocket_clients_len - 1) : (j += 1) {
+                    pane.websocket_clients[j] = pane.websocket_clients[j + 1];
+                }
+                pane.websocket_clients_len -= 1;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// Broadcast terminal output to WebSocket clients (internal).
+    // 2025-12-06-232601-pst: Phase 10.2 WebSocket integration
+    pub fn broadcast_pane_output(
+        self: *TerminalPlusApp,
+        session_id: u32,
+        tab_id: u32,
+        pane_id: u32,
+        output: []const u8,
+    ) void {
+        // Precondition: Output must be valid
+        std.debug.assert(output.len > 0);
+
+        const session = self.get_session(session_id);
+        if (session == null) {
+            return;
+        }
+
+        if (tab_id >= session.?.tabs_len) {
+            return;
+        }
+
+        const tab_opt = session.?.tabs[tab_id];
+        if (tab_opt == null) {
+            return;
+        }
+        var tab = &tab_opt.?;
+
+        if (pane_id >= tab.panes_len) {
+            return;
+        }
+
+        const pane_opt = tab.panes[pane_id];
+        if (pane_opt == null) {
+            return;
+        }
+        var pane = &tab.panes[pane_id].?;
+
+        if (pane.websocket_clients_len == 0) {
+            return;
+        }
+
+        // Create WebSocket frame
+        var frame = grain_core.websocket.WebSocketFrame.init();
+        frame.flags.opcode = grain_core.websocket.FrameOpcode.text;
+        frame.flags.fin = true;
+        frame.flags.masked = false;
+        const output_len = @min(output.len, grain_core.websocket.MAX_FRAME_SIZE);
+        frame.payload_len = @intCast(output_len);
+
+        var i: u32 = 0;
+        while (i < output_len) : (i += 1) {
+            frame.payload[i] = output[i];
+        }
+
+        // Broadcast to all clients
+        i = 0;
+        while (i < pane.websocket_clients_len) : (i += 1) {
+            const conn_id = pane.websocket_clients[i];
+            const conn = self.websocket_manager.find_connection(conn_id);
+            if (conn != null and conn.?.state == grain_core.websocket.ConnectionState.open) {
+                // Frame would be sent here (actual send via socket not implemented)
+                _ = frame;
             }
         }
     }

@@ -2,7 +2,7 @@
 
 **Agent**: Grain Aurora IDE Dream Browser Agent (2nd Agent)  
 **Status**: Active — Foundation components, shared modules  
-**Last Updated**: 2025-12-06-113038-pst
+**Last Updated**: 2025-12-06-232932-pst
 
 ---
 
@@ -41,6 +41,19 @@
 - [x] All tests pass with proper assertions
 - [x] Update `docs/plans/plan_aurora.md` and `docs/tasks/tasks_aurora.md`
 - **Date**: 2025-12-04-095411-PST
+
+#### Phase 2.3: Editor Comprehensive Tests ⚠️ **CREATED (BLOCKED)**
+
+- [x] Create comprehensive test suite (`tests/113_aurora_editor_test.zig`)
+- [x] Tests for editor initialization, text insertion, deletion
+- [x] Tests for undo/redo operations, cursor movement
+- [x] Tests for folding operations, completion rejection
+- [x] Add `aurora_editor_module` to build.zig
+- [x] GrainStyle compliance (grain_case, u32 types, max 73 chars per line)
+- [ ] Tests pass (BLOCKED by Zig 0.15.2 comptime evaluation issue)
+- [x] Update `docs/plans/plan_aurora.md` and `docs/tasks/tasks_aurora.md`
+- **Date**: 2025-12-06-232932-PST
+- **Status**: Tests written and ready, but cannot run due to Zig 0.15.2 comptime issue with `Editor.init` when importing through module. See `src/aurora_editor.zig:2164` for related comment.
 
 ### Grain Style Requirements
 
@@ -108,18 +121,33 @@
 
 - [ ] Integrate DAG Core into editor for event ordering
 - [ ] Integrate DAG Core into browser for event ordering
+- [ ] **Map Aurora UI components to DAG nodes** (text, column, row, button → DAG nodes)
+- [ ] **Extend DAG Core with design_component node type** (coordinate with Bubble Agent)
+- [ ] **Define shared component interface** (coordinate with Bubble Agent)
 - [ ] Implement consensus mechanism for collaborative editing
 - [ ] Implement state synchronization
 - [ ] Add DAG event handlers for editor operations
 - [ ] Add DAG event handlers for browser operations
+- [ ] **Coordinate with Bubble Agent on unified DAG architecture**
 - [ ] Create tests for DAG integration
 - [ ] Update documentation
 
 ### Dependencies
 
 - **Needs**: DAG Core (Phase 0.4) ✅ Complete
-- **Provides**: DAG integration example
+- **Coordinates with**: Grain Bubble Agent (DAG integration, component system unification)
 - **Coordinates with**: Grain Skate Agent (DAG integration)
+- **Provides**: DAG integration example, shared component model
+
+### DAG Code Sharing Analysis
+
+See [`docs/agent-communications/bubble_aurora_dag_sharing_analysis.md`](../agent-communications/bubble_aurora_dag_sharing_analysis.md) for detailed analysis of code sharing opportunities between Aurora and Bubble, especially around DAG UI synthesis (`docs/dag_ui_synthesis.md`).
+
+**Key Opportunities**:
+1. **DAG Core Integration**: Both Aurora and Bubble should use `src/dag_core.zig` for state management
+2. **Component System Unification**: Aurora's UI components and Bubble's design components could share DAG node structure
+3. **Streaming Updates**: Hyperfiddle-style deterministic updates (see `docs/dag_ui_synthesis.md`)
+4. **HashDAG Consensus**: Event ordering for UI state (enables collaboration)
 
 ---
 

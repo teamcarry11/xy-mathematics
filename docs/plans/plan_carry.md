@@ -1,8 +1,8 @@
 # Grain Carry Agent: Development Plan
 
 **Agent**: Grain Carry Agent (6th Agent)  
-**Status**: WebSocket Client Connection Management Complete  
-**Last Updated**: 2025-12-06-121136-pst
+**Status**: Email Service for OTP Delivery Complete  
+**Last Updated**: 2025-12-06-232641-pst
 
 ---
 
@@ -730,6 +730,57 @@ While waiting for Grain Core Agent's API Server (Phase 59), we can prepare the A
 - ✅ Connection management helpers complete (URL parsing, handshake response parsing, accept key validation)
 - ⏳ TCP socket connection integration (when network stack is fully integrated)
 
+### Completed: Email Service for OTP Delivery ✅ (2025-12-06-232641-pst)
+
+**Key Achievements**:
+- Email service module for OTP delivery
+- OTP email template generation (subject and body)
+- Email service configuration (SMTP settings, enabled/disabled)
+- Email sending result handling
+- Integration with OTP handler adapters
+- Comprehensive tests for email service
+
+**Files Created**:
+- `src/grain_carry_core/email/service.zig` — Email service module (190 lines)
+- `src/grain_carry_core/email/root.zig` — Email module root
+- `tests/126_grain_carry_core_email_service_test.zig` — Email service tests
+
+**Email Service Features**:
+- `EmailService` — Email service with configuration
+- `EmailConfig` — SMTP configuration (host, port, credentials, from email)
+- `EmailResult` — Email sending result enum
+- `send_otp_email()` — Send OTP email with template
+- `configure()` — Configure email service with SMTP settings
+- `build_otp_subject()` — Build OTP email subject
+- `build_otp_body()` — Build OTP email body with OTP code
+
+**Integration**:
+- Integrated with OTP send handler adapter
+- Email service instance management (set/get)
+- OTP emails sent when service is enabled
+- Graceful handling when service is unavailable
+
+**Grain Style Compliance**:
+- ✅ `grain_case` function names
+- ✅ `u32`/`u64` types (no `usize`)
+- ✅ Bounded allocations (all limits explicit)
+- ✅ Minimum 2 assertions per function
+- ✅ Max 70 lines per function (all functions compliant)
+- ✅ Max 100 characters per line
+- ✅ All compiler warnings enabled
+
+**Test Coverage**:
+- Email service initialization
+- Email service configuration
+- OTP email sending (enabled/disabled)
+- Invalid recipient/code handling
+- Multiple email sending
+
+**Next Steps**:
+- ⏳ SMTP integration (when network stack is fully integrated)
+- ⏳ Email template customization
+- ⏳ Email delivery status tracking
+
 ### Completed: Handler Adapters for API Server Integration ✅ (2025-12-05-104041-pst)
 
 **Key Achievements**:
@@ -956,7 +1007,12 @@ While waiting for Grain Core Agent's API Server (Phase 59), we can prepare the A
    - WebSocket connection management ✅
    - Ready for Carry Agent WebSocket client implementation ✅
 
-4. **DNS Resolution (Grain Core Agent Phase 61)**: ✅ **COMPLETE** (2025-12-05-231800-pst)
+4. **Socket Options (Grain Core Agent Phase 61)**: ✅ **COMPLETE** (2025-12-06-131112-pst)
+   - Socket option enum (reuse_address, keep_alive, timeout) ✅
+   - Socket option setting/getting methods ✅
+   - Ready for Carry Agent WebSocket client socket configuration ✅
+
+5. **DNS Resolution (Grain Core Agent Phase 61)**: ✅ **COMPLETE** (2025-12-05-231800-pst)
    - DNS resolver with bounded cache ✅
    - DNS cache entry management ✅
    - DNS cache expiration ✅
@@ -964,7 +1020,7 @@ While waiting for Grain Core Agent's API Server (Phase 59), we can prepare the A
    - Hostname resolution ready for network integration ✅
    - Ready for Carry Agent domain name resolution ✅
 
-5. **File Storage (Grain Core Agent Phase 62)**: ✅ **COMPLETE** (2025-12-06-061647-pst)
+6. **File Storage (Grain Core Agent Phase 62)**: ✅ **COMPLETE** (2025-12-06-061647-pst)
    - Database file format with header validation ✅
    - Page-based storage with integrity checks ✅
    - File handle management with locking ✅
@@ -1135,6 +1191,10 @@ While waiting for Grain Core Agent's API Server (Phase 59), we can prepare the A
   - WebSocket frame parsing and generation ✅
   - WebSocket connection management ✅
   - Ready for Carry Agent WebSocket client implementation ✅
+- **Socket Options (Phase 61)**: ✅ **COMPLETE** (2025-12-06-131112-pst)
+  - Socket option enum (reuse_address, keep_alive, timeout) ✅
+  - Socket option setting/getting methods ✅
+  - Ready for Carry Agent WebSocket client socket configuration ✅
 - **DNS Resolution (Phase 61)**: ✅ **COMPLETE** (2025-12-05-231800-pst)
   - DNS resolver with bounded cache ✅
   - DNS cache entry management ✅
@@ -1143,10 +1203,11 @@ While waiting for Grain Core Agent's API Server (Phase 59), we can prepare the A
   - Enables domain name resolution for API clients ✅
 
 **Coordination Notes**:
-- Carry Agent is **ready** for API Server (Phase 59) ✅, Authentication Service (Phase 60) ✅, WebSocket Support (Phase 61) ✅, DNS Resolution (Phase 61) ✅, and File System Enhancements (Phase 62) ✅
+- Carry Agent is **ready** for API Server (Phase 59) ✅, Authentication Service (Phase 60) ✅, WebSocket Support (Phase 61) ✅, Socket Options (Phase 61) ✅, DNS Resolution (Phase 61) ✅, and File System Enhancements (Phase 62) ✅
 - All core infrastructure is complete and ready for integration
 - Carry Agent has completed all core modules and is ready for integration
-- WebSocket client implementation is complete with message handling and keepalive
+- WebSocket client implementation is complete with message handling, keepalive, and connection management
+- Socket options available for WebSocket client socket configuration
 
 **Future Coordination**:
 - **API Integration**: ✅ Complete — Carry Agent's API clients integrated with Grain Core API Server

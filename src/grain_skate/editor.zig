@@ -1,5 +1,6 @@
 const std = @import("std");
 const LineBufferAdapter = @import("line_buffer_adapter.zig").LineBufferAdapter;
+const EditorDagIntegration = @import("editor_dag_integration.zig").EditorDagIntegration;
 
 /// Grain Skate Editor: Text editor with Vim bindings for block editing.
 /// ~<~ Glow Airbend: explicit editor state, bounded text buffer.
@@ -116,6 +117,7 @@ pub const Editor = struct {
         search_pattern: [MAX_SEARCH_PATTERN]u8, // Search pattern buffer
         search_pattern_len: u32, // Search pattern length
         search_direction: SearchDirection, // Search direction (forward/backward)
+        dag_integration: ?*EditorDagIntegration, // Optional DAG integration (for event ordering)
         allocator: std.mem.Allocator,
 
         /// Initialize editor state.
@@ -150,8 +152,28 @@ pub const Editor = struct {
                 .search_pattern = undefined,
                 .search_pattern_len = 0,
                 .search_direction = .forward,
+                .dag_integration = null, // DAG integration optional (can be enabled later)
                 .allocator = allocator,
             };
+        }
+        
+        /// Initialize editor state with DAG integration.
+        pub fn init_with_dag(
+            allocator: std.mem.Allocator,
+            initial_content: []const u8,
+            dag_integration: *EditorDagIntegration,
+        ) !EditorState {
+            // Initialize editor state
+            var editor = try init(allocator, initial_content);
+            errdefer editor.deinit();
+            
+            // Create buffer node in DAG
+            _ = try dag_integration.create_buffer_node(initial_content);
+            
+            // Set DAG integration
+            editor.dag_integration = dag_integration;
+            
+            return editor;
         }
 
         /// Deinitialize editor state and free memory.
@@ -1053,6 +1075,19 @@ pub const Editor = struct {
                 }
                 self.redo_history_len = 0;
             }
+            // Record DAG event (if DAG integration enabled)
+            if (self.dag_integration) |dag| {
+                _ = dag.map_operation_to_event(
+                    .delete,
+                    line_idx,
+                    start_col,
+                    deleted_text,
+                    "",
+                ) catch |err| {
+                    // DAG event recording failed, but continue with operation
+                    _ = err;
+                };
+            }
             // Replace line in buffer
             try self.buffer.replace_line(line_idx, new_line);
         }
@@ -1130,6 +1165,19 @@ pub const Editor = struct {
                     self.redo_history[k].deinit();
                 }
                 self.redo_history_len = 0;
+            }
+            // Record DAG event (if DAG integration enabled)
+            if (self.dag_integration) |dag| {
+                _ = dag.map_operation_to_event(
+                    .delete,
+                    start_line,
+                    selection.start_column,
+                    deleted_text,
+                    "",
+                ) catch |err| {
+                    // DAG event recording failed, but continue with operation
+                    _ = err;
+                };
             }
             // Replace buffer lines
             self.allocator.free(self.buffer.lines);
@@ -1220,6 +1268,19 @@ pub const Editor = struct {
                 }
                 self.redo_history_len = 0;
             }
+            // Record DAG event (if DAG integration enabled)
+            if (self.dag_integration) |dag| {
+                _ = dag.map_operation_to_event(
+                    .insert,
+                    self.cursor_line,
+                    self.cursor_column,
+                    "",
+                    &[_]u8{ch},
+                ) catch |err| {
+                    // DAG event recording failed, but continue with operation
+                    _ = err;
+                };
+            }
             // Replace line in buffer
             try self.buffer.replace_line(self.cursor_line, new_line);
             // Move cursor right
@@ -1276,6 +1337,19 @@ pub const Editor = struct {
                     self.redo_history[i].deinit();
                 }
                 self.redo_history_len = 0;
+            }
+            // Record DAG event (if DAG integration enabled)
+            if (self.dag_integration) |dag| {
+                _ = dag.map_operation_to_event(
+                    .delete,
+                    self.cursor_line,
+                    self.cursor_column,
+                    &[_]u8{deleted_char},
+                    "",
+                ) catch |err| {
+                    // DAG event recording failed, but continue with operation
+                    _ = err;
+                };
             }
             // Replace line in buffer
             if (new_line_len > 0) {

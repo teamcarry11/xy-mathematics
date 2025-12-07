@@ -1,8 +1,8 @@
 # Grain Core Agent: Task List
 
 **Agent**: Grain Core Agent (4th Agent)  
-**Status**: Phase 61 & Phase 62 Complete, Ready for Next Phase  
-**Last Updated**: 2025-12-06-131112-pst
+**Status**: Phase 61 HTTP Client Complete, Phase 62 Complete, Ready for Next Phase  
+**Last Updated**: 2025-12-07-004326-pst
 
 ---
 
@@ -149,7 +149,8 @@
 ### Remaining Tasks
 
 - [x] Implement socket options (reuse address, keep-alive, timeout) ✅ (2025-12-06-131112-pst)
-- [ ] Implement HTTP client/server enhancements
+- [x] Implement HTTP client (GET, POST, PUT, DELETE requests) — COMPLETE (2025-12-07-004326-pst)
+- [ ] Implement HTTP server enhancements (may overlap with Phase 59)
 - [x] Implement WebSocket support (handshake, frame parsing, connection management) ✅ (2025-12-05-202227-pst)
 - [x] Implement DNS resolution (A, AAAA, MX records, caching) ✅ (2025-12-05-231800-pst)
 - [ ] Implement TLS/SSL support (optional, for secure endpoints)

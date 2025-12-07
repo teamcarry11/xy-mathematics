@@ -498,6 +498,19 @@ pub fn build(b: *std.Build) void {
         }),
     });
 
+    // Editor test file (separate test file for editor operations)
+    // Note: Tests editor functionality without requiring LSP server
+    const editor_test_file = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/113_aurora_editor_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "aurora_editor", .module = aurora_editor_module },
+            },
+        }),
+    });
+
     const ai_provider_tests = b.addTest(.{
         .root_module = b.createModule(.{
             .root_source_file = b.path("src/aurora_ai_provider.zig"),
@@ -536,6 +549,24 @@ pub fn build(b: *std.Build) void {
             .optimize = optimize,
             .imports = &.{
                 .{ .name = "aurora_layout", .module = aurora_layout_module },
+            },
+        }),
+    });
+
+    // Aurora Editor module (for test imports)
+    const aurora_editor_module = b.addModule("aurora_editor", .{
+        .root_source_file = b.path("src/aurora_editor.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
+    const editor_test_file = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/113_aurora_editor_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "aurora_editor", .module = aurora_editor_module },
             },
         }),
     });
@@ -880,6 +911,8 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&run_ai_transforms_tests.step);
     const run_layout_tests = b.addRunArtifact(layout_tests);
     test_step.dependOn(&run_layout_tests.step);
+    const run_editor_test_file = b.addRunArtifact(editor_test_file);
+    test_step.dependOn(&run_editor_test_file.step);
     const run_route_tests = b.addRunArtifact(route_tests);
     test_step.dependOn(&run_route_tests.step);
     const run_orchestrator_tests = b.addRunArtifact(orchestrator_tests);
@@ -2874,6 +2907,19 @@ pub fn build(b: *std.Build) void {
     const grain_core_backup_manager_tests_run = b.addRunArtifact(grain_core_backup_manager_tests);
     test_step.dependOn(&grain_core_backup_manager_tests_run.step);
 
+    const grain_core_http_client_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/122_grain_core_http_client_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_core", .module = grain_core_module },
+            },
+        }),
+    });
+    const grain_core_http_client_tests_run = b.addRunArtifact(grain_core_http_client_tests);
+    test_step.dependOn(&grain_core_http_client_tests_run.step);
+
     const grain_core_update_manager_tests = b.addTest(.{
         .root_module = b.createModule(.{
             .root_source_file = b.path("tests/102_grain_core_update_manager_test.zig"),
@@ -3321,6 +3367,21 @@ pub fn build(b: *std.Build) void {
     const grain_database_auth_integration_tests_run = b.addRunArtifact(grain_database_auth_integration_tests);
     test_step.dependOn(&grain_database_auth_integration_tests_run.step);
 
+    // Grain Database Persistence Tests
+    const grain_database_persistence_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/114_grain_database_persistence_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_database", .module = grain_database_module },
+                .{ .name = "grain_core", .module = grain_core_module },
+            },
+        }),
+    });
+    const grain_database_persistence_tests_run = b.addRunArtifact(grain_database_persistence_tests);
+    test_step.dependOn(&grain_database_persistence_tests_run.step);
+
     // RISC-V Logo Display Program
     const riscv_logo_exe = b.addExecutable(.{
         .name = "riscv_logo",
@@ -3725,4 +3786,18 @@ pub fn build(b: *std.Build) void {
     });
     const grain_bubble_export_pdf_tests_run = b.addRunArtifact(grain_bubble_export_pdf_tests);
     test_step.dependOn(&grain_bubble_export_pdf_tests_run.step);
+
+    // Grain Bubble component tests
+    const grain_bubble_component_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/130_grain_bubble_component_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_bubble", .module = grain_bubble_module },
+            },
+        }),
+    });
+    const grain_bubble_component_tests_run = b.addRunArtifact(grain_bubble_component_tests);
+    test_step.dependOn(&grain_bubble_component_tests_run.step);
 }

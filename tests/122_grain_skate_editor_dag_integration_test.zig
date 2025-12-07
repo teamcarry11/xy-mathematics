@@ -111,3 +111,36 @@ test "editor dag process events" {
     try std.testing.expect(integration.dag.pending_events_len == 0);
 }
 
+test "editor with dag integration" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const Editor = @import("grain_skate").Editor;
+    const content = "line1\nline2\nline3";
+    
+    // Create DAG integration
+    var dag_integration = try EditorDagIntegration.init(allocator);
+    defer dag_integration.deinit();
+    
+    // Create editor with DAG integration
+    var editor = try Editor.EditorState.init_with_dag(
+        allocator,
+        content,
+        &dag_integration,
+    );
+    defer editor.deinit();
+    
+    // Enter insert mode and insert character
+    editor.enter_insert_mode();
+    try editor.insert_char('X');
+    
+    // Assert: DAG event was recorded
+    try std.testing.expect(dag_integration.dag.pending_events_len == 1);
+    try std.testing.expect(dag_integration.last_event_id > 0);
+    
+    // Process events
+    try dag_integration.process_events();
+    try std.testing.expect(dag_integration.dag.pending_events_len == 0);
+}
+

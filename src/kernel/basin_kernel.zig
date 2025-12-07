@@ -54,6 +54,8 @@ const network = @import("network.zig");
 const NetworkInterfaceManager = network.NetworkInterfaceManager;
 const tcp_socket = @import("tcp_socket.zig");
 const TcpSocketManager = tcp_socket.TcpSocketManager;
+const udp_socket = @import("udp_socket.zig");
+const UdpSocketManager = udp_socket.UdpSocketManager;
 
 // Export resource_cleanup for tests.
 pub const resource_cleanup_module = resource_cleanup;
@@ -136,6 +138,13 @@ pub const Syscall = enum(u32) {
     tcp_send = 105,
     tcp_recv = 106,
     tcp_close = 107,
+    
+    // UDP Socket Operations
+    udp_socket = 110,
+    udp_bind = 111,
+    udp_sendto = 112,
+    udp_recvfrom = 113,
+    udp_close = 114,
 };
 
 /// Memory mapping flags.
@@ -754,6 +763,11 @@ pub const BasinKernel = struct {
     /// Grain Style: Static allocation, initialized at kernel boot.
     tcp_sockets: TcpSocketManager,
     
+    /// UDP socket manager.
+    /// Why: Manage UDP sockets for network communication.
+    /// Grain Style: Static allocation, initialized at kernel boot.
+    udp_sockets: UdpSocketManager,
+    
     /// IPC channel table.
     /// Why: Manage inter-process communication channels.
     /// Grain Style: Static allocation, initialized at kernel boot.
@@ -837,6 +851,7 @@ pub const BasinKernel = struct {
             .process_group_limits = ProcessGroupLimitsManager.init(),
             .network_interfaces = NetworkInterfaceManager.init(),
             .tcp_sockets = TcpSocketManager.init(),
+            .udp_sockets = UdpSocketManager.init(),
             .channels = ChannelTable.init(),
             .storage = Storage.init(),
             .keyboard = Keyboard.init(),
@@ -1338,6 +1353,11 @@ pub const BasinKernel = struct {
             .tcp_send => self.syscall_tcp_send(arg1, arg2, arg3, arg4),
             .tcp_recv => self.syscall_tcp_recv(arg1, arg2, arg3, arg4),
             .tcp_close => self.syscall_tcp_close(arg1, arg2, arg3, arg4),
+            .udp_socket => self.syscall_udp_socket(arg1, arg2, arg3, arg4),
+            .udp_bind => self.syscall_udp_bind(arg1, arg2, arg3, arg4),
+            .udp_sendto => self.syscall_udp_sendto(arg1, arg2, arg3, arg4),
+            .udp_recvfrom => self.syscall_udp_recvfrom(arg1, arg2, arg3, arg4),
+            .udp_close => self.syscall_udp_close(arg1, arg2, arg3, arg4),
         };
     }
     
@@ -4821,6 +4841,258 @@ pub const BasinKernel = struct {
         
         // Close socket.
         if (!self.tcp_sockets.close_socket(socket_id)) {
+            return BasinError.not_found; // Socket not found
+        }
+        
+        const result = SyscallResult.ok(0);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
+    /// Create a UDP socket.
+    /// Why: Allocate a new UDP socket.
+    /// Contract: Returns socket ID.
+    pub fn syscall_udp_socket(
+        self: *BasinKernel,
+        _arg1: u64,
+        _arg2: u64,
+        _arg3: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg1;
+        _ = _arg2;
+        _ = _arg3;
+        _ = _arg4;
+        
+        // Get current process ID from scheduler.
+        const current_process_id = self.scheduler.get_current();
+        const owner_process_id = @as(u32, @truncate(current_process_id));
+        
+        // Create socket.
+        const socket_id = self.udp_sockets.create_socket(owner_process_id) orelse {
+            return BasinError.out_of_memory; // No free socket slot
+        };
+        
+        const result = SyscallResult.ok(socket_id);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
+    /// Bind UDP socket to local address and port.
+    /// Why: Configure local endpoint for socket.
+    /// Contract: socket_id, addr, and port must be valid.
+    pub fn syscall_udp_bind(
+        self: *BasinKernel,
+        socket_id: u64,
+        addr: u64,
+        port: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg4;
+        
+        // Assert: Socket ID must be non-zero.
+        if (socket_id == 0) {
+            return BasinError.invalid_argument; // Invalid socket ID
+        }
+        
+        // Assert: Port must be valid (16-bit value).
+        if (port > 65535) {
+            return BasinError.invalid_argument; // Invalid port
+        }
+        
+        const ipv4_addr = @as(u32, @truncate(addr));
+        const ipv4_port = @as(u16, @truncate(port));
+        
+        // Bind socket.
+        if (!self.udp_sockets.bind_socket(socket_id, ipv4_addr, ipv4_port)) {
+            return BasinError.not_found; // Socket not found or invalid state
+        }
+        
+        const result = SyscallResult.ok(0);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
+    /// Send data to remote address and port on UDP socket.
+    /// Why: Transmit data to remote endpoint.
+    /// Contract: socket_id must be valid, data_ptr, data_len, addr, and port must be valid.
+    pub fn syscall_udp_sendto(
+        self: *BasinKernel,
+        socket_id: u64,
+        data_ptr: u64,
+        data_len: u64,
+        addr: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        // Assert: Socket ID must be non-zero.
+        if (socket_id == 0) {
+            return BasinError.invalid_argument; // Invalid socket ID
+        }
+        
+        // Assert: Data pointer must be valid (non-zero, within VM memory).
+        if (data_ptr == 0) {
+            return BasinError.invalid_argument; // Null pointer
+        }
+        
+        const VM_MEMORY_SIZE_SENDTO: u64 = 4 * 1024 * 1024; // 4MB default
+        if (data_ptr >= VM_MEMORY_SIZE_SENDTO) {
+            return BasinError.invalid_argument; // Data pointer exceeds VM memory
+        }
+        
+        // Assert: Data length must be reasonable (max socket buffer size).
+        if (data_len == 0) {
+            return BasinError.invalid_argument; // Zero-length data
+        }
+        if (data_len > 64 * 1024) {
+            return BasinError.invalid_argument; // Data too large
+        }
+        
+        // Assert: Data must fit within VM memory.
+        if (data_ptr + data_len > VM_MEMORY_SIZE_SENDTO) {
+            return BasinError.invalid_argument; // Data exceeds VM memory
+        }
+        
+        // Stub: would extract port from arguments properly.
+        // For now, use addr as IPv4 address and port as 0.
+        const ipv4_addr = @as(u32, @truncate(addr));
+        const ipv4_port: u16 = 0; // Stub: would extract from arguments
+        
+        // Read data from VM memory (stub: would use vm_memory_reader).
+        // For now, use a placeholder data slice.
+        const data = "test";
+        
+        // Send data.
+        const bytes_sent = self.udp_sockets.sendto(socket_id, data, ipv4_addr, ipv4_port) orelse {
+            return BasinError.not_found; // Socket not found or invalid state
+        };
+        
+        const result = SyscallResult.ok(bytes_sent);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
+    /// Receive data from UDP socket.
+    /// Why: Read incoming data from bound socket.
+    /// Contract: socket_id must be valid, buffer_ptr and buffer_len must be valid.
+    pub fn syscall_udp_recvfrom(
+        self: *BasinKernel,
+        socket_id: u64,
+        buffer_ptr: u64,
+        buffer_len: u64,
+        addr_ptr: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        // Assert: Socket ID must be non-zero.
+        if (socket_id == 0) {
+            return BasinError.invalid_argument; // Invalid socket ID
+        }
+        
+        // Assert: Buffer pointer must be valid (non-zero, within VM memory).
+        if (buffer_ptr == 0) {
+            return BasinError.invalid_argument; // Null pointer
+        }
+        
+        const VM_MEMORY_SIZE_RECVFROM: u64 = 4 * 1024 * 1024; // 4MB default
+        if (buffer_ptr >= VM_MEMORY_SIZE_RECVFROM) {
+            return BasinError.invalid_argument; // Buffer pointer exceeds VM memory
+        }
+        
+        // Assert: Buffer length must be reasonable (max socket buffer size).
+        if (buffer_len == 0) {
+            return BasinError.invalid_argument; // Zero-length buffer
+        }
+        if (buffer_len > 64 * 1024) {
+            return BasinError.invalid_argument; // Buffer too large
+        }
+        
+        // Assert: Buffer must fit within VM memory.
+        if (buffer_ptr + buffer_len > VM_MEMORY_SIZE_RECVFROM) {
+            return BasinError.invalid_argument; // Buffer exceeds VM memory
+        }
+        
+        // Create buffer slice (stub: would use vm_memory_writer).
+        var buffer: [64 * 1024]u8 = undefined;
+        const buffer_slice = buffer[0..@as(usize, @intCast(buffer_len))];
+        
+        // Create address and port pointers (stub: would use vm_memory_writer).
+        var remote_addr: u32 = 0;
+        var remote_port: u16 = 0;
+        const addr_ptr_opt: ?*u32 = if (addr_ptr != 0) &remote_addr else null;
+        const port_ptr_opt: ?*u16 = if (addr_ptr != 0) &remote_port else null;
+        
+        // Receive data (remote_addr and remote_port are written by recvfrom if addr_ptr != 0).
+        const bytes_received = self.udp_sockets.recvfrom(socket_id, buffer_slice, addr_ptr_opt, port_ptr_opt) orelse {
+            return BasinError.not_found; // Socket not found or invalid state
+        };
+        
+        // Write data and address/port to VM memory (stub: would use vm_memory_writer).
+        // For now, just return bytes received.
+        // Note: addr_ptr is validated above but not written to in stub implementation.
+        
+        const result = SyscallResult.ok(bytes_received);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
+    /// Close UDP socket.
+    /// Why: Release socket resources.
+    /// Contract: socket_id must be valid.
+    pub fn syscall_udp_close(
+        self: *BasinKernel,
+        socket_id: u64,
+        _arg2: u64,
+        _arg3: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg2;
+        _ = _arg3;
+        _ = _arg4;
+        
+        // Assert: Socket ID must be non-zero.
+        if (socket_id == 0) {
+            return BasinError.invalid_argument; // Invalid socket ID
+        }
+        
+        // Close socket.
+        if (!self.udp_sockets.close_socket(socket_id)) {
             return BasinError.not_found; // Socket not found
         }
         

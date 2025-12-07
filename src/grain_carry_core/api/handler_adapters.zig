@@ -17,6 +17,7 @@ const endpoints = @import("endpoints.zig");
 const handlers = @import("handlers.zig");
 const auth_integration = @import("auth_integration.zig");
 const auth_service_integration = @import("auth_service_integration.zig");
+const email_service = @import("../email/service.zig");
 
 // Global API server instance (set during initialization).
 var global_api_server: ?*grain_core_api.ApiServer = null;
@@ -44,6 +45,20 @@ pub fn set_handler_context(context: *handlers.HandlerContext) void {
 // Get handler context.
 fn get_handler_context() ?*handlers.HandlerContext {
     return global_handler_context;
+}
+
+// Global email service instance (set during initialization).
+var global_email_service: ?*email_service.EmailService = null;
+
+// Set email service instance.
+pub fn set_email_service(service: *email_service.EmailService) void {
+    global_email_service = service;
+    std.debug.assert(global_email_service != null);
+}
+
+// Get email service instance.
+fn get_email_service() ?*email_service.EmailService {
+    return global_email_service;
 }
 
 // Handler adapter: Register endpoint.
@@ -371,8 +386,16 @@ pub fn handle_otp_send_adapter(
         return;
     }
     
-    // TODO: Send OTP email (when email service available)
-    // For now, just generate and return success
+    // Send OTP email using email service
+    const email_svc = get_email_service();
+    if (email_svc) |svc| {
+        const otp_code = otp.code[0..otp.code_len];
+        const email_result = svc.send_otp_email(email, otp_code);
+        if (email_result != email_service.EmailResult.success) {
+            response.status = grain_core_api.HttpStatus.internal_server_error;
+            return;
+        }
+    }
     
     var json_buf: [responses.MAX_JSON_RESPONSE_LEN]u8 = undefined;
     const json_len = responses.build_success_response("OTP sent", "", &json_buf);

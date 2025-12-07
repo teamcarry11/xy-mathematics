@@ -19,9 +19,9 @@ test "file manager ui initialization" {
     var fm = grain_core.file_manager.FileManager.init();
     var ws_manager = grain_core.websocket.WebSocketManager.init();
     var storage_mgr = grain_core.file_storage.FileStorageManager.init();
-    var backup_mgr = grain_core.backup_manager.BackupManager.init();
+    const backup_mgr = grain_core.backup_manager.BackupManager.init();
 
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr);
+    const ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr);
 
     try testing.expect(ui.search_query_len == 0);
     try testing.expect(ui.selected_entry_id == 0);
@@ -318,5 +318,52 @@ test "database file management" {
     const closed = ui.close_database_file(handle_id.?);
     try testing.expect(closed == true);
     try testing.expect(ui.database_file_handles_len == 0);
+}
+
+test "backup management" {
+    const allocator = testing.allocator;
+    var fm = grain_core.file_manager.FileManager.init();
+    var ws_manager = grain_core.websocket.WebSocketManager.init();
+    var storage_mgr = grain_core.file_storage.FileStorageManager.init();
+    var backup_mgr = grain_core.backup_manager.BackupManager.init();
+
+    const entry_id = fm.add_file_entry("database.db", "/database.db", .regular, 4096, 0);
+    try testing.expect(entry_id != null);
+
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr);
+
+    // Create full backup
+    const operation_id = ui.create_file_backup(entry_id.?, .full);
+    try testing.expect(operation_id != null);
+    try testing.expect(ui.backup_operations_len == 1);
+
+    // Get backup operation
+    const backup_op = ui.get_backup_operation(operation_id.?);
+    try testing.expect(backup_op != null);
+    try testing.expect(backup_op.?.entry_id == entry_id.?);
+    try testing.expect(backup_op.?.backup_type == .full);
+
+    // Get backup metadata
+    const backup_meta = ui.get_backup_metadata(backup_op.?.backup_id);
+    try testing.expect(backup_meta != null);
+    try testing.expect(backup_meta.?.backup_id == backup_op.?.backup_id);
+
+    // Get all backups
+    var backups: [10]?*const grain_core.backup_manager.BackupMetadata = undefined;
+    var backups_len: u32 = 0;
+    ui.get_all_backups(&backups, &backups_len);
+    try testing.expect(backups_len == 1);
+
+    // Get entry backup operations
+    var operations: [10]?*const FileManagerUI.BackupOperation = undefined;
+    var operations_len: u32 = 0;
+    ui.get_entry_backup_operations(entry_id.?, &operations, &operations_len);
+    try testing.expect(operations_len == 1);
+    try testing.expect(operations[0] != null);
+    try testing.expect(operations[0].?.operation_id == operation_id.?);
+
+    // Restore from backup (verify backup exists)
+    const restored = ui.restore_file_from_backup(backup_op.?.backup_id);
+    try testing.expect(restored == true);
 }
 

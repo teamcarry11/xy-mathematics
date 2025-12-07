@@ -236,6 +236,7 @@
   - Index entry serialization (`src/grain_database/index_entry_serialization.zig`) ✅
   - Index file persistence (write/read index entries to/from pages) ✅
   - Multi-page record support (records spanning multiple pages) ✅
+  - Backup restore functionality ✅
   - Comprehensive tests ✅
   - Unblocked by Grain Core Agent Phase 62 (File System Enhancements) ✅ **COMPLETE**
   - File Storage Core (2025-12-06-023413-pst) ✅

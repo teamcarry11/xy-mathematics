@@ -1,8 +1,8 @@
 # Grain Workspace Agent: Development Plan
 
 **Agent**: Grain Workspace Agent (5th Agent)  
-**Status**: Phase 13 File Storage Integration (File Manager) Complete ✅  
-**Last Updated**: 2025-12-07-082348-pst  
+**Status**: Phase 14 Backup Manager Integration (File Manager) Complete ✅  
+**Last Updated**: 2025-12-07-084440-pst  
 **Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-07-082348-pst.md`
 
 ---
@@ -372,6 +372,7 @@ All planned phases for Grain Workspace Agent have been completed:
 - Phase 11: HTTP Client Integration (Network Tools) ✅ (2025-12-07-054458-pst)
 - Phase 12: HTTP Client Integration (Package Manager UI) ✅ (2025-12-07-060853-pst)
 - Phase 13: File Storage Integration (File Manager) ✅ (2025-12-07-071409-pst)
+- Phase 14: Backup Manager Integration (File Manager) ✅ (2025-12-07-084440-pst)
 
 ### Phase 10.1: WebSocket Integration (Monitor) ✅ **COMPLETE**
 
@@ -612,6 +613,40 @@ All planned phases for Grain Workspace Agent have been completed:
 - Database file handle management (open, close, track)
 - Bounded database file handle storage (max 32 handles)
 - Integration with Grain Core File Storage (Phase 62)
+
+**Grain Style Compliance**:
+- `grain_case` function names
+- `u32`/`u64` types (no `usize`)
+- Bounded allocations (all limits explicit)
+- Assertions for preconditions
+- Max 70 lines per function
+- All compiler warnings enabled
+
+### Phase 14: Backup Manager Integration (File Manager) ✅ **COMPLETE**
+
+**Date**: 2025-12-07-084440-pst
+
+**Completed Work**:
+1. **Backup Manager Support for File Manager App** (`src/grain_workspace/file_manager/app.zig`):
+   - Added `BackupManager` integration to `FileManagerUI`
+   - Added `BackupOperation` struct for tracking backup operations
+   - Added `backup_operations` array with bounded limit (`MAX_BACKUP_OPERATIONS: 16`)
+   - Added `create_file_backup()` function for creating full/incremental backups
+   - Added `get_backup_operation()` function for retrieving backup operations by ID
+   - Added `get_entry_backup_operations()` function for retrieving all backups for an entry
+   - Added `restore_file_from_backup()` function for restoring files from backups
+   - Added `get_backup_metadata()` function for retrieving backup metadata
+   - Added `get_all_backups()` function for retrieving all backups
+   - Updated `init()` to accept `BackupManager` parameter
+   - Comprehensive tests (`tests/112_grain_workspace_file_manager_test.zig`)
+
+**Features**:
+- Full and incremental backup support for database files
+- Backup operation tracking (operation ID, entry ID, backup ID, state)
+- Backup metadata retrieval (backup ID, type, state, file size, checksum)
+- Backup restore verification (checks backup exists and is completed)
+- Bounded backup operation storage (max 16 operations)
+- Integration with Grain Core Backup Manager (Phase 62)
 
 **Grain Style Compliance**:
 - `grain_case` function names

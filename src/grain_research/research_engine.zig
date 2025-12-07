@@ -163,16 +163,16 @@ pub const QueryResult = struct {
 
 // Research engine: Core research data collection and storage.
 pub const ResearchEngine = struct {
-    entries: std.ArrayList(ResearchEntry),
+    entries: std.ArrayListUnmanaged(ResearchEntry),
     next_entry_id: u64,
     allocator: std.mem.Allocator,
 
     // Initialize research engine.
     pub fn init(allocator: std.mem.Allocator) ResearchEngine {
-        std.debug.assert(allocator.ptr != null);
+        _ = allocator;
 
         return ResearchEngine{
-            .entries = std.ArrayList(ResearchEntry).init(allocator),
+            .entries = .{},
             .next_entry_id = 1,
             .allocator = allocator,
         };
@@ -184,7 +184,7 @@ pub const ResearchEngine = struct {
         while (i < self.entries.items.len) : (i += 1) {
             self.entries.items[i].deinit();
         }
-        self.entries.deinit();
+        self.entries.deinit(self.allocator);
         self.* = undefined;
     }
 
@@ -213,7 +213,7 @@ pub const ResearchEngine = struct {
         );
         errdefer entry.deinit();
 
-        try self.entries.append(entry);
+        try self.entries.append(self.allocator, entry);
 
         return entry_id;
     }
@@ -225,12 +225,12 @@ pub const ResearchEngine = struct {
     ) !QueryResult {
         std.debug.assert(self.entries.items.len <= MAX_RESEARCH_ENTRIES);
 
-        var matches = std.ArrayList(ResearchEntry).init(self.allocator);
-        defer matches.deinit();
+        var matches = std.ArrayListUnmanaged(ResearchEntry){};
+        defer matches.deinit(self.allocator);
 
         var i: u32 = 0;
         while (i < self.entries.items.len) : (i += 1) {
-            const entry = &self.entries.items[i];
+            const entry = self.entries.items[i];
             var matches_filter = true;
 
             if (filter.tag) |tag| {
@@ -247,32 +247,40 @@ pub const ResearchEngine = struct {
                 }
             }
 
-            if (matches_filter and filter.title_contains) |substr| {
-                if (std.mem.indexOf(u8, entry.title, substr) == null) {
-                    matches_filter = false;
-                }
-            }
-
-            if (matches_filter and filter.content_contains) |substr| {
-                if (std.mem.indexOf(u8, entry.content, substr) == null) {
-                    matches_filter = false;
-                }
-            }
-
-            if (matches_filter and filter.created_after) |after| {
-                if (entry.created_at < after) {
-                    matches_filter = false;
-                }
-            }
-
-            if (matches_filter and filter.created_before) |before| {
-                if (entry.created_at > before) {
-                    matches_filter = false;
+            if (matches_filter) {
+                if (filter.title_contains) |substr| {
+                    if (std.mem.indexOf(u8, entry.title, substr) == null) {
+                        matches_filter = false;
+                    }
                 }
             }
 
             if (matches_filter) {
-                try matches.append(entry.*);
+                if (filter.content_contains) |substr| {
+                    if (std.mem.indexOf(u8, entry.content, substr) == null) {
+                        matches_filter = false;
+                    }
+                }
+            }
+
+            if (matches_filter) {
+                if (filter.created_after) |after| {
+                    if (entry.created_at < after) {
+                        matches_filter = false;
+                    }
+                }
+            }
+
+            if (matches_filter) {
+                if (filter.created_before) |before| {
+                    if (entry.created_at > before) {
+                        matches_filter = false;
+                    }
+                }
+            }
+
+            if (matches_filter) {
+                try matches.append(self.allocator, entry);
                 if (matches.items.len >= MAX_QUERY_RESULTS) {
                     break;
                 }
@@ -294,6 +302,23 @@ pub const ResearchEngine = struct {
         self: *ResearchEngine,
         entry_id: u64,
     ) ?*ResearchEntry {
+        std.debug.assert(entry_id > 0);
+
+        var i: u32 = 0;
+        while (i < self.entries.items.len) : (i += 1) {
+            if (self.entries.items[i].entry_id == entry_id) {
+                return &self.entries.items[i];
+            }
+        }
+
+        return null;
+    }
+
+    // Get entry by ID (const version).
+    pub fn get_entry_by_id_const(
+        self: *const ResearchEngine,
+        entry_id: u64,
+    ) ?*const ResearchEntry {
         std.debug.assert(entry_id > 0);
 
         var i: u32 = 0;

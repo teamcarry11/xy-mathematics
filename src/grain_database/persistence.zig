@@ -14,6 +14,7 @@ const index_manager = grain_core.index_manager;
 const backup_manager = grain_core.backup_manager;
 const record_serialization = @import("record_serialization.zig");
 const index_entry_serialization = @import("index_entry_serialization.zig");
+const multi_page_record = @import("multi_page_record.zig");
 const storage_engine = @import("storage_engine.zig");
 
 // Database persistence manager.
@@ -22,6 +23,7 @@ pub const PersistenceManager = struct {
     wal_manager: wal_manager.WalManager,
     index_manager: index_manager.IndexManager,
     backup_manager: backup_manager.BackupManager,
+    multi_page_manager: multi_page_record.MultiPageRecordManager,
     database_filename: [file_storage.MAX_FILENAME_LEN]u8,
     database_filename_len: u32,
     is_initialized: bool,

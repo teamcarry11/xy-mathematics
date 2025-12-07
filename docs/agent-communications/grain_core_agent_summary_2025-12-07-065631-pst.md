@@ -317,11 +317,11 @@ Grain Research Agent (Research & Analysis) [Mostly independent, may integrate wi
 
 #### For Grain Skate Agent (Knowledge Graph)
 
-**Current Status**: Phase 4 & Phase 5 IN PROGRESS — Core Complete, UI/GLM-4.6 Integration Pending
+**Current Status**: Phase 4 & Phase 5 IN PROGRESS — Core Complete, UI/Visual Indicators Pending
 - Phase 2: Text Buffer Unification ✅ COMPLETE
 - Phase 3: DAG Integration ✅ COMPLETE
 - Phase 4: Temporal Knowledge Graph 🔄 IN PROGRESS (Core Complete, UI Pending)
-- Phase 5: AI-Powered Graph Insights 🔄 IN PROGRESS (Foundation Complete, GLM-4.6 Integration Pending)
+- Phase 5: AI-Powered Graph Insights 🔄 IN PROGRESS (GLM-4.6 Integration Complete ✅, Visual Indicators Pending)
 
 **Available from Grain Core Agent**:
 - ✅ HTTP Client (Phase 61) — Complete (for AI API calls)
@@ -339,10 +339,9 @@ Grain Research Agent (Research & Analysis) [Mostly independent, may integrate wi
 **Next Steps**:
 - Phase 4: Add time slider UI component to graph renderer
 - Phase 4: Add animated transitions showing graph growth
-- Phase 5: Integrate with `src/aurora_glm46.zig` (GLM-4.6 client from Aurora)
-- Phase 5: Implement actual AI analysis (replace placeholders with GLM-4.6 calls)
-- Phase 5: Add visual indicators for AI-suggested connections
-- Test thoroughly with UI and AI integration
+- Phase 5: Add visual indicators for AI-suggested connections (graph renderer integration)
+- Phase 5: Test thoroughly with actual AI API calls (requires API key)
+- Phase 5: Future: Use vector embeddings for semantic similarity (Grain Court integration)
 
 **Can Work In Parallel With**: All agents (except when coordinating shared modules or Aurora's GLM-4.6 client)
 

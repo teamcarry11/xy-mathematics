@@ -6,6 +6,7 @@
 //!
 //! 2025-12-04-092542-pst: Active implementation
 //! 2025-12-07-025947-pst: Phase 10.4 WebSocket integration for real-time file system notifications
+//! 2025-12-07-071409-pst: Phase 13 File Storage integration for database file support
 
 const std = @import("std");
 const grain_core = @import("grain_core");
@@ -26,6 +27,10 @@ pub const MAX_CLIPBOARD_ENTRIES: u32 = 16;
 // 2025-12-07-025947-pst: Phase 10.4 WebSocket integration
 pub const MAX_WEBSOCKET_CLIENTS: u32 = 32;
 
+// Bounded: Max database file handles (explicit limit)
+// 2025-12-07-071409-pst: Phase 13 File Storage integration
+pub const MAX_DATABASE_FILE_HANDLES: u32 = 32;
+
 // File operation type.
 // 2025-12-04-092542-pst: Active enum
 pub const FileOperation = enum(u8) {
@@ -44,11 +49,23 @@ pub const ClipboardEntry = struct {
     path_len: u32,
 };
 
+// Database file handle tracking.
+// 2025-12-07-071409-pst: Phase 13 File Storage integration
+pub const DatabaseFileHandle = struct {
+    handle_id: u32,
+    entry_id: u32,
+    filename: [grain_core.file_storage.MAX_FILENAME_LEN]u8,
+    filename_len: u32,
+    active: bool,
+};
+
 // File Manager UI application state.
 // 2025-12-04-092542-pst: Active struct
 // 2025-12-07-025947-pst: Phase 10.4 WebSocket integration
+// 2025-12-07-071409-pst: Phase 13 File Storage integration
 pub const FileManagerUI = struct {
     file_manager: *grain_core.file_manager.FileManager,
+    file_storage_manager: *grain_core.file_storage.FileStorageManager,
     search_query: [grain_core.file_manager.MAX_NAME_LEN]u8,
     search_query_len: u32,
     selected_entry_id: u32,
@@ -59,23 +76,29 @@ pub const FileManagerUI = struct {
     websocket_manager: *grain_core.websocket.WebSocketManager,
     websocket_clients: [MAX_WEBSOCKET_CLIENTS]u32,
     websocket_clients_len: u32,
+    database_file_handles: [MAX_DATABASE_FILE_HANDLES]?DatabaseFileHandle,
+    database_file_handles_len: u32,
     allocator: std.mem.Allocator,
 
     /// Initialize file manager UI.
     // 2025-12-04-092542-pst: Active function
     // 2025-12-07-025947-pst: Phase 10.4 WebSocket integration
+    // 2025-12-07-071409-pst: Phase 13 File Storage integration
     pub fn init(
         allocator: std.mem.Allocator,
         fm: *grain_core.file_manager.FileManager,
         ws_manager: *grain_core.websocket.WebSocketManager,
+        storage_mgr: *grain_core.file_storage.FileStorageManager,
     ) FileManagerUI {
         // Precondition: Allocator and managers must be valid
         std.debug.assert(allocator.ptr != null);
         std.debug.assert(@intFromPtr(fm) != 0);
         std.debug.assert(@intFromPtr(ws_manager) != 0);
+        std.debug.assert(@intFromPtr(storage_mgr) != 0);
 
         var ui = FileManagerUI{
             .file_manager = fm,
+            .file_storage_manager = storage_mgr,
             .search_query = undefined,
             .search_query_len = 0,
             .selected_entry_id = 0,
@@ -86,6 +109,8 @@ pub const FileManagerUI = struct {
             .websocket_manager = ws_manager,
             .websocket_clients = undefined,
             .websocket_clients_len = 0,
+            .database_file_handles = undefined,
+            .database_file_handles_len = 0,
             .allocator = allocator,
         };
 
@@ -107,10 +132,17 @@ pub const FileManagerUI = struct {
             ui.websocket_clients[i] = 0;
         }
 
+        // Initialize database file handles array
+        i = 0;
+        while (i < MAX_DATABASE_FILE_HANDLES) : (i += 1) {
+            ui.database_file_handles[i] = null;
+        }
+
         // Postcondition: UI must be valid
         std.debug.assert(ui.search_query_len == 0);
         std.debug.assert(ui.clipboard_len == 0);
         std.debug.assert(ui.websocket_clients_len == 0);
+        std.debug.assert(ui.database_file_handles_len == 0);
 
         return ui;
     }

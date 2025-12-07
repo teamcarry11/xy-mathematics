@@ -12,6 +12,7 @@ const grain_research = @import("grain_research");
 const ResearchEngine = grain_research.ResearchEngine;
 const ResearchEntry = grain_research.ResearchEntry;
 const QueryFilter = grain_research.QueryFilter;
+const MAX_QUERY_RESULTS = grain_research.research_engine.MAX_QUERY_RESULTS;
 
 test "research engine initialization" {
     const allocator = testing.allocator;
@@ -77,7 +78,7 @@ test "query by tag" {
     const tags3 = [_][]const u8{ "tag3" };
     _ = try engine.collect(title3, content3, &tags3);
 
-    var filter = QueryFilter{ .tag = "common" };
+    const filter = QueryFilter{ .tag = "common" };
     const result = try engine.query(filter);
     defer result.deinit();
 
@@ -100,7 +101,7 @@ test "query by title contains" {
     const tags2 = [_][]const u8{ "zig" };
     _ = try engine.collect(title2, content2, &tags2);
 
-    var filter = QueryFilter{ .title_contains = "Python" };
+    const filter = QueryFilter{ .title_contains = "Python" };
     const result = try engine.query(filter);
     defer result.deinit();
 
@@ -123,7 +124,7 @@ test "query by content contains" {
     const tags2 = [_][]const u8{ "analysis" };
     _ = try engine.collect(title2, content2, &tags2);
 
-    var filter = QueryFilter{ .content_contains = "research" };
+    const filter = QueryFilter{ .content_contains = "research" };
     const result = try engine.query(filter);
     defer result.deinit();
 
@@ -145,7 +146,7 @@ test "query by date range" {
     const tags = [_][]const u8{ "test" };
     _ = try engine.collect(title, content, &tags);
 
-    var filter = QueryFilter{
+    const filter = QueryFilter{
         .created_after = before,
         .created_before = after,
     };
@@ -170,7 +171,7 @@ test "query with multiple filters" {
     const tags2 = [_][]const u8{ "zig", "research" };
     _ = try engine.collect(title2, content2, &tags2);
 
-    var filter = QueryFilter{
+    const filter = QueryFilter{
         .tag = "research",
         .title_contains = "Python",
     };
@@ -186,7 +187,7 @@ test "query returns empty result" {
     var engine = ResearchEngine.init(allocator);
     defer engine.deinit();
 
-    var filter = QueryFilter{ .tag = "nonexistent" };
+    const filter = QueryFilter{ .tag = "nonexistent" };
     const result = try engine.query(filter);
     defer result.deinit();
 
@@ -208,11 +209,11 @@ test "query limits results" {
         _ = try engine.collect(title, content, &tags);
     }
 
-    var filter = QueryFilter{ .tag = "test" };
+    const filter = QueryFilter{ .tag = "test" };
     const result = try engine.query(filter);
     defer result.deinit();
 
-    try testing.expect(result.entries_len <= ResearchEngine.MAX_QUERY_RESULTS);
+    try testing.expect(result.entries_len <= MAX_QUERY_RESULTS);
     try testing.expect(result.total_matched == 100);
 }
 
@@ -244,7 +245,7 @@ test "query result deinit" {
     const tags = [_][]const u8{ "test" };
     _ = try engine.collect(title, content, &tags);
 
-    var filter = QueryFilter{ .tag = "test" };
+    const filter = QueryFilter{ .tag = "test" };
     const result = try engine.query(filter);
 
     try testing.expect(result.entries_len == 1);

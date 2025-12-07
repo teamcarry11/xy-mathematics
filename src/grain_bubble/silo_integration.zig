@@ -100,8 +100,104 @@ pub const SiloIntegration = struct {
         offset += 4;
         @memcpy(buffer[offset..offset + 4], std.mem.asBytes(&canvas_state.layers_len));
         offset += 4;
-        // Serialize layers (simplified for Phase 3 - just header).
-        // Full implementation will serialize all layer, shape, and text data.
+        // Serialize layers with full shape and text data.
+        var layer_i: u32 = 0;
+        while (layer_i < canvas_state.layers_len) : (layer_i += 1) {
+            const layer = &canvas_state.layers[layer_i];
+            if (offset + 80 > buffer.len) {
+                break;
+            }
+            // Serialize layer header: id (4), name_len (4), name (up to 64), visible (1), locked (1), z_order (4).
+            @memcpy(buffer[offset..offset + 4], std.mem.asBytes(&layer.id));
+            offset += 4;
+            @memcpy(buffer[offset..offset + 4], std.mem.asBytes(&layer.name_len));
+            offset += 4;
+            if (layer.name_len > 0) {
+                const name_len = @min(layer.name_len, 64);
+                if (offset + name_len > buffer.len) {
+                    break;
+                }
+                @memcpy(buffer[offset..offset + name_len], layer.name[0..name_len]);
+                offset += name_len;
+            }
+            const visible_byte: u8 = if (layer.visible) 1 else 0;
+            buffer[offset] = visible_byte;
+            offset += 1;
+            const locked_byte: u8 = if (layer.locked) 1 else 0;
+            buffer[offset] = locked_byte;
+            offset += 1;
+            @memcpy(buffer[offset..offset + 4], std.mem.asBytes(&layer.z_order));
+            offset += 4;
+            @memcpy(buffer[offset..offset + 4], std.mem.asBytes(&layer.shapes_len));
+            offset += 4;
+            @memcpy(buffer[offset..offset + 4], std.mem.asBytes(&layer.texts_len));
+            offset += 4;
+            // Serialize shapes (each shape: 64 bytes).
+            var shape_i: u32 = 0;
+            while (shape_i < layer.shapes_len) : (shape_i += 1) {
+                const shape = &layer.shapes[shape_i];
+                if (offset + 64 > buffer.len) {
+                    break;
+                }
+                @memcpy(buffer[offset..offset + 4], std.mem.asBytes(&shape.id));
+                offset += 4;
+                const shape_type_val: u8 = @intFromEnum(shape.shape_type);
+                buffer[offset] = shape_type_val;
+                offset += 1;
+                @memcpy(buffer[offset..offset + 8], std.mem.asBytes(&shape.x));
+                offset += 8;
+                @memcpy(buffer[offset..offset + 8], std.mem.asBytes(&shape.y));
+                offset += 8;
+                @memcpy(buffer[offset..offset + 8], std.mem.asBytes(&shape.width));
+                offset += 8;
+                @memcpy(buffer[offset..offset + 8], std.mem.asBytes(&shape.height));
+                offset += 8;
+                @memcpy(buffer[offset..offset + 4], std.mem.asBytes(&shape.color));
+                offset += 4;
+                @memcpy(buffer[offset..offset + 8], std.mem.asBytes(&shape.corner_radius));
+                offset += 8;
+                @memcpy(buffer[offset..offset + 8], std.mem.asBytes(&shape.stroke_width));
+                offset += 8;
+                @memcpy(buffer[offset..offset + 4], std.mem.asBytes(&shape.stroke_color));
+                offset += 4;
+                @memcpy(buffer[offset..offset + 4], std.mem.asBytes(&shape.layer_id));
+                offset += 4;
+                @memcpy(buffer[offset..offset + 4], std.mem.asBytes(&shape.z_order));
+                offset += 4;
+            }
+            // Serialize texts (each text: variable size).
+            var text_i: u32 = 0;
+            while (text_i < layer.texts_len) : (text_i += 1) {
+                const text = &layer.texts[text_i];
+                if (offset + 40 > buffer.len) {
+                    break;
+                }
+                @memcpy(buffer[offset..offset + 4], std.mem.asBytes(&text.id));
+                offset += 4;
+                @memcpy(buffer[offset..offset + 8], std.mem.asBytes(&text.x));
+                offset += 8;
+                @memcpy(buffer[offset..offset + 8], std.mem.asBytes(&text.y));
+                offset += 8;
+                @memcpy(buffer[offset..offset + 4], std.mem.asBytes(&text.content_len));
+                offset += 4;
+                if (text.content_len > 0) {
+                    const content_len = @min(text.content_len, canvas.MAX_TEXT_LEN);
+                    if (offset + content_len > buffer.len) {
+                        break;
+                    }
+                    @memcpy(buffer[offset..offset + content_len], text.content[0..content_len]);
+                    offset += content_len;
+                }
+                @memcpy(buffer[offset..offset + 4], std.mem.asBytes(&text.font_size));
+                offset += 4;
+                @memcpy(buffer[offset..offset + 4], std.mem.asBytes(&text.color));
+                offset += 4;
+                @memcpy(buffer[offset..offset + 4], std.mem.asBytes(&text.layer_id));
+                offset += 4;
+                @memcpy(buffer[offset..offset + 4], std.mem.asBytes(&text.z_order));
+                offset += 4;
+            }
+        }
         std.debug.assert(offset <= buffer.len);
         return offset;
     }
@@ -132,8 +228,118 @@ pub const SiloIntegration = struct {
             return false;
         }
         canvas_state.layers_len = layers_len;
-        // Deserialize layers (simplified for Phase 3).
-        // Full implementation will deserialize all layer data.
+        // Deserialize layers with full shape and text data.
+        var layer_i: u32 = 0;
+        while (layer_i < layers_len) : (layer_i += 1) {
+            if (offset + 20 > buffer.len) {
+                return false;
+            }
+            var layer = &canvas_state.layers[layer_i];
+            layer.id = std.mem.readInt(u32, buffer[offset..offset + 4], .little);
+            offset += 4;
+            layer.name_len = std.mem.readInt(u32, buffer[offset..offset + 4], .little);
+            offset += 4;
+            if (layer.name_len > 64) {
+                return false;
+            }
+            if (layer.name_len > 0) {
+                const name_len = @min(layer.name_len, 64);
+                if (offset + name_len > buffer.len) {
+                    return false;
+                }
+                @memset(layer.name[0..name_len], 0);
+                @memcpy(layer.name[0..name_len], buffer[offset..offset + name_len]);
+                offset += name_len;
+            }
+            layer.visible = buffer[offset] != 0;
+            offset += 1;
+            layer.locked = buffer[offset] != 0;
+            offset += 1;
+            layer.z_order = std.mem.readInt(u32, buffer[offset..offset + 4], .little);
+            offset += 4;
+            layer.shapes_len = std.mem.readInt(u32, buffer[offset..offset + 4], .little);
+            offset += 4;
+            layer.texts_len = std.mem.readInt(u32, buffer[offset..offset + 4], .little);
+            offset += 4;
+            if (layer.shapes_len > canvas.MAX_SHAPES) {
+                return false;
+            }
+            if (layer.texts_len > canvas.MAX_TEXT_ITEMS) {
+                return false;
+            }
+            // Deserialize shapes.
+            var shape_i: u32 = 0;
+            while (shape_i < layer.shapes_len) : (shape_i += 1) {
+                if (offset + 64 > buffer.len) {
+                    return false;
+                }
+                var shape = &layer.shapes[shape_i];
+                shape.id = std.mem.readInt(u32, buffer[offset..offset + 4], .little);
+                offset += 4;
+                const shape_type_val = buffer[offset];
+                offset += 1;
+                if (shape_type_val > 2) {
+                    return false;
+                }
+                shape.shape_type = @enumFromInt(shape_type_val);
+                shape.x = std.mem.readFloat(f64, buffer[offset..offset + 8], .little);
+                offset += 8;
+                shape.y = std.mem.readFloat(f64, buffer[offset..offset + 8], .little);
+                offset += 8;
+                shape.width = std.mem.readFloat(f64, buffer[offset..offset + 8], .little);
+                offset += 8;
+                shape.height = std.mem.readFloat(f64, buffer[offset..offset + 8], .little);
+                offset += 8;
+                shape.color = std.mem.readInt(u32, buffer[offset..offset + 4], .little);
+                offset += 4;
+                shape.corner_radius = std.mem.readFloat(f64, buffer[offset..offset + 8], .little);
+                offset += 8;
+                shape.stroke_width = std.mem.readFloat(f64, buffer[offset..offset + 8], .little);
+                offset += 8;
+                shape.stroke_color = std.mem.readInt(u32, buffer[offset..offset + 4], .little);
+                offset += 4;
+                shape.layer_id = std.mem.readInt(u32, buffer[offset..offset + 4], .little);
+                offset += 4;
+                shape.z_order = std.mem.readInt(u32, buffer[offset..offset + 4], .little);
+                offset += 4;
+            }
+            // Deserialize texts.
+            var text_i: u32 = 0;
+            while (text_i < layer.texts_len) : (text_i += 1) {
+                if (offset + 20 > buffer.len) {
+                    return false;
+                }
+                var text = &layer.texts[text_i];
+                text.id = std.mem.readInt(u32, buffer[offset..offset + 4], .little);
+                offset += 4;
+                text.x = std.mem.readFloat(f64, buffer[offset..offset + 8], .little);
+                offset += 8;
+                text.y = std.mem.readFloat(f64, buffer[offset..offset + 8], .little);
+                offset += 8;
+                text.content_len = std.mem.readInt(u32, buffer[offset..offset + 4], .little);
+                offset += 4;
+                if (text.content_len > canvas.MAX_TEXT_LEN) {
+                    return false;
+                }
+                if (text.content_len > 0) {
+                    const content_len = @min(text.content_len, canvas.MAX_TEXT_LEN);
+                    if (offset + content_len > buffer.len) {
+                        return false;
+                    }
+                    @memset(text.content[0..content_len], 0);
+                    @memcpy(text.content[0..content_len], buffer[offset..offset + content_len]);
+                    offset += content_len;
+                }
+                text.font_size = std.mem.readInt(u32, buffer[offset..offset + 4], .little);
+                offset += 4;
+                text.color = std.mem.readInt(u32, buffer[offset..offset + 4], .little);
+                offset += 4;
+                text.layer_id = std.mem.readInt(u32, buffer[offset..offset + 4], .little);
+                offset += 4;
+                text.z_order = std.mem.readInt(u32, buffer[offset..offset + 4], .little);
+                offset += 4;
+            }
+        }
         std.debug.assert(offset <= buffer.len);
         return true;
     }

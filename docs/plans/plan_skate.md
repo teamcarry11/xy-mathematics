@@ -1,8 +1,8 @@
 # Grain Skate Terminal Silo Field Agent: Development Plan
 
 **Agent**: Grain Skate Terminal Silo Field Agent (3rd Agent)  
-**Status**: Phase 3 Complete, Creative Enhancements Planned  
-**Last Updated**: 2025-12-06-233331-pst
+**Status**: Phase 4 & Phase 5 In Progress (Core Complete, UI/GLM-4.6 Integration Pending)  
+**Last Updated**: 2025-12-07-031415-pst
 
 ---
 
@@ -368,31 +368,52 @@ Grain Skate Terminal Silo Field Agent is responsible for building Grain Skate (k
 
 ---
 
-### Phase 4: Temporal Knowledge Graph (Priority: High)
+### Phase 4: Temporal Knowledge Graph ✅ **IN PROGRESS**
 
-**Status**: **PLANNED**  
+**Date Started**: 2025-12-07-020707-pst
+
+**Status**: **IN PROGRESS** — Core temporal query infrastructure complete, UI pending  
 **Estimated Time**: 3-4 weeks
 
 **Objective**: Time-travel mode for knowledge graph with DAG-based history
 
-**Features**:
-- Time slider UI (drag to view graph at any point in time)
-- Block version history with branching (DAG-based)
-- "What did I know on [date]?" queries
+**Completed Work**:
+1. **Temporal Query Infrastructure** (`src/grain_skate/editor_dag_integration.zig`):
+   - Extended `EditorDagIntegration` with processed events history
+   - Added `ProcessedEvent` struct to store event metadata with timestamps
+   - Implemented `query_events_up_to_timestamp()` for time-travel queries
+   - Implemented `count_events_by_time_range()` for date range queries
+   - Implemented `get_earliest_timestamp()` and `get_latest_timestamp()` for time slider range
+   - Events automatically stored in history when processed
+   - Tests created and added to build system
+
+2. **Temporal Graph Module** (`src/grain_skate/temporal_graph.zig`):
+   - Time-travel mode management (set/reset timestamp)
+   - Time range queries (earliest to latest)
+   - Date range queries ("What did I know on [date]?")
+   - Query events at current time (time-travel or present)
+   - Tests created (`tests/123_grain_skate_temporal_graph_test.zig`)
+   - Added to `src/grain_skate/root.zig` exports
+   - Added tests to `build.zig`
+
+**Remaining Work**:
+- Time slider UI component (graph renderer integration)
+- Block version history visualization
 - Animated transitions showing graph growth
-- Temporal queries: "Show all blocks created in January"
+- Integration with graph renderer for time-travel visualization
 
 **DAG Integration**:
-- Each block edit = DAG event with timestamp
-- DAG history provides deterministic time-travel
-- HashDAG consensus ensures consistent history across collaborators
+- Each block edit = DAG event with timestamp ✅
+- DAG history provides deterministic time-travel ✅
+- HashDAG consensus ensures consistent history across collaborators ✅
 
 **Implementation Steps**:
-1. Extend `EditorDagIntegration` with temporal queries
-2. Add time slider component to graph renderer
-3. Store block creation timestamps in DAG events
-4. Query DAG history for temporal views
-5. Test thoroughly (time-travel, version history, branching)
+1. ✅ Extend `EditorDagIntegration` with temporal queries
+2. ✅ Create `TemporalGraph` module for time-travel management
+3. ✅ Store block creation timestamps in DAG events (automatic via DAG)
+4. ✅ Query DAG history for temporal views
+5. ⏳ Add time slider component to graph renderer (UI pending)
+6. ⏳ Test thoroughly with UI integration (time-travel, version history, branching)
 
 **Dependencies**:
 - **Needs**: DAG Core (exists) ✅
@@ -404,31 +425,54 @@ Grain Skate Terminal Silo Field Agent is responsible for building Grain Skate (k
 
 ---
 
-### Phase 5: AI-Powered Graph Insights (Priority: High)
+### Phase 5: AI-Powered Graph Insights 🔄 **IN PROGRESS**
 
-**Status**: **PLANNED**  
+**Date Started**: 2025-12-07-031415-pst
+
+**Status**: **IN PROGRESS** — Foundation complete, GLM-4.6 integration pending  
 **Estimated Time**: 3-4 weeks
 
 **Objective**: GLM-4.6 powered insights for knowledge graph management
 
-**Features**:
-- Auto-suggest connections between blocks (semantic similarity)
-- Detect knowledge gaps (missing links between related blocks)
-- Summarize subgraphs (AI-generated summaries)
-- Generate block titles from content (auto-titling)
-- Semantic clustering (group related blocks visually)
+**Completed Work**:
+1. **AI Insights Module** (`src/grain_skate/ai_insights.zig`):
+   - AI insights structure with DAG integration and block storage
+   - Connection suggestion structure (`ConnectionSuggestion`)
+   - Title suggestion structure (`TitleSuggestion`)
+   - Placeholder functions for all AI features:
+     - `suggest_connections()` - Auto-suggest connections (placeholder)
+     - `detect_knowledge_gaps()` - Detect missing links (placeholder)
+     - `suggest_title()` - Generate block titles (placeholder)
+     - `summarize_subgraph()` - Summarize subgraphs (placeholder)
+   - `store_suggestion_as_dag_event()` - Store AI suggestions as DAG events ✅
+   - Tests created (`tests/124_grain_skate_ai_insights_test.zig`)
+   - Added to `src/grain_skate/root.zig` exports
+   - Added tests to `build.zig`
+
+2. **DAG Integration**:
+   - Extended `EditorDagIntegration` with `add_event_and_update_last()` method
+   - AI suggestions stored as DAG events (ai_completion type) ✅
+   - Parent event references maintained for deterministic ordering ✅
+
+**Remaining Work**:
+- Integrate with `src/aurora_glm46.zig` (GLM-4.6 client from Aurora)
+- Use vector embeddings for semantic similarity (Grain Court integration)
+- Implement actual AI analysis (replace placeholders with GLM-4.6 calls)
+- Visual indicators for AI-suggested connections (graph renderer integration)
+- Test thoroughly with actual AI integration (AI suggestions, semantic similarity, clustering)
 
 **DAG Integration**:
-- AI suggestions = DAG events (can be accepted/rejected)
-- AI insights stored in DAG for deterministic replay
-- HashDAG consensus for collaborative AI suggestions
+- AI suggestions = DAG events (can be accepted/rejected) ✅
+- AI insights stored in DAG for deterministic replay ✅
+- HashDAG consensus for collaborative AI suggestions ✅
 
 **Implementation Steps**:
-1. Integrate with `src/aurora_glm46.zig` (GLM-4.6 client from Aurora)
-2. Use vector embeddings for semantic similarity (Grain Court integration)
-3. Store AI suggestions as DAG events (accept/reject tracking)
-4. Visual indicators for AI-suggested connections
-5. Test thoroughly (AI suggestions, semantic similarity, clustering)
+1. ✅ Create AI insights module foundation
+2. ✅ Store AI suggestions as DAG events
+3. ⏳ Integrate with `src/aurora_glm46.zig` (GLM-4.6 client from Aurora)
+4. ⏳ Use vector embeddings for semantic similarity (Grain Court integration)
+5. ⏳ Visual indicators for AI-suggested connections
+6. ⏳ Test thoroughly with actual AI integration
 
 **Dependencies**:
 - **Needs**: GLM-4.6 client from Aurora Agent (exists) ✅

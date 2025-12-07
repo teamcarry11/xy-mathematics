@@ -5,6 +5,7 @@
 //! GrainStyle: grain_case, u32/u64, bounded allocations, assertions.
 //!
 //! 2025-12-06-011616-pst: Active implementation
+//! 2025-12-07-020824-pst: Phase 10.3 WebSocket integration tests
 
 const std = @import("std");
 const testing = std.testing;
@@ -17,21 +18,24 @@ test "network tools app initialization" {
     const allocator = testing.allocator;
     var nm = grain_core.network_manager.NetworkManager.init();
     var dns_res = grain_core.dns_resolver.DnsResolver.init(3600);
+    var ws_manager = grain_core.websocket.WebSocketManager.init();
 
-    var app = NetworkToolsApp.init(allocator, &nm, &dns_res);
+    var app = NetworkToolsApp.init(allocator, &nm, &dns_res, &ws_manager);
 
     try testing.expect(app.devices_len == 0);
     try testing.expect(app.connections_len == 0);
     try testing.expect(app.bandwidth_bytes_sent == 0);
     try testing.expect(app.bandwidth_bytes_received == 0);
+    try testing.expect(app.websocket_clients_len == 0);
 }
 
 test "scan network" {
     const allocator = testing.allocator;
     var nm = grain_core.network_manager.NetworkManager.init();
     var dns_res = grain_core.dns_resolver.DnsResolver.init(3600);
+    var ws_manager = grain_core.websocket.WebSocketManager.init();
 
-    var app = NetworkToolsApp.init(allocator, &nm, &dns_res);
+    var app = NetworkToolsApp.init(allocator, &nm, &dns_res, &ws_manager);
     const device_count = app.scan_network("192.168.1.0", "255.255.255.0");
 
     try testing.expect(device_count > 0);
@@ -43,8 +47,9 @@ test "scan ports" {
     const allocator = testing.allocator;
     var nm = grain_core.network_manager.NetworkManager.init();
     var dns_res = grain_core.dns_resolver.DnsResolver.init(3600);
+    var ws_manager = grain_core.websocket.WebSocketManager.init();
 
-    var app = NetworkToolsApp.init(allocator, &nm, &dns_res);
+    var app = NetworkToolsApp.init(allocator, &nm, &dns_res, &ws_manager);
 
     var results: [10]NetworkToolsApp.PortScanResult = undefined;
     var results_len: u32 = 0;
@@ -59,8 +64,9 @@ test "update bandwidth" {
     const allocator = testing.allocator;
     var nm = grain_core.network_manager.NetworkManager.init();
     var dns_res = grain_core.dns_resolver.DnsResolver.init(3600);
+    var ws_manager = grain_core.websocket.WebSocketManager.init();
 
-    var app = NetworkToolsApp.init(allocator, &nm, &dns_res);
+    var app = NetworkToolsApp.init(allocator, &nm, &dns_res, &ws_manager);
     app.update_bandwidth(1024, 2048);
 
     var bytes_sent: u64 = 0;
@@ -75,8 +81,9 @@ test "get bandwidth" {
     const allocator = testing.allocator;
     var nm = grain_core.network_manager.NetworkManager.init();
     var dns_res = grain_core.dns_resolver.DnsResolver.init(3600);
+    var ws_manager = grain_core.websocket.WebSocketManager.init();
 
-    var app = NetworkToolsApp.init(allocator, &nm, &dns_res);
+    var app = NetworkToolsApp.init(allocator, &nm, &dns_res, &ws_manager);
     app.update_bandwidth(512, 1024);
 
     var bytes_sent: u64 = 0;
@@ -91,8 +98,9 @@ test "add connection" {
     const allocator = testing.allocator;
     var nm = grain_core.network_manager.NetworkManager.init();
     var dns_res = grain_core.dns_resolver.DnsResolver.init(3600);
+    var ws_manager = grain_core.websocket.WebSocketManager.init();
 
-    var app = NetworkToolsApp.init(allocator, &nm, &dns_res);
+    var app = NetworkToolsApp.init(allocator, &nm, &dns_res, &ws_manager);
     const result = app.add_connection("127.0.0.1", 8080, "192.168.1.1", 80, .established, 6);
 
     try testing.expect(result == true);
@@ -107,8 +115,9 @@ test "dns lookup" {
     const allocator = testing.allocator;
     var nm = grain_core.network_manager.NetworkManager.init();
     var dns_res = grain_core.dns_resolver.DnsResolver.init(3600);
+    var ws_manager = grain_core.websocket.WebSocketManager.init();
 
-    var app = NetworkToolsApp.init(allocator, &nm, &dns_res);
+    var app = NetworkToolsApp.init(allocator, &nm, &dns_res, &ws_manager);
     _ = app.add_dns_cache_entry("example.com", .a, "93.184.216.34");
 
     var ip_address: [16]u8 = undefined;
@@ -123,8 +132,9 @@ test "add dns cache entry" {
     const allocator = testing.allocator;
     var nm = grain_core.network_manager.NetworkManager.init();
     var dns_res = grain_core.dns_resolver.DnsResolver.init(3600);
+    var ws_manager = grain_core.websocket.WebSocketManager.init();
 
-    var app = NetworkToolsApp.init(allocator, &nm, &dns_res);
+    var app = NetworkToolsApp.init(allocator, &nm, &dns_res, &ws_manager);
     const result = app.add_dns_cache_entry("test.com", .a, "192.168.1.1");
 
     try testing.expect(result == true);
@@ -137,8 +147,9 @@ test "clear expired dns cache" {
     const allocator = testing.allocator;
     var nm = grain_core.network_manager.NetworkManager.init();
     var dns_res = grain_core.dns_resolver.DnsResolver.init(1); // 1 second TTL
+    var ws_manager = grain_core.websocket.WebSocketManager.init();
 
-    var app = NetworkToolsApp.init(allocator, &nm, &dns_res);
+    var app = NetworkToolsApp.init(allocator, &nm, &dns_res, &ws_manager);
     _ = app.add_dns_cache_entry("test.com", .a, "192.168.1.1");
     try testing.expect(dns_res.cache_len == 1);
 
@@ -153,8 +164,9 @@ test "multiple connections" {
     const allocator = testing.allocator;
     var nm = grain_core.network_manager.NetworkManager.init();
     var dns_res = grain_core.dns_resolver.DnsResolver.init(3600);
+    var ws_manager = grain_core.websocket.WebSocketManager.init();
 
-    var app = NetworkToolsApp.init(allocator, &nm, &dns_res);
+    var app = NetworkToolsApp.init(allocator, &nm, &dns_res, &ws_manager);
     _ = app.add_connection("127.0.0.1", 8080, "192.168.1.1", 80, .established, 6);
     _ = app.add_connection("127.0.0.1", 8081, "192.168.1.2", 443, .listening, 6);
 
@@ -167,12 +179,49 @@ test "multiple dns cache entries" {
     const allocator = testing.allocator;
     var nm = grain_core.network_manager.NetworkManager.init();
     var dns_res = grain_core.dns_resolver.DnsResolver.init(3600);
+    var ws_manager = grain_core.websocket.WebSocketManager.init();
 
-    var app = NetworkToolsApp.init(allocator, &nm, &dns_res);
+    var app = NetworkToolsApp.init(allocator, &nm, &dns_res, &ws_manager);
     _ = app.add_dns_cache_entry("test1.com", .a, "192.168.1.1");
     _ = app.add_dns_cache_entry("test2.com", .a, "192.168.1.2");
 
     try testing.expect(dns_res.cache_len == 2);
     try testing.expect(dns_res.cache[0].active == true);
     try testing.expect(dns_res.cache[1].active == true);
+}
+
+test "websocket client management" {
+    const allocator = testing.allocator;
+    var nm = grain_core.network_manager.NetworkManager.init();
+    var dns_res = grain_core.dns_resolver.DnsResolver.init(3600);
+    var ws_manager = grain_core.websocket.WebSocketManager.init();
+
+    var app = NetworkToolsApp.init(allocator, &nm, &dns_res, &ws_manager);
+
+    // Add WebSocket client
+    const conn1 = ws_manager.add_connection(1);
+    try testing.expect(conn1 != null);
+    if (conn1) |conn| {
+        conn.state = grain_core.websocket.ConnectionState.open;
+        const added = app.add_websocket_client(conn.connection_id);
+        try testing.expect(added == true);
+        try testing.expect(app.websocket_clients_len == 1);
+    }
+
+    // Add another client
+    const conn2 = ws_manager.add_connection(2);
+    try testing.expect(conn2 != null);
+    if (conn2) |conn| {
+        conn.state = grain_core.websocket.ConnectionState.open;
+        const added = app.add_websocket_client(conn.connection_id);
+        try testing.expect(added == true);
+        try testing.expect(app.websocket_clients_len == 2);
+    }
+
+    // Remove client
+    if (conn1) |conn| {
+        const removed = app.remove_websocket_client(conn.connection_id);
+        try testing.expect(removed == true);
+        try testing.expect(app.websocket_clients_len == 1);
+    }
 }

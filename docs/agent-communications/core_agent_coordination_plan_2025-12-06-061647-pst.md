@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-This coordination plan provides a unified strategy for all 8 Grain agents, optimizing parallelization while preventing conflicts. It includes dependency analysis, work sequencing, and agent-specific recommendations.
+This coordination plan provides a unified strategy for all 9 Grain agents, optimizing parallelization while preventing conflicts. It includes dependency analysis, work sequencing, and agent-specific recommendations.
 
 **Agents**:
 1. **Grain Core Agent** (System Services) - YOU
@@ -19,6 +19,7 @@ This coordination plan provides a unified strategy for all 8 Grain agents, optim
 6. **Grain Carry Agent** (Mobile Framework)
 7. **Grain Aurora Agent** (IDE/Browser)
 8. **Grain Workspace Agent** (Desktop Apps)
+9. **Grain Flow Agent** (Workflow Orchestration)
 
 ---
 
@@ -82,7 +83,7 @@ This coordination plan provides a unified strategy for all 8 Grain agents, optim
 
 ### Critical Path Dependencies
 
-**CORRECTED ARCHITECTURE** (2025-12-06-104751-pst):
+**CORRECTED ARCHITECTURE** (2025-12-07-040000-pst):
 ```
 Vantage VM (ARM64, macOS only) [NOT a dependency - development tool only]
     ↓ (runs)
@@ -93,13 +94,24 @@ Core Agent (System Services) [Layer 3: System Services]
     ├─→ Silo Agent (Database) [needs: API Server ✅, WebSocket ✅, File System ✅ COMPLETE]
     ├─→ Carry Agent (Mobile) [needs: API Server ✅, Auth ✅, WebSocket ✅]
     ├─→ Workspace Agent (Desktop Apps) [needs: System Services ✅]
-    └─→ Bubble Agent (Design Tool) [needs: Compositor ✅, Rendering ✅]
+    ├─→ Bubble Agent (Design Tool) [needs: Compositor ✅, Rendering ✅]
+    └─→ Flow Agent (Workflow Orchestration) [needs: API Server ✅, WebSocket ✅, Auth ✅]
 
 Aurora Agent (IDE/Browser) [depends on Core/Basin via shared modules]
   └─→ Coordinates with Bubble Agent on DAG integration (see `docs/agent-communications/bubble_aurora_dag_sharing_analysis.md`)
 Skate Agent (Knowledge Graph) [depends on Core/Basin via shared modules]
 Bubble Agent (Design Tool) [depends on Core/Basin via shared modules]
   └─→ Coordinates with Aurora Agent on DAG integration (see `docs/agent-communications/bubble_aurora_dag_sharing_analysis.md`)
+
+Flow Agent (Workflow Orchestration) [Layer 4: Orchestration]
+    ↓ (coordinates)
+    ├─→ Silo Agent (Database workflows)
+    ├─→ Carry Agent (Mobile workflows)
+    ├─→ Workspace Agent (Desktop app workflows)
+    ├─→ Bubble Agent (Design workflows)
+    ├─→ Aurora Agent (IDE workflows)
+    ├─→ Skate Agent (Knowledge graph workflows)
+    └─→ Vantage Agent (VM/Kernel workflows)
 ```
 
 **Key Points**:
@@ -114,13 +126,14 @@ Bubble Agent (Design Tool) [depends on Core/Basin via shared modules]
 |-------|------------|-------------|--------------------------|
 | **Vantage** | macOS 26.1 Tahoe only | None (runs Basin, but not a dependency) | All (separate host layer) |
 | **Basin** | None (pure RISC-V) | Core, All agents | None (foundation layer) |
-| **Core** | **Basin** (RISC-V kernel) ✅ | Silo, Carry, Workspace, Bubble | Aurora, Skate |
-| **Silo** | **Core** (API ✅, WebSocket ✅, File System ✅ COMPLETE), **Basin** (via Core) | Carry | Aurora, Skate, Workspace, Bubble (Phase 1) |
-| **Carry** | **Core** (API ✅, Auth ✅, WebSocket ✅), **Basin** (via Core), Silo | None | Aurora, Skate, Workspace, Bubble (Phase 1) |
+| **Core** | **Basin** (RISC-V kernel) ✅ | Silo, Carry, Workspace, Bubble, Flow | Aurora, Skate |
+| **Silo** | **Core** (API ✅, WebSocket ✅, File System ✅ COMPLETE), **Basin** (via Core) | Carry | Aurora, Skate, Workspace, Bubble (Phase 1), Flow |
+| **Carry** | **Core** (API ✅, Auth ✅, WebSocket ✅), **Basin** (via Core), Silo | None | Aurora, Skate, Workspace, Bubble (Phase 1), Flow |
 | **Aurora** | **Core** (shared modules), **Basin** (via Core) | Shared modules | All (except when coordinating shared modules) |
 | **Skate** | **Core** (shared modules), **Basin** (via Core) | Shared modules | All (except when coordinating shared modules) |
-| **Workspace** | **Core** (System Services ✅), **Basin** (via Core) | None | Aurora, Skate, Bubble (Phase 1) |
-| **Bubble** | **Core** (Compositor ✅, Rendering ✅), **Basin** (via Core) | None | Aurora, Skate, Workspace |
+| **Workspace** | **Core** (System Services ✅), **Basin** (via Core) | None | Aurora, Skate, Bubble (Phase 1), Flow |
+| **Bubble** | **Core** (Compositor ✅, Rendering ✅), **Basin** (via Core) | None | Aurora, Skate, Workspace, Flow |
+| **Flow** | **Core** (API ✅, WebSocket ✅, Auth ✅), **Basin** (via Core) | All agents (orchestration) | Aurora, Skate, Workspace, Bubble (when not coordinating) |
 
 ---
 
@@ -218,12 +231,32 @@ Bubble Agent (Design Tool) [depends on Core/Basin via shared modules]
 
 **Current Priority**: Phase 1 core canvas (SLC v1.0)
 - **Why**: Uses existing OS compositor, can start independently
-- **Can Work In Parallel With**: Aurora, Skate, Workspace
+- **Can Work In Parallel With**: Aurora, Skate, Workspace, Flow
 
 **Next Steps**:
 1. Implement core canvas rendering
 2. Integrate with OS compositor
 3. Update documentation
+
+### Grain Flow Agent
+
+**Current Priority**: Phase 1 Event Bus Foundation
+- **Why**: Foundation for workflow orchestration and agent coordination
+- **Can Do Now**: Start Phase 1 (Event Bus) - unblocked by Core Agent Phase 59 (API Server) ✅ and Phase 61 (WebSocket) ✅
+- **Can Work In Parallel With**: Aurora, Skate, Workspace, Bubble (when not coordinating)
+
+**Next Steps**:
+1. Create `src/grain_flow/` directory structure
+2. Implement event bus foundation (event types, publishing, subscription, routing)
+3. Integrate with Core Agent WebSocket for real-time event delivery
+4. Create comprehensive tests
+5. Update documentation
+
+**Integration Points**:
+- Uses Core Agent API Server for agent RPC
+- Uses Core Agent WebSocket for real-time event delivery
+- Uses Core Agent Authentication for agent identity
+- Coordinates all agents via event bus and workflows
 
 ---
 
@@ -308,6 +341,16 @@ your agent name is: [Your Agent Name]
 ### Grain Bubble Agent
 1. Implement Phase 1 core canvas
 2. Integrate with OS compositor
+
+### Grain Flow Agent
+1. Start Phase 1: Event Bus Foundation - NOW UNBLOCKED
+   - Core Agent API Server ✅
+   - Core Agent WebSocket ✅
+   - Core Agent Authentication ✅
+2. Implement event bus (event types, publishing, subscription, routing)
+3. Integrate with Core Agent WebSocket for real-time event delivery
+4. Create comprehensive tests
+5. Update documentation
 
 ---
 

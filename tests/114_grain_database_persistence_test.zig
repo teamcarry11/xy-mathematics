@@ -10,6 +10,7 @@ const std = @import("std");
 const testing = std.testing;
 const grain_database = @import("grain_database");
 const PersistenceManager = grain_database.PersistenceManager;
+const StorageEngine = grain_database.StorageEngine;
 const grain_core = @import("grain_core");
 const file_storage = grain_core.file_storage;
 const wal_manager = grain_core.wal_manager;
@@ -236,5 +237,51 @@ test "validate database header" {
     header.page_size = file_storage.PAGE_SIZE;
     const valid = manager.validate_database_header(&header);
     try testing.expect(valid);
+}
+
+test "write record to page" {
+    var manager = PersistenceManager.init("test_write_page.db");
+    _ = manager.create_database_file();
+    var storage_engine = try StorageEngine.init(testing.allocator, 1024);
+    defer storage_engine.deinit();
+    const record_id = try storage_engine.create_record("test_key", "test_value");
+    const record = storage_engine.read_record_by_id(record_id);
+    try testing.expect(record != null);
+    var page = file_storage.FilePage.init(1);
+    const written = manager.write_record_to_page(record.?, &page, 0);
+    try testing.expect(written);
+    try testing.expect(page.is_dirty);
+}
+
+test "read record from page" {
+    var manager = PersistenceManager.init("test_read_page.db");
+    _ = manager.create_database_file();
+    var storage_engine = try StorageEngine.init(testing.allocator, 1024);
+    defer storage_engine.deinit();
+    const record_id = try storage_engine.create_record("test_key", "test_value");
+    const record = storage_engine.read_record_by_id(record_id);
+    try testing.expect(record != null);
+    var page = file_storage.FilePage.init(1);
+    _ = manager.write_record_to_page(record.?, &page, 0);
+    const read_record = manager.read_record_from_page(testing.allocator, &page, 0);
+    try testing.expect(read_record != null);
+    defer read_record.?.deinit();
+    try testing.expect(read_record.?.record_id == record.?.record_id);
+    try testing.expect(std.mem.eql(u8, read_record.?.key, record.?.key));
+}
+
+test "find record offset in page" {
+    var manager = PersistenceManager.init("test_find_offset.db");
+    _ = manager.create_database_file();
+    var storage_engine = try StorageEngine.init(testing.allocator, 1024);
+    defer storage_engine.deinit();
+    const record_id = try storage_engine.create_record("test_key", "test_value");
+    const record = storage_engine.read_record_by_id(record_id);
+    try testing.expect(record != null);
+    var page = file_storage.FilePage.init(1);
+    _ = manager.write_record_to_page(record.?, &page, 0);
+    const offset = manager.find_record_offset_in_page(&page, record_id);
+    try testing.expect(offset != null);
+    try testing.expect(offset.? == 0);
 }
 

@@ -16,4 +16,6 @@ pub const BracketMatch = @import("bracket_matching.zig").BracketMatch;
 pub const BracketType = @import("bracket_matching.zig").BracketType;
 pub const LineBufferAdapter = @import("line_buffer_adapter.zig").LineBufferAdapter;
 pub const EditorDagIntegration = @import("editor_dag_integration.zig").EditorDagIntegration;
+pub const TemporalGraph = @import("temporal_graph.zig").TemporalGraph;
+pub const AiInsights = @import("ai_insights.zig").AiInsights;
 

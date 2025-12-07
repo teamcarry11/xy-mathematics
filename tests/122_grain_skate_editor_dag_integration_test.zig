@@ -109,6 +109,45 @@ test "editor dag process events" {
     try integration.process_events();
 
     try std.testing.expect(integration.dag.pending_events_len == 0);
+    try std.testing.expect(integration.processed_events_len == 2);
+}
+
+test "editor dag temporal queries" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var integration = try EditorDagIntegration.init(allocator);
+    defer integration.deinit();
+
+    const content = "line1\nline2\nline3";
+    _ = try integration.create_buffer_node(content);
+
+    // Create events
+    _ = try integration.map_operation_to_event(.insert, 1, 5, "", "new1");
+    _ = try integration.map_operation_to_event(.insert, 1, 9, "", "new2");
+
+    // Process events
+    try integration.process_events();
+
+    // Assert: Events were stored in history
+    try std.testing.expect(integration.processed_events_len == 2);
+
+    // Test temporal queries
+    const earliest = integration.get_earliest_timestamp();
+    const latest = integration.get_latest_timestamp();
+
+    try std.testing.expect(earliest != null);
+    try std.testing.expect(latest != null);
+    try std.testing.expect(latest.? >= earliest.?);
+
+    // Test query events up to timestamp
+    const all_events = integration.query_events_up_to_timestamp(latest.?);
+    try std.testing.expect(all_events.len == 2);
+
+    // Test count events by time range
+    const count = integration.count_events_by_time_range(earliest.?, latest.?);
+    try std.testing.expect(count == 2);
 }
 
 test "editor with dag integration" {
@@ -142,5 +181,44 @@ test "editor with dag integration" {
     // Process events
     try dag_integration.process_events();
     try std.testing.expect(dag_integration.dag.pending_events_len == 0);
+    try std.testing.expect(dag_integration.processed_events_len == 1);
+}
+
+test "editor dag temporal queries" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var integration = try EditorDagIntegration.init(allocator);
+    defer integration.deinit();
+
+    const content = "line1\nline2\nline3";
+    _ = try integration.create_buffer_node(content);
+
+    // Create events
+    _ = try integration.map_operation_to_event(.insert, 1, 5, "", "new1");
+    _ = try integration.map_operation_to_event(.insert, 1, 9, "", "new2");
+
+    // Process events
+    try integration.process_events();
+
+    // Assert: Events were stored in history
+    try std.testing.expect(integration.processed_events_len == 2);
+
+    // Test temporal queries
+    const earliest = integration.get_earliest_timestamp();
+    const latest = integration.get_latest_timestamp();
+
+    try std.testing.expect(earliest != null);
+    try std.testing.expect(latest != null);
+    try std.testing.expect(latest.? >= earliest.?);
+
+    // Test query events up to timestamp
+    const all_events = integration.query_events_up_to_timestamp(latest.?);
+    try std.testing.expect(all_events.len == 2);
+
+    // Test count events by time range
+    const count = integration.count_events_by_time_range(earliest.?, latest.?);
+    try std.testing.expect(count == 2);
 }
 

@@ -5,6 +5,7 @@
 //! GrainStyle: grain_case, u32/u64, bounded allocations, assertions.
 //!
 //! 2025-12-04-102946-pst: Active implementation
+//! 2025-12-07-020824-pst: Phase 10.3 WebSocket integration for live statistics
 
 const std = @import("std");
 const grain_core = @import("grain_core");
@@ -24,6 +25,10 @@ pub const MAX_CONNECTIONS: u32 = 512;
 // Bounded: Max hostname length (explicit limit, in bytes)
 // 2025-12-04-102946-pst: Active constant
 pub const MAX_HOSTNAME_LEN: u32 = 256;
+
+// Bounded: Max WebSocket clients (explicit limit)
+// 2025-12-07-020824-pst: Phase 10.3 WebSocket integration
+pub const MAX_WEBSOCKET_CLIENTS: u32 = 32;
 
 // Port state enumeration.
 // 2025-12-04-102946-pst: Active enum
@@ -83,6 +88,7 @@ pub const ConnectionInfo = struct {
 
 // Network Tools application state.
 // 2025-12-04-102946-pst: Active struct
+// 2025-12-07-020824-pst: Phase 10.3 WebSocket integration
 pub const NetworkToolsApp = struct {
     network_manager: *grain_core.network_manager.NetworkManager,
     dns_resolver: *grain_core.dns_resolver.DnsResolver,
@@ -93,19 +99,25 @@ pub const NetworkToolsApp = struct {
     bandwidth_bytes_sent: u64,
     bandwidth_bytes_received: u64,
     bandwidth_timestamp: u64,
+    websocket_manager: *grain_core.websocket.WebSocketManager,
+    websocket_clients: [MAX_WEBSOCKET_CLIENTS]u32,
+    websocket_clients_len: u32,
     allocator: std.mem.Allocator,
 
     /// Initialize network tools application.
     // 2025-12-06-011616-pst: Active function
+    // 2025-12-07-020824-pst: Phase 10.3 WebSocket integration
     pub fn init(
         allocator: std.mem.Allocator,
         nm: *grain_core.network_manager.NetworkManager,
         dns_res: *grain_core.dns_resolver.DnsResolver,
+        ws_manager: *grain_core.websocket.WebSocketManager,
     ) NetworkToolsApp {
         // Precondition: Allocator and managers must be valid
         std.debug.assert(allocator.ptr != null);
         std.debug.assert(@intFromPtr(nm) != 0);
         std.debug.assert(@intFromPtr(dns_res) != 0);
+        std.debug.assert(@intFromPtr(ws_manager) != 0);
 
         var app = NetworkToolsApp{
             .network_manager = nm,
@@ -117,6 +129,9 @@ pub const NetworkToolsApp = struct {
             .bandwidth_bytes_sent = 0,
             .bandwidth_bytes_received = 0,
             .bandwidth_timestamp = 0,
+            .websocket_manager = ws_manager,
+            .websocket_clients = undefined,
+            .websocket_clients_len = 0,
             .allocator = allocator,
         };
 
@@ -132,9 +147,16 @@ pub const NetworkToolsApp = struct {
             app.connections[i] = null;
         }
 
+        // Initialize WebSocket clients array
+        i = 0;
+        while (i < MAX_WEBSOCKET_CLIENTS) : (i += 1) {
+            app.websocket_clients[i] = 0;
+        }
+
         // Postcondition: App must be valid
         std.debug.assert(app.devices_len == 0);
         std.debug.assert(app.connections_len == 0);
+        std.debug.assert(app.websocket_clients_len == 0);
 
         return app;
     }
@@ -267,6 +289,9 @@ pub const NetworkToolsApp = struct {
 
         // Postcondition: Timestamp must be set
         std.debug.assert(self.bandwidth_timestamp > 0);
+
+        // Broadcast bandwidth update to WebSocket clients
+        self.broadcast_bandwidth_update();
     }
 
     /// Get bandwidth statistics.
@@ -413,6 +438,119 @@ pub const NetworkToolsApp = struct {
         std.debug.assert(cleared_count <= self.dns_resolver.cache_len);
 
         return cleared_count;
+    }
+
+    /// Add WebSocket client for live statistics updates.
+    // 2025-12-07-020824-pst: Phase 10.3 WebSocket integration
+    pub fn add_websocket_client(
+        self: *NetworkToolsApp,
+        connection_id: u32,
+    ) bool {
+        // Precondition: Connection ID must be valid
+        std.debug.assert(connection_id > 0);
+        std.debug.assert(self.websocket_clients_len < MAX_WEBSOCKET_CLIENTS);
+
+        if (self.websocket_clients_len >= MAX_WEBSOCKET_CLIENTS) {
+            return false;
+        }
+
+        self.websocket_clients[self.websocket_clients_len] = connection_id;
+        self.websocket_clients_len += 1;
+
+        // Postcondition: Client count increased
+        std.debug.assert(self.websocket_clients_len > 0);
+        std.debug.assert(self.websocket_clients_len <= MAX_WEBSOCKET_CLIENTS);
+
+        return true;
+    }
+
+    /// Remove WebSocket client.
+    // 2025-12-07-020824-pst: Phase 10.3 WebSocket integration
+    pub fn remove_websocket_client(
+        self: *NetworkToolsApp,
+        connection_id: u32,
+    ) bool {
+        // Precondition: Connection ID must be valid
+        std.debug.assert(connection_id > 0);
+
+        var i: u32 = 0;
+        while (i < self.websocket_clients_len) : (i += 1) {
+            if (self.websocket_clients[i] == connection_id) {
+                var j: u32 = i;
+                while (j < self.websocket_clients_len - 1) : (j += 1) {
+                    self.websocket_clients[j] = self.websocket_clients[j + 1];
+                }
+                self.websocket_clients_len -= 1;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// Broadcast bandwidth update to WebSocket clients (internal).
+    // 2025-12-07-020824-pst: Phase 10.3 WebSocket integration
+    fn broadcast_bandwidth_update(self: *NetworkToolsApp) void {
+        // Precondition: App must be valid
+        std.debug.assert(self.bandwidth_timestamp > 0);
+
+        if (self.websocket_clients_len == 0) {
+            return;
+        }
+
+        // Serialize bandwidth statistics to JSON-like format (simplified)
+        var json_buf: [256]u8 = undefined;
+        const json_len = self.serialize_bandwidth_json(&json_buf);
+        if (json_len == 0) {
+            return;
+        }
+
+        // Create WebSocket frame
+        var frame = grain_core.websocket.WebSocketFrame.init();
+        frame.flags.opcode = grain_core.websocket.FrameOpcode.text;
+        frame.flags.fin = true;
+        frame.flags.masked = false;
+        frame.payload_len = @intCast(json_len);
+
+        var i: u32 = 0;
+        while (i < json_len and i < grain_core.websocket.MAX_FRAME_SIZE) : (i += 1) {
+            frame.payload[i] = json_buf[i];
+        }
+
+        // Broadcast to all clients
+        i = 0;
+        while (i < self.websocket_clients_len) : (i += 1) {
+            const conn_id = self.websocket_clients[i];
+            const conn = self.websocket_manager.find_connection(conn_id);
+            if (conn != null and conn.?.state == grain_core.websocket.ConnectionState.open) {
+                // Frame would be sent here (actual send via socket not implemented)
+                _ = frame;
+            }
+        }
+    }
+
+    /// Serialize bandwidth statistics to JSON format (simplified).
+    // 2025-12-07-020824-pst: Phase 10.3 WebSocket integration
+    fn serialize_bandwidth_json(
+        self: *const NetworkToolsApp,
+        buf: []u8,
+    ) u32 {
+        // Precondition: Buffer must be valid
+        std.debug.assert(buf.len >= 256);
+        std.debug.assert(self.bandwidth_timestamp > 0);
+
+        // Simplified JSON serialization
+        const json_fmt = 
+            \\{"bytes_sent":%d,"bytes_received":%d,"devices":%d,"connections":%d}
+        ;
+        const written = std.fmt.bufPrint(buf, json_fmt, .{
+            self.bandwidth_bytes_sent,
+            self.bandwidth_bytes_received,
+            self.devices_len,
+            self.connections_len,
+        }) catch return 0;
+
+        return @intCast(written.len);
     }
 };
 

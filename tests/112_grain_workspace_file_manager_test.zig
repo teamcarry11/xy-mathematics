@@ -5,6 +5,7 @@
 //! GrainStyle: grain_case, u32/u64, bounded allocations, assertions.
 //!
 //! 2025-12-04-092542-pst: Active implementation
+//! 2025-12-07-025947-pst: Phase 10.4 WebSocket integration tests
 
 const std = @import("std");
 const testing = std.testing;
@@ -14,19 +15,22 @@ const grain_core = @import("grain_core");
 test "file manager ui initialization" {
     const allocator = testing.allocator;
     var fm = grain_core.file_manager.FileManager.init();
+    var ws_manager = grain_core.websocket.WebSocketManager.init();
 
-    var ui = FileManagerUI.init(allocator, &fm);
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager);
 
     try testing.expect(ui.search_query_len == 0);
     try testing.expect(ui.selected_entry_id == 0);
     try testing.expect(ui.clipboard_len == 0);
+    try testing.expect(ui.websocket_clients_len == 0);
 }
 
 test "set search query" {
     const allocator = testing.allocator;
     var fm = grain_core.file_manager.FileManager.init();
+    var ws_manager = grain_core.websocket.WebSocketManager.init();
 
-    var ui = FileManagerUI.init(allocator, &fm);
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager);
     ui.set_search_query("test");
 
     try testing.expect(ui.search_query_len == 4);
@@ -36,8 +40,9 @@ test "set search query" {
 test "navigate to directory" {
     const allocator = testing.allocator;
     var fm = grain_core.file_manager.FileManager.init();
+    var ws_manager = grain_core.websocket.WebSocketManager.init();
 
-    var ui = FileManagerUI.init(allocator, &fm);
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager);
     const result = ui.navigate_to_directory("/home");
 
     try testing.expect(result == true);
@@ -47,8 +52,9 @@ test "navigate to directory" {
 test "get current directory" {
     const allocator = testing.allocator;
     var fm = grain_core.file_manager.FileManager.init();
+    var ws_manager = grain_core.websocket.WebSocketManager.init();
 
-    var ui = FileManagerUI.init(allocator, &fm);
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager);
     const current_dir = ui.get_current_directory();
 
     try testing.expect(std.mem.eql(u8, current_dir, "/"));
@@ -61,7 +67,8 @@ test "get file entries" {
     _ = fm.add_file_entry("file1.txt", "/file1.txt", .regular, 1024, 0);
     _ = fm.add_file_entry("dir1", "/dir1", .directory, 0, 0);
 
-    var ui = FileManagerUI.init(allocator, &fm);
+    var ws_manager = grain_core.websocket.WebSocketManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager);
 
     var entries: [10]*grain_core.file_manager.FileEntry = undefined;
     var entries_len: u32 = 0;
@@ -79,7 +86,8 @@ test "search files" {
     _ = fm.add_file_entry("test-file.txt", "/test-file.txt", .regular, 1024, 0);
     _ = fm.add_file_entry("other-file.txt", "/other-file.txt", .regular, 2048, 0);
 
-    var ui = FileManagerUI.init(allocator, &fm);
+    var ws_manager = grain_core.websocket.WebSocketManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager);
     ui.set_search_query("test");
 
     var results: [10]u32 = undefined;
@@ -97,7 +105,8 @@ test "copy to clipboard" {
     const entry_id = fm.add_file_entry("file.txt", "/file.txt", .regular, 1024, 0);
     try testing.expect(entry_id != null);
 
-    var ui = FileManagerUI.init(allocator, &fm);
+    var ws_manager = grain_core.websocket.WebSocketManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager);
     const result = ui.copy_to_clipboard(entry_id.?);
 
     try testing.expect(result == true);
@@ -113,7 +122,8 @@ test "move to clipboard" {
     const entry_id = fm.add_file_entry("file.txt", "/file.txt", .regular, 1024, 0);
     try testing.expect(entry_id != null);
 
-    var ui = FileManagerUI.init(allocator, &fm);
+    var ws_manager = grain_core.websocket.WebSocketManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager);
     const result = ui.move_to_clipboard(entry_id.?);
 
     try testing.expect(result == true);
@@ -129,7 +139,8 @@ test "paste from clipboard" {
     const entry_id = fm.add_file_entry("file.txt", "/file.txt", .regular, 1024, 0);
     try testing.expect(entry_id != null);
 
-    var ui = FileManagerUI.init(allocator, &fm);
+    var ws_manager = grain_core.websocket.WebSocketManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager);
     _ = ui.copy_to_clipboard(entry_id.?);
 
     const pasted_count = ui.paste_from_clipboard("/dest");
@@ -145,7 +156,8 @@ test "delete file" {
     const entry_id = fm.add_file_entry("file.txt", "/file.txt", .regular, 1024, 0);
     try testing.expect(entry_id != null);
 
-    var ui = FileManagerUI.init(allocator, &fm);
+    var ws_manager = grain_core.websocket.WebSocketManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager);
     const result = ui.delete_file(entry_id.?);
 
     try testing.expect(result == true);
@@ -175,7 +187,8 @@ test "get file preview" {
     const entry_id = fm.add_file_entry("file.txt", "/file.txt", .regular, 1024, 0);
     try testing.expect(entry_id != null);
 
-    var ui = FileManagerUI.init(allocator, &fm);
+    var ws_manager = grain_core.websocket.WebSocketManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager);
 
     var preview: [100]u8 = undefined;
     var preview_len: u32 = 0;
@@ -191,11 +204,47 @@ test "clear clipboard" {
     const entry_id = fm.add_file_entry("file.txt", "/file.txt", .regular, 1024, 0);
     try testing.expect(entry_id != null);
 
-    var ui = FileManagerUI.init(allocator, &fm);
+    var ws_manager = grain_core.websocket.WebSocketManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager);
     _ = ui.copy_to_clipboard(entry_id.?);
     try testing.expect(ui.clipboard_len == 1);
 
     ui.clear_clipboard();
     try testing.expect(ui.clipboard_len == 0);
+}
+
+test "websocket client management" {
+    const allocator = testing.allocator;
+    var fm = grain_core.file_manager.FileManager.init();
+    var ws_manager = grain_core.websocket.WebSocketManager.init();
+
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager);
+
+    // Add WebSocket client
+    const conn1 = ws_manager.add_connection(1);
+    try testing.expect(conn1 != null);
+    if (conn1) |conn| {
+        conn.state = grain_core.websocket.ConnectionState.open;
+        const added = ui.add_websocket_client(conn.connection_id);
+        try testing.expect(added == true);
+        try testing.expect(ui.websocket_clients_len == 1);
+    }
+
+    // Add another client
+    const conn2 = ws_manager.add_connection(2);
+    try testing.expect(conn2 != null);
+    if (conn2) |conn| {
+        conn.state = grain_core.websocket.ConnectionState.open;
+        const added = ui.add_websocket_client(conn.connection_id);
+        try testing.expect(added == true);
+        try testing.expect(ui.websocket_clients_len == 2);
+    }
+
+    // Remove client
+    if (conn1) |conn| {
+        const removed = ui.remove_websocket_client(conn.connection_id);
+        try testing.expect(removed == true);
+        try testing.expect(ui.websocket_clients_len == 1);
+    }
 }
 

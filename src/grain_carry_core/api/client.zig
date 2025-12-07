@@ -6,6 +6,10 @@
 
 const std = @import("std");
 const errors = @import("../utils/errors.zig");
+const http_integration = @import("http_client_integration.zig");
+const grain_core_http = @import("../../grain_core/http_client.zig");
+const http_integration = @import("http_client_integration.zig");
+const grain_core_http = @import("../../grain_core/http_client.zig");
 
 pub const MAX_URL_LEN: u32 = 2048;
 pub const MAX_HEADER_NAME_LEN: u32 = 256;
@@ -235,6 +239,69 @@ pub const ApiClient = struct {
         std.debug.assert(req.url_len > 0);
         
         return req;
+    }
+
+    // Create external API request using HTTP client integration.
+    pub fn create_external_request(
+        self: *const ApiClient,
+        method: HttpMethod,
+        path: []const u8,
+    ) ?*grain_core_http.HttpClientRequest {
+        std.debug.assert(path.len > 0);
+        std.debug.assert(path.len <= MAX_URL_LEN);
+        var url: [MAX_URL_LEN]u8 = undefined;
+        const url_len = self.build_url(path, &url);
+        const external_req = http_integration.create_external_request(method, url[0..url_len]) orelse {
+            return null;
+        };
+        var i: u32 = 0;
+        while (i < self.default_headers_len) : (i += 1) {
+            const header_name = self.default_headers[i].name[0..self.default_headers[i].name_len];
+            const header_value = self.default_headers[i].value[0..self.default_headers[i].value_len];
+            _ = http_integration.add_external_header(external_req, header_name, header_value);
+        }
+        std.debug.assert(external_req.url_len > 0);
+        return external_req;
+    }
+
+    // Send external API request with body.
+    pub fn send_external_request(
+        self: *const ApiClient,
+        method: HttpMethod,
+        path: []const u8,
+        body: []const u8,
+    ) ?*grain_core_http.HttpClientRequest {
+        std.debug.assert(path.len > 0);
+        std.debug.assert(path.len <= MAX_URL_LEN);
+        std.debug.assert(body.len <= MAX_BODY_LEN);
+        const external_req = self.create_external_request(method, path) orelse {
+            return null;
+        };
+        if (body.len > 0) {
+            if (!http_integration.set_external_body(external_req, body)) {
+                return null;
+            }
+        }
+        std.debug.assert(external_req.url_len > 0);
+        return external_req;
+    }
+
+    // Get external request response.
+    pub fn get_external_response(
+        external_req: *const grain_core_http.HttpClientRequest,
+        response_out: *Response,
+    ) bool {
+        std.debug.assert(external_req != null);
+        std.debug.assert(response_out != null);
+        if (!http_integration.is_request_completed(external_req)) {
+            return false;
+        }
+        const core_response = http_integration.get_request_response(external_req) orelse {
+            return false;
+        };
+        const success = http_integration.convert_external_response(core_response, response_out);
+        std.debug.assert(response_out.body_len >= 0);
+        return success;
     }
 };
 

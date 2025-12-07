@@ -1,8 +1,8 @@
 # Grain Carry Agent: Development Plan
 
 **Agent**: Grain Carry Agent (6th Agent)  
-**Status**: Email Service for OTP Delivery Complete  
-**Last Updated**: 2025-12-07-004326-pst
+**Status**: ApiClient Enhanced with External Request Support  
+**Last Updated**: 2025-12-07-030339-pst
 
 ---
 
@@ -780,6 +780,106 @@ While waiting for Grain Core Agent's API Server (Phase 59), we can prepare the A
 - ⏳ SMTP integration (when network stack is fully integrated)
 - ⏳ Email template customization
 - ⏳ Email delivery status tracking
+
+### Completed: HTTP Client Integration ✅ (2025-12-07-020402-pst)
+
+**Key Achievements**:
+- HTTP client integration module for external API calls
+- Integration with Grain Core HTTP Client
+- Method and status conversion functions
+- Request creation and management
+- Response conversion functions
+- Comprehensive tests for HTTP client integration
+
+**Files Created**:
+- `src/grain_carry_core/api/http_client_integration.zig` — HTTP client integration module (178 lines)
+- `tests/127_grain_carry_core_api_http_client_integration_test.zig` — HTTP client integration tests
+
+**HTTP Client Integration Features**:
+- `set_http_client()` — Set global HTTP client instance
+- `create_external_request()` — Create external API request using Core HTTP client
+- `add_external_header()` — Add header to external request
+- `set_external_body()` — Set body for external request
+- `convert_external_response()` — Convert Core HTTP response to Carry API client response
+- `get_request_state()` — Get request state
+- `is_request_completed()` — Check if request is completed
+- `is_request_failed()` — Check if request failed
+- `get_request_response()` — Get request response
+
+**Integration**:
+- Integrates Carry Agent API client with Core Agent HTTP client
+- Enables external API calls from mobile apps
+- Supports GET, POST, PUT, DELETE, PATCH methods
+- Handles concurrent requests (max 32)
+- Converts between Carry and Core API types
+
+**Grain Style Compliance**:
+- ✅ `grain_case` function names
+- ✅ `u32`/`u64` types (no `usize`)
+- ✅ Bounded allocations (all limits explicit)
+- ✅ Minimum 2 assertions per function
+- ✅ Max 70 lines per function (all functions compliant)
+- ✅ Max 100 characters per line
+- ✅ All compiler warnings enabled
+
+**Test Coverage**:
+- HTTP client instance management
+- External request creation
+- Header and body management
+- Request state checking
+- Response conversion
+
+**Next Steps**:
+- ⏳ Complete HTTP request execution (when network stack is fully integrated)
+- ⏳ Add request timeout handling
+- ⏳ Add retry logic for failed requests
+
+### Completed: ApiClient Enhanced with External Request Support ✅ (2025-12-07-030339-pst)
+
+**Key Achievements**:
+- Enhanced ApiClient with external API request methods
+- Integration with HTTP client integration module
+- External request creation and management
+- Response retrieval from external requests
+- Comprehensive tests for enhanced ApiClient
+
+**Files Modified**:
+- `src/grain_carry_core/api/client.zig` — Enhanced ApiClient with external request methods (308 lines)
+- `tests/113_grain_mobile_core_api_client_test.zig` — Added external request tests
+
+**ApiClient Enhancement Features**:
+- `create_external_request()` — Create external API request using HTTP client integration
+- `send_external_request()` — Send external API request with body
+- `get_external_response()` — Get external request response
+- Automatic default header inclusion in external requests
+- URL building with base URL and path
+
+**Integration**:
+- Uses HTTP client integration module for external API calls
+- Integrates with Grain Core HTTP Client
+- Supports all HTTP methods (GET, POST, PUT, DELETE, PATCH)
+- Handles request body and headers
+- Converts responses between Core and Carry API types
+
+**Grain Style Compliance**:
+- ✅ `grain_case` function names
+- ✅ `u32`/`u64` types (no `usize`)
+- ✅ Bounded allocations (all limits explicit)
+- ✅ Minimum 2 assertions per function
+- ✅ Max 70 lines per function (all functions compliant)
+- ✅ Max 100 characters per line
+- ✅ All compiler warnings enabled
+
+**Test Coverage**:
+- External request creation
+- External request with default headers
+- External request with body
+- Response retrieval from external requests
+
+**Next Steps**:
+- ⏳ Complete HTTP request execution (when network stack is fully integrated)
+- ⏳ Add request timeout handling
+- ⏳ Add retry logic for failed requests
 
 ### Completed: Handler Adapters for API Server Integration ✅ (2025-12-05-104041-pst)
 

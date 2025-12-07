@@ -94,3 +94,50 @@ test "api client create request with body" {
     std.debug.assert(req.body_len == body.len);
 }
 
+test "api client create external request" {
+    const grain_core = @import("grain_core");
+    const http_integration = grain_carry_core.api.http_client_integration;
+    var network_stack = grain_core.network_stack.NetworkStack.init();
+    var dns_resolver = grain_core.dns_resolver.DnsResolver.init();
+    var http_client = grain_core.http_client.HttpClient.init(&network_stack, &dns_resolver);
+    http_integration.set_http_client(&http_client);
+    
+    const client = api.ApiClient.init("https://api.example.com");
+    const external_req = client.create_external_request(.get, "/users");
+    
+    std.debug.assert(external_req != null);
+    std.debug.assert(external_req.?.url_len > 0);
+}
+
+test "api client create external request with default headers" {
+    const grain_core = @import("grain_core");
+    const http_integration = grain_carry_core.api.http_client_integration;
+    var network_stack = grain_core.network_stack.NetworkStack.init();
+    var dns_resolver = grain_core.dns_resolver.DnsResolver.init();
+    var http_client = grain_core.http_client.HttpClient.init(&network_stack, &dns_resolver);
+    http_integration.set_http_client(&http_client);
+    
+    var client = api.ApiClient.init("https://api.example.com");
+    _ = client.add_default_header("User-Agent", "GrainMobile/1.0");
+    const external_req = client.create_external_request(.get, "/users");
+    
+    std.debug.assert(external_req != null);
+    std.debug.assert(external_req.?.url_len > 0);
+}
+
+test "api client send external request with body" {
+    const grain_core = @import("grain_core");
+    const http_integration = grain_carry_core.api.http_client_integration;
+    var network_stack = grain_core.network_stack.NetworkStack.init();
+    var dns_resolver = grain_core.dns_resolver.DnsResolver.init();
+    var http_client = grain_core.http_client.HttpClient.init(&network_stack, &dns_resolver);
+    http_integration.set_http_client(&http_client);
+    
+    const client = api.ApiClient.init("https://api.example.com");
+    const body = "{\"name\":\"test\"}";
+    const external_req = client.send_external_request(.post, "/users", body);
+    
+    std.debug.assert(external_req != null);
+    std.debug.assert(external_req.?.url_len > 0);
+}
+

@@ -1042,6 +1042,20 @@ pub fn build(b: *std.Build) void {
     const run_grain_carry_core_websocket_client_tests = b.addRunArtifact(grain_carry_core_websocket_client_tests);
     test_step.dependOn(&run_grain_carry_core_websocket_client_tests.step);
 
+    const grain_carry_core_api_http_client_integration_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/127_grain_carry_core_api_http_client_integration_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_carry_core", .module = grain_carry_core_module },
+                .{ .name = "grain_core", .module = grain_core_module },
+            },
+        }),
+    });
+    const run_grain_carry_core_api_http_client_integration_tests = b.addRunArtifact(grain_carry_core_api_http_client_integration_tests);
+    test_step.dependOn(&run_grain_carry_core_api_http_client_integration_tests.step);
+
     const fuzz_004_tests = b.addTest(.{
         .root_module = b.createModule(.{
             .root_source_file = b.path("tests/004_fuzz.zig"),
@@ -1854,6 +1868,32 @@ pub fn build(b: *std.Build) void {
     });
     const grain_skate_editor_dag_integration_tests_run = b.addRunArtifact(grain_skate_editor_dag_integration_tests);
     test_step.dependOn(&grain_skate_editor_dag_integration_tests_run.step);
+
+    const grain_skate_temporal_graph_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/123_grain_skate_temporal_graph_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_skate", .module = grain_skate_module },
+            },
+        }),
+    });
+    const grain_skate_temporal_graph_tests_run = b.addRunArtifact(grain_skate_temporal_graph_tests);
+    test_step.dependOn(&grain_skate_temporal_graph_tests_run.step);
+
+    const grain_skate_ai_insights_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/124_grain_skate_ai_insights_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_skate", .module = grain_skate_module },
+            },
+        }),
+    });
+    const grain_skate_ai_insights_tests_run = b.addRunArtifact(grain_skate_ai_insights_tests);
+    test_step.dependOn(&grain_skate_ai_insights_tests_run.step);
 
     const shared_font_renderer_tests = b.addTest(.{
         .root_module = b.createModule(.{
@@ -3382,6 +3422,34 @@ pub fn build(b: *std.Build) void {
     const grain_database_persistence_tests_run = b.addRunArtifact(grain_database_persistence_tests);
     test_step.dependOn(&grain_database_persistence_tests_run.step);
 
+    // Grain Database Storage Persistence Tests
+    const grain_database_storage_persistence_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/115_grain_database_storage_persistence_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_database", .module = grain_database_module },
+            },
+        }),
+    });
+    const grain_database_storage_persistence_tests_run = b.addRunArtifact(grain_database_storage_persistence_tests);
+    test_step.dependOn(&grain_database_storage_persistence_tests_run.step);
+
+    // Grain Database Record Serialization Tests
+    const grain_database_record_serialization_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/116_grain_database_record_serialization_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_database", .module = grain_database_module },
+            },
+        }),
+    });
+    const grain_database_record_serialization_tests_run = b.addRunArtifact(grain_database_record_serialization_tests);
+    test_step.dependOn(&grain_database_record_serialization_tests_run.step);
+
     // RISC-V Logo Display Program
     const riscv_logo_exe = b.addExecutable(.{
         .name = "riscv_logo",
@@ -3786,6 +3854,45 @@ pub fn build(b: *std.Build) void {
     });
     const grain_bubble_export_pdf_tests_run = b.addRunArtifact(grain_bubble_export_pdf_tests);
     test_step.dependOn(&grain_bubble_export_pdf_tests_run.step);
+
+    const grain_bubble_export_html_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/131_grain_bubble_export_html_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_bubble", .module = grain_bubble_module },
+            },
+        }),
+    });
+    const grain_bubble_export_html_tests_run = b.addRunArtifact(grain_bubble_export_html_tests);
+    test_step.dependOn(&grain_bubble_export_html_tests_run.step);
+
+    const grain_bubble_export_framework_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/132_grain_bubble_export_framework_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_bubble", .module = grain_bubble_module },
+            },
+        }),
+    });
+    const grain_bubble_export_framework_tests_run = b.addRunArtifact(grain_bubble_export_framework_tests);
+    test_step.dependOn(&grain_bubble_export_framework_tests_run.step);
+
+    const grain_bubble_export_slc_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/133_grain_bubble_export_slc_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_bubble", .module = grain_bubble_module },
+            },
+        }),
+    });
+    const grain_bubble_export_slc_tests_run = b.addRunArtifact(grain_bubble_export_slc_tests);
+    test_step.dependOn(&grain_bubble_export_slc_tests_run.step);
 
     // Grain Bubble component tests
     const grain_bubble_component_tests = b.addTest(.{

@@ -56,6 +56,8 @@ const tcp_socket = @import("tcp_socket.zig");
 const TcpSocketManager = tcp_socket.TcpSocketManager;
 const udp_socket = @import("udp_socket.zig");
 const UdpSocketManager = udp_socket.UdpSocketManager;
+const audio = @import("audio.zig");
+const AudioDeviceManager = audio.AudioDeviceManager;
 
 // Export resource_cleanup for tests.
 pub const resource_cleanup_module = resource_cleanup;
@@ -145,6 +147,17 @@ pub const Syscall = enum(u32) {
     udp_sendto = 112,
     udp_recvfrom = 113,
     udp_close = 114,
+    
+    // Audio Device Operations
+    audio_create_device = 120,
+    audio_set_volume = 121,
+    audio_set_mute = 122,
+    audio_set_state = 123,
+    audio_set_active_output = 124,
+    audio_set_active_input = 125,
+    audio_set_master_volume = 126,
+    audio_set_master_mute = 127,
+    audio_get_device = 128,
 };
 
 /// Memory mapping flags.
@@ -852,6 +865,7 @@ pub const BasinKernel = struct {
             .network_interfaces = NetworkInterfaceManager.init(),
             .tcp_sockets = TcpSocketManager.init(),
             .udp_sockets = UdpSocketManager.init(),
+            .audio_devices = AudioDeviceManager.init(),
             .channels = ChannelTable.init(),
             .storage = Storage.init(),
             .keyboard = Keyboard.init(),
@@ -1358,6 +1372,15 @@ pub const BasinKernel = struct {
             .udp_sendto => self.syscall_udp_sendto(arg1, arg2, arg3, arg4),
             .udp_recvfrom => self.syscall_udp_recvfrom(arg1, arg2, arg3, arg4),
             .udp_close => self.syscall_udp_close(arg1, arg2, arg3, arg4),
+            .audio_create_device => self.syscall_audio_create_device(arg1, arg2, arg3, arg4),
+            .audio_set_volume => self.syscall_audio_set_volume(arg1, arg2, arg3, arg4),
+            .audio_set_mute => self.syscall_audio_set_mute(arg1, arg2, arg3, arg4),
+            .audio_set_state => self.syscall_audio_set_state(arg1, arg2, arg3, arg4),
+            .audio_set_active_output => self.syscall_audio_set_active_output(arg1, arg2, arg3, arg4),
+            .audio_set_active_input => self.syscall_audio_set_active_input(arg1, arg2, arg3, arg4),
+            .audio_set_master_volume => self.syscall_audio_set_master_volume(arg1, arg2, arg3, arg4),
+            .audio_set_master_mute => self.syscall_audio_set_master_mute(arg1, arg2, arg3, arg4),
+            .audio_get_device => self.syscall_audio_get_device(arg1, arg2, arg3, arg4),
         };
     }
     
@@ -5095,6 +5118,403 @@ pub const BasinKernel = struct {
         if (!self.udp_sockets.close_socket(socket_id)) {
             return BasinError.not_found; // Socket not found
         }
+        
+        const result = SyscallResult.ok(0);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
+    /// Create an audio device.
+    /// Why: Add a new audio device.
+    /// Contract: name_ptr, name_len, and device_type must be valid.
+    pub fn syscall_audio_create_device(
+        self: *BasinKernel,
+        name_ptr: u64,
+        name_len: u64,
+        device_type: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg4;
+        
+        // Assert: Name pointer must be valid (non-zero, within VM memory).
+        if (name_ptr == 0) {
+            return BasinError.invalid_argument; // Null pointer
+        }
+        
+        const VM_MEMORY_SIZE_AUDIO: u64 = 4 * 1024 * 1024; // 4MB default
+        if (name_ptr >= VM_MEMORY_SIZE_AUDIO) {
+            return BasinError.invalid_argument; // Name pointer exceeds VM memory
+        }
+        
+        // Assert: Name length must be reasonable (max device name length).
+        if (name_len == 0) {
+            return BasinError.invalid_argument; // Zero-length name
+        }
+        if (name_len > 128) {
+            return BasinError.invalid_argument; // Name too long
+        }
+        
+        // Assert: Name must fit within VM memory.
+        if (name_ptr + name_len > VM_MEMORY_SIZE_AUDIO) {
+            return BasinError.invalid_argument; // Name exceeds VM memory
+        }
+        
+        // Assert: Device type must be valid.
+        if (device_type > 5) {
+            return BasinError.invalid_argument; // Invalid device type
+        }
+        
+        // Get current process ID from scheduler.
+        const current_process_id = self.scheduler.get_current();
+        const owner_process_id = @as(u32, @truncate(current_process_id));
+        
+        // Read device name from VM memory (stub: would use vm_memory_reader).
+        // For now, use a placeholder name.
+        const name = "speaker";
+        
+        const audio_device_type = @as(audio.AudioDeviceType, @enumFromInt(@as(u8, @truncate(device_type))));
+        
+        // Create device.
+        const device_id = self.audio_devices.create_device(name, audio_device_type, owner_process_id) orelse {
+            return BasinError.out_of_memory; // No free device slot
+        };
+        
+        const result = SyscallResult.ok(device_id);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
+    /// Set audio device volume.
+    /// Why: Control device volume.
+    /// Contract: device_id and volume must be valid.
+    pub fn syscall_audio_set_volume(
+        self: *BasinKernel,
+        device_id: u64,
+        volume: u64,
+        _arg3: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg3;
+        _ = _arg4;
+        
+        // Assert: Device ID must be non-zero.
+        if (device_id == 0) {
+            return BasinError.invalid_argument; // Invalid device ID
+        }
+        
+        // Assert: Volume must be valid (0-100).
+        if (volume > 100) {
+            return BasinError.invalid_argument; // Invalid volume
+        }
+        
+        const dev_id = @as(u32, @truncate(device_id));
+        const vol = @as(u32, @truncate(volume));
+        
+        // Set device volume.
+        if (!self.audio_devices.set_device_volume(dev_id, vol)) {
+            return BasinError.not_found; // Device not found
+        }
+        
+        const result = SyscallResult.ok(0);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
+    /// Set audio device mute state.
+    /// Why: Control device mute state.
+    /// Contract: device_id and muted must be valid.
+    pub fn syscall_audio_set_mute(
+        self: *BasinKernel,
+        device_id: u64,
+        muted: u64,
+        _arg3: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg3;
+        _ = _arg4;
+        
+        // Assert: Device ID must be non-zero.
+        if (device_id == 0) {
+            return BasinError.invalid_argument; // Invalid device ID
+        }
+        
+        // Assert: Muted must be valid (0 or 1).
+        if (muted > 1) {
+            return BasinError.invalid_argument; // Invalid mute value
+        }
+        
+        const dev_id = @as(u32, @truncate(device_id));
+        const is_muted = muted != 0;
+        
+        // Set device mute state.
+        if (!self.audio_devices.set_device_mute(dev_id, is_muted)) {
+            return BasinError.not_found; // Device not found
+        }
+        
+        const result = SyscallResult.ok(0);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
+    /// Set audio device state.
+    /// Why: Control device state.
+    /// Contract: device_id and state must be valid.
+    pub fn syscall_audio_set_state(
+        self: *BasinKernel,
+        device_id: u64,
+        state: u64,
+        _arg3: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg3;
+        _ = _arg4;
+        
+        // Assert: Device ID must be non-zero.
+        if (device_id == 0) {
+            return BasinError.invalid_argument; // Invalid device ID
+        }
+        
+        // Assert: State must be valid (0-3).
+        if (state > 3) {
+            return BasinError.invalid_argument; // Invalid state
+        }
+        
+        const dev_id = @as(u32, @truncate(device_id));
+        const audio_state = @as(audio.AudioDeviceState, @enumFromInt(@as(u8, @truncate(state))));
+        
+        // Set device state.
+        if (!self.audio_devices.set_device_state(dev_id, audio_state)) {
+            return BasinError.not_found; // Device not found
+        }
+        
+        const result = SyscallResult.ok(0);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
+    /// Set active output device.
+    /// Why: Select active output device.
+    /// Contract: device_id must be valid (or 0 to clear).
+    pub fn syscall_audio_set_active_output(
+        self: *BasinKernel,
+        device_id: u64,
+        _arg2: u64,
+        _arg3: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg2;
+        _ = _arg3;
+        _ = _arg4;
+        
+        const dev_id = @as(u32, @truncate(device_id));
+        
+        // Set active output device.
+        if (!self.audio_devices.set_active_output_device(dev_id)) {
+            return BasinError.not_found; // Device not found or invalid type
+        }
+        
+        const result = SyscallResult.ok(0);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
+    /// Set active input device.
+    /// Why: Select active input device.
+    /// Contract: device_id must be valid (or 0 to clear).
+    pub fn syscall_audio_set_active_input(
+        self: *BasinKernel,
+        device_id: u64,
+        _arg2: u64,
+        _arg3: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg2;
+        _ = _arg3;
+        _ = _arg4;
+        
+        const dev_id = @as(u32, @truncate(device_id));
+        
+        // Set active input device.
+        if (!self.audio_devices.set_active_input_device(dev_id)) {
+            return BasinError.not_found; // Device not found or invalid type
+        }
+        
+        const result = SyscallResult.ok(0);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
+    /// Set master volume.
+    /// Why: Control master volume.
+    /// Contract: volume must be valid (0-100).
+    pub fn syscall_audio_set_master_volume(
+        self: *BasinKernel,
+        volume: u64,
+        _arg2: u64,
+        _arg3: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg2;
+        _ = _arg3;
+        _ = _arg4;
+        
+        // Assert: Volume must be valid (0-100).
+        if (volume > 100) {
+            return BasinError.invalid_argument; // Invalid volume
+        }
+        
+        const vol = @as(u32, @truncate(volume));
+        
+        // Set master volume.
+        if (!self.audio_devices.set_master_volume(vol)) {
+            return BasinError.invalid_argument; // Invalid volume
+        }
+        
+        const result = SyscallResult.ok(0);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
+    /// Set master mute state.
+    /// Why: Control master mute state.
+    /// Contract: muted must be valid (0 or 1).
+    pub fn syscall_audio_set_master_mute(
+        self: *BasinKernel,
+        muted: u64,
+        _arg2: u64,
+        _arg3: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg2;
+        _ = _arg3;
+        _ = _arg4;
+        
+        // Assert: Muted must be valid (0 or 1).
+        if (muted > 1) {
+            return BasinError.invalid_argument; // Invalid mute value
+        }
+        
+        const is_muted = muted != 0;
+        
+        // Set master mute state.
+        self.audio_devices.set_master_mute(is_muted);
+        
+        const result = SyscallResult.ok(0);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
+    /// Get audio device information.
+    /// Why: Retrieve device configuration.
+    /// Contract: device_id must be valid, info_ptr must be valid VM address.
+    pub fn syscall_audio_get_device(
+        self: *BasinKernel,
+        device_id: u64,
+        info_ptr: u64,
+        _arg3: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg3;
+        _ = _arg4;
+        
+        // Assert: Device ID must be non-zero.
+        if (device_id == 0) {
+            return BasinError.invalid_argument; // Invalid device ID
+        }
+        
+        // Assert: Info pointer must be valid (non-zero, within VM memory).
+        if (info_ptr == 0) {
+            return BasinError.invalid_argument; // Null pointer
+        }
+        
+        const VM_MEMORY_SIZE_AUDIO_GET: u64 = 4 * 1024 * 1024; // 4MB default
+        if (info_ptr >= VM_MEMORY_SIZE_AUDIO_GET) {
+            return BasinError.invalid_argument; // Info pointer exceeds VM memory
+        }
+        
+        const dev_id = @as(u32, @truncate(device_id));
+        
+        // Get device.
+        const device = self.audio_devices.get_device(dev_id) orelse {
+            return BasinError.not_found; // Device not found
+        };
+        
+        // Write device information to VM memory (stub: would use vm_memory_writer).
+        // For now, just return success.
+        // Note: info_ptr is validated above but not written to in stub implementation.
+        _ = device;
         
         const result = SyscallResult.ok(0);
         

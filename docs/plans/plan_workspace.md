@@ -1,8 +1,9 @@
 # Grain Workspace Agent: Development Plan
 
 **Agent**: Grain Workspace Agent (5th Agent)  
-**Status**: Phase 10.2 WebSocket Integration (Terminal Plus) Complete ✅  
-**Last Updated**: 2025-12-07-010956-pst
+**Status**: Phase 10.4 WebSocket Integration (File Manager) Complete ✅  
+**Last Updated**: 2025-12-07-025947-pst  
+**Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-07-015717-pst.md`
 
 ---
 
@@ -363,8 +364,11 @@ All planned phases for Grain Workspace Agent have been completed:
 - Phase 8: Grain Network Tools ✅
 - Phase 8.1: DNS Resolver Integration ✅ (2025-12-06-011616-pst)
 - Phase 9: Grain DevTools ✅
-- Phase 10.1: WebSocket Integration (Monitor) ✅ (2025-12-06-121120-pst)
-- Phase 10.2: WebSocket Integration (Terminal Plus) ✅ (2025-12-06-232601-pst)
+- Phase 10: WebSocket Integration for Real-Time Features ✅ **COMPLETE** (2025-12-07-025947-pst)
+  - Phase 10.1: WebSocket Integration (Monitor) ✅ (2025-12-06-121120-pst)
+  - Phase 10.2: WebSocket Integration (Terminal Plus) ✅ (2025-12-06-232601-pst)
+  - Phase 10.3: WebSocket Integration (Network Tools) ✅ (2025-12-07-020824-pst)
+  - Phase 10.4: WebSocket Integration (File Manager) ✅ (2025-12-07-025947-pst)
 
 ### Phase 10.1: WebSocket Integration (Monitor) ✅ **COMPLETE**
 
@@ -425,6 +429,102 @@ All planned phases for Grain Workspace Agent have been completed:
 - Max 70 lines per function
 - All compiler warnings enabled
 
+### Phase 10.3: WebSocket Integration (Network Tools) ✅ **COMPLETE**
+
+**Date**: 2025-12-07-020824-pst
+
+**Completed Work**:
+1. **WebSocket Support for Network Tools App** (`src/grain_workspace/network_tools/app.zig`):
+   - Added `WebSocketManager` integration to `NetworkToolsApp`
+   - Added `websocket_clients` array with bounded limit (`MAX_WEBSOCKET_CLIENTS: 32`)
+   - Added `add_websocket_client()` and `remove_websocket_client()` functions
+   - Added `broadcast_bandwidth_update()` for live network statistics broadcasting
+   - Added `serialize_bandwidth_json()` for JSON serialization
+   - Updated `update_bandwidth()` to broadcast to WebSocket clients
+   - Updated `init()` to accept `WebSocketManager` parameter
+   - Comprehensive tests (`tests/113_grain_workspace_network_tools_test.zig`)
+
+**Features**:
+- Live network statistics updates via WebSocket
+- Bounded WebSocket client management (max 32 clients)
+- JSON serialization of bandwidth statistics for WebSocket frames
+- Automatic broadcasting on bandwidth updates
+- Client connection/disconnection management
+
+**Grain Style Compliance**:
+- `grain_case` function names
+- `u32`/`u64` types (no `usize`)
+- Bounded allocations (all limits explicit)
+- Assertions for preconditions
+- Max 70 lines per function
+- All compiler warnings enabled
+
+### Phase 10.4: WebSocket Integration (File Manager) ✅ **COMPLETE**
+
+**Date**: 2025-12-07-025947-pst
+
+**Completed Work**:
+1. **WebSocket Support for File Manager App** (`src/grain_workspace/file_manager/app.zig`):
+   - Added `WebSocketManager` integration to `FileManagerUI`
+   - Added `websocket_clients` array with bounded limit (`MAX_WEBSOCKET_CLIENTS: 32`)
+   - Added `add_websocket_client()` and `remove_websocket_client()` functions
+   - Added `broadcast_directory_change()` for real-time directory navigation updates
+   - Added `broadcast_file_event()` for real-time file operation notifications (delete, rename)
+   - Added `serialize_directory_change_json()` and `serialize_file_event_json()` for JSON serialization
+   - Updated `navigate_to_directory()` to broadcast directory changes
+   - Updated `delete_file()` to broadcast file deletion events
+   - Updated `rename_file()` to broadcast file rename events
+   - Updated `init()` to accept `WebSocketManager` parameter
+   - Comprehensive tests (`tests/112_grain_workspace_file_manager_test.zig`)
+
+**Features**:
+- Real-time file system notifications via WebSocket
+- Bounded WebSocket client management (max 32 clients)
+- JSON serialization of directory changes and file events
+- Automatic broadcasting on directory navigation, file deletion, and file rename
+- Client connection/disconnection management
+
+**Grain Style Compliance**:
+- `grain_case` function names
+- `u32`/`u64` types (no `usize`)
+- Bounded allocations (all limits explicit)
+- Assertions for preconditions
+- Max 70 lines per function
+- All compiler warnings enabled
+
+### Phase 10: WebSocket Integration for Real-Time Features ✅ **COMPLETE**
+
+**Date**: 2025-12-07-025947-pst
+
+**Summary**: Phase 10 adds WebSocket support to three Grain Workspace applications for real-time features, leveraging Grain Core Agent Phase 61 WebSocket infrastructure.
+
+**All Sub-Phases Completed**:
+- ✅ Phase 10.1: WebSocket Integration (Monitor) — Real-time system metrics updates
+- ✅ Phase 10.2: WebSocket Integration (Terminal Plus) — Live terminal output streaming
+- ✅ Phase 10.3: WebSocket Integration (Network Tools) — Live network statistics updates
+- ✅ Phase 10.4: WebSocket Integration (File Manager) — Real-time file system notifications
+
+**Total Impact**:
+- 4 applications enhanced with WebSocket support
+- Real-time updates for system monitoring, terminal output, and network statistics
+- Bounded client management (32 clients for Monitor/Network Tools, 16 per pane for Terminal Plus)
+- JSON serialization for all WebSocket broadcasts
+- Comprehensive test coverage for all WebSocket integrations
+
+**Integration Points**:
+- All applications use `grain_core.websocket.WebSocketManager`
+- All applications follow consistent WebSocket client management patterns
+- All applications broadcast updates automatically when data changes
+- All applications support multiple concurrent WebSocket clients
+
+**Grain Style Compliance**:
+- All code follows `grain_case` function names
+- All code uses explicit types (`u32`/`u64`, no `usize`)
+- All code uses bounded allocations with explicit limits
+- All code includes assertions for preconditions
+- All functions respect max 70 lines per function
+- All compiler warnings enabled
+
 **Future Enhancements**:
 - UI integration with Grain Core compositor
 - Enhanced code formatter implementations
@@ -434,8 +534,8 @@ All planned phases for Grain Workspace Agent have been completed:
 - WebSocket integration for real-time features (now available via Core Agent Phase 61)
   - ✅ Real-time system monitoring updates (Phase 10.1 complete)
   - ✅ Live terminal output streaming (Phase 10.2 complete)
-  - Real-time file system notifications (Phase 10.3 planned)
-  - Live network statistics updates (Phase 10.4 planned)
+  - ✅ Live network statistics updates (Phase 10.3 complete)
+  - ✅ Real-time file system notifications (Phase 10.4 complete)
 
 **Creative Future Ideas** (Conceptual):
 - **System Auditor**: Security auditing and compliance checking

@@ -1,8 +1,8 @@
 # Grain Skate Terminal Silo Field Agent: Task List
 
 **Agent**: Grain Skate Terminal Silo Field Agent (3rd Agent)  
-**Status**: Phase 3 Complete, Creative Enhancements Planned  
-**Last Updated**: 2025-12-06-233331-pst
+**Status**: Phase 4 & Phase 5 In Progress (Core Complete, UI/GLM-4.6 Integration Pending)  
+**Last Updated**: 2025-12-07-031415-pst
 
 ---
 
@@ -135,23 +135,28 @@
 
 ---
 
-## Planned: Phase 4 - Temporal Knowledge Graph
+## Planned: Phase 4 - Temporal Knowledge Graph 🔄 **IN PROGRESS**
+
+**Date Started**: 2025-12-07-020707-pst
 
 **Priority**: **HIGH** — Time-travel mode for knowledge graph  
-**Status**: **PLANNED**  
+**Status**: **IN PROGRESS** — Core temporal query infrastructure complete, UI pending  
 **Estimated Time**: 3-4 weeks
 
 ### Tasks
 
-- [ ] Extend `EditorDagIntegration` with temporal queries
-- [ ] Add time slider component to graph renderer
-- [ ] Store block creation timestamps in DAG events
-- [ ] Query DAG history for temporal views
-- [ ] Implement "What did I know on [date]?" queries
-- [ ] Add animated transitions showing graph growth
-- [ ] Test thoroughly (time-travel, version history, branching)
-- [ ] Update tests (`tests/122_grain_skate_editor_dag_integration_test.zig`)
-- [ ] Update `build.zig` if needed
+- [x] Extend `EditorDagIntegration` with temporal queries
+- [x] Create `TemporalGraph` module for time-travel management
+- [x] Store block creation timestamps in DAG events (automatic via DAG)
+- [x] Query DAG history for temporal views
+- [x] Implement "What did I know on [date]?" queries (date range queries)
+- [x] Implement time-travel mode (set/reset timestamp)
+- [x] Create tests (`tests/123_grain_skate_temporal_graph_test.zig`)
+- [x] Add tests to `build.zig`
+- [x] Add `TemporalGraph` to `src/grain_skate/root.zig` exports
+- [ ] Add time slider component to graph renderer (UI pending)
+- [ ] Add animated transitions showing graph growth (UI pending)
+- [ ] Test thoroughly with UI integration (time-travel, version history, branching)
 - [ ] Update `docs/plans/plan_skate.md` and `docs/tasks/tasks_skate.md` with completion
 
 ### Grain Style Requirements
@@ -175,27 +180,29 @@
 
 ---
 
-## Planned: Phase 5 - AI-Powered Graph Insights
+## Planned: Phase 5 - AI-Powered Graph Insights 🔄 **IN PROGRESS**
+
+**Date Started**: 2025-12-07-031415-pst
 
 **Priority**: **HIGH** — GLM-4.6 powered insights  
-**Status**: **PLANNED**  
+**Status**: **IN PROGRESS** — Foundation complete, GLM-4.6 integration pending  
 **Estimated Time**: 3-4 weeks
 
 ### Tasks
 
+- [x] Create AI insights module foundation (`src/grain_skate/ai_insights.zig`)
+- [x] Store AI suggestions as DAG events (accept/reject tracking)
+- [x] Extend `EditorDagIntegration` with `add_event_and_update_last()` method
+- [x] Create placeholder functions for all AI features
+- [x] Create tests (`tests/124_grain_skate_ai_insights_test.zig`)
+- [x] Add tests to `build.zig`
+- [x] Add `AiInsights` to `src/grain_skate/root.zig` exports
 - [ ] Integrate with `src/aurora_glm46.zig` (GLM-4.6 client from Aurora)
 - [ ] Use HTTP client (`src/grain_core/http_client.zig`) for external AI API calls if needed
 - [ ] Use vector embeddings for semantic similarity (Grain Court integration)
-- [ ] Store AI suggestions as DAG events (accept/reject tracking)
-- [ ] Visual indicators for AI-suggested connections
-- [ ] Implement auto-suggest connections between blocks
-- [ ] Implement detect knowledge gaps (missing links)
-- [ ] Implement summarize subgraphs (AI-generated summaries)
-- [ ] Implement generate block titles from content (auto-titling)
-- [ ] Implement semantic clustering (group related blocks visually)
-- [ ] Test thoroughly (AI suggestions, semantic similarity, clustering)
-- [ ] Update tests if needed
-- [ ] Update `build.zig` if needed
+- [ ] Implement actual AI analysis (replace placeholders with GLM-4.6 calls)
+- [ ] Visual indicators for AI-suggested connections (graph renderer integration)
+- [ ] Test thoroughly with actual AI integration (AI suggestions, semantic similarity, clustering)
 - [ ] Update `docs/plans/plan_skate.md` and `docs/tasks/tasks_skate.md` with completion
 
 ### Grain Style Requirements

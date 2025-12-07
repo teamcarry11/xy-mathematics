@@ -5,6 +5,7 @@
 //! GrainStyle: grain_case, u32/u64, bounded allocations, assertions.
 //!
 //! 2025-12-04-092542-pst: Active implementation
+//! 2025-12-07-025947-pst: Phase 10.4 WebSocket integration for real-time file system notifications
 
 const std = @import("std");
 const grain_core = @import("grain_core");
@@ -20,6 +21,10 @@ pub const MAX_PREVIEW_SIZE: u32 = 8192;
 // Bounded: Max clipboard entries (explicit limit)
 // 2025-12-04-092542-pst: Active constant
 pub const MAX_CLIPBOARD_ENTRIES: u32 = 16;
+
+// Bounded: Max WebSocket clients (explicit limit)
+// 2025-12-07-025947-pst: Phase 10.4 WebSocket integration
+pub const MAX_WEBSOCKET_CLIENTS: u32 = 32;
 
 // File operation type.
 // 2025-12-04-092542-pst: Active enum
@@ -41,6 +46,7 @@ pub const ClipboardEntry = struct {
 
 // File Manager UI application state.
 // 2025-12-04-092542-pst: Active struct
+// 2025-12-07-025947-pst: Phase 10.4 WebSocket integration
 pub const FileManagerUI = struct {
     file_manager: *grain_core.file_manager.FileManager,
     search_query: [grain_core.file_manager.MAX_NAME_LEN]u8,
@@ -50,17 +56,23 @@ pub const FileManagerUI = struct {
     clipboard_len: u32,
     preview_buffer: [MAX_PREVIEW_SIZE]u8,
     preview_size: u32,
+    websocket_manager: *grain_core.websocket.WebSocketManager,
+    websocket_clients: [MAX_WEBSOCKET_CLIENTS]u32,
+    websocket_clients_len: u32,
     allocator: std.mem.Allocator,
 
     /// Initialize file manager UI.
     // 2025-12-04-092542-pst: Active function
+    // 2025-12-07-025947-pst: Phase 10.4 WebSocket integration
     pub fn init(
         allocator: std.mem.Allocator,
         fm: *grain_core.file_manager.FileManager,
+        ws_manager: *grain_core.websocket.WebSocketManager,
     ) FileManagerUI {
-        // Precondition: Allocator and manager must be valid
+        // Precondition: Allocator and managers must be valid
         std.debug.assert(allocator.ptr != null);
         std.debug.assert(@intFromPtr(fm) != 0);
+        std.debug.assert(@intFromPtr(ws_manager) != 0);
 
         var ui = FileManagerUI{
             .file_manager = fm,
@@ -71,6 +83,9 @@ pub const FileManagerUI = struct {
             .clipboard_len = 0,
             .preview_buffer = undefined,
             .preview_size = 0,
+            .websocket_manager = ws_manager,
+            .websocket_clients = undefined,
+            .websocket_clients_len = 0,
             .allocator = allocator,
         };
 
@@ -86,9 +101,16 @@ pub const FileManagerUI = struct {
         // Initialize preview buffer
         @memset(&ui.preview_buffer, 0);
 
+        // Initialize WebSocket clients array
+        i = 0;
+        while (i < MAX_WEBSOCKET_CLIENTS) : (i += 1) {
+            ui.websocket_clients[i] = 0;
+        }
+
         // Postcondition: UI must be valid
         std.debug.assert(ui.search_query_len == 0);
         std.debug.assert(ui.clipboard_len == 0);
+        std.debug.assert(ui.websocket_clients_len == 0);
 
         return ui;
     }
@@ -125,6 +147,8 @@ pub const FileManagerUI = struct {
         const result = self.file_manager.set_current_directory(path);
         if (result) {
             self.selected_entry_id = 0;
+            // Broadcast directory change to WebSocket clients
+            self.broadcast_directory_change(path);
         }
 
         // Postcondition: Directory must be set if successful
@@ -318,8 +342,12 @@ pub const FileManagerUI = struct {
         std.debug.assert(entry_id > 0);
 
         const result = self.file_manager.remove_file_entry(entry_id);
-        if (result and self.selected_entry_id == entry_id) {
-            self.selected_entry_id = 0;
+        if (result) {
+            if (self.selected_entry_id == entry_id) {
+                self.selected_entry_id = 0;
+            }
+            // Broadcast file deletion to WebSocket clients
+            self.broadcast_file_event("delete", entry_id);
         }
 
         // Postcondition: Entry must be removed if successful
@@ -353,6 +381,9 @@ pub const FileManagerUI = struct {
 
         // Postcondition: Name must be updated
         std.debug.assert(entry.?.name_len == name_len);
+
+        // Broadcast file rename to WebSocket clients
+        self.broadcast_file_event("rename", entry_id);
 
         return true;
     }
@@ -407,6 +438,216 @@ pub const FileManagerUI = struct {
 
         // Postcondition: Clipboard must be cleared
         std.debug.assert(self.clipboard_len == 0);
+    }
+
+    /// Add WebSocket client for real-time file system notifications.
+    // 2025-12-07-025947-pst: Phase 10.4 WebSocket integration
+    pub fn add_websocket_client(
+        self: *FileManagerUI,
+        connection_id: u32,
+    ) bool {
+        // Precondition: Connection ID must be valid
+        std.debug.assert(connection_id > 0);
+        std.debug.assert(self.websocket_clients_len < MAX_WEBSOCKET_CLIENTS);
+
+        if (self.websocket_clients_len >= MAX_WEBSOCKET_CLIENTS) {
+            return false;
+        }
+
+        self.websocket_clients[self.websocket_clients_len] = connection_id;
+        self.websocket_clients_len += 1;
+
+        // Postcondition: Client count increased
+        std.debug.assert(self.websocket_clients_len > 0);
+        std.debug.assert(self.websocket_clients_len <= MAX_WEBSOCKET_CLIENTS);
+
+        return true;
+    }
+
+    /// Remove WebSocket client.
+    // 2025-12-07-025947-pst: Phase 10.4 WebSocket integration
+    pub fn remove_websocket_client(
+        self: *FileManagerUI,
+        connection_id: u32,
+    ) bool {
+        // Precondition: Connection ID must be valid
+        std.debug.assert(connection_id > 0);
+
+        var i: u32 = 0;
+        while (i < self.websocket_clients_len) : (i += 1) {
+            if (self.websocket_clients[i] == connection_id) {
+                var j: u32 = i;
+                while (j < self.websocket_clients_len - 1) : (j += 1) {
+                    self.websocket_clients[j] = self.websocket_clients[j + 1];
+                }
+                self.websocket_clients_len -= 1;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// Broadcast directory change to WebSocket clients (internal).
+    // 2025-12-07-025947-pst: Phase 10.4 WebSocket integration
+    fn broadcast_directory_change(
+        self: *FileManagerUI,
+        path: []const u8,
+    ) void {
+        // Precondition: Path must be valid
+        std.debug.assert(path.len > 0);
+
+        if (self.websocket_clients_len == 0) {
+            return;
+        }
+
+        // Serialize directory change to JSON-like format (simplified)
+        var json_buf: [512]u8 = undefined;
+        const json_len = self.serialize_directory_change_json(path, &json_buf);
+        if (json_len == 0) {
+            return;
+        }
+
+        // Create WebSocket frame
+        var frame = grain_core.websocket.WebSocketFrame.init();
+        frame.flags.opcode = grain_core.websocket.FrameOpcode.text;
+        frame.flags.fin = true;
+        frame.flags.masked = false;
+        frame.payload_len = @intCast(json_len);
+
+        var i: u32 = 0;
+        while (i < json_len and i < grain_core.websocket.MAX_FRAME_SIZE) : (i += 1) {
+            frame.payload[i] = json_buf[i];
+        }
+
+        // Broadcast to all clients
+        i = 0;
+        while (i < self.websocket_clients_len) : (i += 1) {
+            const conn_id = self.websocket_clients[i];
+            const conn = self.websocket_manager.find_connection(conn_id);
+            if (conn != null and conn.?.state == grain_core.websocket.ConnectionState.open) {
+                // Frame would be sent here (actual send via socket not implemented)
+                _ = frame;
+            }
+        }
+    }
+
+    /// Broadcast file event to WebSocket clients (internal).
+    // 2025-12-07-025947-pst: Phase 10.4 WebSocket integration
+    fn broadcast_file_event(
+        self: *FileManagerUI,
+        event_type: []const u8,
+        entry_id: u32,
+    ) void {
+        // Precondition: Event type and entry ID must be valid
+        std.debug.assert(event_type.len > 0);
+        std.debug.assert(entry_id > 0);
+
+        if (self.websocket_clients_len == 0) {
+            return;
+        }
+
+        // Serialize file event to JSON-like format (simplified)
+        var json_buf: [256]u8 = undefined;
+        const json_len = self.serialize_file_event_json(event_type, entry_id, &json_buf);
+        if (json_len == 0) {
+            return;
+        }
+
+        // Create WebSocket frame
+        var frame = grain_core.websocket.WebSocketFrame.init();
+        frame.flags.opcode = grain_core.websocket.FrameOpcode.text;
+        frame.flags.fin = true;
+        frame.flags.masked = false;
+        frame.payload_len = @intCast(json_len);
+
+        var i: u32 = 0;
+        while (i < json_len and i < grain_core.websocket.MAX_FRAME_SIZE) : (i += 1) {
+            frame.payload[i] = json_buf[i];
+        }
+
+        // Broadcast to all clients
+        i = 0;
+        while (i < self.websocket_clients_len) : (i += 1) {
+            const conn_id = self.websocket_clients[i];
+            const conn = self.websocket_manager.find_connection(conn_id);
+            if (conn != null and conn.?.state == grain_core.websocket.ConnectionState.open) {
+                // Frame would be sent here (actual send via socket not implemented)
+                _ = frame;
+            }
+        }
+    }
+
+    /// Serialize directory change to JSON format (simplified).
+    // 2025-12-07-025947-pst: Phase 10.4 WebSocket integration
+    fn serialize_directory_change_json(
+        self: *const FileManagerUI,
+        path: []const u8,
+        buf: []u8,
+    ) u32 {
+        // Precondition: Buffer must be valid
+        std.debug.assert(buf.len >= 512);
+        std.debug.assert(path.len > 0);
+
+        _ = self; // Suppress unused warning
+
+        // Simplified JSON serialization (escape path for JSON)
+        const path_len = @min(path.len, 200);
+        var path_buf: [200]u8 = undefined;
+        var path_idx: u32 = 0;
+        var i: u32 = 0;
+        while (i < path_len and path_idx < 200) : (i += 1) {
+            const c = path[i];
+            if (c == '"' or c == '\\') {
+                if (path_idx + 1 < 200) {
+                    path_buf[path_idx] = '\\';
+                    path_idx += 1;
+                    path_buf[path_idx] = c;
+                    path_idx += 1;
+                }
+            } else {
+                path_buf[path_idx] = c;
+                path_idx += 1;
+            }
+        }
+        const json_fmt = 
+            \\{"event":"directory_change","path":"%.*s"}
+        ;
+        const written = std.fmt.bufPrint(buf, json_fmt, .{
+            path_idx,
+            &path_buf,
+        }) catch return 0;
+
+        return @intCast(written.len);
+    }
+
+    /// Serialize file event to JSON format (simplified).
+    // 2025-12-07-025947-pst: Phase 10.4 WebSocket integration
+    fn serialize_file_event_json(
+        self: *const FileManagerUI,
+        event_type: []const u8,
+        entry_id: u32,
+        buf: []u8,
+    ) u32 {
+        // Precondition: Buffer must be valid
+        std.debug.assert(buf.len >= 256);
+        std.debug.assert(event_type.len > 0);
+        std.debug.assert(entry_id > 0);
+
+        _ = self; // Suppress unused warning
+
+        // Simplified JSON serialization
+        const event_len = @min(event_type.len, 32);
+        const json_fmt = 
+            \\{"event":"%.*s","entry_id":%d}
+        ;
+        const written = std.fmt.bufPrint(buf, json_fmt, .{
+            event_len,
+            event_type.ptr,
+            entry_id,
+        }) catch return 0;
+
+        return @intCast(written.len);
     }
 };
 

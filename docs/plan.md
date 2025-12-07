@@ -1,6 +1,6 @@
 # Grain OS Development Plan
 
-**Last Updated**: 2025-12-07-060952-pst  
+**Last Updated**: 2025-12-07-064245-pst  
 **Structure**: Hybrid approach with core overview and agent-specific plans  
 **See**: `docs/plans/plan_{agent}.md` for detailed agent plans
 
@@ -49,7 +49,9 @@
 - Network Tests (Phase 4.4) ✅
 - **Phase 4: Network Syscalls — COMPLETE** ✅
 - Audio Device Management (Phase 5.1) ✅
+- Audio I/O Syscalls (Phase 5.3) ✅
 - Audio Tests (Phase 5.4) ✅
+- **Phase 5: Audio Device Management — COMPLETE** ✅
 
 **Provides**: Kernel syscalls, VM capabilities, file I/O, network syscalls (planned)
 

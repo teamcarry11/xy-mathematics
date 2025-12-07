@@ -5654,7 +5654,7 @@ pub const BasinKernel = struct {
         
         // Note: In real implementation, would write to VM memory at buffer_ptr.
         // For now, just return bytes read.
-        _ = buffer_ptr;
+        // Note: buffer_ptr is validated above but not written to in stub implementation.
         
         const result = SyscallResult.ok(@as(u64, @intCast(bytes_read)));
         
@@ -5721,7 +5721,7 @@ pub const BasinKernel = struct {
         // Note: In real implementation, would read from VM memory at data_ptr.
         // For now, just use zero-filled buffer.
         @memset(data, 0);
-        _ = data_ptr;
+        // Note: data_ptr is validated above but not read from in stub implementation.
         
         // Write audio data.
         const bytes_written_opt = self.audio_devices.write_audio(dev_id, data);

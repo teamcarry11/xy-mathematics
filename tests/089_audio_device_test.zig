@@ -423,3 +423,223 @@ test "audio multiple devices" {
     try testing.expect(result4 == .success);
 }
 
+// Test: set audio format.
+test "audio set format" {
+    var kernel = BasinKernel.init();
+    
+    // Create device first.
+    const name_ptr: u64 = 0x10000;
+    const name_len: u64 = 15; // "Built-in Speaker"
+    const device_type: u64 = 1; // speaker
+    const result1 = try kernel.syscall_audio_create_device(
+        name_ptr,
+        name_len,
+        device_type,
+        0,
+    );
+    try testing.expect(result1 == .success);
+    const device_id = result1.success;
+    
+    // Set audio format (44.1kHz, stereo, 16-bit).
+    const sample_rate: u64 = 44100;
+    const channels: u64 = 2;
+    const bit_depth: u64 = 16;
+    const result2 = try kernel.syscall_audio_set_format(
+        device_id,
+        sample_rate,
+        channels,
+        bit_depth,
+    );
+    try testing.expect(result2 == .success);
+}
+
+// Test: read audio data from input device.
+test "audio read from input device" {
+    var kernel = BasinKernel.init();
+    
+    // Create input device first.
+    const name_ptr: u64 = 0x10000;
+    const name_len: u64 = 10; // "Microphone"
+    const device_type: u64 = 3; // microphone
+    const result1 = try kernel.syscall_audio_create_device(
+        name_ptr,
+        name_len,
+        device_type,
+        0,
+    );
+    try testing.expect(result1 == .success);
+    const device_id = result1.success;
+    
+    // Set device state to active.
+    const state: u64 = 2; // active
+    const result2 = try kernel.syscall_audio_set_state(
+        device_id,
+        state,
+        0,
+        0,
+    );
+    try testing.expect(result2 == .success);
+    
+    // Read audio data.
+    const buffer_ptr: u64 = 0x20000;
+    const buffer_len: u64 = 1024;
+    const result3 = try kernel.syscall_audio_read(
+        device_id,
+        buffer_ptr,
+        buffer_len,
+        0,
+    );
+    try testing.expect(result3 == .success);
+    const bytes_read = result3.success;
+    try testing.expect(bytes_read <= buffer_len);
+}
+
+// Test: write audio data to output device.
+test "audio write to output device" {
+    var kernel = BasinKernel.init();
+    
+    // Create output device first.
+    const name_ptr: u64 = 0x10000;
+    const name_len: u64 = 15; // "Built-in Speaker"
+    const device_type: u64 = 1; // speaker
+    const result1 = try kernel.syscall_audio_create_device(
+        name_ptr,
+        name_len,
+        device_type,
+        0,
+    );
+    try testing.expect(result1 == .success);
+    const device_id = result1.success;
+    
+    // Set device state to active.
+    const state: u64 = 2; // active
+    const result2 = try kernel.syscall_audio_set_state(
+        device_id,
+        state,
+        0,
+        0,
+    );
+    try testing.expect(result2 == .success);
+    
+    // Write audio data.
+    const data_ptr: u64 = 0x30000;
+    const data_len: u64 = 1024;
+    const result3 = try kernel.syscall_audio_write(
+        device_id,
+        data_ptr,
+        data_len,
+        0,
+    );
+    try testing.expect(result3 == .success);
+    const bytes_written = result3.success;
+    try testing.expect(bytes_written <= data_len);
+}
+
+// Test: invalid format parameters.
+test "audio invalid format" {
+    var kernel = BasinKernel.init();
+    
+    // Create device first.
+    const name_ptr: u64 = 0x10000;
+    const name_len: u64 = 15; // "Built-in Speaker"
+    const device_type: u64 = 1; // speaker
+    const result1 = try kernel.syscall_audio_create_device(
+        name_ptr,
+        name_len,
+        device_type,
+        0,
+    );
+    try testing.expect(result1 == .success);
+    const device_id = result1.success;
+    
+    // Try to set invalid sample rate.
+    const invalid_sample_rate: u64 = 5000; // Too low
+    const channels: u64 = 2;
+    const bit_depth: u64 = 16;
+    const result2 = kernel.syscall_audio_set_format(
+        device_id,
+        invalid_sample_rate,
+        channels,
+        bit_depth,
+    );
+    try testing.expectError(BasinError.invalid_argument, result2);
+}
+
+// Test: read from output device (should fail).
+test "audio read from output device fails" {
+    var kernel = BasinKernel.init();
+    
+    // Create output device first.
+    const name_ptr: u64 = 0x10000;
+    const name_len: u64 = 15; // "Built-in Speaker"
+    const device_type: u64 = 1; // speaker
+    const result1 = try kernel.syscall_audio_create_device(
+        name_ptr,
+        name_len,
+        device_type,
+        0,
+    );
+    try testing.expect(result1 == .success);
+    const device_id = result1.success;
+    
+    // Set device state to active.
+    const state: u64 = 2; // active
+    const result2 = try kernel.syscall_audio_set_state(
+        device_id,
+        state,
+        0,
+        0,
+    );
+    try testing.expect(result2 == .success);
+    
+    // Try to read from output device (should fail).
+    const buffer_ptr: u64 = 0x20000;
+    const buffer_len: u64 = 1024;
+    const result3 = kernel.syscall_audio_read(
+        device_id,
+        buffer_ptr,
+        buffer_len,
+        0,
+    );
+    try testing.expectError(BasinError.not_found, result3);
+}
+
+// Test: write to input device (should fail).
+test "audio write to input device fails" {
+    var kernel = BasinKernel.init();
+    
+    // Create input device first.
+    const name_ptr: u64 = 0x10000;
+    const name_len: u64 = 10; // "Microphone"
+    const device_type: u64 = 3; // microphone
+    const result1 = try kernel.syscall_audio_create_device(
+        name_ptr,
+        name_len,
+        device_type,
+        0,
+    );
+    try testing.expect(result1 == .success);
+    const device_id = result1.success;
+    
+    // Set device state to active.
+    const state: u64 = 2; // active
+    const result2 = try kernel.syscall_audio_set_state(
+        device_id,
+        state,
+        0,
+        0,
+    );
+    try testing.expect(result2 == .success);
+    
+    // Try to write to input device (should fail).
+    const data_ptr: u64 = 0x30000;
+    const data_len: u64 = 1024;
+    const result3 = kernel.syscall_audio_write(
+        device_id,
+        data_ptr,
+        data_len,
+        0,
+    );
+    try testing.expectError(BasinError.not_found, result3);
+}
+

@@ -1,8 +1,8 @@
 # Grain Vantage Agent: Development Plan
 
 **Agent**: Grain Vantage Agent (1st Agent)  
-**Status**: Phase 5.4 Complete, Ready for Next Phase  
-**Last Updated**: 2025-12-07-042228-pst
+**Status**: Phase 5.3 Complete, Ready for Next Phase  
+**Last Updated**: 2025-12-07-064245-pst
 
 ---
 
@@ -415,20 +415,18 @@ Grain Vantage Agent is responsible for building the RISC-V64 virtual machine (Gr
 
 ---
 
-## Current Work: Phase 5.4 Complete, Ready for Next Phase
+## Current Work: Phase 5.3 Complete, Ready for Next Phase
 
-**Status**: Phase 5.4 Complete (Audio Device Management & Tests)  
-**Next Priority**: Coordinate with Grain Core Agent on audio API integration or plan next kernel feature
+**Status**: Phase 5 Complete (Audio Device Management, I/O, & Tests)  
+**Next Priority**: Coordinate with Grain Core Agent on audio API integration or plan next kernel feature (Phase 6: AArch64 Support)
 
 ### Potential Next Phases
 
-1. **Phase 5.3: Audio I/O Syscalls** (LOW priority) — Audio read/write operations
-   - Implement audio data I/O syscalls
-   - Audio format support (sample rate, channels, bit depth)
-2. **Phase 5.4: Audio Tests** (LOW priority) — Comprehensive test coverage
-   - Create `tests/089_audio_device_test.zig`
-   - Update `build.zig` with new tests
-3. **Phase 6: AArch64 Support** (MEDIUM priority) — AArch64 cloud deployment and VM support
+1. **Phase 6: AArch64 Support** (MEDIUM priority) — AArch64 cloud deployment and VM support
+   - AArch64 cloud deployment
+   - AArch64 VM support
+   - AArch64 kernel port
+   - Cross-platform compatibility
    - Enables cloud deployment and cross-platform compatibility
    - Larger scope (6-8 weeks estimated)
 
@@ -477,12 +475,14 @@ Grain Vantage Agent is responsible for building the RISC-V64 virtual machine (Gr
 **Features**:
 - ✅ Audio device enumeration (Phase 5.1 - COMPLETE)
 - ✅ Audio device control (volume, mute) (Phase 5.1 - COMPLETE)
-- ⏳ Audio I/O syscalls (Phase 5.3 - PLANNED)
+- ✅ Audio I/O syscalls (Phase 5.3 - COMPLETE)
 - ✅ Device selection (output/input) (Phase 5.1 - COMPLETE)
 - ✅ Comprehensive tests (Phase 5.4 - COMPLETE)
+- ✅ Audio format support (Phase 5.3 - COMPLETE)
 
 **Completed Work**:
 - **Phase 5.1: Audio Device Management** (2025-12-07-033535-pst) ✅ **COMPLETE**
+- **Phase 5.3: Audio I/O Syscalls** (2025-12-07-064245-pst) ✅ **COMPLETE**
 - **Phase 5.4: Audio Tests** (2025-12-07-042228-pst) ✅ **COMPLETE**
   - Audio device management module (`src/kernel/audio.zig`)
   - Device structures (`AudioDevice`, `AudioDeviceType`, `AudioDeviceState`)
@@ -502,6 +502,17 @@ Grain Vantage Agent is responsible for building the RISC-V64 virtual machine (Gr
     - `audio_get_device` (#128) — Get device information
   - Comprehensive test suite (`tests/089_audio_device_test.zig`)
   - Tests cover device creation, volume/mute control, state management, active device selection, master controls, error handling, and multiple device scenarios
+- **Phase 5.3: Audio I/O Syscalls** (2025-12-07-064245-pst) ✅ **COMPLETE**
+  - Audio format support (`AudioFormat` struct with sample rate, channels, bit depth)
+  - Audio I/O buffers (64KB input/output buffers per device)
+  - Audio format validation (sample rate 8kHz-192kHz, channels 1-8, bit depth 8/16/24/32)
+  - Audio read/write operations (`read_audio`, `write_audio`)
+  - Audio syscalls:
+    - `audio_set_format` (#129) — Set audio format (sample rate, channels, bit depth)
+    - `audio_read` (#130) — Read audio data from input device
+    - `audio_write` (#131) — Write audio data to output device
+  - Extended test suite with format, read, and write tests
+  - Input/output device capability validation
 
 **Dependencies**:
 - **Provides**: Audio syscalls (for Grain Core Agent Audio Manager)

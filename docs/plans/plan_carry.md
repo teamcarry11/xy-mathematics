@@ -1105,7 +1105,7 @@ While waiting for Grain Core Agent's API Server (Phase 59), we can prepare the A
    - WebSocket frame parsing (text, binary, ping, pong, close) ✅
    - WebSocket frame generation ✅
    - WebSocket connection management ✅
-   - Ready for Carry Agent WebSocket client implementation ✅
+   - Carry Agent WebSocket client implementation ✅ **COMPLETE** (2025-12-06-121136-pst)
 
 4. **Socket Options (Grain Core Agent Phase 61)**: ✅ **COMPLETE** (2025-12-06-131112-pst)
    - Socket option enum (reuse_address, keep_alive, timeout) ✅

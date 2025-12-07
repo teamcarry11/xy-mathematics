@@ -102,14 +102,16 @@ pub const AiInsights = struct {
         self.* = undefined;
     }
     
-    /// Context for collecting streaming GLM-4.6 response.
-    const ResponseCollector = struct {
-        buffer: *std.ArrayList(u8),
-        
-        fn callback(ctx: *ResponseCollector, chunk: []const u8) void {
-            ctx.buffer.writer().writeAll(chunk) catch {};
+    /// Global buffer for collecting streaming responses (single-threaded use).
+    /// Note: This is a workaround for callback limitations in GLM-4.6 client.
+    var global_response_buffer: ?*std.ArrayList(u8) = null;
+    
+    /// Callback for collecting streaming GLM-4.6 response chunks.
+    fn collect_chunk_callback(chunk: []const u8) void {
+        if (global_response_buffer) |buffer| {
+            buffer.writer().writeAll(chunk) catch {};
         }
-    };
+    }
     
     /// Collect streaming GLM-4.6 response into a single string.
     fn collect_glm46_response(
@@ -122,16 +124,19 @@ pub const AiInsights = struct {
         // Assert: Messages must be within bounds
         std.debug.assert(messages.len > 0);
         
-        var response_buffer = std.ArrayList(u8).init(self.allocator);
-        errdefer response_buffer.deinit();
+        var response_buffer_local = std.ArrayList(u8).init(self.allocator);
+        errdefer response_buffer_local.deinit();
         
         const client = &self.glm46_client.?;
         
-        // Collect streaming chunks
-        var collector = ResponseCollector{ .buffer = &response_buffer };
-        try client.requestCompletion(messages, ResponseCollector.callback, &collector);
+        // Set global buffer (single-threaded use)
+        global_response_buffer = &response_buffer_local;
+        defer global_response_buffer = null;
         
-        return try response_buffer.toOwnedSlice();
+        // Collect streaming chunks
+        try client.requestCompletion(messages, collect_chunk_callback);
+        
+        return try response_buffer_local.toOwnedSlice();
     }
     
     /// Analyze blocks and suggest connections (semantic similarity).
@@ -231,7 +236,6 @@ pub const AiInsights = struct {
     
     /// Detect knowledge gaps (missing links between related blocks).
     /// Returns array of block ID pairs that should be linked.
-    /// Note: This is a placeholder - actual GLM-4.6 integration pending.
     pub fn detect_knowledge_gaps(
         self: *AiInsights,
         block_ids: []const u64,
@@ -239,13 +243,72 @@ pub const AiInsights = struct {
         // Assert: Block count must be within bounds
         std.debug.assert(block_ids.len <= MAX_BLOCKS_PER_BATCH);
         
-        // Placeholder: Return empty gaps for now
-        // TODO: Integrate with GLM-4.6 client for gap detection
-        _ = self;
-        _ = block_ids;
+        // If GLM-4.6 client not available, return empty gaps
+        if (self.glm46_client == null) {
+            return &[_]struct { from_block_id: u64, to_block_id: u64 }{};
+        }
         
-        // Return empty array (caller should allocate result)
-        return &[_]struct { from_block_id: u64, to_block_id: u64 }{};
+        // Get block contents and existing links
+        var block_contents = std.ArrayList([]const u8).init(self.allocator);
+        defer {
+            for (block_contents.items) |content| {
+                self.allocator.free(content);
+            }
+            block_contents.deinit();
+        }
+        
+        for (block_ids) |block_id| {
+            const block = self.block_storage.get_block(@as(u32, @intCast(block_id))) orelse continue;
+            const content = try self.allocator.dupe(u8, block.content[0..block.content_len]);
+            try block_contents.append(content);
+        }
+        
+        // Build prompt for GLM-4.6
+        var prompt = std.ArrayList(u8).init(self.allocator);
+        defer prompt.deinit();
+        
+        const writer = prompt.writer();
+        try writer.writeAll("Analyze these knowledge graph blocks and identify missing connections (knowledge gaps). For each gap, provide: block1_id,block2_id (one per line).\n\n");
+        
+        for (block_ids, 0..) |block_id, i| {
+            if (i < block_contents.items.len) {
+                try writer.print("Block {d}:\n{s}\n\n", .{ block_id, block_contents.items[i] });
+            }
+        }
+        
+        const messages = [_]Glm46Client.Message{
+            .{ .role = "system", .content = "You are a knowledge graph analysis assistant. Identify missing connections between related blocks." },
+            .{ .role = "user", .content = try prompt.toOwnedSlice() },
+        };
+        defer self.allocator.free(messages[1].content);
+        
+        // Get AI response
+        const response = try self.collect_glm46_response(&messages);
+        defer self.allocator.free(response);
+        
+        // Parse response (simple CSV-like format)
+        var gaps = std.ArrayList(struct { from_block_id: u64, to_block_id: u64 }).init(self.allocator);
+        errdefer gaps.deinit();
+        
+        // Parse lines
+        var lines = std.mem.split(u8, response, "\n");
+        while (lines.next()) |line| {
+            if (line.len == 0) continue;
+            
+            var fields = std.mem.split(u8, line, ",");
+            const from_id_str = fields.next() orelse continue;
+            const to_id_str = fields.next() orelse continue;
+            
+            const from_id = std.fmt.parseInt(u64, from_id_str, 10) catch continue;
+            const to_id = std.fmt.parseInt(u64, to_id_str, 10) catch continue;
+            
+            try gaps.append(.{
+                .from_block_id = from_id,
+                .to_block_id = to_id,
+            });
+        }
+        
+        return try gaps.toOwnedSlice();
     }
     
     /// Generate block title from content (auto-titling).
@@ -297,7 +360,6 @@ pub const AiInsights = struct {
     
     /// Summarize subgraph (AI-generated summary).
     /// Returns summary text for the subgraph.
-    /// Note: This is a placeholder - actual GLM-4.6 integration pending.
     pub fn summarize_subgraph(
         self: *AiInsights,
         block_ids: []const u64,
@@ -305,12 +367,50 @@ pub const AiInsights = struct {
         // Assert: Block count must be within bounds
         std.debug.assert(block_ids.len <= MAX_BLOCKS_PER_BATCH);
         
-        // Placeholder: Return null for now
-        // TODO: Integrate with GLM-4.6 client for summarization
-        _ = self;
-        _ = block_ids;
+        // If GLM-4.6 client not available, return null
+        if (self.glm46_client == null) {
+            return null;
+        }
         
-        return null;
+        // Get block contents
+        var block_contents = std.ArrayList([]const u8).init(self.allocator);
+        defer {
+            for (block_contents.items) |content| {
+                self.allocator.free(content);
+            }
+            block_contents.deinit();
+        }
+        
+        for (block_ids) |block_id| {
+            const block = self.block_storage.get_block(@as(u32, @intCast(block_id))) orelse continue;
+            const content = try self.allocator.dupe(u8, block.content[0..block.content_len]);
+            try block_contents.append(content);
+        }
+        
+        // Build prompt for GLM-4.6
+        var prompt = std.ArrayList(u8).init(self.allocator);
+        defer prompt.deinit();
+        
+        const writer = prompt.writer();
+        try writer.writeAll("Summarize this knowledge graph subgraph in 2-3 sentences:\n\n");
+        
+        for (block_ids, 0..) |block_id, i| {
+            if (i < block_contents.items.len) {
+                try writer.print("Block {d}:\n{s}\n\n", .{ block_id, block_contents.items[i] });
+            }
+        }
+        
+        const messages = [_]Glm46Client.Message{
+            .{ .role = "system", .content = "You are a knowledge graph assistant. Provide concise summaries of subgraphs." },
+            .{ .role = "user", .content = try prompt.toOwnedSlice() },
+        };
+        defer self.allocator.free(messages[1].content);
+        
+        // Get AI response
+        const response = try self.collect_glm46_response(&messages);
+        
+        // Return summary (caller owns the memory)
+        return response;
     }
     
     /// Store AI suggestion as DAG event (for deterministic replay).

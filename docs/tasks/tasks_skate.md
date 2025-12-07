@@ -197,10 +197,10 @@
 - [x] Create tests (`tests/124_grain_skate_ai_insights_test.zig`)
 - [x] Add tests to `build.zig`
 - [x] Add `AiInsights` to `src/grain_skate/root.zig` exports
-- [ ] Integrate with `src/aurora_glm46.zig` (GLM-4.6 client from Aurora)
-- [ ] Use HTTP client (`src/grain_core/http_client.zig`) for external AI API calls if needed
-- [ ] Use vector embeddings for semantic similarity (Grain Court integration)
-- [ ] Implement actual AI analysis (replace placeholders with GLM-4.6 calls)
+- [x] Integrate with `src/aurora_glm46.zig` (GLM-4.6 client from Aurora) ✅
+- [x] Use HTTP client (`src/grain_core/http_client.zig`) for external AI API calls if needed ✅ (via GLM-4.6 client)
+- [ ] Use vector embeddings for semantic similarity (Grain Court integration) (Future enhancement)
+- [x] Implement actual AI analysis (replace placeholders with GLM-4.6 calls) ✅
 - [ ] Visual indicators for AI-suggested connections (graph renderer integration)
 - [ ] Test thoroughly with actual AI integration (AI suggestions, semantic similarity, clustering)
 - [ ] Update `docs/plans/plan_skate.md` and `docs/tasks/tasks_skate.md` with completion

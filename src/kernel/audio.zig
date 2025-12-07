@@ -145,6 +145,11 @@ pub const AudioDevice = struct {
             .muted = false,
             .allocated = false,
             .owner_process_id = 0,
+            .format = AudioFormat.init(),
+            .input_buffer = [_]u8{0} ** MAX_AUDIO_BUFFER_SIZE,
+            .input_buffer_len = 0,
+            .output_buffer = [_]u8{0} ** MAX_AUDIO_BUFFER_SIZE,
+            .output_buffer_len = 0,
         };
         var i: u32 = 0;
         while (i < MAX_DEVICE_NAME_LEN) : (i += 1) {
@@ -197,6 +202,32 @@ pub const AudioDevice = struct {
         }
         
         return self.name[0..len];
+    }
+    
+    /// Set audio format.
+    /// Why: Configure audio format for I/O operations.
+    /// Contract: format must be valid.
+    pub fn set_format(self: *AudioDevice, format: AudioFormat) bool {
+        // Assert: Entry must be allocated.
+        Debug.kassert(self.allocated, "Entry not allocated", .{});
+        
+        // Assert: Format must be valid.
+        if (!format.is_valid()) {
+            return false;
+        }
+        
+        self.format = format;
+        return true;
+    }
+    
+    /// Get audio format.
+    /// Why: Retrieve audio format.
+    /// Contract: Returns current format.
+    pub fn get_format(self: *const AudioDevice) AudioFormat {
+        // Assert: Entry must be allocated.
+        Debug.kassert(self.allocated, "Entry not allocated", .{});
+        
+        return self.format;
     }
 };
 
@@ -516,6 +547,145 @@ pub const AudioDeviceManager = struct {
         
         // Device not found.
         return false;
+    }
+    
+    /// Set audio format for device.
+    /// Why: Configure audio format for I/O operations.
+    /// Contract: device_id must be valid, format must be valid.
+    pub fn set_device_format(
+        self: *AudioDeviceManager,
+        device_id: u32,
+        format: AudioFormat,
+    ) bool {
+        // Assert: Manager must be initialized.
+        Debug.kassert(self.initialized, "Manager not initialized", .{});
+        
+        // Assert: Format must be valid.
+        if (!format.is_valid()) {
+            return false;
+        }
+        
+        const device = self.get_device(device_id) orelse {
+            return false;
+        };
+        
+        return device.set_format(format);
+    }
+    
+    /// Read audio data from device.
+    /// Why: Read audio data from input device.
+    /// Contract: device_id must be valid, buffer must be valid, len must be valid.
+    /// Returns: Number of bytes read, or null on error.
+    pub fn read_audio(
+        self: *AudioDeviceManager,
+        device_id: u32,
+        buffer: []u8,
+    ) ?u32 {
+        // Assert: Manager must be initialized.
+        Debug.kassert(self.initialized, "Manager not initialized", .{});
+        
+        // Assert: Buffer must be non-empty.
+        if (buffer.len == 0) {
+            return null;
+        }
+        
+        // Assert: Buffer must fit within max size.
+        if (buffer.len > MAX_AUDIO_BUFFER_SIZE) {
+            return null;
+        }
+        
+        const device = self.get_device(device_id) orelse {
+            return null;
+        };
+        
+        // Assert: Device must be input-capable (microphone, bluetooth, usb).
+        if (device.device_type != .microphone and
+            device.device_type != .bluetooth and
+            device.device_type != .usb) {
+            return null;
+        }
+        
+        // Assert: Device must be active.
+        if (device.state != .active) {
+            return null;
+        }
+        
+        // Calculate bytes to read (min of available data and buffer size).
+        const available = device.input_buffer_len;
+        const bytes_to_read = @min(available, @as(u32, @intCast(buffer.len)));
+        
+        // Copy data from input buffer.
+        if (bytes_to_read > 0) {
+            std.mem.copyForwards(u8, buffer[0..bytes_to_read], 
+                device.input_buffer[0..bytes_to_read]);
+            
+            // Shift remaining data to front of buffer.
+            if (bytes_to_read < available) {
+                const remaining = available - bytes_to_read;
+                std.mem.copyForwards(u8, 
+                    device.input_buffer[0..remaining],
+                    device.input_buffer[bytes_to_read..available]);
+            }
+            
+            device.input_buffer_len -= bytes_to_read;
+        }
+        
+        return bytes_to_read;
+    }
+    
+    /// Write audio data to device.
+    /// Why: Write audio data to output device.
+    /// Contract: device_id must be valid, data must be valid, len must be valid.
+    /// Returns: Number of bytes written, or null on error.
+    pub fn write_audio(
+        self: *AudioDeviceManager,
+        device_id: u32,
+        data: []const u8,
+    ) ?u32 {
+        // Assert: Manager must be initialized.
+        Debug.kassert(self.initialized, "Manager not initialized", .{});
+        
+        // Assert: Data must be non-empty.
+        if (data.len == 0) {
+            return null;
+        }
+        
+        // Assert: Data must fit within max size.
+        if (data.len > MAX_AUDIO_BUFFER_SIZE) {
+            return null;
+        }
+        
+        const device = self.get_device(device_id) orelse {
+            return null;
+        };
+        
+        // Assert: Device must be output-capable (speaker, headphone, bluetooth, usb).
+        if (device.device_type != .speaker and
+            device.device_type != .headphone and
+            device.device_type != .bluetooth and
+            device.device_type != .usb) {
+            return null;
+        }
+        
+        // Assert: Device must be active.
+        if (device.state != .active) {
+            return null;
+        }
+        
+        // Calculate bytes to write (min of available space and data size).
+        const available = MAX_AUDIO_BUFFER_SIZE - device.output_buffer_len;
+        const bytes_to_write = @min(available, @as(u32, @intCast(data.len)));
+        
+        // Copy data to output buffer.
+        if (bytes_to_write > 0) {
+            std.mem.copyForwards(u8, 
+                device.output_buffer[device.output_buffer_len..device.output_buffer_len + bytes_to_write],
+                data[0..bytes_to_write]);
+            
+            device.output_buffer_len += bytes_to_write;
+        }
+        
+        return bytes_to_write;
     }
 };
 

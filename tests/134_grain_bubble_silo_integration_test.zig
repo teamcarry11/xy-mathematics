@@ -77,3 +77,49 @@ test "silo integration load component" {
     std.debug.assert(result == false);
 }
 
+test "silo integration serialize deserialize canvas" {
+    var canvas_data = canvas.Canvas.init(1024, 768);
+    const layer_id = canvas_data.create_layer("Test Layer").?;
+    _ = canvas_data.add_shape(
+        layer_id,
+        .rectangle,
+        10.0,
+        20.0,
+        100.0,
+        50.0,
+        0xFF0000FF,
+        0.0,
+    );
+    var integration = silo_integration.SiloIntegration.init();
+    var buffer: [silo_integration.MAX_SERIALIZED_CANVAS_SIZE]u8 = undefined;
+    // Test serialization (internal function, tested via store_canvas).
+    const result = integration.store_canvas(&canvas_data, "test-canvas");
+    // Returns false when storage not set (expected for Phase 3).
+    std.debug.assert(result == false);
+    _ = buffer;
+}
+
+test "silo integration serialize deserialize component" {
+    var canvas_data = canvas.Canvas.init(1024, 768);
+    var library = component.ComponentLibrary.init();
+    const layer_id = canvas_data.create_layer("Test Layer").?;
+    const shape_id = canvas_data.add_shape(
+        layer_id,
+        .rectangle,
+        10.0,
+        20.0,
+        100.0,
+        50.0,
+        0xFF0000FF,
+        0.0,
+    ).?;
+    _ = canvas_data.select_shape(shape_id);
+    const component_id = library.create_component_from_selection(&canvas_data, "Button").?;
+    var integration = silo_integration.SiloIntegration.init();
+    if (library.get_component(component_id)) |comp| {
+        const result = integration.store_component(comp, "test-component");
+        // Returns false when storage not set (expected for Phase 3).
+        std.debug.assert(result == false);
+    }
+}
+

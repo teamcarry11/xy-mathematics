@@ -158,6 +158,9 @@ pub const Syscall = enum(u32) {
     audio_set_master_volume = 126,
     audio_set_master_mute = 127,
     audio_get_device = 128,
+    audio_set_format = 129,
+    audio_read = 130,
+    audio_write = 131,
 };
 
 /// Memory mapping flags.
@@ -1381,6 +1384,9 @@ pub const BasinKernel = struct {
             .audio_set_master_volume => self.syscall_audio_set_master_volume(arg1, arg2, arg3, arg4),
             .audio_set_master_mute => self.syscall_audio_set_master_mute(arg1, arg2, arg3, arg4),
             .audio_get_device => self.syscall_audio_get_device(arg1, arg2, arg3, arg4),
+            .audio_set_format => self.syscall_audio_set_format(arg1, arg2, arg3, arg4),
+            .audio_read => self.syscall_audio_read(arg1, arg2, arg3, arg4),
+            .audio_write => self.syscall_audio_write(arg1, arg2, arg3, arg4),
         };
     }
     
@@ -5520,6 +5526,214 @@ pub const BasinKernel = struct {
         
         // Assert: result must be success (not error).
         Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
+    /// Set audio format for device.
+    /// Why: Configure audio format (sample rate, channels, bit depth).
+    /// Contract: device_id must be valid, format parameters must be valid.
+    pub fn syscall_audio_set_format(
+        self: *BasinKernel,
+        device_id: u64,
+        sample_rate: u64,
+        channels: u64,
+        bit_depth: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        // Assert: Device ID must be non-zero.
+        if (device_id == 0) {
+            return BasinError.invalid_argument; // Invalid device ID
+        }
+        
+        // Assert: Sample rate must be reasonable (8kHz to 192kHz).
+        if (sample_rate < 8000 or sample_rate > 192000) {
+            return BasinError.invalid_argument; // Invalid sample rate
+        }
+        
+        // Assert: Channels must be reasonable (1 to 8).
+        if (channels == 0 or channels > 8) {
+            return BasinError.invalid_argument; // Invalid channels
+        }
+        
+        // Assert: Bit depth must be valid (8, 16, 24, 32).
+        if (bit_depth != 8 and
+            bit_depth != 16 and
+            bit_depth != 24 and
+            bit_depth != 32) {
+            return BasinError.invalid_argument; // Invalid bit depth
+        }
+        
+        const dev_id = @as(u32, @truncate(device_id));
+        const sr = @as(u32, @truncate(sample_rate));
+        const ch = @as(u32, @truncate(channels));
+        const bd = @as(u32, @truncate(bit_depth));
+        
+        const format = audio.AudioFormat{
+            .sample_rate = sr,
+            .channels = ch,
+            .bit_depth = bd,
+        };
+        
+        // Set format.
+        const success = self.audio_devices.set_device_format(dev_id, format);
+        if (!success) {
+            return BasinError.not_found; // Device not found or format invalid
+        }
+        
+        const result = SyscallResult.ok(0);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
+    /// Read audio data from device.
+    /// Why: Read audio data from input device.
+    /// Contract: device_id must be valid, buffer_ptr and buffer_len must be valid.
+    pub fn syscall_audio_read(
+        self: *BasinKernel,
+        device_id: u64,
+        buffer_ptr: u64,
+        buffer_len: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg4;
+        
+        // Assert: Device ID must be non-zero.
+        if (device_id == 0) {
+            return BasinError.invalid_argument; // Invalid device ID
+        }
+        
+        // Assert: Buffer pointer must be valid (non-zero, within VM memory).
+        if (buffer_ptr == 0) {
+            return BasinError.invalid_argument; // Null pointer
+        }
+        
+        const VM_MEMORY_SIZE_AUDIO: u64 = 4 * 1024 * 1024; // 4MB default
+        if (buffer_ptr >= VM_MEMORY_SIZE_AUDIO) {
+            return BasinError.invalid_argument; // Buffer pointer exceeds VM memory
+        }
+        
+        // Assert: Buffer length must be reasonable (max 64KB per read).
+        if (buffer_len == 0) {
+            return BasinError.invalid_argument; // Zero-length buffer
+        }
+        if (buffer_len > 64 * 1024) {
+            return BasinError.invalid_argument; // Buffer too large (> 64KB)
+        }
+        
+        // Assert: Buffer must fit within VM memory.
+        if (buffer_ptr + buffer_len > VM_MEMORY_SIZE_AUDIO) {
+            return BasinError.invalid_argument; // Buffer exceeds VM memory
+        }
+        
+        const dev_id = @as(u32, @truncate(device_id));
+        const buf_len = @as(u32, @truncate(buffer_len));
+        
+        // Create buffer slice (stub: would read from VM memory).
+        // For now, we use a temporary buffer.
+        var temp_buffer: [64 * 1024]u8 = undefined;
+        const buffer = temp_buffer[0..buf_len];
+        
+        // Read audio data.
+        const bytes_read_opt = self.audio_devices.read_audio(dev_id, buffer);
+        const bytes_read = bytes_read_opt orelse {
+            return BasinError.not_found; // Device not found or not input-capable
+        };
+        
+        // Note: In real implementation, would write to VM memory at buffer_ptr.
+        // For now, just return bytes read.
+        _ = buffer_ptr;
+        
+        const result = SyscallResult.ok(@as(u64, @intCast(bytes_read)));
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        Debug.kassert(result.success <= buffer_len, "Read > buffer len", .{});
+        
+        return result;
+    }
+    
+    /// Write audio data to device.
+    /// Why: Write audio data to output device.
+    /// Contract: device_id must be valid, data_ptr and data_len must be valid.
+    pub fn syscall_audio_write(
+        self: *BasinKernel,
+        device_id: u64,
+        data_ptr: u64,
+        data_len: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg4;
+        
+        // Assert: Device ID must be non-zero.
+        if (device_id == 0) {
+            return BasinError.invalid_argument; // Invalid device ID
+        }
+        
+        // Assert: Data pointer must be valid (non-zero, within VM memory).
+        if (data_ptr == 0) {
+            return BasinError.invalid_argument; // Null pointer
+        }
+        
+        const VM_MEMORY_SIZE_AUDIO: u64 = 4 * 1024 * 1024; // 4MB default
+        if (data_ptr >= VM_MEMORY_SIZE_AUDIO) {
+            return BasinError.invalid_argument; // Data pointer exceeds VM memory
+        }
+        
+        // Assert: Data length must be reasonable (max 64KB per write).
+        if (data_len == 0) {
+            return BasinError.invalid_argument; // Zero-length data
+        }
+        if (data_len > 64 * 1024) {
+            return BasinError.invalid_argument; // Data too large (> 64KB)
+        }
+        
+        // Assert: Data must fit within VM memory.
+        if (data_ptr + data_len > VM_MEMORY_SIZE_AUDIO) {
+            return BasinError.invalid_argument; // Data exceeds VM memory
+        }
+        
+        const dev_id = @as(u32, @truncate(device_id));
+        const d_len = @as(u32, @truncate(data_len));
+        
+        // Create data slice (stub: would read from VM memory).
+        // For now, we use a temporary buffer.
+        var temp_buffer: [64 * 1024]u8 = undefined;
+        const data = temp_buffer[0..d_len];
+        
+        // Note: In real implementation, would read from VM memory at data_ptr.
+        // For now, just use zero-filled buffer.
+        @memset(data, 0);
+        _ = data_ptr;
+        
+        // Write audio data.
+        const bytes_written_opt = self.audio_devices.write_audio(dev_id, data);
+        const bytes_written = bytes_written_opt orelse {
+            return BasinError.not_found; // Device not found or not output-capable
+        };
+        
+        const result = SyscallResult.ok(@as(u64, @intCast(bytes_written)));
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        Debug.kassert(result.success <= data_len, "Write > data len", .{});
         
         return result;
     }

@@ -22,6 +22,7 @@ test "ai insights initialization" {
     defer block_storage.deinit();
     
     var ai_insights = AiInsights.init(allocator, &dag_integration, &block_storage);
+    defer ai_insights.deinit();
     
     // Assert: AI insights initialized
     _ = ai_insights;
@@ -42,6 +43,7 @@ test "ai insights store suggestion as dag event" {
     defer block_storage.deinit();
     
     var ai_insights = AiInsights.init(allocator, &dag_integration, &block_storage);
+    defer ai_insights.deinit();
     
     // Store suggestion as DAG event
     const event_id = try ai_insights.store_suggestion_as_dag_event(
@@ -70,12 +72,14 @@ test "ai insights suggest connections placeholder" {
     defer block_storage.deinit();
     
     var ai_insights = AiInsights.init(allocator, &dag_integration, &block_storage);
+    defer ai_insights.deinit();
     
-    // Test suggest connections (placeholder)
+    // Test suggest connections (returns empty without GLM-4.6)
     const block_ids = [_]u64{ 1, 2 };
     const suggestions = try ai_insights.suggest_connections(&block_ids);
+    defer allocator.free(suggestions);
     
-    // Assert: Placeholder returns empty array
+    // Assert: Returns empty array without GLM-4.6 client
     try std.testing.expect(suggestions.len == 0);
 }
 
@@ -94,12 +98,14 @@ test "ai insights detect knowledge gaps placeholder" {
     defer block_storage.deinit();
     
     var ai_insights = AiInsights.init(allocator, &dag_integration, &block_storage);
+    defer ai_insights.deinit();
     
-    // Test detect knowledge gaps (placeholder)
+    // Test detect knowledge gaps (returns empty without GLM-4.6)
     const block_ids = [_]u64{ 1, 2, 3 };
     const gaps = try ai_insights.detect_knowledge_gaps(&block_ids);
+    defer allocator.free(gaps);
     
-    // Assert: Placeholder returns empty array
+    // Assert: Returns empty array without GLM-4.6 client
     try std.testing.expect(gaps.len == 0);
 }
 

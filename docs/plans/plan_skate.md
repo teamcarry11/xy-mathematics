@@ -429,7 +429,7 @@ Grain Skate Terminal Silo Field Agent is responsible for building Grain Skate (k
 
 **Date Started**: 2025-12-07-031415-pst
 
-**Status**: **IN PROGRESS** — Foundation complete, GLM-4.6 integration pending  
+**Status**: **IN PROGRESS** — GLM-4.6 integration complete, visual indicators pending  
 **Estimated Time**: 3-4 weeks
 
 **Objective**: GLM-4.6 powered insights for knowledge graph management
@@ -437,14 +437,16 @@ Grain Skate Terminal Silo Field Agent is responsible for building Grain Skate (k
 **Completed Work**:
 1. **AI Insights Module** (`src/grain_skate/ai_insights.zig`):
    - AI insights structure with DAG integration and block storage
+   - GLM-4.6 client integration (`init_with_glm46()` method) ✅
    - Connection suggestion structure (`ConnectionSuggestion`)
    - Title suggestion structure (`TitleSuggestion`)
-   - Placeholder functions for all AI features:
-     - `suggest_connections()` - Auto-suggest connections (placeholder)
-     - `detect_knowledge_gaps()` - Detect missing links (placeholder)
-     - `suggest_title()` - Generate block titles (placeholder)
-     - `summarize_subgraph()` - Summarize subgraphs (placeholder)
+   - **GLM-4.6 integrated functions**:
+     - `suggest_connections()` - Auto-suggest connections (GLM-4.6 powered) ✅
+     - `detect_knowledge_gaps()` - Detect missing links (GLM-4.6 powered) ✅
+     - `suggest_title()` - Generate block titles (GLM-4.6 powered) ✅
+     - `summarize_subgraph()` - Summarize subgraphs (GLM-4.6 powered) ✅
    - `store_suggestion_as_dag_event()` - Store AI suggestions as DAG events ✅
+   - Streaming response collection (`collect_glm46_response()`) ✅
    - Tests created (`tests/124_grain_skate_ai_insights_test.zig`)
    - Added to `src/grain_skate/root.zig` exports
    - Added tests to `build.zig`
@@ -454,12 +456,16 @@ Grain Skate Terminal Silo Field Agent is responsible for building Grain Skate (k
    - AI suggestions stored as DAG events (ai_completion type) ✅
    - Parent event references maintained for deterministic ordering ✅
 
+3. **GLM-4.6 Integration**:
+   - Integrated `Glm46Client` from `src/aurora_glm46.zig` ✅
+   - Streaming response collection for AI analysis ✅
+   - Prompt engineering for knowledge graph analysis ✅
+   - Response parsing for structured AI outputs ✅
+
 **Remaining Work**:
-- Integrate with `src/aurora_glm46.zig` (GLM-4.6 client from Aurora)
-- Use vector embeddings for semantic similarity (Grain Court integration)
-- Implement actual AI analysis (replace placeholders with GLM-4.6 calls)
 - Visual indicators for AI-suggested connections (graph renderer integration)
-- Test thoroughly with actual AI integration (AI suggestions, semantic similarity, clustering)
+- Use vector embeddings for semantic similarity (Grain Court integration - Future enhancement)
+- Test thoroughly with actual AI API calls (requires API key)
 
 **DAG Integration**:
 - AI suggestions = DAG events (can be accepted/rejected) ✅

@@ -19,7 +19,7 @@
 const std = @import("std");
 
 // Research engine for data collection and storage.
-// pub const research_engine = @import("research_engine.zig");
+pub const research_engine = @import("research_engine.zig");
 
 // Data analysis for performance and usage patterns.
 // pub const data_analysis = @import("data_analysis.zig");
@@ -31,7 +31,10 @@ const std = @import("std");
 // pub const insights_generator = @import("insights_generator.zig");
 
 // Module exports.
-// pub const ResearchEngine = research_engine.ResearchEngine;
+pub const ResearchEngine = research_engine.ResearchEngine;
+pub const ResearchEntry = research_engine.ResearchEntry;
+pub const QueryFilter = research_engine.QueryFilter;
+pub const QueryResult = research_engine.QueryResult;
 // pub const DataAnalysis = data_analysis.DataAnalysis;
 // pub const ResearchTools = research_tools.ResearchTools;
 // pub const InsightsGenerator = insights_generator.InsightsGenerator;

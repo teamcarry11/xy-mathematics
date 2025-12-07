@@ -315,6 +315,14 @@ pub fn build(b: *std.Build) void {
         },
     });
 
+    // Grain Research module
+    const grain_research_module = b.addModule("grain_research", .{
+        .root_source_file = b.path("src/grain_research/root.zig"),
+        .target = target,
+        .optimize = optimize,
+        .imports = &.{},
+    });
+
     // Kernel VM test executable (for testing VM functionality).
     const kernel_vm_test_exe = b.addExecutable(.{
         .name = "kernel_vm_test",
@@ -3965,6 +3973,20 @@ pub fn build(b: *std.Build) void {
     });
     const grain_flow_event_bus_tests_run = b.addRunArtifact(grain_flow_event_bus_tests);
     test_step.dependOn(&grain_flow_event_bus_tests_run.step);
+
+    // Grain Research engine tests
+    const grain_research_engine_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/136_grain_research_engine_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_research", .module = grain_research_module },
+            },
+        }),
+    });
+    const grain_research_engine_tests_run = b.addRunArtifact(grain_research_engine_tests);
+    test_step.dependOn(&grain_research_engine_tests_run.step);
 
     // Grain Bubble component tests
     const grain_bubble_component_tests = b.addTest(.{

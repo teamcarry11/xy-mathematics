@@ -1,8 +1,8 @@
 # Grain Workspace Agent: Task List
 
 **Agent**: Grain Workspace Agent (5th Agent)  
-**Status**: Phase 13 File Storage Integration (File Manager) Complete ✅  
-**Last Updated**: 2025-12-07-082348-pst  
+**Status**: Phase 14 Backup Manager Integration (File Manager) Complete ✅  
+**Last Updated**: 2025-12-07-084440-pst  
 **Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-07-082348-pst.md`
 
 ---
@@ -219,6 +219,82 @@ All planned phases for Grain Workspace Agent have been completed. See completed 
 - [x] Update documentation
 
 **Files**: `src/grain_workspace/devtools/app.zig`, `tests/114_grain_workspace_devtools_test.zig`
+
+---
+
+### Phase 10: WebSocket Integration ✅ (2025-12-07-025947-pst)
+
+**Completed Tasks**:
+- [x] Phase 10.1: WebSocket Integration (Monitor) ✅
+- [x] Phase 10.2: WebSocket Integration (Terminal Plus) ✅
+- [x] Phase 10.3: WebSocket Integration (Network Tools) ✅
+- [x] Phase 10.4: WebSocket Integration (File Manager) ✅
+- [x] Integrate WebSocket Manager into all applications
+- [x] Add WebSocket client management functions
+- [x] Add real-time data serialization (JSON format)
+- [x] Add WebSocket broadcasting for live updates
+- [x] Update all tests for WebSocket integration
+- [x] Update documentation
+
+**Files**: Updated all application files and tests
+
+---
+
+### Phase 11: HTTP Client Integration (Network Tools) ✅ (2025-12-07-040000-pst)
+
+**Completed Tasks**:
+- [x] Integrate HTTP Client into Network Tools
+- [x] Add HTTP endpoint testing functionality
+- [x] Add HTTP test result tracking
+- [x] Update tests for HTTP Client integration
+- [x] Update documentation
+
+**Files**: Updated `src/grain_workspace/network_tools/app.zig`, `tests/113_grain_workspace_network_tools_test.zig`
+
+---
+
+### Phase 12: HTTP Client Integration (Package Manager UI) ✅ (2025-12-07-050000-pst)
+
+**Completed Tasks**:
+- [x] Integrate HTTP Client into Package Manager UI
+- [x] Add repository URL management
+- [x] Add package fetching from remote repositories
+- [x] Update tests for HTTP Client integration
+- [x] Update documentation
+
+**Files**: Updated `src/grain_workspace/package_manager_ui/app.zig`, `tests/111_grain_workspace_package_manager_ui_test.zig`
+
+---
+
+### Phase 13: File Storage Integration (File Manager) ✅ (2025-12-07-071409-pst)
+
+**Completed Tasks**:
+- [x] Integrate File Storage Manager into File Manager
+- [x] Add database file handle management
+- [x] Add database file detection (by extension)
+- [x] Add database file open/close operations
+- [x] Update tests for File Storage integration
+- [x] Update documentation
+
+**Files**: Updated `src/grain_workspace/file_manager/app.zig`, `tests/112_grain_workspace_file_manager_test.zig`
+
+---
+
+### Phase 14: Backup Manager Integration (File Manager) ✅ (2025-12-07-084440-pst)
+
+**Completed Tasks**:
+- [x] Integrate Backup Manager into File Manager
+- [x] Add backup operation tracking
+- [x] Add create_file_backup() function (full/incremental)
+- [x] Add get_backup_operation() function
+- [x] Add get_entry_backup_operations() function
+- [x] Add restore_file_from_backup() function
+- [x] Add get_backup_metadata() function
+- [x] Add get_all_backups() function
+- [x] Update tests for Backup Manager integration
+- [x] Update documentation
+
+**Files**: Updated `src/grain_workspace/file_manager/app.zig`, `tests/112_grain_workspace_file_manager_test.zig`
 
 ---
 

@@ -1,0 +1,352 @@
+//! Grain OS Desktop Shell: Status bar and launcher.
+//!
+//! Why: Provide basic desktop UI elements (status bar, launcher).
+//! Architecture: Renders on top of compositor framebuffer.
+//! GrainStyle: grain_case, u32/u64, bounded allocations, assertions.
+
+const std = @import("std");
+const framebuffer_renderer = @import("framebuffer_renderer.zig");
+const font_renderer = @import("font_renderer.zig");
+const workspace = @import("workspace.zig");
+const application = @import("application.zig");
+
+// Bounded: Status bar height.
+pub const STATUS_BAR_HEIGHT: u32 = 32;
+
+// Bounded: Launcher width.
+pub const LAUNCHER_WIDTH: u32 = 300;
+
+// Bounded: Launcher height.
+pub const LAUNCHER_HEIGHT: u32 = 400;
+
+// Bounded: Max launcher items.
+pub const MAX_LAUNCHER_ITEMS: u32 = 32;
+
+// Bounded: Max item name length.
+pub const MAX_ITEM_NAME_LEN: u32 = 64;
+
+// Launcher item: application entry.
+pub const LauncherItem = struct {
+    name: [MAX_ITEM_NAME_LEN]u8,
+    name_len: u32,
+    command: [MAX_ITEM_NAME_LEN]u8,
+    command_len: u32,
+    icon: u32, // Placeholder for icon ID.
+
+    pub fn init(name: []const u8, command: []const u8) LauncherItem {
+        std.debug.assert(name.len > 0);
+        std.debug.assert(name.len <= MAX_ITEM_NAME_LEN);
+        std.debug.assert(command.len > 0);
+        std.debug.assert(command.len <= MAX_ITEM_NAME_LEN);
+        var item = LauncherItem{
+            .name = undefined,
+            .name_len = 0,
+            .command = undefined,
+            .command_len = 0,
+            .icon = 0,
+        };
+        @memset(&item.name, 0);
+        @memset(&item.command, 0);
+        const name_copy_len = @min(name.len, MAX_ITEM_NAME_LEN);
+        @memcpy(item.name[0..name_copy_len], name[0..name_copy_len]);
+        item.name_len = @intCast(name_copy_len);
+        const cmd_copy_len = @min(command.len, MAX_ITEM_NAME_LEN);
+        @memcpy(item.command[0..cmd_copy_len], command[0..cmd_copy_len]);
+        item.command_len = @intCast(cmd_copy_len);
+        std.debug.assert(item.name_len > 0);
+        return item;
+    }
+};
+
+// Desktop shell: status bar and launcher.
+pub const DesktopShell = struct {
+    renderer: *const framebuffer_renderer.FramebufferRenderer,
+    font: font_renderer.FontRenderer,
+    output_width: u32,
+    output_height: u32,
+    launcher_items: [MAX_LAUNCHER_ITEMS]LauncherItem,
+    launcher_items_len: u32,
+    launcher_visible: bool,
+    current_workspace_id: u32,
+    app_registry: ?*application.ApplicationRegistry,
+    current_time_seconds: u64, // Current time in seconds since epoch
+
+    pub fn init(
+        renderer: *const framebuffer_renderer.FramebufferRenderer,
+        output_width: u32,
+        output_height: u32,
+    ) DesktopShell {
+        std.debug.assert(@intFromPtr(renderer) != 0);
+        std.debug.assert(output_width > 0);
+        std.debug.assert(output_height > 0);
+        var shell = DesktopShell{
+            .renderer = renderer,
+            .font = font_renderer.FontRenderer.init(renderer),
+            .output_width = output_width,
+            .output_height = output_height,
+            .launcher_items = undefined,
+            .launcher_items_len = 0,
+            .launcher_visible = false,
+            .current_workspace_id = 1,
+            .app_registry = null,
+            .current_time_seconds = 0, // Will be updated by update_time
+        };
+        // Initialize launcher items array.
+        var i: u32 = 0;
+        while (i < MAX_LAUNCHER_ITEMS) : (i += 1) {
+            shell.launcher_items[i] = LauncherItem.init("", "");
+        }
+        // Add default launcher items.
+        _ = shell.add_launcher_item("Terminal", "terminal");
+        _ = shell.add_launcher_item("Editor", "editor");
+        _ = shell.add_launcher_item("Browser", "browser");
+        std.debug.assert(shell.launcher_items_len > 0);
+        return shell;
+    }
+
+    // Add item to launcher.
+    pub fn add_launcher_item(self: *DesktopShell, name: []const u8, command: []const u8) bool {
+        std.debug.assert(name.len > 0);
+        std.debug.assert(command.len > 0);
+        if (self.launcher_items_len >= MAX_LAUNCHER_ITEMS) return false;
+        self.launcher_items[self.launcher_items_len] = LauncherItem.init(name, command);
+        self.launcher_items_len += 1;
+        std.debug.assert(self.launcher_items_len <= MAX_LAUNCHER_ITEMS);
+        return true;
+    }
+
+    // Toggle launcher visibility.
+    pub fn toggle_launcher(self: *DesktopShell) void {
+        self.launcher_visible = !self.launcher_visible;
+    }
+
+    // Set current workspace ID.
+    pub fn set_current_workspace(self: *DesktopShell, workspace_id: u32) void {
+        std.debug.assert(workspace_id > 0);
+        self.current_workspace_id = workspace_id;
+    }
+
+    // Set application registry for launcher integration.
+    pub fn set_app_registry(self: *DesktopShell, registry: *application.ApplicationRegistry) void {
+        std.debug.assert(@intFromPtr(registry) != 0);
+        self.app_registry = registry;
+        // Sync launcher items with registered applications.
+        self.sync_launcher_items();
+    }
+
+    // Sync launcher items with registered applications.
+    pub fn sync_launcher_items(self: *DesktopShell) void {
+        if (self.app_registry) |registry| {
+            self.launcher_items_len = 0;
+            const visible_apps = registry.get_visible_applications();
+            var i: u32 = 0;
+            while (i < visible_apps.len and self.launcher_items_len < MAX_LAUNCHER_ITEMS) : (i += 1) {
+                const app = visible_apps.apps[i];
+                const name_slice = app.name[0..app.name_len];
+                const cmd_slice = app.command[0..app.command_len];
+                self.launcher_items[self.launcher_items_len] = LauncherItem.init(name_slice, cmd_slice);
+                self.launcher_items_len += 1;
+            }
+            std.debug.assert(self.launcher_items_len <= MAX_LAUNCHER_ITEMS);
+        }
+    }
+
+    // Check if point is in launcher item area.
+    pub fn get_launcher_item_at(
+        self: *const DesktopShell,
+        x: u32,
+        y: u32,
+    ) ?u32 {
+        if (!self.launcher_visible) return null;
+        std.debug.assert(x < self.output_width);
+        std.debug.assert(y < self.output_height);
+        const launcher_x = (self.output_width - LAUNCHER_WIDTH) / 2;
+        const launcher_y = (self.output_height - LAUNCHER_HEIGHT) / 2;
+        // Check if point is within launcher bounds.
+        if (x < launcher_x or x >= launcher_x + LAUNCHER_WIDTH or
+            y < launcher_y or y >= launcher_y + LAUNCHER_HEIGHT)
+        {
+            return null;
+        }
+        // Calculate item index from y position.
+        const item_height: u32 = 32;
+        const relative_y = y - launcher_y - 40; // Account for launcher border/title.
+        if (relative_y < 0) return null;
+        const item_index = relative_y / item_height;
+        if (item_index < self.launcher_items_len) {
+            return item_index;
+        }
+        return null;
+    }
+
+    // Render status bar.
+    pub fn render_status_bar(self: *const DesktopShell) void {
+        std.debug.assert(self.output_width > 0);
+        std.debug.assert(self.output_height > 0);
+        // Draw status bar background.
+        const status_y = self.output_height - STATUS_BAR_HEIGHT;
+        self.renderer.draw_rect(
+            0,
+            @as(i32, @intCast(status_y)),
+            self.output_width,
+            STATUS_BAR_HEIGHT,
+            framebuffer_renderer.COLOR_DARK_BG,
+        );
+        // Draw workspace indicator (simple rectangle for now).
+        const workspace_x: u32 = 10;
+        const workspace_y: u32 = status_y + 8;
+        const workspace_width: u32 = 16;
+        const workspace_height: u32 = 16;
+        self.renderer.draw_rect(
+            @as(i32, @intCast(workspace_x)),
+            @as(i32, @intCast(workspace_y)),
+            workspace_width,
+            workspace_height,
+            framebuffer_renderer.COLOR_BLUE,
+        );
+        // Draw time (right-aligned).
+        self.draw_time(status_y);
+    }
+
+    // Update current time (called periodically).
+    // 2025-11-25-005738-pst: Active function
+    pub fn update_time(self: *DesktopShell, time_seconds: u64) void {
+        self.current_time_seconds = time_seconds;
+    }
+
+    // Draw time in status bar (right-aligned).
+    // 2025-11-26-130343-pst: Active function (updated to use font renderer)
+    fn draw_time(self: *const DesktopShell, status_y: u32) void {
+        // Format time as HH:MM:SS.
+        const hours = @as(u32, @intCast((self.current_time_seconds / 3600) % 24));
+        const minutes = @as(u32, @intCast((self.current_time_seconds / 60) % 60));
+        const seconds = @as(u32, @intCast(self.current_time_seconds % 60));
+        // Format time string.
+        var time_buf: [9]u8 = undefined;
+        const time_str = std.fmt.bufPrint(
+            &time_buf,
+            "{d:0>2}:{d:0>2}:{d:0>2}",
+            .{ hours, minutes, seconds },
+        ) catch return;
+        // Calculate right-aligned position.
+        const time_width = @as(u32, @intCast(time_str.len)) * font_renderer.FONT_WIDTH;
+        const time_x = if (self.output_width > time_width)
+            self.output_width - time_width - 8
+        else
+            8;
+        const time_y = status_y + 8;
+        // Draw time using font renderer.
+        self.font.draw_text(
+            time_str,
+            time_x,
+            time_y,
+            framebuffer_renderer.COLOR_WHITE,
+        );
+    }
+
+    // Draw a single digit (0-9) as simple rectangles.
+    // 2025-11-25-005738-pst: Active function
+    fn draw_digit(self: *const DesktopShell, x: u32, y: u32, digit: u32) void {
+        std.debug.assert(digit < 10);
+        // Simple 7-segment style: draw segments as rectangles.
+        const segment_width: u32 = 8;
+        const segment_height: u32 = 2;
+        // Top segment.
+        if (digit != 1 and digit != 4) {
+            self.renderer.draw_rect(
+                @as(i32, @intCast(x + 1)),
+                @as(i32, @intCast(y)),
+                segment_width,
+                segment_height,
+                framebuffer_renderer.COLOR_WHITE,
+            );
+        }
+        // Middle segment.
+        if (digit != 0 and digit != 1 and digit != 7) {
+            self.renderer.draw_rect(
+                @as(i32, @intCast(x + 1)),
+                @as(i32, @intCast(y + 6)),
+                segment_width,
+                segment_height,
+                framebuffer_renderer.COLOR_WHITE,
+            );
+        }
+        // Bottom segment.
+        if (digit != 1 and digit != 4 and digit != 7) {
+            self.renderer.draw_rect(
+                @as(i32, @intCast(x + 1)),
+                @as(i32, @intCast(y + 12)),
+                segment_width,
+                segment_height,
+                framebuffer_renderer.COLOR_WHITE,
+            );
+        }
+    }
+
+    // Render launcher.
+    pub fn render_launcher(self: *const DesktopShell) void {
+        if (!self.launcher_visible) return;
+        std.debug.assert(self.output_width > 0);
+        std.debug.assert(self.output_height > 0);
+        // Draw launcher background.
+        const launcher_x = (self.output_width - LAUNCHER_WIDTH) / 2;
+        const launcher_y = (self.output_height - LAUNCHER_HEIGHT) / 2;
+        self.renderer.draw_rect(
+            @as(i32, @intCast(launcher_x)),
+            @as(i32, @intCast(launcher_y)),
+            LAUNCHER_WIDTH,
+            LAUNCHER_HEIGHT,
+            framebuffer_renderer.COLOR_DARK_BG,
+        );
+        // Draw launcher border.
+        self.renderer.draw_rect(
+            @as(i32, @intCast(launcher_x)),
+            @as(i32, @intCast(launcher_y)),
+            LAUNCHER_WIDTH,
+            2,
+            framebuffer_renderer.COLOR_WHITE,
+        );
+        // Draw launcher items.
+        self.draw_launcher_items(launcher_x, launcher_y);
+    }
+
+    // Draw launcher items list.
+    // 2025-11-25-005738-pst: Active function
+    fn draw_launcher_items(self: *const DesktopShell, launcher_x: u32, launcher_y: u32) void {
+        const item_height: u32 = 32;
+        const item_padding: u32 = 8;
+        var y_offset: u32 = item_padding + 2; // Start below border
+        var i: u32 = 0;
+        while (i < self.launcher_items_len and y_offset + item_height < LAUNCHER_HEIGHT) : (i += 1) {
+            const item = self.launcher_items[i];
+            if (item.name_len == 0) continue;
+            // Draw item background (highlight on hover would go here).
+            const item_y = launcher_y + y_offset;
+            self.renderer.draw_rect(
+                @as(i32, @intCast(launcher_x + item_padding)),
+                @as(i32, @intCast(item_y)),
+                LAUNCHER_WIDTH - (item_padding * 2),
+                item_height,
+                framebuffer_renderer.COLOR_DARK_BG,
+            );
+            // Draw item name using font renderer.
+            const name_x = launcher_x + item_padding + 4;
+            const name_y = item_y + 8;
+            const name_slice = item.name[0..item.name_len];
+            self.font.draw_text(
+                name_slice,
+                name_x,
+                name_y,
+                framebuffer_renderer.COLOR_WHITE,
+            );
+            y_offset += item_height + item_padding;
+        }
+    }
+
+    // Render desktop shell (status bar and launcher).
+    pub fn render(self: *const DesktopShell) void {
+        self.render_status_bar();
+        self.render_launcher();
+    }
+};
+

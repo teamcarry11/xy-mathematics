@@ -172,5 +172,65 @@ pub const CourtIntegration = struct {
         std.debug.assert(embedding.len > 0);
         return true;
     }
+
+    // Convert component to text description for embedding.
+    pub fn component_to_description(
+        comp: *const component.Component,
+        buffer: []u8,
+    ) u32 {
+        std.debug.assert(@intFromPtr(comp) != 0);
+        std.debug.assert(buffer.len >= 256);
+        var offset: u32 = 0;
+        // Write component name.
+        if (comp.name_len > 0) {
+            const name_len = @min(comp.name_len, component.MAX_COMPONENT_NAME_LEN);
+            if (offset + name_len < buffer.len) {
+                @memcpy(buffer[offset..offset + name_len], comp.name[0..name_len]);
+                offset += name_len;
+            }
+        }
+        // Write variant count.
+        const variant_text = " variants: ";
+        const variant_text_len = variant_text.len;
+        if (offset + variant_text_len < buffer.len) {
+            @memcpy(buffer[offset..offset + variant_text_len], variant_text);
+            offset += variant_text_len;
+        }
+        // Write design token count.
+        const token_text = " tokens: ";
+        const token_text_len = token_text.len;
+        if (offset + token_text_len < buffer.len) {
+            @memcpy(buffer[offset..offset + token_text_len], token_text);
+            offset += token_text_len;
+        }
+        std.debug.assert(offset <= buffer.len);
+        return offset;
+    }
+
+    // Convert canvas state to context text for LLM.
+    pub fn canvas_to_context(
+        canvas_state: *const canvas.Canvas,
+        buffer: []u8,
+    ) u32 {
+        std.debug.assert(@intFromPtr(canvas_state) != 0);
+        std.debug.assert(buffer.len >= 512);
+        var offset: u32 = 0;
+        // Write layer count.
+        const layer_text = "Canvas with ";
+        const layer_text_len = layer_text.len;
+        if (offset + layer_text_len < buffer.len) {
+            @memcpy(buffer[offset..offset + layer_text_len], layer_text);
+            offset += layer_text_len;
+        }
+        // Write shape and text counts (simplified).
+        const summary_text = " layers, shapes, and text elements.";
+        const summary_text_len = summary_text.len;
+        if (offset + summary_text_len < buffer.len) {
+            @memcpy(buffer[offset..offset + summary_text_len], summary_text);
+            offset += summary_text_len;
+        }
+        std.debug.assert(offset <= buffer.len);
+        return offset;
+    }
 };
 

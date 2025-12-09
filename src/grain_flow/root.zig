@@ -27,7 +27,7 @@ pub const agent_coordinator = @import("agent_coordinator.zig");
 pub const workflow_engine = @import("workflow_engine.zig");
 
 // Workflow visualizer for visual workflow representation.
-// pub const workflow_visualizer = @import("workflow_visualizer.zig");
+pub const workflow_visualizer = @import("workflow_visualizer.zig");
 
 // Module exports.
 pub const EventBus = event_bus.EventBus;
@@ -46,4 +46,7 @@ pub const WorkflowEdge = workflow_engine.WorkflowEdge;
 pub const WorkflowStatus = workflow_engine.WorkflowStatus;
 pub const NodeStatus = workflow_engine.NodeStatus;
 pub const EdgeType = workflow_engine.EdgeType;
-// pub const WorkflowVisualizer = workflow_visualizer.WorkflowVisualizer;
+pub const WorkflowVisualizer = workflow_visualizer.WorkflowVisualizer;
+pub const NodeVisual = workflow_visualizer.NodeVisual;
+pub const EdgeVisual = workflow_visualizer.EdgeVisual;
+pub const NodePosition = workflow_visualizer.NodePosition;

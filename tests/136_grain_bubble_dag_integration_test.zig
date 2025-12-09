@@ -118,3 +118,36 @@ test "dag integration load version snapshot" {
     std.debug.assert(loaded_event_id.? == event_id);
 }
 
+test "dag integration serialize deserialize event" {
+    var event = dag_integration.DesignEvent.init();
+    event.event_id = 100;
+    event.event_type = .add_shape;
+    event.canvas_id = 1;
+    event.component_id = 2;
+    event.event_data_len = 4;
+    event.event_data[0] = 0xAA;
+    event.event_data[1] = 0xBB;
+    event.event_data[2] = 0xCC;
+    event.event_data[3] = 0xDD;
+    event.timestamp = 1234567890;
+    event.parent_events_len = 2;
+    event.parent_events[0] = 50;
+    event.parent_events[1] = 60;
+    var buffer: [dag_integration.MAX_EVENT_DATA_LEN + 64]u8 = undefined;
+    const serialized_len = dag_integration.DagIntegration.serialize_event(&event, buffer[0..]);
+    std.debug.assert(serialized_len > 0);
+    var deserialized_event = dag_integration.DesignEvent.init();
+    const deserialized = dag_integration.DagIntegration.deserialize_event(
+        buffer[0..serialized_len],
+        &deserialized_event,
+    );
+    std.debug.assert(deserialized == true);
+    std.debug.assert(deserialized_event.event_id == event.event_id);
+    std.debug.assert(deserialized_event.event_type == event.event_type);
+    std.debug.assert(deserialized_event.canvas_id == event.canvas_id);
+    std.debug.assert(deserialized_event.component_id == event.component_id);
+    std.debug.assert(deserialized_event.event_data_len == event.event_data_len);
+    std.debug.assert(deserialized_event.timestamp == event.timestamp);
+    std.debug.assert(deserialized_event.parent_events_len == event.parent_events_len);
+}
+

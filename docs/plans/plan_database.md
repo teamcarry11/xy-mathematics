@@ -313,8 +313,17 @@ Grain Database Agent is responsible for building a general-purpose, Grain Style-
 - ✅ List all backups (`list_backups`)
 - ✅ Comprehensive tests (`tests/120_grain_database_backup_restore_test.zig`)
 
-**Tasks Pending**:
-- [ ] End-to-end persistence testing with recovery
+**End-to-End Persistence Testing with Recovery** (2025-12-08-162744-pst):
+- ✅ End-to-end persistence test suite (`tests/121_grain_database_persistence_recovery_test.zig`)
+- ✅ Create and recover workflow test
+- ✅ Update and recover workflow test
+- ✅ Delete and recover workflow test
+- ✅ Backup and restore integration test
+- ✅ WAL recovery after crash simulation test
+- ✅ Checkpoint coordination test
+- ✅ Comprehensive recovery scenarios covered
+
+**Phase 7 Status**: ✅ **COMPLETE**
 
 ### Phase 8: Network Integration (READY)
 **Status**: Ready — Grain Core Agent Phase 61 Complete  

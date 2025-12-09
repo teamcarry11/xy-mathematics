@@ -84,3 +84,46 @@ test "court integration generate component embedding" {
     }
 }
 
+test "court integration component to description" {
+    var canvas_data = canvas.Canvas.init(1024, 768);
+    var library = component.ComponentLibrary.init();
+    const layer_id = canvas_data.create_layer("Test Layer").?;
+    const shape_id = canvas_data.add_shape(
+        layer_id,
+        .rectangle,
+        10.0,
+        20.0,
+        100.0,
+        50.0,
+        0xFF0000FF,
+        0.0,
+    ).?;
+    _ = canvas_data.select_shape(shape_id);
+    const component_id = library.create_component_from_selection(&canvas_data, "Button").?;
+    if (library.get_component(component_id)) |comp| {
+        var buffer: [256]u8 = undefined;
+        const len = court_integration.CourtIntegration.component_to_description(comp, buffer[0..]);
+        std.debug.assert(len > 0);
+        std.debug.assert(len <= 256);
+    }
+}
+
+test "court integration canvas to context" {
+    var canvas_data = canvas.Canvas.init(1024, 768);
+    const layer_id = canvas_data.create_layer("Test Layer").?;
+    _ = canvas_data.add_shape(
+        layer_id,
+        .rectangle,
+        10.0,
+        20.0,
+        100.0,
+        50.0,
+        0xFF0000FF,
+        0.0,
+    );
+    var buffer: [512]u8 = undefined;
+    const len = court_integration.CourtIntegration.canvas_to_context(&canvas_data, buffer[0..]);
+    std.debug.assert(len > 0);
+    std.debug.assert(len <= 512);
+}
+

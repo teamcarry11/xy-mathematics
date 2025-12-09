@@ -249,5 +249,115 @@ pub const DagIntegration = struct {
         }
         return null;
     }
+
+    // Serialize design event to buffer for storage.
+    pub fn serialize_event(
+        event: *const DesignEvent,
+        buffer: []u8,
+    ) u32 {
+        std.debug.assert(@intFromPtr(event) != 0);
+        std.debug.assert(buffer.len >= MAX_EVENT_DATA_LEN + 64);
+        var offset: u32 = 0;
+        // Write event ID (8 bytes).
+        @memcpy(buffer[offset..offset + 8], std.mem.asBytes(&event.event_id));
+        offset += 8;
+        // Write event type (1 byte).
+        const event_type_val: u8 = @intFromEnum(event.event_type);
+        buffer[offset] = event_type_val;
+        offset += 1;
+        // Write canvas ID (4 bytes).
+        @memcpy(buffer[offset..offset + 4], std.mem.asBytes(&event.canvas_id));
+        offset += 4;
+        // Write component ID (4 bytes).
+        @memcpy(buffer[offset..offset + 4], std.mem.asBytes(&event.component_id));
+        offset += 4;
+        // Write event data length (4 bytes).
+        @memcpy(buffer[offset..offset + 4], std.mem.asBytes(&event.event_data_len));
+        offset += 4;
+        // Write event data.
+        if (event.event_data_len > 0) {
+            const data_len = @min(event.event_data_len, MAX_EVENT_DATA_LEN);
+            if (offset + data_len <= buffer.len) {
+                @memcpy(buffer[offset..offset + data_len], event.event_data[0..data_len]);
+                offset += data_len;
+            }
+        }
+        // Write timestamp (8 bytes).
+        @memcpy(buffer[offset..offset + 8], std.mem.asBytes(&event.timestamp));
+        offset += 8;
+        // Write parent events length (4 bytes).
+        @memcpy(buffer[offset..offset + 4], std.mem.asBytes(&event.parent_events_len));
+        offset += 4;
+        // Write parent events (up to 8 * 8 = 64 bytes).
+        var i: u32 = 0;
+        while (i < event.parent_events_len and i < 8) : (i += 1) {
+            @memcpy(buffer[offset..offset + 8], std.mem.asBytes(&event.parent_events[i]));
+            offset += 8;
+        }
+        std.debug.assert(offset <= buffer.len);
+        return offset;
+    }
+
+    // Deserialize design event from buffer.
+    pub fn deserialize_event(
+        buffer: []const u8,
+        event: *DesignEvent,
+    ) bool {
+        std.debug.assert(@intFromPtr(event) != 0);
+        std.debug.assert(buffer.len >= 33); // Minimum size
+        var offset: u32 = 0;
+        // Read event ID.
+        event.event_id = std.mem.readInt(u64, buffer[offset..offset + 8], .little);
+        offset += 8;
+        // Read event type.
+        const event_type_val = buffer[offset];
+        offset += 1;
+        if (event_type_val > 7) {
+            return false;
+        }
+        event.event_type = @enumFromInt(event_type_val);
+        // Read canvas ID.
+        event.canvas_id = std.mem.readInt(u32, buffer[offset..offset + 4], .little);
+        offset += 4;
+        // Read component ID.
+        event.component_id = std.mem.readInt(u32, buffer[offset..offset + 4], .little);
+        offset += 4;
+        // Read event data length.
+        event.event_data_len = std.mem.readInt(u32, buffer[offset..offset + 4], .little);
+        offset += 4;
+        if (event.event_data_len > MAX_EVENT_DATA_LEN) {
+            return false;
+        }
+        // Read event data.
+        if (event.event_data_len > 0) {
+            const data_len = @min(event.event_data_len, MAX_EVENT_DATA_LEN);
+            if (offset + data_len > buffer.len) {
+                return false;
+            }
+            @memset(event.event_data[0..data_len], 0);
+            @memcpy(event.event_data[0..data_len], buffer[offset..offset + data_len]);
+            offset += data_len;
+        }
+        // Read timestamp.
+        event.timestamp = std.mem.readInt(u64, buffer[offset..offset + 8], .little);
+        offset += 8;
+        // Read parent events length.
+        event.parent_events_len = std.mem.readInt(u32, buffer[offset..offset + 4], .little);
+        offset += 4;
+        if (event.parent_events_len > 8) {
+            return false;
+        }
+        // Read parent events.
+        var i: u32 = 0;
+        while (i < event.parent_events_len and i < 8) : (i += 1) {
+            if (offset + 8 > buffer.len) {
+                return false;
+            }
+            event.parent_events[i] = std.mem.readInt(u64, buffer[offset..offset + 8], .little);
+            offset += 8;
+        }
+        std.debug.assert(offset <= buffer.len);
+        return true;
+    }
 };
 

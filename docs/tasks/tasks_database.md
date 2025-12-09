@@ -366,8 +366,19 @@
 - [x] List all backups (`list_backups`)
 - [x] Comprehensive tests (`tests/120_grain_database_backup_restore_test.zig`)
 
+**End-to-End Persistence Testing with Recovery** ✅ (2025-12-08-162744-pst):
+- [x] End-to-end persistence test suite (`tests/121_grain_database_persistence_recovery_test.zig`)
+- [x] Create and recover workflow test
+- [x] Update and recover workflow test
+- [x] Delete and recover workflow test
+- [x] Backup and restore integration test
+- [x] WAL recovery after crash simulation test
+- [x] Checkpoint coordination test
+- [x] Comprehensive recovery scenarios covered
+
+**Phase 7 Status**: ✅ **COMPLETE**
+
 **Tasks Pending**:
-- [ ] End-to-end persistence testing with recovery
 - [ ] Update documentation
 
 **Dependencies**:

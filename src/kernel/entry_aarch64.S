@@ -10,8 +10,9 @@ _start:
     msr daifset, #0xF
     
     // Set up stack pointer (AArch64 uses SP register).
-    // Note: Stack top address will be provided by linker.
-    adr x0, _stack_top
+    // Note: Use adrp + add to load far address (stack is in .bss section).
+    adrp x0, _stack_top
+    add x0, x0, :lo12:_stack_top
     mov sp, x0
     
     // DEBUG: Write 'G' to UART (0x9000000) to verify life.

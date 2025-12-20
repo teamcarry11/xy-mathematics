@@ -4,6 +4,7 @@
 
 const std = @import("std");
 const Debug = @import("debug.zig");
+const TimeSource = @import("time_source.zig").TimeSource;
 
 /// Timer driver for Grain Basin kernel.
 /// Why: Track boot time, provide monotonic clock, enable time-based syscalls.
@@ -26,8 +27,8 @@ pub const Timer = struct {
     /// Contract: Must be called once at kernel boot.
     pub fn init() Timer {
         // Get current time (nanoseconds since epoch).
-        // Note: In VM, we use host system time. On real hardware, use SBI timer.
-        const now_ns = get_host_time_ns();
+        // Note: Uses platform-specific time source (set by platform code).
+        const now_ns = TimeSource.get_time_ns();
         
         return Timer{
             .boot_time_ns = now_ns,
@@ -44,7 +45,7 @@ pub const Timer = struct {
         Debug.kassert(self.initialized, "Timer not initialized", .{});
         
         // Get current time (nanoseconds since epoch).
-        const now_ns = get_host_time_ns();
+        const now_ns = TimeSource.get_time_ns();
         
         // Calculate monotonic time (nanoseconds since boot).
         const monotonic_ns = if (now_ns >= self.boot_time_ns)
@@ -66,7 +67,7 @@ pub const Timer = struct {
         Debug.kassert(self.initialized, "Timer not initialized", .{});
         
         // Get current time (nanoseconds since epoch).
-        const now_ns = get_host_time_ns();
+        const now_ns = TimeSource.get_time_ns();
         
         // Assert: Realtime must be >= boot time.
         Debug.kassert(now_ns >= self.boot_time_ns, "Realtime < boot time", .{});
@@ -102,22 +103,6 @@ pub const Timer = struct {
         
         // Assert: Last timer value must be set.
         Debug.kassert(self.last_timer_ns == time_value, "Timer value not set", .{});
-    }
-    
-    /// Get host system time (nanoseconds since epoch).
-    /// Why: Get current time from host system (VM) or hardware (real).
-    /// Note: In VM, uses std.time. On real hardware, would use SBI timer.
-    fn get_host_time_ns() u64 {
-        // Get current time (nanoseconds since epoch).
-        // Note: std.time.timestamp() returns seconds, we need nanoseconds.
-        const now_sec = std.time.timestamp();
-        const now_ns = @as(u64, @intCast(now_sec)) * 1000000000;
-        
-        // Assert: Time must be reasonable (not before year 2000).
-        const YEAR_2000_NS: u64 = 946684800 * 1000000000; // Jan 1, 2000
-        Debug.kassert(now_ns >= YEAR_2000_NS, "Time before year 2000", .{});
-        
-        return now_ns;
     }
 };
 

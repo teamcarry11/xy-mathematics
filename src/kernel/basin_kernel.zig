@@ -3156,10 +3156,12 @@ pub const BasinKernel = struct {
         _ = _arg4;
         
         // Assert: clock_id must be valid (monotonic or realtime).
-        const clock = @as(?ClockId, @enumFromInt(@as(u32, @truncate(clock_id))));
-        if (clock == null) {
+        const clock = @as(?ClockId, @enumFromInt(@as(u32, @truncate(clock_id)))) orelse {
             return BasinError.invalid_argument; // Invalid clock ID
-        }
+        };
+        
+        // Assert: Clock must be valid (monotonic or realtime).
+        Debug.kassert(clock == .monotonic or clock == .realtime, "Invalid clock", .{});
         
         // Assert: timespec pointer must be valid (non-zero, within VM memory).
         if (timespec_ptr == 0) {

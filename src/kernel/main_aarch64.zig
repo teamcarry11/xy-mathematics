@@ -8,6 +8,8 @@ const BasinKernel = @import("basin_kernel.zig").BasinKernel;
 const Debug = @import("debug.zig");
 const Framebuffer = @import("framebuffer.zig").Framebuffer;
 const boot = @import("boot.zig");
+const platform = @import("platform_aarch64.zig");
+const TimeSource = @import("time_source.zig").TimeSource;
 
 // Global kernel instance
 var kernel: BasinKernel = undefined;
@@ -17,6 +19,8 @@ var kernel: BasinKernel = undefined;
 var framebuffer: ?Framebuffer = null;
 
 pub export fn kmain() noreturn {
+    // Set platform-specific time source.
+    TimeSource.set_implementation(platform.get_time_ns);
     // 1. Early boot banner (serial output)
     Debug.kprint("\n", .{});
     Debug.kprint("   ______           _          ____  _____\n", .{});

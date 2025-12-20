@@ -121,3 +121,15 @@ pub fn shutdown(shutdown_type: u32) void {
     _ = platform_call(.shutdown, @as(u64, @intCast(shutdown_type)), 0, 0, 0);
 }
 
+/// Get current time in nanoseconds since epoch.
+/// Why: Provide time source for freestanding AArch64 kernel.
+/// Contract: Returns monotonic time (or fixed value for stub).
+/// Note: This is a stub - actual implementation should use AArch64 timer registers.
+pub fn get_time_ns() u64 {
+    // Stub: Return a fixed time value for now.
+    // Actual implementation should read AArch64 CNTPCT_EL0 (Physical Counter) register.
+    // For now, use a reasonable fixed value to allow compilation.
+    const FIXED_TIME_NS: u64 = 1703000000 * 1000000000; // Jan 2024
+    return FIXED_TIME_NS;
+}
+

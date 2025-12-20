@@ -392,11 +392,11 @@ Grain Research Agent (Research & Analysis) [Mostly independent, may integrate wi
 
 #### For Grain Skate Agent (Knowledge Graph)
 
-**Current Status**: Phase 4 & Phase 5 IN PROGRESS — GLM-4.6 Integration Complete ✅, Visual Indicators Pending
+**Current Status**: Phase 4 & Phase 5 IN PROGRESS — GLM-4.6 Integration Complete ✅, Visual Indicators Complete ✅
 - Phase 2: Text Buffer Unification ✅ COMPLETE
 - Phase 3: DAG Integration ✅ COMPLETE
 - Phase 4: Temporal Knowledge Graph 🔄 IN PROGRESS (Core Complete, UI Pending)
-- Phase 5: AI-Powered Graph Insights 🔄 IN PROGRESS (GLM-4.6 Integration Complete ✅, Visual Indicators Pending)
+- Phase 5: AI-Powered Graph Insights 🔄 IN PROGRESS (GLM-4.6 Integration Complete ✅, Visual Indicators Complete ✅)
 
 **Available from Grain Core Agent**:
 - ✅ HTTP Client (Phase 61) — Complete (for AI API calls)

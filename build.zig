@@ -582,6 +582,13 @@ pub fn build(b: *std.Build) void {
         }),
     });
 
+    // Aurora LSP module (for test imports)
+    const aurora_lsp_module = b.addModule("aurora_lsp", .{
+        .root_source_file = b.path("src/aurora_lsp.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
     // Aurora Editor module (for test imports)
     const aurora_editor_module = b.addModule("aurora_editor", .{
         .root_source_file = b.path("src/aurora_editor.zig"),

@@ -120,6 +120,7 @@ pub fn build(b: *std.Build) void {
     const run_wrap_docs = b.addRunArtifact(wrap_docs_exe);
     wrap_docs_step.dependOn(&run_wrap_docs.step);
 
+    // RISC-V64 kernel target
     const kernel_target = std.Target.Query{
         .cpu_arch = .riscv64,
         .os_tag = .freestanding,
@@ -141,6 +142,29 @@ pub fn build(b: *std.Build) void {
     const kernel_install = b.addInstallArtifact(kernel_exe, .{});
     const kernel_step = b.step("kernel-rv64", "Build Grain RISC-V kernel image");
     kernel_step.dependOn(&kernel_install.step);
+
+    // AArch64 kernel target
+    const kernel_aarch64_target = std.Target.Query{
+        .cpu_arch = .aarch64,
+        .os_tag = .freestanding,
+        .abi = .none,
+    };
+    const kernel_aarch64_resolved = b.resolveTargetQuery(kernel_aarch64_target);
+
+    const kernel_aarch64_exe = b.addExecutable(.{
+        .name = "grain-aarch64",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/kernel/main_aarch64.zig"),
+            .target = kernel_aarch64_resolved,
+            .optimize = optimize,
+            .code_model = .small,
+        }),
+    });
+    kernel_aarch64_exe.setLinkerScript(b.path("src/kernel/linker_aarch64.ld"));
+    kernel_aarch64_exe.addAssemblyFile(b.path("src/kernel/entry_aarch64.S"));
+    const kernel_aarch64_install = b.addInstallArtifact(kernel_aarch64_exe, .{});
+    const kernel_aarch64_step = b.step("kernel-aarch64", "Build Grain AArch64 kernel image");
+    kernel_aarch64_step.dependOn(&kernel_aarch64_install.step);
 
     // ELF Parser module (for tests that need direct access).
     // ELF Parser module (for kernel and tests).

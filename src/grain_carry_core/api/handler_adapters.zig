@@ -646,6 +646,27 @@ fn get_oauth_manager() ?*oauth.OAuthManager {
     return global_oauth_manager;
 }
 
+// Parse query parameter from query string.
+fn parse_query_param(query: []const u8, param_name: []const u8, output: []u8) ?u32 {
+    std.debug.assert(query.len > 0);
+    std.debug.assert(param_name.len > 0);
+    std.debug.assert(output.len > 0);
+    var param_key_buf: [64]u8 = undefined;
+    std.mem.copyForwards(u8, param_key_buf[0..param_name.len], param_name);
+    param_key_buf[param_name.len] = '=';
+    const param_key = param_key_buf[0..param_name.len + 1];
+    const param_idx = std.mem.indexOf(u8, query, param_key);
+    if (param_idx == null) {
+        return null;
+    }
+    const value_start = param_idx.? + param_key.len;
+    const amp_idx = std.mem.indexOf(u8, query[value_start..], "&");
+    const value_end = if (amp_idx) |idx| value_start + idx else query.len;
+    const value_len = @min(value_end - value_start, output.len);
+    std.mem.copyForwards(u8, output[0..value_len], query[value_start..value_end]);
+    return @intCast(value_len);
+}
+
 // Handler adapter: OAuth callback endpoint.
 pub fn handle_oauth_callback_adapter(
     request: *grain_core_api.HttpRequest,
@@ -653,29 +674,18 @@ pub fn handle_oauth_callback_adapter(
 ) void {
     std.debug.assert(request != null);
     std.debug.assert(response != null);
-    const server = get_api_server() orelse {
-        response.status = grain_core_api.HttpStatus.internal_server_error;
-        return;
-    };
     const oauth_mgr = get_oauth_manager() orelse {
         response.status = grain_core_api.HttpStatus.internal_server_error;
         return;
     };
+    const query_str = request.query[0..request.query_len];
     var provider_buf: [32]u8 = undefined;
     var callback_url_buf: [2048]u8 = undefined;
-    const provider_len = server.parse_query_string_from_request(
-        request,
-        "provider",
-        &provider_buf,
-    ) orelse {
+    const provider_len = parse_query_param(query_str, "provider", &provider_buf) orelse {
         response.status = grain_core_api.HttpStatus.bad_request;
         return;
     };
-    const callback_url_len = server.parse_query_string_from_request(
-        request,
-        "callback_url",
-        &callback_url_buf,
-    ) orelse {
+    const callback_url_len = parse_query_param(query_str, "callback_url", &callback_url_buf) orelse {
         response.status = grain_core_api.HttpStatus.bad_request;
         return;
     };

@@ -122,6 +122,8 @@ pub const GraphRenderer = struct {
             .block_storage = null,
             .buffer_width = buffer_width,
             .buffer_height = buffer_height,
+            .ai_suggestions = &.{}, // Empty initially
+            .ai_suggestions_len = 0,
         };
     }
 
@@ -129,6 +131,42 @@ pub const GraphRenderer = struct {
     // 2025-11-24-171200-pst: Active function
     pub fn set_block_storage(self: *GraphRenderer, block_storage: *Block.BlockStorage) void {
         self.block_storage = block_storage;
+    }
+    
+    /// Set AI suggestions for visual indicators.
+    // 2025-12-19-191609-pst: Active function
+    pub fn set_ai_suggestions(
+        self: *GraphRenderer,
+        suggestions: []const AiInsights.ConnectionSuggestion,
+    ) void {
+        // Assert: Suggestions count must be within bounds
+        std.debug.assert(suggestions.len <= MAX_AI_SUGGESTIONS);
+        
+        self.ai_suggestions = suggestions;
+        self.ai_suggestions_len = @as(u32, @intCast(suggestions.len));
+    }
+    
+    /// Check if edge is an AI-suggested connection.
+    // 2025-12-19-191609-pst: Active function
+    fn is_ai_suggested_edge(
+        self: *const GraphRenderer,
+        from_block_id: u32,
+        to_block_id: u32,
+    ) bool {
+        var i: u32 = 0;
+        while (i < self.ai_suggestions_len) : (i += 1) {
+            const suggestion = self.ai_suggestions[i];
+            const from_match = (suggestion.from_block_id == @as(u64, from_block_id));
+            const to_match = (suggestion.to_block_id == @as(u64, to_block_id));
+            const reverse_from_match = (suggestion.from_block_id == @as(u64, to_block_id));
+            const reverse_to_match = (suggestion.to_block_id == @as(u64, from_block_id));
+            
+            // Check both directions (bidirectional matching)
+            if ((from_match and to_match) or (reverse_from_match and reverse_to_match)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /// Render graph to RGBA buffer.
@@ -139,6 +177,9 @@ pub const GraphRenderer = struct {
 
         // Clear buffer with background color
         self.clear_buffer(buffer);
+
+        // Render AI-suggested edges first (so they appear behind regular edges)
+        self.render_ai_suggested_edges(buffer);
 
         // Render edges first (so nodes appear on top)
         self.render_edges(buffer);
@@ -171,6 +212,65 @@ pub const GraphRenderer = struct {
         }
     }
 
+    /// Render AI-suggested edges that don't exist yet (ghost suggestions).
+    // 2025-12-19-191609-pst: Active function
+    fn render_ai_suggested_edges(self: *const GraphRenderer, buffer: []u8) void {
+        const ai_edge_r = @as(u8, @truncate((COLOR_EDGE_AI_SUGGESTED >> 16) & 0xFF));
+        const ai_edge_g = @as(u8, @truncate((COLOR_EDGE_AI_SUGGESTED >> 8) & 0xFF));
+        const ai_edge_b = @as(u8, @truncate(COLOR_EDGE_AI_SUGGESTED & 0xFF));
+        const ai_edge_a = @as(u8, @truncate((COLOR_EDGE_AI_SUGGESTED >> 24) & 0xFF));
+        
+        // Only render AI suggestions that don't already exist as edges
+        var i: u32 = 0;
+        while (i < self.ai_suggestions_len) : (i += 1) {
+            const suggestion = self.ai_suggestions[i];
+            const from_block_id = @as(u32, @intCast(suggestion.from_block_id));
+            const to_block_id = @as(u32, @intCast(suggestion.to_block_id));
+            
+            // Check if this edge already exists
+            var edge_exists = false;
+            var e: u32 = 0;
+            while (e < self.graph_viz.edges_len) : (e += 1) {
+                const edge = self.graph_viz.edges[e];
+                const matches_forward = (edge.from_block_id == from_block_id and edge.to_block_id == to_block_id);
+                const matches_reverse = (edge.from_block_id == to_block_id and edge.to_block_id == from_block_id);
+                if (matches_forward or matches_reverse) {
+                    edge_exists = true;
+                    break;
+                }
+            }
+            
+            // Skip if edge already exists (will be rendered as regular edge)
+            if (edge_exists) {
+                continue;
+            }
+            
+            // Find nodes for this suggestion
+            const from_node = self.graph_viz.find_node(from_block_id);
+            const to_node = self.graph_viz.find_node(to_block_id);
+            if (from_node == null or to_node == null) {
+                continue; // Nodes don't exist or aren't visible
+            }
+            
+            const from_idx = from_node.?;
+            const to_idx = to_node.?;
+            
+            // Only render if both nodes are visible
+            if (!self.graph_viz.nodes[from_idx].visible or !self.graph_viz.nodes[to_idx].visible) {
+                continue;
+            }
+            
+            // Transform normalized coordinates to pixel coordinates
+            const x1 = self.normalized_to_pixel_x(self.graph_viz.nodes[from_idx].position.x);
+            const y1 = self.normalized_to_pixel_y(self.graph_viz.nodes[from_idx].position.y);
+            const x2 = self.normalized_to_pixel_x(self.graph_viz.nodes[to_idx].position.x);
+            const y2 = self.normalized_to_pixel_y(self.graph_viz.nodes[to_idx].position.y);
+            
+            // Draw dashed line for AI-suggested edge (ghost suggestion)
+            self.draw_dashed_line(buffer, x1, y1, x2, y2, ai_edge_r, ai_edge_g, ai_edge_b, ai_edge_a);
+        }
+    }
+    
     /// Render edges to buffer.
     // 2025-11-24-121500-pst: Active function
     fn render_edges(self: *const GraphRenderer, buffer: []u8) void {
@@ -178,6 +278,11 @@ pub const GraphRenderer = struct {
         const edge_g = @as(u8, @truncate((COLOR_EDGE >> 8) & 0xFF));
         const edge_b = @as(u8, @truncate(COLOR_EDGE & 0xFF));
         const edge_a = @as(u8, @truncate((COLOR_EDGE >> 24) & 0xFF));
+        
+        const ai_edge_r = @as(u8, @truncate((COLOR_EDGE_AI_SUGGESTED >> 16) & 0xFF));
+        const ai_edge_g = @as(u8, @truncate((COLOR_EDGE_AI_SUGGESTED >> 8) & 0xFF));
+        const ai_edge_b = @as(u8, @truncate(COLOR_EDGE_AI_SUGGESTED & 0xFF));
+        const ai_edge_a = @as(u8, @truncate((COLOR_EDGE_AI_SUGGESTED >> 24) & 0xFF));
 
         var e: u32 = 0;
         while (e < self.graph_viz.edges_len) : (e += 1) {
@@ -200,8 +305,19 @@ pub const GraphRenderer = struct {
             const x2 = self.normalized_to_pixel_x(self.graph_viz.nodes[to_idx].position.x);
             const y2 = self.normalized_to_pixel_y(self.graph_viz.nodes[to_idx].position.y);
 
-            // Draw line using Bresenham's algorithm (iterative)
-            self.draw_line(buffer, x1, y1, x2, y2, edge_r, edge_g, edge_b, edge_a);
+            // Check if this edge is an AI suggestion
+            const is_ai_suggested = self.is_ai_suggested_edge(
+                self.graph_viz.edges[e].from_block_id,
+                self.graph_viz.edges[e].to_block_id,
+            );
+            
+            if (is_ai_suggested) {
+                // Draw dashed line for AI-suggested edges
+                self.draw_dashed_line(buffer, x1, y1, x2, y2, ai_edge_r, ai_edge_g, ai_edge_b, ai_edge_a);
+            } else {
+                // Draw solid line for regular edges
+                self.draw_line(buffer, x1, y1, x2, y2, edge_r, edge_g, edge_b, edge_a);
+            }
         }
     }
 
@@ -231,6 +347,74 @@ pub const GraphRenderer = struct {
         }
     }
 
+    /// Draw dashed line for AI-suggested edges (iterative).
+    // 2025-12-19-191609-pst: Active function
+    fn draw_dashed_line(self: *const GraphRenderer, buffer: []u8, x1: u32, y1: u32, x2: u32, y2: u32, r: u8, g: u8, b: u8, a: u8) void {
+        // Assert: Coordinates must be within bounds
+        std.debug.assert(x1 < self.buffer_width);
+        std.debug.assert(y1 < self.buffer_height);
+        std.debug.assert(x2 < self.buffer_width);
+        std.debug.assert(y2 < self.buffer_height);
+        
+        // Dashed line pattern: 5 pixels on, 3 pixels off
+        const dash_length: u32 = 5;
+        const gap_length: u32 = 3;
+        const pattern_length = dash_length + gap_length;
+        
+        var x0 = @as(i32, @intCast(x1));
+        var y0 = @as(i32, @intCast(y1));
+        const x1_i = @as(i32, @intCast(x2));
+        const y1_i = @as(i32, @intCast(y2));
+        
+        const dx = std.math.absInt(x1_i - x0) catch 0;
+        const dy = std.math.absInt(y1_i - y0) catch 0;
+        const sx: i32 = if (x0 < x1_i) 1 else -1;
+        const sy: i32 = if (y0 < y1_i) 1 else -1;
+        var err = dx - dy;
+        
+        var pixel_count: u32 = 0;
+        var in_dash: bool = true;
+        
+        while (true) {
+            if (x0 >= 0 and x0 < @as(i32, @intCast(self.buffer_width)) and y0 >= 0 and y0 < @as(i32, @intCast(self.buffer_height))) {
+                // Only draw if we're in the dash part of the pattern
+                if (in_dash) {
+                    const idx = (@as(u32, @intCast(y0)) * self.buffer_width + @as(u32, @intCast(x0))) * 4;
+                    buffer[idx + 0] = r;
+                    buffer[idx + 1] = g;
+                    buffer[idx + 2] = b;
+                    buffer[idx + 3] = a;
+                }
+            }
+            
+            if (x0 == x1_i and y0 == y1_i) {
+                break;
+            }
+            
+            // Update pattern state
+            pixel_count += 1;
+            if (in_dash and pixel_count >= dash_length) {
+                in_dash = false;
+                pixel_count = 0;
+            } else if (!in_dash and pixel_count >= gap_length) {
+                in_dash = true;
+                pixel_count = 0;
+            }
+            
+            const e2 = 2 * err;
+            if (e2 > -dy) {
+                err -= dy;
+                x0 += sx;
+            }
+            if (e2 < dx) {
+                err += dx;
+                y0 += sy;
+            }
+        }
+        
+        std.debug.assert(pixel_count <= pattern_length); // Postcondition
+    }
+    
     /// Draw line using Bresenham's algorithm (iterative).
     // 2025-11-24-121500-pst: Active function
     fn draw_line(self: *const GraphRenderer, buffer: []u8, x1: u32, y1: u32, x2: u32, y2: u32, r: u8, g: u8, b: u8, a: u8) void {

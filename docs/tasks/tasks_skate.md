@@ -201,8 +201,14 @@
 - [x] Use HTTP client (`src/grain_core/http_client.zig`) for external AI API calls if needed ✅ (via GLM-4.6 client)
 - [ ] Use vector embeddings for semantic similarity (Grain Court integration) (Future enhancement)
 - [x] Implement actual AI analysis (replace placeholders with GLM-4.6 calls) ✅
-- [ ] Visual indicators for AI-suggested connections (graph renderer integration)
-- [ ] Test thoroughly with actual AI integration (AI suggestions, semantic similarity, clustering)
+- [x] Visual indicators for AI-suggested connections (graph renderer integration) ✅
+  - [x] Added `set_ai_suggestions()` method to `GraphRenderer` ✅
+  - [x] Added `COLOR_EDGE_AI_SUGGESTED` constant (orange/yellow) ✅
+  - [x] Added `draw_dashed_line()` for AI-suggested edges ✅
+  - [x] Added `render_ai_suggested_edges()` for ghost suggestions ✅
+  - [x] Modified `render_edges()` to render AI-styled existing edges ✅
+  - [x] Tests created (`tests/056_grain_skate_graph_renderer_test.zig`) ✅
+- [ ] Test thoroughly with actual AI API calls (requires API key)
 - [ ] Update `docs/plans/plan_skate.md` and `docs/tasks/tasks_skate.md` with completion
 
 ### Grain Style Requirements

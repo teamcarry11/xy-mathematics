@@ -1,7 +1,7 @@
 # Grain Skate Terminal Silo Field Agent: Development Plan
 
 **Agent**: Grain Skate Terminal Silo Field Agent (3rd Agent)  
-**Status**: Phase 4 & Phase 5 In Progress (Core Complete, UI/GLM-4.6 Integration Pending)  
+**Status**: Phase 4 & Phase 5 In Progress (Phase 5 Visual Indicators Complete ✅, Phase 4 UI Pending)  
 **Last Updated**: 2025-12-07-031415-pst
 
 ---
@@ -429,7 +429,7 @@ Grain Skate Terminal Silo Field Agent is responsible for building Grain Skate (k
 
 **Date Started**: 2025-12-07-031415-pst
 
-**Status**: **IN PROGRESS** — GLM-4.6 integration complete, visual indicators pending  
+**Status**: **IN PROGRESS** — GLM-4.6 integration complete ✅, visual indicators complete ✅, testing with actual API pending  
 **Estimated Time**: 3-4 weeks
 
 **Objective**: GLM-4.6 powered insights for knowledge graph management
@@ -463,9 +463,17 @@ Grain Skate Terminal Silo Field Agent is responsible for building Grain Skate (k
    - Response parsing for structured AI outputs ✅
 
 **Remaining Work**:
-- Visual indicators for AI-suggested connections (graph renderer integration)
 - Use vector embeddings for semantic similarity (Grain Court integration - Future enhancement)
 - Test thoroughly with actual AI API calls (requires API key)
+
+**Completed (2025-12-19-191609-pst)**:
+- Visual indicators for AI-suggested connections (graph renderer integration) ✅
+  - Added `set_ai_suggestions()` method to `GraphRenderer`
+  - Added `COLOR_EDGE_AI_SUGGESTED` constant (orange/yellow color)
+  - Added `draw_dashed_line()` function for AI-suggested edge rendering
+  - Added `render_ai_suggested_edges()` to render ghost suggestions
+  - Modified `render_edges()` to render existing edges with AI style if suggested
+  - Tests created and added to `tests/056_grain_skate_graph_renderer_test.zig`
 
 **DAG Integration**:
 - AI suggestions = DAG events (can be accepted/rejected) ✅
@@ -477,7 +485,7 @@ Grain Skate Terminal Silo Field Agent is responsible for building Grain Skate (k
 2. ✅ Store AI suggestions as DAG events
 3. ✅ Integrate with `src/aurora_glm46.zig` (GLM-4.6 client from Aurora)
 4. ✅ Implement actual AI analysis (replace placeholders with GLM-4.6 calls)
-5. ⏳ Visual indicators for AI-suggested connections (graph renderer integration)
+5. ✅ Visual indicators for AI-suggested connections (graph renderer integration)
 6. ⏳ Use vector embeddings for semantic similarity (Grain Court integration - Future)
 7. ⏳ Test thoroughly with actual AI API calls (requires API key)
 

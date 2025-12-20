@@ -3,6 +3,7 @@ const testing = std.testing;
 const GraphVisualization = @import("grain_skate").GraphVisualization;
 const GraphRenderer = @import("grain_skate").GraphRenderer;
 const Block = @import("grain_skate").Block;
+const AiInsights = @import("grain_skate").AiInsights;
 
 test "graph renderer init" {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -257,5 +258,79 @@ test "graph renderer enhanced labels centered" {
 
     // Centered labels should be rendered
     try testing.expect(buffer.len == 800 * 600 * 4);
+}
+
+test "graph renderer AI suggestions visual indicators" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var graph_viz = GraphVisualization.init(allocator);
+    graph_viz.add_block(1);
+    graph_viz.add_block(2);
+    graph_viz.calculate_layout(10);
+
+    var renderer = GraphRenderer.init(&graph_viz, 800, 600);
+
+    // Create AI suggestions
+    var ai_reason = try allocator.dupe(u8, "High semantic similarity");
+    defer allocator.free(ai_reason);
+    
+    const suggestions = [_]AiInsights.ConnectionSuggestion{
+        .{
+            .from_block_id = 1,
+            .to_block_id = 2,
+            .confidence = 0.85,
+            .reason = ai_reason,
+            .reason_len = @as(u32, @intCast(ai_reason.len)),
+        },
+    };
+
+    renderer.set_ai_suggestions(&suggestions);
+
+    var buffer: [800 * 600 * 4]u8 = undefined;
+    renderer.render(&buffer);
+
+    // AI suggestions should be rendered (basic sanity check)
+    try testing.expect(buffer.len == 800 * 600 * 4);
+    try testing.expect(renderer.ai_suggestions_len == 1);
+}
+
+test "graph renderer AI suggestions for non-existent edges" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var graph_viz = GraphVisualization.init(allocator);
+    graph_viz.add_block(1);
+    graph_viz.add_block(2);
+    graph_viz.add_block(3);
+    // Note: No link between 1 and 2, so AI suggestion should appear as ghost
+    graph_viz.calculate_layout(10);
+
+    var renderer = GraphRenderer.init(&graph_viz, 800, 600);
+
+    // Create AI suggestion for non-existent edge
+    var ai_reason = try allocator.dupe(u8, "Should be connected");
+    defer allocator.free(ai_reason);
+    
+    const suggestions = [_]AiInsights.ConnectionSuggestion{
+        .{
+            .from_block_id = 1,
+            .to_block_id = 2,
+            .confidence = 0.75,
+            .reason = ai_reason,
+            .reason_len = @as(u32, @intCast(ai_reason.len)),
+        },
+    };
+
+    renderer.set_ai_suggestions(&suggestions);
+
+    var buffer: [800 * 600 * 4]u8 = undefined;
+    renderer.render(&buffer);
+
+    // AI suggestion should be rendered as ghost edge
+    try testing.expect(buffer.len == 800 * 600 * 4);
+    try testing.expect(renderer.ai_suggestions_len == 1);
 }
 

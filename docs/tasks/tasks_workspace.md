@@ -298,6 +298,24 @@ All planned phases for Grain Workspace Agent have been completed. See completed 
 
 ---
 
+### Phase 15: WAL Manager Integration (File Manager) ✅ (2025-12-19-191529-pst)
+
+**Completed Tasks**:
+- [x] Integrate WAL Manager into File Manager
+- [x] Add WAL operation tracking
+- [x] Add add_wal_entry() function (insert, update, delete, checkpoint)
+- [x] Add get_wal_operation() function
+- [x] Add get_entry_wal_operations() function
+- [x] Add needs_wal_checkpoint() function
+- [x] Add checkpoint_wal() function
+- [x] Add get_wal_recovery_entries() function
+- [x] Update tests for WAL Manager integration
+- [x] Update documentation
+
+**Files**: Updated `src/grain_workspace/file_manager/app.zig`, `tests/112_grain_workspace_file_manager_test.zig`
+
+---
+
 ## Coordination Tasks
 
 ### With Grain Core Agent

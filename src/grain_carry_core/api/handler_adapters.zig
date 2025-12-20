@@ -18,6 +18,7 @@ const handlers = @import("handlers.zig");
 const auth_integration = @import("auth_integration.zig");
 const auth_service_integration = @import("auth_service_integration.zig");
 const email_service = @import("../email/service.zig");
+const oauth = @import("../auth/oauth.zig");
 
 // Global API server instance (set during initialization).
 var global_api_server: ?*grain_core_api.ApiServer = null;
@@ -625,6 +626,115 @@ pub fn handle_users_settings_adapter(
     
     var json_buf: [responses.MAX_JSON_RESPONSE_LEN]u8 = undefined;
     const json_len = responses.build_success_response("Settings retrieved", "", &json_buf);
+    response.status = grain_core_api.HttpStatus.ok;
+    _ = response.add_header("Content-Type", "application/json");
+    std.mem.copyForwards(u8, response.body[0..json_len], json_buf[0..json_len]);
+    response.body_len = @intCast(json_len);
+}
+
+// Global OAuth manager instance (set during initialization).
+var global_oauth_manager: ?*oauth.OAuthManager = null;
+
+// Set OAuth manager instance.
+pub fn set_oauth_manager(manager: *oauth.OAuthManager) void {
+    global_oauth_manager = manager;
+    std.debug.assert(global_oauth_manager != null);
+}
+
+// Get OAuth manager instance.
+fn get_oauth_manager() ?*oauth.OAuthManager {
+    return global_oauth_manager;
+}
+
+// Handler adapter: OAuth callback endpoint.
+pub fn handle_oauth_callback_adapter(
+    request: *grain_core_api.HttpRequest,
+    response: *grain_core_api.HttpResponse,
+) void {
+    std.debug.assert(request != null);
+    std.debug.assert(response != null);
+    const server = get_api_server() orelse {
+        response.status = grain_core_api.HttpStatus.internal_server_error;
+        return;
+    };
+    const oauth_mgr = get_oauth_manager() orelse {
+        response.status = grain_core_api.HttpStatus.internal_server_error;
+        return;
+    };
+    var provider_buf: [32]u8 = undefined;
+    var callback_url_buf: [2048]u8 = undefined;
+    const provider_len = server.parse_query_string_from_request(
+        request,
+        "provider",
+        &provider_buf,
+    ) orelse {
+        response.status = grain_core_api.HttpStatus.bad_request;
+        return;
+    };
+    const callback_url_len = server.parse_query_string_from_request(
+        request,
+        "callback_url",
+        &callback_url_buf,
+    ) orelse {
+        response.status = grain_core_api.HttpStatus.bad_request;
+        return;
+    };
+    const provider_str = provider_buf[0..provider_len];
+    const callback_url = callback_url_buf[0..callback_url_len];
+    var provider: oauth.OAuthProvider = undefined;
+    if (std.mem.eql(u8, provider_str, "google")) {
+        provider = oauth.OAuthProvider.google;
+    } else if (std.mem.eql(u8, provider_str, "facebook")) {
+        provider = oauth.OAuthProvider.facebook;
+    } else if (std.mem.eql(u8, provider_str, "github")) {
+        provider = oauth.OAuthProvider.github;
+    } else if (std.mem.eql(u8, provider_str, "apple")) {
+        provider = oauth.OAuthProvider.apple;
+    } else {
+        response.status = grain_core_api.HttpStatus.bad_request;
+        return;
+    }
+    var code_buf: [oauth.MAX_AUTH_CODE_LEN]u8 = undefined;
+    var state_buf: [oauth.MAX_STATE_LEN]u8 = undefined;
+    const parse_result = oauth.parse_oauth_callback(callback_url, &code_buf, &state_buf);
+    if (!parse_result.success) {
+        response.status = grain_core_api.HttpStatus.bad_request;
+        return;
+    }
+    const code = code_buf[0..parse_result.code_len];
+    var token_response = oauth.OAuthTokenResponse.init();
+    if (!oauth_mgr.exchange_code_for_tokens(provider, code, state_buf[0..parse_result.state_len], &token_response)) {
+        response.status = grain_core_api.HttpStatus.unauthorized;
+        return;
+    }
+    const current_time: u64 = @intCast(std.time.timestamp());
+    var user_id: [grain_core_auth.MAX_USER_ID_LEN]u8 = undefined;
+    const user_id_len = @min(token_response.access_token_len, grain_core_auth.MAX_USER_ID_LEN);
+    std.mem.copyForwards(u8, &user_id, token_response.access_token[0..user_id_len]);
+    var access_token: [grain_core_auth.MAX_JWT_LEN]u8 = undefined;
+    var refresh_token: [grain_core_auth.MAX_JWT_LEN]u8 = undefined;
+    const access_token_len = auth_integration.generate_access_token(
+        user_id[0..user_id_len],
+        current_time,
+        &access_token,
+    );
+    const refresh_token_len = auth_integration.generate_refresh_token(
+        user_id[0..user_id_len],
+        current_time,
+        &refresh_token,
+    );
+    if (access_token_len == 0 or refresh_token_len == 0) {
+        response.status = grain_core_api.HttpStatus.internal_server_error;
+        return;
+    }
+    var auth_resp = models.AuthResponse.init();
+    auth_resp.success = true;
+    _ = auth_resp.set_token(access_token[0..access_token_len]);
+    _ = auth_resp.set_refresh_token(refresh_token[0..refresh_token_len]);
+    _ = auth_resp.set_user_id(user_id[0..user_id_len]);
+    auth_resp.expires_in = grain_core_auth.ACCESS_TOKEN_EXPIRY;
+    var json_buf: [responses.MAX_JSON_RESPONSE_LEN]u8 = undefined;
+    const json_len = responses.build_auth_response(&auth_resp, &json_buf);
     response.status = grain_core_api.HttpStatus.ok;
     _ = response.add_header("Content-Type", "application/json");
     std.mem.copyForwards(u8, response.body[0..json_len], json_buf[0..json_len]);

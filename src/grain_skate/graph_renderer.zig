@@ -105,6 +105,8 @@ pub const GraphRenderer = struct {
     block_storage: ?*Block.BlockStorage,
     buffer_width: u32,
     buffer_height: u32,
+    ai_suggestions: []const AiInsights.ConnectionSuggestion, // AI-suggested connections
+    ai_suggestions_len: u32, // Number of AI suggestions
 
     /// Initialize graph renderer.
     // 2025-11-24-121500-pst: Active function

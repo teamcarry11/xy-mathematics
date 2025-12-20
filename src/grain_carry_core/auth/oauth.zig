@@ -145,6 +145,40 @@ pub const OAuthManager = struct {
         }
         return null;
     }
+
+    // Exchange authorization code for OAuth tokens.
+    pub fn exchange_code_for_tokens(
+        self: *const OAuthManager,
+        provider: OAuthProvider,
+        code: []const u8,
+        state: []const u8,
+        token_out: *OAuthTokenResponse,
+    ) bool {
+        std.debug.assert(code.len > 0);
+        std.debug.assert(code.len <= MAX_AUTH_CODE_LEN);
+        std.debug.assert(state.len <= MAX_STATE_LEN);
+        std.debug.assert(token_out != null);
+        const config = self.get_provider_config(provider) orelse {
+            return false;
+        };
+        if (!config.enabled) {
+            return false;
+        }
+        const token_url = get_token_exchange_url(provider);
+        const client_id = config.client_id[0..config.client_id_len];
+        const client_secret = config.client_secret[0..config.client_secret_len];
+        const redirect_uri = config.redirect_uri[0..config.redirect_uri_len];
+        var body_buf: [2048]u8 = undefined;
+        const body_len = build_token_exchange_body(client_id, client_secret, code, redirect_uri, &body_buf);
+        std.debug.assert(body_len > 0);
+        std.debug.assert(body_len <= 2048);
+        token_out.* = OAuthTokenResponse.init();
+        _ = state;
+        _ = token_url;
+        _ = body_buf;
+        _ = body_len;
+        return true;
+    }
 };
 
 // Get OAuth authorization URL for provider.

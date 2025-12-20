@@ -125,12 +125,14 @@ pub const FileManagerUI = struct {
     // 2025-12-07-025947-pst: Phase 10.4 WebSocket integration
     // 2025-12-07-071409-pst: Phase 13 File Storage integration
     // 2025-12-07-084440-pst: Phase 14 Backup Manager integration
+    // 2025-12-19-191529-pst: Phase 15 WAL Manager integration
     pub fn init(
         allocator: std.mem.Allocator,
         fm: *grain_core.file_manager.FileManager,
         ws_manager: *grain_core.websocket.WebSocketManager,
         storage_mgr: *grain_core.file_storage.FileStorageManager,
         backup_mgr: *grain_core.backup_manager.BackupManager,
+        wal_mgr: *grain_core.wal_manager.WalManager,
     ) FileManagerUI {
         // Precondition: Allocator and managers must be valid
         std.debug.assert(allocator.ptr != null);
@@ -138,11 +140,13 @@ pub const FileManagerUI = struct {
         std.debug.assert(@intFromPtr(ws_manager) != 0);
         std.debug.assert(@intFromPtr(storage_mgr) != 0);
         std.debug.assert(@intFromPtr(backup_mgr) != 0);
+        std.debug.assert(@intFromPtr(wal_mgr) != 0);
 
         var ui = FileManagerUI{
             .file_manager = fm,
             .file_storage_manager = storage_mgr,
             .backup_manager = backup_mgr,
+            .wal_manager = wal_mgr,
             .search_query = undefined,
             .search_query_len = 0,
             .selected_entry_id = 0,
@@ -158,6 +162,9 @@ pub const FileManagerUI = struct {
             .backup_operations = undefined,
             .backup_operations_len = 0,
             .next_backup_operation_id = 1,
+            .wal_operations = undefined,
+            .wal_operations_len = 0,
+            .next_wal_operation_id = 1,
             .allocator = allocator,
         };
 
@@ -191,12 +198,19 @@ pub const FileManagerUI = struct {
             ui.backup_operations[i] = null;
         }
 
+        // Initialize WAL operations array
+        i = 0;
+        while (i < MAX_WAL_OPERATIONS) : (i += 1) {
+            ui.wal_operations[i] = null;
+        }
+
         // Postcondition: UI must be valid
         std.debug.assert(ui.search_query_len == 0);
         std.debug.assert(ui.clipboard_len == 0);
         std.debug.assert(ui.websocket_clients_len == 0);
         std.debug.assert(ui.database_file_handles_len == 0);
         std.debug.assert(ui.backup_operations_len == 0);
+        std.debug.assert(ui.wal_operations_len == 0);
 
         return ui;
     }
@@ -1050,6 +1064,135 @@ pub const FileManagerUI = struct {
                 backups_len.* += 1;
             }
         }
+    }
+
+    /// Add WAL entry for database file operation.
+    // 2025-12-19-191529-pst: Phase 15 WAL Manager integration
+    pub fn add_wal_entry(
+        self: *FileManagerUI,
+        entry_id: u32,
+        entry_type: grain_core.wal_manager.WalEntryType,
+        table_id: u32,
+        record_id: u64,
+        data: []const u8,
+    ) ?u32 {
+        // Precondition: Entry ID and parameters must be valid
+        std.debug.assert(entry_id > 0);
+        std.debug.assert(table_id > 0);
+        std.debug.assert(record_id > 0);
+        std.debug.assert(data.len > 0);
+        std.debug.assert(self.wal_operations_len < MAX_WAL_OPERATIONS);
+
+        if (self.wal_operations_len >= MAX_WAL_OPERATIONS) {
+            return null;
+        }
+
+        if (!self.is_database_file(entry_id)) {
+            return null;
+        }
+
+        const timestamp = @as(u64, @intCast(std.time.timestamp()));
+        const wal_entry = self.wal_manager.add_entry(entry_type, table_id, record_id, data, timestamp);
+        if (wal_entry == null) {
+            return null;
+        }
+
+        const operation_id = self.next_wal_operation_id;
+        self.next_wal_operation_id += 1;
+
+        var wal_op = WalOperation{
+            .operation_id = operation_id,
+            .entry_id = entry_id,
+            .wal_entry_id = wal_entry.?.entry_id,
+            .entry_type = entry_type,
+            .active = true,
+        };
+
+        var i: u32 = 0;
+        while (i < MAX_WAL_OPERATIONS) : (i += 1) {
+            if (self.wal_operations[i] == null) {
+                self.wal_operations[i] = wal_op;
+                self.wal_operations_len += 1;
+                break;
+            }
+        }
+
+        // Postcondition: WAL operation must be added
+        std.debug.assert(self.wal_operations_len > 0);
+
+        return operation_id;
+    }
+
+    /// Get WAL operation by operation ID.
+    // 2025-12-19-191529-pst: Phase 15 WAL Manager integration
+    pub fn get_wal_operation(
+        self: *const FileManagerUI,
+        operation_id: u32,
+    ) ?*const WalOperation {
+        // Precondition: Operation ID must be valid
+        std.debug.assert(operation_id > 0);
+
+        var i: u32 = 0;
+        while (i < self.wal_operations_len) : (i += 1) {
+            if (self.wal_operations[i]) |*op| {
+                if (op.operation_id == operation_id and op.active) {
+                    return op;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /// Get all WAL operations for an entry.
+    // 2025-12-19-191529-pst: Phase 15 WAL Manager integration
+    pub fn get_entry_wal_operations(
+        self: *const FileManagerUI,
+        entry_id: u32,
+        operations: []?*const WalOperation,
+        operations_len: *u32,
+    ) void {
+        // Precondition: Operations buffer must be valid
+        std.debug.assert(entry_id > 0);
+        std.debug.assert(operations.len > 0);
+        std.debug.assert(operations_len != null);
+
+        operations_len.* = 0;
+
+        var i: u32 = 0;
+        while (i < self.wal_operations_len and operations_len.* < operations.len) : (i += 1) {
+            if (self.wal_operations[i]) |*op| {
+                if (op.entry_id == entry_id and op.active) {
+                    operations[operations_len.*] = op;
+                    operations_len.* += 1;
+                }
+            }
+        }
+    }
+
+    /// Check if WAL checkpoint is needed.
+    // 2025-12-19-191529-pst: Phase 15 WAL Manager integration
+    pub fn needs_wal_checkpoint(self: *const FileManagerUI) bool {
+        return self.wal_manager.needs_checkpoint();
+    }
+
+    /// Perform WAL checkpoint.
+    // 2025-12-19-191529-pst: Phase 15 WAL Manager integration
+    pub fn checkpoint_wal(self: *FileManagerUI) bool {
+        const timestamp = @as(u64, @intCast(std.time.timestamp()));
+        return self.wal_manager.checkpoint(timestamp);
+    }
+
+    /// Get WAL entries for recovery.
+    // 2025-12-19-191529-pst: Phase 15 WAL Manager integration
+    pub fn get_wal_recovery_entries(
+        self: *const FileManagerUI,
+        entries: []grain_core.wal_manager.WalEntry,
+    ) u32 {
+        // Precondition: Entries buffer must be valid
+        std.debug.assert(entries.len >= grain_core.wal_manager.MAX_WAL_ENTRIES);
+
+        return self.wal_manager.get_recovery_entries(entries);
     }
 };
 

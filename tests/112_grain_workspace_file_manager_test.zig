@@ -8,6 +8,7 @@
 //! 2025-12-07-025947-pst: Phase 10.4 WebSocket integration tests
 //! 2025-12-07-071409-pst: Phase 13 File Storage integration tests
 //! 2025-12-07-084440-pst: Phase 14 Backup Manager integration tests
+//! 2025-12-19-191529-pst: Phase 15 WAL Manager integration tests
 
 const std = @import("std");
 const testing = std.testing;
@@ -19,9 +20,10 @@ test "file manager ui initialization" {
     var fm = grain_core.file_manager.FileManager.init();
     var ws_manager = grain_core.websocket.WebSocketManager.init();
     var storage_mgr = grain_core.file_storage.FileStorageManager.init();
-    const backup_mgr = grain_core.backup_manager.BackupManager.init();
+    var backup_mgr = grain_core.backup_manager.BackupManager.init();
+    var wal_mgr = grain_core.wal_manager.WalManager.init();
 
-    const ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr);
+    const ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr);
 
     try testing.expect(ui.search_query_len == 0);
     try testing.expect(ui.selected_entry_id == 0);
@@ -29,6 +31,7 @@ test "file manager ui initialization" {
     try testing.expect(ui.websocket_clients_len == 0);
     try testing.expect(ui.database_file_handles_len == 0);
     try testing.expect(ui.backup_operations_len == 0);
+    try testing.expect(ui.wal_operations_len == 0);
 }
 
 test "set search query" {

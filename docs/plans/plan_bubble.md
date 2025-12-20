@@ -247,7 +247,8 @@ src/grain_bubble/
 src/grain_bubble/
 ├── export_html.zig          # HTML export ✅
 ├── export_framework.zig     # Framework bundle export (Svelte) ✅
-└── export_slc.zig           # SLC asset bundles ✅
+├── export_slc.zig           # SLC asset bundles ✅
+└── export_optimize.zig      # Export optimization ✅
 ```
 
 **Phase 4 Progress Summary**:

@@ -25,8 +25,13 @@ pub const COLOR_BACKGROUND: u32 = 0xFF1E1E1E; // Dark gray background
 pub const COLOR_NODE: u32 = 0xFF4A90E2; // Blue node
 pub const COLOR_NODE_SELECTED: u32 = 0xFFE24A4A; // Red selected node
 pub const COLOR_EDGE: u32 = 0xFF666666; // Gray edge
+pub const COLOR_EDGE_AI_SUGGESTED: u32 = 0xFFFFAA00; // Orange/yellow for AI-suggested edges
 pub const COLOR_TEXT: u32 = 0xFFFFFFFF; // White text
 pub const COLOR_LABEL_BG: u32 = 0x80000000; // Semi-transparent black background for labels
+
+// Bounded: Max AI suggestions to track for visual indicators
+// 2025-12-19-191609-pst: Active constant
+pub const MAX_AI_SUGGESTIONS: u32 = 100;
 
 // Bounded: Max label length (explicit limit, in characters)
 // 2025-11-24-171200-pst: Active constant

@@ -41,7 +41,8 @@ test "set search query" {
 
     var storage_mgr = grain_core.file_storage.FileStorageManager.init();
     var backup_mgr = grain_core.backup_manager.BackupManager.init();
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr);
+    var wal_mgr = grain_core.wal_manager.WalManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr);
     ui.set_search_query("test");
 
     try testing.expect(ui.search_query_len == 4);
@@ -55,7 +56,8 @@ test "navigate to directory" {
 
     var storage_mgr = grain_core.file_storage.FileStorageManager.init();
     var backup_mgr = grain_core.backup_manager.BackupManager.init();
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr);
+    var wal_mgr = grain_core.wal_manager.WalManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr);
     const result = ui.navigate_to_directory("/home");
 
     try testing.expect(result == true);
@@ -69,7 +71,8 @@ test "get current directory" {
 
     var storage_mgr = grain_core.file_storage.FileStorageManager.init();
     var backup_mgr = grain_core.backup_manager.BackupManager.init();
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr);
+    var wal_mgr = grain_core.wal_manager.WalManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr);
     const current_dir = ui.get_current_directory();
 
     try testing.expect(std.mem.eql(u8, current_dir, "/"));
@@ -85,7 +88,8 @@ test "get file entries" {
     var ws_manager = grain_core.websocket.WebSocketManager.init();
     var storage_mgr = grain_core.file_storage.FileStorageManager.init();
     var backup_mgr = grain_core.backup_manager.BackupManager.init();
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr);
+    var wal_mgr = grain_core.wal_manager.WalManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr);
 
     var entries: [10]*grain_core.file_manager.FileEntry = undefined;
     var entries_len: u32 = 0;
@@ -106,7 +110,8 @@ test "search files" {
     var ws_manager = grain_core.websocket.WebSocketManager.init();
     var storage_mgr = grain_core.file_storage.FileStorageManager.init();
     var backup_mgr = grain_core.backup_manager.BackupManager.init();
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr);
+    var wal_mgr = grain_core.wal_manager.WalManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr);
     ui.set_search_query("test");
 
     var results: [10]u32 = undefined;
@@ -127,7 +132,8 @@ test "copy to clipboard" {
     var ws_manager = grain_core.websocket.WebSocketManager.init();
     var storage_mgr = grain_core.file_storage.FileStorageManager.init();
     var backup_mgr = grain_core.backup_manager.BackupManager.init();
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr);
+    var wal_mgr = grain_core.wal_manager.WalManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr);
     const result = ui.copy_to_clipboard(entry_id.?);
 
     try testing.expect(result == true);
@@ -146,7 +152,8 @@ test "move to clipboard" {
     var ws_manager = grain_core.websocket.WebSocketManager.init();
     var storage_mgr = grain_core.file_storage.FileStorageManager.init();
     var backup_mgr = grain_core.backup_manager.BackupManager.init();
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr);
+    var wal_mgr = grain_core.wal_manager.WalManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr);
     const result = ui.move_to_clipboard(entry_id.?);
 
     try testing.expect(result == true);
@@ -165,7 +172,8 @@ test "paste from clipboard" {
     var ws_manager = grain_core.websocket.WebSocketManager.init();
     var storage_mgr = grain_core.file_storage.FileStorageManager.init();
     var backup_mgr = grain_core.backup_manager.BackupManager.init();
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr);
+    var wal_mgr = grain_core.wal_manager.WalManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr);
     _ = ui.copy_to_clipboard(entry_id.?);
 
     const pasted_count = ui.paste_from_clipboard("/dest");
@@ -184,7 +192,8 @@ test "delete file" {
     var ws_manager = grain_core.websocket.WebSocketManager.init();
     var storage_mgr = grain_core.file_storage.FileStorageManager.init();
     var backup_mgr = grain_core.backup_manager.BackupManager.init();
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr);
+    var wal_mgr = grain_core.wal_manager.WalManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr);
     const result = ui.delete_file(entry_id.?);
 
     try testing.expect(result == true);
@@ -201,7 +210,8 @@ test "rename file" {
     var ws_manager = grain_core.websocket.WebSocketManager.init();
     var storage_mgr = grain_core.file_storage.FileStorageManager.init();
     var backup_mgr = grain_core.backup_manager.BackupManager.init();
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr);
+    var wal_mgr = grain_core.wal_manager.WalManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr);
     const result = ui.rename_file(entry_id.?, "new-name.txt");
 
     try testing.expect(result == true);
@@ -220,7 +230,8 @@ test "get file preview" {
     var ws_manager = grain_core.websocket.WebSocketManager.init();
     var storage_mgr = grain_core.file_storage.FileStorageManager.init();
     var backup_mgr = grain_core.backup_manager.BackupManager.init();
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr);
+    var wal_mgr = grain_core.wal_manager.WalManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr);
 
     var preview: [100]u8 = undefined;
     var preview_len: u32 = 0;
@@ -239,7 +250,8 @@ test "clear clipboard" {
     var ws_manager = grain_core.websocket.WebSocketManager.init();
     var storage_mgr = grain_core.file_storage.FileStorageManager.init();
     var backup_mgr = grain_core.backup_manager.BackupManager.init();
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr);
+    var wal_mgr = grain_core.wal_manager.WalManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr);
     _ = ui.copy_to_clipboard(entry_id.?);
     try testing.expect(ui.clipboard_len == 1);
 
@@ -254,7 +266,8 @@ test "websocket client management" {
 
     var storage_mgr = grain_core.file_storage.FileStorageManager.init();
     var backup_mgr = grain_core.backup_manager.BackupManager.init();
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr);
+    var wal_mgr = grain_core.wal_manager.WalManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr);
 
     // Add WebSocket client
     const conn1 = ws_manager.add_connection(1);
@@ -294,7 +307,8 @@ test "database file management" {
     try testing.expect(entry_id != null);
 
     var backup_mgr = grain_core.backup_manager.BackupManager.init();
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr);
+    var wal_mgr = grain_core.wal_manager.WalManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr);
 
     // Check if file is a database file
     const is_db = ui.is_database_file(entry_id.?);
@@ -368,5 +382,52 @@ test "backup management" {
     // Restore from backup (verify backup exists)
     const restored = ui.restore_file_from_backup(backup_op.?.backup_id);
     try testing.expect(restored == true);
+}
+
+test "wal management" {
+    const allocator = testing.allocator;
+    var fm = grain_core.file_manager.FileManager.init();
+    var ws_manager = grain_core.websocket.WebSocketManager.init();
+    var storage_mgr = grain_core.file_storage.FileStorageManager.init();
+    var backup_mgr = grain_core.backup_manager.BackupManager.init();
+    var wal_mgr = grain_core.wal_manager.WalManager.init();
+
+    const entry_id = fm.add_file_entry("database.db", "/database.db", .regular, 4096, 0);
+    try testing.expect(entry_id != null);
+
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr);
+
+    // Add WAL entry
+    const test_data = "test data";
+    const operation_id = ui.add_wal_entry(entry_id.?, .insert, 1, 1, test_data);
+    try testing.expect(operation_id != null);
+    try testing.expect(ui.wal_operations_len == 1);
+
+    // Get WAL operation
+    const wal_op = ui.get_wal_operation(operation_id.?);
+    try testing.expect(wal_op != null);
+    try testing.expect(wal_op.?.entry_id == entry_id.?);
+    try testing.expect(wal_op.?.entry_type == .insert);
+
+    // Get entry WAL operations
+    var operations: [10]?*const FileManagerUI.WalOperation = undefined;
+    var operations_len: u32 = 0;
+    ui.get_entry_wal_operations(entry_id.?, &operations, &operations_len);
+    try testing.expect(operations_len == 1);
+    try testing.expect(operations[0] != null);
+    try testing.expect(operations[0].?.operation_id == operation_id.?);
+
+    // Check if checkpoint needed (should be false for single entry)
+    const needs_checkpoint = ui.needs_wal_checkpoint();
+    try testing.expect(needs_checkpoint == false);
+
+    // Get WAL recovery entries
+    var recovery_entries: [100]grain_core.wal_manager.WalEntry = undefined;
+    const recovery_count = ui.get_wal_recovery_entries(&recovery_entries);
+    try testing.expect(recovery_count == 1);
+
+    // Perform checkpoint
+    const checkpointed = ui.checkpoint_wal();
+    try testing.expect(checkpointed == true);
 }
 

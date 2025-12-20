@@ -16,6 +16,7 @@ pub const AUTH_OTP_SEND_PATH: []const u8 = "/api/v1/auth/otp/send";
 pub const AUTH_OTP_VERIFY_PATH: []const u8 = "/api/v1/auth/otp/verify";
 pub const AUTH_2FA_ENABLE_PATH: []const u8 = "/api/v1/auth/2fa/enable";
 pub const AUTH_2FA_VERIFY_PATH: []const u8 = "/api/v1/auth/2fa/verify";
+pub const AUTH_OAUTH_CALLBACK_PATH: []const u8 = "/api/v1/auth/oauth/callback";
 pub const USERS_PROFILE_PATH: []const u8 = "/api/v1/users/profile";
 pub const USERS_SETTINGS_PATH: []const u8 = "/api/v1/users/settings";
 
@@ -49,9 +50,10 @@ pub fn init_endpoint_registry() EndpointRegistry {
     registry.paths[5] = AUTH_OTP_VERIFY_PATH;
     registry.paths[6] = AUTH_2FA_ENABLE_PATH;
     registry.paths[7] = AUTH_2FA_VERIFY_PATH;
-    registry.paths[8] = USERS_PROFILE_PATH;
-    registry.paths[9] = USERS_SETTINGS_PATH;
-    registry.paths_len = 10;
+    registry.paths[8] = AUTH_OAUTH_CALLBACK_PATH;
+    registry.paths[9] = USERS_PROFILE_PATH;
+    registry.paths[10] = USERS_SETTINGS_PATH;
+    registry.paths_len = 11;
     
     std.debug.assert(registry.paths_len <= MAX_ENDPOINT_PATHS);
     

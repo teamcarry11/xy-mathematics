@@ -1,8 +1,8 @@
 # Grain Workspace Agent: Development Plan
 
 **Agent**: Grain Workspace Agent (5th Agent)  
-**Status**: Phase 14 Backup Manager Integration (File Manager) Complete ✅  
-**Last Updated**: 2025-12-10-081425-pst  
+**Status**: Phase 15 WAL Manager Integration (File Manager) Complete ✅  
+**Last Updated**: 2025-12-19-191529-pst  
 **Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-10-081425-pst.md`
 
 ---
@@ -373,6 +373,7 @@ All planned phases for Grain Workspace Agent have been completed:
 - Phase 12: HTTP Client Integration (Package Manager UI) ✅ (2025-12-07-060853-pst)
 - Phase 13: File Storage Integration (File Manager) ✅ (2025-12-07-071409-pst)
 - Phase 14: Backup Manager Integration (File Manager) ✅ (2025-12-07-084440-pst)
+- Phase 15: WAL Manager Integration (File Manager) ✅ (2025-12-19-191529-pst)
 
 ### Phase 10.1: WebSocket Integration (Monitor) ✅ **COMPLETE**
 
@@ -647,6 +648,40 @@ All planned phases for Grain Workspace Agent have been completed:
 - Backup restore verification (checks backup exists and is completed)
 - Bounded backup operation storage (max 16 operations)
 - Integration with Grain Core Backup Manager (Phase 62)
+
+**Grain Style Compliance**:
+- `grain_case` function names
+- `u32`/`u64` types (no `usize`)
+- Bounded allocations (all limits explicit)
+- Assertions for preconditions
+- Max 70 lines per function
+- All compiler warnings enabled
+
+### Phase 15: WAL Manager Integration (File Manager) ✅ **COMPLETE**
+
+**Date**: 2025-12-19-191529-pst
+
+**Completed Work**:
+1. **WAL Manager Support for File Manager App** (`src/grain_workspace/file_manager/app.zig`):
+   - Added `WalManager` integration to `FileManagerUI`
+   - Added `WalOperation` struct for tracking WAL operations
+   - Added `wal_operations` array with bounded limit (`MAX_WAL_OPERATIONS: 32`)
+   - Added `add_wal_entry()` function for adding WAL entries (insert, update, delete, checkpoint)
+   - Added `get_wal_operation()` function for retrieving WAL operations by ID
+   - Added `get_entry_wal_operations()` function for retrieving all WAL operations for an entry
+   - Added `needs_wal_checkpoint()` function for checking if checkpoint is needed
+   - Added `checkpoint_wal()` function for performing WAL checkpoint
+   - Added `get_wal_recovery_entries()` function for retrieving entries for recovery
+   - Updated `init()` to accept `WalManager` parameter
+   - Comprehensive tests (`tests/112_grain_workspace_file_manager_test.zig`)
+
+**Features**:
+- WAL entry support for database file operations (insert, update, delete, checkpoint)
+- WAL operation tracking (operation ID, entry ID, WAL entry ID, entry type)
+- WAL checkpoint support (interval-based and size-based)
+- WAL recovery entries retrieval for database recovery
+- Bounded WAL operation storage (max 32 operations)
+- Integration with Grain Core WAL Manager (Phase 62)
 
 **Grain Style Compliance**:
 - `grain_case` function names

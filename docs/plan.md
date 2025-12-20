@@ -1,6 +1,6 @@
 # Grain OS Development Plan
 
-**Last Updated**: 2025-12-10-081425-pst  
+**Last Updated**: 2025-12-19-200803-pst  
 **Structure**: Hybrid approach with core overview and agent-specific plans  
 **See**: `docs/plans/plan_{agent}.md` for detailed agent plans
 
@@ -54,6 +54,7 @@
 - **Phase 5: Audio Device Management — COMPLETE** ✅
 - Architecture Abstraction Layer (Phase 6.1) ✅
 - AArch64 VM Support (Phase 6.2) ✅
+- AArch64 Kernel Port (Phase 6.3) 🔄 (In Progress — Structure complete, POSIX dependency blocker)
 
 **Provides**: Kernel syscalls, VM capabilities, file I/O, network syscalls (planned)
 

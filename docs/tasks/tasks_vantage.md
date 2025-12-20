@@ -95,7 +95,7 @@
 ## Phase 6: AArch64 Support (IN PROGRESS)
 
 **Priority**: **MEDIUM** — Cloud deployment and hardware support  
-**Status**: **IN PROGRESS** (Phase 6.1 Complete)  
+**Status**: **IN PROGRESS** (Phase 6.2 Complete, Phase 6.3 In Progress)  
 **Estimated Time**: 6-8 weeks
 
 ### Completed Tasks
@@ -108,17 +108,22 @@
 - [x] Implement AArch64 memory operations — Phase 6.2
 - [x] Implement AArch64 VM state management — Phase 6.2
 - [x] Create comprehensive tests (`tests/090_aarch64_vm_test.zig`) — Phase 6.2
+- [x] Create AArch64 entry assembly (`src/kernel/entry_aarch64.S`) — Phase 6.3
+- [x] Create AArch64 linker script (`src/kernel/linker_aarch64.ld`) — Phase 6.3
+- [x] Create AArch64 platform interface (`src/kernel/platform_aarch64.zig`) — Phase 6.3
+- [x] Create AArch64 kernel main (`src/kernel/main_aarch64.zig`) — Phase 6.3
+- [x] Update build configuration for AArch64 kernel (`build.zig`) — Phase 6.3
+- [x] Create platform interface tests (`tests/091_platform_aarch64_test.zig`) — Phase 6.3
 
 ### Remaining Tasks
 
 - [ ] Implement AArch64 instruction emulation (full instruction set) — Phase 6.2 (extended)
 - [ ] Implement AArch64 JIT compiler support — Phase 6.2 (extended)
-- [ ] Implement AArch64 kernel port — Phase 6.3
+- [ ] Remove POSIX dependencies from kernel for freestanding target — Phase 6.3 (blocker)
+- [ ] Complete AArch64 kernel build (resolve POSIX dependency issues) — Phase 6.3
 - [ ] Implement cross-platform compatibility layer — Phase 6.4
 - [ ] AArch64 cloud deployment — Phase 6.5
 - [ ] Test AArch64 cloud deployment
-- [ ] Create comprehensive tests (`tests/085_kernel_aarch64_test.zig`)
-- [ ] Update `build.zig` with new module and tests
 - [ ] Coordinate with Grain Core Agent on deployment strategy
 - [ ] Update `docs/plans/plan_vantage.md` and `docs/tasks/tasks_vantage.md` with completion
 

@@ -784,6 +784,11 @@ pub const BasinKernel = struct {
     /// Grain Style: Static allocation, initialized at kernel boot.
     udp_sockets: UdpSocketManager,
     
+    /// Audio device manager.
+    /// Why: Manage audio devices for audio I/O syscalls.
+    /// Grain Style: Static allocation, initialized at kernel boot.
+    audio_devices: AudioDeviceManager,
+    
     /// IPC channel table.
     /// Why: Manage inter-process communication channels.
     /// Grain Style: Static allocation, initialized at kernel boot.

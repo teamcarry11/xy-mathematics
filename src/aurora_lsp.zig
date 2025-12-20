@@ -4338,7 +4338,7 @@ pub const LspClient = struct {
         // The client can process these events to update its state.
         // For now, this is a placeholder for future file watching integration.
         _ = self;
-        _ = events;
+        _ = events; // TODO: Process file change events
     }
     
     /// Convert LSP Position to byte offset in text (for incremental edits).

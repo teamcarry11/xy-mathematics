@@ -334,3 +334,73 @@ test "graph renderer AI suggestions for non-existent edges" {
     try testing.expect(renderer.ai_suggestions_len == 1);
 }
 
+test "graph renderer temporal filtering initialization" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var graph_viz = GraphVisualization.init(allocator);
+    var renderer = GraphRenderer.init(&graph_viz, 800, 600);
+
+    // Initially, no time-travel mode
+    try testing.expect(!renderer.is_time_travel_mode());
+    try testing.expect(renderer.get_temporal_timestamp() == null);
+}
+
+test "graph renderer temporal timestamp setting" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var graph_viz = GraphVisualization.init(allocator);
+    var renderer = GraphRenderer.init(&graph_viz, 800, 600);
+
+    // Set timestamp
+    const test_timestamp: u64 = 1234567890;
+    renderer.set_temporal_timestamp(test_timestamp);
+
+    // Time-travel mode should be active
+    try testing.expect(renderer.is_time_travel_mode());
+    try testing.expect(renderer.get_temporal_timestamp().? == test_timestamp);
+
+    // Reset to present
+    renderer.set_temporal_timestamp(null);
+    try testing.expect(!renderer.is_time_travel_mode());
+    try testing.expect(renderer.get_temporal_timestamp() == null);
+}
+
+test "graph renderer temporal graph integration" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const EditorDagIntegration = @import("grain_skate").EditorDagIntegration;
+    const TemporalGraph = @import("grain_skate").TemporalGraph;
+
+    // Create DAG integration and temporal graph
+    var dag_integration = try EditorDagIntegration.init(allocator);
+    defer dag_integration.deinit();
+
+    const content = "line1\nline2\nline3";
+    _ = try dag_integration.create_buffer_node(content);
+
+    var temporal_graph = TemporalGraph.init(allocator, &dag_integration);
+
+    var graph_viz = GraphVisualization.init(allocator);
+    var renderer = GraphRenderer.init(&graph_viz, 800, 600);
+
+    // Set temporal graph
+    renderer.set_temporal_graph(&temporal_graph);
+
+    // Initially, no time-travel mode
+    try testing.expect(!renderer.is_time_travel_mode());
+
+    // Set timestamp via temporal graph
+    const test_timestamp: u64 = 1234567890;
+    renderer.set_temporal_timestamp(test_timestamp);
+
+    // Time-travel mode should be active
+    try testing.expect(renderer.is_time_travel_mode());
+    try testing.expect(renderer.get_temporal_timestamp().? == test_timestamp);
+    try testing.expect(temporal_graph.get_timestamp().? == test_timestamp);
+}

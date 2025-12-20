@@ -5,7 +5,7 @@ const std = @import("std");
 const testing = std.testing;
 const grain_core = @import("grain_core");
 const backup_manager = grain_core.backup_manager;
-const grain_database = @import("../src/grain_database/root.zig");
+const grain_database = @import("grain_database");
 const PersistenceManager = grain_database.PersistenceManager;
 
 test "validate_backup_for_restore valid" {

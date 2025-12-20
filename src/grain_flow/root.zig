@@ -29,6 +29,9 @@ pub const workflow_engine = @import("workflow_engine.zig");
 // Workflow visualizer for visual workflow representation.
 pub const workflow_visualizer = @import("workflow_visualizer.zig");
 
+// Workflow templates for pre-built workflow patterns.
+pub const workflow_templates = @import("workflow_templates.zig");
+
 // Module exports.
 pub const EventBus = event_bus.EventBus;
 pub const EventType = event_bus.EventType;
@@ -50,3 +53,6 @@ pub const WorkflowVisualizer = workflow_visualizer.WorkflowVisualizer;
 pub const NodeVisual = workflow_visualizer.NodeVisual;
 pub const EdgeVisual = workflow_visualizer.EdgeVisual;
 pub const NodePosition = workflow_visualizer.NodePosition;
+
+pub const WorkflowTemplateBuilder = workflow_templates.WorkflowTemplateBuilder;
+pub const WorkflowTemplate = workflow_templates.WorkflowTemplate;

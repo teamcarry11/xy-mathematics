@@ -3,7 +3,7 @@
 
 const std = @import("std");
 const testing = std.testing;
-const grain_database = @import("../src/grain_database/root.zig");
+const grain_database = @import("grain_database");
 const NetworkIntegration = grain_database.NetworkIntegration;
 const TlsConfig = grain_database.TlsConfig;
 

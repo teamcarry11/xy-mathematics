@@ -79,15 +79,27 @@ pub const BackupOperation = struct {
     active: bool,
 };
 
+// WAL operation tracking.
+// 2025-12-19-191529-pst: Phase 15 WAL Manager integration
+pub const WalOperation = struct {
+    operation_id: u32,
+    entry_id: u32,
+    wal_entry_id: u64,
+    entry_type: grain_core.wal_manager.WalEntryType,
+    active: bool,
+};
+
 // File Manager UI application state.
 // 2025-12-04-092542-pst: Active struct
 // 2025-12-07-025947-pst: Phase 10.4 WebSocket integration
 // 2025-12-07-071409-pst: Phase 13 File Storage integration
 // 2025-12-07-084440-pst: Phase 14 Backup Manager integration
+// 2025-12-19-191529-pst: Phase 15 WAL Manager integration
 pub const FileManagerUI = struct {
     file_manager: *grain_core.file_manager.FileManager,
     file_storage_manager: *grain_core.file_storage.FileStorageManager,
     backup_manager: *grain_core.backup_manager.BackupManager,
+    wal_manager: *grain_core.wal_manager.WalManager,
     search_query: [grain_core.file_manager.MAX_NAME_LEN]u8,
     search_query_len: u32,
     selected_entry_id: u32,
@@ -103,6 +115,9 @@ pub const FileManagerUI = struct {
     backup_operations: [MAX_BACKUP_OPERATIONS]?BackupOperation,
     backup_operations_len: u32,
     next_backup_operation_id: u32,
+    wal_operations: [MAX_WAL_OPERATIONS]?WalOperation,
+    wal_operations_len: u32,
+    next_wal_operation_id: u32,
     allocator: std.mem.Allocator,
 
     /// Initialize file manager UI.

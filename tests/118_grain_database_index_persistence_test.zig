@@ -6,9 +6,8 @@ const testing = std.testing;
 const grain_core = @import("grain_core");
 const file_storage = grain_core.file_storage;
 const index_manager = grain_core.index_manager;
-const grain_database = @import("../src/grain_database/root.zig");
+const grain_database = @import("grain_database");
 const PersistenceManager = grain_database.PersistenceManager;
-const index_entry_serialization = @import("../src/grain_database/index_entry_serialization.zig");
 
 test "write_index_entry_to_page basic" {
     var manager = PersistenceManager.init("test_index.db");
@@ -84,7 +83,7 @@ test "find_index_entry_offset_in_page" {
     entry2.timestamp = 6000;
     var page = file_storage.FilePage.init();
     const offset1: u32 = 50;
-    const offset2: u32 = offset1 + index_entry_serialization.calculate_serialized_size(3, 4);
+    const offset2: u32 = offset1 + grain_database.calculate_index_entry_serialized_size(3, 4);
     const write1 = manager.write_index_entry_to_page(&entry1, &page, offset1);
     std.debug.assert(write1);
     const write2 = manager.write_index_entry_to_page(&entry2, &page, offset2);

@@ -1335,8 +1335,12 @@ While waiting for Grain Core Agent's API Server (Phase 59), we can prepare the A
 - Acknowledged Flow Agent ALL PHASES COMPLETE milestone
 - Acknowledged Silo Agent Phase 8 Complete milestone (2025-12-09-000742-pst)
 - Acknowledged Research Agent Dream Browser Spec v0 Research Complete
+- Acknowledged Vantage Agent Phase 6.3 Complete (AArch64 Kernel Port)
+- Acknowledged Workspace Agent Phase 15 Complete (WAL Manager Integration)
 - Silo Agent ready for production use — Carry Agent ready for database integration
 - OAuth callback handling complete (2025-12-19-191442-pst)
+- OAuth integration complete (foundation + callback handling)
+- WebSocket client implementation already complete (2025-12-06-121136-pst) — clarification: coordination summary mentions "Implement WebSocket client" but this is already done
 - Acknowledged infrastructure phases 63-68 queued for next coordination cycle
 - Acknowledged new Flow Agent (Workflow Orchestration) and Research Agent (Research & Analysis)
 - Socket options available for WebSocket client socket configuration

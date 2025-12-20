@@ -154,10 +154,14 @@
 - [x] Create tests (`tests/123_grain_skate_temporal_graph_test.zig`)
 - [x] Add tests to `build.zig`
 - [x] Add `TemporalGraph` to `src/grain_skate/root.zig` exports
-- [ ] Add time slider component to graph renderer (UI pending)
-- [ ] Add animated transitions showing graph growth (UI pending)
+- [x] Add temporal filtering support to GraphRenderer (set_temporal_graph, set_temporal_timestamp) ✅
+- [x] Integrate TemporalGraph with GraphRenderer for timestamp-based filtering ✅
+- [x] Add tests for temporal filtering in graph renderer ✅
+- [ ] Add time slider component (UI layer - pending Bubble Agent coordination)
+- [ ] Add animated transitions showing graph growth (UI layer - pending Bubble Agent coordination)
+- [ ] Implement actual node/edge filtering based on timestamp (requires block creation timestamp tracking)
 - [ ] Test thoroughly with UI integration (time-travel, version history, branching)
-- [ ] Update `docs/plans/plan_skate.md` and `docs/tasks/tasks_skate.md` with completion
+- [ ] Update `docs/plans/plan_skate.md` and `docs/tasks/tasks_skate.md` with completion (in progress)
 
 ### Grain Style Requirements
 

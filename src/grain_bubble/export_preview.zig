@@ -188,13 +188,17 @@ pub const ExportPreview = struct {
     pub fn from_slc_bundle(
         self: *ExportPreview,
         slc_bundle: *export_slc.SlcBundle,
+        width: u32,
+        height: u32,
     ) void {
         std.debug.assert(@intFromPtr(self) != 0);
         std.debug.assert(@intFromPtr(slc_bundle) != 0);
         std.debug.assert(slc_bundle.content_len > 0);
+        std.debug.assert(width > 0);
+        std.debug.assert(height > 0);
         self.format = .slc;
-        self.width = slc_bundle.width;
-        self.height = slc_bundle.height;
+        self.width = width;
+        self.height = height;
         const slc_content = slc_bundle.get_content();
         self.set_content(slc_content);
         const metadata_str = std.fmt.bufPrint(

@@ -5,7 +5,7 @@ const std = @import("std");
 const testing = std.testing;
 const grain_core = @import("grain_core");
 const index_manager = grain_core.index_manager;
-const index_entry_serialization = @import("../src/grain_database/index_entry_serialization.zig");
+const grain_database = @import("grain_database");
 
 test "serialize_index_entry basic" {
     var entry = index_manager.IndexEntry.init();
@@ -22,10 +22,10 @@ test "serialize_index_entry basic" {
         entry.value[i] = @as(u8, @intCast(97 + i));
     }
     var buffer: [256]u8 = undefined;
-    const written = index_entry_serialization.serialize_index_entry(&entry, &buffer);
+    const written = grain_database.serialize_index_entry(&entry, &buffer);
     std.debug.assert(written > 0);
-    std.debug.assert(written == index_entry_serialization.INDEX_ENTRY_HEADER_SIZE + 3 + 5);
-    const deserialized = index_entry_serialization.deserialize_index_entry(buffer[0..written]);
+    std.debug.assert(written == grain_database.INDEX_ENTRY_HEADER_SIZE + 3 + 5);
+    const deserialized = grain_database.deserialize_index_entry(buffer[0..written]);
     std.debug.assert(deserialized != null);
     std.debug.assert(deserialized.?.record_id == 123);
     std.debug.assert(deserialized.?.key_len == 3);
@@ -56,9 +56,9 @@ test "serialize_index_entry large key" {
         entry.value[i] = @as(u8, @intCast(100 + i));
     }
     var buffer: [512]u8 = undefined;
-    const written = index_entry_serialization.serialize_index_entry(&entry, &buffer);
+    const written = grain_database.serialize_index_entry(&entry, &buffer);
     std.debug.assert(written > 0);
-    const deserialized = index_entry_serialization.deserialize_index_entry(buffer[0..written]);
+    const deserialized = grain_database.deserialize_index_entry(buffer[0..written]);
     std.debug.assert(deserialized != null);
     std.debug.assert(deserialized.?.record_id == 456);
     std.debug.assert(deserialized.?.key_len == 200);
@@ -67,15 +67,15 @@ test "serialize_index_entry large key" {
 }
 
 test "calculate_serialized_size" {
-    const size1 = index_entry_serialization.calculate_serialized_size(10, 20);
-    std.debug.assert(size1 == index_entry_serialization.INDEX_ENTRY_HEADER_SIZE + 10 + 20);
-    const size2 = index_entry_serialization.calculate_serialized_size(100, 200);
-    std.debug.assert(size2 == index_entry_serialization.INDEX_ENTRY_HEADER_SIZE + 100 + 200);
+    const size1 = grain_database.calculate_index_entry_serialized_size(10, 20);
+    std.debug.assert(size1 == grain_database.INDEX_ENTRY_HEADER_SIZE + 10 + 20);
+    const size2 = grain_database.calculate_index_entry_serialized_size(100, 200);
+    std.debug.assert(size2 == grain_database.INDEX_ENTRY_HEADER_SIZE + 100 + 200);
 }
 
 test "deserialize_index_entry invalid data" {
     var buffer: [16]u8 = undefined;
-    const deserialized = index_entry_serialization.deserialize_index_entry(&buffer);
+    const deserialized = grain_database.deserialize_index_entry(&buffer);
     std.debug.assert(deserialized == null);
 }
 

@@ -111,7 +111,6 @@ test "end_to_end_persistence_backup_and_restore" {
     std.debug.assert(record_id2 > 0);
     const backup = manager.create_backup(backup_manager.BackupType.full, "backup_e2e.db");
     std.debug.assert(backup != null);
-    const current_time = @as(u64, @intCast(std.time.timestamp()));
     var checksum: [32]u8 = undefined;
     var i: u32 = 0;
     while (i < 32) : (i += 1) {

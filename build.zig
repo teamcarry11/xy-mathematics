@@ -4060,6 +4060,71 @@ pub fn build(b: *std.Build) void {
     const grain_bubble_export_slc_tests_run = b.addRunArtifact(grain_bubble_export_slc_tests);
     test_step.dependOn(&grain_bubble_export_slc_tests_run.step);
 
+    const grain_bubble_silo_integration_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/134_grain_bubble_silo_integration_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_bubble", .module = grain_bubble_module },
+            },
+        }),
+    });
+    const grain_bubble_silo_integration_tests_run = b.addRunArtifact(grain_bubble_silo_integration_tests);
+    test_step.dependOn(&grain_bubble_silo_integration_tests_run.step);
+
+    const grain_bubble_court_integration_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/135_grain_bubble_court_integration_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_bubble", .module = grain_bubble_module },
+            },
+        }),
+    });
+    const grain_bubble_court_integration_tests_run = b.addRunArtifact(grain_bubble_court_integration_tests);
+    test_step.dependOn(&grain_bubble_court_integration_tests_run.step);
+
+    const grain_bubble_dag_integration_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/136_grain_bubble_dag_integration_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_bubble", .module = grain_bubble_module },
+            },
+        }),
+    });
+    const grain_bubble_dag_integration_tests_run = b.addRunArtifact(grain_bubble_dag_integration_tests);
+    test_step.dependOn(&grain_bubble_dag_integration_tests_run.step);
+
+    const grain_bubble_export_optimize_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/137_grain_bubble_export_optimize_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_bubble", .module = grain_bubble_module },
+            },
+        }),
+    });
+    const grain_bubble_export_optimize_tests_run = b.addRunArtifact(grain_bubble_export_optimize_tests);
+    test_step.dependOn(&grain_bubble_export_optimize_tests_run.step);
+
+    const grain_bubble_export_preview_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/138_grain_bubble_export_preview_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_bubble", .module = grain_bubble_module },
+            },
+        }),
+    });
+    const grain_bubble_export_preview_tests_run = b.addRunArtifact(grain_bubble_export_preview_tests);
+    test_step.dependOn(&grain_bubble_export_preview_tests_run.step);
+
     // Grain Flow event bus tests
     const grain_flow_event_bus_tests = b.addTest(.{
         .root_module = b.createModule(.{

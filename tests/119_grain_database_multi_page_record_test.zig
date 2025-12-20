@@ -5,18 +5,17 @@ const std = @import("std");
 const testing = std.testing;
 const grain_core = @import("grain_core");
 const file_storage = grain_core.file_storage;
-const grain_database = @import("../src/grain_database/root.zig");
+const grain_database = @import("grain_database");
 const PersistenceManager = grain_database.PersistenceManager;
 const StorageEngine = grain_database.StorageEngine;
-const multi_page_record = @import("../src/grain_database/multi_page_record.zig");
 
 test "multi_page_record_manager_init" {
-    var manager = multi_page_record.MultiPageRecordManager.init();
+    var manager = grain_database.MultiPageRecordManager.init();
     std.debug.assert(manager.metadata_len == 0);
 }
 
 test "multi_page_record_manager_add_metadata" {
-    var manager = multi_page_record.MultiPageRecordManager.init();
+    var manager = grain_database.MultiPageRecordManager.init();
     const added = manager.add_metadata(123, 10, 3, 10000, 1000);
     std.debug.assert(added);
     std.debug.assert(manager.metadata_len == 1);
@@ -27,7 +26,7 @@ test "multi_page_record_manager_add_metadata" {
 }
 
 test "multi_page_record_manager_find_metadata" {
-    var manager = multi_page_record.MultiPageRecordManager.init();
+    var manager = grain_database.MultiPageRecordManager.init();
     _ = manager.add_metadata(456, 20, 5, 20000, 2000);
     const found = manager.find_metadata(456);
     std.debug.assert(found != null);
@@ -40,17 +39,17 @@ test "multi_page_record_manager_find_metadata" {
 test "needs_multiple_pages" {
     const small_size: u32 = 1000;
     const large_size: u32 = 5000;
-    std.debug.assert(!multi_page_record.MultiPageRecordManager.needs_multiple_pages(small_size));
-    std.debug.assert(multi_page_record.MultiPageRecordManager.needs_multiple_pages(large_size));
+    std.debug.assert(!grain_database.MultiPageRecordManager.needs_multiple_pages(small_size, file_storage.PAGE_SIZE));
+    std.debug.assert(grain_database.MultiPageRecordManager.needs_multiple_pages(large_size, file_storage.PAGE_SIZE));
 }
 
 test "calculate_page_count" {
     const small_size: u32 = 1000;
     const medium_size: u32 = 4096;
     const large_size: u32 = 10000;
-    std.debug.assert(multi_page_record.MultiPageRecordManager.calculate_page_count(small_size) == 1);
-    std.debug.assert(multi_page_record.MultiPageRecordManager.calculate_page_count(medium_size) == 1);
-    std.debug.assert(multi_page_record.MultiPageRecordManager.calculate_page_count(large_size) == 3);
+    std.debug.assert(grain_database.MultiPageRecordManager.calculate_page_count(small_size, file_storage.PAGE_SIZE) == 1);
+    std.debug.assert(grain_database.MultiPageRecordManager.calculate_page_count(medium_size, file_storage.PAGE_SIZE) == 1);
+    std.debug.assert(grain_database.MultiPageRecordManager.calculate_page_count(large_size, file_storage.PAGE_SIZE) == 3);
 }
 
 test "write_record_multi_page basic" {

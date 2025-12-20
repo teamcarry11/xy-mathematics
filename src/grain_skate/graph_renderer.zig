@@ -108,6 +108,8 @@ pub const GraphRenderer = struct {
     buffer_height: u32,
     ai_suggestions: []const AiInsights.ConnectionSuggestion, // AI-suggested connections
     ai_suggestions_len: u32, // Number of AI suggestions
+    temporal_graph: ?*TemporalGraph, // Optional temporal graph for time-travel filtering
+    current_timestamp: ?u64, // Current time-travel timestamp (null = present)
 
     /// Initialize graph renderer.
     // 2025-11-24-121500-pst: Active function
@@ -125,6 +127,8 @@ pub const GraphRenderer = struct {
             .buffer_height = buffer_height,
             .ai_suggestions = &.{}, // Empty initially
             .ai_suggestions_len = 0,
+            .temporal_graph = null, // No temporal filtering initially
+            .current_timestamp = null, // Start at present
         };
     }
 
@@ -145,6 +149,54 @@ pub const GraphRenderer = struct {
         
         self.ai_suggestions = suggestions;
         self.ai_suggestions_len = @as(u32, @intCast(suggestions.len));
+    }
+    
+    /// Set temporal graph for time-travel filtering.
+    // 2025-12-20-144235-pst: Active function
+    pub fn set_temporal_graph(self: *GraphRenderer, temporal_graph: ?*TemporalGraph) void {
+        self.temporal_graph = temporal_graph;
+        // Sync current timestamp from temporal graph if available
+        if (temporal_graph) |tg| {
+            self.current_timestamp = tg.get_timestamp();
+        } else {
+            self.current_timestamp = null;
+        }
+    }
+    
+    /// Set current time-travel timestamp for filtering (null = present).
+    // 2025-12-20-144235-pst: Active function
+    pub fn set_temporal_timestamp(self: *GraphRenderer, timestamp: ?u64) void {
+        // Assert: If timestamp is set, it must be within valid range
+        if (timestamp) |ts| {
+            if (self.temporal_graph) |tg| {
+                const range = tg.get_time_range();
+                if (range.latest) |latest| {
+                    std.debug.assert(ts <= latest);
+                }
+                if (range.earliest) |earliest| {
+                    std.debug.assert(ts >= earliest);
+                }
+            }
+        }
+        
+        self.current_timestamp = timestamp;
+        
+        // Sync with temporal graph if available
+        if (self.temporal_graph) |tg| {
+            tg.set_timestamp(timestamp);
+        }
+    }
+    
+    /// Get current time-travel timestamp (null = present).
+    // 2025-12-20-144235-pst: Active function
+    pub fn get_temporal_timestamp(self: *const GraphRenderer) ?u64 {
+        return self.current_timestamp;
+    }
+    
+    /// Check if time-travel mode is active.
+    // 2025-12-20-144235-pst: Active function
+    pub fn is_time_travel_mode(self: *const GraphRenderer) bool {
+        return self.current_timestamp != null;
     }
     
     /// Check if edge is an AI-suggested connection.

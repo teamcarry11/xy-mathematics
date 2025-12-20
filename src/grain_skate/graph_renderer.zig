@@ -10,6 +10,7 @@ const std = @import("std");
 const GraphVisualization = @import("graph_viz.zig").GraphVisualization;
 const Block = @import("block.zig").Block;
 const AiInsights = @import("ai_insights.zig").AiInsights;
+const TemporalGraph = @import("temporal_graph.zig").TemporalGraph;
 
 // Bounded: Max buffer width (explicit limit, in pixels)
 // 2025-11-24-121500-pst: Active constant

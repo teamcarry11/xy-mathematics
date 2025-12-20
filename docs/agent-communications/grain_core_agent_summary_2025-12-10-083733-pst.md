@@ -355,11 +355,17 @@ Grain Research Agent (Research & Analysis) [Mostly independent, may integrate wi
 
 #### For Grain Aurora Agent (IDE/Browser)
 
-**Current Status**: Active — Foundation components, shared modules
+**Current Status**: Active — Foundation components, shared modules, Dream Browser Spec v0 Research Available
 - Shared module refactoring (Phase 2) ✅
 - LSP implementation ✅
 - Editor enhancements ✅
 - DAG Integration Planning (with Bubble Agent) 🔄
+- Dream Browser Spec v0 research complete ✅ (from Research Agent)
+
+**Available from Research Agent**:
+- ✅ Dream Browser Spec v0 & MVP Plan — Research Complete (`docs/research/dream_browser_spec_v0_research_2025-12-10-083733-pst.md`)
+  - Comprehensive Dream Browser specification for Nostr-first, DNS-compatible addressing and distribution stack
+  - Includes: Dream URL Spec v0, Resolver Semantics, DNS/Web Compatibility, Security/Trust/UX Rules, Performance Plan, Spam/Abuse Mitigation, Evolve DAG, Storage Stack, Relay MVP, Bilingual Module, Data Models, State Machines, Risk/Mitigation, Implementation Phasing (Phases A-E)
 
 **Your Instructions**:
 1. Continue as you best recommend, given the context
@@ -371,6 +377,9 @@ Grain Research Agent (Research & Analysis) [Mostly independent, may integrate wi
 7. Make sure that all your agent-specific and integration new tests as well as existing tests pass that implement their API contracts
 
 **Next Steps**:
+- **Review Dream Browser Spec v0 research deliverable** (`docs/research/dream_browser_spec_v0_research_2025-12-10-083733-pst.md`)
+- **Integrate Dream Browser Spec v0 into Aurora Agent's development plan**
+- **Coordinate with Core Agent on infrastructure needs** (DNS resolution, network stack enhancements for Dream Browser)
 - Continue LSP features
 - Continue editor enhancements
 - Continue browser improvements
@@ -538,8 +547,8 @@ your agent name is: {Agent Name}
 
 ### Files Created/Updated
 
-1. **Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-08-213304-pst.md`
-2. **Comprehensive Summary**: `docs/agent-communications/grain_core_agent_summary_2025-12-08-213304-pst.md`
+1. **Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-10-083733-pst.md`
+2. **Comprehensive Summary**: `docs/agent-communications/grain_core_agent_summary_2025-12-10-083733-pst.md`
 3. **All Agent Plans**: Updated with latest status
 4. **General Plans**: `docs/plan.md` and `docs/tasks.md` updated
 
@@ -569,18 +578,20 @@ All changes committed and pushed to `main`:
 **New Progress Since Last Plan**:
 - ✅ **Flow Agent: ALL PHASES COMPLETE ✅** (Phase 1-4 COMPLETE) - Major milestone!
 - ✅ **Silo Agent: Phase 8 Complete ✅** - New milestone! (2025-12-09-000742-pst)
+- ✅ **Research Agent: Dream Browser Spec v0 Research Complete ✅** - Comprehensive spec and MVP plan (2025-12-10-083733-pst)
 - ✅ Research Agent: Phase 1 IN PROGRESS — Core Implementation Complete, Testing in Progress, Research Work Assessment Infused
 - ✅ Vantage Agent: Phase 6.2 Complete, Phase 6 In Progress
 - ✅ Bubble Agent: Phase 3 In Progress — Silo/Court Integration (Integration Helpers Complete)
-- ✅ Aurora Agent: Continued LSP and editor enhancements
+- ✅ Aurora Agent: Continued LSP and editor enhancements, Dream Browser Spec v0 research available for integration
 - ✅ Skate Agent: Phase 4 & Phase 5 IN PROGRESS — GLM-4.6 Integration Complete ✅, Visual Indicators Pending
 - ✅ Workspace Agent: Phase 14 Backup Manager Integration (File Manager) Complete ✅
 - ✅ Carry Agent: OAuth Integration Foundation Complete — Acknowledged Flow & Silo Milestones
 
 **New Next Steps**:
 - Flow Agent: Integration with other agents (ALL PHASES COMPLETE ✅, ready for production use)
-- Research Agent: IMMEDIATE PRIORITY - Complete Phase 1 (Fix compilation errors, verify tests pass)
+- Research Agent: IMMEDIATE PRIORITY - Complete Phase 1 (Fix compilation errors, verify tests pass), Coordinate Dream Browser Spec v0 integration with Aurora Agent
 - Silo Agent: Production use (Phase 8 Complete ✅, ready for production use)
+- Aurora Agent: Review and integrate Dream Browser Spec v0 research deliverable, Coordinate with Core Agent on infrastructure needs (DNS resolution, network stack)
 - Carry Agent: WebSocket Client Implementation, Continue OAuth integration, Coordinate with Silo Agent (Silo Phase 8 Complete ✅)
 - Skate Agent: Phase 4 UI (Time Slider), Phase 5 Visual Indicators
 - Vantage Agent: Continue Phase 6 implementation

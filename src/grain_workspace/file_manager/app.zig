@@ -36,6 +36,10 @@ pub const MAX_DATABASE_FILE_HANDLES: u32 = 32;
 // 2025-12-07-084440-pst: Phase 14 Backup Manager integration
 pub const MAX_BACKUP_OPERATIONS: u32 = 16;
 
+// Bounded: Max WAL operations (explicit limit)
+// 2025-12-19-191339-pst: Phase 15 WAL Manager integration
+pub const MAX_WAL_OPERATIONS: u32 = 32;
+
 // File operation type.
 // 2025-12-04-092542-pst: Active enum
 pub const FileOperation = enum(u8) {

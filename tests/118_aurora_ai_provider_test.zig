@@ -124,6 +124,7 @@ test "ai provider transform parameters refactor rename" {
 
     // Assert: Parameters structure correct
     std.debug.assert(params == .refactor_rename);
+    _ = params; // Use params to avoid unused warning
     std.debug.assert(std.mem.eql(u8, params.refactor_rename.symbol_name, symbol_name));
     std.debug.assert(std.mem.eql(u8, params.refactor_rename.new_name, new_name));
     std.debug.assert(params.refactor_rename.line == 10);

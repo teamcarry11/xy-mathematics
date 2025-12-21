@@ -13,4 +13,5 @@ pub const package_manager_ui = @import("package_manager_ui/app.zig");
 pub const file_manager = @import("file_manager/app.zig");
 pub const network_tools = @import("network_tools/app.zig");
 pub const devtools = @import("devtools/app.zig");
+pub const text_editor = @import("text_editor/app.zig");
 

@@ -442,9 +442,29 @@ Grain Vantage Agent is responsible for building the RISC-V64 virtual machine (Gr
 - Platform-specific time source implementation for AArch64 freestanding environment
 
 **Next Steps**:
-1. Phase 6.4: Cross-Platform Compatibility — Ensure shared kernel components work on both architectures
-2. Test AArch64 kernel boot sequence in VM
-3. Coordinate with Grain Core Agent on deployment strategy
+1. **CRITICAL**: Complete Vantage/Basin verification checklist for SLC products
+2. Phase 6.4: Cross-Platform Compatibility — Ensure shared kernel components work on both architectures
+3. Test AArch64 kernel boot sequence in VM
+4. Coordinate with Grain Core Agent on deployment strategy
+
+### Vantage/Basin Verification for SLC Products
+
+**Status**: IN PROGRESS  
+**Date**: 2025-12-20-161135-pst  
+**Priority**: CRITICAL
+
+**Verification Checklist**:
+- [x] Create verification checklist document (`docs/vantage_verification/vantage_basin_verification_2025-12-20-161135-pst.md`)
+- [x] Create file system kernel verification test (`tests/097_file_system_kernel_test.zig`)
+- [ ] Verify Nostr protocol works at RISC-V Basin kernel level (HTTP Client, WebSocket, event signing)
+- [ ] Verify DAG operations work at RISC-V Basin kernel level
+- [ ] Verify file system works at RISC-V Basin kernel level (complete tests)
+- [ ] Verify Vantage VM translates to macOS Tahoe 26.2 (aarch64 Apple Silicon M)
+- [ ] Test all SLC products on macOS Tahoe 26.2
+- [ ] Performance benchmarks (60fps, sub-ms latency)
+- [ ] Documentation updated with verification results
+
+**Reference**: `docs/vantage_verification/vantage_basin_verification_2025-12-20-161135-pst.md`
 
 ### Potential Next Phases
 

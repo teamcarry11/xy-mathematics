@@ -4165,6 +4165,19 @@ pub fn build(b: *std.Build) void {
     const grain_bubble_export_preview_tests_run = b.addRunArtifact(grain_bubble_export_preview_tests);
     test_step.dependOn(&grain_bubble_export_preview_tests_run.step);
 
+    const grain_bubble_agent_flow_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/139_grain_bubble_agent_flow_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_bubble", .module = grain_bubble_module },
+            },
+        }),
+    });
+    const grain_bubble_agent_flow_tests_run = b.addRunArtifact(grain_bubble_agent_flow_tests);
+    test_step.dependOn(&grain_bubble_agent_flow_tests_run.step);
+
     // Grain Flow event bus tests
     const grain_flow_event_bus_tests = b.addTest(.{
         .root_module = b.createModule(.{
@@ -4248,6 +4261,20 @@ pub fn build(b: *std.Build) void {
     });
     const grain_research_engine_tests_run = b.addRunArtifact(grain_research_engine_tests);
     test_step.dependOn(&grain_research_engine_tests_run.step);
+
+    // Grain Research code analysis tests
+    const grain_research_code_analysis_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/137_grain_research_code_analysis_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_research", .module = grain_research_module },
+            },
+        }),
+    });
+    const grain_research_code_analysis_tests_run = b.addRunArtifact(grain_research_code_analysis_tests);
+    test_step.dependOn(&grain_research_code_analysis_tests_run.step);
 
     // Grain Bubble component tests
     const grain_bubble_component_tests = b.addTest(.{

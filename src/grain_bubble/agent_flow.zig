@@ -391,4 +391,194 @@ pub const AgentFlow = struct {
         }
         return null;
     }
+
+    // Export flow to Flow Agent workflow format (simplified representation).
+    // Returns workflow data as JSON-like string representation.
+    pub fn export_to_workflow_format(
+        self: *const AgentFlow,
+        workflow_name: []const u8,
+        output: []u8,
+    ) u32 {
+        std.debug.assert(@intFromPtr(self) != 0);
+        std.debug.assert(workflow_name.len > 0);
+        std.debug.assert(output.len > 0);
+        var offset: u32 = 0;
+        // Write workflow header.
+        const header = "{\"workflow_name\":\"";
+        if (offset + header.len < output.len) {
+            @memcpy(output[offset..offset + header.len], header);
+            offset += @as(u32, @intCast(header.len));
+        }
+        const name_len = @min(workflow_name.len, output.len - offset - 1);
+        if (offset + name_len < output.len) {
+            @memcpy(output[offset..offset + name_len], workflow_name[0..name_len]);
+            offset += name_len;
+        }
+        const header2 = "\",\"nodes\":[";
+        if (offset + header2.len < output.len) {
+            @memcpy(output[offset..offset + header2.len], header2);
+            offset += @as(u32, @intCast(header2.len));
+        }
+        // Write nodes.
+        var node_i: u32 = 0;
+        while (node_i < self.nodes_len) : (node_i += 1) {
+            if (node_i > 0) {
+                if (offset < output.len) {
+                    output[offset] = ',';
+                    offset += 1;
+                }
+            }
+            const node = &self.nodes[node_i];
+            const node_start = "{\"id\":";
+            if (offset + node_start.len < output.len) {
+                @memcpy(output[offset..offset + node_start.len], node_start);
+                offset += @as(u32, @intCast(node_start.len));
+            }
+            const node_id_str = std.fmt.bufPrint(
+                output[offset..@min(offset + 32, output.len)],
+                "{}",
+                .{node.id},
+            ) catch break;
+            const node_id_len = std.mem.indexOfScalar(u8, node_id_str, 0) orelse node_id_str.len;
+            offset += @as(u32, @intCast(node_id_len));
+            const node_type_str = switch (node.node_type) {
+                .start => "start",
+                .agent => "agent",
+                .task => "task",
+                .decision => "decision",
+                .end => "end",
+            };
+            const node_mid = ",\"type\":\"";
+            if (offset + node_mid.len < output.len) {
+                @memcpy(output[offset..offset + node_mid.len], node_mid);
+                offset += @as(u32, @intCast(node_mid.len));
+            }
+            if (offset + node_type_str.len < output.len) {
+                @memcpy(output[offset..offset + node_type_str.len], node_type_str);
+                offset += @as(u32, @intCast(node_type_str.len));
+            }
+            const node_name = node.name[0..node.name_len];
+            const node_name_mid = "\",\"name\":\"";
+            if (offset + node_name_mid.len < output.len) {
+                @memcpy(output[offset..offset + node_name_mid.len], node_name_mid);
+                offset += @as(u32, @intCast(node_name_mid.len));
+            }
+            const name_copy_len = @min(node_name.len, output.len - offset - 1);
+            if (offset + name_copy_len < output.len) {
+                @memcpy(output[offset..offset + name_copy_len], node_name[0..name_copy_len]);
+                offset += name_copy_len;
+            }
+            if (node.node_type == .agent and node.agent_id > 0) {
+                const agent_mid = "\",\"agent_id\":";
+                if (offset + agent_mid.len < output.len) {
+                    @memcpy(output[offset..offset + agent_mid.len], agent_mid);
+                    offset += @as(u32, @intCast(agent_mid.len));
+                }
+                const agent_id_str = std.fmt.bufPrint(
+                    output[offset..@min(offset + 32, output.len)],
+                    "{}",
+                    .{node.agent_id},
+                ) catch break;
+                const agent_id_len = std.mem.indexOfScalar(u8, agent_id_str, 0) orelse agent_id_str.len;
+                offset += @as(u32, @intCast(agent_id_len));
+            }
+            if (node.node_type == .task and node.task_name_len > 0) {
+                const task_mid = ",\"task_name\":\"";
+                if (offset + task_mid.len < output.len) {
+                    @memcpy(output[offset..offset + task_mid.len], task_mid);
+                    offset += @as(u32, @intCast(task_mid.len));
+                }
+                const task_name = node.task_name[0..node.task_name_len];
+                const task_copy_len = @min(task_name.len, output.len - offset - 1);
+                if (offset + task_copy_len < output.len) {
+                    @memcpy(output[offset..offset + task_copy_len], task_name[0..task_copy_len]);
+                    offset += task_copy_len;
+                }
+            }
+            const node_end = "}";
+            if (offset + node_end.len < output.len) {
+                @memcpy(output[offset..offset + node_end.len], node_end);
+                offset += @as(u32, @intCast(node_end.len));
+            }
+        }
+        // Write connections.
+        const conn_start = "],\"connections\":[";
+        if (offset + conn_start.len < output.len) {
+            @memcpy(output[offset..offset + conn_start.len], conn_start);
+            offset += @as(u32, @intCast(conn_start.len));
+        }
+        var conn_i: u32 = 0;
+        while (conn_i < self.connections_len) : (conn_i += 1) {
+            if (conn_i > 0) {
+                if (offset < output.len) {
+                    output[offset] = ',';
+                    offset += 1;
+                }
+            }
+            const conn = &self.connections[conn_i];
+            const conn_start_str = "{\"from\":";
+            if (offset + conn_start_str.len < output.len) {
+                @memcpy(output[offset..offset + conn_start_str.len], conn_start_str);
+                offset += @as(u32, @intCast(conn_start_str.len));
+            }
+            const from_str = std.fmt.bufPrint(
+                output[offset..@min(offset + 32, output.len)],
+                "{}",
+                .{conn.from_node_id},
+            ) catch break;
+            const from_len = std.mem.indexOfScalar(u8, from_str, 0) orelse from_str.len;
+            offset += @as(u32, @intCast(from_len));
+            const conn_mid = ",\"to\":";
+            if (offset + conn_mid.len < output.len) {
+                @memcpy(output[offset..offset + conn_mid.len], conn_mid);
+                offset += @as(u32, @intCast(conn_mid.len));
+            }
+            const to_str = std.fmt.bufPrint(
+                output[offset..@min(offset + 32, output.len)],
+                "{}",
+                .{conn.to_node_id},
+            ) catch break;
+            const to_len = std.mem.indexOfScalar(u8, to_str, 0) orelse to_str.len;
+            offset += @as(u32, @intCast(to_len));
+            if (conn.label_len > 0) {
+                const label_mid = ",\"label\":\"";
+                if (offset + label_mid.len < output.len) {
+                    @memcpy(output[offset..offset + label_mid.len], label_mid);
+                    offset += @as(u32, @intCast(label_mid.len));
+                }
+                const label = conn.label[0..conn.label_len];
+                const label_copy_len = @min(label.len, output.len - offset - 1);
+                if (offset + label_copy_len < output.len) {
+                    @memcpy(output[offset..offset + label_copy_len], label[0..label_copy_len]);
+                    offset += label_copy_len;
+                }
+            }
+            if (conn.condition_len > 0) {
+                const cond_mid = ",\"condition\":\"";
+                if (offset + cond_mid.len < output.len) {
+                    @memcpy(output[offset..offset + cond_mid.len], cond_mid);
+                    offset += @as(u32, @intCast(cond_mid.len));
+                }
+                const condition = conn.condition[0..conn.condition_len];
+                const cond_copy_len = @min(condition.len, output.len - offset - 1);
+                if (offset + cond_copy_len < output.len) {
+                    @memcpy(output[offset..offset + cond_copy_len], condition[0..cond_copy_len]);
+                    offset += cond_copy_len;
+                }
+            }
+            const conn_end = "}";
+            if (offset + conn_end.len < output.len) {
+                @memcpy(output[offset..offset + conn_end.len], conn_end);
+                offset += @as(u32, @intCast(conn_end.len));
+            }
+        }
+        // Write footer.
+        const footer = "]}";
+        if (offset + footer.len < output.len) {
+            @memcpy(output[offset..offset + footer.len], footer);
+            offset += @as(u32, @intCast(footer.len));
+        }
+        std.debug.assert(offset <= output.len);
+        return offset;
+    }
 };

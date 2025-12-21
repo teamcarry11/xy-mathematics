@@ -245,6 +245,120 @@ pub const WorkflowTemplateBuilder = struct {
         }
         return workflow_id;
     }
+
+    // Create Nostr profile publishing workflow template.
+    pub fn create_nostr_profile_publish_workflow(
+        self: *WorkflowTemplateBuilder,
+        workflow_name: []const u8,
+        workspace_agent_id: u32,
+        silo_agent_id: u32,
+        aurora_agent_id: u32,
+        skate_agent_id: u32,
+        timeout_ms: u64,
+    ) ?u32 {
+        std.debug.assert(workflow_name.len > 0);
+        std.debug.assert(workspace_agent_id > 0);
+        std.debug.assert(silo_agent_id > 0);
+        std.debug.assert(aurora_agent_id > 0);
+        std.debug.assert(skate_agent_id > 0);
+        std.debug.assert(timeout_ms > 0);
+        const workflow_id = self.engine.create_workflow(workflow_name, timeout_ms);
+        if (workflow_id == null) {
+            return null;
+        }
+        const workflow = self.engine.find_workflow(workflow_id.?);
+        if (workflow == null) {
+            return null;
+        }
+        const node1 = workflow_engine.WorkflowNode.init(
+            1,
+            "create_profile_data",
+            workspace_agent_id,
+        );
+        const node2 = workflow_engine.WorkflowNode.init(
+            2,
+            "store_profile_in_db",
+            silo_agent_id,
+        );
+        const node3 = workflow_engine.WorkflowNode.init(
+            3,
+            "publish_to_nostr",
+            aurora_agent_id,
+        );
+        const node4 = workflow_engine.WorkflowNode.init(
+            4,
+            "update_dag_relationships",
+            skate_agent_id,
+        );
+        _ = workflow.?.add_node(node1);
+        _ = workflow.?.add_node(node2);
+        _ = workflow.?.add_node(node3);
+        _ = workflow.?.add_node(node4);
+        const edge1 = workflow_engine.WorkflowEdge.init(1, 2, workflow_engine.EdgeType.data_flow);
+        const edge2 = workflow_engine.WorkflowEdge.init(2, 3, workflow_engine.EdgeType.dependency);
+        const edge3 = workflow_engine.WorkflowEdge.init(3, 4, workflow_engine.EdgeType.data_flow);
+        _ = workflow.?.add_edge(edge1);
+        _ = workflow.?.add_edge(edge2);
+        _ = workflow.?.add_edge(edge3);
+        return workflow_id;
+    }
+
+    // Create DAG website publishing workflow template.
+    pub fn create_dag_website_publish_workflow(
+        self: *WorkflowTemplateBuilder,
+        workflow_name: []const u8,
+        workspace_agent_id: u32,
+        skate_agent_id: u32,
+        silo_agent_id: u32,
+        aurora_agent_id: u32,
+        timeout_ms: u64,
+    ) ?u32 {
+        std.debug.assert(workflow_name.len > 0);
+        std.debug.assert(workspace_agent_id > 0);
+        std.debug.assert(skate_agent_id > 0);
+        std.debug.assert(silo_agent_id > 0);
+        std.debug.assert(aurora_agent_id > 0);
+        std.debug.assert(timeout_ms > 0);
+        const workflow_id = self.engine.create_workflow(workflow_name, timeout_ms);
+        if (workflow_id == null) {
+            return null;
+        }
+        const workflow = self.engine.find_workflow(workflow_id.?);
+        if (workflow == null) {
+            return null;
+        }
+        const node1 = workflow_engine.WorkflowNode.init(
+            1,
+            "create_website_content",
+            workspace_agent_id,
+        );
+        const node2 = workflow_engine.WorkflowNode.init(
+            2,
+            "build_dag_structure",
+            skate_agent_id,
+        );
+        const node3 = workflow_engine.WorkflowNode.init(
+            3,
+            "store_website_data",
+            silo_agent_id,
+        );
+        const node4 = workflow_engine.WorkflowNode.init(
+            4,
+            "publish_to_nostr",
+            aurora_agent_id,
+        );
+        _ = workflow.?.add_node(node1);
+        _ = workflow.?.add_node(node2);
+        _ = workflow.?.add_node(node3);
+        _ = workflow.?.add_node(node4);
+        const edge1 = workflow_engine.WorkflowEdge.init(1, 2, workflow_engine.EdgeType.data_flow);
+        const edge2 = workflow_engine.WorkflowEdge.init(2, 3, workflow_engine.EdgeType.dependency);
+        const edge3 = workflow_engine.WorkflowEdge.init(3, 4, workflow_engine.EdgeType.data_flow);
+        _ = workflow.?.add_edge(edge1);
+        _ = workflow.?.add_edge(edge2);
+        _ = workflow.?.add_edge(edge3);
+        return workflow_id;
+    }
 };
 
 // Get template information.

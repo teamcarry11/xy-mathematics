@@ -24,8 +24,8 @@ pub const research_engine = @import("research_engine.zig");
 // Data analysis for performance and usage patterns.
 // pub const data_analysis = @import("data_analysis.zig");
 
-// Research tools for code and system analysis.
-// pub const research_tools = @import("research_tools.zig");
+// Code analysis for Grain Style compliance.
+pub const code_analysis = @import("code_analysis.zig");
 
 // Insights generator for recommendations and reports.
 // pub const insights_generator = @import("insights_generator.zig");
@@ -36,5 +36,8 @@ pub const ResearchEntry = research_engine.ResearchEntry;
 pub const QueryFilter = research_engine.QueryFilter;
 pub const QueryResult = research_engine.QueryResult;
 // pub const DataAnalysis = data_analysis.DataAnalysis;
-// pub const ResearchTools = research_tools.ResearchTools;
+pub const CodeAnalyzer = code_analysis.CodeAnalyzer;
+pub const Violation = code_analysis.Violation;
+pub const ViolationType = code_analysis.ViolationType;
+pub const AnalysisResult = code_analysis.AnalysisResult;
 // pub const InsightsGenerator = insights_generator.InsightsGenerator;

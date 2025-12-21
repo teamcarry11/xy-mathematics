@@ -2,7 +2,7 @@
 
 **Agent**: Grain Flow Agent (9th Agent)  
 **Status**: All Core Phases Complete ✅ (Phase 1-4 COMPLETE), Phase 5 Templates Complete ✅, Ready for SLC Product Integration  
-**Last Updated**: 2025-12-20-161331-pst
+**Last Updated**: 2025-12-20-162752-pst
 
 ---
 
@@ -257,10 +257,12 @@ Flow Agent (Workflow Orchestration) [Layer 4: Orchestration]
 - ✅ Data sync workflow template (Carry + Silo integration)
 - ✅ Parallel processing workflow template
 - ✅ Sequential workflow template
+- ✅ Nostr Profile Builder workflow template (SLC Product) - Workspace → Silo → Aurora → Skate
+- ✅ DAG Website Builder workflow template (SLC Product) - Workspace → Skate → Silo → Aurora
 - ✅ Template information API (`get_template_info()`)
-- ✅ Comprehensive tests (6 test cases)
+- ✅ Comprehensive tests (8 test cases including SLC product templates)
 
-**Integration**: Demonstrates real-world usage patterns with Silo Agent and Carry Agent
+**Integration**: Demonstrates real-world usage patterns with Silo Agent, Carry Agent, and SLC products (Aurora, Skate, Workspace)
 
 ---
 

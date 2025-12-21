@@ -73,6 +73,40 @@ pub const NostrProfileStorage = struct {
         defer self.storage_engine.allocator.free(key);
         return self.storage_engine.read_record_by_key(key);
     }
+
+    // Update Nostr profile data.
+    pub fn update_profile(
+        self: *NostrProfileStorage,
+        npub: []const u8,
+        profile_data: []const u8,
+    ) !void {
+        std.debug.assert(npub.len > 0);
+        std.debug.assert(npub.len <= MAX_PROFILE_KEY_LEN);
+        std.debug.assert(profile_data.len > 0);
+        const key = try std.fmt.allocPrint(
+            self.storage_engine.allocator,
+            "nostr:profile:{s}",
+            .{npub},
+        );
+        defer self.storage_engine.allocator.free(key);
+        try self.storage_engine.update_record(key, profile_data);
+    }
+
+    // Delete Nostr profile data.
+    pub fn delete_profile(
+        self: *NostrProfileStorage,
+        npub: []const u8,
+    ) !void {
+        std.debug.assert(npub.len > 0);
+        std.debug.assert(npub.len <= MAX_PROFILE_KEY_LEN);
+        const key = try std.fmt.allocPrint(
+            self.storage_engine.allocator,
+            "nostr:profile:{s}",
+            .{npub},
+        );
+        defer self.storage_engine.allocator.free(key);
+        try self.storage_engine.delete_record(key);
+    }
 };
 
 // DAG website storage helper.
@@ -150,6 +184,40 @@ pub const DagWebsiteStorage = struct {
         defer self.storage_engine.allocator.free(key);
         return self.storage_engine.read_record_by_key(key);
     }
+
+    // Update DAG website node.
+    pub fn update_node(
+        self: *DagWebsiteStorage,
+        node_id: []const u8,
+        content: []const u8,
+    ) !void {
+        std.debug.assert(node_id.len > 0);
+        std.debug.assert(node_id.len <= MAX_WEBSITE_KEY_LEN);
+        std.debug.assert(content.len > 0);
+        const key = try std.fmt.allocPrint(
+            self.storage_engine.allocator,
+            "dag:website:{s}",
+            .{node_id},
+        );
+        defer self.storage_engine.allocator.free(key);
+        try self.storage_engine.update_record(key, content);
+    }
+
+    // Delete DAG website node.
+    pub fn delete_node(
+        self: *DagWebsiteStorage,
+        node_id: []const u8,
+    ) !void {
+        std.debug.assert(node_id.len > 0);
+        std.debug.assert(node_id.len <= MAX_WEBSITE_KEY_LEN);
+        const key = try std.fmt.allocPrint(
+            self.storage_engine.allocator,
+            "dag:website:{s}",
+            .{node_id},
+        );
+        defer self.storage_engine.allocator.free(key);
+        try self.storage_engine.delete_record(key);
+    }
 };
 
 // Workspace file storage helper.
@@ -200,5 +268,39 @@ pub const WorkspaceFileStorage = struct {
         ) catch return null;
         defer self.storage_engine.allocator.free(key);
         return self.storage_engine.read_record_by_key(key);
+    }
+
+    // Update workspace file metadata.
+    pub fn update_file_metadata(
+        self: *WorkspaceFileStorage,
+        file_path: []const u8,
+        metadata: []const u8,
+    ) !void {
+        std.debug.assert(file_path.len > 0);
+        std.debug.assert(file_path.len <= MAX_FILE_KEY_LEN);
+        std.debug.assert(metadata.len > 0);
+        const key = try std.fmt.allocPrint(
+            self.storage_engine.allocator,
+            "workspace:file:{s}",
+            .{file_path},
+        );
+        defer self.storage_engine.allocator.free(key);
+        try self.storage_engine.update_record(key, metadata);
+    }
+
+    // Delete workspace file metadata.
+    pub fn delete_file_metadata(
+        self: *WorkspaceFileStorage,
+        file_path: []const u8,
+    ) !void {
+        std.debug.assert(file_path.len > 0);
+        std.debug.assert(file_path.len <= MAX_FILE_KEY_LEN);
+        const key = try std.fmt.allocPrint(
+            self.storage_engine.allocator,
+            "workspace:file:{s}",
+            .{file_path},
+        );
+        defer self.storage_engine.allocator.free(key);
+        try self.storage_engine.delete_record(key);
     }
 };

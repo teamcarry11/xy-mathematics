@@ -101,7 +101,14 @@ pub fn register_mobile_endpoints_with_compositor(
     )) {
         count += 1;
     }
-    std.debug.assert(count <= 10);
+    if (compositor.register_api_route(
+        grain_core_api.HttpMethod.get,
+        endpoints.AUTH_OAUTH_CALLBACK_PATH,
+        handler_adapters.handle_oauth_callback_adapter,
+    )) {
+        count += 1;
+    }
+    std.debug.assert(count <= 11);
     return count;
 }
 

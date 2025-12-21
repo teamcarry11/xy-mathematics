@@ -210,3 +210,68 @@ test "agent flow render_nodes" {
     flow.render_nodes(layer_id);
     try testing.expect(canvas_state.layers[layer_id].shapes_len == 2);
 }
+
+test "agent flow export_to_workflow_format" {
+    var canvas_state = canvas.Canvas.init(1024, 768);
+    var flow = agent_flow.AgentFlow.init(&canvas_state);
+    _ = flow.add_node(.start, "Start", 100.0, 200.0);
+    const agent_node = flow.add_node(.agent, "Agent1", 200.0, 200.0);
+    agent_node.?.set_agent_id(5);
+    _ = flow.add_node(.end, "End", 300.0, 200.0);
+    _ = flow.add_connection(1, 2);
+    _ = flow.add_connection(2, 3);
+    var output: [4096]u8 = undefined;
+    const len = flow.export_to_workflow_format("TestWorkflow", &output);
+    try testing.expect(len > 0);
+    const output_str = output[0..len];
+    try testing.expect(std.mem.indexOf(u8, output_str, "TestWorkflow") != null);
+    try testing.expect(std.mem.indexOf(u8, output_str, "Start") != null);
+    try testing.expect(std.mem.indexOf(u8, output_str, "Agent1") != null);
+    try testing.expect(std.mem.indexOf(u8, output_str, "End") != null);
+    try testing.expect(std.mem.indexOf(u8, output_str, "agent_id") != null);
+}
+
+test "agent flow export_to_workflow_format with task node" {
+    var canvas_state = canvas.Canvas.init(1024, 768);
+    var flow = agent_flow.AgentFlow.init(&canvas_state);
+    const task_node = flow.add_node(.task, "ProcessData", 100.0, 200.0);
+    task_node.?.set_task_name("process_data");
+    var output: [4096]u8 = undefined;
+    const len = flow.export_to_workflow_format("TaskWorkflow", &output);
+    try testing.expect(len > 0);
+    const output_str = output[0..len];
+    try testing.expect(std.mem.indexOf(u8, output_str, "TaskWorkflow") != null);
+    try testing.expect(std.mem.indexOf(u8, output_str, "ProcessData") != null);
+    try testing.expect(std.mem.indexOf(u8, output_str, "task_name") != null);
+    try testing.expect(std.mem.indexOf(u8, output_str, "process_data") != null);
+}
+
+test "agent flow export_to_workflow_format with connection labels" {
+    var canvas_state = canvas.Canvas.init(1024, 768);
+    var flow = agent_flow.AgentFlow.init(&canvas_state);
+    _ = flow.add_node(.start, "Start", 100.0, 200.0);
+    _ = flow.add_node(.end, "End", 200.0, 200.0);
+    const conn = flow.add_connection(1, 2);
+    conn.?.set_label("Next");
+    var output: [4096]u8 = undefined;
+    const len = flow.export_to_workflow_format("LabelWorkflow", &output);
+    try testing.expect(len > 0);
+    const output_str = output[0..len];
+    try testing.expect(std.mem.indexOf(u8, output_str, "label") != null);
+    try testing.expect(std.mem.indexOf(u8, output_str, "Next") != null);
+}
+
+test "agent flow export_to_workflow_format with decision condition" {
+    var canvas_state = canvas.Canvas.init(1024, 768);
+    var flow = agent_flow.AgentFlow.init(&canvas_state);
+    _ = flow.add_node(.decision, "CheckStatus", 100.0, 200.0);
+    _ = flow.add_node(.end, "End", 200.0, 200.0);
+    const conn = flow.add_connection(1, 2);
+    conn.?.set_condition("status == success");
+    var output: [4096]u8 = undefined;
+    const len = flow.export_to_workflow_format("DecisionWorkflow", &output);
+    try testing.expect(len > 0);
+    const output_str = output[0..len];
+    try testing.expect(std.mem.indexOf(u8, output_str, "condition") != null);
+    try testing.expect(std.mem.indexOf(u8, output_str, "status == success") != null);
+}

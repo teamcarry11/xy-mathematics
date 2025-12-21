@@ -115,3 +115,59 @@ test "get template info" {
     try std.testing.expect(template.name_len > 0);
     try std.testing.expect(template.description_len > 0);
 }
+
+test "create nostr profile publish workflow template" {
+    var bus = event_bus.EventBus.init();
+    var coordinator = agent_coordinator.AgentCoordinator.init(&bus);
+    var engine = workflow_engine.WorkflowEngine.init(&bus, &coordinator);
+    var builder = workflow_templates.WorkflowTemplateBuilder.init(&bus, &coordinator, &engine);
+    const workspace_id = coordinator.register_agent("workspace_agent", 1000);
+    try std.testing.expect(workspace_id != null);
+    const silo_id = coordinator.register_agent("silo_agent", 1000);
+    try std.testing.expect(silo_id != null);
+    const aurora_id = coordinator.register_agent("aurora_agent", 1000);
+    try std.testing.expect(aurora_id != null);
+    const skate_id = coordinator.register_agent("skate_agent", 1000);
+    try std.testing.expect(skate_id != null);
+    const workflow_id = builder.create_nostr_profile_publish_workflow(
+        "nostr_profile_publish",
+        workspace_id.?,
+        silo_id.?,
+        aurora_id.?,
+        skate_id.?,
+        2000,
+    );
+    try std.testing.expect(workflow_id != null);
+    const workflow = engine.find_workflow(workflow_id.?);
+    try std.testing.expect(workflow != null);
+    try std.testing.expect(workflow.?.get_node_count() == 4);
+    try std.testing.expect(workflow.?.get_edge_count() == 3);
+}
+
+test "create dag website publish workflow template" {
+    var bus = event_bus.EventBus.init();
+    var coordinator = agent_coordinator.AgentCoordinator.init(&bus);
+    var engine = workflow_engine.WorkflowEngine.init(&bus, &coordinator);
+    var builder = workflow_templates.WorkflowTemplateBuilder.init(&bus, &coordinator, &engine);
+    const workspace_id = coordinator.register_agent("workspace_agent", 1000);
+    try std.testing.expect(workspace_id != null);
+    const skate_id = coordinator.register_agent("skate_agent", 1000);
+    try std.testing.expect(skate_id != null);
+    const silo_id = coordinator.register_agent("silo_agent", 1000);
+    try std.testing.expect(silo_id != null);
+    const aurora_id = coordinator.register_agent("aurora_agent", 1000);
+    try std.testing.expect(aurora_id != null);
+    const workflow_id = builder.create_dag_website_publish_workflow(
+        "dag_website_publish",
+        workspace_id.?,
+        skate_id.?,
+        silo_id.?,
+        aurora_id.?,
+        2000,
+    );
+    try std.testing.expect(workflow_id != null);
+    const workflow = engine.find_workflow(workflow_id.?);
+    try std.testing.expect(workflow != null);
+    try std.testing.expect(workflow.?.get_node_count() == 4);
+    try std.testing.expect(workflow.?.get_edge_count() == 3);
+}

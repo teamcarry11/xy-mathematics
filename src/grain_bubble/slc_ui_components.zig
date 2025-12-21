@@ -334,3 +334,137 @@ pub const SlcComponentLibrary = struct {
         return self.workspace_components_len;
     }
 };
+
+// Design pattern: reusable design pattern for SLC components.
+pub const DesignPattern = struct {
+    pattern_id: u32,
+    pattern_type: PatternType,
+    name: [MAX_COMPONENT_NAME_LEN]u8,
+    name_len: u32,
+    color_scheme: ColorScheme,
+    spacing: SpacingScheme,
+    typography: TypographyScheme,
+
+    pub const PatternType = enum(u8) {
+        profile_form, // Profile form pattern
+        profile_viewer, // Profile viewer pattern
+        website_editor, // Website editor pattern
+        workspace_app, // Workspace app pattern
+    };
+
+    pub const ColorScheme = struct {
+        primary: u32,
+        secondary: u32,
+        background: u32,
+        text: u32,
+        accent: u32,
+    };
+
+    pub const SpacingScheme = struct {
+        small: f64,
+        medium: f64,
+        large: f64,
+        xlarge: f64,
+    };
+
+    pub const TypographyScheme = struct {
+        heading_size: u32,
+        body_size: u32,
+        caption_size: u32,
+        line_height: f64,
+    };
+
+    pub fn init(
+        pattern_id: u32,
+        pattern_type: PatternType,
+        name: []const u8,
+    ) DesignPattern {
+        std.debug.assert(pattern_id > 0);
+        std.debug.assert(name.len > 0);
+        std.debug.assert(name.len <= MAX_COMPONENT_NAME_LEN);
+        var pattern = DesignPattern{
+            .pattern_id = pattern_id,
+            .pattern_type = pattern_type,
+            .name = undefined,
+            .name_len = 0,
+            .color_scheme = ColorScheme{
+                .primary = 0xFF0000FF,
+                .secondary = 0xFF00FF00,
+                .background = 0xFFFFFFFF,
+                .text = 0xFF000000,
+                .accent = 0xFFFF0000,
+            },
+            .spacing = SpacingScheme{
+                .small = 4.0,
+                .medium = 8.0,
+                .large = 16.0,
+                .xlarge = 32.0,
+            },
+            .typography = TypographyScheme{
+                .heading_size = 24,
+                .body_size = 16,
+                .caption_size = 12,
+                .line_height = 1.5,
+            },
+        };
+        @memset(pattern.name[0..], 0);
+        const name_len = @min(name.len, MAX_COMPONENT_NAME_LEN);
+        @memcpy(pattern.name[0..name_len], name[0..name_len]);
+        pattern.name_len = @as(u32, @intCast(name_len));
+        std.debug.assert(pattern.name_len > 0);
+        return pattern;
+    }
+};
+
+// Animation: animation configuration for SLC components.
+pub const Animation = struct {
+    animation_id: u32,
+    animation_type: AnimationType,
+    duration_ms: u32,
+    easing: EasingType,
+    delay_ms: u32,
+
+    pub const AnimationType = enum(u8) {
+        fade_in, // Fade in animation
+        fade_out, // Fade out animation
+        slide_in, // Slide in animation
+        slide_out, // Slide out animation
+        scale_in, // Scale in animation
+        scale_out, // Scale out animation
+    };
+
+    pub const EasingType = enum(u8) {
+        linear, // Linear easing
+        ease_in, // Ease in easing
+        ease_out, // Ease out easing
+        ease_in_out, // Ease in-out easing
+    };
+
+    pub fn init(
+        animation_id: u32,
+        anim_type: AnimationType,
+        duration_ms: u32,
+        easing: EasingType,
+    ) Animation {
+        std.debug.assert(animation_id > 0);
+        std.debug.assert(duration_ms > 0);
+        std.debug.assert(duration_ms <= 10000);
+        const anim = Animation{
+            .animation_id = animation_id,
+            .animation_type = anim_type,
+            .duration_ms = duration_ms,
+            .easing = easing,
+            .delay_ms = 0,
+        };
+        std.debug.assert(anim.duration_ms > 0);
+        return anim;
+    }
+
+    // Set animation delay.
+    pub fn set_delay(self: *Animation, delay_ms: u32) void {
+        std.debug.assert(@intFromPtr(self) != 0);
+        std.debug.assert(delay_ms <= 5000);
+        self.delay_ms = delay_ms;
+        std.debug.assert(self.delay_ms <= 5000);
+    }
+};

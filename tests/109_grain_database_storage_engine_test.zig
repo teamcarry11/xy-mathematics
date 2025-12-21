@@ -169,3 +169,21 @@ test "storage engine statistics" {
     try testing.expect(engine.get_average_record_size() > 0);
     try testing.expect(engine.get_next_record_id() == 3);
 }
+
+test "storage engine validation" {
+    const allocator = testing.allocator;
+    var engine = try StorageEngine.init(allocator, 1024 * 1024);
+    defer engine.deinit();
+
+    try testing.expect(StorageEngine.validate_key("valid_key"));
+    try testing.expect(!StorageEngine.validate_key(""));
+    try testing.expect(StorageEngine.validate_value("valid_value"));
+    try testing.expect(StorageEngine.validate_value(""));
+
+    _ = try engine.create_record("test_key", "test_value");
+    try testing.expect(engine.has_record("test_key"));
+    try testing.expect(!engine.has_record("nonexistent"));
+    const record_id = try engine.create_record("test_key2", "test_value2");
+    try testing.expect(engine.has_record_by_id(record_id));
+    try testing.expect(!engine.has_record_by_id(999999));
+}

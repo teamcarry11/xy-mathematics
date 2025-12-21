@@ -51,13 +51,97 @@ pub const TemporalGraph = struct {
     pub fn set_timestamp(self: *TemporalGraph, timestamp: ?u64) void {
         // Assert: If timestamp is set, it must be within valid range
         if (timestamp) |ts| {
-            const latest = self.dag_integration.get_latest_timestamp();
-            if (latest) |l| {
-                std.debug.assert(ts <= l);
+            const range = self.get_time_range();
+            if (range.latest) |latest| {
+                std.debug.assert(ts <= latest);
+            }
+            if (range.earliest) |earliest| {
+                std.debug.assert(ts >= earliest);
             }
         }
         
         self.current_timestamp = timestamp;
+    }
+    
+    /// Get time range duration in seconds (latest - earliest).
+    /// Returns 0 if range is invalid or empty.
+    pub fn get_time_range_duration(self: *const TemporalGraph) u64 {
+        const range = self.get_time_range();
+        if (range.earliest == null or range.latest == null) {
+            return 0;
+        }
+        
+        const earliest = range.earliest.?;
+        const latest = range.latest.?;
+        
+        // Assert: Latest must be >= earliest
+        std.debug.assert(latest >= earliest);
+        
+        return latest - earliest;
+    }
+    
+    /// Calculate timestamp from slider position (0.0 to 1.0).
+    /// Returns null if range is invalid or empty.
+    pub fn timestamp_from_slider_position(
+        self: *const TemporalGraph,
+        position: f32,
+    ) ?u64 {
+        // Assert: Position must be in valid range
+        std.debug.assert(position >= 0.0);
+        std.debug.assert(position <= 1.0);
+        
+        const range = self.get_time_range();
+        if (range.earliest == null or range.latest == null) {
+            return null;
+        }
+        
+        const earliest = range.earliest.?;
+        const latest = range.latest.?;
+        const duration = latest - earliest;
+        
+        // Calculate timestamp: earliest + (position * duration)
+        const offset = @as(u64, @intFromFloat(position * @as(f64, @floatFromInt(duration))));
+        const timestamp = earliest + offset;
+        
+        // Assert: Calculated timestamp is within range
+        std.debug.assert(timestamp >= earliest);
+        std.debug.assert(timestamp <= latest);
+        
+        return timestamp;
+    }
+    
+    /// Calculate slider position (0.0 to 1.0) from timestamp.
+    /// Returns null if range is invalid, empty, or timestamp is out of range.
+    pub fn slider_position_from_timestamp(
+        self: *const TemporalGraph,
+        timestamp: u64,
+    ) ?f32 {
+        const range = self.get_time_range();
+        if (range.earliest == null or range.latest == null) {
+            return null;
+        }
+        
+        const earliest = range.earliest.?;
+        const latest = range.latest.?;
+        
+        // Assert: Timestamp must be within range
+        std.debug.assert(timestamp >= earliest);
+        std.debug.assert(timestamp <= latest);
+        
+        const duration = latest - earliest;
+        if (duration == 0) {
+            return 0.0; // Single point in time
+        }
+        
+        // Calculate position: (timestamp - earliest) / duration
+        const offset = timestamp - earliest;
+        const position = @as(f32, @floatFromInt(offset)) / @as(f32, @floatFromInt(duration));
+        
+        // Assert: Position is in valid range
+        std.debug.assert(position >= 0.0);
+        std.debug.assert(position <= 1.0);
+        
+        return position;
     }
     
     /// Get current time-travel timestamp (null = present).

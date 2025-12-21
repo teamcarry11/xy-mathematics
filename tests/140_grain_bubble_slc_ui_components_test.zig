@@ -123,3 +123,42 @@ test "slc component library multiple components" {
     std.debug.assert(library.profile_components_len == 3);
     std.debug.assert(library.get_profile_component_count() == 3);
 }
+
+test "slc design pattern init" {
+    const pattern = slc_ui_components.DesignPattern.init(
+        1,
+        .profile_form,
+        "Profile Form Pattern",
+    );
+    std.debug.assert(pattern.pattern_id == 1);
+    std.debug.assert(pattern.pattern_type == .profile_form);
+    std.debug.assert(pattern.name_len > 0);
+    std.debug.assert(pattern.color_scheme.primary == 0xFF0000FF);
+    std.debug.assert(pattern.spacing.medium == 8.0);
+    std.debug.assert(pattern.typography.heading_size == 24);
+}
+
+test "slc animation init" {
+    const anim = slc_ui_components.Animation.init(
+        1,
+        .fade_in,
+        300,
+        .ease_in_out,
+    );
+    std.debug.assert(anim.animation_id == 1);
+    std.debug.assert(anim.animation_type == .fade_in);
+    std.debug.assert(anim.duration_ms == 300);
+    std.debug.assert(anim.easing == .ease_in_out);
+    std.debug.assert(anim.delay_ms == 0);
+}
+
+test "slc animation set delay" {
+    var anim = slc_ui_components.Animation.init(
+        1,
+        .slide_in,
+        500,
+        .ease_out,
+    );
+    anim.set_delay(100);
+    std.debug.assert(anim.delay_ms == 100);
+}

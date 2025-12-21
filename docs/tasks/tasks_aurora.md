@@ -2,7 +2,7 @@
 
 **Agent**: Grain Aurora IDE Dream Browser Agent (2nd Agent)  
 **Status**: Active — Foundation components, shared modules  
-**Last Updated**: 2025-12-20-182841-pst
+**Last Updated**: 2025-12-20-200935-pst
 
 ---
 
@@ -161,6 +161,22 @@
 - [x] All tests pass with proper assertions
 - [x] Update `docs/plans/plan_aurora.md` and `docs/tasks/tasks_aurora.md`
 - **Date**: 2025-12-20-182841-PST
+
+#### Phase 2.11: Folding Comprehensive Tests ✅ **COMPLETE**
+
+- [x] Create comprehensive test suite (`tests/121_aurora_folding_test.zig`)
+- [x] Tests for folding constants and fold structure
+- [x] Tests for initialization and deinitialization
+- [x] Tests for parse operations (functions, structs, enums, unions)
+- [x] Tests for toggle fold operations
+- [x] Tests for fold state checking (isFolded, getFold)
+- [x] Tests for fold retrieval (getAllFolds)
+- [x] Tests for bounds checking and edge cases
+- [x] Add `aurora_folding_module` and `folding_test_file` to build.zig
+- [x] GrainStyle compliance (grain_case, u32 types, max 73 chars per line)
+- [x] All tests pass with proper assertions
+- [x] Update `docs/plans/plan_aurora.md` and `docs/tasks/tasks_aurora.md`
+- **Date**: 2025-12-20-200935-PST
 
 ### Grain Style Requirements
 

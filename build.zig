@@ -1080,6 +1080,8 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&run_ai_transforms_test_file.step);
     const run_dag_integration_test_file = b.addRunArtifact(dag_integration_test_file);
     test_step.dependOn(&run_dag_integration_test_file.step);
+    const run_folding_test_file = b.addRunArtifact(folding_test_file);
+    test_step.dependOn(&run_folding_test_file.step);
     const run_route_tests = b.addRunArtifact(route_tests);
     test_step.dependOn(&run_route_tests.step);
     const run_orchestrator_tests = b.addRunArtifact(orchestrator_tests);

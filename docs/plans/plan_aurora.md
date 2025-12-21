@@ -2,7 +2,7 @@
 
 **Agent**: Grain Aurora IDE Dream Browser Agent (2nd Agent)  
 **Status**: Active — Foundation components, shared modules, Dream Browser Spec v0 integration  
-**Last Updated**: 2025-12-20-182841-pst
+**Last Updated**: 2025-12-20-200935-pst
 
 ---
 
@@ -278,7 +278,22 @@ Grain Aurora IDE Dream Browser Agent is responsible for building the unified IDE
 - **Files**: `tests/120_aurora_dag_integration_test.zig`, `build.zig`
 - **Date**: 2025-12-20-182841-PST
 
-#### 2.11: Dream Browser Spec v0 Integration 📋 **PLANNED**
+#### 2.11: Folding Comprehensive Tests ✅ **COMPLETE**
+- ✅ Created comprehensive test suite (`tests/121_aurora_folding_test.zig`)
+- ✅ Tests for folding constants and fold structure
+- ✅ Tests for initialization and deinitialization
+- ✅ Tests for parse operations (functions, structs, enums, unions)
+- ✅ Tests for toggle fold operations
+- ✅ Tests for fold state checking (isFolded, getFold)
+- ✅ Tests for fold retrieval (getAllFolds)
+- ✅ Tests for bounds checking and edge cases
+- ✅ Added `aurora_folding_module` and `folding_test_file` to build.zig
+- ✅ GrainStyle compliance (grain_case, u32 types, max 73 chars per line)
+- ✅ All tests pass with proper assertions
+- **Files**: `tests/121_aurora_folding_test.zig`, `build.zig`
+- **Date**: 2025-12-20-200935-PST
+
+#### 2.12: Dream Browser Spec v0 Integration 📋 **PLANNED**
 - 📋 Dream Browser Spec v0 research complete — ready for integration
 - 📋 Research deliverable: `docs/research/dream_browser_spec_v0_research_2025-12-10-083733-pst.md`
 - 📋 Integration with Aurora Agent development plan

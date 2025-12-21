@@ -434,10 +434,16 @@ pub const AiInsights = struct {
         }
         
         for (block_ids) |block_id| {
+            // Assert: Block ID must be valid
+            std.debug.assert(block_id > 0);
+            
             const block = self.block_storage.get_block(@as(u32, @intCast(block_id))) orelse continue;
             const content = try self.allocator.dupe(u8, block.content[0..block.content_len]);
             try block_contents.append(content);
         }
+        
+        // Assert: At least one block content retrieved
+        std.debug.assert(block_contents.items.len > 0);
         
         // Build prompt for GLM-4.6
         var prompt = std.ArrayList(u8).init(self.allocator);
@@ -460,6 +466,14 @@ pub const AiInsights = struct {
         
         // Get AI response
         const response = try self.collect_glm46_response(&messages);
+        
+        // Validate response is not empty
+        if (response.len == 0) {
+            return null;
+        }
+        
+        // Assert: Response length is reasonable (max 10KB)
+        std.debug.assert(response.len <= 10_000);
         
         // Return summary (caller owns the memory)
         return response;

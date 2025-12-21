@@ -237,7 +237,7 @@ pub const AiInsights = struct {
             
             // Validate blocks exist
             const from_block = self.block_storage.get_block(@as(u32, @intCast(from_id))) orelse continue;
-            const to_block = self.block_storage.get_block(@as(u32, @intCast(to_id))) orelse continue;
+            _ = self.block_storage.get_block(@as(u32, @intCast(to_id))) orelse continue;
             
             // Skip if link already exists
             var link_exists = false;
@@ -299,9 +299,16 @@ pub const AiInsights = struct {
         
         for (block_ids) |block_id| {
             const block = self.block_storage.get_block(@as(u32, @intCast(block_id))) orelse continue;
+            
+            // Skip blocks with empty content
+            if (block.content_len == 0) continue;
+            
             const content = try self.allocator.dupe(u8, block.content[0..block.content_len]);
             try block_contents.append(content);
         }
+        
+        // Assert: At least 2 blocks with content required for gap detection
+        std.debug.assert(block_contents.items.len >= 2);
         
         // Build prompt for GLM-4.6
         var prompt = std.ArrayList(u8).init(self.allocator);
@@ -354,6 +361,21 @@ pub const AiInsights = struct {
             // Validate block IDs are within reasonable bounds
             if (from_id == 0 or to_id == 0) continue;
             if (from_id == to_id) continue; // Skip self-connections
+            
+            // Validate blocks exist
+            const from_block = self.block_storage.get_block(@as(u32, @intCast(from_id))) orelse continue;
+            _ = self.block_storage.get_block(@as(u32, @intCast(to_id))) orelse continue;
+            
+            // Skip if link already exists (not a knowledge gap)
+            var link_exists = false;
+            var i: u32 = 0;
+            while (i < from_block.links_len) : (i += 1) {
+                if (from_block.links[i] == @as(u32, @intCast(to_id))) {
+                    link_exists = true;
+                    break;
+                }
+            }
+            if (link_exists) continue;
             
             try gaps.append(.{
                 .from_block_id = from_id,

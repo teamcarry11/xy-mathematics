@@ -155,3 +155,37 @@ test "http status to db result validation error" {
     const result = db_integration.http_status_to_db_result(status);
     try testing.expect(result == db_integration.DatabaseResult.validation_error);
 }
+
+test "process user response success" {
+    const grain_core_api = @import("grain_core").api_server;
+    var response = grain_core_api.HttpResponse.init();
+    response.status = grain_core_api.HttpStatus.ok;
+    const json_body = "{\"user_id\":\"test123\",\"email\":\"test@example.com\"}";
+    const body_len = @min(json_body.len, grain_core_api.MAX_RESPONSE_SIZE);
+    std.mem.copyForwards(u8, &response.body, json_body[0..body_len]);
+    response.body_len = @intCast(body_len);
+    var user = db_integration.UserData.init();
+    const result = db_integration.process_user_response(&response, &user);
+    try testing.expect(result == db_integration.DatabaseResult.success);
+    try testing.expect(user.user_id_len > 0);
+    try testing.expect(user.email_len > 0);
+}
+
+test "process user response not found" {
+    const grain_core_api = @import("grain_core").api_server;
+    var response = grain_core_api.HttpResponse.init();
+    response.status = grain_core_api.HttpStatus.not_found;
+    var user = db_integration.UserData.init();
+    const result = db_integration.process_user_response(&response, &user);
+    try testing.expect(result == db_integration.DatabaseResult.not_found);
+}
+
+test "process user response validation error" {
+    const grain_core_api = @import("grain_core").api_server;
+    var response = grain_core_api.HttpResponse.init();
+    response.status = grain_core_api.HttpStatus.ok;
+    response.body_len = 0;
+    var user = db_integration.UserData.init();
+    const result = db_integration.process_user_response(&response, &user);
+    try testing.expect(result == db_integration.DatabaseResult.validation_error);
+}

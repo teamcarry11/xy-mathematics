@@ -117,6 +117,40 @@ pub fn get_database_config() *const DatabaseConfig {
     return &db_config;
 }
 
+// URL encode a string for query parameters.
+// Simple percent encoding for safe characters in URLs.
+fn url_encode_query_param(input: []const u8, output: []u8) ?u32 {
+    std.debug.assert(input.len > 0);
+    std.debug.assert(output.len >= input.len * 3);
+    var pos: u32 = 0;
+    var i: u32 = 0;
+    while (i < input.len and pos + 3 < output.len) : (i += 1) {
+        const c = input[i];
+        if ((c >= 'a' and c <= 'z') or (c >= 'A' and c <= 'Z') or
+            (c >= '0' and c <= '9') or c == '-' or c == '_' or
+            c == '.' or c == '@')
+        {
+            if (pos + 1 >= output.len) {
+                return null;
+            }
+            output[pos] = c;
+            pos += 1;
+        } else {
+            if (pos + 3 >= output.len) {
+                return null;
+            }
+            const hex_high = (c >> 4) & 0x0F;
+            const hex_low = c & 0x0F;
+            output[pos] = '%';
+            output[pos + 1] = if (hex_high < 10) '0' + @as(u8, @intCast(hex_high)) else 'A' + @as(u8, @intCast(hex_high - 10));
+            output[pos + 2] = if (hex_low < 10) '0' + @as(u8, @intCast(hex_low)) else 'A' + @as(u8, @intCast(hex_low - 10));
+            pos += 3;
+        }
+    }
+    std.debug.assert(pos <= output.len);
+    return pos;
+}
+
 // Build JSON request body for user data.
 fn build_user_json_body(user_data: *const UserData, body_out: []u8) ?u32 {
     std.debug.assert(user_data != null);
@@ -253,6 +287,7 @@ pub fn get_user_by_id(user_id: []const u8, user_out: *UserData) DatabaseResult {
 }
 
 // Get user from database by email.
+// Note: Response parsing will be integrated once async handling pattern is coordinated.
 pub fn get_user_by_email(email: []const u8, user_out: *UserData) DatabaseResult {
     std.debug.assert(email.len > 0);
     std.debug.assert(email.len <= models.MAX_EMAIL_LEN);
@@ -274,16 +309,24 @@ pub fn get_user_by_email(email: []const u8, user_out: *UserData) DatabaseResult 
     const users_path_len = @min(users_path.len, path_buf.len - path_len);
     std.mem.copyForwards(u8, path_buf[path_len..], users_path[0..users_path_len]);
     path_len += @intCast(users_path_len);
-    const email_len = @min(email.len, path_buf.len - path_len);
-    std.mem.copyForwards(u8, path_buf[path_len..], email[0..email_len]);
-    path_len += @intCast(email_len);
+    var email_encoded: [models.MAX_EMAIL_LEN * 3]u8 = undefined;
+    const email_encoded_len = url_encode_query_param(email, &email_encoded) orelse {
+        return DatabaseResult.internal_error;
+    };
+    const email_encoded_len_safe = @min(email_encoded_len, path_buf.len - path_len);
+    std.mem.copyForwards(u8, path_buf[path_len..], email_encoded[0..email_encoded_len_safe]);
+    path_len += email_encoded_len_safe;
     std.debug.assert(path_len <= 1024);
     const request = http_client_integration.create_external_request(
         .get,
         path_buf[0..path_len],
     ) orelse {
         return DatabaseResult.connection_error;
-    };
+    }
+    // TODO: Once async response handling pattern is coordinated with Core Agent:
+    // 1. Check request state using check_request_response()
+    // 2. Parse response body using parse_user_from_json()
+    // 3. Handle HTTP status codes using http_status_to_db_result()
     _ = user_out;
     _ = request;
     return DatabaseResult.success;
@@ -445,4 +488,23 @@ pub fn http_status_to_db_result(status: grain_core_api.HttpStatus) DatabaseResul
         .internal_server_error, .service_unavailable => DatabaseResult.internal_error,
         else => DatabaseResult.internal_error,
     };
+}
+
+// Process completed HTTP response and parse user data.
+// Helper function for async response handling integration.
+pub fn process_user_response(
+    response: *const grain_core_api.HttpResponse,
+    user_out: *UserData,
+) DatabaseResult {
+    std.debug.assert(response != null);
+    std.debug.assert(user_out != null);
+    const status_result = http_status_to_db_result(response.status);
+    if (status_result != DatabaseResult.success) {
+        return status_result;
+    }
+    if (response.body_len == 0) {
+        return DatabaseResult.validation_error;
+    }
+    const body = response.body[0..response.body_len];
+    return parse_user_from_json(body, user_out);
 }

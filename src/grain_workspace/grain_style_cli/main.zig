@@ -9,6 +9,7 @@
 //! 2025-12-21-083947-pst: Phase 24 Recursive Directory Linting
 //! 2025-12-21-141612-pst: Phase 25 Performance Optimizations
 //! 2025-12-21-141612-pst: Phase 26 Enhanced JSON Output
+//! 2025-12-21-144225-pst: Phase 27 Full File Path Collection
 //!
 //! Open-Source Service Model: 100% open-source, revenue from services (consulting,
 //! training, hosted services, enterprise support, sponsorships, grants).
@@ -605,7 +606,7 @@ pub const GrainStyleCLI = struct {
         return false;
     }
 
-    /// Collect Zig files from directory recursively.
+    /// Collect Zig files from directory recursively (count only).
     // 2025-12-21-083947-pst: Phase 24 Recursive Directory Linting
     pub fn collect_zig_files(
         self: *GrainStyleCLI,
@@ -659,8 +660,7 @@ pub const GrainStyleCLI = struct {
             switch (entry.kind) {
                 .file => {
                     if (std.mem.endsWith(u8, entry.name, ".zig")) {
-                        // Store file path (simplified - in real implementation would use allocator)
-                        // For now, we'll just count and let caller handle paths
+                        // Count files only (for backward compatibility)
                         files_len.* += 1;
                     }
                 },
@@ -674,6 +674,82 @@ pub const GrainStyleCLI = struct {
 
         // Postcondition: Files count must be valid
         std.debug.assert(files_len.* <= files.len);
+
+        return true;
+    }
+
+    /// Collect Zig file paths from directory recursively.
+    // 2025-12-21-144225-pst: Phase 27 Full File Path Collection
+    pub fn collect_zig_file_paths(
+        self: *GrainStyleCLI,
+        dir_path: []const u8,
+        file_paths: *std.ArrayList([]const u8),
+    ) bool {
+        // Precondition: Directory path and ArrayList must be valid
+        std.debug.assert(dir_path.len > 0);
+        std.debug.assert(dir_path.len <= MAX_FILE_PATH_LEN);
+        std.debug.assert(@intFromPtr(file_paths) != 0);
+
+        if (self.should_ignore(dir_path)) {
+            return true;
+        }
+
+        const dir = std.fs.cwd().openDir(dir_path, .{ .iterate = true }) catch |err| {
+            _ = err;
+            return false;
+        };
+        defer dir.close();
+
+        var iterator = dir.iterate();
+        while (iterator.next() catch |err| {
+            _ = err;
+            return false;
+        }) |entry| {
+            if (file_paths.items.len >= MAX_FILES_TO_LINT) {
+                break;
+            }
+
+            var full_path: [MAX_FILE_PATH_LEN]u8 = undefined;
+            var full_path_len: u32 = 0;
+
+            if (dir_path.len + 1 + entry.name.len <= MAX_FILE_PATH_LEN) {
+                @memcpy(full_path[0..dir_path.len], dir_path);
+                full_path[dir_path.len] = '/';
+                @memcpy(full_path[dir_path.len + 1..dir_path.len + 1 + entry.name.len], entry.name);
+                full_path_len = @as(u32, @intCast(dir_path.len + 1 + entry.name.len));
+            } else {
+                continue;
+            }
+
+            const full_path_str = full_path[0..full_path_len];
+
+            if (self.should_ignore(full_path_str)) {
+                continue;
+            }
+
+            switch (entry.kind) {
+                .file => {
+                    if (std.mem.endsWith(u8, entry.name, ".zig")) {
+                        // Allocate and store file path
+                        const path_copy = self.allocator.dupe(u8, full_path_str) catch {
+                            return false;
+                        };
+                        file_paths.append(path_copy) catch {
+                            self.allocator.free(path_copy);
+                            return false;
+                        };
+                    }
+                },
+                .directory => {
+                    // Recursively collect files from subdirectory
+                    _ = self.collect_zig_file_paths(full_path_str, file_paths);
+                },
+                else => {},
+            }
+        }
+
+        // Postcondition: File paths count must be valid
+        std.debug.assert(file_paths.items.len <= MAX_FILES_TO_LINT);
 
         return true;
     }
@@ -748,6 +824,7 @@ pub const GrainStyleCLI = struct {
     // 2025-12-21-083947-pst: Phase 24 Recursive Directory Linting
     // 2025-12-21-141612-pst: Phase 25 Performance Optimizations
     // 2025-12-21-141612-pst: Phase 26 Enhanced JSON Output
+    // 2025-12-21-144225-pst: Phase 27 Full File Path Collection
     pub fn run(
         self: *GrainStyleCLI,
         file_paths: []const []const u8,
@@ -767,60 +844,77 @@ pub const GrainStyleCLI = struct {
             json_array_started = true;
         }
 
+        // Phase 27: Collect all files to lint (from directories and files)
+        var all_files = std.ArrayList([]const u8).init(self.allocator);
+        defer {
+            // Free all allocated file paths
+            for (all_files.items) |file_path| {
+                self.allocator.free(file_path);
+            }
+            all_files.deinit();
+        }
+
         var i: u32 = 0;
         while (i < file_paths.len) : (i += 1) {
+            const path = file_paths[i];
+
+            if (self.is_directory(path)) {
+                // Phase 27: Collect all .zig files from directory
+                _ = self.collect_zig_file_paths(path, &all_files);
+            } else {
+                // Regular file - add to list if it's a .zig file
+                if (std.mem.endsWith(u8, path, ".zig") and !self.should_ignore(path)) {
+                    const path_copy = self.allocator.dupe(u8, path) catch continue;
+                    all_files.append(path_copy) catch {
+                        self.allocator.free(path_copy);
+                        continue;
+                    };
+                }
+            }
+        }
+
+        // Phase 27: Lint all collected files
+        var file_i: u32 = 0;
+        while (file_i < all_files.items.len) : (file_i += 1) {
             // Phase 25: Early exit if max violations reached
             if (total_violations >= self.config.max_violations) {
                 break;
             }
 
-            const path = file_paths[i];
+            const path = all_files.items[file_i];
+            files_checked += 1;
+            const violations = self.lint_file(path);
 
-            if (self.is_directory(path)) {
-                // For directories, collect and lint all .zig files
-                var file_count: u32 = 0;
-                _ = self.collect_zig_files(path, &[_]?[]const u8{}, &file_count);
+            if (violations > 0) {
+                files_with_violations += 1;
+                total_violations += violations;
 
-                // Note: Full implementation would collect actual file paths
-                // and lint them. For now, this demonstrates the structure.
-            } else {
-                // Regular file - lint it
-                if (std.mem.endsWith(u8, path, ".zig") and !self.should_ignore(path)) {
-                    files_checked += 1;
-                    const violations = self.lint_file(path);
+                if (self.config.output_format == .json) {
+                    // Phase 26: Output as JSON array elements
+                    var messages: [256]?grain_workspace.devtools.LinterMessage = undefined;
+                    var messages_len: u32 = 0;
+                    self.devtools_app.get_linter_messages(path, &messages, &messages_len);
 
-                    if (violations > 0) {
-                        files_with_violations += 1;
-                        total_violations += violations;
-
-                        if (self.config.output_format == .json) {
-                            // Phase 26: Output as JSON array elements
-                            var messages: [256]?grain_workspace.devtools.LinterMessage = undefined;
-                            var messages_len: u32 = 0;
-                            self.devtools_app.get_linter_messages(path, &messages, &messages_len);
-
-                            var msg_i: u32 = 0;
-                            while (msg_i < messages_len) : (msg_i += 1) {
-                                if (messages[msg_i]) |msg| {
-                                    var output_buffer: [MAX_OUTPUT_BUFFER_SIZE]u8 = undefined;
-                                    var output_len: u32 = 0;
-                                    if (self.format_violation_json_array_element(
-                                        msg,
-                                        &output_buffer,
-                                        &output_len,
-                                        !json_array_started,
-                                    )) {
-                                        const stdout = std.io.getStdOut().writer();
-                                        _ = stdout.write(output_buffer[0..output_len]) catch {};
-                                        json_array_started = true;
-                                    }
-                                }
+                    var msg_i: u32 = 0;
+                    while (msg_i < messages_len) : (msg_i += 1) {
+                        if (messages[msg_i]) |msg| {
+                            var output_buffer: [MAX_OUTPUT_BUFFER_SIZE]u8 = undefined;
+                            var output_len: u32 = 0;
+                            if (self.format_violation_json_array_element(
+                                msg,
+                                &output_buffer,
+                                &output_len,
+                                !json_array_started,
+                            )) {
+                                const stdout = std.io.getStdOut().writer();
+                                _ = stdout.write(output_buffer[0..output_len]) catch {};
+                                json_array_started = true;
                             }
-                        } else {
-                            // Text output format
-                            self.print_violations(path);
                         }
                     }
+                } else {
+                    // Text output format
+                    self.print_violations(path);
                 }
             }
         }
@@ -844,8 +938,8 @@ pub const GrainStyleCLI = struct {
         }
 
         // Postcondition: Total violations must be valid
-        std.debug.assert(total_violations <= grain_workspace.devtools.MAX_LINT_VIOLATIONS * file_paths.len);
-        std.debug.assert(files_checked <= file_paths.len);
+        std.debug.assert(total_violations <= grain_workspace.devtools.MAX_LINT_VIOLATIONS * all_files.items.len);
+        std.debug.assert(files_checked <= all_files.items.len);
         std.debug.assert(files_with_violations <= files_checked);
 
         if (total_violations > 0) {

@@ -243,3 +243,97 @@ test "slc preset animations smooth slide in" {
     std.debug.assert(anim.duration_ms == 600);
     std.debug.assert(anim.easing == .ease_out);
 }
+
+test "slc component library create variant for profile" {
+    var library = slc_ui_components.SlcComponentLibrary.init();
+    var base_comp = component.Component.init();
+    base_comp.id = 1;
+    _ = library.add_profile_component(.form, "Profile Form", &base_comp);
+    const variant_id = library.create_variant_for_profile(1, "hover", .state);
+    std.debug.assert(variant_id != null);
+    std.debug.assert(variant_id.? == 1);
+    std.debug.assert(library.get_variant_count_for_profile(1) == 1);
+}
+
+test "slc component library create variant for website" {
+    var library = slc_ui_components.SlcComponentLibrary.init();
+    var base_comp = component.Component.init();
+    base_comp.id = 1;
+    _ = library.add_website_component(.dag_editor, "DAG Editor", &base_comp);
+    const variant_id = library.create_variant_for_website(1, "large", .size);
+    std.debug.assert(variant_id != null);
+    std.debug.assert(variant_id.? == 1);
+    std.debug.assert(library.get_variant_count_for_website(1) == 1);
+}
+
+test "slc component library create variant for workspace" {
+    var library = slc_ui_components.SlcComponentLibrary.init();
+    var base_comp = component.Component.init();
+    base_comp.id = 1;
+    _ = library.add_workspace_component(.file_manager, "File Manager", &base_comp);
+    const variant_id = library.create_variant_for_workspace(1, "dark", .theme);
+    std.debug.assert(variant_id != null);
+    std.debug.assert(variant_id.? == 1);
+    std.debug.assert(library.get_variant_count_for_workspace(1) == 1);
+}
+
+test "slc component library get variant for profile" {
+    var library = slc_ui_components.SlcComponentLibrary.init();
+    var base_comp = component.Component.init();
+    base_comp.id = 1;
+    _ = library.add_profile_component(.form, "Profile Form", &base_comp);
+    _ = library.create_variant_for_profile(1, "active", .state);
+    const variant = library.get_variant_for_profile(1, 1);
+    std.debug.assert(variant != null);
+    std.debug.assert(variant.?.id == 1);
+    std.debug.assert(variant.?.variant_type == .state);
+}
+
+test "slc component library get variant for website" {
+    var library = slc_ui_components.SlcComponentLibrary.init();
+    var base_comp = component.Component.init();
+    base_comp.id = 1;
+    _ = library.add_website_component(.dag_editor, "DAG Editor", &base_comp);
+    _ = library.create_variant_for_website(1, "small", .size);
+    const variant = library.get_variant_for_website(1, 1);
+    std.debug.assert(variant != null);
+    std.debug.assert(variant.?.id == 1);
+    std.debug.assert(variant.?.variant_type == .size);
+}
+
+test "slc component library get variant for workspace" {
+    var library = slc_ui_components.SlcComponentLibrary.init();
+    var base_comp = component.Component.init();
+    base_comp.id = 1;
+    _ = library.add_workspace_component(.file_manager, "File Manager", &base_comp);
+    _ = library.create_variant_for_workspace(1, "light", .theme);
+    const variant = library.get_variant_for_workspace(1, 1);
+    std.debug.assert(variant != null);
+    std.debug.assert(variant.?.id == 1);
+    std.debug.assert(variant.?.variant_type == .theme);
+}
+
+test "slc component library multiple variants" {
+    var library = slc_ui_components.SlcComponentLibrary.init();
+    var base_comp = component.Component.init();
+    base_comp.id = 1;
+    _ = library.add_profile_component(.form, "Profile Form", &base_comp);
+    _ = library.create_variant_for_profile(1, "default", .state);
+    _ = library.create_variant_for_profile(1, "hover", .state);
+    _ = library.create_variant_for_profile(1, "active", .state);
+    std.debug.assert(library.get_variant_count_for_profile(1) == 3);
+    const variant1 = library.get_variant_for_profile(1, 1);
+    const variant2 = library.get_variant_for_profile(1, 2);
+    const variant3 = library.get_variant_for_profile(1, 3);
+    std.debug.assert(variant1 != null);
+    std.debug.assert(variant2 != null);
+    std.debug.assert(variant3 != null);
+}
+
+test "slc component library variant count zero" {
+    var library = slc_ui_components.SlcComponentLibrary.init();
+    var base_comp = component.Component.init();
+    base_comp.id = 1;
+    _ = library.add_profile_component(.form, "Profile Form", &base_comp);
+    std.debug.assert(library.get_variant_count_for_profile(1) == 0);
+}

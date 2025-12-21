@@ -258,16 +258,6 @@ pub fn build(b: *std.Build) void {
         },
     });
 
-    // Grain Court module (formerly Grain Field)
-    const grain_court_module = b.addModule("grain_court", .{
-        .root_source_file = b.path("src/grain_court/root.zig"),
-        .target = target,
-        .optimize = optimize,
-        .imports = &.{
-            .{ .name = "grain_core", .module = grain_core_module },
-        },
-    });
-
     // Grain Silo module
     const grain_silo_module = b.addModule("grain_silo", .{
         .root_source_file = b.path("src/grain_silo/root.zig"),
@@ -282,13 +272,23 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    // Grain OS module
+    // Grain OS module (must be defined before grain_court_module which depends on it)
     const grain_core_module = b.addModule("grain_core", .{
         .root_source_file = b.path("src/grain_core/root.zig"),
         .target = target,
         .optimize = optimize,
         .imports = &.{
             .{ .name = "basin_kernel", .module = basin_kernel_module },
+        },
+    });
+
+    // Grain Court module (formerly Grain Field)
+    const grain_court_module = b.addModule("grain_court", .{
+        .root_source_file = b.path("src/grain_court/root.zig"),
+        .target = target,
+        .optimize = optimize,
+        .imports = &.{
+            .{ .name = "grain_core", .module = grain_core_module },
         },
     });
 

@@ -447,8 +447,8 @@ Beyond these rules:
 - Use 4 spaces of indentation, rather than 2 spaces, as that is more obvious to the eye at a
   distance.
 
-- **Hard limit all line lengths to at most 73 columns** for graincard compatibility. This ensures
-  code fits perfectly in graincard content areas (75×100 total, with 1-char borders). Use it up.
+- **Hard limit all line lengths to at most 101 columns** for graincard compatibility. This ensures
+  code fits perfectly in graincard content areas (103×80 total, with 1-char borders). Use it up.
   Never go beyond. Nothing should be hidden by a horizontal scrollbar. Let your editor help you by
   setting a column ruler. To wrap a function signature, call or data structure, add a trailing
   comma, close your eyes and let `zig fmt` do the rest.

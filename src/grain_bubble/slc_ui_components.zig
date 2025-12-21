@@ -442,23 +442,27 @@ pub const SlcComponentLibrary = struct {
         std.debug.assert(@intFromPtr(self) != 0);
         std.debug.assert(component_id > 0);
         std.debug.assert(name.len > 0);
-        if (self.get_website_component(component_id)) |website_comp| {
-            const base = website_comp.base_component;
-            if (base.variants_len >= component.MAX_VARIANTS) {
-                return null;
+        std.debug.assert(name.len <= MAX_COMPONENT_NAME_LEN);
+        var i: u32 = 0;
+        while (i < self.website_components_len) : (i += 1) {
+            if (self.website_components[i].component_id == component_id) {
+                const base = self.website_components[i].base_component;
+                if (base.variants_len >= component.MAX_VARIANTS) {
+                    return null;
+                }
+                const variant_id = base.variants_len + 1;
+                var variant = component.ComponentVariant.init();
+                variant.id = variant_id;
+                variant.variant_type = variant_type;
+                const name_len = @min(name.len, MAX_COMPONENT_NAME_LEN);
+                @memset(variant.name[0..name_len], 0);
+                @memcpy(variant.name[0..name_len], name[0..name_len]);
+                variant.name_len = @as(u32, @intCast(name_len));
+                base.variants[base.variants_len] = variant;
+                base.variants_len += 1;
+                std.debug.assert(base.variants_len <= component.MAX_VARIANTS);
+                return variant_id;
             }
-            const variant_id = base.variants_len + 1;
-            var variant = component.ComponentVariant.init();
-            variant.id = variant_id;
-            variant.variant_type = variant_type;
-            const name_len = @min(name.len, MAX_COMPONENT_NAME_LEN);
-            @memset(variant.name[0..name_len], 0);
-            @memcpy(variant.name[0..name_len], name[0..name_len]);
-            variant.name_len = @as(u32, @intCast(name_len));
-            base.variants[base.variants_len] = variant;
-            base.variants_len += 1;
-            std.debug.assert(base.variants_len <= component.MAX_VARIANTS);
-            return variant_id;
         }
         return null;
     }
@@ -473,23 +477,27 @@ pub const SlcComponentLibrary = struct {
         std.debug.assert(@intFromPtr(self) != 0);
         std.debug.assert(component_id > 0);
         std.debug.assert(name.len > 0);
-        if (self.get_workspace_component(component_id)) |workspace_comp| {
-            const base = workspace_comp.base_component;
-            if (base.variants_len >= component.MAX_VARIANTS) {
-                return null;
+        std.debug.assert(name.len <= MAX_COMPONENT_NAME_LEN);
+        var i: u32 = 0;
+        while (i < self.workspace_components_len) : (i += 1) {
+            if (self.workspace_components[i].component_id == component_id) {
+                const base = self.workspace_components[i].base_component;
+                if (base.variants_len >= component.MAX_VARIANTS) {
+                    return null;
+                }
+                const variant_id = base.variants_len + 1;
+                var variant = component.ComponentVariant.init();
+                variant.id = variant_id;
+                variant.variant_type = variant_type;
+                const name_len = @min(name.len, MAX_COMPONENT_NAME_LEN);
+                @memset(variant.name[0..name_len], 0);
+                @memcpy(variant.name[0..name_len], name[0..name_len]);
+                variant.name_len = @as(u32, @intCast(name_len));
+                base.variants[base.variants_len] = variant;
+                base.variants_len += 1;
+                std.debug.assert(base.variants_len <= component.MAX_VARIANTS);
+                return variant_id;
             }
-            const variant_id = base.variants_len + 1;
-            var variant = component.ComponentVariant.init();
-            variant.id = variant_id;
-            variant.variant_type = variant_type;
-            const name_len = @min(name.len, MAX_COMPONENT_NAME_LEN);
-            @memset(variant.name[0..name_len], 0);
-            @memcpy(variant.name[0..name_len], name[0..name_len]);
-            variant.name_len = @as(u32, @intCast(name_len));
-            base.variants[base.variants_len] = variant;
-            base.variants_len += 1;
-            std.debug.assert(base.variants_len <= component.MAX_VARIANTS);
-            return variant_id;
         }
         return null;
     }

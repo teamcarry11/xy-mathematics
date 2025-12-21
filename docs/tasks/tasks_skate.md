@@ -157,9 +157,15 @@
 - [x] Add temporal filtering support to GraphRenderer (set_temporal_graph, set_temporal_timestamp) ✅
 - [x] Integrate TemporalGraph with GraphRenderer for timestamp-based filtering ✅
 - [x] Add tests for temporal filtering in graph renderer ✅
+- [x] Implement actual node/edge filtering based on timestamp (using block.created_at) ✅
+  - [x] Added `block_exists_at_timestamp()` helper function ✅
+  - [x] Added temporal filtering to render_nodes() ✅
+  - [x] Added temporal filtering to render_edges() ✅
+  - [x] Added temporal filtering to render_ai_suggested_edges() ✅
+  - [x] Added temporal filtering to render_labels() ✅
+  - [x] Tests created for temporal node and edge filtering ✅
 - [ ] Add time slider component (UI layer - pending Bubble Agent coordination)
 - [ ] Add animated transitions showing graph growth (UI layer - pending Bubble Agent coordination)
-- [ ] Implement actual node/edge filtering based on timestamp (requires block creation timestamp tracking)
 - [ ] Test thoroughly with UI integration (time-travel, version history, branching)
 - [ ] Update `docs/plans/plan_skate.md` and `docs/tasks/tasks_skate.md` with completion (in progress)
 

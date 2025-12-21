@@ -372,8 +372,8 @@ Grain Skate Terminal Silo Field Agent is responsible for building Grain Skate (k
 
 **Date Started**: 2025-12-07-020707-pst
 
-**Status**: **IN PROGRESS** — Core temporal query infrastructure complete ✅, GraphRenderer integration complete ✅, UI components pending  
-**Estimated Time**: 2-3 weeks (remaining work)
+**Status**: **IN PROGRESS** — Core temporal query infrastructure complete ✅, GraphRenderer integration complete ✅, Temporal filtering complete ✅, UI components pending  
+**Estimated Time**: 1-2 weeks (remaining work: UI components only)
 
 **Objective**: Time-travel mode for knowledge graph with DAG-based history
 

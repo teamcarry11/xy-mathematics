@@ -4,7 +4,7 @@
 //! Architecture: Native desktop app with Grain OS integration.
 //! GrainStyle: grain_case, u32/u64, bounded allocations, assertions.
 //!
-//! 2025-12-20-212447-pst: Grain Bubble Agent
+//! 2025-12-21-083043-pst: Grain Bubble Agent
 
 pub const canvas = @import("canvas.zig");
 pub const bubble_renderer = @import("bubble_renderer.zig");
@@ -22,4 +22,5 @@ pub const dag_integration = @import("dag_integration.zig");
 pub const export_optimize = @import("export_optimize.zig");
 pub const export_preview = @import("export_preview.zig");
 pub const agent_flow = @import("agent_flow.zig");
+pub const slc_ui_components = @import("slc_ui_components.zig");
 

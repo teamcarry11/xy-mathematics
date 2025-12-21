@@ -10,6 +10,7 @@ const std = @import("std");
 const http_client_integration = @import("http_client_integration.zig");
 const models = @import("models.zig");
 const grain_core_api = @import("../../grain_core/api_server.zig");
+const grain_core_json = @import("../../grain_core/json_helpers.zig");
 
 // Bounded: Max database base URL length.
 pub const MAX_DB_BASE_URL_LEN: u32 = 512;
@@ -115,6 +116,56 @@ pub fn get_database_config() *const DatabaseConfig {
     return &db_config;
 }
 
+// Build JSON request body for user data.
+fn build_user_json_body(user_data: *const UserData, body_out: []u8) ?u32 {
+    std.debug.assert(user_data != null);
+    std.debug.assert(body_out.len >= MAX_USER_JSON_LEN);
+    var pos: u32 = 0;
+    if (pos + 1 >= body_out.len) {
+        return null;
+    }
+    body_out[pos] = '{';
+    pos += 1;
+    const user_id_str = user_data.user_id[0..user_data.user_id_len];
+    if (!grain_core_json.write_json_string(body_out, &pos, "\"user_id\":")) {
+        return null;
+    }
+    if (!grain_core_json.write_json_string(body_out, &pos, user_id_str)) {
+        return null;
+    }
+    if (pos + 1 >= body_out.len) {
+        return null;
+    }
+    body_out[pos] = ',';
+    pos += 1;
+    const email_str = user_data.email[0..user_data.email_len];
+    if (!grain_core_json.write_json_string(body_out, &pos, "\"email\":")) {
+        return null;
+    }
+    if (!grain_core_json.write_json_string(body_out, &pos, email_str)) {
+        return null;
+    }
+    if (pos + 1 >= body_out.len) {
+        return null;
+    }
+    body_out[pos] = ',';
+    pos += 1;
+    const username_str = user_data.username[0..user_data.username_len];
+    if (!grain_core_json.write_json_string(body_out, &pos, "\"username\":")) {
+        return null;
+    }
+    if (!grain_core_json.write_json_string(body_out, &pos, username_str)) {
+        return null;
+    }
+    if (pos + 1 >= body_out.len) {
+        return null;
+    }
+    body_out[pos] = '}';
+    pos += 1;
+    std.debug.assert(pos <= MAX_USER_JSON_LEN);
+    return pos;
+}
+
 // Create user in database.
 pub fn create_user(user_data: *const UserData) DatabaseResult {
     std.debug.assert(user_data != null);
@@ -138,14 +189,20 @@ pub fn create_user(user_data: *const UserData) DatabaseResult {
     std.mem.copyForwards(u8, path_buf[path_len..], users_path[0..users_path_len]);
     path_len += @intCast(users_path_len);
     std.debug.assert(path_len <= 1024);
-    const request_id = http_client_integration.create_external_request(
-        grain_core_api.HttpMethod.post,
+    const request = http_client_integration.create_external_request(
+        http_client_integration.client.HttpMethod.post,
         path_buf[0..path_len],
-    );
-    if (request_id == 0) {
+    ) orelse {
         return DatabaseResult.connection_error;
+    };
+    var json_body: [MAX_USER_JSON_LEN]u8 = undefined;
+    const body_len = build_user_json_body(user_data, &json_body) orelse {
+        return DatabaseResult.internal_error;
+    };
+    if (!http_client_integration.set_external_body(request, json_body[0..body_len])) {
+        return DatabaseResult.internal_error;
     }
-    _ = user_data;
+    _ = http_client_integration.add_external_header(request, "Content-Type", "application/json");
     return DatabaseResult.success;
 }
 

@@ -150,3 +150,22 @@ test "batch create records with duplicates" {
     try testing.expect(count == 2);
     try testing.expect(engine.records_len == 3);
 }
+
+test "storage engine statistics" {
+    const allocator = testing.allocator;
+    var engine = try StorageEngine.init(allocator, 1024 * 1024);
+    defer engine.deinit();
+
+    try testing.expect(engine.get_record_count() == 0);
+    try testing.expect(engine.get_total_storage_size() == 0);
+    try testing.expect(engine.get_average_record_size() == 0);
+    try testing.expect(engine.get_next_record_id() == 1);
+
+    _ = try engine.create_record("key1", "value1");
+    _ = try engine.create_record("key2", "value2");
+
+    try testing.expect(engine.get_record_count() == 2);
+    try testing.expect(engine.get_total_storage_size() > 0);
+    try testing.expect(engine.get_average_record_size() > 0);
+    try testing.expect(engine.get_next_record_id() == 3);
+}

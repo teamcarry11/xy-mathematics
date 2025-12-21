@@ -28,6 +28,8 @@ pub const research_engine = @import("research_engine.zig");
 pub const code_analysis = @import("code_analysis.zig");
 // Codebase analyzer for analyzing entire codebase.
 pub const codebase_analyzer = @import("codebase_analyzer.zig");
+// Token counter for LLM provider token counting.
+pub const token_counter = @import("token_counter.zig");
 
 // Insights generator for recommendations and reports.
 // pub const insights_generator = @import("insights_generator.zig");
@@ -44,4 +46,7 @@ pub const ViolationType = code_analysis.ViolationType;
 pub const AnalysisResult = code_analysis.AnalysisResult;
 pub const CodebaseAnalyzer = codebase_analyzer.CodebaseAnalyzer;
 pub const FileAnalysisResult = codebase_analyzer.FileAnalysisResult;
+pub const TokenCounter = token_counter.TokenCounter;
+pub const TokenCountResult = token_counter.TokenCountResult;
+pub const LLMProvider = token_counter.LLMProvider;
 // pub const InsightsGenerator = insights_generator.InsightsGenerator;

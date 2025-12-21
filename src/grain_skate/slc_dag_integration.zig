@@ -69,9 +69,14 @@ pub const SlcDagIntegration = struct {
         npub: []const u8,
         name: []const u8,
     ) !u32 {
-        // Assert: NPUB and name must be bounded
+        // Assert: NPUB and name must be non-empty and bounded
+        std.debug.assert(npub.len > 0);
         std.debug.assert(npub.len <= 128);
+        std.debug.assert(name.len > 0);
         std.debug.assert(name.len <= 256);
+        
+        // Assert: Node count must be within bounds
+        std.debug.assert(self.dag.nodes_len < DagCore.MAX_NODES);
         
         // Create profile data (JSON-like structure for now)
         var profile_data = std.ArrayList(u8).init(self.allocator);

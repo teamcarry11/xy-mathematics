@@ -277,5 +277,36 @@ pub const StorageEngine = struct {
         std.debug.assert(self.records_len <= MAX_RECORDS);
         return count;
     }
+
+    // Get total record count.
+    pub fn get_record_count(self: *const StorageEngine) u32 {
+        return self.records_len;
+    }
+
+    // Get total storage size (sum of all key and value sizes).
+    pub fn get_total_storage_size(self: *const StorageEngine) u64 {
+        var total_size: u64 = 0;
+        var i: u32 = 0;
+        while (i < self.records_len) : (i += 1) {
+            const record = &self.records[i];
+            total_size += @as(u64, record.key_len);
+            total_size += record.value_len;
+        }
+        return total_size;
+    }
+
+    // Get average record size (total size / record count).
+    pub fn get_average_record_size(self: *const StorageEngine) u64 {
+        if (self.records_len == 0) {
+            return 0;
+        }
+        const total_size = self.get_total_storage_size();
+        return total_size / @as(u64, self.records_len);
+    }
+
+    // Get next record ID (for monitoring).
+    pub fn get_next_record_id(self: *const StorageEngine) u64 {
+        return self.next_record_id;
+    }
 };
 

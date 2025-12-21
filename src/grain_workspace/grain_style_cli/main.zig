@@ -5,6 +5,7 @@
 //! GrainStyle: grain_case, u32/u64, bounded allocations, assertions.
 //!
 //! 2025-12-20-200932-pst: Phase 22 Standalone CLI Tool
+//! 2025-12-21-083130-pst: Phase 23 Enhanced CLI Output and Configuration
 //!
 //! Open-Source Service Model: 100% open-source, revenue from services (consulting,
 //! training, hosted services, enterprise support, sponsorships, grants).
@@ -24,6 +25,18 @@ pub const MAX_FILE_SIZE: u32 = 10_000_000; // 10 MB
 // 2025-12-20-200932-pst: Phase 22 Standalone CLI Tool
 pub const MAX_OUTPUT_BUFFER_SIZE: u32 = 1_048_576; // 1 MB
 
+// Bounded: Max config file size (explicit limit, in bytes)
+// 2025-12-21-083130-pst: Phase 23 Enhanced CLI Output and Configuration
+pub const MAX_CONFIG_FILE_SIZE: u32 = 8192; // 8 KB
+
+// Bounded: Max config key length (explicit limit, in bytes)
+// 2025-12-21-083130-pst: Phase 23 Enhanced CLI Output and Configuration
+pub const MAX_CONFIG_KEY_LEN: u32 = 64;
+
+// Bounded: Max config value length (explicit limit, in bytes)
+// 2025-12-21-083130-pst: Phase 23 Enhanced CLI Output and Configuration
+pub const MAX_CONFIG_VALUE_LEN: u32 = 256;
+
 // Exit code enumeration.
 // 2025-12-20-200932-pst: Phase 22 Standalone CLI Tool
 pub const ExitCode = enum(u8) {
@@ -32,11 +45,29 @@ pub const ExitCode = enum(u8) {
     error, // Error occurred
 };
 
+// Output format enumeration.
+// 2025-12-21-083130-pst: Phase 23 Enhanced CLI Output and Configuration
+pub const OutputFormat = enum(u8) {
+    text, // Plain text output
+    json, // JSON output
+};
+
+// CLI configuration structure.
+// 2025-12-21-083130-pst: Phase 23 Enhanced CLI Output and Configuration
+pub const CLIConfig = struct {
+    use_color: bool, // Enable color output
+    output_format: OutputFormat, // Output format
+    max_line_length: u32, // Max line length (default 100)
+    max_function_length: u32, // Max function length (default 70)
+};
+
 // CLI application state.
 // 2025-12-20-200932-pst: Phase 22 Standalone CLI Tool
+// 2025-12-21-083130-pst: Phase 23 Enhanced CLI Output and Configuration
 pub const GrainStyleCLI = struct {
     allocator: std.mem.Allocator,
     devtools_app: grain_workspace.devtools.DevToolsApp,
+    config: CLIConfig,
 
     /// Initialize CLI application.
     // 2025-12-20-200932-pst: Phase 22 Standalone CLI Tool

@@ -215,9 +215,9 @@ src/grain_bubble/
 - ✅ DAG version snapshot management (create_version_snapshot, load_version_snapshot)
 - ✅ Integration helper functions (component_to_description, canvas_to_context, serialize_event, deserialize_event)
 - ✅ Comprehensive test coverage (3 test files, 26+ test cases)
-- ⏳ Full vector search implementation (with real Court compute)
-- ⏳ Full LLM inference integration (with real Court compute)
-- ⏳ Full DAG event recording and replay (with real DAG core)
+- ✅ Full vector search implementation (with real Court compute)
+- ✅ Full LLM inference integration (with real Court compute)
+- ✅ Full DAG event recording and replay (with real DAG core)
 
 ---
 

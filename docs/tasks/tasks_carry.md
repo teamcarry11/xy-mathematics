@@ -213,6 +213,16 @@ All core modules are complete:
 - [ ] OAuth token management (optional, for token refresh)
 - [ ] User profile synchronization
 - [ ] Integration with auth service (OAuth callback handler integrated)
+- [x] ✅ Database integration foundation (2025-12-20-181029-pst)
+  - [x] ✅ Database integration module created
+  - [x] ✅ Database client functions (create_user, get_user_by_id, get_user_by_email, update_user)
+  - [x] ✅ Database integration tests
+- [x] ✅ Handler adapters updated to use database integration (2025-12-20-204947-pst)
+  - [x] ✅ Register handler stores users in database
+  - [x] ✅ Login handler verifies credentials against database
+  - [x] ✅ Profile handler fetches from database
+  - [x] ✅ Settings handler fetches from database
+  - [x] ✅ Database config initialization in os_integration
 - [x] ✅ Update `docs/plans/plan_carry.md` and `docs/tasks/tasks_carry.md` with completion
 
 ### Dependencies

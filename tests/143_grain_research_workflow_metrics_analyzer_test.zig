@@ -45,8 +45,9 @@ test "parse coordination metrics json" {
     defer analyzer.deinit();
 
     // Flow Agent's actual JSON format (nested structure).
+    // Patterns only include source_agent_id, target_agent_id, count (no latency_ms).
     const json_data =
-        \\{"coordination":{"total_coordinations":1,"success_rate_percent":100,"avg_coordination_latency_ms":50,"coordination_patterns":[{"source_agent_id":1,"target_agent_id":2,"coordination_latency_ms":50,"count":1}]}}
+        \\{"coordination":{"total_coordinations":1,"success_rate_percent":100,"avg_coordination_latency_ms":50,"coordination_patterns":[{"source_agent_id":1,"target_agent_id":2,"count":1}]}}
     ;
 
     try analyzer.parse_json_metrics(json_data);

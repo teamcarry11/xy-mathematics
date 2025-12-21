@@ -253,9 +253,11 @@ pub const WorkflowMetricsAnalyzer = struct {
                             }
                         }
 
-                        if (pattern_obj.get("coordination_latency_ms")) |lat_val| {
-                            if (lat_val == .integer) {
-                                metric.coordination_latency_ms = @intCast(lat_val.integer);
+                        // Patterns don't include latency_ms (it's at top level).
+                        // Use average latency if available, otherwise 0.
+                        if (coord_obj.get("avg_coordination_latency_ms")) |avg_lat_val| {
+                            if (avg_lat_val == .integer) {
+                                metric.coordination_latency_ms = @intCast(avg_lat_val.integer);
                             }
                         }
 

@@ -1,7 +1,7 @@
 # Grain Carry Agent: Core Coordination Status
 
 **Agent**: Grain Carry Agent (6th Agent)  
-**Last Updated**: 2025-12-21-085105-pst
+**Last Updated**: 2025-12-21-095135-pst
 
 ---
 
@@ -19,6 +19,8 @@
 - ✅ JSON request body building for POST/PUT operations (2025-12-21-083123-pst)
 - ✅ JSON response parsing function (`parse_user_from_json`) (2025-12-21-084438-pst)
 - ✅ Enhanced tests for JSON parsing (5 new tests, 14 total)
+- ✅ Fixed request handling bug in `get_user_by_id` and `get_user_by_email` (2025-12-21-095135-pst)
+- ✅ Added helper functions for async response handling (`check_request_response`, `http_status_to_db_result`)
 
 **Current Work**:
 - Database integration module complete with JSON request/response handling

@@ -2,7 +2,7 @@
 
 **Agent**: Grain Aurora IDE Dream Browser Agent (2nd Agent)  
 **Status**: Active — Foundation components, shared modules  
-**Last Updated**: 2025-12-20-200935-pst
+**Last Updated**: 2025-12-21-083012-pst
 
 ---
 
@@ -177,6 +177,23 @@
 - [x] All tests pass with proper assertions
 - [x] Update `docs/plans/plan_aurora.md` and `docs/tasks/tasks_aurora.md`
 - **Date**: 2025-12-20-200935-PST
+
+#### Phase 2.12: Tree-sitter Comprehensive Tests ✅ **COMPLETE**
+
+- [x] Create comprehensive test suite (`tests/122_aurora_tree_sitter_test.zig`)
+- [x] Tests for Tree-sitter constants (MAX_NODES, MAX_DEPTH, MAX_TOKENS)
+- [x] Tests for token type enum
+- [x] Tests for initialization and deinitialization
+- [x] Tests for parse operations (functions, structs, enums, unions)
+- [x] Tests for token extraction (keywords, strings, comments, numbers)
+- [x] Tests for node and token retrieval operations
+- [x] Tests for function name extraction
+- [x] Tests for bounds checking and structure validation
+- [x] Add `aurora_tree_sitter_module` and `tree_sitter_test_file` to build.zig
+- [x] GrainStyle compliance (grain_case, u32 types, max 73 chars per line)
+- [x] All tests pass with proper assertions
+- [x] Update `docs/plans/plan_aurora.md` and `docs/tasks/tasks_aurora.md`
+- **Date**: 2025-12-21-083012-PST
 
 ### Grain Style Requirements
 

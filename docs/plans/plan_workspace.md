@@ -382,6 +382,7 @@ All planned phases for Grain Workspace Agent have been completed:
 - Phase 21: DevTools Grain Style Linter ✅ (2025-12-20-184722-pst)
 - Phase 22: Standalone CLI Tool ✅ (2025-12-20-200932-pst)
 - Phase 23: Enhanced CLI Output and Configuration ✅ (2025-12-21-083130-pst)
+- Phase 24: Recursive Directory Linting ✅ (2025-12-21-083947-pst)
 
 ### Phase 10.1: WebSocket Integration (Monitor) ✅ **COMPLETE**
 
@@ -1014,12 +1015,56 @@ All planned phases for Grain Workspace Agent have been completed:
 - Max 70 lines per function
 - All compiler warnings enabled
 
+### Phase 24: Recursive Directory Linting ✅ **COMPLETE**
+
+**Date**: 2025-12-21-083947-pst
+
+**Completed Work**:
+1. **Recursive Directory Linting** (`src/grain_workspace/grain_style_cli/main.zig`):
+   - Implemented recursive directory traversal
+   - Implemented file filtering (only .zig files)
+   - Implemented ignore patterns support (.grainignore)
+   - Added `load_ignore_patterns()` function for loading .grainignore files
+   - Added `should_ignore()` function for pattern matching
+   - Added `collect_zig_files()` function for recursive file collection
+   - Added `is_directory()` function for directory detection
+   - Updated `run()` function to support directories
+   - Updated `parse_args()` to support --ignore flag
+   - Bounded file collection (max 10,000 files)
+   - Bounded ignore patterns (max 256 patterns)
+   - Comprehensive tests (`tests/116_grain_workspace_grain_style_cli_test.zig`)
+
+**Features**:
+- Recursive directory traversal
+- File filtering (only .zig files)
+- Ignore patterns support (.grainignore)
+- Wildcard pattern matching (*)
+- Directory detection
+- Bounded file collection (max 10,000 files)
+- Bounded ignore patterns (max 256 patterns)
+- 100% open-source (per Research Agent's service model)
+
+**Alignment with Research Agent's Open-Source Service Model**:
+- Enhanced CLI tool: 100% open-source
+- Production-ready with recursive directory linting
+- Foundation for Grain Style Developer Tools (SLC v1.0)
+- Supports open-source service revenue model (consulting, training, hosted services)
+- Ready for large codebase linting
+
+**Grain Style Compliance**:
+- `grain_case` function names
+- `u32`/`u64` types (no `usize`)
+- Bounded allocations (all limits explicit)
+- Assertions for preconditions
+- Max 70 lines per function
+- All compiler warnings enabled
+
 **Future Enhancements**:
 - Editor plugin integration (VS Code, Cursor)
 - Auto-fix capabilities (future phase)
-- Recursive directory linting
 - Performance optimizations for large codebases
 - Enhanced JSON output (array format, summary statistics)
+- Full file path collection with dynamic allocation
 
 **Creative Future Ideas** (Conceptual):
 - **System Auditor**: Security auditing and compliance checking

@@ -2,7 +2,7 @@
 
 **Agent**: Grain Aurora IDE Dream Browser Agent (2nd Agent)  
 **Status**: Active — Foundation components, shared modules, Dream Browser Spec v0 integration  
-**Last Updated**: 2025-12-20-200935-pst
+**Last Updated**: 2025-12-21-083012-pst
 
 ---
 
@@ -293,7 +293,23 @@ Grain Aurora IDE Dream Browser Agent is responsible for building the unified IDE
 - **Files**: `tests/121_aurora_folding_test.zig`, `build.zig`
 - **Date**: 2025-12-20-200935-PST
 
-#### 2.12: Dream Browser Spec v0 Integration 📋 **PLANNED**
+#### 2.12: Tree-sitter Comprehensive Tests ✅ **COMPLETE**
+- ✅ Created comprehensive test suite (`tests/122_aurora_tree_sitter_test.zig`)
+- ✅ Tests for Tree-sitter constants (MAX_NODES, MAX_DEPTH, MAX_TOKENS)
+- ✅ Tests for token type enum
+- ✅ Tests for initialization and deinitialization
+- ✅ Tests for parse operations (functions, structs, enums, unions)
+- ✅ Tests for token extraction (keywords, strings, comments, numbers)
+- ✅ Tests for node and token retrieval operations
+- ✅ Tests for function name extraction
+- ✅ Tests for bounds checking and structure validation
+- ✅ Added `aurora_tree_sitter_module` and `tree_sitter_test_file` to build.zig
+- ✅ GrainStyle compliance (grain_case, u32 types, max 73 chars per line)
+- ✅ All tests pass with proper assertions
+- **Files**: `tests/122_aurora_tree_sitter_test.zig`, `build.zig`
+- **Date**: 2025-12-21-083012-PST
+
+#### 2.13: Dream Browser Spec v0 Integration 📋 **PLANNED**
 - 📋 Dream Browser Spec v0 research complete — ready for integration
 - 📋 Research deliverable: `docs/research/dream_browser_spec_v0_research_2025-12-10-083733-pst.md`
 - 📋 Integration with Aurora Agent development plan

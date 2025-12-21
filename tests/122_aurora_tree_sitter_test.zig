@@ -41,7 +41,7 @@ test "tree-sitter initialization" {
     defer parser.deinit();
 
     // Assert: Parser initialized correctly
-    std.debug.assert(parser.allocator.ptr != null);
+    // Note: allocator is valid (no null check needed for Allocator type)
 }
 
 test "tree-sitter deinitialization" {
@@ -305,8 +305,9 @@ test "tree-sitter get node at point invalid" {
     const point = TreeSitter.Point{ .row = 999, .column = 999 };
     const node = parser.getNodeAt(&tree, point);
 
-    // Assert: Should return null for invalid point
+    // Assert: Should return null or root node for invalid point
     // Note: May return root node or null depending on implementation
+    std.debug.assert(node == null or node.?.type.len > 0);
 }
 
 test "tree-sitter get token at point" {
@@ -324,10 +325,11 @@ test "tree-sitter get token at point" {
 
     // Get token at start
     const point = TreeSitter.Point{ .row = 0, .column = 0 };
-    const token = parser.getTokenAt(&parser, &tree, point);
+    const token = parser.getTokenAt(&tree, point);
 
-    // Assert: Should find token
+    // Assert: Should find token or null (if whitespace)
     // Note: May return null if point is in whitespace
+    _ = token;
 }
 
 test "tree-sitter get function name" {

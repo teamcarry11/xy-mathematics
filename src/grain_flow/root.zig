@@ -50,6 +50,9 @@ pub const workflow_observatory = @import("workflow_observatory.zig");
 // Dashboard API for HTTP endpoints.
 pub const dashboard_api = @import("dashboard_api.zig");
 
+// Workflow scheduler for scheduled and recurring workflows.
+pub const workflow_scheduler = @import("workflow_scheduler.zig");
+
 // Module exports.
 pub const EventBus = event_bus.EventBus;
 pub const EventType = event_bus.EventType;
@@ -102,3 +105,7 @@ pub const register_dashboard_endpoints = dashboard_api.register_dashboard_endpoi
 pub const handle_dashboard_request = dashboard_api.handle_dashboard_request;
 pub const handle_summary_request = dashboard_api.handle_summary_request;
 pub const handle_metrics_request = dashboard_api.handle_metrics_request;
+
+pub const WorkflowScheduler = workflow_scheduler.WorkflowScheduler;
+pub const ScheduledWorkflow = workflow_scheduler.ScheduledWorkflow;
+pub const ScheduleType = workflow_scheduler.ScheduleType;

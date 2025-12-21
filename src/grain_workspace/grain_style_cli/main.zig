@@ -600,6 +600,10 @@ pub const GrainStyleCLI = struct {
                 i += 1;
                 const config_path = args[i];
                 _ = self.load_config(config_path);
+            } else if (std.mem.eql(u8, arg, "--ignore") and i + 1 < args.len) {
+                i += 1;
+                const ignore_path = args[i];
+                _ = self.load_ignore_patterns(ignore_path);
             } else if (!std.mem.startsWith(u8, arg, "--")) {
                 if (file_paths_len.* < file_paths.len) {
                     file_paths[file_paths_len.*] = arg;

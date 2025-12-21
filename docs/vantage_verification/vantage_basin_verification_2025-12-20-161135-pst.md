@@ -175,12 +175,19 @@
 
 ## Next Steps
 
-1. **IMMEDIATE**: Create verification tests for Nostr protocol (HTTP Client, WebSocket)
-2. **IMMEDIATE**: Create verification tests for file system operations
+1. **IMMEDIATE**: Complete file system kernel verification (integration tests with VM)
+2. **IMMEDIATE**: Create verification tests for Nostr protocol (HTTP Client, WebSocket)
 3. **SHORT-TERM**: Create verification tests for DAG operations
 4. **SHORT-TERM**: Test VM translation to macOS Tahoe 26.2
 5. **MEDIUM-TERM**: Performance benchmarks
 6. **MEDIUM-TERM**: Documentation updates
+
+**Progress**:
+- ✅ File system kernel validation tests complete (`tests/097_file_system_kernel_test.zig`)
+  - Tests all file system syscalls (open, read, write, close, unlink, rename, mkdir, opendir, readdir, closedir)
+  - Validates error conditions (null pointers, invalid handles, empty paths, invalid flags)
+  - Follows Grain Style (grain_case, explicit types, comprehensive assertions)
+  - Added to `build.zig`
 
 ---
 

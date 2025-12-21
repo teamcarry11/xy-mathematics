@@ -325,7 +325,7 @@ docs/
 
 **References**:
 - [`docs/research/slc_product_financial_analysis_2025-12-20-150727-pst.md`](../research/slc_product_financial_analysis_2025-12-20-150727-pst.md)
-- [`docs/research/slc_grain_style_developer_tools_coordination_2025-12-20-162641-pst.md`](../research/slc_grain_style_developer_tools_coordination_2025-12-20-162641-pst.md)
+- [`docs/research/slc_grain_style_developer_tools_open_source_coordination_2025-12-20-182737-pst.md`](../research/slc_grain_style_developer_tools_open_source_coordination_2025-12-20-182737-pst.md) (Open-source service model)
 - [`docs/research/grain_government_systems_integration_2025-12-20-145246-pst.md`](../research/grain_government_systems_integration_2025-12-20-145246-pst.md)
 
 ---

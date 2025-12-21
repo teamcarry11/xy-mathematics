@@ -94,8 +94,6 @@ test "platform_riscv_console_putchar" {
     Debug.kassert(riscv_platform.initialized, "Platform not initialized", .{});
 }
 
-/// Test platform console putchar for AArch64.
-/// Why: Verify AArch64 console output works via platform abstraction.
 test "platform_aarch64_console_putchar" {
     // Initialize AArch64 platform.
     const aarch64_platform = platform.Platform.init(

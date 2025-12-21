@@ -427,7 +427,7 @@ pub fn check_request_response(
 }
 
 // Convert HTTP status to database result.
-fn http_status_to_db_result(status: grain_core_api.HttpStatus) DatabaseResult {
+pub fn http_status_to_db_result(status: grain_core_api.HttpStatus) DatabaseResult {
     std.debug.assert(@intFromEnum(status) >= 200);
     std.debug.assert(@intFromEnum(status) <= 503);
     return switch (status) {

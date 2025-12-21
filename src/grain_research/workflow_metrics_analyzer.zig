@@ -84,6 +84,7 @@ pub const WorkflowMetricsAnalyzer = struct {
     coordination_metrics: std.ArrayListUnmanaged(AgentCoordinationMetric),
     failure_metrics: std.ArrayListUnmanaged(FailurePatternMetric),
     performance_metrics: std.ArrayListUnmanaged(PerformanceMetric),
+    coordination_success_rate_percent: u32,
 
     // Initialize workflow metrics analyzer.
     pub fn init(allocator: std.mem.Allocator) WorkflowMetricsAnalyzer {
@@ -95,6 +96,7 @@ pub const WorkflowMetricsAnalyzer = struct {
             .coordination_metrics = .{},
             .failure_metrics = .{},
             .performance_metrics = .{},
+            .coordination_success_rate_percent = 0,
         };
     }
 
@@ -221,6 +223,13 @@ pub const WorkflowMetricsAnalyzer = struct {
         std.debug.assert(coord_val == .object);
 
         const coord_obj = coord_val.object;
+
+        // Parse top-level success rate.
+        if (coord_obj.get("success_rate_percent")) |success_rate_val| {
+            if (success_rate_val == .integer) {
+                self.coordination_success_rate_percent = @intCast(success_rate_val.integer);
+            }
+        }
 
         // Parse coordination patterns array.
         if (coord_obj.get("coordination_patterns")) |patterns_val| {
@@ -437,24 +446,10 @@ pub const WorkflowMetricsAnalyzer = struct {
     pub fn get_coordination_success_rate_percent(
         self: *const WorkflowMetricsAnalyzer,
     ) u32 {
-        std.debug.assert(self.coordination_metrics.items.len <= MAX_AGENT_PAIRS);
+        std.debug.assert(self.coordination_success_rate_percent <= 100);
 
-        if (self.coordination_metrics.items.len == 0) {
-            return 0;
-        }
-
-        var success_count: u32 = 0;
-        var i: u32 = 0;
-        while (i < self.coordination_metrics.items.len) : (i += 1) {
-            if (self.coordination_metrics.items[i].status == .success) {
-                success_count += 1;
-            }
-        }
-
-        const success_rate = (success_count * 100) / self.coordination_metrics.items.len;
-        std.debug.assert(success_rate <= 100);
-
-        return success_rate;
+        // Use top-level success rate from JSON (more accurate than counting patterns).
+        return self.coordination_success_rate_percent;
     }
 
     // Calculate failure recovery success rate percentage.

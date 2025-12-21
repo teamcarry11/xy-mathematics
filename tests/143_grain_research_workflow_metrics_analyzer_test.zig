@@ -131,17 +131,21 @@ test "calculate coordination success rate" {
     defer analyzer.deinit();
 
     // Flow Agent's actual JSON format.
+    // Patterns only include source_agent_id, target_agent_id, count (no latency_ms, status).
     const json_data =
         \\{"coordination":{"total_coordinations":2,"success_rate_percent":50,"avg_coordination_latency_ms":62,"coordination_patterns":[
-        \\{"source_agent_id":1,"target_agent_id":2,"coordination_latency_ms":50,"status":0,"count":1},
-        \\{"source_agent_id":2,"target_agent_id":3,"coordination_latency_ms":75,"status":1,"count":1}
+        \\{"source_agent_id":1,"target_agent_id":2,"count":1},
+        \\{"source_agent_id":2,"target_agent_id":3,"count":1}
         \\]}}
     ;
 
     try analyzer.parse_json_metrics(json_data);
 
+    // Success rate comes from top-level field, not patterns.
     const success_rate = analyzer.get_coordination_success_rate_percent();
     try testing.expect(success_rate == 50);
+    // Note: Parser uses avg latency from top level for all patterns.
+    try testing.expect(analyzer.get_coordination_metric_count() == 2);
 }
 
 test "parse empty json" {
@@ -162,11 +166,12 @@ test "parse complete metrics json" {
     var analyzer = WorkflowMetricsAnalyzer.init(allocator);
     defer analyzer.deinit();
 
+    // Flow Agent's actual JSON format (nested structure from export_all_metrics_json).
     const json_data =
-        \\{"workflow":{"executions":[{"workflow_id":1,"execution_time_ms":100,"status":0,"timestamp":1000}]},
-        \\"coordination":{"coordination_patterns":[{"source_agent_id":1,"target_agent_id":2,"coordination_latency_ms":50}]},
-        \\"failure":{"failure_type_distribution":{"transient":2}},
-        \\"performance":{"avg_queue_depth":3,"avg_wait_time_ms":200,"avg_cpu_percent":50}}
+        \\{"workflow":{"total_executions":1,"success_rate_percent":100,"failure_rate_percent":0,"avg_execution_time_ms":100,"executions":[{"workflow_id":1,"execution_time_ms":100,"status":0,"timestamp":1000}]},
+        \\"coordination":{"total_coordinations":1,"success_rate_percent":100,"avg_coordination_latency_ms":50,"coordination_patterns":[{"source_agent_id":1,"target_agent_id":2,"count":1}]},
+        \\"failure":{"total_failures":2,"recovery_success_rate_percent":80,"failure_type_distribution":{"transient":2}},
+        \\"performance":{"avg_queue_depth":3,"avg_wait_time_ms":200,"avg_cpu_percent":50,"avg_memory_bytes":1048576}}
     ;
 
     try analyzer.parse_json_metrics(json_data);

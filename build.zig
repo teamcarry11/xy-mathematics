@@ -733,6 +733,17 @@ pub fn build(b: *std.Build) void {
         }),
     });
 
+    const text_renderer_test_file = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/124_aurora_text_renderer_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "aurora_text_renderer", .module = aurora_text_renderer_module },
+            },
+        }),
+    });
+
     // Dream Browser Viewport module (for test imports)
     const dream_browser_viewport_module = b.addModule("dream_browser_viewport", .{
         .root_source_file = b.path("src/dream_browser_viewport.zig"),
@@ -1129,6 +1140,8 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&run_tree_sitter_test_file.step);
     const run_tab_manager_test_file = b.addRunArtifact(tab_manager_test_file);
     test_step.dependOn(&run_tab_manager_test_file.step);
+    const run_text_renderer_test_file = b.addRunArtifact(text_renderer_test_file);
+    test_step.dependOn(&run_text_renderer_test_file.step);
     const run_route_tests = b.addRunArtifact(route_tests);
     test_step.dependOn(&run_route_tests.step);
     const run_orchestrator_tests = b.addRunArtifact(orchestrator_tests);

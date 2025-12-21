@@ -104,19 +104,33 @@ test "file system kernel verification" {
     try testing.expect(write_result_null == .err);
     try testing.expect(write_result_null.err == BasinError.invalid_argument);
     
-    // Test 3: Read from file.
+    // Test 3: Read from file (with invalid handle - should fail).
     const read_buffer_ptr: u64 = 0x3000; // VM memory address
     const read_buffer_len: u32 = 1024;
     
-    const read_result = kernel.syscall_read(
-        1, // file handle
+    // Test with zero handle - should fail.
+    const read_result_zero = kernel.syscall_read(
+        0, // invalid handle
         read_buffer_ptr,
         read_buffer_len,
         0, // offset (not used)
     );
     
-    // Assert: Read should succeed or return appropriate error.
-    _ = read_result;
+    // Assert: Should fail with invalid_argument (invalid handle).
+    try testing.expect(read_result_zero == .err);
+    try testing.expect(read_result_zero.err == BasinError.invalid_argument);
+    
+    // Test with null buffer pointer - should fail.
+    const read_result_null = kernel.syscall_read(
+        1, // file handle
+        0, // null pointer
+        read_buffer_len,
+        0, // offset (not used)
+    );
+    
+    // Assert: Should fail with invalid_argument (null pointer).
+    try testing.expect(read_result_null == .err);
+    try testing.expect(read_result_null.err == BasinError.invalid_argument);
     
     // Test 4: Close file.
     const close_result = kernel.syscall_close(1, 0, 0, 0);

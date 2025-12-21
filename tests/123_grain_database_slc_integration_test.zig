@@ -318,3 +318,110 @@ test "workspace_file_storage_count" {
     const count = file_storage.count_file_metadata();
     std.debug.assert(count >= 2);
 }
+
+test "nostr_profile_storage_pagination" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deallocate();
+    const allocator = gpa.allocator();
+    var storage = try StorageEngine.init(allocator, 1024);
+    defer storage.deinit();
+    var g = try Graph.init(allocator);
+    defer g.deinit();
+    var profile_storage = NostrProfileStorage.init(&storage, &g);
+    const profile_data = "{\"name\":\"Test\"}";
+    _ = try profile_storage.store_profile("npub1page1", profile_data);
+    _ = try profile_storage.store_profile("npub1page2", profile_data);
+    _ = try profile_storage.store_profile("npub1page3", profile_data);
+    var output: [2]u64 = undefined;
+    const count1 = profile_storage.list_profiles_paginated(&output, 0, 2);
+    std.debug.assert(count1 == 2);
+    const count2 = profile_storage.list_profiles_paginated(&output, 2, 2);
+    std.debug.assert(count2 >= 1);
+}
+
+test "dag_website_storage_pagination" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deallocate();
+    const allocator = gpa.allocator();
+    var storage = try StorageEngine.init(allocator, 1024);
+    defer storage.deinit();
+    var g = try Graph.init(allocator);
+    defer g.deinit();
+    var website_storage = DagWebsiteStorage.init(&storage, &g);
+    const content = "<h1>Test</h1>";
+    _ = try website_storage.store_node("page1", content);
+    _ = try website_storage.store_node("page2", content);
+    _ = try website_storage.store_node("page3", content);
+    var output: [2]u64 = undefined;
+    const count1 = website_storage.list_nodes_paginated(&output, 0, 2);
+    std.debug.assert(count1 == 2);
+    const count2 = website_storage.list_nodes_paginated(&output, 2, 2);
+    std.debug.assert(count2 >= 1);
+}
+
+test "workspace_file_storage_pagination" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deallocate();
+    const allocator = gpa.allocator();
+    var storage = try StorageEngine.init(allocator, 1024);
+    defer storage.deinit();
+    var file_storage = WorkspaceFileStorage.init(&storage);
+    const metadata = "{\"size\":1024}";
+    _ = try file_storage.store_file_metadata("/home/user/page1.txt", metadata);
+    _ = try file_storage.store_file_metadata("/home/user/page2.txt", metadata);
+    _ = try file_storage.store_file_metadata("/home/user/page3.txt", metadata);
+    var output: [2]u64 = undefined;
+    const count1 = file_storage.list_file_metadata_paginated(&output, 0, 2);
+    std.debug.assert(count1 == 2);
+    const count2 = file_storage.list_file_metadata_paginated(&output, 2, 2);
+    std.debug.assert(count2 >= 1);
+}
+
+test "nostr_profile_storage_search" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deallocate();
+    const allocator = gpa.allocator();
+    var storage = try StorageEngine.init(allocator, 1024);
+    defer storage.deinit();
+    var g = try Graph.init(allocator);
+    defer g.deinit();
+    var profile_storage = NostrProfileStorage.init(&storage, &g);
+    _ = try profile_storage.store_profile("npub1search1", "{\"name\":\"Alice\",\"bio\":\"Developer\"}");
+    _ = try profile_storage.store_profile("npub1search2", "{\"name\":\"Bob\",\"bio\":\"Designer\"}");
+    _ = try profile_storage.store_profile("npub1search3", "{\"name\":\"Charlie\",\"bio\":\"Developer\"}");
+    var output: [10]u64 = undefined;
+    const count = profile_storage.search_profiles("Developer", &output);
+    std.debug.assert(count >= 2);
+}
+
+test "dag_website_storage_search" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deallocate();
+    const allocator = gpa.allocator();
+    var storage = try StorageEngine.init(allocator, 1024);
+    defer storage.deinit();
+    var g = try Graph.init(allocator);
+    defer g.deinit();
+    var website_storage = DagWebsiteStorage.init(&storage, &g);
+    _ = try website_storage.store_node("search1", "<h1>About Page</h1>");
+    _ = try website_storage.store_node("search2", "<h1>Contact Page</h1>");
+    _ = try website_storage.store_node("search3", "<h1>About Us</h1>");
+    var output: [10]u64 = undefined;
+    const count = website_storage.search_nodes("About", &output);
+    std.debug.assert(count >= 2);
+}
+
+test "workspace_file_storage_search" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deallocate();
+    const allocator = gpa.allocator();
+    var storage = try StorageEngine.init(allocator, 1024);
+    defer storage.deinit();
+    var file_storage = WorkspaceFileStorage.init(&storage);
+    _ = try file_storage.store_file_metadata("/home/user/search1.txt", "{\"type\":\"text\",\"size\":1024}");
+    _ = try file_storage.store_file_metadata("/home/user/search2.txt", "{\"type\":\"image\",\"size\":2048}");
+    _ = try file_storage.store_file_metadata("/home/user/search3.txt", "{\"type\":\"text\",\"size\":512}");
+    var output: [10]u64 = undefined;
+    const count = file_storage.search_file_metadata("text", &output);
+    std.debug.assert(count >= 2);
+}

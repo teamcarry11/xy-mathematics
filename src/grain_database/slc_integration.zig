@@ -528,6 +528,52 @@ pub const WorkspaceFileStorage = struct {
         output: []u64,
     ) u32 {
         std.debug.assert(output.len > 0);
+        return self.list_file_metadata_paginated(output, 0, output.len);
+    }
+
+    // List workspace file metadata with pagination (offset, limit).
+    pub fn list_file_metadata_paginated(
+        self: *WorkspaceFileStorage,
+        output: []u64,
+        offset: u32,
+        limit: u32,
+    ) u32 {
+        std.debug.assert(output.len > 0);
+        std.debug.assert(limit > 0);
+        std.debug.assert(limit <= output.len);
+        var count: u32 = 0;
+        var skipped: u32 = 0;
+        var i: u32 = 0;
+        const prefix = "workspace:file:";
+        while (i < self.storage_engine.records_len) : (i += 1) {
+            const record = &self.storage_engine.records[i];
+            if (record.key_len >= prefix.len) {
+                if (std.mem.eql(u8, record.key[0..prefix.len], prefix)) {
+                    if (skipped < offset) {
+                        skipped += 1;
+                    } else {
+                        if (count < limit and count < output.len) {
+                            output[count] = record.record_id;
+                            count += 1;
+                        }
+                        if (count >= limit) {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        return count;
+    }
+
+    // Search workspace file metadata by content (simple text matching).
+    pub fn search_file_metadata(
+        self: *WorkspaceFileStorage,
+        query: []const u8,
+        output: []u64,
+    ) u32 {
+        std.debug.assert(query.len > 0);
+        std.debug.assert(output.len > 0);
         var count: u32 = 0;
         var i: u32 = 0;
         const prefix = "workspace:file:";
@@ -535,9 +581,12 @@ pub const WorkspaceFileStorage = struct {
             const record = &self.storage_engine.records[i];
             if (record.key_len >= prefix.len) {
                 if (std.mem.eql(u8, record.key[0..prefix.len], prefix)) {
-                    if (count < output.len) {
-                        output[count] = record.record_id;
-                        count += 1;
+                    const value_slice = record.value[0..record.value_len];
+                    if (std.mem.indexOf(u8, value_slice, query) != null) {
+                        if (count < output.len) {
+                            output[count] = record.record_id;
+                            count += 1;
+                        }
                     }
                 }
             }

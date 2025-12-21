@@ -423,6 +423,12 @@ Grain Database Agent is responsible for building a general-purpose, Grain Style-
 - ✅ All helpers now support full CRUD + list operations
 - ✅ Enhanced tests to cover all new methods
 
+**Pagination and Search** (2025-12-21-150958-pst):
+- ✅ Added pagination support (`list_profiles_paginated`, `list_nodes_paginated`, `list_file_metadata_paginated`)
+- ✅ Added search functionality (`search_profiles`, `search_nodes`, `search_file_metadata`)
+- ✅ All helpers now support pagination (offset + limit) and content search
+- ✅ Comprehensive tests for pagination and search methods
+
 **Integration Points**:
 - **Nostr Profile Builder**: Profile data storage with key-value and graph support
 - **DAG Website Builder**: Website content storage and DAG structure management

@@ -448,6 +448,9 @@
 - [x] Add CRUD operations (update/delete methods) to all helpers
 - [x] Add list/query methods (`list_profiles`, `list_nodes`, `list_file_metadata`)
 - [x] Enhanced tests to cover all new methods
+- [x] Add pagination support (`list_profiles_paginated`, `list_nodes_paginated`, `list_file_metadata_paginated`)
+- [x] Add search functionality (`search_profiles`, `search_nodes`, `search_file_metadata`)
+- [x] Comprehensive tests for pagination and search methods
 - [x] Update documentation
 
 **Deliverables**:

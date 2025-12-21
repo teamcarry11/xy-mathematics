@@ -8,7 +8,7 @@
 
 ## Overall Status
 
-**Goal**: RISC-V-targeted Grain OS with graphical interface running in macOS Tahoe 26.1 VM, with path toward Framework 13 RISC-V hardware.
+**Goal**: RISC-V-targeted Grain OS with graphical interface running in macOS Tahoe 26.3 Beta VM, with path toward Framework 13 RISC-V hardware.
 
 **Current Status**: Multiple agents working in parallel on different components.
 

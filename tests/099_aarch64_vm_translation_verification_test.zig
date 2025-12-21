@@ -1,5 +1,5 @@
 //! AArch64 VM Translation Verification Test
-//! Why: Verify Vantage VM translates to macOS Tahoe 26.2 (aarch64 Apple Silicon M).
+//! Why: Verify Vantage VM translates to macOS Tahoe 26.3 Beta (aarch64 Apple Silicon M).
 //! Grain Style: Explicit types (u32/u64), comprehensive assertions, bounded allocations.
 
 const std = @import("std");

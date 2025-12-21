@@ -638,6 +638,13 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    // Aurora Filter module (for test imports)
+    const aurora_filter_module = b.addModule("aurora_filter", .{
+        .root_source_file = b.path("src/aurora_filter.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
     // Aurora Editor module (for test imports)
     const aurora_editor_module = b.addModule("aurora_editor", .{
         .root_source_file = b.path("src/aurora_editor.zig"),
@@ -4465,6 +4472,34 @@ pub fn build(b: *std.Build) void {
     const grain_flow_core_integration_tests_run = b.addRunArtifact(grain_flow_core_integration_tests);
     test_step.dependOn(&grain_flow_core_integration_tests_run.step);
 
+    // Grain Flow realistic metrics generator tests
+    const grain_flow_realistic_metrics_generator_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/147_grain_flow_realistic_metrics_generator_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_flow", .module = grain_flow_module },
+            },
+        }),
+    });
+    const grain_flow_realistic_metrics_generator_tests_run = b.addRunArtifact(grain_flow_realistic_metrics_generator_tests);
+    test_step.dependOn(&grain_flow_realistic_metrics_generator_tests_run.step);
+
+    // Grain Flow Step 3 real metrics export tests
+    const grain_flow_step3_real_metrics_export_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/148_grain_flow_step3_real_metrics_export_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_flow", .module = grain_flow_module },
+            },
+        }),
+    });
+    const grain_flow_step3_real_metrics_export_tests_run = b.addRunArtifact(grain_flow_step3_real_metrics_export_tests);
+    test_step.dependOn(&grain_flow_step3_real_metrics_export_tests_run.step);
+
     // Grain Research engine tests
     const grain_research_engine_tests = b.addTest(.{
         .root_module = b.createModule(.{
@@ -4548,6 +4583,35 @@ pub fn build(b: *std.Build) void {
     });
     const grain_research_workflow_metrics_step2_validation_tests_run = b.addRunArtifact(grain_research_workflow_metrics_step2_validation_tests);
     test_step.dependOn(&grain_research_workflow_metrics_step2_validation_tests_run.step);
+
+    // Grain Research workflow metrics Step 3 validation tests (real workflow metrics)
+    const grain_research_workflow_metrics_step3_validation_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/149_grain_research_workflow_metrics_step3_validation_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_research", .module = grain_research_module },
+                .{ .name = "grain_flow", .module = grain_flow_module },
+            },
+        }),
+    });
+    const grain_research_workflow_metrics_step3_validation_tests_run = b.addRunArtifact(grain_research_workflow_metrics_step3_validation_tests);
+    test_step.dependOn(&grain_research_workflow_metrics_step3_validation_tests_run.step);
+
+    // Grain Research ZON format token benchmark tests
+    const grain_research_zon_token_benchmark_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/150_grain_research_zon_token_benchmark_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_research", .module = grain_research_module },
+            },
+        }),
+    });
+    const grain_research_zon_token_benchmark_tests_run = b.addRunArtifact(grain_research_zon_token_benchmark_tests);
+    test_step.dependOn(&grain_research_zon_token_benchmark_tests_run.step);
 
     // Grain Bubble component tests
     const grain_bubble_component_tests = b.addTest(.{

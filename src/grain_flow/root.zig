@@ -53,6 +53,9 @@ pub const dashboard_api = @import("dashboard_api.zig");
 // Workflow scheduler for scheduled and recurring workflows.
 pub const workflow_scheduler = @import("workflow_scheduler.zig");
 
+// Realistic metrics generator for Step 3 validation.
+pub const realistic_metrics_generator = @import("realistic_metrics_generator.zig");
+
 // Module exports.
 pub const EventBus = event_bus.EventBus;
 pub const EventType = event_bus.EventType;
@@ -109,3 +112,5 @@ pub const handle_metrics_request = dashboard_api.handle_metrics_request;
 pub const WorkflowScheduler = workflow_scheduler.WorkflowScheduler;
 pub const ScheduledWorkflow = workflow_scheduler.ScheduledWorkflow;
 pub const ScheduleType = workflow_scheduler.ScheduleType;
+
+pub const RealisticMetricsGenerator = realistic_metrics_generator.RealisticMetricsGenerator;

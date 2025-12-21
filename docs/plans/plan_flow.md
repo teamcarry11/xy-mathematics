@@ -383,11 +383,16 @@ docs/
 ## Next Steps
 
 1. **Production Use**: Flow Agent is ready for production use with other agents
-2. **Research Agent Collaboration**: Workflow Observatory collaboration started ✅
-   - **Priority 1**: Workflow Observability Metrics (Research Agent, Week 1-2)
-   - **Phase 2**: Instrumentation (Flow Agent, Week 2-3) — Awaiting research findings
+2. **Research Agent Collaboration**: Workflow Observatory collaboration in progress ✅
+   - **Priority 1**: Workflow Observability Metrics (Research Agent, Week 1-2) — **COMPLETE** ✅
+   - **Metric Definitions**: Received and reviewed (2025-12-20-200931-pst)
+   - **Phase 2**: Instrumentation (Flow Agent, Week 2-3) — **READY TO IMPLEMENT** ✅
+     - Phase 1: Basic Metrics (execution time, success rate, failure rate)
+     - Phase 2: Agent Coordination Metrics (latency, success rate, patterns)
+     - Phase 3: Failure Pattern Metrics (type distribution, recovery rate, complexity correlation)
+     - Phase 4: Performance Characteristics (resource usage, queue depth, wait time)
    - **Phase 3**: Workflow Observatory Dashboard (Together, Week 3-4)
-   - **Reference**: [`docs/agent-communications/research_to_flow_response_2025-12-20-175923-pst.md`](../agent-communications/research_to_flow_response_2025-12-20-175923-pst.md)
+   - **Reference**: [`docs/research/workflow_observability_metrics_research_2025-12-20-200931-pst.md`](../research/workflow_observability_metrics_research_2025-12-20-200931-pst.md)
 3. **SLC Product Integration**: Workflow templates ready for:
    - Nostr Profile Builder (profile publishing workflow template complete ✅)
    - DAG Website Builder (website publishing workflow template complete ✅)

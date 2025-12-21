@@ -1236,6 +1236,7 @@ While waiting for Grain Core Agent's API Server (Phase 59), we can prepare the A
 - ✅ Authorization URL generation for all providers
 - ✅ OAuth callback handling (code exchange for tokens) (2025-12-19-191442-pst)
 - ✅ OAuth callback handler adapter
+- ✅ OAuth callback endpoint registered with API server (2025-12-20-162943-pst)
 - ✅ Comprehensive OAuth tests (foundation + callback handling) (2025-12-20-161211-pst)
 
 **Features**:

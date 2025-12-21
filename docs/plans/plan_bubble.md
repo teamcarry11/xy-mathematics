@@ -316,8 +316,8 @@ src/grain_bubble/
 - ✅ Agent flow container with add/remove/get operations
 - ✅ Visual rendering integration with canvas
 - ✅ Node selection by position
+- ✅ Flow export to Flow Agent format (JSON-like representation)
 - ✅ Comprehensive test coverage (Agent flow tests)
-- ⏳ Flow export to Flow Agent format - Planned
 - ⏳ Flow execution visualization - Planned
 
 ---

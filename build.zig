@@ -4342,6 +4342,20 @@ pub fn build(b: *std.Build) void {
     const grain_flow_workflow_metrics_tests_run = b.addRunArtifact(grain_flow_workflow_metrics_tests);
     test_step.dependOn(&grain_flow_workflow_metrics_tests_run.step);
 
+    // Grain Flow Agent Coordination Metrics Tests
+    const grain_flow_agent_coordination_metrics_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/140_grain_flow_agent_coordination_metrics_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_flow", .module = grain_flow_module },
+            },
+        }),
+    });
+    const grain_flow_agent_coordination_metrics_tests_run = b.addRunArtifact(grain_flow_agent_coordination_metrics_tests);
+    test_step.dependOn(&grain_flow_agent_coordination_metrics_tests_run.step);
+
     // Grain Research engine tests
     const grain_research_engine_tests = b.addTest(.{
         .root_module = b.createModule(.{

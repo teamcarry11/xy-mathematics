@@ -132,17 +132,28 @@ test "file system kernel verification" {
     try testing.expect(read_result_null == .err);
     try testing.expect(read_result_null.err == BasinError.invalid_argument);
     
-    // Test 4: Close file.
-    const close_result = kernel.syscall_close(1, 0, 0, 0);
+    // Test 4: Close file (with invalid handle - should fail).
+    // Test with zero handle - should fail.
+    const close_result_zero = kernel.syscall_close(0, 0, 0, 0);
     
-    // Assert: Close should succeed or return appropriate error.
-    _ = close_result;
+    // Assert: Should fail with invalid_argument (invalid handle).
+    try testing.expect(close_result_zero == .err);
+    try testing.expect(close_result_zero.err == BasinError.invalid_argument);
     
-    // Test 5: Delete file (unlink).
-    const unlink_result = kernel.syscall_unlink(file_path_ptr, file_path_len, 0, 0);
+    // Test 5: Delete file (unlink) - validation tests.
+    // Test with null pointer - should fail.
+    const unlink_result_null = kernel.syscall_unlink(0, file_path_len, 0, 0);
     
-    // Assert: Unlink should succeed or return appropriate error.
-    _ = unlink_result;
+    // Assert: Should fail with invalid_argument (null pointer).
+    try testing.expect(unlink_result_null == .err);
+    try testing.expect(unlink_result_null.err == BasinError.invalid_argument);
+    
+    // Test with zero path length - should fail.
+    const unlink_result_zero_len = kernel.syscall_unlink(file_path_ptr, 0, 0, 0);
+    
+    // Assert: Should fail with invalid_argument (empty path).
+    try testing.expect(unlink_result_zero_len == .err);
+    try testing.expect(unlink_result_zero_len.err == BasinError.invalid_argument);
     
     // Test 6: Create directory.
     const dir_path = "test_dir";

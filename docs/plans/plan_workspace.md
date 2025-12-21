@@ -1,8 +1,8 @@
 # Grain Workspace Agent: Development Plan
 
 **Agent**: Grain Workspace Agent (5th Agent)  
-**Status**: Phase 19 Text Editor File I/O Complete ✅  
-**Last Updated**: 2025-12-20-180043-pst  
+**Status**: Phase 20 Text Editor Plain Text Mode Complete ✅  
+**Last Updated**: 2025-12-20-180855-pst  
 **Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-20-172643-pst.md`
 
 ---
@@ -378,6 +378,7 @@ All planned phases for Grain Workspace Agent have been completed:
 - Phase 17: Text Editor Application (SLC v1.0) ✅ (2025-12-20-162045-pst)
 - Phase 18: Text Editor Undo/Redo ✅ (2025-12-20-175102-pst)
 - Phase 19: Text Editor File I/O ✅ (2025-12-20-180043-pst)
+- Phase 20: Text Editor Plain Text Mode ✅ (2025-12-20-180855-pst)
 
 ### Phase 10.1: WebSocket Integration (Monitor) ✅ **COMPLETE**
 
@@ -836,6 +837,40 @@ All planned phases for Grain Workspace Agent have been completed:
 - All compiler warnings enabled
 
 **Note**: File I/O methods provide the structure and API for kernel integration. In production, these will integrate with kernel file system syscalls for actual file read/write operations.
+
+### Phase 20: Text Editor Plain Text Mode ✅ **COMPLETE**
+
+**Date**: 2025-12-20-180855-pst
+
+**Completed Work**:
+1. **Plain Text Mode and Auto-Conversion** (`src/grain_workspace/text_editor/app.zig`):
+   - Added `plain_text_mode` flag to `TextEditor` struct
+   - Implemented `toggle_plain_text_mode()` function
+   - Implemented `convert_to_plain_ascii()` function for auto-conversion
+   - Integrated auto-conversion into `insert_text_internal()`
+   - Auto-conversion of em dashes (—) to ASCII double dashes (--)
+   - Auto-conversion of smart quotes (" " ' ') to straight quotes (" " ' ')
+   - Auto-conversion of ellipses (…) to triple periods (...)
+   - UTF-8 sequence detection and conversion
+   - Comprehensive tests (`tests/115_grain_workspace_text_editor_test.zig`)
+
+**Features**:
+- Plain text mode toggle (enable/disable auto-conversion)
+- Em dash conversion (— → --)
+- Smart double quote conversion (" " → " ")
+- Smart single quote conversion (' ' → ' ')
+- Ellipsis conversion (… → ...)
+- Real-time conversion during text insertion
+- UTF-8 sequence handling
+- Bounded conversion buffer (max 3x expansion for ellipses)
+
+**Grain Style Compliance**:
+- `grain_case` function names
+- `u32`/`u64` types (no `usize`)
+- Bounded allocations (all limits explicit)
+- Assertions for preconditions
+- Max 70 lines per function
+- All compiler warnings enabled
 
 **Future Enhancements**:
 - UI integration with Grain Core compositor

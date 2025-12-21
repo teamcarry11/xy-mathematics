@@ -1,8 +1,8 @@
 # Grain Workspace Agent: Task List
 
 **Agent**: Grain Workspace Agent (5th Agent)  
-**Status**: Phase 19 Text Editor File I/O Complete ✅  
-**Last Updated**: 2025-12-20-180043-pst  
+**Status**: Phase 20 Text Editor Plain Text Mode Complete ✅  
+**Last Updated**: 2025-12-20-180855-pst  
 **Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-20-172643-pst.md`
 
 ---
@@ -362,6 +362,18 @@ All planned phases for Grain Workspace Agent have been completed. See completed 
 - [x] Update open_file to load file content
 - [x] Update save_file to write file content
 - [x] Create comprehensive tests for file I/O
+- [x] Update documentation
+
+**Files**: Updated `src/grain_workspace/text_editor/app.zig`, `tests/115_grain_workspace_text_editor_test.zig`
+
+### Phase 20: Text Editor Plain Text Mode ✅ (2025-12-20-180855-pst)
+
+**Completed Tasks**:
+- [x] Add plain_text_mode flag to TextEditor
+- [x] Implement auto-conversion functions (em dashes, smart quotes, ellipses)
+- [x] Add toggle_plain_text_mode function
+- [x] Integrate auto-conversion into insert_text
+- [x] Create comprehensive tests
 - [x] Update documentation
 
 **Files**: Updated `src/grain_workspace/text_editor/app.zig`, `tests/115_grain_workspace_text_editor_test.zig`

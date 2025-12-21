@@ -88,26 +88,18 @@ pub const TemporalGraph = struct {
         return self.dag_integration.count_events_by_time_range(start_date, end_date);
     }
     
-    /// Get events for a specific date (Unix timestamp).
-    pub fn get_events_for_date(self: *const TemporalGraph, date_timestamp: u64) []const EditorDagIntegration.ProcessedEvent {
+    /// Get count of events for a specific date (Unix timestamp).
+    /// Returns count of events within the 24-hour period starting at date_timestamp.
+    pub fn get_event_count_for_date(self: *const TemporalGraph, date_timestamp: u64) u32 {
+        // Assert: Timestamp must be valid (within reasonable Unix timestamp range)
+        std.debug.assert(date_timestamp > 0);
+        
         // Get start and end of day (24 hours)
         const start_of_day = date_timestamp;
         const end_of_day = date_timestamp + (24 * 60 * 60); // 24 hours in seconds
         
-        // Query events in day range
-        const all_events = self.dag_integration.get_processed_events();
-        var matching_count: u32 = 0;
-        var i: u32 = 0;
-        while (i < all_events.len) : (i += 1) {
-            const event = all_events[i];
-            if (event.timestamp >= start_of_day and event.timestamp <= end_of_day) {
-                matching_count += 1;
-            }
-        }
-        
-        // Return matching events (caller should filter from all_events)
-        _ = matching_count;
-        return all_events;
+        // Query events in date range using count method
+        return self.dag_integration.count_events_by_time_range(start_of_day, end_of_day);
     }
     
     /// Check if time-travel mode is active (timestamp set).

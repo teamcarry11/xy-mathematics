@@ -101,10 +101,6 @@ test "ai transforms applied edit structure" {
 }
 
 test "ai transforms transform result structure" {
-    var arena = std.heap.ArenaAllocator.init(testing.allocator);
-    defer arena.deinit();
-    const allocator = arena.allocator();
-
     const result = AiTransforms.TransformResult{
         .transform_type = .refactor_rename,
         .file_edits = &.{},

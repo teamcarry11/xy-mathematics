@@ -4430,6 +4430,21 @@ pub fn build(b: *std.Build) void {
     const grain_flow_workflow_scheduler_tests_run = b.addRunArtifact(grain_flow_workflow_scheduler_tests);
     test_step.dependOn(&grain_flow_workflow_scheduler_tests_run.step);
 
+    // Grain Flow Core integration tests
+    const grain_flow_core_integration_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/146_grain_flow_core_integration_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_flow", .module = grain_flow_module },
+                .{ .name = "grain_core", .module = grain_core_module },
+            },
+        }),
+    });
+    const grain_flow_core_integration_tests_run = b.addRunArtifact(grain_flow_core_integration_tests);
+    test_step.dependOn(&grain_flow_core_integration_tests_run.step);
+
     // Grain Research engine tests
     const grain_research_engine_tests = b.addTest(.{
         .root_module = b.createModule(.{
@@ -4457,6 +4472,34 @@ pub fn build(b: *std.Build) void {
     });
     const grain_research_code_analysis_tests_run = b.addRunArtifact(grain_research_code_analysis_tests);
     test_step.dependOn(&grain_research_code_analysis_tests_run.step);
+
+    // Grain Research workflow metrics analyzer tests
+    const grain_research_workflow_metrics_analyzer_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/143_grain_research_workflow_metrics_analyzer_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_research", .module = grain_research_module },
+            },
+        }),
+    });
+    const grain_research_workflow_metrics_analyzer_tests_run = b.addRunArtifact(grain_research_workflow_metrics_analyzer_tests);
+    test_step.dependOn(&grain_research_workflow_metrics_analyzer_tests_run.step);
+
+    // Grain Research insights generator tests
+    const grain_research_insights_generator_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/144_grain_research_insights_generator_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_research", .module = grain_research_module },
+            },
+        }),
+    });
+    const grain_research_insights_generator_tests_run = b.addRunArtifact(grain_research_insights_generator_tests);
+    test_step.dependOn(&grain_research_insights_generator_tests_run.step);
 
     // Grain Bubble component tests
     const grain_bubble_component_tests = b.addTest(.{

@@ -30,9 +30,11 @@ pub const code_analysis = @import("code_analysis.zig");
 pub const codebase_analyzer = @import("codebase_analyzer.zig");
 // Token counter for LLM provider token counting.
 pub const token_counter = @import("token_counter.zig");
+// Workflow metrics analyzer for Flow Agent collaboration.
+pub const workflow_metrics_analyzer = @import("workflow_metrics_analyzer.zig");
 
 // Insights generator for recommendations and reports.
-// pub const insights_generator = @import("insights_generator.zig");
+pub const insights_generator = @import("insights_generator.zig");
 
 // Module exports.
 pub const ResearchEngine = research_engine.ResearchEngine;
@@ -49,4 +51,19 @@ pub const FileAnalysisResult = codebase_analyzer.FileAnalysisResult;
 pub const TokenCounter = token_counter.TokenCounter;
 pub const TokenCountResult = token_counter.TokenCountResult;
 pub const LLMProvider = token_counter.LLMProvider;
-// pub const InsightsGenerator = insights_generator.InsightsGenerator;
+pub const WorkflowMetricsAnalyzer = workflow_metrics_analyzer.WorkflowMetricsAnalyzer;
+pub const WorkflowExecutionMetric = workflow_metrics_analyzer.WorkflowExecutionMetric;
+pub const WorkflowStatus = workflow_metrics_analyzer.WorkflowStatus;
+pub const AgentCoordinationMetric = workflow_metrics_analyzer.AgentCoordinationMetric;
+pub const CoordinationStatus = workflow_metrics_analyzer.CoordinationStatus;
+pub const FailurePatternMetric = workflow_metrics_analyzer.FailurePatternMetric;
+pub const FailureType = workflow_metrics_analyzer.FailureType;
+pub const PerformanceMetric = workflow_metrics_analyzer.PerformanceMetric;
+pub const InsightsGenerator = insights_generator.InsightsGenerator;
+pub const Insight = insights_generator.Insight;
+pub const InsightType = insights_generator.InsightType;
+pub const InsightSeverity = insights_generator.InsightSeverity;
+pub const Recommendation = insights_generator.Recommendation;
+pub const RecommendationCategory = insights_generator.RecommendationCategory;
+pub const RecommendationPriority = insights_generator.RecommendationPriority;
+pub const HypothesisTestResult = insights_generator.HypothesisTestResult;

@@ -38,6 +38,9 @@ pub const workflow_metrics = @import("workflow_metrics.zig");
 // Agent coordination metrics for observability.
 pub const agent_coordination_metrics = @import("agent_coordination_metrics.zig");
 
+// Failure pattern metrics for observability.
+pub const failure_pattern_metrics = @import("failure_pattern_metrics.zig");
+
 // Module exports.
 pub const EventBus = event_bus.EventBus;
 pub const EventType = event_bus.EventType;
@@ -71,3 +74,8 @@ pub const AgentCoordinationMetricsCollector = agent_coordination_metrics.AgentCo
 pub const AgentCoordinationRecord = agent_coordination_metrics.AgentCoordinationRecord;
 pub const AgentCoordinationStatus = agent_coordination_metrics.AgentCoordinationStatus;
 pub const AgentPairPattern = agent_coordination_metrics.AgentPairPattern;
+
+pub const FailurePatternMetricsCollector = failure_pattern_metrics.FailurePatternMetricsCollector;
+pub const FailureRecord = failure_pattern_metrics.FailureRecord;
+pub const FailureType = failure_pattern_metrics.FailureType;
+pub const WorkflowComplexity = failure_pattern_metrics.WorkflowComplexity;

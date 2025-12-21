@@ -127,12 +127,28 @@ pub const DagIntegration = struct {
         if (self.dag == null) {
             return false;
         }
-        // Record event in DAG (simplified for Phase 3).
-        // Full implementation will create DAG event node with proper ordering.
-        // For now, validate event and return success (ready for real implementation).
+        const dag = self.dag.?;
         std.debug.assert(event.event_id > 0);
         std.debug.assert(event.event_data_len <= MAX_EVENT_DATA_LEN);
         std.debug.assert(event.parent_events_len <= 8);
+        // Create canvas node if it doesn't exist (simplified - use canvas_id as node_id).
+        const canvas_node_id: u32 = event.canvas_id;
+        // Convert DesignEvent to DAG Event.
+        const event_data = event.event_data[0..event.event_data_len];
+        const parent_ids = event.parent_events[0..event.parent_events_len];
+        // Map DesignEvent.EventType to DAG EventType.
+        const dag_event_type: dag_core.DagCore.EventType = switch (event.event_type) {
+            .add_shape, .delete_shape, .move_shape, .resize_shape => .ui_interaction,
+            .add_component, .delete_component, .create_component, .update_component => .ui_interaction,
+        };
+        // Add event to DAG using addEvent.
+        const event_id = dag.addEvent(
+            dag_event_type,
+            canvas_node_id,
+            event_data,
+            parent_ids,
+        ) catch return false;
+        std.debug.assert(event_id > 0);
         return true;
     }
 
@@ -148,14 +164,41 @@ pub const DagIntegration = struct {
         if (self.dag == null) {
             return 0;
         }
-        // Get event history from DAG (simplified for Phase 3).
-        // Full implementation will query DAG for events related to canvas_id.
-        // For now, return empty history (ready for real implementation).
+        const dag = self.dag.?;
+        // Query DAG for events related to canvas_id (node_id).
+        const canvas_node_id: u32 = canvas_id;
         var event_count: u32 = 0;
         var i: u32 = 0;
-        while (i < events.len and event_count < MAX_DESIGN_HISTORY) : (i += 1) {
-            events[i] = DesignEvent.init();
-            event_count += 1;
+        // Iterate through pending events to find matching canvas_id.
+        while (i < dag.pending_events_len and event_count < events.len) : (i += 1) {
+            const dag_event = &dag.pending_events[i];
+            if (dag_event.node_id == canvas_node_id) {
+                // Convert DAG Event to DesignEvent.
+                var design_event = DesignEvent.init();
+                design_event.event_id = dag_event.id;
+                // Map DAG EventType to DesignEvent EventType.
+                design_event.event_type = switch (dag_event.event_type) {
+                    .ui_interaction => .add_shape, // Simplified mapping.
+                    else => .add_shape,
+                };
+                design_event.canvas_id = canvas_node_id;
+                design_event.component_id = 0; // Not available in DAG event.
+                // Copy event data.
+                const data_len = @min(dag_event.data_len, MAX_EVENT_DATA_LEN);
+                if (data_len > 0) {
+                    @memcpy(design_event.event_data[0..data_len], dag_event.data[0..data_len]);
+                    design_event.event_data_len = data_len;
+                }
+                design_event.timestamp = dag_event.timestamp;
+                // Copy parent events.
+                const parent_len = @min(dag_event.parents_len, 8);
+                if (parent_len > 0) {
+                    @memcpy(design_event.parent_events[0..parent_len], dag_event.parents[0..parent_len]);
+                    design_event.parent_events_len = parent_len;
+                }
+                events[event_count] = design_event;
+                event_count += 1;
+            }
         }
         std.debug.assert(event_count <= MAX_DESIGN_HISTORY);
         return event_count;

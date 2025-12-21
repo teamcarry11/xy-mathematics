@@ -16,6 +16,8 @@ const auth_integration = @import("auth_integration.zig");
 const route_registration = @import("route_registration.zig");
 const endpoints = @import("endpoints.zig");
 const handlers = @import("handlers.zig");
+const database_integration = @import("database_integration.zig");
+const oauth = @import("../auth/oauth.zig");
 
 // Register all mobile endpoints with Grain Core API Server.
 pub fn register_mobile_endpoints_with_compositor(

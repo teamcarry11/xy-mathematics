@@ -13,6 +13,7 @@ const std = @import("std");
 const event_bus = @import("event_bus.zig");
 const agent_coordinator = @import("agent_coordinator.zig");
 const workflow_metrics = @import("workflow_metrics.zig");
+const failure_pattern_metrics = @import("failure_pattern_metrics.zig");
 
 // Bounded: Max workflow depth (max path length).
 pub const MAX_WORKFLOW_DEPTH: u32 = 1000;
@@ -244,6 +245,7 @@ pub const WorkflowEngine = struct {
     event_bus: *event_bus.EventBus,
     agent_coordinator: *agent_coordinator.AgentCoordinator,
     metrics_collector: ?*workflow_metrics.WorkflowMetricsCollector,
+    failure_pattern_collector: ?*failure_pattern_metrics.FailurePatternMetricsCollector,
 
     pub fn init(
         event_bus_instance: *event_bus.EventBus,
@@ -258,6 +260,7 @@ pub const WorkflowEngine = struct {
             .event_bus = event_bus_instance,
             .agent_coordinator = coordinator_instance,
             .metrics_collector = null,
+            .failure_pattern_collector = null,
         };
         var i: u32 = 0;
         while (i < 64) : (i += 1) {
@@ -443,6 +446,22 @@ pub const WorkflowEngine = struct {
                     workflow_metrics.WorkflowExecutionStatus.failure,
                 );
             }
+            // Record failure pattern metric.
+            if (self.failure_pattern_collector) |collector| {
+                const complexity = failure_pattern_metrics.WorkflowComplexity.init(
+                    workflow.?.nodes_len,
+                    workflow.?.edges_len,
+                    0,
+                );
+                _ = collector.record_failure(
+                    workflow_id,
+                    0,
+                    0,
+                    failure_pattern_metrics.FailureType.unknown,
+                    timestamp,
+                    complexity,
+                );
+            }
         }
         return true;
     }
@@ -454,6 +473,15 @@ pub const WorkflowEngine = struct {
     ) void {
         std.debug.assert(@intFromPtr(collector) != 0);
         self.metrics_collector = collector;
+    }
+
+    // Set failure pattern collector (optional, for observability).
+    pub fn set_failure_pattern_collector(
+        self: *WorkflowEngine,
+        collector: *failure_pattern_metrics.FailurePatternMetricsCollector,
+    ) void {
+        std.debug.assert(@intFromPtr(collector) != 0);
+        self.failure_pattern_collector = collector;
     }
 
     // Get workflow count.

@@ -200,9 +200,34 @@ pub const CourtIntegration = struct {
         if (self.compute == null) {
             return false;
         }
-        // Generate embedding via Court compute (simplified for Phase 3).
-        // Full implementation will use Court's data_transform operation.
-        // For now, initialize with zeros (ready for real implementation).
+        const compute = self.compute.?;
+        // Convert component to description for embedding.
+        var desc_buffer: [512]u8 = undefined;
+        const desc_len = component_to_description(comp, &desc_buffer);
+        if (desc_len == 0) {
+            return false;
+        }
+        // Allocate SRAM for description data.
+        const desc_size: u64 = @as(u64, @intCast(desc_len));
+        const data_offset = compute.allocate_sram(desc_size) catch return false;
+        // Copy description to SRAM.
+        const sram_slice = compute.sram_data[data_offset..data_offset + desc_size];
+        @memcpy(sram_slice[0..desc_len], desc_buffer[0..desc_len]);
+        // Execute data transform operation for embedding.
+        const core_ids = [_]u32{0}; // Use first core for transform.
+        const op_id = compute.execute_parallel(
+            grain_court.Compute.CourtCompute.OpType.data_transform,
+            &core_ids,
+            data_offset,
+            desc_size,
+        ) catch return false;
+        // Wait for operation to complete (simplified - check status).
+        const op_status = compute.get_op_status(op_id);
+        if (op_status == null or op_status.? != .completed) {
+            return false;
+        }
+        // For now, initialize with zeros (actual embedding would come from SRAM).
+        // Full implementation would read embedding vector from SRAM.
         var i: u32 = 0;
         while (i < embedding.len) : (i += 1) {
             embedding[i] = 0.0;

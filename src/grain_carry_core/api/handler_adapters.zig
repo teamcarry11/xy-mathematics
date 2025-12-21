@@ -245,25 +245,35 @@ pub fn handle_login_adapter(
         return;
     }
     
-    // TODO: Verify credentials against database (when database available)
-    // For now, generate tokens for any valid email/password format
+    // Verify credentials against database
+    var user_data = database_integration.UserData.init();
+    const db_result = database_integration.get_user_by_email(email, &user_data);
+    if (db_result != database_integration.DatabaseResult.success) {
+        response.status = grain_core_api.HttpStatus.unauthorized;
+        return;
+    }
     
-    // Generate user_id from email (temporary until database available)
-    var user_id: [grain_core_auth.MAX_USER_ID_LEN]u8 = undefined;
-    const user_id_len = if (email_len <= grain_core_auth.MAX_USER_ID_LEN) email_len else grain_core_auth.MAX_USER_ID_LEN;
-    std.mem.copyForwards(u8, &user_id, email[0..user_id_len]);
+    // Verify password hash
+    var password_hash: [grain_core_auth.HASH_OUTPUT_LEN]u8 = undefined;
+    auth_integration.hash_password(password, &password_hash);
+    if (!std.mem.eql(u8, password_hash[0..], user_data.password_hash[0..user_data.password_hash_len])) {
+        response.status = grain_core_api.HttpStatus.unauthorized;
+        return;
+    }
+    
+    const user_id = user_data.user_id[0..user_data.user_id_len];
     
     // Generate tokens
     const current_time: u64 = @intCast(std.time.timestamp());
     var access_token: [grain_core_auth.MAX_JWT_LEN]u8 = undefined;
     var refresh_token: [grain_core_auth.MAX_JWT_LEN]u8 = undefined;
     const access_token_len = auth_integration.generate_access_token(
-        user_id[0..user_id_len],
+        user_id,
         current_time,
         &access_token,
     );
     const refresh_token_len = auth_integration.generate_refresh_token(
-        user_id[0..user_id_len],
+        user_id,
         current_time,
         &refresh_token,
     );

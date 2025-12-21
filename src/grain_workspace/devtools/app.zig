@@ -5,6 +5,7 @@
 //! GrainStyle: grain_case, u32/u64, bounded allocations, assertions.
 //!
 //! 2025-12-04-131701-pst: Active implementation
+//! 2025-12-20-184722-pst: Phase 21 Grain Style Linter integration
 
 const std = @import("std");
 const grain_core = @import("grain_core");
@@ -24,6 +25,10 @@ pub const MAX_TEST_FILES: u32 = 512;
 // Bounded: Max file path length (explicit limit, in bytes)
 // 2025-12-04-131701-pst: Active constant
 pub const MAX_FILE_PATH_LEN: u32 = 512;
+
+// Bounded: Max lint violations (explicit limit)
+// 2025-12-20-184722-pst: Phase 21 Grain Style Linter
+pub const MAX_LINT_VIOLATIONS: u32 = 1000;
 
 // Language enumeration for formatter.
 // 2025-12-04-131701-pst: Active enum
@@ -507,6 +512,251 @@ pub const DevToolsApp = struct {
 
         // Postcondition: Messages must be cleared
         std.debug.assert(self.linter_messages_len == 0);
+    }
+
+    /// Lint Zig code for Grain Style compliance.
+    // 2025-12-20-184722-pst: Phase 21 Grain Style Linter
+    pub fn lint_grain_style(
+        self: *DevToolsApp,
+        file_path: []const u8,
+        source_code: []const u8,
+    ) u32 {
+        // Precondition: File path and source code must be valid
+        std.debug.assert(file_path.len > 0);
+        std.debug.assert(file_path.len <= MAX_FILE_PATH_LEN);
+        std.debug.assert(source_code.len > 0);
+
+        // Clear previous messages for this file
+        self.clear_linter_messages();
+
+        var violation_count: u32 = 0;
+        var line_number: u32 = 1;
+        var line_start: u32 = 0;
+        var function_start_line: u32 = 0;
+        var function_line_count: u32 = 0;
+        var in_function: bool = false;
+
+        var i: u32 = 0;
+        while (i < source_code.len and violation_count < MAX_LINT_VIOLATIONS) : (i += 1) {
+            const c = source_code[i];
+
+            // Check for newline
+            if (c == '\n') {
+                // Check line length (grainwrap-100)
+                const line_len = i - line_start;
+                if (line_len > 100) {
+                    const msg = "Line exceeds 100 characters (grainwrap-100)";
+                    _ = self.add_linter_message(
+                        file_path,
+                        line_number,
+                        101,
+                        .error,
+                        msg,
+                    );
+                    violation_count += 1;
+                }
+
+                // Check for usize/isize usage in line
+                var j: u32 = line_start;
+                while (j < i and j + 5 < source_code.len) : (j += 1) {
+                    // Check for "usize"
+                    if (j + 5 <= source_code.len) {
+                        if (std.mem.eql(u8, source_code[j..j+5], "usize")) {
+                            const msg = "Use explicit u32/u64 instead of usize";
+                            _ = self.add_linter_message(
+                                file_path,
+                                line_number,
+                                j - line_start + 1,
+                                .error,
+                                msg,
+                            );
+                            violation_count += 1;
+                        }
+                    }
+                    // Check for "isize"
+                    if (j + 5 <= source_code.len) {
+                        if (std.mem.eql(u8, source_code[j..j+5], "isize")) {
+                            const msg = "Use explicit i32/i64 instead of isize";
+                            _ = self.add_linter_message(
+                                file_path,
+                                line_number,
+                                j - line_start + 1,
+                                .error,
+                                msg,
+                            );
+                            violation_count += 1;
+                        }
+                    }
+                }
+
+                line_number += 1;
+                line_start = i + 1;
+
+                // Update function line count
+                if (in_function) {
+                    function_line_count += 1;
+                }
+            }
+
+            // Detect function start (simplified: look for "pub fn" or "fn")
+            if (i + 3 < source_code.len) {
+                if (std.mem.eql(u8, source_code[i..i+3], "fn ")) {
+                    in_function = true;
+                    function_start_line = line_number;
+                    function_line_count = 0;
+                }
+            }
+
+            // Detect function end (simplified: look for closing brace at start of line)
+            if (c == '}' and in_function) {
+                // Check if this is likely end of function
+                var check_pos: u32 = i;
+                while (check_pos > 0 and check_pos > line_start) : (check_pos -= 1) {
+                    if (source_code[check_pos] == '\n') {
+                        break;
+                    }
+                }
+                // Simple heuristic: if brace is at start of line or after whitespace
+                if (check_pos == line_start or (check_pos < i and source_code[check_pos + 1] == '}')) {
+                    // Check function length (grain validate-70)
+                    if (function_line_count > 70) {
+                        const msg = "Function exceeds 70 lines (grain validate-70)";
+                        _ = self.add_linter_message(
+                            file_path,
+                            function_start_line,
+                            1,
+                            .error,
+                            msg,
+                        );
+                        violation_count += 1;
+                    }
+                    in_function = false;
+                }
+            }
+        }
+
+        // Check last line if no newline at end
+        if (line_start < source_code.len) {
+            const line_len = source_code.len - line_start;
+            if (line_len > 100) {
+                const msg = "Line exceeds 100 characters (grainwrap-100)";
+                _ = self.add_linter_message(
+                    file_path,
+                    line_number,
+                    101,
+                    .error,
+                    msg,
+                );
+                violation_count += 1;
+            }
+        }
+
+        // Postcondition: Violation count must be valid
+        std.debug.assert(violation_count <= MAX_LINT_VIOLATIONS);
+
+        return violation_count;
+    }
+
+    /// Check for bounded allocations (MAX_* constants).
+    // 2025-12-20-184722-pst: Phase 21 Grain Style Linter
+    pub fn check_bounded_allocations(
+        self: *DevToolsApp,
+        file_path: []const u8,
+        source_code: []const u8,
+    ) u32 {
+        // Precondition: File path and source code must be valid
+        std.debug.assert(file_path.len > 0);
+        std.debug.assert(file_path.len <= MAX_FILE_PATH_LEN);
+        std.debug.assert(source_code.len > 0);
+
+        var violation_count: u32 = 0;
+        var line_number: u32 = 1;
+        var line_start: u32 = 0;
+
+        // Look for array allocations without MAX_ constants
+        var i: u32 = 0;
+        while (i < source_code.len and violation_count < MAX_LINT_VIOLATIONS) : (i += 1) {
+            const c = source_code[i];
+
+            if (c == '\n') {
+                line_number += 1;
+                line_start = i + 1;
+            }
+
+            // Check for array declarations that might not be bounded
+            if (i + 4 < source_code.len and std.mem.eql(u8, source_code[i..i+4], "var ")) {
+                // Look ahead for array syntax
+                var j: u32 = i + 4;
+                while (j < source_code.len and j < i + 100) : (j += 1) {
+                    if (source_code[j] == '[') {
+                        // Found array declaration, check if it has MAX_ constant
+                        var has_max: bool = false;
+                        var k: u32 = i;
+                        while (k < j) : (k += 1) {
+                            if (k + 4 < source_code.len and std.mem.eql(u8, source_code[k..k+4], "MAX_")) {
+                                has_max = true;
+                                break;
+                            }
+                        }
+                        if (!has_max) {
+                            const msg = "Array allocation should use MAX_ constant";
+                            _ = self.add_linter_message(
+                                file_path,
+                                line_number,
+                                i - line_start + 1,
+                                .warning,
+                                msg,
+                            );
+                            violation_count += 1;
+                        }
+                        break;
+                    }
+                    if (source_code[j] == '\n' or source_code[j] == ';') {
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Postcondition: Violation count must be valid
+        std.debug.assert(violation_count <= MAX_LINT_VIOLATIONS);
+
+        return violation_count;
+    }
+
+    /// Get linter messages for a file.
+    // 2025-12-20-184722-pst: Phase 21 Grain Style Linter
+    pub fn get_linter_messages(
+        self: *const DevToolsApp,
+        file_path: []const u8,
+        messages: []?LinterMessage,
+        messages_len: *u32,
+    ) void {
+        // Precondition: Messages buffer must be valid
+        std.debug.assert(file_path.len > 0);
+        std.debug.assert(messages.len >= 256);
+
+        messages_len.* = 0;
+        var i: u32 = 0;
+        while (i < self.linter_messages_len and messages_len.* < messages.len) : (i += 1) {
+            if (self.linter_messages[i]) |msg| {
+                // Check if message is for this file
+                if (msg.file_path_len == file_path.len) {
+                    var match: bool = true;
+                    var j: u32 = 0;
+                    while (j < file_path.len) : (j += 1) {
+                        if (msg.file_path[j] != file_path[j]) {
+                            match = false;
+                            break;
+                        }
+                    }
+                    if (match) {
+                        messages[messages_len.*] = msg;
+                        messages_len.* += 1;
+                    }
+                }
+            }
+        }
     }
 };
 

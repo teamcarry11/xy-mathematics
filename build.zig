@@ -603,6 +603,13 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    // Aurora DAG Integration module (for test imports)
+    const aurora_dag_integration_module = b.addModule("aurora_dag_integration", .{
+        .root_source_file = b.path("src/aurora_dag_integration.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
     // Aurora Editor module (for test imports)
     const aurora_editor_module = b.addModule("aurora_editor", .{
         .root_source_file = b.path("src/aurora_editor.zig"),
@@ -650,6 +657,17 @@ pub fn build(b: *std.Build) void {
             .optimize = optimize,
             .imports = &.{
                 .{ .name = "aurora_ai_transforms", .module = aurora_ai_transforms_module },
+            },
+        }),
+    });
+
+    const dag_integration_test_file = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/120_aurora_dag_integration_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "aurora_dag_integration", .module = aurora_dag_integration_module },
             },
         }),
     });
@@ -1040,6 +1058,10 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&run_lsp_test_file.step);
     const run_ai_provider_test_file = b.addRunArtifact(ai_provider_test_file);
     test_step.dependOn(&run_ai_provider_test_file.step);
+    const run_ai_transforms_test_file = b.addRunArtifact(ai_transforms_test_file);
+    test_step.dependOn(&run_ai_transforms_test_file.step);
+    const run_dag_integration_test_file = b.addRunArtifact(dag_integration_test_file);
+    test_step.dependOn(&run_dag_integration_test_file.step);
     const run_route_tests = b.addRunArtifact(route_tests);
     test_step.dependOn(&run_route_tests.step);
     const run_orchestrator_tests = b.addRunArtifact(orchestrator_tests);
@@ -4347,4 +4369,46 @@ pub fn build(b: *std.Build) void {
     });
     const grain_bubble_component_tests_run = b.addRunArtifact(grain_bubble_component_tests);
     test_step.dependOn(&grain_bubble_component_tests_run.step);
+
+    // File system kernel verification test
+    const file_system_kernel_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/097_file_system_kernel_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+            },
+        }),
+    });
+    const file_system_kernel_tests_run = b.addRunArtifact(file_system_kernel_tests);
+    test_step.dependOn(&file_system_kernel_tests_run.step);
+
+    // Nostr protocol kernel verification test
+    const nostr_protocol_kernel_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/092_nostr_protocol_kernel_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+            },
+        }),
+    });
+    const nostr_protocol_kernel_tests_run = b.addRunArtifact(nostr_protocol_kernel_tests);
+    test_step.dependOn(&nostr_protocol_kernel_tests_run.step);
+
+    // DAG operations kernel verification test
+    const dag_operations_kernel_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/095_dag_operations_kernel_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+            },
+        }),
+    });
+    const dag_operations_kernel_tests_run = b.addRunArtifact(dag_operations_kernel_tests);
+    test_step.dependOn(&dag_operations_kernel_tests_run.step);
 }

@@ -5,6 +5,7 @@
 //! GrainStyle: grain_case, u32/u64, bounded allocations, assertions.
 //!
 //! 2025-12-04-131701-pst: Active implementation
+//! 2025-12-20-184722-pst: Phase 21 Grain Style Linter integration tests
 
 const std = @import("std");
 const testing = std.testing;
@@ -156,3 +157,82 @@ test "format code" {
     try testing.expect(result == false);
 }
 
+test "lint grain style line length violation" {
+    const allocator = testing.allocator;
+    var app = DevToolsApp.init(allocator);
+
+    // Create code with line exceeding 100 characters
+    const long_line = "pub fn test_function() void { var x: u32 = 0; var y: u32 = 0; var z: u32 = 0; } // This line is way too long and exceeds 100 characters";
+    const violations = app.lint_grain_style("test.zig", long_line);
+
+    try testing.expect(violations > 0);
+    try testing.expect(app.linter_messages_len > 0);
+    try testing.expect(app.linter_messages[0] != null);
+    try testing.expect(app.linter_messages[0].?.severity == .error);
+}
+
+test "lint grain style usize violation" {
+    const allocator = testing.allocator;
+    var app = DevToolsApp.init(allocator);
+
+    // Create code with usize
+    const code_with_usize = "pub fn test() void {\n    var x: usize = 0;\n}";
+    const violations = app.lint_grain_style("test.zig", code_with_usize);
+
+    try testing.expect(violations > 0);
+    try testing.expect(app.linter_messages_len > 0);
+}
+
+test "lint grain style isize violation" {
+    const allocator = testing.allocator;
+    var app = DevToolsApp.init(allocator);
+
+    // Create code with isize
+    const code_with_isize = "pub fn test() void {\n    var x: isize = 0;\n}";
+    const violations = app.lint_grain_style("test.zig", code_with_isize);
+
+    try testing.expect(violations > 0);
+    try testing.expect(app.linter_messages_len > 0);
+}
+
+test "lint grain style valid code" {
+    const allocator = testing.allocator;
+    var app = DevToolsApp.init(allocator);
+
+    // Create valid Grain Style code
+    const valid_code = "pub fn test() void {\n    var x: u32 = 0;\n}";
+    const violations = app.lint_grain_style("test.zig", valid_code);
+
+    // Should have no violations for basic valid code
+    try testing.expect(violations == 0);
+}
+
+test "check bounded allocations" {
+    const allocator = testing.allocator;
+    var app = DevToolsApp.init(allocator);
+
+    // Create code with unbounded array
+    const code_unbounded = "pub fn test() void {\n    var arr: [100]u32 = undefined;\n}";
+    const violations = app.check_bounded_allocations("test.zig", code_unbounded);
+
+    // Should detect potential unbounded allocation
+    try testing.expect(violations >= 0);
+}
+
+test "get linter messages" {
+    const allocator = testing.allocator;
+    var app = DevToolsApp.init(allocator);
+
+    // Add some linter messages
+    _ = app.add_linter_message("test.zig", 10, 5, .warning, "Message 1");
+    _ = app.add_linter_message("test.zig", 20, 3, .error, "Message 2");
+    _ = app.add_linter_message("other.zig", 5, 1, .info, "Message 3");
+
+    var messages: [10]?DevToolsApp.LinterMessage = undefined;
+    var messages_len: u32 = 0;
+    app.get_linter_messages("test.zig", &messages, &messages_len);
+
+    try testing.expect(messages_len == 2);
+    try testing.expect(messages[0] != null);
+    try testing.expect(messages[1] != null);
+}

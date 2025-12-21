@@ -1,6 +1,6 @@
 # Grain OS Development Plan
 
-**Last Updated**: 2025-12-20-181029-pst  
+**Last Updated**: 2025-12-20-184754-pst  
 **Structure**: Hybrid approach with core overview and agent-specific plans  
 **See**: `docs/plans/plan_{agent}.md` for detailed agent plans
 
@@ -52,7 +52,10 @@
 - **Phase 6.1: Architecture Abstraction Layer — COMPLETE** ✅
 - **Phase 6.2: AArch64 VM Support — COMPLETE** ✅
 - **Phase 6.3: AArch64 Kernel Port — COMPLETE** ✅
-- **Vantage/Basin Verification: File System Kernel Test — IN PROGRESS** 🔄
+- **Vantage/Basin Verification: Kernel Tests — IN PROGRESS** 🔄
+  - File System Kernel Test ✅
+  - Nostr Protocol Kernel Test ✅
+  - DAG Operations Kernel Test ✅
 - Audio Device Management (Phase 5.1) ✅
 - Audio I/O Syscalls (Phase 5.3) ✅
 - Audio Tests (Phase 5.4) ✅

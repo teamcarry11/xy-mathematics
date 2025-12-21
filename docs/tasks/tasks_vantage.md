@@ -9,7 +9,7 @@
 ## Current Work: Vantage/Basin Verification for SLC Products
 
 **Status**: Vantage/Basin Verification IN PROGRESS  
-**Date**: 2025-12-20-161135-pst  
+**Date**: 2025-12-20-184754-pst  
 **Priority**: CRITICAL — Required before SLC product implementation
 
 **Priority**: **TBD** — Coordinate with Grain Core Agent on priorities  
@@ -23,8 +23,18 @@
   - Validation tests complete (error conditions, parameter validation)
   - Tests all file system syscalls (open, read, write, close, unlink, rename, mkdir, opendir, readdir, closedir)
   - Added to `build.zig`
-- [ ] Verify Nostr protocol works at RISC-V Basin kernel level
-- [ ] Verify DAG operations work at RISC-V Basin kernel level
+- [x] Verify Nostr protocol works at RISC-V Basin kernel level
+  - Created `tests/092_nostr_protocol_kernel_test.zig`
+  - Tests HTTP Client operations via TCP socket syscalls
+  - Tests WebSocket operations via TCP socket syscalls
+  - Tests event signing foundation (file syscalls)
+  - Added to `build.zig`
+- [x] Verify DAG operations work at RISC-V Basin kernel level
+  - Created `tests/095_dag_operations_kernel_test.zig`
+  - Tests DAG file operations via file syscalls
+  - Tests DAG publishing via TCP socket syscalls
+  - Tests DAG node/edge operations via file syscalls
+  - Added to `build.zig`
 - [ ] Verify file system works at RISC-V Basin kernel level (integration tests with VM)
 - [ ] Verify Vantage VM translates to macOS Tahoe 26.2 (aarch64)
 - [ ] Test all SLC products on macOS Tahoe 26.2

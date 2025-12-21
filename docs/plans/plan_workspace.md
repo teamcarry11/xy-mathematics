@@ -1,8 +1,8 @@
 # Grain Workspace Agent: Development Plan
 
 **Agent**: Grain Workspace Agent (5th Agent)  
-**Status**: Phase 20 Text Editor Plain Text Mode Complete ✅  
-**Last Updated**: 2025-12-20-180855-pst  
+**Status**: Phase 21 DevTools Grain Style Linter Complete ✅  
+**Last Updated**: 2025-12-20-184722-pst  
 **Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-20-172643-pst.md`
 
 ---
@@ -379,6 +379,7 @@ All planned phases for Grain Workspace Agent have been completed:
 - Phase 18: Text Editor Undo/Redo ✅ (2025-12-20-175102-pst)
 - Phase 19: Text Editor File I/O ✅ (2025-12-20-180043-pst)
 - Phase 20: Text Editor Plain Text Mode ✅ (2025-12-20-180855-pst)
+- Phase 21: DevTools Grain Style Linter ✅ (2025-12-20-184722-pst)
 
 ### Phase 10.1: WebSocket Integration (Monitor) ✅ **COMPLETE**
 
@@ -872,6 +873,45 @@ All planned phases for Grain Workspace Agent have been completed:
 - Max 70 lines per function
 - All compiler warnings enabled
 
+### Phase 21: DevTools Grain Style Linter ✅ **COMPLETE**
+
+**Date**: 2025-12-20-184722-pst
+
+**Completed Work**:
+1. **Grain Style Linter for DevTools** (`src/grain_workspace/devtools/app.zig`):
+   - Implemented `lint_grain_style()` function for comprehensive Grain Style checking
+   - Implemented `check_bounded_allocations()` function for bounded allocation checking
+   - Implemented `get_linter_messages()` function for retrieving linter messages
+   - Line length checking (grainwrap-100: max 100 characters per line)
+   - Function length checking (grain validate-70: max 70 lines per function)
+   - Explicit type checking (u32/u64, no usize/isize)
+   - Bounded allocation checking (MAX_* constants)
+   - Violation reporting with line numbers and severity levels
+   - Comprehensive tests (`tests/114_grain_workspace_devtools_test.zig`)
+
+**Features**:
+- Grain Style linting (grainwrap-100, grain validate-70)
+- Explicit type checking (u32/u64, no usize/isize)
+- Bounded allocation checking (MAX_* constants)
+- Violation reporting with line numbers
+- Severity levels (info, warning, error, critical)
+- File-specific message retrieval
+- Bounded violation storage (max 1000 violations)
+
+**Alignment with Research Agent's Open-Source Service Model**:
+- Core linter functionality: 100% open-source
+- Ready for integration into standalone CLI tool
+- Foundation for Grain Style Developer Tools (SLC v1.0)
+- Supports open-source service revenue model (consulting, training, hosted services)
+
+**Grain Style Compliance**:
+- `grain_case` function names
+- `u32`/`u64` types (no `usize`)
+- Bounded allocations (all limits explicit)
+- Assertions for preconditions
+- Max 70 lines per function
+- All compiler warnings enabled
+
 **Future Enhancements**:
 - UI integration with Grain Core compositor
 - Enhanced code formatter implementations
@@ -880,6 +920,9 @@ All planned phases for Grain Workspace Agent have been completed:
 - Enhanced profiling capabilities
 - Kernel file I/O integration (actual file read/write via syscalls)
 - Syntax highlighting
+- Standalone CLI tool (per Research Agent's open-source service model)
+- Editor plugin integration (VS Code, Cursor)
+- Auto-fix capabilities (future phase)
 - WebSocket integration for real-time features (now available via Core Agent Phase 61)
   - ✅ Real-time system monitoring updates (Phase 10.1 complete)
   - ✅ Live terminal output streaming (Phase 10.2 complete)

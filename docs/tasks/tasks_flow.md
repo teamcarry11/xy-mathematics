@@ -340,13 +340,51 @@
   - [x] Failure pattern metrics visualization
   - [x] Performance metrics visualization
   - [x] Embedded HTML served via API endpoint
-- [ ] Analyze metrics and generate insights (Research Agent)
-- [ ] Validate that observability improves workflow understanding
+- [ ] Analyze metrics and generate insights (Research Agent - in progress)
+- [ ] Validate that observability improves workflow understanding (Together - after Research Agent completes analysis)
 
 **Research Priorities** (from Research Agent):
 1. **Priority 1**: Workflow Observability Metrics (Immediate, 1-2 weeks)
 2. **Priority 2**: Integration Testing Patterns (Short-term, 2-3 weeks)
 3. **Priority 3**: Failure Pattern Analysis (Medium-term, 3-4 weeks)
+
+---
+
+## Workflow Scheduler Enhancement
+
+### Status: **COMPLETE** ✅
+
+**Date**: 2025-12-21-091028-pst  
+**Enhancement**: Workflow scheduling for automation and periodic tasks
+
+**Completed Work**:
+- [x] Create Workflow Scheduler module (`workflow_scheduler.zig`) — Complete ✅
+  - [x] Schedule types (once, recurring, interval)
+  - [x] Scheduled workflow management
+  - [x] Schedule execution checking
+  - [x] Enable/disable/remove schedules
+  - [x] Comprehensive tests (`tests/145_grain_flow_workflow_scheduler_test.zig`)
+  - [x] Build integration complete
+
+**Features**:
+- **One-time schedules**: Execute workflow at specific time
+- **Interval schedules**: Execute workflow at fixed intervals (e.g., every 5 minutes)
+- **Recurring schedules**: Execute workflow on cron-like schedule (basic implementation)
+- **Schedule management**: Enable, disable, remove schedules
+- **Automatic execution**: `check_and_execute()` method for periodic checking
+
+**Use Cases**:
+- Scheduled database backups
+- Periodic data synchronization
+- Automated report generation
+- Maintenance tasks
+- Health checks
+
+**Next Steps**: Can be enhanced with:
+- Full cron expression parsing
+- Schedule persistence
+- Schedule API endpoints
+- Schedule visualization in dashboard
 
 **Reference Documents**:
 - Flow Agent letter: [`docs/agent-communications/flow_to_research_letter_2025-12-20-175131-pst.md`](../agent-communications/flow_to_research_letter_2025-12-20-175131-pst.md)

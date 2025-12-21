@@ -136,3 +136,161 @@ test "oauth get authorization url apple" {
     try testing.expect(std.mem.startsWith(u8, url_buf[0..url_len], "https://appleid.apple.com/auth/authorize?"));
 }
 
+test "oauth parse callback url with code and state" {
+    const callback_url = "https://example.com/callback?code=test_code_123&state=test_state_456";
+    var code_buf: [oauth.MAX_AUTH_CODE_LEN]u8 = undefined;
+    var state_buf: [oauth.MAX_STATE_LEN]u8 = undefined;
+    const result = oauth.parse_oauth_callback(callback_url, &code_buf, &state_buf);
+    try testing.expect(result.success);
+    try testing.expect(result.code_len > 0);
+    try testing.expect(result.state_len > 0);
+    try testing.expect(std.mem.eql(u8, code_buf[0..result.code_len], "test_code_123"));
+    try testing.expect(std.mem.eql(u8, state_buf[0..result.state_len], "test_state_456"));
+}
+
+test "oauth parse callback url with code only" {
+    const callback_url = "https://example.com/callback?code=test_code_only";
+    var code_buf: [oauth.MAX_AUTH_CODE_LEN]u8 = undefined;
+    var state_buf: [oauth.MAX_STATE_LEN]u8 = undefined;
+    const result = oauth.parse_oauth_callback(callback_url, &code_buf, &state_buf);
+    try testing.expect(result.success);
+    try testing.expect(result.code_len > 0);
+    try testing.expect(result.state_len == 0);
+    try testing.expect(std.mem.eql(u8, code_buf[0..result.code_len], "test_code_only"));
+}
+
+test "oauth parse callback url without code" {
+    const callback_url = "https://example.com/callback?state=test_state";
+    var code_buf: [oauth.MAX_AUTH_CODE_LEN]u8 = undefined;
+    var state_buf: [oauth.MAX_STATE_LEN]u8 = undefined;
+    const result = oauth.parse_oauth_callback(callback_url, &code_buf, &state_buf);
+    try testing.expect(!result.success);
+    try testing.expect(result.code_len == 0);
+}
+
+test "oauth parse callback url empty" {
+    const callback_url = "";
+    var code_buf: [oauth.MAX_AUTH_CODE_LEN]u8 = undefined;
+    var state_buf: [oauth.MAX_STATE_LEN]u8 = undefined;
+    const result = oauth.parse_oauth_callback(callback_url, &code_buf, &state_buf);
+    try testing.expect(!result.success);
+    try testing.expect(result.code_len == 0);
+}
+
+test "oauth parse callback url with additional params" {
+    const callback_url = "https://example.com/callback?code=test_code&state=test_state&other=param";
+    var code_buf: [oauth.MAX_AUTH_CODE_LEN]u8 = undefined;
+    var state_buf: [oauth.MAX_STATE_LEN]u8 = undefined;
+    const result = oauth.parse_oauth_callback(callback_url, &code_buf, &state_buf);
+    try testing.expect(result.success);
+    try testing.expect(result.code_len > 0);
+    try testing.expect(result.state_len > 0);
+    try testing.expect(std.mem.eql(u8, code_buf[0..result.code_len], "test_code"));
+    try testing.expect(std.mem.eql(u8, state_buf[0..result.state_len], "test_state"));
+}
+
+test "oauth exchange code for tokens google" {
+    var manager = oauth.OAuthManager.init();
+    const client_id = "test_client_id";
+    const client_secret = "test_client_secret";
+    const redirect_uri = "https://example.com/callback";
+    _ = manager.configure_provider(
+        oauth.OAuthProvider.google,
+        client_id,
+        client_secret,
+        redirect_uri,
+    );
+    const code = "test_auth_code";
+    const state = "test_state";
+    var token_response = oauth.OAuthTokenResponse.init();
+    const success = manager.exchange_code_for_tokens(
+        oauth.OAuthProvider.google,
+        code,
+        state,
+        &token_response,
+    );
+    try testing.expect(success);
+}
+
+test "oauth exchange code for tokens disabled provider" {
+    var manager = oauth.OAuthManager.init();
+    const code = "test_auth_code";
+    const state = "test_state";
+    var token_response = oauth.OAuthTokenResponse.init();
+    const success = manager.exchange_code_for_tokens(
+        oauth.OAuthProvider.google,
+        code,
+        state,
+        &token_response,
+    );
+    try testing.expect(!success);
+}
+
+test "oauth exchange code for tokens github" {
+    var manager = oauth.OAuthManager.init();
+    const client_id = "test_client_id";
+    const client_secret = "test_client_secret";
+    const redirect_uri = "https://example.com/callback";
+    _ = manager.configure_provider(
+        oauth.OAuthProvider.github,
+        client_id,
+        client_secret,
+        redirect_uri,
+    );
+    const code = "test_auth_code_github";
+    const state = "test_state_github";
+    var token_response = oauth.OAuthTokenResponse.init();
+    const success = manager.exchange_code_for_tokens(
+        oauth.OAuthProvider.github,
+        code,
+        state,
+        &token_response,
+    );
+    try testing.expect(success);
+}
+
+test "oauth exchange code for tokens facebook" {
+    var manager = oauth.OAuthManager.init();
+    const client_id = "test_client_id";
+    const client_secret = "test_client_secret";
+    const redirect_uri = "https://example.com/callback";
+    _ = manager.configure_provider(
+        oauth.OAuthProvider.facebook,
+        client_id,
+        client_secret,
+        redirect_uri,
+    );
+    const code = "test_auth_code_facebook";
+    const state = "test_state_facebook";
+    var token_response = oauth.OAuthTokenResponse.init();
+    const success = manager.exchange_code_for_tokens(
+        oauth.OAuthProvider.facebook,
+        code,
+        state,
+        &token_response,
+    );
+    try testing.expect(success);
+}
+
+test "oauth exchange code for tokens apple" {
+    var manager = oauth.OAuthManager.init();
+    const client_id = "test_client_id";
+    const client_secret = "test_client_secret";
+    const redirect_uri = "https://example.com/callback";
+    _ = manager.configure_provider(
+        oauth.OAuthProvider.apple,
+        client_id,
+        client_secret,
+        redirect_uri,
+    );
+    const code = "test_auth_code_apple";
+    const state = "test_state_apple";
+    var token_response = oauth.OAuthTokenResponse.init();
+    const success = manager.exchange_code_for_tokens(
+        oauth.OAuthProvider.apple,
+        code,
+        state,
+        &token_response,
+    );
+    try testing.expect(success);
+}

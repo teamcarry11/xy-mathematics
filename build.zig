@@ -2017,6 +2017,19 @@ pub fn build(b: *std.Build) void {
     const grain_skate_ai_insights_tests_run = b.addRunArtifact(grain_skate_ai_insights_tests);
     test_step.dependOn(&grain_skate_ai_insights_tests_run.step);
 
+    const grain_skate_slc_dag_integration_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/125_grain_skate_slc_dag_integration_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_skate", .module = grain_skate_module },
+            },
+        }),
+    });
+    const grain_skate_slc_dag_integration_tests_run = b.addRunArtifact(grain_skate_slc_dag_integration_tests);
+    test_step.dependOn(&grain_skate_slc_dag_integration_tests_run.step);
+
     const shared_font_renderer_tests = b.addTest(.{
         .root_module = b.createModule(.{
             .root_source_file = b.path("tests/060_shared_font_renderer_test.zig"),

@@ -18,4 +18,5 @@ pub const LineBufferAdapter = @import("line_buffer_adapter.zig").LineBufferAdapt
 pub const EditorDagIntegration = @import("editor_dag_integration.zig").EditorDagIntegration;
 pub const TemporalGraph = @import("temporal_graph.zig").TemporalGraph;
 pub const AiInsights = @import("ai_insights.zig").AiInsights;
+pub const SlcDagIntegration = @import("slc_dag_integration.zig").SlcDagIntegration;
 

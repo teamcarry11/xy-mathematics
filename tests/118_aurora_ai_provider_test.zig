@@ -156,6 +156,7 @@ test "ai provider transform request structure" {
 
     // Assert: Request structure correct
     std.debug.assert(request.transform_type == .refactor_rename);
+    _ = request; // Use request to avoid unused warning
     std.debug.assert(std.mem.eql(u8, request.code, code));
     std.debug.assert(request.context.len == 0);
 }

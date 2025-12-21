@@ -443,6 +443,45 @@ Grain Skate Terminal Silo Field Agent is responsible for building Grain Skate (k
 
 ---
 
+### SLC Product Integration: DAG Core Integration 🔄 **IN PROGRESS**
+
+**Date Started**: 2025-12-20-161207-pst
+
+**Status**: **IN PROGRESS** — Foundation complete ✅  
+**Estimated Time**: 1-2 weeks
+
+**Objective**: Provide DAG core integration helpers for Nostr Profile Builder and DAG Website Builder
+
+**Completed Work**:
+1. **SLC DAG Integration Module** (`src/grain_skate/slc_dag_integration.zig`):
+   - DAG integration for Nostr profiles (profile nodes, relationship edges)
+   - DAG integration for DAG websites (page nodes, link edges)
+   - `create_profile_node()` - Create DAG node for Nostr profile
+   - `create_profile_relationship()` - Create profile relationship edges
+   - `create_website_page_node()` - Create DAG node for website page
+   - `create_website_link()` - Create link between pages
+   - `get_following_profiles()` - Query profile relationships
+   - `get_linked_pages()` - Query website structure
+   - Tests created (`tests/125_grain_skate_slc_dag_integration_test.zig`)
+   - Added to `src/grain_skate/root.zig` exports
+   - Added tests to `build.zig`
+
+**Integration Points**:
+- **Nostr Profile Builder**: Profile relationships (follows, mentions, reposts) as DAG edges
+- **DAG Website Builder**: Website structure (pages as nodes, links as edges)
+- **DAG Operations**: Query operations for profiles and websites
+
+**Dependencies**:
+- **Needs**: DAG Core (exists) ✅
+- **Coordinates with**: Aurora Agent (Dream Browser integration), Silo Agent (storage)
+
+**Remaining Work**:
+- Integration with Nostr protocol (Aurora Agent coordination)
+- Integration with website publishing (Core Agent coordination)
+- Enhanced query operations (if needed)
+
+---
+
 ### Phase 5: AI-Powered Graph Insights 🔄 **IN PROGRESS**
 
 **Date Started**: 2025-12-07-031415-pst

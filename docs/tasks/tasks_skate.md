@@ -190,6 +190,47 @@
 
 ---
 
+## SLC Product Integration: DAG Core Integration 🔄 **IN PROGRESS**
+
+**Date Started**: 2025-12-20-161207-pst
+
+**Priority**: **HIGH** — SLC product integration  
+**Status**: **IN PROGRESS** — Foundation complete ✅  
+**Estimated Time**: 1-2 weeks
+
+### Tasks
+
+- [x] Create SLC DAG integration module (`src/grain_skate/slc_dag_integration.zig`) ✅
+- [x] Implement profile node creation (`create_profile_node()`) ✅
+- [x] Implement profile relationship creation (`create_profile_relationship()`) ✅
+- [x] Implement website page node creation (`create_website_page_node()`) ✅
+- [x] Implement website link creation (`create_website_link()`) ✅
+- [x] Implement profile relationship queries (`get_following_profiles()`) ✅
+- [x] Implement website structure queries (`get_linked_pages()`) ✅
+- [x] Create tests (`tests/125_grain_skate_slc_dag_integration_test.zig`) ✅
+- [x] Add tests to `build.zig` ✅
+- [x] Add `SlcDagIntegration` to `src/grain_skate/root.zig` exports ✅
+- [ ] Integration with Nostr protocol (Aurora Agent coordination)
+- [ ] Integration with website publishing (Core Agent coordination)
+- [ ] Enhanced query operations (if needed)
+- [ ] Update `docs/plans/plan_skate.md` and `docs/tasks/tasks_skate.md` with completion
+
+### Grain Style Requirements
+
+- All functions use `grain_case` naming
+- Bounded allocations: Use DAG constants
+- Minimum 2 assertions per function
+- Max 70 lines per function
+- Max 100 characters per line
+- All compiler warnings enabled
+
+### Dependencies
+
+- **Needs**: DAG Core (exists) ✅
+- **Coordinates with**: Aurora Agent (Dream Browser, Nostr protocol), Core Agent (website publishing), Silo Agent (storage)
+
+---
+
 ## Planned: Phase 5 - AI-Powered Graph Insights 🔄 **IN PROGRESS**
 
 **Date Started**: 2025-12-07-031415-pst

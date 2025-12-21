@@ -167,9 +167,16 @@ pub const AiInsights = struct {
         
         for (block_ids) |block_id| {
             const block = self.block_storage.get_block(@as(u32, @intCast(block_id))) orelse continue;
+            
+            // Skip blocks with empty content
+            if (block.content_len == 0) continue;
+            
             const content = try self.allocator.dupe(u8, block.content[0..block.content_len]);
             try block_contents.append(content);
         }
+        
+        // Assert: At least 2 blocks with content required for connections
+        std.debug.assert(block_contents.items.len >= 2);
         
         // Build prompt for GLM-4.6
         var prompt = std.ArrayList(u8).init(self.allocator);

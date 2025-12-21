@@ -84,4 +84,7 @@ pub const WorkspaceFileStorage = @import("slc_integration.zig").WorkspaceFileSto
 pub const MAX_PROFILE_KEY_LEN = @import("slc_integration.zig").MAX_PROFILE_KEY_LEN;
 pub const MAX_WEBSITE_KEY_LEN = @import("slc_integration.zig").MAX_WEBSITE_KEY_LEN;
 pub const MAX_FILE_KEY_LEN = @import("slc_integration.zig").MAX_FILE_KEY_LEN;
+pub const validate_npub = @import("slc_integration.zig").validate_npub;
+pub const validate_file_path = @import("slc_integration.zig").validate_file_path;
+pub const SlcError = @import("slc_integration.zig").SlcError;
 

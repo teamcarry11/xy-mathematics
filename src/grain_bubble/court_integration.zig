@@ -152,9 +152,28 @@ pub const CourtIntegration = struct {
         if (self.compute == null) {
             return 0;
         }
-        // LLM inference via Court compute (simplified for Phase 3).
-        // Full implementation will use Court's llm_inference operation.
-        // For now, return empty suggestions (ready for real implementation).
+        const compute = self.compute.?;
+        // Allocate SRAM for context data.
+        const context_size: u64 = @as(u64, @intCast(context.len));
+        const data_offset = compute.allocate_sram(context_size) catch return 0;
+        // Copy context to SRAM.
+        const sram_slice = compute.sram_data[data_offset..data_offset + context_size];
+        @memcpy(sram_slice[0..context.len], context);
+        // Execute LLM inference operation.
+        const core_ids = [_]u32{0}; // Use first core for inference.
+        const op_id = compute.execute_parallel(
+            grain_court.Compute.CourtCompute.OpType.llm_inference,
+            &core_ids,
+            data_offset,
+            context_size,
+        ) catch return 0;
+        // Wait for operation to complete (simplified - check status).
+        const op_status = compute.get_op_status(op_id);
+        if (op_status == null or op_status.? != .completed) {
+            return 0;
+        }
+        // For now, return empty suggestions (actual suggestions would come from SRAM).
+        // Full implementation would read suggestions from SRAM and populate DesignSuggestion.
         var suggestion_count: u32 = 0;
         var i: u32 = 0;
         while (i < suggestions.len and suggestion_count < MAX_SEARCH_RESULTS) : (i += 1) {

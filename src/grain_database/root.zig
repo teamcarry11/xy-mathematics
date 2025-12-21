@@ -9,6 +9,7 @@ pub const WAL = @import("wal.zig").WAL;
 pub const LogEntryType = @import("wal.zig").LogEntryType;
 pub const Transaction = @import("transaction.zig").Transaction;
 pub const TransactionState = @import("transaction.zig").TransactionState;
+pub const TransactionOperation = @import("transaction.zig").TransactionOperation;
 pub const Schema = @import("relational.zig").Schema;
 pub const Table = @import("relational.zig").Table;
 pub const Column = @import("relational.zig").Column;

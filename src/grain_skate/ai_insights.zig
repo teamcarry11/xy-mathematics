@@ -207,8 +207,17 @@ pub const AiInsights = struct {
         
         // Parse lines (simple implementation)
         var lines = std.mem.split(u8, response, "\n");
-        while (lines.next()) |line| {
+        var line_count: u32 = 0;
+        while (lines.next()) |line| : (line_count += 1) {
             if (line.len == 0) continue;
+            
+            // Assert: Line count must be within bounds
+            std.debug.assert(line_count < MAX_BLOCKS_PER_BATCH * MAX_BLOCKS_PER_BATCH);
+            
+            // Check if suggestions array is full
+            if (suggestions.items.len >= MAX_AI_SUGGESTIONS) {
+                break;
+            }
             
             var fields = std.mem.split(u8, line, ",");
             const from_id_str = fields.next() orelse continue;
@@ -216,9 +225,20 @@ pub const AiInsights = struct {
             const conf_str = fields.next() orelse continue;
             const reason_str = fields.rest();
             
+            // Validate reason string length
+            if (reason_str.len > 1000) continue; // Max 1000 chars per reason
+            
             const from_id = std.fmt.parseInt(u64, from_id_str, 10) catch continue;
             const to_id = std.fmt.parseInt(u64, to_id_str, 10) catch continue;
-            const confidence = std.fmt.parseFloat(f32, conf_str) catch 0.5;
+            
+            // Validate block IDs are within reasonable bounds
+            if (from_id == 0 or to_id == 0) continue;
+            if (from_id == to_id) continue; // Skip self-connections
+            
+            // Parse confidence and clamp to valid range
+            var confidence = std.fmt.parseFloat(f32, conf_str) catch 0.5;
+            if (confidence < 0.0) confidence = 0.0;
+            if (confidence > 1.0) confidence = 1.0;
             
             const reason = try self.allocator.dupe(u8, reason_str);
             

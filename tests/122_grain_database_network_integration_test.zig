@@ -8,7 +8,7 @@ const NetworkIntegration = grain_database.NetworkIntegration;
 const TlsConfig = grain_database.TlsConfig;
 
 test "network_integration_init" {
-    var integration = NetworkIntegration.init();
+    const integration = NetworkIntegration.init();
     std.debug.assert(integration.connection_pool_len == 0);
     std.debug.assert(!integration.tls_config.enabled);
     std.debug.assert(integration.next_connection_id == 1);

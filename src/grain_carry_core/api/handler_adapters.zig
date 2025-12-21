@@ -19,6 +19,7 @@ const auth_integration = @import("auth_integration.zig");
 const auth_service_integration = @import("auth_service_integration.zig");
 const email_service = @import("../email/service.zig");
 const oauth = @import("../auth/oauth.zig");
+const database_integration = @import("database_integration.zig");
 
 // Global API server instance (set during initialization).
 var global_api_server: ?*grain_core_api.ApiServer = null;
@@ -120,13 +121,50 @@ pub fn handle_register_adapter(
     var password_hash: [grain_core_auth.HASH_OUTPUT_LEN]u8 = undefined;
     auth_integration.hash_password(password, &password_hash);
     
-    // TODO: Store user in database (when database available)
-    // For now, just hash the password and generate tokens
-    
-    // Generate user_id from email (temporary until database available)
+    // Generate user_id from email (SHA-256 hash)
     var user_id: [grain_core_auth.MAX_USER_ID_LEN]u8 = undefined;
-    const user_id_len = if (email_len <= grain_core_auth.MAX_USER_ID_LEN) email_len else grain_core_auth.MAX_USER_ID_LEN;
-    std.mem.copyForwards(u8, &user_id, email[0..user_id_len]);
+    var user_id_bytes: [32]u8 = undefined;
+    std.crypto.hash.sha2.Sha256.hash(email, &user_id_bytes, .{});
+    const user_id_hex_len: u32 = 32 * 2;
+    var i: u32 = 0;
+    while (i < user_id_hex_len and i < grain_core_auth.MAX_USER_ID_LEN) : (i += 2) {
+        const byte_idx = i / 2;
+        std.debug.assert(byte_idx < 32);
+        const byte = user_id_bytes[byte_idx];
+        const high_nibble = (byte >> 4) & 0x0F;
+        const low_nibble = byte & 0x0F;
+        user_id[i] = if (high_nibble < 10) '0' + @as(u8, @intCast(high_nibble)) else 'a' + @as(u8, @intCast(high_nibble - 10));
+        if (i + 1 < grain_core_auth.MAX_USER_ID_LEN) {
+            user_id[i + 1] = if (low_nibble < 10) '0' + @as(u8, @intCast(low_nibble)) else 'a' + @as(u8, @intCast(low_nibble - 10));
+        }
+    }
+    const user_id_len = if (user_id_hex_len > grain_core_auth.MAX_USER_ID_LEN) grain_core_auth.MAX_USER_ID_LEN else user_id_hex_len;
+    
+    // Check if user already exists
+    var existing_user = database_integration.UserData.init();
+    const existing_result = database_integration.get_user_by_email(email, &existing_user);
+    if (existing_result == database_integration.DatabaseResult.success) {
+        response.status = grain_core_api.HttpStatus.conflict;
+        return;
+    }
+    
+    // Store user in database
+    const current_time: u64 = @intCast(std.time.timestamp());
+    var user_data = database_integration.UserData.init();
+    std.mem.copyForwards(u8, &user_data.user_id, user_id[0..user_id_len]);
+    user_data.user_id_len = user_id_len;
+    std.mem.copyForwards(u8, &user_data.email, email);
+    user_data.email_len = email_len;
+    std.mem.copyForwards(u8, &user_data.username, username);
+    user_data.username_len = username_len;
+    std.mem.copyForwards(u8, &user_data.password_hash, password_hash[0..grain_core_auth.HASH_OUTPUT_LEN]);
+    user_data.password_hash_len = grain_core_auth.HASH_OUTPUT_LEN;
+    user_data.created_at = current_time;
+    const db_result = database_integration.create_user(&user_data);
+    if (db_result != database_integration.DatabaseResult.success) {
+        response.status = grain_core_api.HttpStatus.internal_server_error;
+        return;
+    }
     
     // Generate tokens
     const current_time: u64 = @intCast(std.time.timestamp());

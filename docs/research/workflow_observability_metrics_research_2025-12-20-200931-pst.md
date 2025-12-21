@@ -626,14 +626,17 @@ From first principles, we need metrics that are:
 2. ✅ Define metric definitions — Complete
 3. ✅ Design collection strategies — Complete
 4. ✅ Create testable hypotheses — Complete
-5. ⏳ Deliver research document to Flow Agent
+5. ✅ Deliver research document to Flow Agent — Complete
 
 ### Short-term (Flow Agent)
 
-1. ⏳ Review metric definitions
-2. ⏳ Plan instrumentation approach
-3. ⏳ Implement metric collection (Phase 1: Basic Metrics)
-4. ⏳ Store metrics in research-accessible format
+1. ✅ Review metric definitions — Complete
+2. ✅ Plan instrumentation approach — Complete
+3. ✅ Implement metric collection (Phase 1: Basic Metrics) — Complete (2025-12-20-201357-pst)
+4. ✅ Store metrics in research-accessible format — Complete (JSON export)
+5. ⏳ Implement Phase 2: Agent Coordination Metrics (Week 2)
+6. ⏳ Implement Phase 3: Failure Pattern Metrics (Week 3)
+7. ⏳ Implement Phase 4: Performance Characteristics (Week 4)
 
 ### Medium-term (Together)
 

@@ -108,9 +108,28 @@ pub const CourtIntegration = struct {
         if (self.compute == null) {
             return 0;
         }
-        // Vector search via Court compute (simplified for Phase 3).
-        // Full implementation will use Court's vector_search operation.
-        // For now, return empty results (ready for real implementation).
+        const compute = self.compute.?;
+        // Allocate SRAM for query vector.
+        const vector_size: u64 = @as(u64, @intCast(query_vector.len)) * @sizeOf(f32);
+        const data_offset = compute.allocate_sram(vector_size) catch return 0;
+        // Copy query vector to SRAM.
+        const sram_slice = compute.sram_data[data_offset..data_offset + vector_size];
+        @memcpy(sram_slice[0..query_vector.len], std.mem.asBytes(query_vector.ptr)[0..vector_size]);
+        // Execute vector search operation.
+        const core_ids = [_]u32{0}; // Use first core for search.
+        const op_id = compute.execute_parallel(
+            grain_court.Compute.CourtCompute.OpType.vector_search,
+            &core_ids,
+            data_offset,
+            vector_size,
+        ) catch return 0;
+        // Wait for operation to complete (simplified - check status).
+        const op_status = compute.get_op_status(op_id);
+        if (op_status == null or op_status.? != .completed) {
+            return 0;
+        }
+        // For now, return empty results (actual results would come from SRAM).
+        // Full implementation would read results from SRAM and populate ComponentMatch.
         var result_count: u32 = 0;
         var i: u32 = 0;
         while (i < results.len and result_count < MAX_SEARCH_RESULTS) : (i += 1) {

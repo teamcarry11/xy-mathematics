@@ -241,5 +241,41 @@ pub const StorageEngine = struct {
         }
         return null;
     }
+
+    // Batch create records (for bulk loading).
+    pub fn batch_create_records(
+        self: *StorageEngine,
+        keys: []const []const u8,
+        values: []const []const u8,
+        output_record_ids: []u64,
+    ) !u32 {
+        std.debug.assert(keys.len == values.len);
+        std.debug.assert(keys.len <= output_record_ids.len);
+        std.debug.assert(self.records_len + keys.len <= MAX_RECORDS);
+        var count: u32 = 0;
+        var i: u32 = 0;
+        while (i < keys.len) : (i += 1) {
+            std.debug.assert(keys[i].len <= MAX_KEY_LEN);
+            std.debug.assert(values[i].len <= MAX_VALUE_LEN);
+            if (self.find_record_by_key(keys[i])) |_| {
+                continue;
+            }
+            const record_id = self.next_record_id;
+            self.next_record_id += 1;
+            var record = try Record.init(
+                self.allocator,
+                keys[i],
+                values[i],
+                record_id,
+            );
+            errdefer record.deinit();
+            self.records[self.records_len] = record;
+            self.records_len += 1;
+            output_record_ids[count] = record_id;
+            count += 1;
+        }
+        std.debug.assert(self.records_len <= MAX_RECORDS);
+        return count;
+    }
 };
 

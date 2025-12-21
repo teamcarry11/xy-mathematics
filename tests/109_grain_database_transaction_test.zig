@@ -11,7 +11,8 @@ const testing = std.testing;
 const grain_database = @import("grain_database");
 const Transaction = grain_database.Transaction;
 const TransactionState = grain_database.TransactionState;
-const OperationType = grain_database.Transaction.TransactionOperation.OperationType;
+const TransactionOperation = grain_database.TransactionOperation;
+const OperationType = TransactionOperation.OperationType;
 
 test "transaction initialization" {
     const allocator = testing.allocator;

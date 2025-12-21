@@ -4268,10 +4268,6 @@ pub fn build(b: *std.Build) void {
     const grain_bubble_agent_flow_tests = b.addTest(.{
         .root_module = b.createModule(.{
             .root_source_file = b.path("tests/139_grain_bubble_agent_flow_test.zig"),
-    });
-
-    const grain_bubble_slc_ui_components_test = b.addTest(.{
-        .root_source_file = b.path("tests/140_grain_bubble_slc_ui_components_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{

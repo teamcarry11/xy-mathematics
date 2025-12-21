@@ -118,3 +118,64 @@ test "workspace_file_storage_store_and_retrieve" {
     std.debug.assert(retrieved != null);
     std.debug.assert(retrieved.?.record_id == record_id);
 }
+
+test "nostr_profile_storage_update_and_delete" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deallocate();
+    const allocator = gpa.allocator();
+    var storage = try StorageEngine.init(allocator, 1024);
+    defer storage.deinit();
+    var g = try Graph.init(allocator);
+    defer g.deinit();
+    var profile_storage = NostrProfileStorage.init(&storage, &g);
+    const npub = "npub1test456";
+    const profile_data1 = "{\"name\":\"Test User\",\"bio\":\"Original bio\"}";
+    _ = try profile_storage.store_profile(npub, profile_data1);
+    const profile_data2 = "{\"name\":\"Test User\",\"bio\":\"Updated bio\"}";
+    try profile_storage.update_profile(npub, profile_data2);
+    const retrieved = profile_storage.get_profile(npub);
+    std.debug.assert(retrieved != null);
+    try profile_storage.delete_profile(npub);
+    const deleted = profile_storage.get_profile(npub);
+    std.debug.assert(deleted == null);
+}
+
+test "dag_website_storage_update_and_delete" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deallocate();
+    const allocator = gpa.allocator();
+    var storage = try StorageEngine.init(allocator, 1024);
+    defer storage.deinit();
+    var g = try Graph.init(allocator);
+    defer g.deinit();
+    var website_storage = DagWebsiteStorage.init(&storage, &g);
+    const node_id = "node3";
+    const content1 = "<h1>Original Content</h1>";
+    _ = try website_storage.store_node(node_id, content1);
+    const content2 = "<h1>Updated Content</h1>";
+    try website_storage.update_node(node_id, content2);
+    const retrieved = website_storage.get_node(node_id);
+    std.debug.assert(retrieved != null);
+    try website_storage.delete_node(node_id);
+    const deleted = website_storage.get_node(node_id);
+    std.debug.assert(deleted == null);
+}
+
+test "workspace_file_storage_update_and_delete" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deallocate();
+    const allocator = gpa.allocator();
+    var storage = try StorageEngine.init(allocator, 1024);
+    defer storage.deinit();
+    var file_storage = WorkspaceFileStorage.init(&storage);
+    const file_path = "/home/user/updated.txt";
+    const metadata1 = "{\"size\":1024,\"modified\":1234567890}";
+    _ = try file_storage.store_file_metadata(file_path, metadata1);
+    const metadata2 = "{\"size\":2048,\"modified\":1234567900}";
+    try file_storage.update_file_metadata(file_path, metadata2);
+    const retrieved = file_storage.get_file_metadata(file_path);
+    std.debug.assert(retrieved != null);
+    try file_storage.delete_file_metadata(file_path);
+    const deleted = file_storage.get_file_metadata(file_path);
+    std.debug.assert(deleted == null);
+}

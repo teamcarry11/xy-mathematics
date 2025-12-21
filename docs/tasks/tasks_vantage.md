@@ -16,10 +16,22 @@
 **Status**: **READY** — Phase 5.1 (Audio Device Management) Complete  
 **Estimated Time**: TBD
 
+### Current Verification Tasks (CRITICAL)
+
+- [x] Create verification checklist document
+- [x] Create file system kernel verification test
+- [ ] Verify Nostr protocol works at RISC-V Basin kernel level
+- [ ] Verify DAG operations work at RISC-V Basin kernel level
+- [ ] Verify file system works at RISC-V Basin kernel level (complete tests)
+- [ ] Verify Vantage VM translates to macOS Tahoe 26.2 (aarch64)
+- [ ] Test all SLC products on macOS Tahoe 26.2
+- [ ] Performance benchmarks (60fps, sub-ms latency)
+- [ ] Documentation updated with verification results
+
 ### Next Potential Tasks
 
 - [ ] AArch64 Support (Phase 6) — Cloud deployment and hardware support
-- [ ] Coordinate with Grain Core Agent on next priority features
+- [ ] Coordinate with Grain Core Agent on SLC product integration
 
 ### Dependencies
 

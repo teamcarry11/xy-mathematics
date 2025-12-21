@@ -405,7 +405,7 @@ pub const TextEditor = struct {
         self.file_state = .dirty;
 
         // Postcondition: Text must be deleted
-        std.debug.assert(current_line.content_len >= 0);
+        std.debug.assert(current_line.content_len <= MAX_LINE_LEN);
 
         return true;
     }

@@ -127,6 +127,10 @@ pub const CodeAnalyzer = struct {
 
         var violations = std.ArrayListUnmanaged(Violation){};
         defer violations.deinit(self.allocator);
+        violations.ensureTotalCapacity(self.allocator, MAX_VIOLATIONS_PER_FILE) catch |err| {
+            std.debug.assert(err == error.OutOfMemory);
+            return err;
+        };
 
         var line_number: u32 = 1;
         var line_start: u32 = 0;
@@ -215,6 +219,8 @@ pub const CodeAnalyzer = struct {
         }
 
         // Check function length (grain validate-70).
+        // Note: Full function detection requires AST parsing.
+        // This is a placeholder for future enhancement.
         if (in_function and function_line_count > 70) {
             const msg = try std.fmt.allocPrint(
                 self.allocator,
@@ -231,27 +237,6 @@ pub const CodeAnalyzer = struct {
             );
             try violations.append(self.allocator, violation);
         }
-
-        // Copy violations to result.
-        if (violations.items.len > 0) {
-            const violations_copy = try self.allocator.alloc(
-                Violation,
-                violations.items.len,
-            );
-            errdefer self.allocator.free(violations_copy);
-
-            var j: u32 = 0;
-            while (j < violations.items.len) : (j += 1) {
-                violations_copy[j] = violations.items[j];
-            }
-
-            result.violations = violations_copy;
-            result.violations_len = @as(u32, @intCast(violations.items.len));
-        }
-
-        result.total_lines = line_number;
-        // Note: Function counting would require full AST parsing.
-        result.total_functions = 0;
 
         // Check final line length if code doesn't end with newline.
         if (line_start < code.len) {
@@ -273,6 +258,27 @@ pub const CodeAnalyzer = struct {
                 try violations.append(self.allocator, violation);
             }
         }
+
+        // Copy violations to result (including final line check).
+        if (violations.items.len > 0) {
+            const violations_copy = try self.allocator.alloc(
+                Violation,
+                violations.items.len,
+            );
+            errdefer self.allocator.free(violations_copy);
+
+            var j: u32 = 0;
+            while (j < violations.items.len) : (j += 1) {
+                violations_copy[j] = violations.items[j];
+            }
+
+            result.violations = violations_copy;
+            result.violations_len = @as(u32, @intCast(violations.items.len));
+        }
+
+        result.total_lines = line_number;
+        // Note: Function counting would require full AST parsing.
+        result.total_functions = 0;
 
         return result;
     }

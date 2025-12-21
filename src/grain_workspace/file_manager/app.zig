@@ -40,6 +40,10 @@ pub const MAX_BACKUP_OPERATIONS: u32 = 16;
 // 2025-12-19-191339-pst: Phase 15 WAL Manager integration
 pub const MAX_WAL_OPERATIONS: u32 = 32;
 
+// Bounded: Max index operations (explicit limit)
+// 2025-12-20-161231-pst: Phase 16 Index Manager integration
+pub const MAX_INDEX_OPERATIONS: u32 = 32;
+
 // File operation type.
 // 2025-12-04-092542-pst: Active enum
 pub const FileOperation = enum(u8) {
@@ -89,17 +93,39 @@ pub const WalOperation = struct {
     active: bool,
 };
 
+// Index operation tracking.
+// 2025-12-20-161231-pst: Phase 16 Index Manager integration
+pub const IndexOperation = struct {
+    operation_id: u32,
+    entry_id: u32,
+    index_id: u32,
+    table_id: u32,
+    operation_type: IndexOperationType,
+    active: bool,
+};
+
+// Index operation type.
+// 2025-12-20-161231-pst: Phase 16 Index Manager integration
+pub const IndexOperationType = enum(u8) {
+    create, // Create index
+    delete, // Delete index
+    add_entry, // Add entry to index
+    query, // Query index
+};
+
 // File Manager UI application state.
 // 2025-12-04-092542-pst: Active struct
 // 2025-12-07-025947-pst: Phase 10.4 WebSocket integration
 // 2025-12-07-071409-pst: Phase 13 File Storage integration
 // 2025-12-07-084440-pst: Phase 14 Backup Manager integration
 // 2025-12-19-191529-pst: Phase 15 WAL Manager integration
+// 2025-12-20-161231-pst: Phase 16 Index Manager integration
 pub const FileManagerUI = struct {
     file_manager: *grain_core.file_manager.FileManager,
     file_storage_manager: *grain_core.file_storage.FileStorageManager,
     backup_manager: *grain_core.backup_manager.BackupManager,
     wal_manager: *grain_core.wal_manager.WalManager,
+    index_manager: *grain_core.index_manager.IndexManager,
     search_query: [grain_core.file_manager.MAX_NAME_LEN]u8,
     search_query_len: u32,
     selected_entry_id: u32,

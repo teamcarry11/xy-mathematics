@@ -208,7 +208,7 @@ pub const ResearchEngine = struct {
         const entry_id = self.next_entry_id;
         self.next_entry_id += 1;
 
-        const entry = try ResearchEntry.init(
+        var entry = try ResearchEntry.init(
             self.allocator,
             entry_id,
             title,

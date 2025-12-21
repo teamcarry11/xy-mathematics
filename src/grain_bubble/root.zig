@@ -21,4 +21,5 @@ pub const court_integration = @import("court_integration.zig");
 pub const dag_integration = @import("dag_integration.zig");
 pub const export_optimize = @import("export_optimize.zig");
 pub const export_preview = @import("export_preview.zig");
+pub const agent_flow = @import("agent_flow.zig");
 

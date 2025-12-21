@@ -342,6 +342,118 @@ test "get file content empty" {
     try testing.expect(buffer_len == 0);
 }
 
+test "toggle plain text mode" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    const initial = editor.plain_text_mode;
+    editor.toggle_plain_text_mode();
+    try testing.expect(editor.plain_text_mode == !initial);
+    editor.toggle_plain_text_mode();
+    try testing.expect(editor.plain_text_mode == initial);
+}
+
+test "plain text mode em dash conversion" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    editor.toggle_plain_text_mode();
+    try testing.expect(editor.plain_text_mode == true);
+
+    // Insert em dash (UTF-8: 0xE2 0x80 0x94)
+    const em_dash = "\xE2\x80\x94";
+    _ = editor.insert_text(em_dash);
+    
+    // Should be converted to double dash
+    try testing.expect(editor.lines[0].content_len == 2);
+    try testing.expect(editor.lines[0].content[0] == '-');
+    try testing.expect(editor.lines[0].content[1] == '-');
+}
+
+test "plain text mode smart quotes conversion" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    editor.toggle_plain_text_mode();
+    try testing.expect(editor.plain_text_mode == true);
+
+    // Insert left double quote (UTF-8: 0xE2 0x80 0x9C)
+    const left_quote = "\xE2\x80\x9C";
+    _ = editor.insert_text(left_quote);
+    
+    // Should be converted to straight quote
+    try testing.expect(editor.lines[0].content_len == 1);
+    try testing.expect(editor.lines[0].content[0] == '"');
+
+    // Insert right double quote (UTF-8: 0xE2 0x80 0x9D)
+    const right_quote = "\xE2\x80\x9D";
+    _ = editor.insert_text(right_quote);
+    
+    // Should be converted to straight quote
+    try testing.expect(editor.lines[0].content_len == 2);
+    try testing.expect(editor.lines[0].content[1] == '"');
+}
+
+test "plain text mode ellipsis conversion" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    editor.toggle_plain_text_mode();
+    try testing.expect(editor.plain_text_mode == true);
+
+    // Insert ellipsis (UTF-8: 0xE2 0x80 0xA6)
+    const ellipsis = "\xE2\x80\xA6";
+    _ = editor.insert_text(ellipsis);
+    
+    // Should be converted to triple periods
+    try testing.expect(editor.lines[0].content_len == 3);
+    try testing.expect(editor.lines[0].content[0] == '.');
+    try testing.expect(editor.lines[0].content[1] == '.');
+    try testing.expect(editor.lines[0].content[2] == '.');
+}
+
+test "plain text mode single quotes conversion" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    editor.toggle_plain_text_mode();
+    try testing.expect(editor.plain_text_mode == true);
+
+    // Insert left single quote (UTF-8: 0xE2 0x80 0x98)
+    const left_single = "\xE2\x80\x98";
+    _ = editor.insert_text(left_single);
+    
+    // Should be converted to straight quote
+    try testing.expect(editor.lines[0].content_len == 1);
+    try testing.expect(editor.lines[0].content[0] == '\'');
+
+    // Insert right single quote (UTF-8: 0xE2 0x80 0x99)
+    const right_single = "\xE2\x80\x99";
+    _ = editor.insert_text(right_single);
+    
+    // Should be converted to straight quote
+    try testing.expect(editor.lines[0].content_len == 2);
+    try testing.expect(editor.lines[0].content[1] == '\'');
+}
+
+test "plain text mode disabled no conversion" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    try testing.expect(editor.plain_text_mode == false);
+
+    // Insert regular text - should not be converted
+    _ = editor.insert_text("Hello");
+    try testing.expect(editor.lines[0].content_len == 5);
+    try testing.expect(std.mem.eql(u8, editor.lines[0].content[0..5], "Hello"));
+}
+
 test "cannot open file when file has unsaved changes" {
     const allocator = testing.allocator;
     var editor = TextEditor.init(allocator);

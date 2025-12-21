@@ -4535,6 +4535,20 @@ pub fn build(b: *std.Build) void {
     const grain_research_workflow_metrics_integration_tests_run = b.addRunArtifact(grain_research_workflow_metrics_integration_tests);
     test_step.dependOn(&grain_research_workflow_metrics_integration_tests_run.step);
 
+    // Grain Research workflow metrics Step 2 validation tests
+    const grain_research_workflow_metrics_step2_validation_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/146_grain_research_workflow_metrics_step2_validation_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_research", .module = grain_research_module },
+            },
+        }),
+    });
+    const grain_research_workflow_metrics_step2_validation_tests_run = b.addRunArtifact(grain_research_workflow_metrics_step2_validation_tests);
+    test_step.dependOn(&grain_research_workflow_metrics_step2_validation_tests_run.step);
+
     // Grain Bubble component tests
     const grain_bubble_component_tests = b.addTest(.{
         .root_module = b.createModule(.{

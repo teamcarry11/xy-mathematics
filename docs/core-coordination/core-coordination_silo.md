@@ -91,6 +91,7 @@ All core phases complete and ready for production use:
 ### Pending Dependencies
 - ⏳ **Vantage Agent**: Phase 10 (AArch64 Cloud Deployment) - waiting on VM integration
 - ⏳ **SLC Product Integration**: Coordination with Aurora, Skate, Workspace agents for production use
+- ⏳ **Court Agent**: Future AI-powered features (no immediate dependency, but potential future integration)
 
 ---
 

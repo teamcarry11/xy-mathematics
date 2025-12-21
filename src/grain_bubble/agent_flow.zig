@@ -30,6 +30,15 @@ pub const FlowNodeType = enum(u8) {
     end = 4,
 };
 
+// Flow node execution status (matches Flow Agent NodeStatus).
+pub const FlowNodeStatus = enum(u8) {
+    pending = 0,
+    running = 1,
+    completed = 2,
+    failed = 3,
+    skipped = 4,
+};
+
 // Flow node: represents an agent, task, or decision point.
 pub const FlowNode = struct {
     id: u32,
@@ -45,6 +54,7 @@ pub const FlowNode = struct {
     agent_id: u32, // For agent nodes: which agent to use
     task_name: [MAX_NODE_NAME_LEN]u8, // For task nodes: task name
     task_name_len: u32,
+    execution_status: FlowNodeStatus, // Execution status for visualization
 
     pub fn init(
         id: u32,
@@ -71,6 +81,7 @@ pub const FlowNode = struct {
             .agent_id = 0,
             .task_name = undefined,
             .task_name_len = 0,
+            .execution_status = .pending,
         };
         @memset(node.name[0..], 0);
         @memset(node.config[0..], 0);
@@ -111,6 +122,18 @@ pub const FlowNode = struct {
         @memcpy(self.task_name[0..copy_len], task_name[0..copy_len]);
         self.task_name_len = @as(u32, @intCast(copy_len));
         std.debug.assert(self.task_name_len > 0);
+    }
+
+    // Set execution status.
+    pub fn set_execution_status(self: *FlowNode, status: FlowNodeStatus) void {
+        std.debug.assert(@intFromPtr(self) != 0);
+        self.execution_status = status;
+    }
+
+    // Get execution status.
+    pub fn get_execution_status(self: *const FlowNode) FlowNodeStatus {
+        std.debug.assert(@intFromPtr(self) != 0);
+        return self.execution_status;
     }
 };
 

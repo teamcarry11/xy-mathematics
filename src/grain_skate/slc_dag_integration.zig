@@ -233,6 +233,106 @@ pub const SlcDagIntegration = struct {
         
         return count;
     }
+    
+    /// Get all profiles that follow a profile (reverse lookup).
+    /// Returns array of profile node IDs.
+    pub fn get_follower_profiles(
+        self: *const SlcDagIntegration,
+        profile_id: u32,
+        follower_ids: []u32,
+    ) u32 {
+        // Assert: Profile ID must be valid
+        std.debug.assert(profile_id > 0);
+        std.debug.assert(follower_ids.len > 0);
+        
+        var count: u32 = 0;
+        var i: u32 = 0;
+        while (i < self.dag.edges_len and count < follower_ids.len) : (i += 1) {
+            const edge = self.dag.edges[i];
+            if (edge.to_node == profile_id and edge.edge_type == .semantic) {
+                follower_ids[count] = edge.from_node;
+                count += 1;
+            }
+        }
+        
+        // Assert: Count is within bounds
+        std.debug.assert(count <= follower_ids.len);
+        
+        return count;
+    }
+    
+    /// Get all pages that link to a page (backlinks/reverse lookup).
+    /// Returns array of page node IDs.
+    pub fn get_backlink_pages(
+        self: *const SlcDagIntegration,
+        page_id: u32,
+        backlink_page_ids: []u32,
+    ) u32 {
+        // Assert: Page ID must be valid
+        std.debug.assert(page_id > 0);
+        std.debug.assert(backlink_page_ids.len > 0);
+        
+        var count: u32 = 0;
+        var i: u32 = 0;
+        while (i < self.dag.edges_len and count < backlink_page_ids.len) : (i += 1) {
+            const edge = self.dag.edges[i];
+            if (edge.to_node == page_id and edge.edge_type == .semantic) {
+                backlink_page_ids[count] = edge.from_node;
+                count += 1;
+            }
+        }
+        
+        // Assert: Count is within bounds
+        std.debug.assert(count <= backlink_page_ids.len);
+        
+        return count;
+    }
+    
+    /// Get total number of relationships for a profile (following + followers).
+    /// Returns count of total relationships.
+    pub fn get_profile_relationship_count(
+        self: *const SlcDagIntegration,
+        profile_id: u32,
+    ) u32 {
+        // Assert: Profile ID must be valid
+        std.debug.assert(profile_id > 0);
+        
+        var count: u32 = 0;
+        var i: u32 = 0;
+        while (i < self.dag.edges_len) : (i += 1) {
+            const edge = self.dag.edges[i];
+            if (edge.edge_type == .semantic) {
+                if (edge.from_node == profile_id or edge.to_node == profile_id) {
+                    count += 1;
+                }
+            }
+        }
+        
+        return count;
+    }
+    
+    /// Get total number of links for a page (outgoing + incoming).
+    /// Returns count of total links.
+    pub fn get_page_link_count(
+        self: *const SlcDagIntegration,
+        page_id: u32,
+    ) u32 {
+        // Assert: Page ID must be valid
+        std.debug.assert(page_id > 0);
+        
+        var count: u32 = 0;
+        var i: u32 = 0;
+        while (i < self.dag.edges_len) : (i += 1) {
+            const edge = self.dag.edges[i];
+            if (edge.edge_type == .semantic) {
+                if (edge.from_node == page_id or edge.to_node == page_id) {
+                    count += 1;
+                }
+            }
+        }
+        
+        return count;
+    }
 };
 
 test "slc dag integration initialization" {

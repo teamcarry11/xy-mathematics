@@ -549,4 +549,185 @@ pub const TextEditor = struct {
 
         self.show_line_numbers = !self.show_line_numbers;
     }
+
+    /// Add undo entry.
+    // 2025-12-20-175102-pst: Phase 18 Undo/Redo
+    fn add_undo_entry(
+        self: *TextEditor,
+        line: u32,
+        column: u32,
+        action: UndoAction,
+        text: []const u8,
+    ) void {
+        // Precondition: File must be open
+        std.debug.assert(self.file_state != .closed);
+        std.debug.assert(text.len <= MAX_LINE_LEN);
+
+        // Discard redo history if we're not at the end
+        if (self.undo_history_pos < self.undo_history_len) {
+            self.undo_history_len = self.undo_history_pos;
+        }
+
+        // Check if we need to make room
+        if (self.undo_history_len >= MAX_UNDO_HISTORY) {
+            // Shift history left
+            var i: u32 = 0;
+            while (i < MAX_UNDO_HISTORY - 1) : (i += 1) {
+                self.undo_history[i] = self.undo_history[i + 1];
+            }
+            self.undo_history_len = MAX_UNDO_HISTORY - 1;
+        }
+
+        // Add new entry
+        const entry = &self.undo_history[self.undo_history_len];
+        entry.line = line;
+        entry.column = column;
+        entry.action = action;
+        @memset(&entry.text, 0);
+        const text_len = @min(text.len, MAX_LINE_LEN);
+        @memcpy(entry.text[0..text_len], text[0..text_len]);
+        entry.text_len = @as(u32, @intCast(text_len));
+
+        self.undo_history_len += 1;
+        self.undo_history_pos = self.undo_history_len;
+    }
+
+    /// Undo last action.
+    // 2025-12-20-175102-pst: Phase 18 Undo/Redo
+    pub fn undo(self: *TextEditor) bool {
+        // Precondition: File must be open
+        std.debug.assert(self.file_state != .closed);
+
+        if (self.file_state == .closed) {
+            return false;
+        }
+
+        if (self.undo_history_pos == 0) {
+            return false; // Nothing to undo
+        }
+
+        self.undo_history_pos -= 1;
+        const entry = &self.undo_history[self.undo_history_pos];
+
+        // Restore cursor position
+        self.cursor.line = entry.line;
+        self.cursor.column = entry.column;
+
+        // Apply undo based on action type
+        switch (entry.action) {
+            .insert => {
+                // Undo insert: delete the text
+                if (entry.text_len > 0) {
+                    _ = self.delete_text(entry.text_len);
+                }
+            },
+            .delete => {
+                // Undo delete: insert the text back
+                if (entry.text_len > 0) {
+                    _ = self.insert_text(entry.text[0..entry.text_len]);
+                }
+            },
+            .newline => {
+                // Undo newline: remove the line break
+                if (self.lines_len > 0 and self.cursor.line < self.lines_len - 1) {
+                    // Merge with next line
+                    const current = &self.lines[self.cursor.line];
+                    const next = &self.lines[self.cursor.line + 1];
+                    const remaining = MAX_LINE_LEN - current.content_len;
+                    const merge_len = @min(next.content_len, remaining);
+                    if (merge_len > 0) {
+                        @memcpy(
+                            current.content[current.content_len..current.content_len + merge_len],
+                            next.content[0..merge_len],
+                        );
+                        current.content_len += merge_len;
+                    }
+                    // Remove next line
+                    var i: u32 = self.cursor.line + 1;
+                    while (i < self.lines_len - 1) : (i += 1) {
+                        self.lines[i] = self.lines[i + 1];
+                    }
+                    self.lines_len -= 1;
+                }
+            },
+            .backspace => {
+                // Undo backspace: insert the text back
+                if (entry.text_len > 0) {
+                    _ = self.insert_text(entry.text[0..entry.text_len]);
+                }
+            },
+        }
+
+        // Mark as dirty
+        self.file_state = .dirty;
+
+        return true;
+    }
+
+    /// Redo last undone action.
+    // 2025-12-20-175102-pst: Phase 18 Undo/Redo
+    pub fn redo(self: *TextEditor) bool {
+        // Precondition: File must be open
+        std.debug.assert(self.file_state != .closed);
+
+        if (self.file_state == .closed) {
+            return false;
+        }
+
+        if (self.undo_history_pos >= self.undo_history_len) {
+            return false; // Nothing to redo
+        }
+
+        const entry = &self.undo_history[self.undo_history_pos];
+        self.undo_history_pos += 1;
+
+        // Restore cursor position
+        self.cursor.line = entry.line;
+        self.cursor.column = entry.column;
+
+        // Apply redo based on action type
+        switch (entry.action) {
+            .insert => {
+                // Redo insert: insert the text
+                if (entry.text_len > 0) {
+                    _ = self.insert_text(entry.text[0..entry.text_len]);
+                }
+            },
+            .delete => {
+                // Redo delete: delete the text
+                if (entry.text_len > 0) {
+                    _ = self.delete_text(entry.text_len);
+                }
+            },
+            .newline => {
+                // Redo newline: insert line break
+                if (self.lines_len < MAX_LINES) {
+                    // Split line at cursor
+                    const current = &self.lines[self.cursor.line];
+                    const split_pos = self.cursor.column;
+                    if (split_pos < current.content_len) {
+                        // Create new line with remaining content
+                        const new_line = &self.lines[self.lines_len];
+                        const remaining = current.content_len - split_pos;
+                        @memcpy(new_line.content[0..remaining], current.content[split_pos..current.content_len]);
+                        new_line.content_len = remaining;
+                        // Truncate current line
+                        current.content_len = split_pos;
+                        self.lines_len += 1;
+                    }
+                }
+            },
+            .backspace => {
+                // Redo backspace: delete the text
+                if (entry.text_len > 0) {
+                    _ = self.delete_text(entry.text_len);
+                }
+            },
+        }
+
+        // Mark as dirty
+        self.file_state = .dirty;
+
+        return true;
+    }
 };

@@ -11,6 +11,7 @@
 
 const std = @import("std");
 const event_bus = @import("event_bus.zig");
+const agent_coordination_metrics = @import("agent_coordination_metrics.zig");
 
 // Bounded: Max agents in registry.
 pub const MAX_AGENTS: u32 = 64;
@@ -200,6 +201,7 @@ pub const AgentCoordinator = struct {
     rpc_requests_count: u32,
     next_request_id: u32,
     event_bus: *event_bus.EventBus,
+    coordination_metrics: ?*agent_coordination_metrics.AgentCoordinationMetricsCollector,
 
     pub fn init(event_bus_instance: *event_bus.EventBus) AgentCoordinator {
         std.debug.assert(event_bus_instance != null);
@@ -213,6 +215,7 @@ pub const AgentCoordinator = struct {
             .rpc_requests_count = 0,
             .next_request_id = 1,
             .event_bus = event_bus_instance,
+            .coordination_metrics = null,
         };
         var i: u32 = 0;
         while (i < MAX_AGENTS) : (i += 1) {
@@ -411,6 +414,16 @@ pub const AgentCoordinator = struct {
         }
         self.rpc_requests_tail = (self.rpc_requests_tail + 1) % MAX_RPC_REQUESTS;
         self.rpc_requests_count += 1;
+        // Record coordination start for metrics.
+        if (self.coordination_metrics) |metrics| {
+            _ = metrics.record_coordination_start(
+                from_agent_id,
+                to_agent_id,
+                0,
+                request_id,
+                timestamp,
+            );
+        }
         return request_id;
     }
 
@@ -451,5 +464,14 @@ pub const AgentCoordinator = struct {
     // Get RPC request count.
     pub fn get_rpc_request_count(self: *const AgentCoordinator) u32 {
         return self.rpc_requests_count;
+    }
+
+    // Set coordination metrics collector (optional, for observability).
+    pub fn set_coordination_metrics_collector(
+        self: *AgentCoordinator,
+        collector: *agent_coordination_metrics.AgentCoordinationMetricsCollector,
+    ) void {
+        std.debug.assert(@intFromPtr(collector) != 0);
+        self.coordination_metrics = collector;
     }
 };

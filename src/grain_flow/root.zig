@@ -35,6 +35,9 @@ pub const workflow_templates = @import("workflow_templates.zig");
 // Workflow metrics for observability.
 pub const workflow_metrics = @import("workflow_metrics.zig");
 
+// Agent coordination metrics for observability.
+pub const agent_coordination_metrics = @import("agent_coordination_metrics.zig");
+
 // Module exports.
 pub const EventBus = event_bus.EventBus;
 pub const EventType = event_bus.EventType;
@@ -63,3 +66,8 @@ pub const WorkflowTemplate = workflow_templates.WorkflowTemplate;
 pub const WorkflowMetricsCollector = workflow_metrics.WorkflowMetricsCollector;
 pub const WorkflowExecutionRecord = workflow_metrics.WorkflowExecutionRecord;
 pub const WorkflowExecutionStatus = workflow_metrics.WorkflowExecutionStatus;
+
+pub const AgentCoordinationMetricsCollector = agent_coordination_metrics.AgentCoordinationMetricsCollector;
+pub const AgentCoordinationRecord = agent_coordination_metrics.AgentCoordinationRecord;
+pub const AgentCoordinationStatus = agent_coordination_metrics.AgentCoordinationStatus;
+pub const AgentPairPattern = agent_coordination_metrics.AgentPairPattern;

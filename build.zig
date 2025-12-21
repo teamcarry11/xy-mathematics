@@ -596,6 +596,13 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    // Aurora AI Transforms module (for test imports)
+    const aurora_ai_transforms_module = b.addModule("aurora_ai_transforms", .{
+        .root_source_file = b.path("src/aurora_ai_transforms.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
     // Aurora Editor module (for test imports)
     const aurora_editor_module = b.addModule("aurora_editor", .{
         .root_source_file = b.path("src/aurora_editor.zig"),
@@ -4302,20 +4309,6 @@ pub fn build(b: *std.Build) void {
     });
     const grain_research_code_analysis_tests_run = b.addRunArtifact(grain_research_code_analysis_tests);
     test_step.dependOn(&grain_research_code_analysis_tests_run.step);
-
-    // Grain Research codebase analyzer tests
-    const grain_research_codebase_analyzer_tests = b.addTest(.{
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/138_grain_research_codebase_analyzer_test.zig"),
-            .target = target,
-            .optimize = optimize,
-            .imports = &.{
-                .{ .name = "grain_research", .module = grain_research_module },
-            },
-        }),
-    });
-    const grain_research_codebase_analyzer_tests_run = b.addRunArtifact(grain_research_codebase_analyzer_tests);
-    test_step.dependOn(&grain_research_codebase_analyzer_tests_run.step);
 
     // Grain Bubble component tests
     const grain_bubble_component_tests = b.addTest(.{

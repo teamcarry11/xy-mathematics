@@ -4,7 +4,7 @@
 //! Architecture: Flow nodes, connections, and canvas integration.
 //! GrainStyle: grain_case, u32/u64, bounded allocations, assertions.
 //!
-//! 2025-12-20-152034-pst: Grain Bubble Agent
+//! 2025-12-20-175025-pst: Grain Bubble Agent
 
 const std = @import("std");
 const canvas = @import("canvas.zig");

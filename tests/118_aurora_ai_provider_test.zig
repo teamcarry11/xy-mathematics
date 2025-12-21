@@ -104,10 +104,6 @@ test "ai provider transform type enum" {
 }
 
 test "ai provider transform parameters refactor rename" {
-    var arena = std.heap.ArenaAllocator.init(testing.allocator);
-    defer arena.deinit();
-    const allocator = arena.allocator();
-
     const symbol_name = "old_name";
     const new_name = "new_name";
     const file_uri = "file:///test.zig";
@@ -124,11 +120,12 @@ test "ai provider transform parameters refactor rename" {
 
     // Assert: Parameters structure correct
     std.debug.assert(params == .refactor_rename);
-    _ = params; // Use params to avoid unused warning
     std.debug.assert(std.mem.eql(u8, params.refactor_rename.symbol_name, symbol_name));
     std.debug.assert(std.mem.eql(u8, params.refactor_rename.new_name, new_name));
     std.debug.assert(params.refactor_rename.line == 10);
     std.debug.assert(params.refactor_rename.char == 5);
+    // Use params to verify structure
+    _ = params.refactor_rename.file_uri;
 }
 
 test "ai provider transform request structure" {
@@ -156,16 +153,13 @@ test "ai provider transform request structure" {
 
     // Assert: Request structure correct
     std.debug.assert(request.transform_type == .refactor_rename);
-    _ = request; // Use request to avoid unused warning
     std.debug.assert(std.mem.eql(u8, request.code, code));
     std.debug.assert(request.context.len == 0);
+    // Use request to verify structure
+    _ = request.parameters;
 }
 
 test "ai provider transform result structure" {
-    var arena = std.heap.ArenaAllocator.init(testing.allocator);
-    defer arena.deinit();
-    const allocator = arena.allocator();
-
     const result = AiProvider.TransformResult{
         .file_edits = &.{},
         .file_edits_len = 0,
@@ -177,6 +171,8 @@ test "ai provider transform result structure" {
     std.debug.assert(result.file_edits_len == 0);
     std.debug.assert(result.success == true);
     std.debug.assert(result.error_message == null);
+    // Use result to verify structure
+    _ = result.file_edits;
 }
 
 test "ai provider file edit structure" {
@@ -294,10 +290,6 @@ test "ai provider bounds checking context tokens" {
 }
 
 test "ai provider transform parameters extract function" {
-    var arena = std.heap.ArenaAllocator.init(testing.allocator);
-    defer arena.deinit();
-    const allocator = arena.allocator();
-
     const function_name = "extracted_func";
     const file_uri = "file:///test.zig";
 
@@ -317,6 +309,10 @@ test "ai provider transform parameters extract function" {
     std.debug.assert(std.mem.eql(u8, params.extract_function.function_name, function_name));
     std.debug.assert(params.extract_function.start_line == 5);
     std.debug.assert(params.extract_function.end_line == 10);
+    // Use params to verify structure
+    _ = params.extract_function.file_uri;
+    _ = params.extract_function.start_char;
+    _ = params.extract_function.end_char;
 }
 
 test "ai provider transform parameters multi file edit" {

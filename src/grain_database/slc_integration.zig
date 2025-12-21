@@ -107,6 +107,29 @@ pub const NostrProfileStorage = struct {
         defer self.storage_engine.allocator.free(key);
         try self.storage_engine.delete_record(key);
     }
+
+    // List all Nostr profiles (returns count of matching records).
+    pub fn list_profiles(
+        self: *NostrProfileStorage,
+        output: []u64,
+    ) u32 {
+        std.debug.assert(output.len > 0);
+        var count: u32 = 0;
+        var i: u32 = 0;
+        const prefix = "nostr:profile:";
+        while (i < self.storage_engine.records_len) : (i += 1) {
+            const record = &self.storage_engine.records[i];
+            if (record.key_len >= prefix.len) {
+                if (std.mem.eql(u8, record.key[0..prefix.len], prefix)) {
+                    if (count < output.len) {
+                        output[count] = record.record_id;
+                        count += 1;
+                    }
+                }
+            }
+        }
+        return count;
+    }
 };
 
 // DAG website storage helper.
@@ -217,6 +240,29 @@ pub const DagWebsiteStorage = struct {
         );
         defer self.storage_engine.allocator.free(key);
         try self.storage_engine.delete_record(key);
+    }
+
+    // List all DAG website nodes (returns count of matching records).
+    pub fn list_nodes(
+        self: *DagWebsiteStorage,
+        output: []u64,
+    ) u32 {
+        std.debug.assert(output.len > 0);
+        var count: u32 = 0;
+        var i: u32 = 0;
+        const prefix = "dag:website:";
+        while (i < self.storage_engine.records_len) : (i += 1) {
+            const record = &self.storage_engine.records[i];
+            if (record.key_len >= prefix.len) {
+                if (std.mem.eql(u8, record.key[0..prefix.len], prefix)) {
+                    if (count < output.len) {
+                        output[count] = record.record_id;
+                        count += 1;
+                    }
+                }
+            }
+        }
+        return count;
     }
 };
 

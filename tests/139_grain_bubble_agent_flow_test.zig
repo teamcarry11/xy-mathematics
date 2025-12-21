@@ -275,3 +275,55 @@ test "agent flow export_to_workflow_format with decision condition" {
     try testing.expect(std.mem.indexOf(u8, output_str, "condition") != null);
     try testing.expect(std.mem.indexOf(u8, output_str, "status == success") != null);
 }
+
+test "flow node execution status" {
+    var node = agent_flow.FlowNode.init(1, .agent, "TestAgent", 100.0, 200.0);
+    try testing.expect(node.execution_status == .pending);
+    node.set_execution_status(.running);
+    try testing.expect(node.get_execution_status() == .running);
+    node.set_execution_status(.completed);
+    try testing.expect(node.get_execution_status() == .completed);
+    node.set_execution_status(.failed);
+    try testing.expect(node.get_execution_status() == .failed);
+}
+
+test "agent flow set_node_execution_status" {
+    var canvas_state = canvas.Canvas.init(1024, 768);
+    var flow = agent_flow.AgentFlow.init(&canvas_state);
+    _ = flow.add_node(.agent, "Agent1", 100.0, 200.0);
+    const set = flow.set_node_execution_status(1, .running);
+    try testing.expect(set == true);
+    const status = flow.get_node_execution_status(1);
+    try testing.expect(status != null);
+    try testing.expect(status.? == .running);
+}
+
+test "agent flow get_node_execution_status not found" {
+    var canvas_state = canvas.Canvas.init(1024, 768);
+    var flow = agent_flow.AgentFlow.init(&canvas_state);
+    const status = flow.get_node_execution_status(999);
+    try testing.expect(status == null);
+}
+
+test "agent flow reset_execution_statuses" {
+    var canvas_state = canvas.Canvas.init(1024, 768);
+    var flow = agent_flow.AgentFlow.init(&canvas_state);
+    _ = flow.add_node(.start, "Start", 100.0, 200.0);
+    _ = flow.add_node(.agent, "Agent1", 200.0, 200.0);
+    _ = flow.set_node_execution_status(1, .running);
+    _ = flow.set_node_execution_status(2, .completed);
+    flow.reset_execution_statuses();
+    try testing.expect(flow.get_node_execution_status(1).? == .pending);
+    try testing.expect(flow.get_node_execution_status(2).? == .pending);
+}
+
+test "agent flow render_nodes with execution status" {
+    var canvas_state = canvas.Canvas.init(1024, 768);
+    const layer_id = canvas_state.create_layer("Flow Layer").?;
+    var flow = agent_flow.AgentFlow.init(&canvas_state);
+    _ = flow.add_node(.start, "Start", 100.0, 200.0);
+    const agent_node = flow.add_node(.agent, "Agent1", 200.0, 200.0);
+    agent_node.?.set_execution_status(.running);
+    flow.render_nodes(layer_id);
+    try testing.expect(canvas_state.layers[layer_id].shapes_len == 2);
+}

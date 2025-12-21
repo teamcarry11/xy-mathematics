@@ -373,12 +373,20 @@ pub const AgentFlow = struct {
         var i: u32 = 0;
         while (i < self.nodes_len) : (i += 1) {
             const node = &self.nodes[i];
-            const color: u32 = switch (node.node_type) {
+            const base_color: u32 = switch (node.node_type) {
                 .start => 0xFF00FF00, // Green
                 .agent => 0xFF0000FF, // Blue
                 .task => 0xFFFF00FF, // Magenta
                 .decision => 0xFFFFFF00, // Yellow
                 .end => 0xFFFF0000, // Red
+            };
+            // Override color based on execution status.
+            const color: u32 = switch (node.execution_status) {
+                .pending => base_color,
+                .running => 0xFFFFA500, // Orange for running
+                .completed => 0xFF00FF00, // Green for completed
+                .failed => 0xFFFF0000, // Red for failed
+                .skipped => 0xFF808080, // Gray for skipped
             };
             _ = self.canvas_state.add_shape(
                 layer_id,
@@ -390,6 +398,44 @@ pub const AgentFlow = struct {
                 color,
                 8.0, // Corner radius
             );
+        }
+        std.debug.assert(i == self.nodes_len);
+    }
+
+    // Set execution status for a node by ID.
+    pub fn set_node_execution_status(
+        self: *AgentFlow,
+        node_id: u32,
+        status: FlowNodeStatus,
+    ) bool {
+        std.debug.assert(@intFromPtr(self) != 0);
+        const node = self.get_node(node_id);
+        if (node == null) {
+            return false;
+        }
+        node.?.set_execution_status(status);
+        return true;
+    }
+
+    // Get execution status for a node by ID.
+    pub fn get_node_execution_status(
+        self: *const AgentFlow,
+        node_id: u32,
+    ) ?FlowNodeStatus {
+        std.debug.assert(@intFromPtr(self) != 0);
+        const node = self.get_node(node_id);
+        if (node == null) {
+            return null;
+        }
+        return node.?.get_execution_status();
+    }
+
+    // Reset all node execution statuses to pending.
+    pub fn reset_execution_statuses(self: *AgentFlow) void {
+        std.debug.assert(@intFromPtr(self) != 0);
+        var i: u32 = 0;
+        while (i < self.nodes_len) : (i += 1) {
+            self.nodes[i].execution_status = .pending;
         }
         std.debug.assert(i == self.nodes_len);
     }

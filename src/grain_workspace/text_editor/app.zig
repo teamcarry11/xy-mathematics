@@ -302,6 +302,12 @@ pub const TextEditor = struct {
     /// Insert text at cursor position.
     // 2025-12-20-161231-pst: Phase 17 SLC v1.0
     pub fn insert_text(self: *TextEditor, text: []const u8) bool {
+        return self.insert_text_internal(text, true);
+    }
+
+    /// Internal insert text (with optional undo recording).
+    // 2025-12-20-175102-pst: Phase 18 Undo/Redo
+    fn insert_text_internal(self: *TextEditor, text: []const u8, record_undo: bool) bool {
         // Precondition: File must be open
         std.debug.assert(self.file_state != .closed);
         std.debug.assert(text.len > 0);
@@ -340,6 +346,13 @@ pub const TextEditor = struct {
             }
         }
 
+        // Record undo entry before inserting (if not from undo/redo)
+        if (record_undo) {
+            const old_cursor_line = self.cursor.line;
+            const old_cursor_col = self.cursor.column;
+            self.add_undo_entry(old_cursor_line, old_cursor_col, .insert, text[0..insert_len]);
+        }
+
         // Insert new text
         @memcpy(
             current_line.content[self.cursor.column..self.cursor.column + insert_len],
@@ -360,6 +373,12 @@ pub const TextEditor = struct {
     /// Delete text at cursor position.
     // 2025-12-20-161231-pst: Phase 17 SLC v1.0
     pub fn delete_text(self: *TextEditor, count: u32) bool {
+        return self.delete_text_internal(count, true);
+    }
+
+    /// Internal delete text (with optional undo recording).
+    // 2025-12-20-175102-pst: Phase 18 Undo/Redo
+    fn delete_text_internal(self: *TextEditor, count: u32, record_undo: bool) bool {
         // Precondition: File must be open
         std.debug.assert(self.file_state != .closed);
         std.debug.assert(count > 0);
@@ -385,6 +404,14 @@ pub const TextEditor = struct {
         const delete_len = @min(count, current_line.content_len - self.cursor.column);
         if (delete_len == 0) {
             return false;
+        }
+
+        // Record undo entry before deleting (if not from undo/redo)
+        if (record_undo) {
+            const old_cursor_line = self.cursor.line;
+            const old_cursor_col = self.cursor.column;
+            const deleted_text = current_line.content[self.cursor.column..self.cursor.column + delete_len];
+            self.add_undo_entry(old_cursor_line, old_cursor_col, .delete, deleted_text);
         }
 
         // Shift remaining content
@@ -618,13 +645,13 @@ pub const TextEditor = struct {
             .insert => {
                 // Undo insert: delete the text
                 if (entry.text_len > 0) {
-                    _ = self.delete_text(entry.text_len);
+                    _ = self.delete_text_internal(entry.text_len, false);
                 }
             },
             .delete => {
                 // Undo delete: insert the text back
                 if (entry.text_len > 0) {
-                    _ = self.insert_text(entry.text[0..entry.text_len]);
+                    _ = self.insert_text_internal(entry.text[0..entry.text_len], false);
                 }
             },
             .newline => {
@@ -690,13 +717,13 @@ pub const TextEditor = struct {
             .insert => {
                 // Redo insert: insert the text
                 if (entry.text_len > 0) {
-                    _ = self.insert_text(entry.text[0..entry.text_len]);
+                    _ = self.insert_text_internal(entry.text[0..entry.text_len], false);
                 }
             },
             .delete => {
                 // Redo delete: delete the text
                 if (entry.text_len > 0) {
-                    _ = self.delete_text(entry.text_len);
+                    _ = self.delete_text_internal(entry.text_len, false);
                 }
             },
             .newline => {

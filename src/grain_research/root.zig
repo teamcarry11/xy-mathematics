@@ -26,6 +26,8 @@ pub const research_engine = @import("research_engine.zig");
 
 // Code analysis for Grain Style compliance.
 pub const code_analysis = @import("code_analysis.zig");
+// Codebase analyzer for analyzing entire codebase.
+pub const codebase_analyzer = @import("codebase_analyzer.zig");
 
 // Insights generator for recommendations and reports.
 // pub const insights_generator = @import("insights_generator.zig");
@@ -40,4 +42,6 @@ pub const CodeAnalyzer = code_analysis.CodeAnalyzer;
 pub const Violation = code_analysis.Violation;
 pub const ViolationType = code_analysis.ViolationType;
 pub const AnalysisResult = code_analysis.AnalysisResult;
+pub const CodebaseAnalyzer = codebase_analyzer.CodebaseAnalyzer;
+pub const FileAnalysisResult = codebase_analyzer.FileAnalysisResult;
 // pub const InsightsGenerator = insights_generator.InsightsGenerator;

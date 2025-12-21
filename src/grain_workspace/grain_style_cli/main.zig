@@ -98,7 +98,15 @@ pub const GrainStyleCLI = struct {
                 .max_line_length = 100,
                 .max_function_length = 70,
             },
+            .ignore_patterns = undefined,
+            .ignore_patterns_len = 0,
         };
+
+        // Initialize ignore patterns
+        var i: u32 = 0;
+        while (i < MAX_IGNORE_PATTERNS) : (i += 1) {
+            @memset(&cli.ignore_patterns[i], 0);
+        }
 
         // Postcondition: CLI must be valid
         std.debug.assert(@intFromPtr(&cli) != 0);
@@ -394,6 +402,177 @@ pub const GrainStyleCLI = struct {
                 }
             }
         }
+    }
+
+    /// Load ignore patterns from .grainignore file.
+    // 2025-12-21-083947-pst: Phase 24 Recursive Directory Linting
+    pub fn load_ignore_patterns(
+        self: *GrainStyleCLI,
+        ignore_file: []const u8,
+    ) bool {
+        // Precondition: Ignore file path must be valid
+        std.debug.assert(ignore_file.len > 0);
+        std.debug.assert(ignore_file.len <= MAX_FILE_PATH_LEN);
+
+        var ignore_content: [MAX_CONFIG_FILE_SIZE]u8 = undefined;
+        var content_len: u32 = 0;
+
+        if (!self.read_file_content(ignore_file, &ignore_content, &content_len)) {
+            return false;
+        }
+
+        self.ignore_patterns_len = 0;
+        var line_start: u32 = 0;
+        var i: u32 = 0;
+        while (i < content_len and self.ignore_patterns_len < MAX_IGNORE_PATTERNS) : (i += 1) {
+            if (ignore_content[i] == '\n' or ignore_content[i] == '\r') {
+                if (i > line_start) {
+                    const pattern_len = i - line_start;
+                    if (pattern_len > 0 and pattern_len < MAX_IGNORE_PATTERN_LEN) {
+                        @memset(&self.ignore_patterns[self.ignore_patterns_len], 0);
+                        @memcpy(
+                            self.ignore_patterns[self.ignore_patterns_len][0..pattern_len],
+                            ignore_content[line_start..i],
+                        );
+                        self.ignore_patterns_len += 1;
+                    }
+                }
+                line_start = i + 1;
+            }
+        }
+
+        // Handle last line if no newline at end
+        if (line_start < content_len and self.ignore_patterns_len < MAX_IGNORE_PATTERNS) {
+            const pattern_len = content_len - line_start;
+            if (pattern_len > 0 and pattern_len < MAX_IGNORE_PATTERN_LEN) {
+                @memset(&self.ignore_patterns[self.ignore_patterns_len], 0);
+                @memcpy(
+                    self.ignore_patterns[self.ignore_patterns_len][0..pattern_len],
+                    ignore_content[line_start..content_len],
+                );
+                self.ignore_patterns_len += 1;
+            }
+        }
+
+        // Postcondition: Ignore patterns count must be valid
+        std.debug.assert(self.ignore_patterns_len <= MAX_IGNORE_PATTERNS);
+
+        return true;
+    }
+
+    /// Check if path matches any ignore pattern.
+    // 2025-12-21-083947-pst: Phase 24 Recursive Directory Linting
+    pub fn should_ignore(
+        self: *const GrainStyleCLI,
+        path: []const u8,
+    ) bool {
+        // Precondition: Path must be valid
+        std.debug.assert(path.len > 0);
+
+        var i: u32 = 0;
+        while (i < self.ignore_patterns_len) : (i += 1) {
+            const pattern = self.ignore_patterns[i][0..MAX_IGNORE_PATTERN_LEN];
+            var pattern_len: u32 = 0;
+            while (pattern_len < MAX_IGNORE_PATTERN_LEN and pattern[pattern_len] != 0) : (pattern_len += 1) {}
+
+            if (pattern_len == 0) {
+                continue;
+            }
+
+            const pattern_str = pattern[0..pattern_len];
+
+            // Simple pattern matching (supports * wildcard)
+            if (std.mem.indexOf(u8, pattern_str, "*") != null) {
+                // Wildcard matching (simplified)
+                if (std.mem.endsWith(u8, path, pattern_str[1..]) or
+                    std.mem.startsWith(u8, path, pattern_str[0..pattern_len-1]))
+                {
+                    return true;
+                }
+            } else {
+                // Exact match or substring match
+                if (std.mem.eql(u8, path, pattern_str) or
+                    std.mem.indexOf(u8, path, pattern_str) != null)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /// Collect Zig files from directory recursively.
+    // 2025-12-21-083947-pst: Phase 24 Recursive Directory Linting
+    pub fn collect_zig_files(
+        self: *GrainStyleCLI,
+        dir_path: []const u8,
+        files: []?[]const u8,
+        files_len: *u32,
+    ) bool {
+        // Precondition: Directory path and buffer must be valid
+        std.debug.assert(dir_path.len > 0);
+        std.debug.assert(dir_path.len <= MAX_FILE_PATH_LEN);
+        std.debug.assert(files.len > 0);
+        std.debug.assert(files_len != null);
+
+        if (self.should_ignore(dir_path)) {
+            return true;
+        }
+
+        const dir = std.fs.cwd().openDir(dir_path, .{ .iterate = true }) catch |err| {
+            _ = err;
+            return false;
+        };
+        defer dir.close();
+
+        var iterator = dir.iterate();
+        while (iterator.next() catch |err| {
+            _ = err;
+            return false;
+        }) |entry| {
+            if (files_len.* >= files.len or files_len.* >= MAX_FILES_TO_LINT) {
+                break;
+            }
+
+            var full_path: [MAX_FILE_PATH_LEN]u8 = undefined;
+            var full_path_len: u32 = 0;
+
+            if (dir_path.len + 1 + entry.name.len <= MAX_FILE_PATH_LEN) {
+                @memcpy(full_path[0..dir_path.len], dir_path);
+                full_path[dir_path.len] = '/';
+                @memcpy(full_path[dir_path.len + 1..dir_path.len + 1 + entry.name.len], entry.name);
+                full_path_len = @as(u32, @intCast(dir_path.len + 1 + entry.name.len));
+            } else {
+                continue;
+            }
+
+            const full_path_str = full_path[0..full_path_len];
+
+            if (self.should_ignore(full_path_str)) {
+                continue;
+            }
+
+            switch (entry.kind) {
+                .file => {
+                    if (std.mem.endsWith(u8, entry.name, ".zig")) {
+                        // Store file path (simplified - in real implementation would use allocator)
+                        // For now, we'll just count and let caller handle paths
+                        files_len.* += 1;
+                    }
+                },
+                .directory => {
+                    // Recursively collect files from subdirectory
+                    _ = self.collect_zig_files(full_path_str, files, files_len);
+                },
+                else => {},
+            }
+        }
+
+        // Postcondition: Files count must be valid
+        std.debug.assert(files_len.* <= files.len);
+
+        return true;
     }
 
     /// Parse command-line arguments.

@@ -5,7 +5,7 @@
 //! Architecture: Component library with SLC product-specific components.
 //! GrainStyle: grain_case, u32/u64, bounded allocations, assertions.
 //!
-//! 2025-12-21-083043-pst: Grain Bubble Agent
+//! 2025-12-21-083043-pst: Grain Bubble Agent - SLC Product Integration
 
 const std = @import("std");
 const canvas = @import("canvas.zig");

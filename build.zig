@@ -697,17 +697,6 @@ pub fn build(b: *std.Build) void {
         }),
     });
 
-    const tree_sitter_test_file = b.addTest(.{
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/122_aurora_tree_sitter_test.zig"),
-            .target = target,
-            .optimize = optimize,
-            .imports = &.{
-                .{ .name = "aurora_tree_sitter", .module = aurora_tree_sitter_module },
-            },
-        }),
-    });
-
     // Dream Browser Viewport module (for test imports)
     const dream_browser_viewport_module = b.addModule("dream_browser_viewport", .{
         .root_source_file = b.path("src/dream_browser_viewport.zig"),
@@ -4296,6 +4285,19 @@ pub fn build(b: *std.Build) void {
     const grain_bubble_agent_flow_tests_run = b.addRunArtifact(grain_bubble_agent_flow_tests);
     test_step.dependOn(&grain_bubble_agent_flow_tests_run.step);
 
+    const grain_bubble_slc_ui_components_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/140_grain_bubble_slc_ui_components_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_bubble", .module = grain_bubble_module },
+            },
+        }),
+    });
+    const grain_bubble_slc_ui_components_tests_run = b.addRunArtifact(grain_bubble_slc_ui_components_tests);
+    test_step.dependOn(&grain_bubble_slc_ui_components_tests_run.step);
+
     // Grain Flow event bus tests
     const grain_flow_event_bus_tests = b.addTest(.{
         .root_module = b.createModule(.{
@@ -4394,6 +4396,21 @@ pub fn build(b: *std.Build) void {
     const grain_flow_workflow_observatory_tests_run = b.addRunArtifact(grain_flow_workflow_observatory_tests);
     test_step.dependOn(&grain_flow_workflow_observatory_tests_run.step);
 
+    // Grain Flow Dashboard API Tests
+    const grain_flow_dashboard_api_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/144_grain_flow_dashboard_api_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_flow", .module = grain_flow_module },
+                .{ .name = "grain_core", .module = grain_core_module },
+            },
+        }),
+    });
+    const grain_flow_dashboard_api_tests_run = b.addRunArtifact(grain_flow_dashboard_api_tests);
+    test_step.dependOn(&grain_flow_dashboard_api_tests_run.step);
+
     // Grain Research engine tests
     const grain_research_engine_tests = b.addTest(.{
         .root_module = b.createModule(.{
@@ -4491,4 +4508,22 @@ pub fn build(b: *std.Build) void {
     });
     const file_system_integration_tests_run = b.addRunArtifact(file_system_integration_tests);
     test_step.dependOn(&file_system_integration_tests_run.step);
+
+    // AArch64 VM translation verification test
+    const aarch64_vm_translation_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/099_aarch64_vm_translation_verification_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "vm_aarch64", .module = b.addModule("vm_aarch64", .{
+                    .root_source_file = b.path("src/kernel_vm/vm_aarch64.zig"),
+                    .target = target,
+                    .optimize = optimize,
+                })},
+            },
+        }),
+    });
+    const aarch64_vm_translation_tests_run = b.addRunArtifact(aarch64_vm_translation_tests);
+    test_step.dependOn(&aarch64_vm_translation_tests_run.step);
 }

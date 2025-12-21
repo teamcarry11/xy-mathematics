@@ -6,6 +6,7 @@
 //!
 //! 2025-12-20-200932-pst: Phase 22 Standalone CLI Tool tests
 //! 2025-12-21-083130-pst: Phase 23 Enhanced CLI Output and Configuration tests
+//! 2025-12-21-083947-pst: Phase 24 Recursive Directory Linting tests
 
 const std = @import("std");
 const testing = std.testing;

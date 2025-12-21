@@ -325,3 +325,80 @@ pub fn update_user(user_id: []const u8, user_data: *const UserData) DatabaseResu
     _ = http_client_integration.add_external_header(request, "Content-Type", "application/json");
     return DatabaseResult.success;
 }
+
+// Parse user data from JSON response.
+pub fn parse_user_from_json(json: []const u8, user_out: *UserData) DatabaseResult {
+    std.debug.assert(json.len > 0);
+    std.debug.assert(user_out != null);
+    if (json.len > MAX_USER_JSON_LEN) {
+        return DatabaseResult.validation_error;
+    }
+    var user_id_buf: [models.MAX_USER_ID_LEN]u8 = undefined;
+    var email_buf: [models.MAX_EMAIL_LEN]u8 = undefined;
+    var username_buf: [models.MAX_USERNAME_LEN]u8 = undefined;
+    const user_id_result = grain_core_json.find_json_key(json, "user_id");
+    if (user_id_result) |result| {
+        if (result.success) {
+            const user_id_len = grain_core_json.extract_json_string_value(
+                json,
+                &result,
+                &user_id_buf,
+            ) orelse {
+                return DatabaseResult.validation_error;
+            };
+            if (user_id_len > 0 and user_id_len <= models.MAX_USER_ID_LEN) {
+                std.mem.copyForwards(u8, &user_out.user_id, user_id_buf[0..user_id_len]);
+                user_out.user_id_len = user_id_len;
+            }
+        }
+    }
+    const email_result = grain_core_json.find_json_key(json, "email");
+    if (email_result) |result| {
+        if (result.success) {
+            const email_len = grain_core_json.extract_json_string_value(
+                json,
+                &result,
+                &email_buf,
+            ) orelse {
+                return DatabaseResult.validation_error;
+            };
+            if (email_len > 0 and email_len <= models.MAX_EMAIL_LEN) {
+                std.mem.copyForwards(u8, &user_out.email, email_buf[0..email_len]);
+                user_out.email_len = email_len;
+            }
+        }
+    }
+    const username_result = grain_core_json.find_json_key(json, "username");
+    if (username_result) |result| {
+        if (result.success) {
+            const username_len = grain_core_json.extract_json_string_value(
+                json,
+                &result,
+                &username_buf,
+            ) orelse {
+                return DatabaseResult.validation_error;
+            };
+            if (username_len > 0 and username_len <= models.MAX_USERNAME_LEN) {
+                std.mem.copyForwards(u8, &user_out.username, username_buf[0..username_len]);
+                user_out.username_len = username_len;
+            }
+        }
+    }
+    const created_at_result = grain_core_json.find_json_key(json, "created_at");
+    if (created_at_result) |result| {
+        if (result.success) {
+            const created_at_val = grain_core_json.extract_json_number_value(json, &result);
+            if (created_at_val) |val| {
+                if (val >= 0) {
+                    user_out.created_at = @intCast(@as(u64, @bitCast(val)));
+                }
+            }
+        }
+    }
+    if (user_out.user_id_len == 0 or user_out.email_len == 0) {
+        return DatabaseResult.validation_error;
+    }
+    std.debug.assert(user_out.user_id_len > 0);
+    std.debug.assert(user_out.email_len > 0);
+    return DatabaseResult.success;
+}

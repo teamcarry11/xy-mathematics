@@ -643,6 +643,17 @@ pub fn build(b: *std.Build) void {
         }),
     });
 
+    const ai_transforms_test_file = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/119_aurora_ai_transforms_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "aurora_ai_transforms", .module = aurora_ai_transforms_module },
+            },
+        }),
+    });
+
     // Dream Browser Viewport module (for test imports)
     const dream_browser_viewport_module = b.addModule("dream_browser_viewport", .{
         .root_source_file = b.path("src/dream_browser_viewport.zig"),

@@ -327,3 +327,53 @@ test "agent flow render_nodes with execution status" {
     flow.render_nodes(layer_id);
     try testing.expect(canvas_state.layers[layer_id].shapes_len == 2);
 }
+
+test "agent flow convert_to_flow_node_status" {
+    const status = agent_flow.FlowNodeStatus.running;
+    const flow_status = agent_flow.AgentFlow.convert_to_flow_node_status(status);
+    try testing.expect(flow_status == 1);
+}
+
+test "agent flow convert_from_flow_node_status" {
+    const flow_status: u8 = 2;
+    const status = agent_flow.AgentFlow.convert_from_flow_node_status(flow_status);
+    try testing.expect(status == .completed);
+}
+
+test "agent flow update_execution_status_from_flow" {
+    var canvas_state = canvas.Canvas.init(1024, 768);
+    var flow = agent_flow.AgentFlow.init(&canvas_state);
+    _ = flow.add_node(.agent, "Agent1", 100.0, 200.0);
+    const updated = flow.update_execution_status_from_flow(1, 1); // running
+    try testing.expect(updated == true);
+    const status = flow.get_node_execution_status(1);
+    try testing.expect(status != null);
+    try testing.expect(status.? == .running);
+}
+
+test "agent flow get_flow_node_id" {
+    var canvas_state = canvas.Canvas.init(1024, 768);
+    var flow = agent_flow.AgentFlow.init(&canvas_state);
+    _ = flow.add_node(.agent, "Agent1", 100.0, 200.0);
+    const flow_id = flow.get_flow_node_id(1);
+    try testing.expect(flow_id != null);
+    try testing.expect(flow_id.? == 1);
+}
+
+test "agent flow sync_execution_statuses" {
+    var canvas_state = canvas.Canvas.init(1024, 768);
+    var flow = agent_flow.AgentFlow.init(&canvas_state);
+    _ = flow.add_node(.start, "Start", 100.0, 200.0);
+    _ = flow.add_node(.agent, "Agent1", 200.0, 200.0);
+    _ = flow.add_node(.end, "End", 300.0, 200.0);
+    const updates = [_]struct { node_id: u32, status: u8 }{
+        .{ .node_id = 1, .status = 1 }, // running
+        .{ .node_id = 2, .status = 2 }, // completed
+        .{ .node_id = 3, .status = 0 }, // pending
+    };
+    const updated = flow.sync_execution_statuses(&updates);
+    try testing.expect(updated == 3);
+    try testing.expect(flow.get_node_execution_status(1).? == .running);
+    try testing.expect(flow.get_node_execution_status(2).? == .completed);
+    try testing.expect(flow.get_node_execution_status(3).? == .pending);
+}

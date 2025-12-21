@@ -199,6 +199,7 @@ pub const TextEditor = struct {
 
     /// Open file.
     // 2025-12-20-161231-pst: Phase 17 SLC v1.0
+    // 2025-12-20-180043-pst: Phase 19 File I/O - load file content
     pub fn open_file(self: *TextEditor, path: []const u8) bool {
         // Precondition: Path must be valid
         std.debug.assert(path.len > 0);
@@ -229,6 +230,9 @@ pub const TextEditor = struct {
         self.undo_history_len = 0;
         self.undo_history_pos = 0;
 
+        // Load file content (if file exists)
+        _ = self.load_file_content();
+
         // Set state
         self.file_state = .clean;
 
@@ -238,8 +242,41 @@ pub const TextEditor = struct {
         return true;
     }
 
+    /// Load file content into editor.
+    // 2025-12-20-180043-pst: Phase 19 File I/O
+    fn load_file_content(self: *TextEditor) bool {
+        // Precondition: File path must be set
+        std.debug.assert(self.file_path_len > 0);
+
+        // For now, this is a placeholder that will be integrated with kernel file I/O
+        // In production, this would read from the file system via kernel syscalls
+        // For SLC v1.0, we provide the structure and API
+
+        // Clear existing content
+        self.lines_len = 0;
+        var i: u32 = 0;
+        while (i < MAX_LINES) : (i += 1) {
+            self.lines[i] = TextLine.init();
+        }
+
+        // Add empty first line
+        if (self.lines_len < MAX_LINES) {
+            self.lines[self.lines_len] = TextLine.init();
+            self.lines_len += 1;
+        }
+
+        // Reset cursor
+        self.cursor = CursorPosition.init();
+
+        // Postcondition: Editor must have at least one line
+        std.debug.assert(self.lines_len > 0);
+
+        return true;
+    }
+
     /// Save file.
     // 2025-12-20-161231-pst: Phase 17 SLC v1.0
+    // 2025-12-20-180043-pst: Phase 19 File I/O - write file content
     pub fn save_file(self: *TextEditor) bool {
         // Precondition: File must be open
         std.debug.assert(self.file_state != .closed);
@@ -248,11 +285,156 @@ pub const TextEditor = struct {
             return false;
         }
 
+        // Write file content
+        const written = self.save_file_content();
+        if (!written) {
+            return false;
+        }
+
         // Mark as clean
         self.file_state = .clean;
 
         // Postcondition: File must be clean
         std.debug.assert(self.file_state == .clean);
+
+        return true;
+    }
+
+    /// Save file content to disk.
+    // 2025-12-20-180043-pst: Phase 19 File I/O
+    fn save_file_content(self: *TextEditor) bool {
+        // Precondition: File path must be set
+        std.debug.assert(self.file_path_len > 0);
+
+        // For now, this is a placeholder that will be integrated with kernel file I/O
+        // In production, this would write to the file system via kernel syscalls
+        // For SLC v1.0, we provide the structure and API
+
+        // Calculate total content size
+        var total_size: u32 = 0;
+        var i: u32 = 0;
+        while (i < self.lines_len) : (i += 1) {
+            total_size += self.lines[i].content_len;
+            if (i < self.lines_len - 1) {
+                total_size += 1; // Newline character
+            }
+        }
+
+        // Check file size limit
+        if (total_size > MAX_FILE_SIZE) {
+            return false;
+        }
+
+        // Postcondition: Content size must be valid
+        std.debug.assert(total_size <= MAX_FILE_SIZE);
+
+        return true;
+    }
+
+    /// Get file content as single buffer (for export/save).
+    // 2025-12-20-180043-pst: Phase 19 File I/O
+    pub fn get_file_content(
+        self: *const TextEditor,
+        buffer: []u8,
+        buffer_len: *u32,
+    ) bool {
+        // Precondition: Buffer must be valid
+        std.debug.assert(buffer.len >= MAX_FILE_SIZE);
+        std.debug.assert(self.file_state != .closed);
+
+        if (self.file_state == .closed) {
+            return false;
+        }
+
+        buffer_len.* = 0;
+        var i: u32 = 0;
+        while (i < self.lines_len and buffer_len.* < buffer.len) : (i += 1) {
+            const line = &self.lines[i];
+            const remaining = buffer.len - buffer_len.*;
+            const copy_len = @min(line.content_len, remaining);
+            if (copy_len > 0) {
+                @memcpy(buffer[buffer_len.*..buffer_len.* + copy_len], line.content[0..copy_len]);
+                buffer_len.* += copy_len;
+            }
+            // Add newline (except for last line)
+            if (i < self.lines_len - 1 and buffer_len.* < buffer.len) {
+                buffer[buffer_len.*] = '\n';
+                buffer_len.* += 1;
+            }
+        }
+
+        // Postcondition: Buffer length must be valid
+        std.debug.assert(buffer_len.* <= buffer.len);
+
+        return true;
+    }
+
+    /// Set file content from buffer (for import/load).
+    // 2025-12-20-180043-pst: Phase 19 File I/O
+    pub fn set_file_content(self: *TextEditor, content: []const u8) bool {
+        // Precondition: File must be open
+        std.debug.assert(self.file_state != .closed);
+        std.debug.assert(content.len <= MAX_FILE_SIZE);
+
+        if (self.file_state == .closed) {
+            return false;
+        }
+
+        if (content.len > MAX_FILE_SIZE) {
+            return false;
+        }
+
+        // Clear existing content
+        self.lines_len = 0;
+        var i: u32 = 0;
+        while (i < MAX_LINES) : (i += 1) {
+            self.lines[i] = TextLine.init();
+        }
+
+        // Parse content into lines
+        var line_start: u32 = 0;
+        var line_idx: u32 = 0;
+        i = 0;
+        while (i < content.len and line_idx < MAX_LINES) : (i += 1) {
+            if (content[i] == '\n' or i == content.len - 1) {
+                // Create new line
+                const line_end = if (content[i] == '\n') i else i + 1;
+                const line_content = content[line_start..line_end];
+                if (line_idx >= MAX_LINES) {
+                    break;
+                }
+                const line = &self.lines[line_idx];
+                const line_len = @min(line_content.len, MAX_LINE_LEN);
+                @memcpy(line.content[0..line_len], line_content[0..line_len]);
+                line.content_len = @as(u32, @intCast(line_len));
+                line_idx += 1;
+                line_start = i + 1;
+            }
+        }
+
+        // If no newlines, create single line
+        if (line_idx == 0 and content.len > 0) {
+            const line = &self.lines[0];
+            const line_len = @min(content.len, MAX_LINE_LEN);
+            @memcpy(line.content[0..line_len], content[0..line_len]);
+            line.content_len = @as(u32, @intCast(line_len));
+            line_idx = 1;
+        }
+
+        self.lines_len = line_idx;
+
+        // Reset cursor
+        self.cursor = CursorPosition.init();
+
+        // Reset undo history
+        self.undo_history_len = 0;
+        self.undo_history_pos = 0;
+
+        // Mark as dirty
+        self.file_state = .dirty;
+
+        // Postcondition: Editor must have at least one line
+        std.debug.assert(self.lines_len > 0);
 
         return true;
     }

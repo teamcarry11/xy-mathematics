@@ -7,6 +7,7 @@ const testing = std.testing;
 const basin_kernel = @import("basin_kernel");
 const BasinKernel = basin_kernel.basin_kernel.BasinKernel;
 const BasinError = basin_kernel.basin_kernel.BasinError;
+const SyscallResult = basin_kernel.basin_kernel.SyscallResult;
 
 // Test file system operations at kernel level.
 test "file system kernel verification" {
@@ -14,21 +15,59 @@ test "file system kernel verification" {
     var kernel = BasinKernel.init();
     
     // Test 1: Create file (open with create flag).
+    // Note: Open requires flags with read or write set.
     const file_path = "test_file.txt";
     const file_path_ptr: u64 = 0x1000; // VM memory address
     const file_path_len: u32 = @as(u32, @intCast(file_path.len));
     
+    // Test with invalid flags (no read/write) - should fail.
+    const open_result_invalid = kernel.syscall_open(
+        file_path_ptr,
+        file_path_len,
+        0, // flags (no read/write - invalid)
+        0, // mode (not used)
+    );
+    
+    // Assert: Should fail with invalid_argument (no permissions set).
+    try testing.expect(open_result_invalid == .err);
+    try testing.expect(open_result_invalid.err == BasinError.invalid_argument);
+    
+    // Test with null pointer - should fail.
+    const open_result_null = kernel.syscall_open(
+        0, // null pointer
+        file_path_len,
+        0x5, // flags (read + create)
+        0, // mode (not used)
+    );
+    
+    // Assert: Should fail with invalid_argument (null pointer).
+    try testing.expect(open_result_null == .err);
+    try testing.expect(open_result_null.err == BasinError.invalid_argument);
+    
+    // Test with zero path length - should fail.
+    const open_result_zero_len = kernel.syscall_open(
+        file_path_ptr,
+        0, // zero length
+        0x5, // flags (read + create)
+        0, // mode (not used)
+    );
+    
+    // Assert: Should fail with invalid_argument (empty path).
+    try testing.expect(open_result_zero_len == .err);
+    try testing.expect(open_result_zero_len.err == BasinError.invalid_argument);
+    
+    // Test with valid flags (read + create) - may fail due to invalid pointer.
     // Note: In real test, we would write file_path to VM memory at file_path_ptr.
-    // For now, we test the syscall interface.
-    // Open may fail due to invalid pointer, which is expected for this test.
+    // For now, we test the syscall interface validation.
+    const open_flags: u64 = 0x5; // read (0x1) + create (0x4)
     const open_result = kernel.syscall_open(
         file_path_ptr,
         file_path_len,
-        0, // flags (create)
+        open_flags,
         0, // mode (not used)
     ) catch |err| {
         // Expected: May fail with invalid_argument or invalid_address.
-        // This is acceptable for verification test.
+        // This is acceptable for verification test (pointer validation).
         try testing.expect(err == BasinError.invalid_argument or err == BasinError.invalid_address);
         return;
     };

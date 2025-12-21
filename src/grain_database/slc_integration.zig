@@ -20,6 +20,36 @@ pub const MAX_WEBSITE_KEY_LEN: u32 = 256;
 // Bounded: Max file key length.
 pub const MAX_FILE_KEY_LEN: u32 = 512;
 
+// Validate Nostr npub format (basic check: starts with "npub1" and has valid length).
+pub fn validate_npub(npub: []const u8) bool {
+    std.debug.assert(npub.len > 0);
+    if (npub.len < 5) {
+        return false;
+    }
+    if (!std.mem.eql(u8, npub[0..5], "npub1")) {
+        return false;
+    }
+    if (npub.len > MAX_PROFILE_KEY_LEN) {
+        return false;
+    }
+    return true;
+}
+
+// Validate file path format (basic check: non-empty, starts with "/").
+pub fn validate_file_path(file_path: []const u8) bool {
+    std.debug.assert(file_path.len > 0);
+    if (file_path.len == 0) {
+        return false;
+    }
+    if (file_path[0] != '/') {
+        return false;
+    }
+    if (file_path.len > MAX_FILE_KEY_LEN) {
+        return false;
+    }
+    return true;
+}
+
 // Nostr profile storage helper.
 pub const NostrProfileStorage = struct {
     storage_engine: *storage_engine.StorageEngine,
@@ -47,6 +77,9 @@ pub const NostrProfileStorage = struct {
         std.debug.assert(npub.len > 0);
         std.debug.assert(npub.len <= MAX_PROFILE_KEY_LEN);
         std.debug.assert(profile_data.len > 0);
+        if (!validate_npub(npub)) {
+            return error.InvalidNpub;
+        }
         const key = try std.fmt.allocPrint(
             self.storage_engine.allocator,
             "nostr:profile:{s}",
@@ -125,6 +158,22 @@ pub const NostrProfileStorage = struct {
                         output[count] = record.record_id;
                         count += 1;
                     }
+                }
+            }
+        }
+        return count;
+    }
+
+    // Count all Nostr profiles.
+    pub fn count_profiles(self: *NostrProfileStorage) u32 {
+        var count: u32 = 0;
+        var i: u32 = 0;
+        const prefix = "nostr:profile:";
+        while (i < self.storage_engine.records_len) : (i += 1) {
+            const record = &self.storage_engine.records[i];
+            if (record.key_len >= prefix.len) {
+                if (std.mem.eql(u8, record.key[0..prefix.len], prefix)) {
+                    count += 1;
                 }
             }
         }
@@ -289,6 +338,9 @@ pub const WorkspaceFileStorage = struct {
         std.debug.assert(file_path.len > 0);
         std.debug.assert(file_path.len <= MAX_FILE_KEY_LEN);
         std.debug.assert(metadata.len > 0);
+        if (!validate_file_path(file_path)) {
+            return error.InvalidFilePath;
+        }
         const key = try std.fmt.allocPrint(
             self.storage_engine.allocator,
             "workspace:file:{s}",

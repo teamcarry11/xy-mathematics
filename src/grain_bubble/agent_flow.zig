@@ -688,4 +688,63 @@ pub const AgentFlow = struct {
         std.debug.assert(offset <= output.len);
         return offset;
     }
+
+    // Convert FlowNodeStatus to Flow Agent NodeStatus (for integration).
+    // Note: This is a helper for integration - actual Flow Agent import
+    // would be done at application level to avoid circular dependencies.
+    pub fn convert_to_flow_node_status(
+        status: FlowNodeStatus,
+    ) u8 {
+        return @intFromEnum(status);
+    }
+
+    // Convert from Flow Agent NodeStatus (u8) to FlowNodeStatus.
+    pub fn convert_from_flow_node_status(
+        status: u8,
+    ) FlowNodeStatus {
+        std.debug.assert(status <= 4);
+        return @enumFromInt(status);
+    }
+
+    // Update execution status from Flow Agent NodeStatus.
+    pub fn update_execution_status_from_flow(
+        self: *AgentFlow,
+        node_id: u32,
+        flow_status: u8,
+    ) bool {
+        std.debug.assert(@intFromPtr(self) != 0);
+        const status = AgentFlow.convert_from_flow_node_status(flow_status);
+        return self.set_node_execution_status(node_id, status);
+    }
+
+    // Get node ID mapping (Bubble node ID to Flow Agent node ID).
+    // Returns node ID as-is (assuming 1:1 mapping for now).
+    pub fn get_flow_node_id(self: *const AgentFlow, bubble_node_id: u32) ?u32 {
+        std.debug.assert(@intFromPtr(self) != 0);
+        const node = self.get_node(bubble_node_id);
+        if (node == null) {
+            return null;
+        }
+        return bubble_node_id;
+    }
+
+    // Sync execution statuses from Flow Agent workflow execution.
+    // This would be called periodically or via event callbacks.
+    pub fn sync_execution_statuses(
+        self: *AgentFlow,
+        node_statuses: []const struct { node_id: u32, status: u8 },
+    ) u32 {
+        std.debug.assert(@intFromPtr(self) != 0);
+        std.debug.assert(node_statuses.len > 0);
+        var updated: u32 = 0;
+        var i: u32 = 0;
+        while (i < node_statuses.len) : (i += 1) {
+            const update = node_statuses[i];
+            if (self.update_execution_status_from_flow(update.node_id, update.status)) {
+                updated += 1;
+            }
+        }
+        std.debug.assert(updated <= node_statuses.len);
+        return updated;
+    }
 };

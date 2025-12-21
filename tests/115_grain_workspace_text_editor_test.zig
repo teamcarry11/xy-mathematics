@@ -277,6 +277,71 @@ test "cannot redo when nothing to redo" {
     try testing.expect(result == false);
 }
 
+test "get file content" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    _ = editor.insert_text("Hello");
+    _ = editor.insert_text("\n");
+    _ = editor.insert_text("World");
+
+    var buffer: [1000]u8 = undefined;
+    var buffer_len: u32 = 0;
+    const result = editor.get_file_content(&buffer, &buffer_len);
+    try testing.expect(result == true);
+    try testing.expect(buffer_len > 0);
+    try testing.expect(std.mem.eql(u8, buffer[0..5], "Hello"));
+}
+
+test "set file content" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    const content = "Hello\nWorld\nTest";
+    const result = editor.set_file_content(content);
+    try testing.expect(result == true);
+    try testing.expect(editor.lines_len >= 1);
+    try testing.expect(editor.file_state == .dirty);
+}
+
+test "set file content single line" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    const content = "Hello World";
+    const result = editor.set_file_content(content);
+    try testing.expect(result == true);
+    try testing.expect(editor.lines_len == 1);
+    try testing.expect(editor.lines[0].content_len == 11);
+    try testing.expect(std.mem.eql(u8, editor.lines[0].content[0..11], "Hello World"));
+}
+
+test "set file content multiple lines" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    const content = "Line 1\nLine 2\nLine 3";
+    const result = editor.set_file_content(content);
+    try testing.expect(result == true);
+    try testing.expect(editor.lines_len >= 2);
+}
+
+test "get file content empty" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    var buffer: [1000]u8 = undefined;
+    var buffer_len: u32 = 0;
+    const result = editor.get_file_content(&buffer, &buffer_len);
+    try testing.expect(result == true);
+    try testing.expect(buffer_len == 0);
+}
+
 test "cannot open file when file has unsaved changes" {
     const allocator = testing.allocator;
     var editor = TextEditor.init(allocator);

@@ -333,6 +333,84 @@ pub const SlcDagIntegration = struct {
         
         return count;
     }
+    
+    /// Get profile node data (raw JSON string).
+    /// Returns node data if profile exists, null otherwise.
+    pub fn get_profile_data(
+        self: *const SlcDagIntegration,
+        profile_id: u32,
+    ) ?[]const u8 {
+        // Assert: Profile ID must be valid
+        std.debug.assert(profile_id > 0);
+        
+        const node = self.dag.getNode(profile_id) orelse return null;
+        
+        // Return node data (JSON string)
+        return node.data[0..node.data_len];
+    }
+    
+    /// Get website page node data (raw JSON string).
+    /// Returns node data if page exists, null otherwise.
+    pub fn get_page_data(
+        self: *const SlcDagIntegration,
+        page_id: u32,
+    ) ?[]const u8 {
+        // Assert: Page ID must be valid
+        std.debug.assert(page_id > 0);
+        
+        const node = self.dag.getNode(page_id) orelse return null;
+        
+        // Return node data (JSON string)
+        return node.data[0..node.data_len];
+    }
+    
+    /// Check if profile relationship exists.
+    /// Returns true if relationship exists, false otherwise.
+    pub fn has_profile_relationship(
+        self: *const SlcDagIntegration,
+        from_profile_id: u32,
+        to_profile_id: u32,
+    ) bool {
+        // Assert: Profile IDs must be valid
+        std.debug.assert(from_profile_id > 0);
+        std.debug.assert(to_profile_id > 0);
+        
+        var i: u32 = 0;
+        while (i < self.dag.edges_len) : (i += 1) {
+            const edge = self.dag.edges[i];
+            if (edge.from_node == from_profile_id and
+                edge.to_node == to_profile_id and
+                edge.edge_type == .semantic) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    /// Check if website link exists.
+    /// Returns true if link exists, false otherwise.
+    pub fn has_website_link(
+        self: *const SlcDagIntegration,
+        from_page_id: u32,
+        to_page_id: u32,
+    ) bool {
+        // Assert: Page IDs must be valid
+        std.debug.assert(from_page_id > 0);
+        std.debug.assert(to_page_id > 0);
+        
+        var i: u32 = 0;
+        while (i < self.dag.edges_len) : (i += 1) {
+            const edge = self.dag.edges[i];
+            if (edge.from_node == from_page_id and
+                edge.to_node == to_page_id and
+                edge.edge_type == .semantic) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
 };
 
 test "slc dag integration initialization" {

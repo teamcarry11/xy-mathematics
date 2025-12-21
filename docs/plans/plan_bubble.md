@@ -318,6 +318,7 @@ src/grain_bubble/
 - ✅ Node selection by position
 - ✅ Flow export to Flow Agent format (JSON-like representation)
 - ✅ Flow execution visualization (execution status tracking and visual rendering)
+- ✅ Agent integration (status conversion and synchronization with Flow Agent)
 - ✅ Comprehensive test coverage (Agent flow tests)
 
 ---

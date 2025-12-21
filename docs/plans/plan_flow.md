@@ -1,8 +1,8 @@
 # Grain Flow Agent: Development Plan
 
 **Agent**: Grain Flow Agent (9th Agent)  
-**Status**: All Phases Complete ✅ (Phase 1-5 COMPLETE), SLC Product Workflow Templates Ready ✅  
-**Last Updated**: 2025-12-20-175131-pst
+**Status**: All Phases Complete ✅ (Phase 1-5 COMPLETE), SLC Product Workflow Templates Ready ✅, Research Agent Collaboration Started ✅  
+**Last Updated**: 2025-12-20-180635-pst
 
 ---
 
@@ -383,13 +383,18 @@ docs/
 ## Next Steps
 
 1. **Production Use**: Flow Agent is ready for production use with other agents
-2. **SLC Product Integration**: Workflow templates ready for:
+2. **Research Agent Collaboration**: Workflow Observatory collaboration started ✅
+   - **Priority 1**: Workflow Observability Metrics (Research Agent, Week 1-2)
+   - **Phase 2**: Instrumentation (Flow Agent, Week 2-3) — Awaiting research findings
+   - **Phase 3**: Workflow Observatory Dashboard (Together, Week 3-4)
+   - **Reference**: [`docs/agent-communications/research_to_flow_response_2025-12-20-175923-pst.md`](../agent-communications/research_to_flow_response_2025-12-20-175923-pst.md)
+3. **SLC Product Integration**: Workflow templates ready for:
    - Nostr Profile Builder (profile publishing workflow template complete ✅)
    - DAG Website Builder (website publishing workflow template complete ✅)
    - Workspace App Suite (ready to add templates as needed)
-3. **Monitor Integration**: Watch for additional workflow orchestration requirements as SLC products develop
-4. **Performance Optimization**: Monitor and optimize based on real-world usage patterns
-5. **Enhanced Examples**: Continue adding real-world workflow examples based on usage feedback
+4. **Monitor Integration**: Watch for additional workflow orchestration requirements as SLC products develop
+5. **Performance Optimization**: Monitor and optimize based on real-world usage patterns (after observability layer is built)
+6. **Enhanced Examples**: Continue adding real-world workflow examples based on usage feedback
 
 ---
 
@@ -408,8 +413,9 @@ docs/
 **Phase 3**: Workflow Engine ✅ COMPLETE  
 **Phase 4**: Workflow Visualizer ✅ COMPLETE  
 **Phase 5**: Workflow Templates & Integration Examples ✅ COMPLETE (Optional Enhancement)  
+**Research Collaboration**: Workflow Observatory collaboration started ✅ (Research Agent Priority 1 in progress)  
 **Estimated Time**: 2-3 weeks per phase (All core phases completed)  
-**Integration**: Flows seamlessly with Grain Core orchestration, ready for SLC product workflow orchestration
+**Integration**: Flows seamlessly with Grain Core orchestration, ready for SLC product workflow orchestration, collaborating with Research Agent on observability layer
 
 ---
 

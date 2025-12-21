@@ -23,7 +23,7 @@ pub fn set_http_client(http_client: *grain_core_http.HttpClient) void {
 }
 
 // Get HTTP client instance.
-fn get_http_client() ?*grain_core_http.HttpClient {
+pub fn get_http_client() ?*grain_core_http.HttpClient {
     return global_http_client;
 }
 

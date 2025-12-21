@@ -18,4 +18,5 @@ pub const handler_adapters = @import("handler_adapters.zig");
 pub const auth_integration = @import("auth_integration.zig");
 pub const auth_service_integration = @import("auth_service_integration.zig");
 pub const http_client_integration = @import("http_client_integration.zig");
+pub const database_integration = @import("database_integration.zig");
 

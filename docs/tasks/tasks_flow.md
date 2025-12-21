@@ -1,8 +1,8 @@
 # Grain Flow Agent: Task List
 
 **Agent**: Grain Flow Agent (9th Agent)  
-**Status**: All Phases Complete ✅ (Phase 1-5 COMPLETE), SLC Product Workflow Templates Ready ✅  
-**Last Updated**: 2025-12-20-175131-pst
+**Status**: All Phases Complete ✅ (Phase 1-5 COMPLETE), SLC Product Workflow Templates Ready ✅, Research Agent Collaboration Started ✅  
+**Last Updated**: 2025-12-20-180635-pst
 
 ---
 
@@ -248,8 +248,47 @@
 
 ---
 
-**Last Updated**: 2025-12-20-175131-pst  
-**Next Review**: Ready for production use, monitor SLC product development for additional workflow requirements
+**Last Updated**: 2025-12-20-180635-pst  
+**Next Review**: Ready for production use, monitor SLC product development for additional workflow requirements, await Research Agent workflow observability research (Priority 1)
+
+---
+
+## Research Agent Collaboration: Workflow Observatory
+
+### Collaboration Status: **STARTED** ✅
+
+**Date**: 2025-12-20-180635-pst  
+**Collaboration Partner**: Grain Research Agent  
+**Goal**: Build Workflow Observatory with observability, testing, and intelligence layers
+
+**Phase 1: Research** (Research Agent, Week 1-2) — **IN PROGRESS**
+- [x] Flow Agent letter sent (2025-12-20-175131-pst)
+- [x] Research Agent response received (2025-12-20-175923-pst)
+- [ ] Research workflow observability metrics (Priority 1)
+- [ ] Deliver research document with metric definitions
+
+**Phase 2: Instrumentation** (Flow Agent, Week 2-3) — **PENDING RESEARCH**
+- [ ] Await Research Agent metric definitions
+- [ ] Instrument workflow engine to emit metrics
+- [ ] Implement metric collection for workflow execution
+- [ ] Implement metric collection for agent coordination
+- [ ] Implement metric collection for failures
+- [ ] Store metrics in research-accessible format
+
+**Phase 3: Observatory** (Together, Week 3-4) — **PENDING**
+- [ ] Build Workflow Observatory dashboard
+- [ ] Implement real-time metric visualization
+- [ ] Analyze metrics and generate insights
+- [ ] Validate that observability improves workflow understanding
+
+**Research Priorities** (from Research Agent):
+1. **Priority 1**: Workflow Observability Metrics (Immediate, 1-2 weeks)
+2. **Priority 2**: Integration Testing Patterns (Short-term, 2-3 weeks)
+3. **Priority 3**: Failure Pattern Analysis (Medium-term, 3-4 weeks)
+
+**Reference Documents**:
+- Flow Agent letter: [`docs/agent-communications/flow_to_research_letter_2025-12-20-175131-pst.md`](../agent-communications/flow_to_research_letter_2025-12-20-175131-pst.md)
+- Research Agent response: [`docs/agent-communications/research_to_flow_response_2025-12-20-175923-pst.md`](../agent-communications/research_to_flow_response_2025-12-20-175923-pst.md)
 
 ---
 

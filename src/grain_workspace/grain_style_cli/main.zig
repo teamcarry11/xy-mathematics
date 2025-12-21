@@ -7,6 +7,8 @@
 //! 2025-12-20-200932-pst: Phase 22 Standalone CLI Tool
 //! 2025-12-21-083130-pst: Phase 23 Enhanced CLI Output and Configuration
 //! 2025-12-21-083947-pst: Phase 24 Recursive Directory Linting
+//! 2025-12-21-141612-pst: Phase 25 Performance Optimizations
+//! 2025-12-21-141612-pst: Phase 26 Enhanced JSON Output
 //!
 //! Open-Source Service Model: 100% open-source, revenue from services (consulting,
 //! training, hosted services, enterprise support, sponsorships, grants).
@@ -50,6 +52,14 @@ pub const MAX_IGNORE_PATTERNS: u32 = 256;
 // 2025-12-21-083947-pst: Phase 24 Recursive Directory Linting
 pub const MAX_IGNORE_PATTERN_LEN: u32 = 256;
 
+// Bounded: Max violations before early exit (explicit limit)
+// 2025-12-21-141612-pst: Phase 25 Performance Optimizations
+pub const MAX_VIOLATIONS_BEFORE_EXIT: u32 = 1000;
+
+// Bounded: Max summary statistics buffer size (explicit limit, in bytes)
+// 2025-12-21-141612-pst: Phase 26 Enhanced JSON Output
+pub const MAX_SUMMARY_BUFFER_SIZE: u32 = 8192; // 8 KB
+
 // Exit code enumeration.
 // 2025-12-20-200932-pst: Phase 22 Standalone CLI Tool
 pub const ExitCode = enum(u8) {
@@ -67,20 +77,25 @@ pub const OutputFormat = enum(u8) {
 
 // CLI configuration structure.
 // 2025-12-21-083130-pst: Phase 23 Enhanced CLI Output and Configuration
+// 2025-12-21-141612-pst: Phase 25 Performance Optimizations
 pub const CLIConfig = struct {
     use_color: bool, // Enable color output
     output_format: OutputFormat, // Output format
     max_line_length: u32, // Max line length (default 100)
     max_function_length: u32, // Max function length (default 70)
+    max_violations: u32, // Max violations before early exit (default 1000)
 };
 
 // CLI application state.
 // 2025-12-20-200932-pst: Phase 22 Standalone CLI Tool
 // 2025-12-21-083130-pst: Phase 23 Enhanced CLI Output and Configuration
+// 2025-12-21-083947-pst: Phase 24 Recursive Directory Linting
 pub const GrainStyleCLI = struct {
     allocator: std.mem.Allocator,
     devtools_app: grain_workspace.devtools.DevToolsApp,
     config: CLIConfig,
+    ignore_patterns: [MAX_IGNORE_PATTERNS][MAX_IGNORE_PATTERN_LEN]u8,
+    ignore_patterns_len: u32,
 
     /// Initialize CLI application.
     // 2025-12-20-200932-pst: Phase 22 Standalone CLI Tool
@@ -97,6 +112,7 @@ pub const GrainStyleCLI = struct {
                 .output_format = .text,
                 .max_line_length = 100,
                 .max_function_length = 70,
+                .max_violations = MAX_VIOLATIONS_BEFORE_EXIT,
             },
             .ignore_patterns = undefined,
             .ignore_patterns_len = 0,
@@ -168,6 +184,9 @@ pub const GrainStyleCLI = struct {
             } else if (std.mem.eql(u8, key, "max_function_length")) {
                 const parsed = std.fmt.parseInt(u32, value, 10) catch 70;
                 self.config.max_function_length = parsed;
+            } else if (std.mem.eql(u8, key, "max_violations")) {
+                const parsed = std.fmt.parseInt(u32, value, 10) catch MAX_VIOLATIONS_BEFORE_EXIT;
+                self.config.max_violations = parsed;
             }
 
             i = value_end;
@@ -231,6 +250,7 @@ pub const GrainStyleCLI = struct {
 
     /// Lint file and return violation count.
     // 2025-12-20-200932-pst: Phase 22 Standalone CLI Tool
+    // 2025-12-21-141612-pst: Phase 25 Performance Optimizations
     pub fn lint_file(
         self: *GrainStyleCLI,
         file_path: []const u8,
@@ -246,6 +266,7 @@ pub const GrainStyleCLI = struct {
             return 0;
         }
 
+        // Performance: Skip empty files early
         if (content_len == 0) {
             return 0;
         }
@@ -333,7 +354,7 @@ pub const GrainStyleCLI = struct {
         return true;
     }
 
-    /// Format violation message as JSON.
+    /// Format violation message as JSON (single object format).
     // 2025-12-21-083130-pst: Phase 23 Enhanced CLI Output and Configuration
     pub fn format_violation_message_json(
         self: *GrainStyleCLI,
@@ -362,6 +383,88 @@ pub const GrainStyleCLI = struct {
             output,
             format_str,
             .{ file_path_str, msg.line_number, msg.column_number, severity_str, message_str },
+        ) catch |err| {
+            _ = err;
+            return false;
+        };
+
+        output_len.* = @as(u32, @intCast(formatted.len));
+
+        // Postcondition: Output length must be valid
+        std.debug.assert(output_len.* <= output.len);
+
+        _ = self; // Suppress unused warning
+
+        return true;
+    }
+
+    /// Format violation message as JSON array element.
+    // 2025-12-21-141612-pst: Phase 26 Enhanced JSON Output
+    pub fn format_violation_json_array_element(
+        self: *GrainStyleCLI,
+        msg: grain_workspace.devtools.LinterMessage,
+        output: []u8,
+        output_len: *u32,
+        is_first: bool,
+    ) bool {
+        // Precondition: Output buffer must be valid
+        std.debug.assert(output.len > 0);
+        std.debug.assert(output_len != null);
+
+        output_len.* = 0;
+
+        const severity_str = switch (msg.severity) {
+            .info => "info",
+            .warning => "warning",
+            .error => "error",
+            .critical => "critical",
+        };
+
+        const file_path_str = msg.file_path[0..msg.file_path_len];
+        const message_str = msg.message[0..msg.message_len];
+
+        const prefix = if (is_first) "" else ",";
+        const format_str = "{s}{{\"file\":\"{s}\",\"line\":{d},\"column\":{d},\"severity\":\"{s}\",\"message\":\"{s}\"}}";
+        const formatted = std.fmt.bufPrint(
+            output,
+            format_str,
+            .{ prefix, file_path_str, msg.line_number, msg.column_number, severity_str, message_str },
+        ) catch |err| {
+            _ = err;
+            return false;
+        };
+
+        output_len.* = @as(u32, @intCast(formatted.len));
+
+        // Postcondition: Output length must be valid
+        std.debug.assert(output_len.* <= output.len);
+
+        _ = self; // Suppress unused warning
+
+        return true;
+    }
+
+    /// Format summary statistics as JSON.
+    // 2025-12-21-141612-pst: Phase 26 Enhanced JSON Output
+    pub fn format_summary_json(
+        self: *GrainStyleCLI,
+        total_violations: u32,
+        files_checked: u32,
+        files_with_violations: u32,
+        output: []u8,
+        output_len: *u32,
+    ) bool {
+        // Precondition: Output buffer must be valid
+        std.debug.assert(output.len > 0);
+        std.debug.assert(output_len != null);
+
+        output_len.* = 0;
+
+        const format_str = "{{\"summary\":{{\"total_violations\":{d},\"files_checked\":{d},\"files_with_violations\":{d}}}}}\n";
+        const formatted = std.fmt.bufPrint(
+            output,
+            format_str,
+            .{ total_violations, files_checked, files_with_violations },
         ) catch |err| {
             _ = err;
             return false;
@@ -643,6 +746,8 @@ pub const GrainStyleCLI = struct {
     // 2025-12-20-200932-pst: Phase 22 Standalone CLI Tool
     // 2025-12-21-083130-pst: Phase 23 Enhanced CLI Output and Configuration
     // 2025-12-21-083947-pst: Phase 24 Recursive Directory Linting
+    // 2025-12-21-141612-pst: Phase 25 Performance Optimizations
+    // 2025-12-21-141612-pst: Phase 26 Enhanced JSON Output
     pub fn run(
         self: *GrainStyleCLI,
         file_paths: []const []const u8,
@@ -651,8 +756,24 @@ pub const GrainStyleCLI = struct {
         std.debug.assert(file_paths.len > 0);
 
         var total_violations: u32 = 0;
+        var files_checked: u32 = 0;
+        var files_with_violations: u32 = 0;
+        var json_array_started: bool = false;
+
+        // Phase 26: Start JSON array if JSON output format
+        if (self.config.output_format == .json) {
+            const stdout = std.io.getStdOut().writer();
+            _ = stdout.write("{\"violations\":[") catch {};
+            json_array_started = true;
+        }
+
         var i: u32 = 0;
         while (i < file_paths.len) : (i += 1) {
+            // Phase 25: Early exit if max violations reached
+            if (total_violations >= self.config.max_violations) {
+                break;
+            }
+
             const path = file_paths[i];
 
             if (self.is_directory(path)) {
@@ -665,17 +786,67 @@ pub const GrainStyleCLI = struct {
             } else {
                 // Regular file - lint it
                 if (std.mem.endsWith(u8, path, ".zig") and !self.should_ignore(path)) {
+                    files_checked += 1;
                     const violations = self.lint_file(path);
+
                     if (violations > 0) {
-                        self.print_violations(path);
+                        files_with_violations += 1;
+                        total_violations += violations;
+
+                        if (self.config.output_format == .json) {
+                            // Phase 26: Output as JSON array elements
+                            var messages: [256]?grain_workspace.devtools.LinterMessage = undefined;
+                            var messages_len: u32 = 0;
+                            self.devtools_app.get_linter_messages(path, &messages, &messages_len);
+
+                            var msg_i: u32 = 0;
+                            while (msg_i < messages_len) : (msg_i += 1) {
+                                if (messages[msg_i]) |msg| {
+                                    var output_buffer: [MAX_OUTPUT_BUFFER_SIZE]u8 = undefined;
+                                    var output_len: u32 = 0;
+                                    if (self.format_violation_json_array_element(
+                                        msg,
+                                        &output_buffer,
+                                        &output_len,
+                                        !json_array_started,
+                                    )) {
+                                        const stdout = std.io.getStdOut().writer();
+                                        _ = stdout.write(output_buffer[0..output_len]) catch {};
+                                        json_array_started = true;
+                                    }
+                                }
+                            }
+                        } else {
+                            // Text output format
+                            self.print_violations(path);
+                        }
                     }
-                    total_violations += violations;
                 }
+            }
+        }
+
+        // Phase 26: Close JSON array and output summary
+        if (self.config.output_format == .json) {
+            const stdout = std.io.getStdOut().writer();
+            _ = stdout.write("],") catch {};
+
+            var summary_buffer: [MAX_SUMMARY_BUFFER_SIZE]u8 = undefined;
+            var summary_len: u32 = 0;
+            if (self.format_summary_json(
+                total_violations,
+                files_checked,
+                files_with_violations,
+                &summary_buffer,
+                &summary_len,
+            )) {
+                _ = stdout.write(summary_buffer[0..summary_len]) catch {};
             }
         }
 
         // Postcondition: Total violations must be valid
         std.debug.assert(total_violations <= grain_workspace.devtools.MAX_LINT_VIOLATIONS * file_paths.len);
+        std.debug.assert(files_checked <= file_paths.len);
+        std.debug.assert(files_with_violations <= files_checked);
 
         if (total_violations > 0) {
             return .violations_found;

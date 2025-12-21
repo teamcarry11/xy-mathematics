@@ -9,7 +9,7 @@ test "workflow scheduler initialization" {
     var event_bus = grain_flow.EventBus.init();
     var coordinator = grain_flow.AgentCoordinator.init(&event_bus);
     var engine = grain_flow.WorkflowEngine.init(&event_bus, &coordinator);
-    var scheduler = grain_flow.WorkflowScheduler.init(&engine);
+    const scheduler = grain_flow.WorkflowScheduler.init(&engine);
     std.debug.assert(scheduler.schedules_len == 0);
     std.debug.assert(scheduler.next_schedule_id == 1);
 }
@@ -188,5 +188,59 @@ test "interval schedule next execution" {
     const schedule = scheduler.get_schedule(schedule_id.?);
     std.debug.assert(schedule != null);
     std.debug.assert(schedule.?.next_execution == 1000000 + 60000);
+    std.debug.assert(schedule.?.execution_count == 1);
+}
+
+test "recurring schedule cron parser" {
+    var event_bus = grain_flow.EventBus.init();
+    var coordinator = grain_flow.AgentCoordinator.init(&event_bus);
+    var engine = grain_flow.WorkflowEngine.init(&event_bus, &coordinator);
+    var scheduler = grain_flow.WorkflowScheduler.init(&engine);
+
+    // Create and schedule workflow with recurring cron.
+    const workflow_id = engine.create_workflow("test_workflow", 10000);
+    const schedule_id = scheduler.schedule_recurring(
+        workflow_id.?,
+        "recurring_schedule",
+        "0 * * * *", // Every hour
+        1000000, // First execution
+    );
+    std.debug.assert(schedule_id != null);
+
+    // Execute at first execution time.
+    const executed = scheduler.check_and_execute(1000000);
+    std.debug.assert(executed == 1);
+
+    // Verify next execution was calculated (should be 1 hour later).
+    const schedule = scheduler.get_schedule(schedule_id.?);
+    std.debug.assert(schedule != null);
+    std.debug.assert(schedule.?.next_execution == 1000000 + 3600000); // 1 hour
+    std.debug.assert(schedule.?.execution_count == 1);
+}
+
+test "recurring schedule cron parser every minute" {
+    var event_bus = grain_flow.EventBus.init();
+    var coordinator = grain_flow.AgentCoordinator.init(&event_bus);
+    var engine = grain_flow.WorkflowEngine.init(&event_bus, &coordinator);
+    var scheduler = grain_flow.WorkflowScheduler.init(&engine);
+
+    // Create and schedule workflow with recurring cron (every minute).
+    const workflow_id = engine.create_workflow("test_workflow", 10000);
+    const schedule_id = scheduler.schedule_recurring(
+        workflow_id.?,
+        "recurring_schedule",
+        "* * * * *", // Every minute
+        1000000, // First execution
+    );
+    std.debug.assert(schedule_id != null);
+
+    // Execute at first execution time.
+    const executed = scheduler.check_and_execute(1000000);
+    std.debug.assert(executed == 1);
+
+    // Verify next execution was calculated (should be 1 minute later).
+    const schedule = scheduler.get_schedule(schedule_id.?);
+    std.debug.assert(schedule != null);
+    std.debug.assert(schedule.?.next_execution == 1000000 + 60000); // 1 minute
     std.debug.assert(schedule.?.execution_count == 1);
 }

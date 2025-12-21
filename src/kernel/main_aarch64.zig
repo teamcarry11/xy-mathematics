@@ -8,7 +8,8 @@ const BasinKernel = @import("basin_kernel.zig").BasinKernel;
 const Debug = @import("debug.zig");
 const Framebuffer = @import("framebuffer.zig").Framebuffer;
 const boot = @import("boot.zig");
-const platform = @import("platform_aarch64.zig");
+const platform_aarch64 = @import("platform_aarch64.zig");
+const platform = @import("platform.zig");
 const TimeSource = @import("time_source.zig").TimeSource;
 
 // Global kernel instance
@@ -20,7 +21,15 @@ var framebuffer: ?Framebuffer = null;
 
 pub export fn kmain() noreturn {
     // Set platform-specific time source.
-    TimeSource.set_implementation(platform.get_time_ns);
+    TimeSource.set_implementation(platform_aarch64.get_time_ns);
+    
+    // Initialize platform abstraction for AArch64.
+    const aarch64_platform = platform.Platform.init(
+        .aarch64,
+        platform_aarch64.platform_call,
+        platform_aarch64.get_time_ns,
+    );
+    platform.set_platform(aarch64_platform);
     // 1. Early boot banner (serial output)
     Debug.kprint("\n", .{});
     Debug.kprint("   ______           _          ____  _____\n", .{});

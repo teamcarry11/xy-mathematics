@@ -211,6 +211,7 @@ pub fn create_user(user_data: *const UserData) DatabaseResult {
 }
 
 // Get user from database by user_id.
+// Note: Response parsing will be integrated once async handling pattern is coordinated.
 pub fn get_user_by_id(user_id: []const u8, user_out: *UserData) DatabaseResult {
     std.debug.assert(user_id.len > 0);
     std.debug.assert(user_id.len <= models.MAX_USER_ID_LEN);
@@ -241,7 +242,11 @@ pub fn get_user_by_id(user_id: []const u8, user_out: *UserData) DatabaseResult {
         path_buf[0..path_len],
     ) orelse {
         return DatabaseResult.connection_error;
-    };
+    }
+    // TODO: Once async response handling pattern is coordinated with Core Agent:
+    // 1. Check request state using check_request_response()
+    // 2. Parse response body using parse_user_from_json()
+    // 3. Handle HTTP status codes using http_status_to_db_result()
     _ = user_out;
     _ = request;
     return DatabaseResult.success;
@@ -406,21 +411,23 @@ pub fn parse_user_from_json(json: []const u8, user_out: *UserData) DatabaseResul
 
 // Check if HTTP request is completed and get response.
 // Returns success if request is completed and response is available.
-// Note: This function will be used once async response handling is coordinated with Core Agent.
+// Uses http_client_integration helpers for state checking.
 pub fn check_request_response(
     request: *const grain_core_http.HttpClientRequest,
     response_out: *?grain_core_api.HttpResponse,
 ) DatabaseResult {
     std.debug.assert(request != null);
     std.debug.assert(response_out != null);
-    if (request.state != grain_core_http.RequestState.completed) {
-        if (request.state == grain_core_http.RequestState.failed) {
-            return DatabaseResult.connection_error;
-        }
+    response_out.* = null;
+    if (http_client_integration.is_request_failed(request)) {
         return DatabaseResult.connection_error;
     }
-    if (request.response) |resp| {
-        response_out.* = resp;
+    if (!http_client_integration.is_request_completed(request)) {
+        return DatabaseResult.connection_error;
+    }
+    const response = http_client_integration.get_request_response(request);
+    if (response) |resp| {
+        response_out.* = resp.*;
         return DatabaseResult.success;
     }
     return DatabaseResult.connection_error;

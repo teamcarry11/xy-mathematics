@@ -263,6 +263,9 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/grain_court/root.zig"),
         .target = target,
         .optimize = optimize,
+        .imports = &.{
+            .{ .name = "grain_core", .module = grain_core_module },
+        },
     });
 
     // Grain Silo module
@@ -4625,6 +4628,20 @@ pub fn build(b: *std.Build) void {
     });
     const grain_research_zon_token_benchmark_tests_run = b.addRunArtifact(grain_research_zon_token_benchmark_tests);
     test_step.dependOn(&grain_research_zon_token_benchmark_tests_run.step);
+
+    // ZON Format Retrieval Accuracy Tests (Phase 2).
+    const grain_research_zon_retrieval_accuracy_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/151_grain_research_zon_retrieval_accuracy_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_research", .module = grain_research_module },
+            },
+        }),
+    });
+    const grain_research_zon_retrieval_accuracy_tests_run = b.addRunArtifact(grain_research_zon_retrieval_accuracy_tests);
+    test_step.dependOn(&grain_research_zon_retrieval_accuracy_tests_run.step);
 
     // Grain Bubble component tests
     const grain_bubble_component_tests = b.addTest(.{

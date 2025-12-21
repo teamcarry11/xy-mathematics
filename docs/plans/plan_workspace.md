@@ -1,9 +1,9 @@
 # Grain Workspace Agent: Development Plan
 
 **Agent**: Grain Workspace Agent (5th Agent)  
-**Status**: Phase 24 Recursive Directory Linting Complete ✅  
-**Last Updated**: 2025-12-21-083947-pst  
-**Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-20-215819-pst.md`
+**Status**: Phase 26 Enhanced JSON Output Complete ✅  
+**Last Updated**: 2025-12-21-144225-pst  
+**Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-21-141612-pst.md`
 
 ---
 
@@ -1059,11 +1059,66 @@ All planned phases for Grain Workspace Agent have been completed:
 - Max 70 lines per function
 - All compiler warnings enabled
 
+### Phase 25: Performance Optimizations ✅ **COMPLETE**
+
+**Date**: 2025-12-21-144225-pst
+
+**Completed Work**:
+1. **Performance Optimizations** (`src/grain_workspace/grain_style_cli/main.zig`):
+   - Added early exit on max violations (configurable via `max_violations` config)
+   - Optimized file reading (skip empty files early)
+   - Added `MAX_VIOLATIONS_BEFORE_EXIT` constant (default 1000)
+   - Updated `CLIConfig` to include `max_violations` field
+   - Updated `load_config()` to parse `max_violations` setting
+   - Updated `lint_file()` to skip empty files early
+   - Updated `run()` to check max violations and exit early
+   - Comprehensive tests (`tests/116_grain_workspace_grain_style_cli_test.zig`)
+
+**Features**:
+- Early exit on max violations (configurable)
+- Skip empty files early (performance optimization)
+- Configurable max violations limit
+- Optimized for large codebases
+
+**Grain Style Compliance**:
+- `grain_case` function names
+- `u32`/`u64` types (no `usize`)
+- Bounded allocations (all limits explicit)
+- Assertions for preconditions
+- Max 70 lines per function
+- All compiler warnings enabled
+
+### Phase 26: Enhanced JSON Output ✅ **COMPLETE**
+
+**Date**: 2025-12-21-144225-pst
+
+**Completed Work**:
+1. **Enhanced JSON Output** (`src/grain_workspace/grain_style_cli/main.zig`):
+   - Added JSON array format for violations (instead of one JSON object per line)
+   - Added summary statistics (total violations, files checked, files with violations)
+   - Added `format_violation_json_array_element()` function
+   - Added `format_summary_json()` function
+   - Added `MAX_SUMMARY_BUFFER_SIZE` constant (8 KB)
+   - Updated `run()` to output JSON array format and summary
+   - Comprehensive tests (`tests/116_grain_workspace_grain_style_cli_test.zig`)
+
+**Features**:
+- JSON array format for all violations
+- Summary statistics (total violations, files checked, files with violations)
+- Structured JSON output with metadata
+- Backward compatible with existing JSON format
+
+**Grain Style Compliance**:
+- `grain_case` function names
+- `u32`/`u64` types (no `usize`)
+- Bounded allocations (all limits explicit)
+- Assertions for preconditions
+- Max 70 lines per function
+- All compiler warnings enabled
+
 **Future Enhancements**:
 - Editor plugin integration (VS Code, Cursor)
 - Auto-fix capabilities (future phase)
-- Performance optimizations for large codebases
-- Enhanced JSON output (array format, summary statistics)
 - Full file path collection with dynamic allocation
 
 **Creative Future Ideas** (Conceptual):

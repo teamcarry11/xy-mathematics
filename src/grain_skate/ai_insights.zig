@@ -235,6 +235,21 @@ pub const AiInsights = struct {
             if (from_id == 0 or to_id == 0) continue;
             if (from_id == to_id) continue; // Skip self-connections
             
+            // Validate blocks exist
+            const from_block = self.block_storage.get_block(@as(u32, @intCast(from_id))) orelse continue;
+            const to_block = self.block_storage.get_block(@as(u32, @intCast(to_id))) orelse continue;
+            
+            // Skip if link already exists
+            var link_exists = false;
+            var i: u32 = 0;
+            while (i < from_block.links_len) : (i += 1) {
+                if (from_block.links[i] == @as(u32, @intCast(to_id))) {
+                    link_exists = true;
+                    break;
+                }
+            }
+            if (link_exists) continue;
+            
             // Parse confidence and clamp to valid range
             var confidence = std.fmt.parseFloat(f32, conf_str) catch 0.5;
             if (confidence < 0.0) confidence = 0.0;

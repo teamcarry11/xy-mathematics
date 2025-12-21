@@ -35,6 +35,8 @@ pub const workflow_metrics_analyzer = @import("workflow_metrics_analyzer.zig");
 
 // Insights generator for recommendations and reports.
 pub const insights_generator = @import("insights_generator.zig");
+// Retrieval accuracy analyzer for ZON format validation.
+pub const retrieval_accuracy = @import("retrieval_accuracy.zig");
 
 // Module exports.
 pub const ResearchEngine = research_engine.ResearchEngine;
@@ -67,3 +69,9 @@ pub const Recommendation = insights_generator.Recommendation;
 pub const RecommendationCategory = insights_generator.RecommendationCategory;
 pub const RecommendationPriority = insights_generator.RecommendationPriority;
 pub const HypothesisTestResult = insights_generator.HypothesisTestResult;
+pub const RetrievalAccuracyAnalyzer = retrieval_accuracy.RetrievalAccuracyAnalyzer;
+pub const TestDataset = retrieval_accuracy.TestDataset;
+pub const Fact = retrieval_accuracy.Fact;
+pub const Query = retrieval_accuracy.Query;
+pub const QueryType = retrieval_accuracy.Query.QueryType;
+pub const RetrievalResult = retrieval_accuracy.RetrievalResult;

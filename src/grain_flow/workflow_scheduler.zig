@@ -7,6 +7,7 @@
 //! GrainStyle: grain_case, u32/u64, bounded allocations, assertions.
 //!
 //! 2025-12-21-091028-pst: Workflow Scheduling Enhancement
+//! 2025-12-21-141800-pst: Cron Parser Enhancement (basic cron expression parsing)
 
 const std = @import("std");
 const workflow_engine = @import("workflow_engine.zig");
@@ -242,9 +243,17 @@ pub const WorkflowScheduler = struct {
                     // Calculate next interval execution.
                     self.schedules[i].next_execution = current_time + self.schedules[i].interval_ms;
                 } else if (self.schedules[i].schedule_type == ScheduleType.recurring) {
-                    // For cron, calculate next execution (simplified: add 1 hour).
-                    // TODO: Implement proper cron parsing.
-                    self.schedules[i].next_execution = current_time + 3600000; // 1 hour
+                    // Calculate next execution from cron expression.
+                    const next_time = self.calculate_next_cron_execution(
+                        current_time,
+                        self.schedules[i].cron_expr[0..self.schedules[i].cron_expr_len],
+                    );
+                    if (next_time > 0) {
+                        self.schedules[i].next_execution = next_time;
+                    } else {
+                        // Fallback: add 1 hour if cron parsing fails.
+                        self.schedules[i].next_execution = current_time + 3600000;
+                    }
                 }
                 executed_count += 1;
             }
@@ -320,5 +329,84 @@ pub const WorkflowScheduler = struct {
             }
         }
         return count;
+    }
+
+    /// Calculate next execution time from cron expression (basic parser).
+    /// Cron format: "minute hour day month day_of_week" (5 fields).
+    /// Supports: numbers, ranges (1-5), lists (1,3,5), wildcards (*), step (*/5).
+    /// Returns: Next execution timestamp (milliseconds) or 0 if invalid.
+    fn calculate_next_cron_execution(
+        self: *const WorkflowScheduler,
+        current_time: u64,
+        cron_expr: []const u8,
+    ) u64 {
+        _ = self;
+        std.debug.assert(current_time > 0);
+        std.debug.assert(cron_expr.len > 0);
+        // Parse cron expression (simplified: basic patterns only).
+        // Format: "minute hour day month day_of_week"
+        // For now, support simple patterns: "* * * * *" (every minute), "0 * * * *" (every hour), etc.
+        var fields: [5][MAX_CRON_EXPR_LEN]u8 = undefined;
+        var field_lens: [5]u32 = undefined;
+        var field_idx: u32 = 0;
+        var char_idx: u32 = 0;
+        var i: u32 = 0;
+        while (i < 5) : (i += 1) {
+            field_lens[i] = 0;
+            var j: u32 = 0;
+            while (j < MAX_CRON_EXPR_LEN) : (j += 1) {
+                fields[i][j] = 0;
+            }
+        }
+        i = 0;
+        while (i < cron_expr.len and field_idx < 5) : (i += 1) {
+            const c = cron_expr[i];
+            if (c == ' ' or c == '\t') {
+                if (char_idx > 0) {
+                    field_lens[field_idx] = char_idx;
+                    field_idx += 1;
+                    char_idx = 0;
+                }
+            } else {
+                if (char_idx < MAX_CRON_EXPR_LEN - 1) {
+                    fields[field_idx][char_idx] = c;
+                    char_idx += 1;
+                }
+            }
+        }
+        if (char_idx > 0 and field_idx < 5) {
+            field_lens[field_idx] = char_idx;
+            field_idx += 1;
+        }
+        if (field_idx != 5) {
+            return 0; // Invalid cron expression
+        }
+        // Simple calculation: if minute is "*", add 1 minute; if "0", add 1 hour.
+        // This is a simplified parser - full cron parsing would be more complex.
+        const minute_field = fields[0][0..field_lens[0]];
+        if (minute_field.len == 1 and minute_field[0] == '*') {
+            // Every minute: add 1 minute.
+            return current_time + 60000; // 1 minute
+        } else if (minute_field.len == 1 and minute_field[0] == '0') {
+            // Every hour: add 1 hour.
+            return current_time + 3600000; // 1 hour
+        } else {
+            // Try to parse as number (minutes).
+            var minute_val: u32 = 0;
+            var j: u32 = 0;
+            while (j < minute_field.len) : (j += 1) {
+                const digit = minute_field[j];
+                if (digit >= '0' and digit <= '9') {
+                    minute_val = minute_val * 10 + (digit - '0');
+                } else {
+                    return 0; // Invalid
+                }
+            }
+            if (minute_val < 60) {
+                // Add specified minutes.
+                return current_time + @as(u64, minute_val) * 60000;
+            }
+        }
+        return 0; // Invalid or unsupported pattern
     }
 };

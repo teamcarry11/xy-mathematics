@@ -7,6 +7,8 @@
 //! 2025-12-20-200932-pst: Phase 22 Standalone CLI Tool tests
 //! 2025-12-21-083130-pst: Phase 23 Enhanced CLI Output and Configuration tests
 //! 2025-12-21-083947-pst: Phase 24 Recursive Directory Linting tests
+//! 2025-12-21-141612-pst: Phase 25 Performance Optimizations tests
+//! 2025-12-21-141612-pst: Phase 26 Enhanced JSON Output tests
 
 const std = @import("std");
 const testing = std.testing;
@@ -328,4 +330,83 @@ test "collect zig files" {
 
     try testing.expect(result == true);
     try testing.expect(files_len >= 2);
+}
+
+test "format violation json array element" {
+    const allocator = testing.allocator;
+    var cli = GrainStyleCLI.init(allocator);
+    cli.config.output_format = .json;
+
+    // Create a test message
+    var msg: @import("../src/grain_workspace/devtools/app.zig").LinterMessage = undefined;
+    @memset(&msg, 0);
+    @memcpy(msg.file_path[0..10], "test.zig");
+    msg.file_path_len = 7;
+    @memcpy(msg.message[0..20], "Test violation");
+    msg.message_len = 15;
+    msg.line_number = 1;
+    msg.column_number = 1;
+    msg.severity = .warning;
+
+    var output: [1024]u8 = undefined;
+    var output_len: u32 = 0;
+
+    // Test first element
+    const result1 = cli.format_violation_json_array_element(msg, &output, &output_len, true);
+    try testing.expect(result1 == true);
+    try testing.expect(output_len > 0);
+    try testing.expect(std.mem.indexOf(u8, output[0..output_len], "test.zig") != null);
+
+    // Test subsequent element
+    var output2: [1024]u8 = undefined;
+    var output_len2: u32 = 0;
+    const result2 = cli.format_violation_json_array_element(msg, &output2, &output_len2, false);
+    try testing.expect(result2 == true);
+    try testing.expect(output_len2 > 0);
+    try testing.expect(std.mem.indexOf(u8, output2[0..output_len2], ",") != null);
+}
+
+test "format summary json" {
+    const allocator = testing.allocator;
+    var cli = GrainStyleCLI.init(allocator);
+    cli.config.output_format = .json;
+
+    var output: [1024]u8 = undefined;
+    var output_len: u32 = 0;
+
+    const result = cli.format_summary_json(10, 5, 3, &output, &output_len);
+    try testing.expect(result == true);
+    try testing.expect(output_len > 0);
+    try testing.expect(std.mem.indexOf(u8, output[0..output_len], "total_violations") != null);
+    try testing.expect(std.mem.indexOf(u8, output[0..output_len], "files_checked") != null);
+    try testing.expect(std.mem.indexOf(u8, output[0..output_len], "files_with_violations") != null);
+}
+
+test "run with max violations early exit" {
+    const allocator = testing.allocator;
+    var cli = GrainStyleCLI.init(allocator);
+    cli.config.max_violations = 5; // Set low limit for testing
+
+    // Create test files with violations
+    const test_file1 = "test_max1.zig";
+    const test_content1 = "pub fn test() void {\n    var x: usize = 0;\n    var y: usize = 1;\n}";
+
+    const file1 = try std.fs.cwd().createFile(test_file1, .{});
+    defer file1.close();
+    try file1.writeAll(test_content1);
+    defer std.fs.cwd().deleteFile(test_file1) catch {};
+
+    const test_file2 = "test_max2.zig";
+    const test_content2 = "pub fn test2() void {\n    var z: usize = 2;\n}";
+
+    const file2 = try std.fs.cwd().createFile(test_file2, .{});
+    defer file2.close();
+    try file2.writeAll(test_content2);
+    defer std.fs.cwd().deleteFile(test_file2) catch {};
+
+    const file_paths = [_][]const u8{ test_file1, test_file2 };
+    const exit_code = cli.run(&file_paths);
+
+    // Should exit with violations found
+    try testing.expect(exit_code == .violations_found);
 }

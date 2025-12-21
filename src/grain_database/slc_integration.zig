@@ -153,6 +153,52 @@ pub const NostrProfileStorage = struct {
         output: []u64,
     ) u32 {
         std.debug.assert(output.len > 0);
+        return self.list_profiles_paginated(output, 0, output.len);
+    }
+
+    // List Nostr profiles with pagination (offset, limit).
+    pub fn list_profiles_paginated(
+        self: *NostrProfileStorage,
+        output: []u64,
+        offset: u32,
+        limit: u32,
+    ) u32 {
+        std.debug.assert(output.len > 0);
+        std.debug.assert(limit > 0);
+        std.debug.assert(limit <= output.len);
+        var count: u32 = 0;
+        var skipped: u32 = 0;
+        var i: u32 = 0;
+        const prefix = "nostr:profile:";
+        while (i < self.storage_engine.records_len) : (i += 1) {
+            const record = &self.storage_engine.records[i];
+            if (record.key_len >= prefix.len) {
+                if (std.mem.eql(u8, record.key[0..prefix.len], prefix)) {
+                    if (skipped < offset) {
+                        skipped += 1;
+                    } else {
+                        if (count < limit and count < output.len) {
+                            output[count] = record.record_id;
+                            count += 1;
+                        }
+                        if (count >= limit) {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        return count;
+    }
+
+    // Search Nostr profiles by content (simple text matching).
+    pub fn search_profiles(
+        self: *NostrProfileStorage,
+        query: []const u8,
+        output: []u64,
+    ) u32 {
+        std.debug.assert(query.len > 0);
+        std.debug.assert(output.len > 0);
         var count: u32 = 0;
         var i: u32 = 0;
         const prefix = "nostr:profile:";
@@ -160,9 +206,12 @@ pub const NostrProfileStorage = struct {
             const record = &self.storage_engine.records[i];
             if (record.key_len >= prefix.len) {
                 if (std.mem.eql(u8, record.key[0..prefix.len], prefix)) {
-                    if (count < output.len) {
-                        output[count] = record.record_id;
-                        count += 1;
+                    const value_slice = record.value[0..record.value_len];
+                    if (std.mem.indexOf(u8, value_slice, query) != null) {
+                        if (count < output.len) {
+                            output[count] = record.record_id;
+                            count += 1;
+                        }
                     }
                 }
             }
@@ -303,6 +352,52 @@ pub const DagWebsiteStorage = struct {
         output: []u64,
     ) u32 {
         std.debug.assert(output.len > 0);
+        return self.list_nodes_paginated(output, 0, output.len);
+    }
+
+    // List DAG website nodes with pagination (offset, limit).
+    pub fn list_nodes_paginated(
+        self: *DagWebsiteStorage,
+        output: []u64,
+        offset: u32,
+        limit: u32,
+    ) u32 {
+        std.debug.assert(output.len > 0);
+        std.debug.assert(limit > 0);
+        std.debug.assert(limit <= output.len);
+        var count: u32 = 0;
+        var skipped: u32 = 0;
+        var i: u32 = 0;
+        const prefix = "dag:website:";
+        while (i < self.storage_engine.records_len) : (i += 1) {
+            const record = &self.storage_engine.records[i];
+            if (record.key_len >= prefix.len) {
+                if (std.mem.eql(u8, record.key[0..prefix.len], prefix)) {
+                    if (skipped < offset) {
+                        skipped += 1;
+                    } else {
+                        if (count < limit and count < output.len) {
+                            output[count] = record.record_id;
+                            count += 1;
+                        }
+                        if (count >= limit) {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        return count;
+    }
+
+    // Search DAG website nodes by content (simple text matching).
+    pub fn search_nodes(
+        self: *DagWebsiteStorage,
+        query: []const u8,
+        output: []u64,
+    ) u32 {
+        std.debug.assert(query.len > 0);
+        std.debug.assert(output.len > 0);
         var count: u32 = 0;
         var i: u32 = 0;
         const prefix = "dag:website:";
@@ -310,9 +405,12 @@ pub const DagWebsiteStorage = struct {
             const record = &self.storage_engine.records[i];
             if (record.key_len >= prefix.len) {
                 if (std.mem.eql(u8, record.key[0..prefix.len], prefix)) {
-                    if (count < output.len) {
-                        output[count] = record.record_id;
-                        count += 1;
+                    const value_slice = record.value[0..record.value_len];
+                    if (std.mem.indexOf(u8, value_slice, query) != null) {
+                        if (count < output.len) {
+                            output[count] = record.record_id;
+                            count += 1;
+                        }
                     }
                 }
             }

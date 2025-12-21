@@ -61,3 +61,94 @@ test "court parallel operation" {
     try testing.expect(status.? == .pending);
 }
 
+test "llm provider pool init" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var pool = grain_court.LlmProvider.ProviderPool.init(allocator);
+    try testing.expect(pool.providers_len == 0);
+    try testing.expect(pool.default_provider == null);
+}
+
+test "llm provider pool add provider" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var pool = grain_court.LlmProvider.ProviderPool.init(allocator);
+    const api_key = "test-api-key";
+    var openai_provider = try grain_court.OpenAIProvider.init(
+        allocator,
+        api_key,
+        null,
+    );
+    try pool.add_provider(&openai_provider.trait);
+    try testing.expect(pool.providers_len == 1);
+    try testing.expect(pool.default_provider != null);
+}
+
+test "llm provider pool get provider by type" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var pool = grain_court.LlmProvider.ProviderPool.init(allocator);
+    const api_key = "test-api-key";
+    var openai_provider = try grain_court.OpenAIProvider.init(
+        allocator,
+        api_key,
+        null,
+    );
+    try pool.add_provider(&openai_provider.trait);
+    const provider = pool.get_provider_by_type(.openai);
+    try testing.expect(provider != null);
+    try testing.expect(provider.?.provider_type == .openai);
+}
+
+test "openai provider init" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const api_key = "test-api-key-12345";
+    var provider = try grain_court.OpenAIProvider.init(
+        allocator,
+        api_key,
+        null,
+    );
+    try testing.expect(provider.trait.provider_type == .openai);
+    try testing.expect(provider.trait.state == .idle);
+    try testing.expect(provider.trait.api_key_len > 0);
+}
+
+test "openai provider check health" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const api_key = "test-api-key";
+    var provider = try grain_court.OpenAIProvider.init(
+        allocator,
+        api_key,
+        null,
+    );
+    const is_healthy = provider.trait.check_health(&provider.trait);
+    try testing.expect(is_healthy == false); // No HTTP client
+}
+
+test "openai provider get name" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const api_key = "test-api-key";
+    var provider = try grain_court.OpenAIProvider.init(
+        allocator,
+        api_key,
+        null,
+    );
+    const name = provider.trait.get_name(&provider.trait);
+    try testing.expect(std.mem.eql(u8, name, "OpenAI"));
+}
+

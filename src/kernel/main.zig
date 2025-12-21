@@ -4,6 +4,9 @@ const BasinKernel = @import("basin_kernel.zig").BasinKernel;
 const Debug = @import("debug.zig");
 const Framebuffer = @import("framebuffer.zig").Framebuffer;
 const boot = @import("boot.zig");
+const platform = @import("platform.zig");
+const platform_riscv = @import("platform_riscv.zig");
+const TimeSource = @import("time_source.zig").TimeSource;
 
 // Global kernel instance
 var kernel: BasinKernel = undefined;
@@ -13,6 +16,17 @@ var kernel: BasinKernel = undefined;
 var framebuffer: ?Framebuffer = null;
 
 pub export fn kmain() noreturn {
+    // Set platform-specific time source.
+    TimeSource.set_implementation(platform_riscv.get_time_ns);
+    
+    // Initialize platform abstraction for RISC-V.
+    const riscv_platform = platform.Platform.init(
+        .riscv64,
+        platform_riscv.platform_call_riscv,
+        platform_riscv.get_time_ns,
+    );
+    platform.set_platform(riscv_platform);
+    
     // 1. Early boot banner (serial output)
     Debug.kprint("\n", .{});
     Debug.kprint("   ______           _          ____  _____\n", .{});

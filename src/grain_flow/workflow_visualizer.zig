@@ -8,6 +8,7 @@
 //! GrainStyle: grain_case, u32/u64, bounded allocations, assertions.
 //!
 //! 2025-12-08-140000-pst: Phase 4 Workflow Visualizer Foundation
+//! 2025-12-21-141900-pst: Hierarchical Layout Enhancement (improved DAG visualization)
 
 const std = @import("std");
 const workflow_engine = @import("workflow_engine.zig");
@@ -190,13 +191,126 @@ pub const WorkflowVisualizer = struct {
         if (self.svg_content_len > 0) {
             return false; // Already rendered
         }
-        // Simple grid layout (iterative, no recursion).
-        var x: i32 = 100;
-        var y: i32 = 100;
-        const row_height: i32 = 100;
+        // Hierarchical layout (iterative, no recursion).
+        // Calculate node levels (depth from root nodes).
+        var node_levels: [workflow_engine.MAX_WORKFLOW_NODES]u32 = undefined;
+        var node_levels_set: [workflow_engine.MAX_WORKFLOW_NODES]bool = undefined;
         var i: u32 = 0;
         while (i < workflow.nodes_len) : (i += 1) {
+            node_levels[i] = 0;
+            node_levels_set[i] = false;
+        }
+        // Find root nodes (no incoming edges) and set level 0.
+        i = 0;
+        while (i < workflow.nodes_len) : (i += 1) {
+            var has_incoming: bool = false;
+            var j: u32 = 0;
+            while (j < workflow.edges_len) : (j += 1) {
+                if (workflow.edges[j].to_node_id == workflow.nodes[i].node_id) {
+                    has_incoming = true;
+                    break;
+                }
+            }
+            if (!has_incoming) {
+                node_levels[i] = 0;
+                node_levels_set[i] = true;
+            }
+        }
+        // If no root nodes found (all nodes have edges or no edges at all), set all to level 0.
+        var has_root: bool = false;
+        i = 0;
+        while (i < workflow.nodes_len) : (i += 1) {
+            if (node_levels_set[i]) {
+                has_root = true;
+                break;
+            }
+        }
+        if (!has_root) {
+            i = 0;
+            while (i < workflow.nodes_len) : (i += 1) {
+                node_levels[i] = 0;
+                node_levels_set[i] = true;
+            }
+        }
+        // Calculate levels iteratively (topological order).
+        var max_level: u32 = 0;
+        var changed: bool = true;
+        var iterations: u32 = 0;
+        const max_iterations: u32 = workflow.nodes_len; // Prevent infinite loops
+        while (changed and iterations < max_iterations) {
+            iterations += 1;
+            changed = false;
+            i = 0;
+            while (i < workflow.edges_len) : (i += 1) {
+                const edge = &workflow.edges[i];
+                var from_idx: u32 = 0;
+                var to_idx: u32 = 0;
+                var from_found: bool = false;
+                var to_found: bool = false;
+                var k: u32 = 0;
+                while (k < workflow.nodes_len) : (k += 1) {
+                    if (workflow.nodes[k].node_id == edge.from_node_id) {
+                        from_idx = k;
+                        from_found = true;
+                    }
+                    if (workflow.nodes[k].node_id == edge.to_node_id) {
+                        to_idx = k;
+                        to_found = true;
+                    }
+                }
+                if (from_found and to_found and node_levels_set[from_idx]) {
+                    const new_level = node_levels[from_idx] + 1;
+                    if (!node_levels_set[to_idx] or new_level > node_levels[to_idx]) {
+                        node_levels[to_idx] = new_level;
+                        node_levels_set[to_idx] = true;
+                        if (new_level > max_level) {
+                            max_level = new_level;
+                        }
+                        changed = true;
+                    }
+                }
+            }
+        }
+        // Ensure all nodes have levels assigned (fallback to level 0 if not set).
+        i = 0;
+        while (i < workflow.nodes_len) : (i += 1) {
+            if (!node_levels_set[i]) {
+                node_levels[i] = 0;
+                node_levels_set[i] = true;
+            }
+        }
+        // Position nodes by level (hierarchical layout).
+        const levels_count: u32 = if (max_level == 0 and workflow.nodes_len > 0) 1 else max_level + 1;
+        const level_width: i32 = if (levels_count > 1) @as(i32, @intCast(self.width)) / @as(i32, @intCast(levels_count)) else @as(i32, @intCast(self.width));
+        const node_spacing: i32 = 80;
+        var level_counts: [workflow_engine.MAX_WORKFLOW_NODES]u32 = undefined;
+        i = 0;
+        while (i <= max_level) : (i += 1) {
+            level_counts[i] = 0;
+        }
+        i = 0;
+        while (i < workflow.nodes_len) : (i += 1) {
+            const level = node_levels[i];
+            if (level <= max_level) {
+                level_counts[level] += 1;
+            }
+        }
+        i = 0;
+        while (i < workflow.nodes_len) : (i += 1) {
             const node = &workflow.nodes[i];
+            const level = node_levels[i];
+            const x = @as(i32, @intCast(level)) * level_width + level_width / 2;
+            const nodes_in_level_before: u32 = {
+                var count: u32 = 0;
+                var j: u32 = 0;
+                while (j < i) : (j += 1) {
+                    if (node_levels[j] == level) {
+                        count += 1;
+                    }
+                }
+                count;
+            };
+            const y = 100 + @as(i32, @intCast(nodes_in_level_before)) * node_spacing;
             var label_buf: [MAX_NODE_LABEL_LEN]u8 = undefined;
             const label_len = @min(node.name_len, MAX_NODE_LABEL_LEN);
             var j: u32 = 0;
@@ -207,11 +321,6 @@ pub const WorkflowVisualizer = struct {
             var visual = NodeVisual.init(node.node_id, position, label_buf[0..label_len]);
             visual.set_status_color(node.status);
             _ = self.add_node_visual(visual);
-            x += 200;
-            if (x > @as(i32, @intCast(self.width)) - 200) {
-                x = 100;
-                y += row_height;
-            }
         }
         i = 0;
         while (i < workflow.edges_len) : (i += 1) {

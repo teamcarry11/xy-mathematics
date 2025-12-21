@@ -58,19 +58,22 @@
 
 ### Depends On
 - **Core Agent**: HTTP Client (Phase 61) ✅ - Using for AI API calls
-- **Aurora Agent**: GLM-4.6 client ✅ - Using for AI-powered insights
+- **Aurora Agent**: GLM-4.6 client ✅ - Currently using for AI-powered insights (will migrate to Court)
+- **Court Agent**: LLM infrastructure services ⏳ - Future integration for AI-powered graph insights
 - **DAG Core**: Shared module ✅ - Foundation for all DAG operations
 
 ### Needs Coordination With
-1. **Bubble Agent**: Phase 4 UI components (time slider UI, animated transitions)
-2. **Aurora Agent**: SLC Product Nostr protocol integration (Dream Browser)
-3. **Core Agent**: SLC Product website publishing integration
+1. **Court Agent**: LLM infrastructure integration for AI-powered graph insights (Integration Partner)
+2. **Bubble Agent**: Phase 4 UI components (time slider UI, animated transitions)
+3. **Aurora Agent**: SLC Product Nostr protocol integration (Dream Browser)
+4. **Core Agent**: SLC Product website publishing integration
 
 ## Dependencies
 
 - ✅ **DAG Core**: Available and integrated
 - ✅ **HTTP Client**: Available from Core Agent (Phase 61)
 - ✅ **GLM-4.6 Client**: Available from Aurora Agent
+- ⏳ **LLM Infrastructure**: Waiting on Court Agent for multi-provider LLM API abstraction
 - ⏳ **UI Components**: Waiting on Bubble Agent coordination for time slider
 - ⏳ **Nostr Protocol**: Waiting on Aurora Agent coordination
 - ⏳ **Website Publishing**: Waiting on Core Agent coordination
@@ -82,7 +85,13 @@
    - Integrate animated transitions showing graph growth
    - Test UI integration with temporal filtering
 
-2. **SLC Product Integration** (coordination needed):
+2. **Court Agent Integration** (Integration Partner):
+   - Coordinate with Court Agent on LLM infrastructure integration
+   - Migrate from Aurora's GLM-4.6 client to Court's multi-provider abstraction
+   - Integrate ZON format for token-efficient graph data transmission
+   - Plan vector embeddings integration for semantic similarity
+
+3. **SLC Product Integration** (coordination needed):
    - Coordinate with Aurora Agent on Nostr protocol integration
    - Coordinate with Core Agent on website publishing integration
 
@@ -94,9 +103,10 @@
 **Ready for Coordination**: Yes - Most remaining work requires coordination
 
 **Priority Coordination Points**:
-1. **Bubble Agent**: Time slider UI component design and implementation
-2. **Aurora Agent**: Nostr protocol integration for SLC Profile Builder
-3. **Core Agent**: Website publishing infrastructure for SLC Website Builder
+1. **Court Agent**: LLM infrastructure integration for AI-powered graph insights (Integration Partner)
+2. **Bubble Agent**: Time slider UI component design and implementation
+3. **Aurora Agent**: Nostr protocol integration for SLC Profile Builder
+4. **Core Agent**: Website publishing infrastructure for SLC Website Builder
 
 **Can Work Independently**: Limited - Core functionality complete, remaining work is integration/UI
 

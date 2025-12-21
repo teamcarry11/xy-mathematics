@@ -1,9 +1,9 @@
 # Grain Workspace Agent: Task List
 
 **Agent**: Grain Workspace Agent (5th Agent)  
-**Status**: Phase 15 WAL Manager Integration (File Manager) Complete ✅  
-**Last Updated**: 2025-12-20-143904-pst  
-**Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-20-143300-pst.md`
+**Status**: Phase 16 Index Manager Integration (File Manager) Complete ✅  
+**Last Updated**: 2025-12-20-161231-pst  
+**Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-20-152034-pst.md`
 
 ---
 
@@ -310,6 +310,23 @@ All planned phases for Grain Workspace Agent have been completed. See completed 
 - [x] Add checkpoint_wal() function
 - [x] Add get_wal_recovery_entries() function
 - [x] Update tests for WAL Manager integration
+- [x] Update documentation
+
+**Files**: Updated `src/grain_workspace/file_manager/app.zig`, `tests/112_grain_workspace_file_manager_test.zig`
+
+### Phase 16: Index Manager Integration (File Manager) ✅ (2025-12-20-161231-pst)
+
+**Completed Tasks**:
+- [x] Integrate Index Manager into File Manager
+- [x] Add Index operation tracking
+- [x] Add create_index() function (B-tree, hash index types)
+- [x] Add find_index() function
+- [x] Add delete_index() function
+- [x] Add add_index_entry() function
+- [x] Add query_index() function
+- [x] Add get_index_operation() function
+- [x] Add get_entry_index_operations() function
+- [x] Update tests for Index Manager integration
 - [x] Update documentation
 
 **Files**: Updated `src/grain_workspace/file_manager/app.zig`, `tests/112_grain_workspace_file_manager_test.zig`

@@ -62,7 +62,7 @@ pub const NostrProfileStorage = struct {
     pub fn get_profile(
         self: *NostrProfileStorage,
         npub: []const u8,
-    ) ?*const storage_engine.Record {
+    ) ?*storage_engine.Record {
         std.debug.assert(npub.len > 0);
         std.debug.assert(npub.len <= MAX_PROFILE_KEY_LEN);
         const key = std.fmt.allocPrint(
@@ -71,7 +71,7 @@ pub const NostrProfileStorage = struct {
             .{npub},
         ) catch return null;
         defer self.storage_engine.allocator.free(key);
-        return self.storage_engine.get_record_by_key(key);
+        return self.storage_engine.read_record_by_key(key);
     }
 };
 
@@ -110,29 +110,36 @@ pub const DagWebsiteStorage = struct {
         defer self.storage_engine.allocator.free(key);
         const record_id = try self.storage_engine.create_record(key, content);
         std.debug.assert(record_id > 0);
-        const node = try self.graph.add_node(node_id, content);
-        std.debug.assert(node != null);
+        const graph_node_id = try self.graph.add_node("dag_website", content);
+        std.debug.assert(graph_node_id > 0);
         return record_id;
     }
 
     // Store DAG website edge.
     pub fn store_edge(
         self: *DagWebsiteStorage,
-        from_node_id: []const u8,
-        to_node_id: []const u8,
+        from_node_id: u64,
+        to_node_id: u64,
         edge_data: []const u8,
-    ) !void {
-        std.debug.assert(from_node_id.len > 0);
-        std.debug.assert(to_node_id.len > 0);
-        const edge = try self.graph.add_edge(from_node_id, to_node_id, edge_data);
-        std.debug.assert(edge != null);
+    ) !u64 {
+        std.debug.assert(from_node_id > 0);
+        std.debug.assert(to_node_id > 0);
+        std.debug.assert(edge_data.len > 0);
+        const edge_id = try self.graph.add_edge(
+            from_node_id,
+            to_node_id,
+            "dag_link",
+            edge_data,
+        );
+        std.debug.assert(edge_id > 0);
+        return edge_id;
     }
 
     // Retrieve DAG website node.
     pub fn get_node(
         self: *DagWebsiteStorage,
         node_id: []const u8,
-    ) ?*const storage_engine.Record {
+    ) ?*storage_engine.Record {
         std.debug.assert(node_id.len > 0);
         std.debug.assert(node_id.len <= MAX_WEBSITE_KEY_LEN);
         const key = std.fmt.allocPrint(
@@ -141,7 +148,7 @@ pub const DagWebsiteStorage = struct {
             .{node_id},
         ) catch return null;
         defer self.storage_engine.allocator.free(key);
-        return self.storage_engine.get_record_by_key(key);
+        return self.storage_engine.read_record_by_key(key);
     }
 };
 
@@ -183,7 +190,7 @@ pub const WorkspaceFileStorage = struct {
     pub fn get_file_metadata(
         self: *WorkspaceFileStorage,
         file_path: []const u8,
-    ) ?*const storage_engine.Record {
+    ) ?*storage_engine.Record {
         std.debug.assert(file_path.len > 0);
         std.debug.assert(file_path.len <= MAX_FILE_KEY_LEN);
         const key = std.fmt.allocPrint(
@@ -192,6 +199,6 @@ pub const WorkspaceFileStorage = struct {
             .{file_path},
         ) catch return null;
         defer self.storage_engine.allocator.free(key);
-        return self.storage_engine.get_record_by_key(key);
+        return self.storage_engine.read_record_by_key(key);
     }
 };

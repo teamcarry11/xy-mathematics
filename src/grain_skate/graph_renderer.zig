@@ -221,6 +221,22 @@ pub const GraphRenderer = struct {
         }
         return false;
     }
+    
+    /// Check if block exists at current temporal timestamp (for filtering).
+    // 2025-12-20-161207-pst: Active function
+    fn block_exists_at_timestamp(self: *const GraphRenderer, block_id: u32) bool {
+        // If not in time-travel mode, all blocks exist
+        const timestamp = self.current_timestamp orelse return true;
+        
+        // If no block storage, can't check (assume exists)
+        const storage = self.block_storage orelse return true;
+        
+        // Get block and check if it was created before or at timestamp
+        const block = storage.get_block(block_id) orelse return false;
+        
+        // Block exists if created_at <= timestamp
+        return block.created_at <= timestamp;
+    }
 
     /// Render graph to RGBA buffer.
     // 2025-11-24-121500-pst: Active function
@@ -313,6 +329,13 @@ pub const GraphRenderer = struct {
                 continue;
             }
             
+            // Temporal filtering: Skip AI-suggested edges if either node doesn't exist at timestamp
+            // Note: AI suggestions are for future connections, so we check if nodes exist
+            if (!self.block_exists_at_timestamp(self.graph_viz.nodes[from_idx].block_id) or
+                !self.block_exists_at_timestamp(self.graph_viz.nodes[to_idx].block_id)) {
+                continue;
+            }
+            
             // Transform normalized coordinates to pixel coordinates
             const x1 = self.normalized_to_pixel_x(self.graph_viz.nodes[from_idx].position.x);
             const y1 = self.normalized_to_pixel_y(self.graph_viz.nodes[from_idx].position.y);
@@ -351,6 +374,12 @@ pub const GraphRenderer = struct {
 
             const from_idx = from_node.?;
             const to_idx = to_node.?;
+            
+            // Temporal filtering: Skip edges if either node doesn't exist at current timestamp
+            if (!self.block_exists_at_timestamp(self.graph_viz.edges[e].from_block_id) or
+                !self.block_exists_at_timestamp(self.graph_viz.edges[e].to_block_id)) {
+                continue;
+            }
 
             // Transform normalized coordinates to pixel coordinates
             const x1 = self.normalized_to_pixel_x(self.graph_viz.nodes[from_idx].position.x);
@@ -380,6 +409,11 @@ pub const GraphRenderer = struct {
         var n: u32 = 0;
         while (n < self.graph_viz.nodes_len) : (n += 1) {
             if (!self.graph_viz.nodes[n].visible) {
+                continue;
+            }
+            
+            // Temporal filtering: Skip nodes that don't exist at current timestamp
+            if (!self.block_exists_at_timestamp(self.graph_viz.nodes[n].block_id)) {
                 continue;
             }
 
@@ -575,6 +609,11 @@ pub const GraphRenderer = struct {
         var n: u32 = 0;
         while (n < self.graph_viz.nodes_len) : (n += 1) {
             if (!self.graph_viz.nodes[n].visible) {
+                continue;
+            }
+            
+            // Temporal filtering: Skip labels for nodes that don't exist at current timestamp
+            if (!self.block_exists_at_timestamp(self.graph_viz.nodes[n].block_id)) {
                 continue;
             }
 

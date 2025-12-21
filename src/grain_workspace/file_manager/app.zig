@@ -144,6 +144,9 @@ pub const FileManagerUI = struct {
     wal_operations: [MAX_WAL_OPERATIONS]?WalOperation,
     wal_operations_len: u32,
     next_wal_operation_id: u32,
+    index_operations: [MAX_INDEX_OPERATIONS]?IndexOperation,
+    index_operations_len: u32,
+    next_index_operation_id: u32,
     allocator: std.mem.Allocator,
 
     /// Initialize file manager UI.
@@ -152,6 +155,7 @@ pub const FileManagerUI = struct {
     // 2025-12-07-071409-pst: Phase 13 File Storage integration
     // 2025-12-07-084440-pst: Phase 14 Backup Manager integration
     // 2025-12-19-191529-pst: Phase 15 WAL Manager integration
+    // 2025-12-20-161231-pst: Phase 16 Index Manager integration
     pub fn init(
         allocator: std.mem.Allocator,
         fm: *grain_core.file_manager.FileManager,
@@ -159,6 +163,7 @@ pub const FileManagerUI = struct {
         storage_mgr: *grain_core.file_storage.FileStorageManager,
         backup_mgr: *grain_core.backup_manager.BackupManager,
         wal_mgr: *grain_core.wal_manager.WalManager,
+        index_mgr: *grain_core.index_manager.IndexManager,
     ) FileManagerUI {
         // Precondition: Allocator and managers must be valid
         std.debug.assert(allocator.ptr != null);
@@ -167,12 +172,14 @@ pub const FileManagerUI = struct {
         std.debug.assert(@intFromPtr(storage_mgr) != 0);
         std.debug.assert(@intFromPtr(backup_mgr) != 0);
         std.debug.assert(@intFromPtr(wal_mgr) != 0);
+        std.debug.assert(@intFromPtr(index_mgr) != 0);
 
         var ui = FileManagerUI{
             .file_manager = fm,
             .file_storage_manager = storage_mgr,
             .backup_manager = backup_mgr,
             .wal_manager = wal_mgr,
+            .index_manager = index_mgr,
             .search_query = undefined,
             .search_query_len = 0,
             .selected_entry_id = 0,
@@ -191,6 +198,9 @@ pub const FileManagerUI = struct {
             .wal_operations = undefined,
             .wal_operations_len = 0,
             .next_wal_operation_id = 1,
+            .index_operations = undefined,
+            .index_operations_len = 0,
+            .next_index_operation_id = 1,
             .allocator = allocator,
         };
 
@@ -230,6 +240,12 @@ pub const FileManagerUI = struct {
             ui.wal_operations[i] = null;
         }
 
+        // Initialize index operations array
+        i = 0;
+        while (i < MAX_INDEX_OPERATIONS) : (i += 1) {
+            ui.index_operations[i] = null;
+        }
+
         // Postcondition: UI must be valid
         std.debug.assert(ui.search_query_len == 0);
         std.debug.assert(ui.clipboard_len == 0);
@@ -237,6 +253,7 @@ pub const FileManagerUI = struct {
         std.debug.assert(ui.database_file_handles_len == 0);
         std.debug.assert(ui.backup_operations_len == 0);
         std.debug.assert(ui.wal_operations_len == 0);
+        std.debug.assert(ui.index_operations_len == 0);
 
         return ui;
     }
@@ -1219,6 +1236,307 @@ pub const FileManagerUI = struct {
         std.debug.assert(entries.len >= grain_core.wal_manager.MAX_WAL_ENTRIES);
 
         return self.wal_manager.get_recovery_entries(entries);
+    }
+
+    /// Create index for database file.
+    // 2025-12-20-161231-pst: Phase 16 Index Manager integration
+    pub fn create_index(
+        self: *FileManagerUI,
+        entry_id: u32,
+        table_id: u32,
+        index_type: grain_core.index_manager.IndexType,
+        name: []const u8,
+    ) ?u32 {
+        // Precondition: Entry ID and parameters must be valid
+        std.debug.assert(entry_id > 0);
+        std.debug.assert(table_id > 0);
+        std.debug.assert(name.len > 0);
+        std.debug.assert(self.index_operations_len < MAX_INDEX_OPERATIONS);
+
+        if (self.index_operations_len >= MAX_INDEX_OPERATIONS) {
+            return null;
+        }
+
+        if (!self.is_database_file(entry_id)) {
+            return null;
+        }
+
+        const timestamp = @as(u64, @intCast(std.time.timestamp()));
+        const index = self.index_manager.create_index(table_id, index_type, name, timestamp);
+        if (index == null) {
+            return null;
+        }
+
+        const operation_id = self.next_index_operation_id;
+        self.next_index_operation_id += 1;
+
+        var index_op = IndexOperation{
+            .operation_id = operation_id,
+            .entry_id = entry_id,
+            .index_id = index.?.index_id,
+            .table_id = table_id,
+            .operation_type = IndexOperationType.create,
+            .active = true,
+        };
+
+        var i: u32 = 0;
+        while (i < MAX_INDEX_OPERATIONS) : (i += 1) {
+            if (self.index_operations[i] == null) {
+                self.index_operations[i] = index_op;
+                self.index_operations_len += 1;
+                break;
+            }
+        }
+
+        // Postcondition: Index operation must be added
+        std.debug.assert(self.index_operations_len > 0);
+
+        return operation_id;
+    }
+
+    /// Find index by table ID and name.
+    // 2025-12-20-161231-pst: Phase 16 Index Manager integration
+    pub fn find_index(
+        self: *const FileManagerUI,
+        table_id: u32,
+        name: []const u8,
+    ) ?*grain_core.index_manager.Index {
+        // Precondition: Table ID and name must be valid
+        std.debug.assert(table_id > 0);
+        std.debug.assert(name.len > 0);
+
+        return self.index_manager.find_index(table_id, name);
+    }
+
+    /// Delete index for database file.
+    // 2025-12-20-161231-pst: Phase 16 Index Manager integration
+    pub fn delete_index(
+        self: *FileManagerUI,
+        entry_id: u32,
+        table_id: u32,
+        name: []const u8,
+    ) ?u32 {
+        // Precondition: Entry ID and parameters must be valid
+        std.debug.assert(entry_id > 0);
+        std.debug.assert(table_id > 0);
+        std.debug.assert(name.len > 0);
+        std.debug.assert(self.index_operations_len < MAX_INDEX_OPERATIONS);
+
+        if (self.index_operations_len >= MAX_INDEX_OPERATIONS) {
+            return null;
+        }
+
+        if (!self.is_database_file(entry_id)) {
+            return null;
+        }
+
+        const index = self.index_manager.find_index(table_id, name);
+        if (index == null) {
+            return null;
+        }
+
+        const deleted = self.index_manager.delete_index(table_id, name);
+        if (!deleted) {
+            return null;
+        }
+
+        const operation_id = self.next_index_operation_id;
+        self.next_index_operation_id += 1;
+
+        var index_op = IndexOperation{
+            .operation_id = operation_id,
+            .entry_id = entry_id,
+            .index_id = index.?.index_id,
+            .table_id = table_id,
+            .operation_type = IndexOperationType.delete,
+            .active = true,
+        };
+
+        var i: u32 = 0;
+        while (i < MAX_INDEX_OPERATIONS) : (i += 1) {
+            if (self.index_operations[i] == null) {
+                self.index_operations[i] = index_op;
+                self.index_operations_len += 1;
+                break;
+            }
+        }
+
+        // Postcondition: Index operation must be added
+        std.debug.assert(self.index_operations_len > 0);
+
+        return operation_id;
+    }
+
+    /// Add entry to index.
+    // 2025-12-20-161231-pst: Phase 16 Index Manager integration
+    pub fn add_index_entry(
+        self: *FileManagerUI,
+        entry_id: u32,
+        table_id: u32,
+        index_name: []const u8,
+        key: []const u8,
+        value: []const u8,
+        record_id: u64,
+    ) ?u32 {
+        // Precondition: Entry ID and parameters must be valid
+        std.debug.assert(entry_id > 0);
+        std.debug.assert(table_id > 0);
+        std.debug.assert(index_name.len > 0);
+        std.debug.assert(key.len > 0);
+        std.debug.assert(record_id > 0);
+        std.debug.assert(self.index_operations_len < MAX_INDEX_OPERATIONS);
+
+        if (self.index_operations_len >= MAX_INDEX_OPERATIONS) {
+            return null;
+        }
+
+        if (!self.is_database_file(entry_id)) {
+            return null;
+        }
+
+        const index = self.index_manager.find_index(table_id, index_name);
+        if (index == null) {
+            return null;
+        }
+
+        const timestamp = @as(u64, @intCast(std.time.timestamp()));
+        const added = index.?.add_entry(key, value, record_id, timestamp);
+        if (!added) {
+            return null;
+        }
+
+        const operation_id = self.next_index_operation_id;
+        self.next_index_operation_id += 1;
+
+        var index_op = IndexOperation{
+            .operation_id = operation_id,
+            .entry_id = entry_id,
+            .index_id = index.?.index_id,
+            .table_id = table_id,
+            .operation_type = IndexOperationType.add_entry,
+            .active = true,
+        };
+
+        var i: u32 = 0;
+        while (i < MAX_INDEX_OPERATIONS) : (i += 1) {
+            if (self.index_operations[i] == null) {
+                self.index_operations[i] = index_op;
+                self.index_operations_len += 1;
+                break;
+            }
+        }
+
+        // Postcondition: Index operation must be added
+        std.debug.assert(self.index_operations_len > 0);
+
+        return operation_id;
+    }
+
+    /// Query index for entries matching key.
+    // 2025-12-20-161231-pst: Phase 16 Index Manager integration
+    pub fn query_index(
+        self: *FileManagerUI,
+        entry_id: u32,
+        table_id: u32,
+        index_name: []const u8,
+        key: []const u8,
+    ) ?u32 {
+        // Precondition: Entry ID and parameters must be valid
+        std.debug.assert(entry_id > 0);
+        std.debug.assert(table_id > 0);
+        std.debug.assert(index_name.len > 0);
+        std.debug.assert(key.len > 0);
+        std.debug.assert(self.index_operations_len < MAX_INDEX_OPERATIONS);
+
+        if (self.index_operations_len >= MAX_INDEX_OPERATIONS) {
+            return null;
+        }
+
+        if (!self.is_database_file(entry_id)) {
+            return null;
+        }
+
+        const index = self.index_manager.find_index(table_id, index_name);
+        if (index == null) {
+            return null;
+        }
+
+        const entry = index.?.find_entry(key);
+        if (entry == null) {
+            return null;
+        }
+
+        const operation_id = self.next_index_operation_id;
+        self.next_index_operation_id += 1;
+
+        var index_op = IndexOperation{
+            .operation_id = operation_id,
+            .entry_id = entry_id,
+            .index_id = index.?.index_id,
+            .table_id = table_id,
+            .operation_type = IndexOperationType.query,
+            .active = true,
+        };
+
+        var i: u32 = 0;
+        while (i < MAX_INDEX_OPERATIONS) : (i += 1) {
+            if (self.index_operations[i] == null) {
+                self.index_operations[i] = index_op;
+                self.index_operations_len += 1;
+                break;
+            }
+        }
+
+        // Postcondition: Index operation must be added
+        std.debug.assert(self.index_operations_len > 0);
+
+        return operation_id;
+    }
+
+    /// Get index operation by operation ID.
+    // 2025-12-20-161231-pst: Phase 16 Index Manager integration
+    pub fn get_index_operation(
+        self: *const FileManagerUI,
+        operation_id: u32,
+    ) ?*const IndexOperation {
+        // Precondition: Operation ID must be valid
+        std.debug.assert(operation_id > 0);
+
+        var i: u32 = 0;
+        while (i < self.index_operations_len) : (i += 1) {
+            if (self.index_operations[i]) |*op| {
+                if (op.operation_id == operation_id and op.active) {
+                    return op;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /// Get all index operations for an entry.
+    // 2025-12-20-161231-pst: Phase 16 Index Manager integration
+    pub fn get_entry_index_operations(
+        self: *const FileManagerUI,
+        entry_id: u32,
+        operations: []?*const IndexOperation,
+        operations_len: *u32,
+    ) void {
+        // Precondition: Operations buffer must be valid
+        std.debug.assert(entry_id > 0);
+        std.debug.assert(operations.len >= MAX_INDEX_OPERATIONS);
+
+        operations_len.* = 0;
+
+        var i: u32 = 0;
+        while (i < self.index_operations_len and operations_len.* < operations.len) : (i += 1) {
+            if (self.index_operations[i]) |*op| {
+                if (op.entry_id == entry_id and op.active) {
+                    operations[operations_len.*] = op;
+                    operations_len.* += 1;
+                }
+            }
+        }
     }
 };
 

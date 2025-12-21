@@ -404,11 +404,19 @@ Grain Skate Terminal Silo Field Agent is responsible for building Grain Skate (k
   - Added `get_temporal_timestamp()` and `is_time_travel_mode()` methods
   - Tests created and added to `tests/056_grain_skate_graph_renderer_test.zig`
 
+**Completed (2025-12-20-161207-pst)**:
+- Actual node/edge filtering based on timestamp ✅
+  - Implemented `block_exists_at_timestamp()` helper function
+  - Added temporal filtering to `render_nodes()` (filters nodes by `block.created_at <= timestamp`)
+  - Added temporal filtering to `render_edges()` (filters edges if either node doesn't exist at timestamp)
+  - Added temporal filtering to `render_ai_suggested_edges()` (consistent filtering)
+  - Added temporal filtering to `render_labels()` (consistent filtering)
+  - Tests created for temporal node and edge filtering
+
 **Remaining Work**:
 - Time slider UI component (UI layer integration - pending Bubble Agent coordination)
-- Block version history visualization (requires block creation timestamp tracking)
+- Block version history visualization (foundation ready with temporal filtering)
 - Animated transitions showing graph growth (UI layer - pending Bubble Agent coordination)
-- Actual node/edge filtering based on timestamp (requires block creation timestamp tracking)
 
 **DAG Integration**:
 - Each block edit = DAG event with timestamp ✅
@@ -421,8 +429,8 @@ Grain Skate Terminal Silo Field Agent is responsible for building Grain Skate (k
 3. ✅ Store block creation timestamps in DAG events (automatic via DAG)
 4. ✅ Query DAG history for temporal views
 5. ✅ Add temporal filtering support to GraphRenderer (set_temporal_graph, set_temporal_timestamp)
-6. ⏳ Add time slider UI component (pending Bubble Agent coordination)
-7. ⏳ Implement actual node/edge filtering based on timestamp (requires block creation timestamp tracking)
+6. ✅ Implement actual node/edge filtering based on timestamp (using block.created_at)
+7. ⏳ Add time slider UI component (pending Bubble Agent coordination)
 8. ⏳ Test thoroughly with UI integration (time-travel, version history, branching)
 
 **Dependencies**:

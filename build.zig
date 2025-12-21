@@ -589,6 +589,13 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    // Aurora AI Provider module (for test imports)
+    const aurora_ai_provider_module = b.addModule("aurora_ai_provider", .{
+        .root_source_file = b.path("src/aurora_ai_provider.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
     // Aurora Editor module (for test imports)
     const aurora_editor_module = b.addModule("aurora_editor", .{
         .root_source_file = b.path("src/aurora_editor.zig"),
@@ -614,6 +621,17 @@ pub fn build(b: *std.Build) void {
             .optimize = optimize,
             .imports = &.{
                 .{ .name = "aurora_lsp", .module = aurora_lsp_module },
+            },
+        }),
+    });
+
+    const ai_provider_test_file = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/118_aurora_ai_provider_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "aurora_ai_provider", .module = aurora_ai_provider_module },
             },
         }),
     });

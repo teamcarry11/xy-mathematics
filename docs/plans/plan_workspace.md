@@ -1,9 +1,9 @@
 # Grain Workspace Agent: Development Plan
 
 **Agent**: Grain Workspace Agent (5th Agent)  
-**Status**: Phase 15 WAL Manager Integration (File Manager) Complete ✅  
-**Last Updated**: 2025-12-20-143904-pst  
-**Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-20-143300-pst.md`
+**Status**: Phase 16 Index Manager Integration (File Manager) Complete ✅  
+**Last Updated**: 2025-12-20-161231-pst  
+**Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-20-152034-pst.md`
 
 ---
 
@@ -374,6 +374,7 @@ All planned phases for Grain Workspace Agent have been completed:
 - Phase 13: File Storage Integration (File Manager) ✅ (2025-12-07-071409-pst)
 - Phase 14: Backup Manager Integration (File Manager) ✅ (2025-12-07-084440-pst)
 - Phase 15: WAL Manager Integration (File Manager) ✅ (2025-12-19-191529-pst)
+- Phase 16: Index Manager Integration (File Manager) ✅ (2025-12-20-161231-pst)
 
 ### Phase 10.1: WebSocket Integration (Monitor) ✅ **COMPLETE**
 
@@ -682,6 +683,41 @@ All planned phases for Grain Workspace Agent have been completed:
 - WAL recovery entries retrieval for database recovery
 - Bounded WAL operation storage (max 32 operations)
 - Integration with Grain Core WAL Manager (Phase 62)
+
+**Grain Style Compliance**:
+- `grain_case` function names
+- `u32`/`u64` types (no `usize`)
+- Bounded allocations (all limits explicit)
+- Assertions for preconditions
+- Max 70 lines per function
+- All compiler warnings enabled
+
+### Phase 16: Index Manager Integration (File Manager) ✅ **COMPLETE**
+
+**Date**: 2025-12-20-161231-pst
+
+**Completed Work**:
+1. **Index Manager Support for File Manager App** (`src/grain_workspace/file_manager/app.zig`):
+   - Added `IndexManager` integration to `FileManagerUI`
+   - Added `IndexOperation` struct for tracking index operations
+   - Added `index_operations` array with bounded limit (`MAX_INDEX_OPERATIONS: 32`)
+   - Added `create_index()` function for creating indexes (B-tree, hash)
+   - Added `find_index()` function for finding indexes by table ID and name
+   - Added `delete_index()` function for deleting indexes
+   - Added `add_index_entry()` function for adding entries to indexes
+   - Added `query_index()` function for querying indexes by key
+   - Added `get_index_operation()` function for retrieving index operations by ID
+   - Added `get_entry_index_operations()` function for retrieving all index operations for an entry
+   - Updated `init()` to accept `IndexManager` parameter
+   - Comprehensive tests (`tests/112_grain_workspace_file_manager_test.zig`)
+
+**Features**:
+- Index creation support for database file operations (B-tree, hash index types)
+- Index entry management (add, query, delete)
+- Index operation tracking (operation ID, entry ID, index ID, table ID, operation type)
+- Efficient database queries via indexes
+- Bounded index operation storage (max 32 operations)
+- Integration with Grain Core Index Manager (Phase 62)
 
 **Grain Style Compliance**:
 - `grain_case` function names

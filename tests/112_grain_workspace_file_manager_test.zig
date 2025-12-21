@@ -9,6 +9,7 @@
 //! 2025-12-07-071409-pst: Phase 13 File Storage integration tests
 //! 2025-12-07-084440-pst: Phase 14 Backup Manager integration tests
 //! 2025-12-19-191529-pst: Phase 15 WAL Manager integration tests
+//! 2025-12-20-161231-pst: Phase 16 Index Manager integration tests
 
 const std = @import("std");
 const testing = std.testing;
@@ -22,8 +23,9 @@ test "file manager ui initialization" {
     var storage_mgr = grain_core.file_storage.FileStorageManager.init();
     var backup_mgr = grain_core.backup_manager.BackupManager.init();
     var wal_mgr = grain_core.wal_manager.WalManager.init();
+    var index_mgr = grain_core.index_manager.IndexManager.init();
 
-    const ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr);
+    const ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr, &index_mgr);
 
     try testing.expect(ui.search_query_len == 0);
     try testing.expect(ui.selected_entry_id == 0);
@@ -32,6 +34,7 @@ test "file manager ui initialization" {
     try testing.expect(ui.database_file_handles_len == 0);
     try testing.expect(ui.backup_operations_len == 0);
     try testing.expect(ui.wal_operations_len == 0);
+    try testing.expect(ui.index_operations_len == 0);
 }
 
 test "set search query" {
@@ -42,7 +45,8 @@ test "set search query" {
     var storage_mgr = grain_core.file_storage.FileStorageManager.init();
     var backup_mgr = grain_core.backup_manager.BackupManager.init();
     var wal_mgr = grain_core.wal_manager.WalManager.init();
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr);
+    var index_mgr = grain_core.index_manager.IndexManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr, &index_mgr);
     ui.set_search_query("test");
 
     try testing.expect(ui.search_query_len == 4);
@@ -57,7 +61,8 @@ test "navigate to directory" {
     var storage_mgr = grain_core.file_storage.FileStorageManager.init();
     var backup_mgr = grain_core.backup_manager.BackupManager.init();
     var wal_mgr = grain_core.wal_manager.WalManager.init();
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr);
+    var index_mgr = grain_core.index_manager.IndexManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr, &index_mgr);
     const result = ui.navigate_to_directory("/home");
 
     try testing.expect(result == true);
@@ -72,7 +77,8 @@ test "get current directory" {
     var storage_mgr = grain_core.file_storage.FileStorageManager.init();
     var backup_mgr = grain_core.backup_manager.BackupManager.init();
     var wal_mgr = grain_core.wal_manager.WalManager.init();
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr);
+    var index_mgr = grain_core.index_manager.IndexManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr, &index_mgr);
     const current_dir = ui.get_current_directory();
 
     try testing.expect(std.mem.eql(u8, current_dir, "/"));
@@ -89,7 +95,8 @@ test "get file entries" {
     var storage_mgr = grain_core.file_storage.FileStorageManager.init();
     var backup_mgr = grain_core.backup_manager.BackupManager.init();
     var wal_mgr = grain_core.wal_manager.WalManager.init();
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr);
+    var index_mgr = grain_core.index_manager.IndexManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr, &index_mgr);
 
     var entries: [10]*grain_core.file_manager.FileEntry = undefined;
     var entries_len: u32 = 0;
@@ -111,7 +118,8 @@ test "search files" {
     var storage_mgr = grain_core.file_storage.FileStorageManager.init();
     var backup_mgr = grain_core.backup_manager.BackupManager.init();
     var wal_mgr = grain_core.wal_manager.WalManager.init();
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr);
+    var index_mgr = grain_core.index_manager.IndexManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr, &index_mgr);
     ui.set_search_query("test");
 
     var results: [10]u32 = undefined;
@@ -133,7 +141,8 @@ test "copy to clipboard" {
     var storage_mgr = grain_core.file_storage.FileStorageManager.init();
     var backup_mgr = grain_core.backup_manager.BackupManager.init();
     var wal_mgr = grain_core.wal_manager.WalManager.init();
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr);
+    var index_mgr = grain_core.index_manager.IndexManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr, &index_mgr);
     const result = ui.copy_to_clipboard(entry_id.?);
 
     try testing.expect(result == true);
@@ -153,7 +162,8 @@ test "move to clipboard" {
     var storage_mgr = grain_core.file_storage.FileStorageManager.init();
     var backup_mgr = grain_core.backup_manager.BackupManager.init();
     var wal_mgr = grain_core.wal_manager.WalManager.init();
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr);
+    var index_mgr = grain_core.index_manager.IndexManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr, &index_mgr);
     const result = ui.move_to_clipboard(entry_id.?);
 
     try testing.expect(result == true);
@@ -173,7 +183,8 @@ test "paste from clipboard" {
     var storage_mgr = grain_core.file_storage.FileStorageManager.init();
     var backup_mgr = grain_core.backup_manager.BackupManager.init();
     var wal_mgr = grain_core.wal_manager.WalManager.init();
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr);
+    var index_mgr = grain_core.index_manager.IndexManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr, &index_mgr);
     _ = ui.copy_to_clipboard(entry_id.?);
 
     const pasted_count = ui.paste_from_clipboard("/dest");
@@ -193,7 +204,8 @@ test "delete file" {
     var storage_mgr = grain_core.file_storage.FileStorageManager.init();
     var backup_mgr = grain_core.backup_manager.BackupManager.init();
     var wal_mgr = grain_core.wal_manager.WalManager.init();
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr);
+    var index_mgr = grain_core.index_manager.IndexManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr, &index_mgr);
     const result = ui.delete_file(entry_id.?);
 
     try testing.expect(result == true);
@@ -211,7 +223,8 @@ test "rename file" {
     var storage_mgr = grain_core.file_storage.FileStorageManager.init();
     var backup_mgr = grain_core.backup_manager.BackupManager.init();
     var wal_mgr = grain_core.wal_manager.WalManager.init();
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr);
+    var index_mgr = grain_core.index_manager.IndexManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr, &index_mgr);
     const result = ui.rename_file(entry_id.?, "new-name.txt");
 
     try testing.expect(result == true);
@@ -231,7 +244,8 @@ test "get file preview" {
     var storage_mgr = grain_core.file_storage.FileStorageManager.init();
     var backup_mgr = grain_core.backup_manager.BackupManager.init();
     var wal_mgr = grain_core.wal_manager.WalManager.init();
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr);
+    var index_mgr = grain_core.index_manager.IndexManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr, &index_mgr);
 
     var preview: [100]u8 = undefined;
     var preview_len: u32 = 0;
@@ -251,7 +265,8 @@ test "clear clipboard" {
     var storage_mgr = grain_core.file_storage.FileStorageManager.init();
     var backup_mgr = grain_core.backup_manager.BackupManager.init();
     var wal_mgr = grain_core.wal_manager.WalManager.init();
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr);
+    var index_mgr = grain_core.index_manager.IndexManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr, &index_mgr);
     _ = ui.copy_to_clipboard(entry_id.?);
     try testing.expect(ui.clipboard_len == 1);
 
@@ -267,7 +282,8 @@ test "websocket client management" {
     var storage_mgr = grain_core.file_storage.FileStorageManager.init();
     var backup_mgr = grain_core.backup_manager.BackupManager.init();
     var wal_mgr = grain_core.wal_manager.WalManager.init();
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr);
+    var index_mgr = grain_core.index_manager.IndexManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr, &index_mgr);
 
     // Add WebSocket client
     const conn1 = ws_manager.add_connection(1);
@@ -308,7 +324,8 @@ test "database file management" {
 
     var backup_mgr = grain_core.backup_manager.BackupManager.init();
     var wal_mgr = grain_core.wal_manager.WalManager.init();
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr);
+    var index_mgr = grain_core.index_manager.IndexManager.init();
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr, &index_mgr);
 
     // Check if file is a database file
     const is_db = ui.is_database_file(entry_id.?);
@@ -391,11 +408,12 @@ test "wal management" {
     var storage_mgr = grain_core.file_storage.FileStorageManager.init();
     var backup_mgr = grain_core.backup_manager.BackupManager.init();
     var wal_mgr = grain_core.wal_manager.WalManager.init();
+    var index_mgr = grain_core.index_manager.IndexManager.init();
 
     const entry_id = fm.add_file_entry("database.db", "/database.db", .regular, 4096, 0);
     try testing.expect(entry_id != null);
 
-    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr);
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr, &index_mgr);
 
     // Add WAL entry
     const test_data = "test data";
@@ -431,3 +449,58 @@ test "wal management" {
     try testing.expect(checkpointed == true);
 }
 
+test "index management" {
+    const allocator = testing.allocator;
+    var fm = grain_core.file_manager.FileManager.init();
+    var ws_manager = grain_core.websocket.WebSocketManager.init();
+    var storage_mgr = grain_core.file_storage.FileStorageManager.init();
+    var backup_mgr = grain_core.backup_manager.BackupManager.init();
+    var wal_mgr = grain_core.wal_manager.WalManager.init();
+    var index_mgr = grain_core.index_manager.IndexManager.init();
+
+    const entry_id = fm.add_file_entry("database.db", "/database.db", .regular, 4096, 0);
+    try testing.expect(entry_id != null);
+
+    var ui = FileManagerUI.init(allocator, &fm, &ws_manager, &storage_mgr, &backup_mgr, &wal_mgr, &index_mgr);
+
+    // Create index
+    const create_op_id = ui.create_index(entry_id.?, 1, .btree, "test_index");
+    try testing.expect(create_op_id != null);
+    try testing.expect(ui.index_operations_len == 1);
+
+    // Get index operation
+    const index_op = ui.get_index_operation(create_op_id.?);
+    try testing.expect(index_op != null);
+    try testing.expect(index_op.?.entry_id == entry_id.?);
+    try testing.expect(index_op.?.operation_type == .create);
+
+    // Find index
+    const index = ui.find_index(1, "test_index");
+    try testing.expect(index != null);
+    try testing.expect(index.?.table_id == 1);
+
+    // Add entry to index
+    const add_op_id = ui.add_index_entry(entry_id.?, 1, "test_index", "key1", "value1", 1);
+    try testing.expect(add_op_id != null);
+    try testing.expect(ui.index_operations_len == 2);
+
+    // Query index
+    const query_op_id = ui.query_index(entry_id.?, 1, "test_index", "key1");
+    try testing.expect(query_op_id != null);
+    try testing.expect(ui.index_operations_len == 3);
+
+    // Get entry index operations
+    var operations: [10]?*const FileManagerUI.IndexOperation = undefined;
+    var operations_len: u32 = 0;
+    ui.get_entry_index_operations(entry_id.?, &operations, &operations_len);
+    try testing.expect(operations_len == 3);
+
+    // Delete index
+    const delete_op_id = ui.delete_index(entry_id.?, 1, "test_index");
+    try testing.expect(delete_op_id != null);
+    try testing.expect(ui.index_operations_len == 4);
+
+    // Verify index is deleted
+    const deleted_index = ui.find_index(1, "test_index");
+    try testing.expect(deleted_index == null);
+}

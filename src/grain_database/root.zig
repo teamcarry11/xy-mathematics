@@ -78,4 +78,10 @@ pub const database_auth_middleware = @import("middleware_integration.zig").datab
 pub const database_cors_middleware = @import("middleware_integration.zig").database_cors_middleware;
 pub const database_content_type_middleware = @import("middleware_integration.zig").database_content_type_middleware;
 pub const register_database_middleware = @import("middleware_integration.zig").register_database_middleware;
+pub const NostrProfileStorage = @import("slc_integration.zig").NostrProfileStorage;
+pub const DagWebsiteStorage = @import("slc_integration.zig").DagWebsiteStorage;
+pub const WorkspaceFileStorage = @import("slc_integration.zig").WorkspaceFileStorage;
+pub const MAX_PROFILE_KEY_LEN = @import("slc_integration.zig").MAX_PROFILE_KEY_LEN;
+pub const MAX_WEBSITE_KEY_LEN = @import("slc_integration.zig").MAX_WEBSITE_KEY_LEN;
+pub const MAX_FILE_KEY_LEN = @import("slc_integration.zig").MAX_FILE_KEY_LEN;
 

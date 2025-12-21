@@ -342,4 +342,53 @@ pub const AgentFlow = struct {
         std.debug.assert(@intFromPtr(self) != 0);
         return self.connections_len;
     }
+
+    // Render flow nodes as shapes on canvas.
+    pub fn render_nodes(self: *AgentFlow, layer_id: u32) void {
+        std.debug.assert(@intFromPtr(self) != 0);
+        std.debug.assert(@intFromPtr(self.canvas_state) != 0);
+        var i: u32 = 0;
+        while (i < self.nodes_len) : (i += 1) {
+            const node = &self.nodes[i];
+            const color: u32 = switch (node.node_type) {
+                .start => 0xFF00FF00, // Green
+                .agent => 0xFF0000FF, // Blue
+                .task => 0xFFFF00FF, // Magenta
+                .decision => 0xFFFFFF00, // Yellow
+                .end => 0xFFFF0000, // Red
+            };
+            _ = self.canvas_state.add_shape(
+                layer_id,
+                .rounded_rectangle,
+                node.x,
+                node.y,
+                node.width,
+                node.height,
+                color,
+                8.0, // Corner radius
+            );
+        }
+        std.debug.assert(i == self.nodes_len);
+    }
+
+    // Get node at position (for selection).
+    pub fn get_node_at_position(
+        self: *const AgentFlow,
+        x: f64,
+        y: f64,
+    ) ?*const FlowNode {
+        std.debug.assert(@intFromPtr(self) != 0);
+        std.debug.assert(x >= 0.0);
+        std.debug.assert(y >= 0.0);
+        var i: u32 = 0;
+        while (i < self.nodes_len) : (i += 1) {
+            const node = &self.nodes[i];
+            if (x >= node.x and x <= node.x + node.width and
+                y >= node.y and y <= node.y + node.height)
+            {
+                return node;
+            }
+        }
+        return null;
+    }
 };

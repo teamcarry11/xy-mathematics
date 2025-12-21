@@ -190,7 +190,7 @@ pub fn create_user(user_data: *const UserData) DatabaseResult {
     path_len += @intCast(users_path_len);
     std.debug.assert(path_len <= 1024);
     const request = http_client_integration.create_external_request(
-        http_client_integration.client.HttpMethod.post,
+        .post,
         path_buf[0..path_len],
     ) orelse {
         return DatabaseResult.connection_error;

@@ -107,10 +107,17 @@ pub const SlcDagIntegration = struct {
         to_profile_id: u32,
         relationship: ProfileRelationship,
     ) !void {
-        // Assert: Profile IDs must be valid
+        // Assert: Profile IDs must be valid and different
         std.debug.assert(from_profile_id > 0);
         std.debug.assert(to_profile_id > 0);
         std.debug.assert(from_profile_id != to_profile_id);
+        
+        // Assert: Profile IDs must be valid node indices
+        std.debug.assert(from_profile_id < self.dag.nodes_len);
+        std.debug.assert(to_profile_id < self.dag.nodes_len);
+        
+        // Assert: Edge count must be within bounds
+        std.debug.assert(self.dag.edges_len < MAX_PROFILE_RELATIONSHIPS);
         
         // Create edge with semantic type for relationships
         try self.dag.addEdge(

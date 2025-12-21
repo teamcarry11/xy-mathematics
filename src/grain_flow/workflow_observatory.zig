@@ -299,28 +299,26 @@ pub const WorkflowObservatory = struct {
 
         // Total failures.
         const total = collector.total_failures;
-        const total_str = "\"total\":" ++ std.fmt.comptimePrint("{d}", .{total}) ++ ",";
-        const total_str_len = @intCast(total_str.len);
-        if (offset + total_str_len < output.len) {
-            var i: u32 = 0;
-            while (i < total_str_len) : (i += 1) {
-                output[offset + i] = total_str[i];
-            }
-            offset += total_str_len;
-        } else {
-            return offset;
-        }
+        const total_written = std.fmt.bufPrint(
+            output[offset..],
+            "\"total\":{d},",
+            .{total},
+        ) catch return offset;
+        offset += @intCast(total_written.len);
 
         // Recovery rate.
         const recovery_rate = collector.get_recovery_success_rate_percent();
-        const recovery_str = "\"recovery_rate\":" ++ std.fmt.comptimePrint("{d}", .{recovery_rate}) ++ "}";
-        const recovery_str_len = @intCast(recovery_str.len);
-        if (offset + recovery_str_len < output.len) {
-            var i: u32 = 0;
-            while (i < recovery_str_len) : (i += 1) {
-                output[offset + i] = recovery_str[i];
-            }
-            offset += recovery_str_len;
+        const recovery_written = std.fmt.bufPrint(
+            output[offset..],
+            "\"recovery_rate\":{d}",
+            .{recovery_rate},
+        ) catch return offset;
+        offset += @intCast(recovery_written.len);
+
+        // Closing brace.
+        if (offset + 1 < output.len) {
+            output[offset] = '}';
+            offset += 1;
         }
         return offset;
     }
@@ -350,42 +348,35 @@ pub const WorkflowObservatory = struct {
 
         // Average queue depth.
         const avg_queue = collector.get_average_queue_depth();
-        const queue_str = "\"avg_queue_depth\":" ++ std.fmt.comptimePrint("{d}", .{avg_queue}) ++ ",";
-        const queue_str_len = @intCast(queue_str.len);
-        if (offset + queue_str_len < output.len) {
-            var i: u32 = 0;
-            while (i < queue_str_len) : (i += 1) {
-                output[offset + i] = queue_str[i];
-            }
-            offset += queue_str_len;
-        } else {
-            return offset;
-        }
+        const queue_written = std.fmt.bufPrint(
+            output[offset..],
+            "\"avg_queue_depth\":{d},",
+            .{avg_queue},
+        ) catch return offset;
+        offset += @intCast(queue_written.len);
 
         // Average wait time.
         const avg_wait = collector.get_average_wait_time_ms();
-        const wait_str = "\"avg_wait_time_ms\":" ++ std.fmt.comptimePrint("{d}", .{avg_wait}) ++ ",";
-        const wait_str_len = @intCast(wait_str.len);
-        if (offset + wait_str_len < output.len) {
-            var i: u32 = 0;
-            while (i < wait_str_len) : (i += 1) {
-                output[offset + i] = wait_str[i];
-            }
-            offset += wait_str_len;
-        } else {
-            return offset;
-        }
+        const wait_written = std.fmt.bufPrint(
+            output[offset..],
+            "\"avg_wait_time_ms\":{d},",
+            .{avg_wait},
+        ) catch return offset;
+        offset += @intCast(wait_written.len);
 
         // Average CPU percent.
         const avg_cpu = collector.get_average_cpu_percent();
-        const cpu_str = "\"avg_cpu_percent\":" ++ std.fmt.comptimePrint("{d}", .{avg_cpu}) ++ "}";
-        const cpu_str_len = @intCast(cpu_str.len);
-        if (offset + cpu_str_len < output.len) {
-            var i: u32 = 0;
-            while (i < cpu_str_len) : (i += 1) {
-                output[offset + i] = cpu_str[i];
-            }
-            offset += cpu_str_len;
+        const cpu_written = std.fmt.bufPrint(
+            output[offset..],
+            "\"avg_cpu_percent\":{d}",
+            .{avg_cpu},
+        ) catch return offset;
+        offset += @intCast(cpu_written.len);
+
+        // Closing brace.
+        if (offset + 1 < output.len) {
+            output[offset] = '}';
+            offset += 1;
         }
         return offset;
     }

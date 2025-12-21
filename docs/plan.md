@@ -403,7 +403,7 @@
 - Flow Agent Collaboration Started ✅
 - Workflow Observability Metrics Research Complete ✅ (Priority 1)
 
-**Provides**: Research capabilities, data analysis, insights generation, code analysis, codebase analysis, workflow observability research
+**Provides**: Research capabilities, data analysis, insights generation, code analysis, codebase analysis, workflow observability research, token counting for LLM providers
 
 **Dependencies**:
 - **Needs**: Core Agent File System (optional) ✅, HTTP Client (optional) ✅

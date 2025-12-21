@@ -44,6 +44,9 @@ pub const failure_pattern_metrics = @import("failure_pattern_metrics.zig");
 // Performance metrics for observability.
 pub const performance_metrics = @import("performance_metrics.zig");
 
+// Workflow observatory for metrics aggregation and dashboard.
+pub const workflow_observatory = @import("workflow_observatory.zig");
+
 // Module exports.
 pub const EventBus = event_bus.EventBus;
 pub const EventType = event_bus.EventType;
@@ -87,3 +90,5 @@ pub const PerformanceMetricsCollector = performance_metrics.PerformanceMetricsCo
 pub const ResourceUsageRecord = performance_metrics.ResourceUsageRecord;
 pub const QueueDepthSample = performance_metrics.QueueDepthSample;
 pub const WaitTimeRecord = performance_metrics.WaitTimeRecord;
+
+pub const WorkflowObservatory = workflow_observatory.WorkflowObservatory;

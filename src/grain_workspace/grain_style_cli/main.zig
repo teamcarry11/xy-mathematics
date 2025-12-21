@@ -71,6 +71,7 @@ pub const GrainStyleCLI = struct {
 
     /// Initialize CLI application.
     // 2025-12-20-200932-pst: Phase 22 Standalone CLI Tool
+    // 2025-12-21-083130-pst: Phase 23 Enhanced CLI Output and Configuration
     pub fn init(allocator: std.mem.Allocator) GrainStyleCLI {
         // Precondition: Allocator must be valid
         std.debug.assert(allocator.ptr != null);
@@ -78,12 +79,84 @@ pub const GrainStyleCLI = struct {
         var cli = GrainStyleCLI{
             .allocator = allocator,
             .devtools_app = grain_workspace.devtools.DevToolsApp.init(allocator),
+            .config = CLIConfig{
+                .use_color = true,
+                .output_format = .text,
+                .max_line_length = 100,
+                .max_function_length = 70,
+            },
         };
 
         // Postcondition: CLI must be valid
         std.debug.assert(@intFromPtr(&cli) != 0);
 
         return cli;
+    }
+
+    /// Load configuration from file.
+    // 2025-12-21-083130-pst: Phase 23 Enhanced CLI Output and Configuration
+    pub fn load_config(
+        self: *GrainStyleCLI,
+        config_path: []const u8,
+    ) bool {
+        // Precondition: Config path must be valid
+        std.debug.assert(config_path.len > 0);
+        std.debug.assert(config_path.len <= MAX_FILE_PATH_LEN);
+
+        var config_content: [MAX_CONFIG_FILE_SIZE]u8 = undefined;
+        var content_len: u32 = 0;
+
+        if (!self.read_file_content(config_path, &config_content, &content_len)) {
+            return false;
+        }
+
+        // Simple config parsing (key=value format)
+        var i: u32 = 0;
+        while (i < content_len) : (i += 1) {
+            if (config_content[i] == '\n' or config_content[i] == '\r') {
+                continue;
+            }
+
+            var key_start: u32 = i;
+            var key_end: u32 = i;
+            while (key_end < content_len and config_content[key_end] != '=') : (key_end += 1) {}
+
+            if (key_end >= content_len) {
+                break;
+            }
+
+            var value_start: u32 = key_end + 1;
+            var value_end: u32 = value_start;
+            while (value_end < content_len and config_content[value_end] != '\n' and config_content[value_end] != '\r') : (value_end += 1) {}
+
+            const key = config_content[key_start..key_end];
+            const value = config_content[value_start..value_end];
+
+            // Parse configuration values
+            if (std.mem.eql(u8, key, "use_color")) {
+                self.config.use_color = std.mem.eql(u8, value, "true");
+            } else if (std.mem.eql(u8, key, "output_format")) {
+                if (std.mem.eql(u8, value, "json")) {
+                    self.config.output_format = .json;
+                } else {
+                    self.config.output_format = .text;
+                }
+            } else if (std.mem.eql(u8, key, "max_line_length")) {
+                const parsed = std.fmt.parseInt(u32, value, 10) catch 100;
+                self.config.max_line_length = parsed;
+            } else if (std.mem.eql(u8, key, "max_function_length")) {
+                const parsed = std.fmt.parseInt(u32, value, 10) catch 70;
+                self.config.max_function_length = parsed;
+            }
+
+            i = value_end;
+        }
+
+        // Postcondition: Config must be valid
+        std.debug.assert(self.config.max_line_length > 0);
+        std.debug.assert(self.config.max_function_length > 0);
+
+        return true;
     }
 
     /// Read file content.
@@ -174,7 +247,74 @@ pub const GrainStyleCLI = struct {
 
     /// Format violation message for output.
     // 2025-12-20-200932-pst: Phase 22 Standalone CLI Tool
+    // 2025-12-21-083130-pst: Phase 23 Enhanced CLI Output and Configuration
     pub fn format_violation_message(
+        self: *GrainStyleCLI,
+        msg: grain_workspace.devtools.LinterMessage,
+        output: []u8,
+        output_len: *u32,
+    ) bool {
+        // Precondition: Output buffer must be valid
+        std.debug.assert(output.len > 0);
+        std.debug.assert(output_len != null);
+
+        output_len.* = 0;
+
+        if (self.config.output_format == .json) {
+            return self.format_violation_message_json(msg, output, output_len);
+        }
+
+        const severity_str = switch (msg.severity) {
+            .info => "info",
+            .warning => "warning",
+            .error => "error",
+            .critical => "critical",
+        };
+
+        const file_path_str = msg.file_path[0..msg.file_path_len];
+        const message_str = msg.message[0..msg.message_len];
+
+        var format_str: []const u8 = undefined;
+        if (self.config.use_color) {
+            const color_code = switch (msg.severity) {
+                .info => "\x1b[36m", // Cyan
+                .warning => "\x1b[33m", // Yellow
+                .error => "\x1b[31m", // Red
+                .critical => "\x1b[35m", // Magenta
+            };
+            const reset_code = "\x1b[0m";
+            format_str = "{s}:{d}:{d}: {s}{s}{s}: {s}\n";
+            const formatted = std.fmt.bufPrint(
+                output,
+                format_str,
+                .{ file_path_str, msg.line_number, msg.column_number, color_code, severity_str, reset_code, message_str },
+            ) catch |err| {
+                _ = err;
+                return false;
+            };
+            output_len.* = @as(u32, @intCast(formatted.len));
+        } else {
+            format_str = "{s}:{d}:{d}: {s}: {s}\n";
+            const formatted = std.fmt.bufPrint(
+                output,
+                format_str,
+                .{ file_path_str, msg.line_number, msg.column_number, severity_str, message_str },
+            ) catch |err| {
+                _ = err;
+                return false;
+            };
+            output_len.* = @as(u32, @intCast(formatted.len));
+        }
+
+        // Postcondition: Output length must be valid
+        std.debug.assert(output_len.* <= output.len);
+
+        return true;
+    }
+
+    /// Format violation message as JSON.
+    // 2025-12-21-083130-pst: Phase 23 Enhanced CLI Output and Configuration
+    pub fn format_violation_message_json(
         self: *GrainStyleCLI,
         msg: grain_workspace.devtools.LinterMessage,
         output: []u8,
@@ -196,7 +336,7 @@ pub const GrainStyleCLI = struct {
         const file_path_str = msg.file_path[0..msg.file_path_len];
         const message_str = msg.message[0..msg.message_len];
 
-        const format_str = "{s}:{d}:{d}: {s}: {s}\n";
+        const format_str = "{{\"file\":\"{s}\",\"line\":{d},\"column\":{d},\"severity\":\"{s}\",\"message\":\"{s}\"}}\n";
         const formatted = std.fmt.bufPrint(
             output,
             format_str,

@@ -167,11 +167,34 @@ pub const SlcComponentLibrary = struct {
             .next_website_id = 1,
             .next_workspace_id = 1,
         };
+        // Initialize arrays (components will be created via add functions).
         var i: u32 = 0;
         while (i < MAX_SLC_COMPONENTS) : (i += 1) {
-            library.profile_components[i] = ProfileComponent.init(0, .form, "", undefined);
-            library.website_components[i] = WebsiteComponent.init(0, .dag_editor, "", undefined);
-            library.workspace_components[i] = WorkspaceComponent.init(0, .file_manager, "", undefined);
+            // Use zero-initialized structs (component_id 0 indicates unused).
+            library.profile_components[i] = ProfileComponent{
+                .component_id = 0,
+                .component_type = .form,
+                .name = undefined,
+                .name_len = 0,
+                .base_component = undefined,
+            };
+            @memset(library.profile_components[i].name[0..], 0);
+            library.website_components[i] = WebsiteComponent{
+                .component_id = 0,
+                .component_type = .dag_editor,
+                .name = undefined,
+                .name_len = 0,
+                .base_component = undefined,
+            };
+            @memset(library.website_components[i].name[0..], 0);
+            library.workspace_components[i] = WorkspaceComponent{
+                .component_id = 0,
+                .component_type = .file_manager,
+                .name = undefined,
+                .name_len = 0,
+                .base_component = undefined,
+            };
+            @memset(library.workspace_components[i].name[0..], 0);
         }
         std.debug.assert(library.profile_components_len == 0);
         std.debug.assert(library.website_components_len == 0);

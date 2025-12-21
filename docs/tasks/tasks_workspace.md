@@ -1,8 +1,8 @@
 # Grain Workspace Agent: Task List
 
 **Agent**: Grain Workspace Agent (5th Agent)  
-**Status**: Phase 26 Enhanced JSON Output Complete ✅  
-**Last Updated**: 2025-12-21-144225-pst  
+**Status**: Phase 27 Full File Path Collection Complete ✅  
+**Last Updated**: 2025-12-21-152026-pst  
 **Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-21-141612-pst.md`
 
 ---
@@ -493,6 +493,25 @@ All planned phases for Grain Workspace Agent have been completed. See completed 
 - Foundation for Grain Style Developer Tools (SLC v1.0)
 - Supports open-source service revenue model (consulting, training, hosted services)
 - Ready for CI/CD integration with structured JSON output
+
+### Phase 27: Full File Path Collection ✅ (2025-12-21-152026-pst)
+
+**Completed Tasks**:
+- [x] Implement collect_zig_file_paths() function
+- [x] Use allocator to store file paths dynamically
+- [x] Update run() to collect and lint all files from directories
+- [x] Add proper memory management (free allocated paths)
+- [x] Create comprehensive tests
+- [x] Update documentation
+
+**Files**: Updated `src/grain_workspace/grain_style_cli/main.zig`, `tests/116_grain_workspace_grain_style_cli_test.zig`
+
+**Alignment with Research Agent's Open-Source Service Model**:
+- Enhanced CLI tool: 100% open-source
+- Production-ready with full file path collection
+- Foundation for Grain Style Developer Tools (SLC v1.0)
+- Supports open-source service revenue model (consulting, training, hosted services)
+- Directory linting now fully functional
 
 ---
 

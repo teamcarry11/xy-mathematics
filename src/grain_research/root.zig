@@ -37,6 +37,8 @@ pub const workflow_metrics_analyzer = @import("workflow_metrics_analyzer.zig");
 pub const insights_generator = @import("insights_generator.zig");
 // Retrieval accuracy analyzer for ZON format validation.
 pub const retrieval_accuracy = @import("retrieval_accuracy.zig");
+// Retrieval serialization for JSON and ZON formats.
+pub const retrieval_serialization = @import("retrieval_serialization.zig");
 
 // Module exports.
 pub const ResearchEngine = research_engine.ResearchEngine;
@@ -75,3 +77,6 @@ pub const Fact = retrieval_accuracy.Fact;
 pub const Query = retrieval_accuracy.Query;
 pub const QueryType = retrieval_accuracy.Query.QueryType;
 pub const RetrievalResult = retrieval_accuracy.RetrievalResult;
+pub const Serializer = retrieval_serialization.Serializer;
+pub const SerializationResult = retrieval_serialization.SerializationResult;
+pub const SerializationFormat = retrieval_serialization.SerializationResult.SerializationFormat;

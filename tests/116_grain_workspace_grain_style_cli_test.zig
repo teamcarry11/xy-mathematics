@@ -9,6 +9,7 @@
 //! 2025-12-21-083947-pst: Phase 24 Recursive Directory Linting tests
 //! 2025-12-21-141612-pst: Phase 25 Performance Optimizations tests
 //! 2025-12-21-141612-pst: Phase 26 Enhanced JSON Output tests
+//! 2025-12-21-144225-pst: Phase 27 Full File Path Collection tests
 
 const std = @import("std");
 const testing = std.testing;
@@ -405,6 +406,73 @@ test "run with max violations early exit" {
     defer std.fs.cwd().deleteFile(test_file2) catch {};
 
     const file_paths = [_][]const u8{ test_file1, test_file2 };
+    const exit_code = cli.run(&file_paths);
+
+    // Should exit with violations found
+    try testing.expect(exit_code == .violations_found);
+}
+
+test "collect zig file paths" {
+    const allocator = testing.allocator;
+    var cli = GrainStyleCLI.init(allocator);
+
+    // Create a temporary directory with Zig files
+    const test_dir = "test_collect_paths_dir";
+    try std.fs.cwd().makeDir(test_dir);
+    defer std.fs.cwd().deleteDir(test_dir) catch {};
+
+    // Create test files
+    const file1 = try std.fs.cwd().createFile(test_dir ++ "/test1.zig", .{});
+    defer file1.close();
+    try file1.writeAll("pub fn test() void {}\n");
+
+    const file2 = try std.fs.cwd().createFile(test_dir ++ "/test2.zig", .{});
+    defer file2.close();
+    try file2.writeAll("pub fn test2() void {}\n");
+
+    var file_paths = std.ArrayList([]const u8).init(allocator);
+    defer {
+        for (file_paths.items) |path| {
+            allocator.free(path);
+        }
+        file_paths.deinit();
+    }
+
+    const result = cli.collect_zig_file_paths(test_dir, &file_paths);
+
+    try testing.expect(result == true);
+    try testing.expect(file_paths.items.len >= 2);
+
+    // Verify paths are valid
+    var found1: bool = false;
+    var found2: bool = false;
+    for (file_paths.items) |path| {
+        if (std.mem.indexOf(u8, path, "test1.zig") != null) {
+            found1 = true;
+        }
+        if (std.mem.indexOf(u8, path, "test2.zig") != null) {
+            found2 = true;
+        }
+    }
+    try testing.expect(found1 == true);
+    try testing.expect(found2 == true);
+}
+
+test "run with directory" {
+    const allocator = testing.allocator;
+    var cli = GrainStyleCLI.init(allocator);
+
+    // Create a temporary directory with Zig files
+    const test_dir = "test_run_dir";
+    try std.fs.cwd().makeDir(test_dir);
+    defer std.fs.cwd().deleteDir(test_dir) catch {};
+
+    // Create test file with violation
+    const test_file = try std.fs.cwd().createFile(test_dir ++ "/test.zig", .{});
+    defer test_file.close();
+    try test_file.writeAll("pub fn test() void {\n    var x: usize = 0;\n}");
+
+    const file_paths = [_][]const u8{ test_dir };
     const exit_code = cli.run(&file_paths);
 
     // Should exit with violations found

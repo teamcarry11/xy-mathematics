@@ -139,7 +139,7 @@ pub const MistralProvider = struct {
         std.debug.assert(request.prompt_len > 0);
         std.debug.assert(request.prompt_len <= llm_provider.MAX_REQUEST_SIZE);
         if (self.http_client == null) {
-            return error.HttpClientNotAvailable;
+            return llm_provider.LlmProviderError.HttpClientNotAvailable;
         }
         const client = self.http_client.?;
         const url = "https://api.mistral.ai/v1/chat/completions";
@@ -147,7 +147,7 @@ pub const MistralProvider = struct {
             grain_core.api_server.HttpMethod.post,
             url,
         ) orelse {
-            return error.RequestCreationFailed;
+            return llm_provider.LlmProviderError.RequestCreationFailed;
         };
         const auth_header = try std.fmt.allocPrint(
             allocator,

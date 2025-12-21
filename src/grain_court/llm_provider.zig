@@ -8,6 +8,17 @@
 const std = @import("std");
 const grain_core = @import("grain_core");
 
+// LLM provider errors.
+pub const LlmProviderError = error{
+    TooManyProviders,
+    ProviderPoolFull,
+    HttpClientNotAvailable,
+    RequestCreationFailed,
+    NoHealthyProvider,
+    InvalidRequest,
+    InvalidResponse,
+};
+
 // Bounded: Max providers in pool.
 pub const MAX_PROVIDERS: u32 = 10;
 
@@ -131,7 +142,7 @@ pub const ProviderPool = struct {
                 return;
             }
         }
-        return error.ProviderPoolFull;
+        return LlmProviderError.ProviderPoolFull;
     }
 
     // Get provider by type.
@@ -191,7 +202,7 @@ pub const ProviderPool = struct {
                 };
             }
         }
-        return try self.try_fallback(request, allocator, null, error.NoHealthyProvider);
+        return try self.try_fallback(request, allocator, null, LlmProviderError.NoHealthyProvider);
     }
 
     // Try fallback providers.

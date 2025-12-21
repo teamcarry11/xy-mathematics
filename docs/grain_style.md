@@ -447,8 +447,8 @@ Beyond these rules:
 - Use 4 spaces of indentation, rather than 2 spaces, as that is more obvious to the eye at a
   distance.
 
-- **Hard limit all line lengths to at most 101 columns** for graincard compatibility. This ensures
-  code fits perfectly in graincard content areas (103×80 total, with 1-char borders). Use it up.
+- **Hard limit all line lengths to at most 103 columns** for graincard compatibility. This ensures
+  code fits perfectly in graincard content areas (103×80 characters, entirely content). Use it up.
   Never go beyond. Nothing should be hidden by a horizontal scrollbar. Let your editor help you by
   setting a column ruler. To wrap a function signature, call or data structure, add a trailing
   comma, close your eyes and let `zig fmt` do the rest.
@@ -458,27 +458,37 @@ Beyond these rules:
 
 ## Graincard Constraints
 
-Graincards are 75×100 monospace teaching cards used throughout the grain network. All zig code
+Graincards are 103×80 monospace teaching cards used throughout the grain network. All zig code
 should be written to fit within these constraints.
 
 ### Dimensions
 
-- **Total size**: 75 characters wide × 100 lines tall
-- **Content area**: 73 characters wide × 98 lines tall (after borders)
-- **Borders**: 1 character on each side (left, right, top, bottom)
+- **Total size**: 103 characters wide × 80 lines tall (entirely content)
+- **No borders in count**: Borders and padding are handled by printer software, not included in
+  character count
 
 This means:
-- **Zig code lines**: max 73 characters per line (hard wrap)
-- **Zig functions**: max 70 lines (leaves 28 lines for title/metadata)
-- **Borders included**: the 1-char borders are part of the 75×100 total
+- **Zig code lines**: max 103 characters per line (hard wrap)
+- **Zig functions**: max 70 lines (leaves 10 lines for title/metadata)
+- **Content only**: All 103×80 characters are content; printer handles margins/borders
 
 ### Why These Constraints?
 
+**Aspect Ratio Rationale**: Graincards are optimized for portrait-printed 8.5×11" standard printer
+paper. With monospace character aspect ratio of ~0.6 (width:height), 103×80 characters produces a
+visual aspect ratio of 0.772, matching the paper's 0.773 aspect ratio. This ensures graincards
+display optimally when printed, with proper utilization of page space while maintaining readability.
+
+**Simplified Specification**: By removing borders from the character count, we eliminate confusion
+about what counts as content vs. formatting. Printer software handles margins and borders;
+graincards are pure content.
+
 Graincards are designed to be:
 - **Portable**: viewable in any terminal
-- **Consistent**: all cards same size
+- **Printable**: optimized for portrait 8.5×11" paper with proper aspect ratio
+- **Consistent**: all cards same size (103×80 characters)
 - **Focused**: forces concise, clear code
-- **Beautiful**: ASCII art borders create visual structure
+- **Simple**: content-only specification, printer handles formatting
 
 When you write zig code for graincards, you're writing for a specific display format. This
 constraint breeds creativity - it forces you to think carefully about every line.

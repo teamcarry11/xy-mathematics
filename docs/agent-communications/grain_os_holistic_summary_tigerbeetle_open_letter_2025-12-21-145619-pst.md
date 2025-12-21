@@ -53,7 +53,7 @@ Operating systems are unreliable. They crash, leak memory, and fail unpredictabl
 **What We Changed**:
 - Context: Financial database → General-purpose OS
 - Target: x86_64 → RISC-V64 (with AArch64 JIT for development)
-- Constraints: Graincard compatibility (75×100 monospace teaching cards)
+- Constraints: Graincard compatibility (103×80 monospace teaching cards, optimized for portrait 8.5×11" paper with 0.772 visual aspect ratio matching paper's 0.773)
 
 **The Tools**: Aurora IDE, Skate Knowledge Graph, Dream Browser—all built on unified DAG state management inspired by TigerBeetle's deterministic message bus. Editor AST nodes, browser DOM nodes, knowledge graph relationships—all flow through the same deterministic state machine.
 

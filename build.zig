@@ -258,6 +258,16 @@ pub fn build(b: *std.Build) void {
         },
     });
 
+    // Grain Court module (formerly Grain Field)
+    const grain_court_module = b.addModule("grain_court", .{
+        .root_source_file = b.path("src/grain_court/root.zig"),
+        .target = target,
+        .optimize = optimize,
+        .imports = &.{
+            .{ .name = "grain_core", .module = grain_core_module },
+        },
+    });
+
     // Grain Silo module
     const grain_silo_module = b.addModule("grain_silo", .{
         .root_source_file = b.path("src/grain_silo/root.zig"),
@@ -272,23 +282,13 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    // Grain OS module (must be defined before grain_court_module which depends on it)
+    // Grain OS module
     const grain_core_module = b.addModule("grain_core", .{
         .root_source_file = b.path("src/grain_core/root.zig"),
         .target = target,
         .optimize = optimize,
         .imports = &.{
             .{ .name = "basin_kernel", .module = basin_kernel_module },
-        },
-    });
-
-    // Grain Court module (formerly Grain Field)
-    const grain_court_module = b.addModule("grain_court", .{
-        .root_source_file = b.path("src/grain_court/root.zig"),
-        .target = target,
-        .optimize = optimize,
-        .imports = &.{
-            .{ .name = "grain_core", .module = grain_core_module },
         },
     });
 
@@ -648,6 +648,13 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    // Aurora VCS module (for test imports)
+    const aurora_vcs_module = b.addModule("aurora_vcs", .{
+        .root_source_file = b.path("src/aurora_vcs.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
     // Aurora Editor module (for test imports)
     const aurora_editor_module = b.addModule("aurora_editor", .{
         .root_source_file = b.path("src/aurora_editor.zig"),
@@ -761,6 +768,17 @@ pub fn build(b: *std.Build) void {
             .optimize = optimize,
             .imports = &.{
                 .{ .name = "aurora_filter", .module = aurora_filter_module },
+            },
+        }),
+    });
+
+    const vcs_test_file = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/126_aurora_vcs_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "aurora_vcs", .module = aurora_vcs_module },
             },
         }),
     });
@@ -1165,6 +1183,8 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&run_text_renderer_test_file.step);
     const run_filter_test_file = b.addRunArtifact(filter_test_file);
     test_step.dependOn(&run_filter_test_file.step);
+    const run_vcs_test_file = b.addRunArtifact(vcs_test_file);
+    test_step.dependOn(&run_vcs_test_file.step);
     const run_route_tests = b.addRunArtifact(route_tests);
     test_step.dependOn(&run_route_tests.step);
     const run_orchestrator_tests = b.addRunArtifact(orchestrator_tests);
@@ -4642,6 +4662,20 @@ pub fn build(b: *std.Build) void {
     });
     const grain_research_zon_retrieval_accuracy_tests_run = b.addRunArtifact(grain_research_zon_retrieval_accuracy_tests);
     test_step.dependOn(&grain_research_zon_retrieval_accuracy_tests_run.step);
+
+    // ZON Format Retrieval Serialization Tests (Phase 2).
+    const grain_research_zon_retrieval_serialization_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/152_grain_research_zon_retrieval_serialization_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_research", .module = grain_research_module },
+            },
+        }),
+    });
+    const grain_research_zon_retrieval_serialization_tests_run = b.addRunArtifact(grain_research_zon_retrieval_serialization_tests);
+    test_step.dependOn(&grain_research_zon_retrieval_serialization_tests_run.step);
 
     // Grain Bubble component tests
     const grain_bubble_component_tests = b.addTest(.{

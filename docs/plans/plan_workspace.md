@@ -1,8 +1,8 @@
 # Grain Workspace Agent: Development Plan
 
 **Agent**: Grain Workspace Agent (5th Agent)  
-**Status**: Phase 26 Enhanced JSON Output Complete ✅  
-**Last Updated**: 2025-12-21-144225-pst  
+**Status**: Phase 27 Full File Path Collection Complete ✅  
+**Last Updated**: 2025-12-21-152026-pst  
 **Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-21-141612-pst.md`
 
 ---
@@ -1116,10 +1116,36 @@ All planned phases for Grain Workspace Agent have been completed:
 - Max 70 lines per function
 - All compiler warnings enabled
 
+### Phase 27: Full File Path Collection ✅ **COMPLETE**
+
+**Date**: 2025-12-21-152026-pst
+
+**Completed Work**:
+1. **Full File Path Collection** (`src/grain_workspace/grain_style_cli/main.zig`):
+   - Implemented `collect_zig_file_paths()` function to collect actual file paths
+   - Uses allocator to store file paths dynamically (bounded by MAX_FILES_TO_LINT)
+   - Updated `run()` function to collect and lint all files from directories
+   - Proper memory management (frees allocated paths after use)
+   - Comprehensive tests (`tests/116_grain_workspace_grain_style_cli_test.zig`)
+
+**Features**:
+- Full file path collection from directories
+- Dynamic allocation with bounded limits (max 10,000 files)
+- Proper memory management (frees allocated paths)
+- Directory linting now fully functional
+- Recursive directory traversal with path collection
+
+**Grain Style Compliance**:
+- `grain_case` function names
+- `u32`/`u64` types (no `usize`)
+- Bounded allocations (MAX_FILES_TO_LINT limit enforced)
+- Assertions for preconditions
+- Max 70 lines per function
+- All compiler warnings enabled
+
 **Future Enhancements**:
 - Editor plugin integration (VS Code, Cursor)
 - Auto-fix capabilities (future phase)
-- Full file path collection with dynamic allocation
 
 **Creative Future Ideas** (Conceptual):
 - **System Auditor**: Security auditing and compliance checking

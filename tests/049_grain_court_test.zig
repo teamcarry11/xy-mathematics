@@ -152,3 +152,162 @@ test "openai provider get name" {
     try testing.expect(std.mem.eql(u8, name, "OpenAI"));
 }
 
+test "anthropic provider init" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const api_key = "test-api-key-12345";
+    var provider = try grain_court.AnthropicProvider.init(
+        allocator,
+        api_key,
+        null,
+    );
+    try testing.expect(provider.trait.provider_type == .anthropic);
+    try testing.expect(provider.trait.state == .idle);
+    try testing.expect(provider.trait.api_key_len > 0);
+}
+
+test "anthropic provider check health" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const api_key = "test-api-key";
+    var provider = try grain_court.AnthropicProvider.init(
+        allocator,
+        api_key,
+        null,
+    );
+    const is_healthy = provider.trait.check_health(&provider.trait);
+    try testing.expect(is_healthy == false); // No HTTP client
+}
+
+test "anthropic provider get name" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const api_key = "test-api-key";
+    var provider = try grain_court.AnthropicProvider.init(
+        allocator,
+        api_key,
+        null,
+    );
+    const name = provider.trait.get_name(&provider.trait);
+    try testing.expect(std.mem.eql(u8, name, "Anthropic"));
+}
+
+test "mistral provider init" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const api_key = "test-api-key-12345";
+    var provider = try grain_court.MistralProvider.init(
+        allocator,
+        api_key,
+        null,
+    );
+    try testing.expect(provider.trait.provider_type == .mistral);
+    try testing.expect(provider.trait.state == .idle);
+    try testing.expect(provider.trait.api_key_len > 0);
+}
+
+test "mistral provider check health" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const api_key = "test-api-key";
+    var provider = try grain_court.MistralProvider.init(
+        allocator,
+        api_key,
+        null,
+    );
+    const is_healthy = provider.trait.check_health(&provider.trait);
+    try testing.expect(is_healthy == false); // No HTTP client
+}
+
+test "mistral provider get name" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const api_key = "test-api-key";
+    var provider = try grain_court.MistralProvider.init(
+        allocator,
+        api_key,
+        null,
+    );
+    const name = provider.trait.get_name(&provider.trait);
+    try testing.expect(std.mem.eql(u8, name, "Mistral"));
+}
+
+test "provider pool multiple providers" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var pool = grain_court.LlmProvider.ProviderPool.init(allocator);
+    const api_key = "test-api-key";
+    var openai_provider = try grain_court.OpenAIProvider.init(
+        allocator,
+        api_key,
+        null,
+    );
+    var anthropic_provider = try grain_court.AnthropicProvider.init(
+        allocator,
+        api_key,
+        null,
+    );
+    try pool.add_provider(&openai_provider.trait);
+    try pool.add_provider(&anthropic_provider.trait);
+    try testing.expect(pool.providers_len == 2);
+    try testing.expect(pool.default_provider != null);
+    try testing.expect(pool.default_provider.?.provider_type == .openai);
+}
+
+test "provider pool set default provider" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var pool = grain_court.LlmProvider.ProviderPool.init(allocator);
+    const api_key = "test-api-key";
+    var openai_provider = try grain_court.OpenAIProvider.init(
+        allocator,
+        api_key,
+        null,
+    );
+    var anthropic_provider = try grain_court.AnthropicProvider.init(
+        allocator,
+        api_key,
+        null,
+    );
+    try pool.add_provider(&openai_provider.trait);
+    try pool.add_provider(&anthropic_provider.trait);
+    const set = pool.set_default_provider(&anthropic_provider.trait);
+    try testing.expect(set == true);
+    try testing.expect(pool.default_provider != null);
+    try testing.expect(pool.default_provider.?.provider_type == .anthropic);
+}
+
+test "provider pool get default provider" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var pool = grain_court.LlmProvider.ProviderPool.init(allocator);
+    const api_key = "test-api-key";
+    var openai_provider = try grain_court.OpenAIProvider.init(
+        allocator,
+        api_key,
+        null,
+    );
+    try pool.add_provider(&openai_provider.trait);
+    const default_provider = pool.get_default_provider();
+    try testing.expect(default_provider != null);
+    try testing.expect(default_provider.?.provider_type == .openai);
+}
+

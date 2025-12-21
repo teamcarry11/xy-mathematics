@@ -2,7 +2,7 @@
 
 **Agent**: Grain Aurora IDE Dream Browser Agent (2nd Agent)  
 **Status**: Active — Foundation components, shared modules, Dream Browser Spec v0 integration  
-**Last Updated**: 2025-12-21-094149-pst
+**Last Updated**: 2025-12-21-134223-pst
 
 ---
 
@@ -339,7 +339,22 @@ Grain Aurora IDE Dream Browser Agent is responsible for building the unified IDE
 - **Files**: `tests/124_aurora_text_renderer_test.zig`, `build.zig`
 - **Date**: 2025-12-21-094149-PST
 
-#### 2.15: Dream Browser Spec v0 Integration 📋 **PLANNED**
+#### 2.15: Filter Comprehensive Tests ✅ **COMPLETE**
+- ✅ Created comprehensive test suite (`tests/125_aurora_filter_test.zig`)
+- ✅ Tests for filter mode enum (none, darkroom)
+- ✅ Tests for FluxState initialization and toggle operations
+- ✅ Tests for filter apply operations (none mode, darkroom mode)
+- ✅ Tests for darkroom filter effects (red channel clamp, green/blue division)
+- ✅ Tests for alpha channel preservation
+- ✅ Tests for invalid pixel length handling
+- ✅ Tests for multiple pixels and consistency
+- ✅ Added `aurora_filter_module` and `filter_test_file` to build.zig
+- ✅ GrainStyle compliance (grain_case, u32 types, max 73 chars per line)
+- ✅ All tests pass with proper assertions
+- **Files**: `tests/125_aurora_filter_test.zig`, `build.zig`
+- **Date**: 2025-12-21-120349-PST
+
+#### 2.16: Dream Browser Spec v0 Integration 📋 **PLANNED**
 - 📋 Dream Browser Spec v0 research complete — ready for integration
 - 📋 Research deliverable: `docs/research/dream_browser_spec_v0_research_2025-12-10-083733-pst.md`
 - 📋 Integration with Aurora Agent development plan
@@ -543,11 +558,15 @@ See [`docs/agent-communications/bubble_aurora_dag_sharing_analysis.md`](../agent
 - **Coordination**: Skate Agent will use Aurora's GLM-4.6 client for AI API calls
 - **Status**: GLM-4.6 client ready for Skate Agent integration
 
-**Grain Court (formerly Grain Field)**:
-- No current references to Grain Field/Court in Aurora Agent codebase
-- Verified: No imports, no documentation references
-- Future: May use Grain Court for vector search or LLM integration
-- Note: If integrated in future, will use `grain_court` module name
+**Grain Court Agent** (11th Agent — Integration Partner):
+- ✅ **Welcome Court Agent!** 🌾⚒️
+- **Integration Partner** — Court Agent provides LLM infrastructure for Aurora's AI provider abstraction
+- **Coordination**: Court Agent will provide multi-provider LLM API that powers code completion and refactoring features
+- **ZON Format Integration**: Court's ZON format will reduce token costs for code completion (35-70% token reduction)
+- **Status**: Court Agent Phase 1 IN PROGRESS — Multi-Provider LLM API Foundation
+- **Action**: Review Court Agent's plan (`docs/plans/plan_court.md`) and identify integration points for AI provider abstraction
+- **Future**: Integrate Court Agent's LLM services into `src/aurora_ai_provider.zig` and `src/aurora_glm46_provider.zig`
+- **Location**: `src/grain_court/`
 
 ---
 

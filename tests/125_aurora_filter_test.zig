@@ -19,7 +19,7 @@ test "filter mode enum" {
 
 test "filter flux state initialization" {
     // Assert: FluxState initialized with none mode
-    var state = Filter.FluxState{};
+    const state = Filter.FluxState{};
     std.debug.assert(state.mode == .none);
 }
 
@@ -40,7 +40,7 @@ test "filter flux state toggle to none" {
 
 test "filter apply none mode" {
     // Assert: Apply with none mode does nothing
-    var state = Filter.FluxState{};
+    const state = Filter.FluxState{};
     var pixels = [_]u8{ 100, 150, 200, 255 };
     const original = pixels;
     

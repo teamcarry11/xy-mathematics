@@ -179,3 +179,58 @@ test "workspace_file_storage_update_and_delete" {
     const deleted = file_storage.get_file_metadata(file_path);
     std.debug.assert(deleted == null);
 }
+
+test "nostr_profile_storage_list_profiles" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deallocate();
+    const allocator = gpa.allocator();
+    var storage = try StorageEngine.init(allocator, 1024);
+    defer storage.deinit();
+    var g = try Graph.init(allocator);
+    defer g.deinit();
+    var profile_storage = NostrProfileStorage.init(&storage, &g);
+    const npub1 = "npub1list1";
+    const npub2 = "npub1list2";
+    const profile_data = "{\"name\":\"Test\"}";
+    _ = try profile_storage.store_profile(npub1, profile_data);
+    _ = try profile_storage.store_profile(npub2, profile_data);
+    var output: [10]u64 = undefined;
+    const count = profile_storage.list_profiles(&output);
+    std.debug.assert(count >= 2);
+}
+
+test "dag_website_storage_list_nodes" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deallocate();
+    const allocator = gpa.allocator();
+    var storage = try StorageEngine.init(allocator, 1024);
+    defer storage.deinit();
+    var g = try Graph.init(allocator);
+    defer g.deinit();
+    var website_storage = DagWebsiteStorage.init(&storage, &g);
+    const node1 = "list_node1";
+    const node2 = "list_node2";
+    const content = "<h1>Test</h1>";
+    _ = try website_storage.store_node(node1, content);
+    _ = try website_storage.store_node(node2, content);
+    var output: [10]u64 = undefined;
+    const count = website_storage.list_nodes(&output);
+    std.debug.assert(count >= 2);
+}
+
+test "workspace_file_storage_list_file_metadata" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deallocate();
+    const allocator = gpa.allocator();
+    var storage = try StorageEngine.init(allocator, 1024);
+    defer storage.deinit();
+    var file_storage = WorkspaceFileStorage.init(&storage);
+    const file1 = "/home/user/file1.txt";
+    const file2 = "/home/user/file2.txt";
+    const metadata = "{\"size\":1024}";
+    _ = try file_storage.store_file_metadata(file1, metadata);
+    _ = try file_storage.store_file_metadata(file2, metadata);
+    var output: [10]u64 = undefined;
+    const count = file_storage.list_file_metadata(&output);
+    std.debug.assert(count >= 2);
+}

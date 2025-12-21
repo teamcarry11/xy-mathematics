@@ -680,7 +680,7 @@ pub const TextEditor = struct {
             .backspace => {
                 // Undo backspace: insert the text back
                 if (entry.text_len > 0) {
-                    _ = self.insert_text(entry.text[0..entry.text_len]);
+                    _ = self.insert_text_internal(entry.text[0..entry.text_len], false);
                 }
             },
         }
@@ -747,7 +747,7 @@ pub const TextEditor = struct {
             .backspace => {
                 // Redo backspace: delete the text
                 if (entry.text_len > 0) {
-                    _ = self.delete_text(entry.text_len);
+                    _ = self.delete_text_internal(entry.text_len, false);
                 }
             },
         }

@@ -207,6 +207,9 @@
 - [x] Implement website link creation (`create_website_link()`) ✅
 - [x] Implement profile relationship queries (`get_following_profiles()`) ✅
 - [x] Implement website structure queries (`get_linked_pages()`) ✅
+- [x] Implement reverse profile queries (`get_follower_profiles()`) ✅
+- [x] Implement reverse page queries (`get_backlink_pages()`) ✅
+- [x] Implement relationship counting (`get_profile_relationship_count()`, `get_page_link_count()`) ✅
 - [x] Create tests (`tests/125_grain_skate_slc_dag_integration_test.zig`) ✅
 - [x] Add tests to `build.zig` ✅
 - [x] Add `SlcDagIntegration` to `src/grain_skate/root.zig` exports ✅

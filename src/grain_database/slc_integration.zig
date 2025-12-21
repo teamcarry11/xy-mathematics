@@ -349,4 +349,27 @@ pub const WorkspaceFileStorage = struct {
         defer self.storage_engine.allocator.free(key);
         try self.storage_engine.delete_record(key);
     }
+
+    // List all workspace file metadata (returns count of matching records).
+    pub fn list_file_metadata(
+        self: *WorkspaceFileStorage,
+        output: []u64,
+    ) u32 {
+        std.debug.assert(output.len > 0);
+        var count: u32 = 0;
+        var i: u32 = 0;
+        const prefix = "workspace:file:";
+        while (i < self.storage_engine.records_len) : (i += 1) {
+            const record = &self.storage_engine.records[i];
+            if (record.key_len >= prefix.len) {
+                if (std.mem.eql(u8, record.key[0..prefix.len], prefix)) {
+                    if (count < output.len) {
+                        output[count] = record.record_id;
+                        count += 1;
+                    }
+                }
+            }
+        }
+        return count;
+    }
 };

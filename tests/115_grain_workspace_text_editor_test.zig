@@ -179,6 +179,104 @@ test "cannot close file with unsaved changes" {
     try testing.expect(editor.file_state == .dirty);
 }
 
+test "undo insert" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    _ = editor.insert_text("Hello");
+    try testing.expect(editor.lines[0].content_len == 5);
+
+    const result = editor.undo();
+    try testing.expect(result == true);
+    try testing.expect(editor.lines[0].content_len == 0);
+}
+
+test "redo insert" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    _ = editor.insert_text("Hello");
+    _ = editor.undo();
+    try testing.expect(editor.lines[0].content_len == 0);
+
+    const result = editor.redo();
+    try testing.expect(result == true);
+    try testing.expect(editor.lines[0].content_len == 5);
+    try testing.expect(std.mem.eql(u8, editor.lines[0].content[0..5], "Hello"));
+}
+
+test "undo delete" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    _ = editor.insert_text("Hello, World!");
+    _ = editor.move_cursor(0, 5);
+    _ = editor.delete_text(7);
+    try testing.expect(editor.lines[0].content_len == 6);
+
+    const result = editor.undo();
+    try testing.expect(result == true);
+    try testing.expect(editor.lines[0].content_len == 13);
+}
+
+test "redo delete" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    _ = editor.insert_text("Hello, World!");
+    _ = editor.move_cursor(0, 5);
+    _ = editor.delete_text(7);
+    _ = editor.undo();
+    try testing.expect(editor.lines[0].content_len == 13);
+
+    const result = editor.redo();
+    try testing.expect(result == true);
+    try testing.expect(editor.lines[0].content_len == 6);
+}
+
+test "undo history limit" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    // Insert many characters to test undo history
+    var i: u32 = 0;
+    while (i < 50) : (i += 1) {
+        _ = editor.insert_text("a");
+    }
+    try testing.expect(editor.lines[0].content_len == 50);
+
+    // Undo all
+    i = 0;
+    while (i < 50) : (i += 1) {
+        _ = editor.undo();
+    }
+    try testing.expect(editor.lines[0].content_len == 0);
+}
+
+test "cannot undo when nothing to undo" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    const result = editor.undo();
+    try testing.expect(result == false);
+}
+
+test "cannot redo when nothing to redo" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    _ = editor.insert_text("Hello");
+    const result = editor.redo();
+    try testing.expect(result == false);
+}
+
 test "cannot open file when file has unsaved changes" {
     const allocator = testing.allocator;
     var editor = TextEditor.init(allocator);

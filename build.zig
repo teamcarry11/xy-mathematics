@@ -624,6 +624,13 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    // Aurora Tab Manager module (for test imports)
+    const aurora_tab_manager_module = b.addModule("aurora_tab_manager", .{
+        .root_source_file = b.path("src/aurora_tab_manager.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
     // Aurora Editor module (for test imports)
     const aurora_editor_module = b.addModule("aurora_editor", .{
         .root_source_file = b.path("src/aurora_editor.zig"),
@@ -704,6 +711,17 @@ pub fn build(b: *std.Build) void {
             .optimize = optimize,
             .imports = &.{
                 .{ .name = "aurora_tree_sitter", .module = aurora_tree_sitter_module },
+            },
+        }),
+    });
+
+    const tab_manager_test_file = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/123_aurora_tab_manager_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "aurora_tab_manager", .module = aurora_tab_manager_module },
             },
         }),
     });
@@ -1102,6 +1120,8 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&run_folding_test_file.step);
     const run_tree_sitter_test_file = b.addRunArtifact(tree_sitter_test_file);
     test_step.dependOn(&run_tree_sitter_test_file.step);
+    const run_tab_manager_test_file = b.addRunArtifact(tab_manager_test_file);
+    test_step.dependOn(&run_tab_manager_test_file.step);
     const run_route_tests = b.addRunArtifact(route_tests);
     test_step.dependOn(&run_route_tests.step);
     const run_orchestrator_tests = b.addRunArtifact(orchestrator_tests);
@@ -4507,4 +4527,19 @@ pub fn build(b: *std.Build) void {
     });
     const file_system_integration_tests_run = b.addRunArtifact(file_system_integration_tests);
     test_step.dependOn(&file_system_integration_tests_run.step);
+
+    // Performance benchmark verification test
+    const performance_benchmark_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/100_performance_benchmark_verification_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "kernel_vm", .module = kernel_vm_module },
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+            },
+        }),
+    });
+    const performance_benchmark_tests_run = b.addRunArtifact(performance_benchmark_tests);
+    test_step.dependOn(&performance_benchmark_tests_run.step);
 }

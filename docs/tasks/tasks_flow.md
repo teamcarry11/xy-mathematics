@@ -2,7 +2,7 @@
 
 **Agent**: Grain Flow Agent (9th Agent)  
 **Status**: All Phases Complete ✅ (Phase 1-5 COMPLETE), SLC Product Workflow Templates Ready ✅, Research Agent Collaboration Started ✅, Instrumentation Design Prepared ✅  
-**Last Updated**: 2025-12-21-091028-pst
+**Last Updated**: 2025-12-21-094141-pst
 
 ---
 
@@ -385,6 +385,39 @@
 - Schedule persistence
 - Schedule API endpoints
 - Schedule visualization in dashboard
+
+---
+
+## Phase 63: API Contracts Registry
+
+### Status: **COMPLETE** ✅
+
+**Date**: 2025-12-21-094141-pst  
+**Task**: Document Flow Agent's API contracts for Core coordination
+
+**Completed Work**:
+- [x] Create API contracts document (`docs/core-coordination/core-coordination_flow.md`) — Complete ✅
+  - [x] Event Bus API documentation
+  - [x] Agent Coordinator API documentation
+  - [x] Workflow Engine API documentation
+  - [x] Workflow Scheduler API documentation
+  - [x] Dashboard API documentation
+  - [x] Breaking changes protocol
+  - [x] Versioning strategy
+  - [x] Integration examples
+  - [x] Performance characteristics
+  - [x] Security considerations
+
+**Documentation Includes**:
+- **Flow → Core APIs**: All interfaces Flow Agent uses from Core
+- **Flow → Other Agents APIs**: All interfaces Flow Agent exposes to other agents
+- **Public Types**: All exported types and their structures
+- **Public Functions**: All exported functions with parameters and return values
+- **Bounded Allocations**: All MAX_ constants and limits
+- **Breaking Changes Protocol**: Versioning and deprecation policy
+- **Integration Examples**: Code examples for common use cases
+
+**Next Steps**: Ready for Core Agent review and coordination
 
 **Reference Documents**:
 - Flow Agent letter: [`docs/agent-communications/flow_to_research_letter_2025-12-20-175131-pst.md`](../agent-communications/flow_to_research_letter_2025-12-20-175131-pst.md)

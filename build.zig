@@ -1020,6 +1020,8 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&run_parser_tests.step);
     const run_lsp_test_file = b.addRunArtifact(lsp_test_file);
     test_step.dependOn(&run_lsp_test_file.step);
+    const run_ai_provider_test_file = b.addRunArtifact(ai_provider_test_file);
+    test_step.dependOn(&run_ai_provider_test_file.step);
     const run_route_tests = b.addRunArtifact(route_tests);
     test_step.dependOn(&run_route_tests.step);
     const run_orchestrator_tests = b.addRunArtifact(orchestrator_tests);

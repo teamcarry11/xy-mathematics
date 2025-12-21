@@ -85,3 +85,49 @@ test "update user disabled database" {
     const result = db_integration.update_user(user_id, &user);
     try testing.expect(result == db_integration.DatabaseResult.connection_error);
 }
+
+test "parse user from json with all fields" {
+    const json = "{\"user_id\":\"abc123\",\"email\":\"test@example.com\",\"username\":\"testuser\",\"created_at\":1234567890}";
+    var user = db_integration.UserData.init();
+    const result = db_integration.parse_user_from_json(json, &user);
+    try testing.expect(result == db_integration.DatabaseResult.success);
+    try testing.expect(user.user_id_len > 0);
+    try testing.expect(user.email_len > 0);
+    try testing.expect(user.username_len > 0);
+    try testing.expect(user.created_at > 0);
+    try testing.expect(std.mem.eql(u8, user.user_id[0..user.user_id_len], "abc123"));
+    try testing.expect(std.mem.eql(u8, user.email[0..user.email_len], "test@example.com"));
+    try testing.expect(std.mem.eql(u8, user.username[0..user.username_len], "testuser"));
+}
+
+test "parse user from json with minimal fields" {
+    const json = "{\"user_id\":\"abc123\",\"email\":\"test@example.com\"}";
+    var user = db_integration.UserData.init();
+    const result = db_integration.parse_user_from_json(json, &user);
+    try testing.expect(result == db_integration.DatabaseResult.success);
+    try testing.expect(user.user_id_len > 0);
+    try testing.expect(user.email_len > 0);
+    try testing.expect(std.mem.eql(u8, user.user_id[0..user.user_id_len], "abc123"));
+    try testing.expect(std.mem.eql(u8, user.email[0..user.email_len], "test@example.com"));
+}
+
+test "parse user from json missing required fields" {
+    const json = "{\"user_id\":\"abc123\"}";
+    var user = db_integration.UserData.init();
+    const result = db_integration.parse_user_from_json(json, &user);
+    try testing.expect(result == db_integration.DatabaseResult.validation_error);
+}
+
+test "parse user from json invalid json" {
+    const json = "{invalid json}";
+    var user = db_integration.UserData.init();
+    const result = db_integration.parse_user_from_json(json, &user);
+    try testing.expect(result == db_integration.DatabaseResult.validation_error);
+}
+
+test "parse user from json empty json" {
+    const json = "{}";
+    var user = db_integration.UserData.init();
+    const result = db_integration.parse_user_from_json(json, &user);
+    try testing.expect(result == db_integration.DatabaseResult.validation_error);
+}

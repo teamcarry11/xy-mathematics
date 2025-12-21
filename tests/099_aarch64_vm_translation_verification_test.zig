@@ -4,9 +4,9 @@
 
 const std = @import("std");
 const testing = std.testing;
-const kernel_vm = @import("kernel_vm");
-const AArch64VM = kernel_vm.vm_aarch64.AArch64VM;
-const AArch64VMState = kernel_vm.vm_aarch64.AArch64VMState;
+const vm_aarch64 = @import("vm_aarch64");
+const AArch64VM = vm_aarch64.AArch64VM;
+const AArch64VMState = vm_aarch64.AArch64VMState;
 
 // Test: AArch64 VM can be initialized on current platform.
 test "aarch64 vm translation: vm initialization" {

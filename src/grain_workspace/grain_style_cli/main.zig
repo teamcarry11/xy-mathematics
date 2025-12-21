@@ -6,6 +6,7 @@
 //!
 //! 2025-12-20-200932-pst: Phase 22 Standalone CLI Tool
 //! 2025-12-21-083130-pst: Phase 23 Enhanced CLI Output and Configuration
+//! 2025-12-21-083947-pst: Phase 24 Recursive Directory Linting
 //!
 //! Open-Source Service Model: 100% open-source, revenue from services (consulting,
 //! training, hosted services, enterprise support, sponsorships, grants).
@@ -36,6 +37,18 @@ pub const MAX_CONFIG_KEY_LEN: u32 = 64;
 // Bounded: Max config value length (explicit limit, in bytes)
 // 2025-12-21-083130-pst: Phase 23 Enhanced CLI Output and Configuration
 pub const MAX_CONFIG_VALUE_LEN: u32 = 256;
+
+// Bounded: Max files to lint (explicit limit)
+// 2025-12-21-083947-pst: Phase 24 Recursive Directory Linting
+pub const MAX_FILES_TO_LINT: u32 = 10_000;
+
+// Bounded: Max ignore patterns (explicit limit)
+// 2025-12-21-083947-pst: Phase 24 Recursive Directory Linting
+pub const MAX_IGNORE_PATTERNS: u32 = 256;
+
+// Bounded: Max ignore pattern length (explicit limit, in bytes)
+// 2025-12-21-083947-pst: Phase 24 Recursive Directory Linting
+pub const MAX_IGNORE_PATTERN_LEN: u32 = 256;
 
 // Exit code enumeration.
 // 2025-12-20-200932-pst: Phase 22 Standalone CLI Tool

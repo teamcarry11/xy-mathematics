@@ -129,9 +129,9 @@ pub fn handle_metrics_request(
             response.status = grain_core.api_server.HttpStatus.internal_server_error;
             const error_msg = "{\"error\":\"Failed to export metrics\"}";
             const msg_len = @min(error_msg.len, response.body.len);
-            i = 0;
-            while (i < msg_len) : (i += 1) {
-                response.body[i] = error_msg[i];
+            var j: u32 = 0;
+            while (j < msg_len) : (j += 1) {
+                response.body[j] = error_msg[j];
             }
             response.body_len = msg_len;
         }
@@ -140,9 +140,9 @@ pub fn handle_metrics_request(
         response.status = grain_core.api_server.HttpStatus.service_unavailable;
         const error_msg = "{\"error\":\"Observatory not available\"}";
         const msg_len = @min(error_msg.len, response.body.len);
-        var i: u32 = 0;
-        while (i < msg_len) : (i += 1) {
-            response.body[i] = error_msg[i];
+        var k: u32 = 0;
+        while (k < msg_len) : (k += 1) {
+            response.body[k] = error_msg[k];
         }
         response.body_len = msg_len;
     }

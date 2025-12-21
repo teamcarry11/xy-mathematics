@@ -138,10 +138,17 @@ pub const SlcDagIntegration = struct {
         content: []const u8,
         url_path: []const u8,
     ) !u32 {
-        // Assert: Title, content, and URL path must be bounded
+        // Assert: Title, content, and URL path must be non-empty and bounded
+        std.debug.assert(title.len > 0);
         std.debug.assert(title.len <= 256);
+        std.debug.assert(content.len > 0);
         std.debug.assert(content.len <= 100_000); // Max 100KB per page
+        std.debug.assert(url_path.len > 0);
         std.debug.assert(url_path.len <= 512);
+        
+        // Assert: Node count must be within bounds
+        std.debug.assert(self.dag.nodes_len < DagCore.MAX_NODES);
+        std.debug.assert(self.dag.nodes_len < MAX_WEBSITE_PAGES);
         
         // Create page data (JSON-like structure for now)
         var page_data = std.ArrayList(u8).init(self.allocator);
@@ -176,10 +183,18 @@ pub const SlcDagIntegration = struct {
         from_page_id: u32,
         to_page_id: u32,
     ) !void {
-        // Assert: Page IDs must be valid
+        // Assert: Page IDs must be valid and different
         std.debug.assert(from_page_id > 0);
         std.debug.assert(to_page_id > 0);
         std.debug.assert(from_page_id != to_page_id);
+        
+        // Assert: Page IDs must be valid node indices
+        std.debug.assert(from_page_id < self.dag.nodes_len);
+        std.debug.assert(to_page_id < self.dag.nodes_len);
+        
+        // Assert: Edge count must be within bounds
+        const max_links = MAX_WEBSITE_PAGES * 10; // Max 10 links per page
+        std.debug.assert(self.dag.edges_len < max_links);
         
         // Create edge with semantic type for links
         try self.dag.addEdge(

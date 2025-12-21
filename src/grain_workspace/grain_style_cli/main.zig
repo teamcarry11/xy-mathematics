@@ -383,8 +383,48 @@ pub const GrainStyleCLI = struct {
         }
     }
 
+    /// Parse command-line arguments.
+    // 2025-12-21-083130-pst: Phase 23 Enhanced CLI Output and Configuration
+    pub fn parse_args(
+        self: *GrainStyleCLI,
+        args: []const []const u8,
+        file_paths: []?[]const u8,
+        file_paths_len: *u32,
+    ) bool {
+        // Precondition: Args and buffers must be valid
+        std.debug.assert(args.len > 0);
+        std.debug.assert(file_paths.len > 0);
+        std.debug.assert(file_paths_len != null);
+
+        file_paths_len.* = 0;
+        var i: u32 = 1; // Skip program name
+        while (i < args.len) : (i += 1) {
+            const arg = args[i];
+            if (std.mem.eql(u8, arg, "--json")) {
+                self.config.output_format = .json;
+            } else if (std.mem.eql(u8, arg, "--no-color")) {
+                self.config.use_color = false;
+            } else if (std.mem.eql(u8, arg, "--config") and i + 1 < args.len) {
+                i += 1;
+                const config_path = args[i];
+                _ = self.load_config(config_path);
+            } else if (!std.mem.startsWith(u8, arg, "--")) {
+                if (file_paths_len.* < file_paths.len) {
+                    file_paths[file_paths_len.*] = arg;
+                    file_paths_len.* += 1;
+                }
+            }
+        }
+
+        // Postcondition: File paths count must be valid
+        std.debug.assert(file_paths_len.* <= file_paths.len);
+
+        return file_paths_len.* > 0;
+    }
+
     /// Run linting on files and return exit code.
     // 2025-12-20-200932-pst: Phase 22 Standalone CLI Tool
+    // 2025-12-21-083130-pst: Phase 23 Enhanced CLI Output and Configuration
     pub fn run(
         self: *GrainStyleCLI,
         file_paths: []const []const u8,

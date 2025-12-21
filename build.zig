@@ -4268,6 +4268,10 @@ pub fn build(b: *std.Build) void {
     const grain_bubble_agent_flow_tests = b.addTest(.{
         .root_module = b.createModule(.{
             .root_source_file = b.path("tests/139_grain_bubble_agent_flow_test.zig"),
+    });
+
+    const grain_bubble_slc_ui_components_test = b.addTest(.{
+        .root_source_file = b.path("tests/140_grain_bubble_slc_ui_components_test.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
@@ -4277,6 +4281,19 @@ pub fn build(b: *std.Build) void {
     });
     const grain_bubble_agent_flow_tests_run = b.addRunArtifact(grain_bubble_agent_flow_tests);
     test_step.dependOn(&grain_bubble_agent_flow_tests_run.step);
+
+    const grain_bubble_slc_ui_components_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/140_grain_bubble_slc_ui_components_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_bubble", .module = grain_bubble_module },
+            },
+        }),
+    });
+    const grain_bubble_slc_ui_components_tests_run = b.addRunArtifact(grain_bubble_slc_ui_components_tests);
+    test_step.dependOn(&grain_bubble_slc_ui_components_tests_run.step);
 
     // Grain Flow event bus tests
     const grain_flow_event_bus_tests = b.addTest(.{

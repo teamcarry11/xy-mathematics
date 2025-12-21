@@ -126,10 +126,11 @@ fn build_user_json_body(user_data: *const UserData, body_out: []u8) ?u32 {
     }
     body_out[pos] = '{';
     pos += 1;
+    const user_id_key = "\"user_id\":";
+    const user_id_key_len = @min(user_id_key.len, body_out.len - pos);
+    std.mem.copyForwards(u8, body_out[pos..], user_id_key[0..user_id_key_len]);
+    pos += @intCast(user_id_key_len);
     const user_id_str = user_data.user_id[0..user_data.user_id_len];
-    if (!grain_core_json.write_json_string(body_out, &pos, "\"user_id\":")) {
-        return null;
-    }
     if (!grain_core_json.write_json_string(body_out, &pos, user_id_str)) {
         return null;
     }
@@ -138,10 +139,11 @@ fn build_user_json_body(user_data: *const UserData, body_out: []u8) ?u32 {
     }
     body_out[pos] = ',';
     pos += 1;
+    const email_key = "\"email\":";
+    const email_key_len = @min(email_key.len, body_out.len - pos);
+    std.mem.copyForwards(u8, body_out[pos..], email_key[0..email_key_len]);
+    pos += @intCast(email_key_len);
     const email_str = user_data.email[0..user_data.email_len];
-    if (!grain_core_json.write_json_string(body_out, &pos, "\"email\":")) {
-        return null;
-    }
     if (!grain_core_json.write_json_string(body_out, &pos, email_str)) {
         return null;
     }
@@ -150,10 +152,11 @@ fn build_user_json_body(user_data: *const UserData, body_out: []u8) ?u32 {
     }
     body_out[pos] = ',';
     pos += 1;
+    const username_key = "\"username\":";
+    const username_key_len = @min(username_key.len, body_out.len - pos);
+    std.mem.copyForwards(u8, body_out[pos..], username_key[0..username_key_len]);
+    pos += @intCast(username_key_len);
     const username_str = user_data.username[0..user_data.username_len];
-    if (!grain_core_json.write_json_string(body_out, &pos, "\"username\":")) {
-        return null;
-    }
     if (!grain_core_json.write_json_string(body_out, &pos, username_str)) {
         return null;
     }
@@ -306,13 +309,19 @@ pub fn update_user(user_id: []const u8, user_data: *const UserData) DatabaseResu
     std.mem.copyForwards(u8, path_buf[path_len..], user_id[0..user_id_len]);
     path_len += @intCast(user_id_len);
     std.debug.assert(path_len <= 1024);
-    const request_id = http_client_integration.create_external_request(
-        grain_core_api.HttpMethod.put,
+    const request = http_client_integration.create_external_request(
+        .put,
         path_buf[0..path_len],
-    );
-    if (request_id == 0) {
+    ) orelse {
         return DatabaseResult.connection_error;
+    };
+    var json_body: [MAX_USER_JSON_LEN]u8 = undefined;
+    const body_len = build_user_json_body(user_data, &json_body) orelse {
+        return DatabaseResult.internal_error;
+    };
+    if (!http_client_integration.set_external_body(request, json_body[0..body_len])) {
+        return DatabaseResult.internal_error;
     }
-    _ = user_data;
+    _ = http_client_integration.add_external_header(request, "Content-Type", "application/json");
     return DatabaseResult.success;
 }

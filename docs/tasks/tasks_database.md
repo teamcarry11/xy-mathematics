@@ -445,6 +445,9 @@
 - [x] Create comprehensive tests (`tests/123_grain_database_slc_integration_test.zig`)
 - [x] Update `build.zig` with new tests
 - [x] Export helpers from `root.zig`
+- [x] Add CRUD operations (update/delete methods) to all helpers
+- [x] Add list/query methods (`list_profiles`, `list_nodes`, `list_file_metadata`)
+- [x] Enhanced tests to cover all new methods
 - [x] Update documentation
 
 **Deliverables**:

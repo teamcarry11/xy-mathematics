@@ -414,6 +414,12 @@ Grain Database Agent is responsible for building a general-purpose, Grain Style-
 - ✅ Updated `build.zig` with new tests
 - ✅ Exported helpers from `root.zig`
 
+**Enhanced Work** (2025-12-20-175159-pst):
+- ✅ Added CRUD operations (update/delete methods) to all helpers
+- ✅ Added list/query methods (`list_profiles`, `list_nodes`, `list_file_metadata`)
+- ✅ All helpers now support full CRUD + list operations
+- ✅ Enhanced tests to cover all new methods
+
 **Integration Points**:
 - **Nostr Profile Builder**: Profile data storage with key-value and graph support
 - **DAG Website Builder**: Website content storage and DAG structure management

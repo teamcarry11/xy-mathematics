@@ -47,6 +47,9 @@ pub const performance_metrics = @import("performance_metrics.zig");
 // Workflow observatory for metrics aggregation and dashboard.
 pub const workflow_observatory = @import("workflow_observatory.zig");
 
+// Dashboard API for HTTP endpoints.
+pub const dashboard_api = @import("dashboard_api.zig");
+
 // Module exports.
 pub const EventBus = event_bus.EventBus;
 pub const EventType = event_bus.EventType;
@@ -92,3 +95,9 @@ pub const QueueDepthSample = performance_metrics.QueueDepthSample;
 pub const WaitTimeRecord = performance_metrics.WaitTimeRecord;
 
 pub const WorkflowObservatory = workflow_observatory.WorkflowObservatory;
+
+pub const DashboardApiContext = dashboard_api.DashboardApiContext;
+pub const set_dashboard_context = dashboard_api.set_dashboard_context;
+pub const register_dashboard_endpoints = dashboard_api.register_dashboard_endpoints;
+pub const handle_summary_request = dashboard_api.handle_summary_request;
+pub const handle_metrics_request = dashboard_api.handle_metrics_request;

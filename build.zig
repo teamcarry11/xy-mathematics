@@ -617,6 +617,13 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    // Aurora Tree-sitter module (for test imports)
+    const aurora_tree_sitter_module = b.addModule("aurora_tree_sitter", .{
+        .root_source_file = b.path("src/aurora_tree_sitter.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
     // Aurora Editor module (for test imports)
     const aurora_editor_module = b.addModule("aurora_editor", .{
         .root_source_file = b.path("src/aurora_editor.zig"),
@@ -4278,19 +4285,6 @@ pub fn build(b: *std.Build) void {
     const grain_bubble_agent_flow_tests_run = b.addRunArtifact(grain_bubble_agent_flow_tests);
     test_step.dependOn(&grain_bubble_agent_flow_tests_run.step);
 
-    const grain_bubble_slc_ui_components_tests = b.addTest(.{
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/140_grain_bubble_slc_ui_components_test.zig"),
-            .target = target,
-            .optimize = optimize,
-            .imports = &.{
-                .{ .name = "grain_bubble", .module = grain_bubble_module },
-            },
-        }),
-    });
-    const grain_bubble_slc_ui_components_tests_run = b.addRunArtifact(grain_bubble_slc_ui_components_tests);
-    test_step.dependOn(&grain_bubble_slc_ui_components_tests_run.step);
-
     // Grain Flow event bus tests
     const grain_flow_event_bus_tests = b.addTest(.{
         .root_module = b.createModule(.{
@@ -4388,6 +4382,21 @@ pub fn build(b: *std.Build) void {
     });
     const grain_flow_workflow_observatory_tests_run = b.addRunArtifact(grain_flow_workflow_observatory_tests);
     test_step.dependOn(&grain_flow_workflow_observatory_tests_run.step);
+
+    // Grain Flow Dashboard API Tests
+    const grain_flow_dashboard_api_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/144_grain_flow_dashboard_api_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_flow", .module = grain_flow_module },
+                .{ .name = "grain_core", .module = grain_core_module },
+            },
+        }),
+    });
+    const grain_flow_dashboard_api_tests_run = b.addRunArtifact(grain_flow_dashboard_api_tests);
+    test_step.dependOn(&grain_flow_dashboard_api_tests_run.step);
 
     // Grain Research engine tests
     const grain_research_engine_tests = b.addTest(.{

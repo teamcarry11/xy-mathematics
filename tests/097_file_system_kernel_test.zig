@@ -155,35 +155,50 @@ test "file system kernel verification" {
     try testing.expect(unlink_result_zero_len == .err);
     try testing.expect(unlink_result_zero_len.err == BasinError.invalid_argument);
     
-    // Test 6: Create directory.
+    // Test 6: Create directory - validation tests.
     const dir_path = "test_dir";
     const dir_path_ptr: u64 = 0x4000; // VM memory address
     const dir_path_len: u32 = @as(u32, @intCast(dir_path.len));
     
-    const mkdir_result = kernel.syscall_mkdir(dir_path_ptr, dir_path_len, 0, 0);
+    // Test with null pointer - should fail.
+    const mkdir_result_null = kernel.syscall_mkdir(0, dir_path_len, 0, 0);
     
-    // Assert: Mkdir should succeed or return appropriate error.
-    _ = mkdir_result;
+    // Assert: Should fail with invalid_argument (null pointer).
+    try testing.expect(mkdir_result_null == .err);
+    try testing.expect(mkdir_result_null.err == BasinError.invalid_argument);
     
-    // Test 7: Open directory.
-    const opendir_result = kernel.syscall_opendir(dir_path_ptr, dir_path_len, 0, 0);
+    // Test with zero path length - should fail.
+    const mkdir_result_zero_len = kernel.syscall_mkdir(dir_path_ptr, 0, 0, 0);
     
-    // Assert: Opendir should succeed or return appropriate error.
-    _ = opendir_result;
+    // Assert: Should fail with invalid_argument (empty path).
+    try testing.expect(mkdir_result_zero_len == .err);
+    try testing.expect(mkdir_result_zero_len.err == BasinError.invalid_argument);
     
-    // Test 8: Read directory.
-    const readdir_result = kernel.syscall_readdir(1, 0, 0, 0); // dir handle from opendir
+    // Test 7: Open directory - validation tests.
+    // Test with null pointer - should fail.
+    const opendir_result_null = kernel.syscall_opendir(0, dir_path_len, 0, 0);
     
-    // Assert: Readdir should succeed or return appropriate error.
-    _ = readdir_result;
+    // Assert: Should fail with invalid_argument (null pointer).
+    try testing.expect(opendir_result_null == .err);
+    try testing.expect(opendir_result_null.err == BasinError.invalid_argument);
     
-    // Test 9: Close directory.
-    const closedir_result = kernel.syscall_closedir(1, 0, 0, 0);
+    // Test 8: Read directory (with invalid handle - should fail).
+    // Test with zero handle - should fail.
+    const readdir_result_zero = kernel.syscall_readdir(0, 0, 0, 0);
     
-    // Assert: Closedir should succeed or return appropriate error.
-    _ = closedir_result;
+    // Assert: Should fail with invalid_argument (invalid handle).
+    try testing.expect(readdir_result_zero == .err);
+    try testing.expect(readdir_result_zero.err == BasinError.invalid_argument);
     
-    // Test 10: Rename file.
+    // Test 9: Close directory (with invalid handle - should fail).
+    // Test with zero handle - should fail.
+    const closedir_result_zero = kernel.syscall_closedir(0, 0, 0, 0);
+    
+    // Assert: Should fail with invalid_argument (invalid handle).
+    try testing.expect(closedir_result_zero == .err);
+    try testing.expect(closedir_result_zero.err == BasinError.invalid_argument);
+    
+    // Test 10: Rename file - validation tests.
     const old_path = "old_file.txt";
     const new_path = "new_file.txt";
     const old_path_ptr: u64 = 0x5000; // VM memory address
@@ -191,15 +206,41 @@ test "file system kernel verification" {
     const new_path_ptr: u64 = 0x6000; // VM memory address
     const new_path_len: u32 = @as(u32, @intCast(new_path.len));
     
-    const rename_result = kernel.syscall_rename(
-        old_path_ptr,
+    // Test with null old path pointer - should fail.
+    const rename_result_null_old = kernel.syscall_rename(
+        0, // null pointer
         old_path_len,
         new_path_ptr,
         new_path_len,
     );
     
-    // Assert: Rename should succeed or return appropriate error.
-    _ = rename_result;
+    // Assert: Should fail with invalid_argument (null pointer).
+    try testing.expect(rename_result_null_old == .err);
+    try testing.expect(rename_result_null_old.err == BasinError.invalid_argument);
+    
+    // Test with null new path pointer - should fail.
+    const rename_result_null_new = kernel.syscall_rename(
+        old_path_ptr,
+        old_path_len,
+        0, // null pointer
+        new_path_len,
+    );
+    
+    // Assert: Should fail with invalid_argument (null pointer).
+    try testing.expect(rename_result_null_new == .err);
+    try testing.expect(rename_result_null_new.err == BasinError.invalid_argument);
+    
+    // Test with zero old path length - should fail.
+    const rename_result_zero_old = kernel.syscall_rename(
+        old_path_ptr,
+        0, // zero length
+        new_path_ptr,
+        new_path_len,
+    );
+    
+    // Assert: Should fail with invalid_argument (empty path).
+    try testing.expect(rename_result_zero_old == .err);
+    try testing.expect(rename_result_zero_old.err == BasinError.invalid_argument);
 }
 
 // Test file organization at kernel level.
@@ -207,57 +248,73 @@ test "file organization kernel verification" {
     // Initialize kernel.
     var kernel = BasinKernel.init();
     
-    // Test: Create multiple files in directory structure.
+    // Test: Verify file organization syscalls validate parameters correctly.
     // This tests file organization capabilities at kernel level.
     
-    // Create root directory.
+    // Test 1: Create root directory - validation.
     const root_dir = "test_root";
     const root_dir_ptr: u64 = 0x7000; // VM memory address
     const root_dir_len: u32 = @as(u32, @intCast(root_dir.len));
     
-    const mkdir_result = kernel.syscall_mkdir(root_dir_ptr, root_dir_len, 0, 0);
-    _ = mkdir_result;
+    // Test with null pointer - should fail.
+    const mkdir_result_null = kernel.syscall_mkdir(0, root_dir_len, 0, 0);
+    try testing.expect(mkdir_result_null == .err);
+    try testing.expect(mkdir_result_null.err == BasinError.invalid_argument);
     
-    // Create subdirectory.
+    // Test 2: Create subdirectory - validation.
     const sub_dir = "test_root/sub_dir";
     const sub_dir_ptr: u64 = 0x8000; // VM memory address
     const sub_dir_len: u32 = @as(u32, @intCast(sub_dir.len));
     
-    const mkdir_sub_result = kernel.syscall_mkdir(sub_dir_ptr, sub_dir_len, 0, 0);
-    _ = mkdir_sub_result;
+    // Test with zero path length - should fail.
+    const mkdir_sub_result_zero = kernel.syscall_mkdir(sub_dir_ptr, 0, 0, 0);
+    try testing.expect(mkdir_sub_result_zero == .err);
+    try testing.expect(mkdir_sub_result_zero.err == BasinError.invalid_argument);
     
-    // Create file in subdirectory.
+    // Test 3: Create file in subdirectory - validation.
     const file_path = "test_root/sub_dir/file.txt";
     const file_path_ptr: u64 = 0x9000; // VM memory address
     const file_path_len: u32 = @as(u32, @intCast(file_path.len));
     
-    const open_result = kernel.syscall_open(
+    // Test with invalid flags - should fail.
+    const open_result_invalid = kernel.syscall_open(
         file_path_ptr,
         file_path_len,
-        0, // flags (create)
+        0, // flags (no read/write - invalid)
         0, // mode (not used)
     );
-    _ = open_result;
+    try testing.expect(open_result_invalid == .err);
+    try testing.expect(open_result_invalid.err == BasinError.invalid_argument);
     
-    // Write to file.
+    // Test 4: Write to file - validation.
     const write_data = "File organization test";
     const write_data_ptr: u64 = 0xa000; // VM memory address
     const write_data_len: u32 = @as(u32, @intCast(write_data.len));
     
-    const write_result = kernel.syscall_write(1, write_data_ptr, write_data_len, 0);
-    _ = write_result;
+    // Test with invalid handle - should fail.
+    const write_result_invalid = kernel.syscall_write(0, write_data_ptr, write_data_len, 0);
+    try testing.expect(write_result_invalid == .err);
+    try testing.expect(write_result_invalid.err == BasinError.invalid_argument);
     
-    // Close file.
-    const close_result = kernel.syscall_close(1, 0, 0, 0);
-    _ = close_result;
+    // Test 5: Close file - validation.
+    // Test with invalid handle - should fail.
+    const close_result_invalid = kernel.syscall_close(0, 0, 0, 0);
+    try testing.expect(close_result_invalid == .err);
+    try testing.expect(close_result_invalid.err == BasinError.invalid_argument);
     
-    // Verify file organization: list directory contents.
-    const opendir_result = kernel.syscall_opendir(sub_dir_ptr, sub_dir_len, 0, 0);
-    _ = opendir_result;
+    // Test 6: Verify file organization: list directory contents - validation.
+    // Test with null pointer - should fail.
+    const opendir_result_null = kernel.syscall_opendir(0, sub_dir_len, 0, 0);
+    try testing.expect(opendir_result_null == .err);
+    try testing.expect(opendir_result_null.err == BasinError.invalid_argument);
     
-    const readdir_result = kernel.syscall_readdir(1, 0, 0, 0);
-    _ = readdir_result;
+    // Test with invalid handle - should fail.
+    const readdir_result_invalid = kernel.syscall_readdir(0, 0, 0, 0);
+    try testing.expect(readdir_result_invalid == .err);
+    try testing.expect(readdir_result_invalid.err == BasinError.invalid_argument);
     
-    const closedir_result = kernel.syscall_closedir(1, 0, 0, 0);
-    _ = closedir_result;
+    // Test with invalid handle - should fail.
+    const closedir_result_invalid = kernel.syscall_closedir(0, 0, 0, 0);
+    try testing.expect(closedir_result_invalid == .err);
+    try testing.expect(closedir_result_invalid.err == BasinError.invalid_argument);
 }

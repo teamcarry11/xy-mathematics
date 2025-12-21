@@ -19,10 +19,13 @@
 ### Current Verification Tasks (CRITICAL)
 
 - [x] Create verification checklist document
-- [x] Create file system kernel verification test
+- [x] Create file system kernel verification test (`tests/097_file_system_kernel_test.zig`)
+  - Validation tests complete (error conditions, parameter validation)
+  - Tests all file system syscalls (open, read, write, close, unlink, rename, mkdir, opendir, readdir, closedir)
+  - Added to `build.zig`
 - [ ] Verify Nostr protocol works at RISC-V Basin kernel level
 - [ ] Verify DAG operations work at RISC-V Basin kernel level
-- [ ] Verify file system works at RISC-V Basin kernel level (complete tests)
+- [ ] Verify file system works at RISC-V Basin kernel level (integration tests with VM)
 - [ ] Verify Vantage VM translates to macOS Tahoe 26.2 (aarch64)
 - [ ] Test all SLC products on macOS Tahoe 26.2
 - [ ] Performance benchmarks (60fps, sub-ms latency)

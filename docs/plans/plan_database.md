@@ -456,6 +456,12 @@ Grain Database Agent is responsible for building a general-purpose, Grain Style-
 - **Duplicate Handling**: Batch operations skip duplicate keys automatically
 - **Bounded Output**: Batch operations use bounded output arrays for Grain Style compliance
 
+**Statistics Functions** (2025-12-21-083125-pst):
+- **Record Count**: `get_record_count()` returns total number of records
+- **Storage Size**: `get_total_storage_size()` returns sum of all key/value sizes
+- **Average Size**: `get_average_record_size()` returns average record size
+- **Next ID**: `get_next_record_id()` returns next record ID for monitoring
+
 **Status**: ✅ **COMPLETE**
 
 ### Phase 10: AArch64 Cloud Deployment (PLANNED)

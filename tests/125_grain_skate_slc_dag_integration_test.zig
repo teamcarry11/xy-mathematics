@@ -237,3 +237,100 @@ test "slc dag integration page link count" {
     // Assert: Total link count (2 outgoing + 1 incoming = 3)
     try testing.expect(count == 3);
 }
+
+test "slc dag integration get profile data" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var integration = try SlcDagIntegration.init(allocator);
+    defer integration.deinit();
+
+    const npub = "npub1example";
+    const name = "Test Profile";
+    const profile_id = try integration.create_profile_node(npub, name);
+
+    const data = integration.get_profile_data(profile_id);
+
+    // Assert: Profile data retrieved
+    try testing.expect(data != null);
+    try testing.expect(data.?.len > 0);
+    
+    // Data should contain npub and name
+    const data_str = data.?;
+    try testing.expect(std.mem.indexOf(u8, data_str, npub) != null);
+    try testing.expect(std.mem.indexOf(u8, data_str, name) != null);
+}
+
+test "slc dag integration get page data" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var integration = try SlcDagIntegration.init(allocator);
+    defer integration.deinit();
+
+    const title = "About Page";
+    const content = "This is content";
+    const url_path = "/about";
+    const page_id = try integration.create_website_page_node(title, content, url_path);
+
+    const data = integration.get_page_data(page_id);
+
+    // Assert: Page data retrieved
+    try testing.expect(data != null);
+    try testing.expect(data.?.len > 0);
+    
+    // Data should contain title, content, and url_path
+    const data_str = data.?;
+    try testing.expect(std.mem.indexOf(u8, data_str, title) != null);
+    try testing.expect(std.mem.indexOf(u8, data_str, url_path) != null);
+}
+
+test "slc dag integration has profile relationship" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var integration = try SlcDagIntegration.init(allocator);
+    defer integration.deinit();
+
+    const profile1_id = try integration.create_profile_node("npub1", "Profile 1");
+    const profile2_id = try integration.create_profile_node("npub2", "Profile 2");
+
+    // No relationship initially
+    try testing.expect(!integration.has_profile_relationship(profile1_id, profile2_id));
+
+    // Create relationship
+    try integration.create_profile_relationship(profile1_id, profile2_id, .follows);
+
+    // Relationship should exist
+    try testing.expect(integration.has_profile_relationship(profile1_id, profile2_id));
+    
+    // Reverse relationship should not exist
+    try testing.expect(!integration.has_profile_relationship(profile2_id, profile1_id));
+}
+
+test "slc dag integration has website link" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var integration = try SlcDagIntegration.init(allocator);
+    defer integration.deinit();
+
+    const page1_id = try integration.create_website_page_node("Home", "Content", "/");
+    const page2_id = try integration.create_website_page_node("About", "Content", "/about");
+
+    // No link initially
+    try testing.expect(!integration.has_website_link(page1_id, page2_id));
+
+    // Create link
+    try integration.create_website_link(page1_id, page2_id);
+
+    // Link should exist
+    try testing.expect(integration.has_website_link(page1_id, page2_id));
+    
+    // Reverse link should not exist
+    try testing.expect(!integration.has_website_link(page2_id, page1_id));
+}

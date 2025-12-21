@@ -466,6 +466,10 @@ Grain Skate Terminal Silo Field Agent is responsible for building Grain Skate (k
    - `get_backlink_pages()` - Query page backlinks (incoming) ✅
    - `get_profile_relationship_count()` - Count total relationships ✅
    - `get_page_link_count()` - Count total links ✅
+   - `get_profile_data()` - Get profile node data (raw JSON) ✅
+   - `get_page_data()` - Get page node data (raw JSON) ✅
+   - `has_profile_relationship()` - Check if relationship exists ✅
+   - `has_website_link()` - Check if link exists ✅
    - Tests created (`tests/125_grain_skate_slc_dag_integration_test.zig`)
    - Added to `src/grain_skate/root.zig` exports
    - Added tests to `build.zig`

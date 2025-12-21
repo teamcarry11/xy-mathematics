@@ -146,6 +146,7 @@ pub const TextEditor = struct {
     search_query: [256]u8,
     search_query_len: u32,
     show_line_numbers: bool,
+    plain_text_mode: bool,
     allocator: std.mem.Allocator,
 
     /// Initialize text editor.
@@ -169,6 +170,7 @@ pub const TextEditor = struct {
             .search_query = undefined,
             .search_query_len = 0,
             .show_line_numbers = true,
+            .plain_text_mode = false,
             .allocator = allocator,
         };
 
@@ -489,6 +491,7 @@ pub const TextEditor = struct {
 
     /// Internal insert text (with optional undo recording).
     // 2025-12-20-175102-pst: Phase 18 Undo/Redo
+    // 2025-12-20-180855-pst: Phase 20 Plain Text Mode - auto-conversion
     fn insert_text_internal(self: *TextEditor, text: []const u8, record_undo: bool) bool {
         // Precondition: File must be open
         std.debug.assert(self.file_state != .closed);
@@ -496,6 +499,17 @@ pub const TextEditor = struct {
 
         if (self.file_state == .closed) {
             return false;
+        }
+
+        // Convert to plain ASCII if plain text mode is enabled
+        var converted_text = text;
+        var conversion_buffer: [MAX_LINE_LEN * 3]u8 = undefined;
+        var conversion_len: u32 = 0;
+        if (self.plain_text_mode) {
+            const converted = self.convert_to_plain_ascii(text, &conversion_buffer, &conversion_len);
+            if (converted and conversion_len > 0) {
+                converted_text = conversion_buffer[0..conversion_len];
+            }
         }
 
         if (self.lines_len == 0) {
@@ -514,7 +528,7 @@ pub const TextEditor = struct {
 
         const current_line = &self.lines[self.cursor.line];
         const remaining = MAX_LINE_LEN - current_line.content_len;
-        const insert_len = @min(text.len, remaining);
+        const insert_len = @min(converted_text.len, remaining);
 
         if (insert_len == 0) {
             return false;
@@ -757,6 +771,110 @@ pub const TextEditor = struct {
         std.debug.assert(self.file_state != .closed);
 
         self.show_line_numbers = !self.show_line_numbers;
+    }
+
+    /// Toggle plain text mode.
+    // 2025-12-20-180855-pst: Phase 20 Plain Text Mode
+    pub fn toggle_plain_text_mode(self: *TextEditor) void {
+        // Precondition: File must be open
+        std.debug.assert(self.file_state != .closed);
+
+        self.plain_text_mode = !self.plain_text_mode;
+    }
+
+    /// Convert text to plain ASCII (em dashes, smart quotes, ellipses).
+    // 2025-12-20-180855-pst: Phase 20 Plain Text Mode
+    fn convert_to_plain_ascii(self: *TextEditor, text: []const u8, output: []u8, output_len: *u32) bool {
+        // Precondition: Output buffer must be valid
+        std.debug.assert(output.len >= text.len * 3); // Worst case: ellipses expansion
+        std.debug.assert(text.len > 0);
+
+        _ = self; // Suppress unused warning
+
+        output_len.* = 0;
+        var i: u32 = 0;
+        while (i < text.len and output_len.* < output.len) : (i += 1) {
+            const c = text[i];
+            // Em dash (—) to double dash (--)
+            if (c == 0xE2 and i + 2 < text.len) {
+                if (text[i + 1] == 0x80 and text[i + 2] == 0x94) {
+                    // UTF-8 em dash
+                    if (output_len.* + 2 <= output.len) {
+                        output[output_len.*] = '-';
+                        output_len.* += 1;
+                        output[output_len.*] = '-';
+                        output_len.* += 1;
+                        i += 2; // Skip remaining UTF-8 bytes
+                        continue;
+                    }
+                }
+            }
+            // Smart quotes and ellipses (UTF-8 sequences)
+            if (c == 0xE2 and i + 2 < text.len) {
+                // Left double quote ("")
+                if (text[i + 1] == 0x80 and text[i + 2] == 0x9C) {
+                    if (output_len.* < output.len) {
+                        output[output_len.*] = '"';
+                        output_len.* += 1;
+                        i += 2;
+                        continue;
+                    }
+                }
+                // Right double quote ("")
+                if (text[i + 1] == 0x80 and text[i + 2] == 0x9D) {
+                    if (output_len.* < output.len) {
+                        output[output_len.*] = '"';
+                        output_len.* += 1;
+                        i += 2;
+                        continue;
+                    }
+                }
+                // Ellipsis (…)
+                if (text[i + 1] == 0x80 and text[i + 2] == 0xA6) {
+                    if (output_len.* + 3 <= output.len) {
+                        output[output_len.*] = '.';
+                        output_len.* += 1;
+                        output[output_len.*] = '.';
+                        output_len.* += 1;
+                        output[output_len.*] = '.';
+                        output_len.* += 1;
+                        i += 2;
+                        continue;
+                    }
+                }
+            }
+            // Smart single quotes (UTF-8)
+            if (c == 0xE2 and i + 2 < text.len) {
+                // Left single quote (')
+                if (text[i + 1] == 0x80 and text[i + 2] == 0x98) {
+                    if (output_len.* < output.len) {
+                        output[output_len.*] = '\'';
+                        output_len.* += 1;
+                        i += 2;
+                        continue;
+                    }
+                }
+                // Right single quote (')
+                if (text[i + 1] == 0x80 and text[i + 2] == 0x99) {
+                    if (output_len.* < output.len) {
+                        output[output_len.*] = '\'';
+                        output_len.* += 1;
+                        i += 2;
+                        continue;
+                    }
+                }
+            }
+            // Regular ASCII character
+            if (output_len.* < output.len) {
+                output[output_len.*] = c;
+                output_len.* += 1;
+            }
+        }
+
+        // Postcondition: Output length must be valid
+        std.debug.assert(output_len.* <= output.len);
+
+        return true;
     }
 
     /// Add undo entry.

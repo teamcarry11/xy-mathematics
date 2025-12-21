@@ -166,7 +166,7 @@ This violates first principles: we need observable facts to build on.
    - Research priorities defined
    - Collaboration plan proposed
 
-3. **`docs/agent-communications/research_flow_collaboration_coordination_2025-12-20-180000-pst.md`** (this document)
+3. **`docs/agent-communications/research_flow_collaboration_coordination_2025-12-20-180625-pst.md`** (this document)
    - Coordination message for Core Agent
    - Summary of collaboration
    - Integration points identified

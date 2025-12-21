@@ -1196,6 +1196,19 @@ pub fn build(b: *std.Build) void {
     const run_grain_carry_core_oauth_tests = b.addRunArtifact(grain_carry_core_oauth_tests);
     test_step.dependOn(&run_grain_carry_core_oauth_tests.step);
 
+    const grain_carry_core_database_integration_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/129_grain_carry_core_database_integration_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_carry_core", .module = grain_carry_core_module },
+            },
+        }),
+    });
+    const run_grain_carry_core_database_integration_tests = b.addRunArtifact(grain_carry_core_database_integration_tests);
+    test_step.dependOn(&run_grain_carry_core_database_integration_tests.step);
+
     const fuzz_004_tests = b.addTest(.{
         .root_module = b.createModule(.{
             .root_source_file = b.path("tests/004_fuzz.zig"),

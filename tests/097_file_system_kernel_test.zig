@@ -75,21 +75,34 @@ test "file system kernel verification" {
     // If open succeeds, verify result is success.
     try testing.expect(open_result == .success);
     
-    // Test 2: Write to file.
+    // Test 2: Write to file (with invalid handle - should fail).
     const write_data = "Hello, Grain OS!";
     const write_data_ptr: u64 = 0x2000; // VM memory address
     const write_data_len: u32 = @as(u32, @intCast(write_data.len));
     
-    // Note: In real test, we would write write_data to VM memory at write_data_ptr.
-    const write_result = kernel.syscall_write(
-        1, // file handle (from open)
+    // Test with zero handle - should fail.
+    const write_result_zero = kernel.syscall_write(
+        0, // invalid handle
         write_data_ptr,
         write_data_len,
         0, // offset (not used)
     );
     
-    // Assert: Write should succeed or return appropriate error.
-    _ = write_result;
+    // Assert: Should fail with invalid_argument (invalid handle).
+    try testing.expect(write_result_zero == .err);
+    try testing.expect(write_result_zero.err == BasinError.invalid_argument);
+    
+    // Test with null buffer pointer - should fail.
+    const write_result_null = kernel.syscall_write(
+        1, // file handle
+        0, // null pointer
+        write_data_len,
+        0, // offset (not used)
+    );
+    
+    // Assert: Should fail with invalid_argument (null pointer).
+    try testing.expect(write_result_null == .err);
+    try testing.expect(write_result_null.err == BasinError.invalid_argument);
     
     // Test 3: Read from file.
     const read_buffer_ptr: u64 = 0x3000; // VM memory address

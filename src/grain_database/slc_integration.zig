@@ -11,6 +11,12 @@ const storage_engine = @import("storage_engine.zig");
 const graph = @import("graph.zig");
 const relational = @import("relational.zig");
 
+// SLC integration errors.
+pub const SlcError = error{
+    InvalidNpub,
+    InvalidFilePath,
+};
+
 // Bounded: Max profile key length.
 pub const MAX_PROFILE_KEY_LEN: u32 = 256;
 
@@ -313,6 +319,22 @@ pub const DagWebsiteStorage = struct {
         }
         return count;
     }
+
+    // Count all DAG website nodes.
+    pub fn count_nodes(self: *DagWebsiteStorage) u32 {
+        var count: u32 = 0;
+        var i: u32 = 0;
+        const prefix = "dag:website:";
+        while (i < self.storage_engine.records_len) : (i += 1) {
+            const record = &self.storage_engine.records[i];
+            if (record.key_len >= prefix.len) {
+                if (std.mem.eql(u8, record.key[0..prefix.len], prefix)) {
+                    count += 1;
+                }
+            }
+        }
+        return count;
+    }
 };
 
 // Workspace file storage helper.
@@ -419,6 +441,22 @@ pub const WorkspaceFileStorage = struct {
                         output[count] = record.record_id;
                         count += 1;
                     }
+                }
+            }
+        }
+        return count;
+    }
+
+    // Count all workspace file metadata.
+    pub fn count_file_metadata(self: *WorkspaceFileStorage) u32 {
+        var count: u32 = 0;
+        var i: u32 = 0;
+        const prefix = "workspace:file:";
+        while (i < self.storage_engine.records_len) : (i += 1) {
+            const record = &self.storage_engine.records[i];
+            if (record.key_len >= prefix.len) {
+                if (std.mem.eql(u8, record.key[0..prefix.len], prefix)) {
+                    count += 1;
                 }
             }
         }

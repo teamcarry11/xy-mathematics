@@ -263,6 +263,11 @@ pub const AiInsights = struct {
         // Assert: Block count must be within bounds
         std.debug.assert(block_ids.len <= MAX_BLOCKS_PER_BATCH);
         
+        // Validate all block IDs are non-zero
+        for (block_ids) |block_id| {
+            std.debug.assert(block_id > 0);
+        }
+        
         // If GLM-4.6 client not available, return empty gaps
         if (self.glm46_client == null) {
             return &[_]struct { from_block_id: u64, to_block_id: u64 }{};
@@ -351,7 +356,7 @@ pub const AiInsights = struct {
         block_id: u64,
     ) !?TitleSuggestion {
         // Assert: Block ID must be valid
-        _ = block_id;
+        std.debug.assert(block_id > 0);
         
         // If GLM-4.6 client not available, return null
         if (self.glm46_client == null) {
@@ -360,6 +365,9 @@ pub const AiInsights = struct {
         
         // Get block content
         const block = self.block_storage.get_block(@as(u32, @intCast(block_id))) orelse return null;
+        
+        // Assert: Block content must exist
+        std.debug.assert(block.content_len > 0);
         
         // Build prompt for GLM-4.6
         var prompt = std.ArrayList(u8).init(self.allocator);
@@ -378,10 +386,21 @@ pub const AiInsights = struct {
         const response = try self.collect_glm46_response(&messages);
         defer self.allocator.free(response);
         
+        // Validate response is not empty
+        if (response.len == 0) {
+            return null;
+        }
+        
         // Trim whitespace and limit length
         const trimmed = std.mem.trim(u8, response, " \n\r\t");
+        if (trimmed.len == 0) {
+            return null;
+        }
         const max_len = @min(trimmed.len, Block.MAX_BLOCK_TITLE);
         const title = try self.allocator.dupe(u8, trimmed[0..max_len]);
+        
+        // Assert: Title length is within bounds
+        std.debug.assert(title.len <= Block.MAX_BLOCK_TITLE);
         
         return TitleSuggestion{
             .block_id = block_id,

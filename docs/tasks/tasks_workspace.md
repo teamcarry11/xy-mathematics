@@ -1,9 +1,9 @@
 # Grain Workspace Agent: Task List
 
 **Agent**: Grain Workspace Agent (5th Agent)  
-**Status**: Phase 21 DevTools Grain Style Linter Complete ✅  
-**Last Updated**: 2025-12-20-184722-pst  
-**Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-20-172643-pst.md`
+**Status**: Phase 22 Standalone CLI Tool Complete ✅  
+**Last Updated**: 2025-12-20-200932-pst  
+**Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-20-195937-pst.md`
 
 ---
 
@@ -396,6 +396,26 @@ All planned phases for Grain Workspace Agent have been completed. See completed 
 - Ready for integration into standalone CLI tool
 - Foundation for Grain Style Developer Tools (SLC v1.0)
 - Supports open-source service revenue model
+
+### Phase 22: Standalone CLI Tool ✅ (2025-12-20-200932-pst)
+
+**Completed Tasks**:
+- [x] Create standalone CLI tool module structure
+- [x] Implement file reading and linting
+- [x] Implement CLI output formatting
+- [x] Create comprehensive tests
+- [x] Update root.zig to export CLI tool
+- [x] Add to build.zig test suite
+- [x] Update documentation
+
+**Files**: Created `src/grain_workspace/grain_style_cli/main.zig`, `tests/116_grain_workspace_grain_style_cli_test.zig`, updated `src/grain_workspace/root.zig`, `build.zig`
+
+**Alignment with Research Agent's Open-Source Service Model**:
+- Standalone CLI tool: 100% open-source
+- Ready for distribution and integration
+- Foundation for Grain Style Developer Tools (SLC v1.0)
+- Supports open-source service revenue model (consulting, training, hosted services)
+- Ready for editor plugin integration (VS Code, Cursor)
 
 ---
 

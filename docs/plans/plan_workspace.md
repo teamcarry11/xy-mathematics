@@ -921,7 +921,6 @@ All planned phases for Grain Workspace Agent have been completed:
 - Enhanced profiling capabilities
 - Kernel file I/O integration (actual file read/write via syscalls)
 - Syntax highlighting
-- Standalone CLI tool (per Research Agent's open-source service model)
 - Editor plugin integration (VS Code, Cursor)
 - Auto-fix capabilities (future phase)
 - WebSocket integration for real-time features (now available via Core Agent Phase 61)
@@ -929,6 +928,56 @@ All planned phases for Grain Workspace Agent have been completed:
   - ✅ Live terminal output streaming (Phase 10.2 complete)
   - ✅ Live network statistics updates (Phase 10.3 complete)
   - ✅ Real-time file system notifications (Phase 10.4 complete)
+
+### Phase 22: Standalone CLI Tool ✅ **COMPLETE**
+
+**Date**: 2025-12-20-200932-pst
+
+**Completed Work**:
+1. **Standalone CLI Tool** (`src/grain_workspace/grain_style_cli/main.zig`):
+   - Implemented `GrainStyleCLI` struct for standalone CLI tool
+   - Implemented `read_file_content()` function for file reading
+   - Implemented `lint_file()` function for linting files
+   - Implemented `format_violation_message()` function for output formatting
+   - Implemented `print_violations()` function for printing violations
+   - Implemented `run()` function for CLI execution
+   - File path validation and bounded file size (max 10 MB)
+   - Exit code enumeration (success, violations_found, error)
+   - Comprehensive tests (`tests/116_grain_workspace_grain_style_cli_test.zig`)
+   - Added to `root.zig` exports
+   - Added to `build.zig` test suite
+
+**Features**:
+- Standalone CLI tool for Grain Style linting
+- File reading with bounded size limits (max 10 MB)
+- Violation reporting with formatted output
+- Exit codes for CI/CD integration
+- Multiple file support
+- Bounded output buffer (max 1 MB)
+- 100% open-source (per Research Agent's service model)
+
+**Alignment with Research Agent's Open-Source Service Model**:
+- Standalone CLI tool: 100% open-source
+- Ready for distribution and integration
+- Foundation for Grain Style Developer Tools (SLC v1.0)
+- Supports open-source service revenue model (consulting, training, hosted services)
+- Ready for editor plugin integration (VS Code, Cursor)
+
+**Grain Style Compliance**:
+- `grain_case` function names
+- `u32`/`u64` types (no `usize`)
+- Bounded allocations (all limits explicit)
+- Assertions for preconditions
+- Max 70 lines per function
+- All compiler warnings enabled
+
+**Future Enhancements**:
+- Editor plugin integration (VS Code, Cursor)
+- Auto-fix capabilities (future phase)
+- Enhanced output formatting (color-coded, JSON output)
+- Configuration file support (.grainstyle)
+- Recursive directory linting
+- Performance optimizations for large codebases
 
 **Creative Future Ideas** (Conceptual):
 - **System Auditor**: Security auditing and compliance checking

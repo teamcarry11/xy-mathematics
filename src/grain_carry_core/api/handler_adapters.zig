@@ -635,8 +635,14 @@ pub fn handle_users_profile_adapter(
         return;
     }
     
-    // TODO: Fetch user profile from database (when database available)
-    // For now, return success with user_id from token
+    // Fetch user profile from database
+    var user_data = database_integration.UserData.init();
+    const user_id_str = claims.user_id[0..claims.user_id_len];
+    const db_result = database_integration.get_user_by_id(user_id_str, &user_data);
+    if (db_result != database_integration.DatabaseResult.success) {
+        response.status = grain_core_api.HttpStatus.not_found;
+        return;
+    }
     
     var json_buf: [responses.MAX_JSON_RESPONSE_LEN]u8 = undefined;
     const json_len = responses.build_success_response("Profile retrieved", "", &json_buf);

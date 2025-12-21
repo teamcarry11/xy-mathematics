@@ -32,6 +32,9 @@ pub fn register_mobile_endpoints_with_compositor(
     var api_server_ptr = &compositor.api_server;
     handler_adapters.set_api_server(api_server_ptr);
     auth_integration.set_auth_service(auth_service);
+    var db_config = database_integration.DatabaseConfig.init();
+    db_config.enabled = false;
+    database_integration.set_database_config(db_config);
     var count: u32 = 0;
     if (compositor.register_api_route(
         grain_core_api.HttpMethod.post,

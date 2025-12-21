@@ -118,3 +118,35 @@ test "multiple records" {
     try testing.expect(std.mem.eql(u8, record2.?.value, "value2"));
 }
 
+test "batch create records" {
+    const allocator = testing.allocator;
+    var engine = try StorageEngine.init(allocator, 1024 * 1024);
+    defer engine.deinit();
+
+    const keys = [_][]const u8{ "batch1", "batch2", "batch3" };
+    const values = [_][]const u8{ "value1", "value2", "value3" };
+    var output_record_ids: [10]u64 = undefined;
+    const count = try engine.batch_create_records(&keys, &values, &output_record_ids);
+    try testing.expect(count == 3);
+    try testing.expect(engine.records_len == 3);
+    try testing.expect(output_record_ids[0] > 0);
+    try testing.expect(output_record_ids[1] > 0);
+    try testing.expect(output_record_ids[2] > 0);
+    const record1 = engine.read_record_by_key("batch1");
+    try testing.expect(record1 != null);
+    try testing.expect(std.mem.eql(u8, record1.?.value, "value1"));
+}
+
+test "batch create records with duplicates" {
+    const allocator = testing.allocator;
+    var engine = try StorageEngine.init(allocator, 1024 * 1024);
+    defer engine.deinit();
+
+    _ = try engine.create_record("existing", "value");
+    const keys = [_][]const u8{ "existing", "new1", "new2" };
+    const values = [_][]const u8{ "duplicate", "value1", "value2" };
+    var output_record_ids: [10]u64 = undefined;
+    const count = try engine.batch_create_records(&keys, &values, &output_record_ids);
+    try testing.expect(count == 2);
+    try testing.expect(engine.records_len == 3);
+}

@@ -109,12 +109,13 @@ pub const CourtIntegration = struct {
             return 0;
         }
         const compute = self.compute.?;
-        // Allocate SRAM for query vector.
+        // Allocate SRAM for query vector (use core 0).
+        const core_id: u32 = 0;
         const vector_size: u64 = @as(u64, @intCast(query_vector.len)) * @sizeOf(f32);
-        const data_offset = compute.allocate_sram(vector_size) catch return 0;
+        const data_offset = compute.allocate_sram(core_id, vector_size) catch return 0;
         // Copy query vector to SRAM.
         const sram_slice = compute.sram_data[data_offset..data_offset + vector_size];
-        @memcpy(sram_slice[0..query_vector.len], std.mem.asBytes(query_vector.ptr)[0..vector_size]);
+        @memcpy(sram_slice[0..vector_size], std.mem.asBytes(query_vector.ptr)[0..vector_size]);
         // Execute vector search operation.
         const core_ids = [_]u32{0}; // Use first core for search.
         const op_id = compute.execute_parallel(
@@ -153,12 +154,13 @@ pub const CourtIntegration = struct {
             return 0;
         }
         const compute = self.compute.?;
-        // Allocate SRAM for context data.
+        // Allocate SRAM for context data (use core 0).
+        const core_id: u32 = 0;
         const context_size: u64 = @as(u64, @intCast(context.len));
-        const data_offset = compute.allocate_sram(context_size) catch return 0;
+        const data_offset = compute.allocate_sram(core_id, context_size) catch return 0;
         // Copy context to SRAM.
         const sram_slice = compute.sram_data[data_offset..data_offset + context_size];
-        @memcpy(sram_slice[0..context.len], context);
+        @memcpy(sram_slice[0..context_size], context);
         // Execute LLM inference operation.
         const core_ids = [_]u32{0}; // Use first core for inference.
         const op_id = compute.execute_parallel(
@@ -207,12 +209,13 @@ pub const CourtIntegration = struct {
         if (desc_len == 0) {
             return false;
         }
-        // Allocate SRAM for description data.
+        // Allocate SRAM for description data (use core 0).
+        const core_id: u32 = 0;
         const desc_size: u64 = @as(u64, @intCast(desc_len));
-        const data_offset = compute.allocate_sram(desc_size) catch return false;
+        const data_offset = compute.allocate_sram(core_id, desc_size) catch return false;
         // Copy description to SRAM.
         const sram_slice = compute.sram_data[data_offset..data_offset + desc_size];
-        @memcpy(sram_slice[0..desc_len], desc_buffer[0..desc_len]);
+        @memcpy(sram_slice[0..desc_size], desc_buffer[0..desc_len]);
         // Execute data transform operation for embedding.
         const core_ids = [_]u32{0}; // Use first core for transform.
         const op_id = compute.execute_parallel(

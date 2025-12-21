@@ -133,6 +133,17 @@ pub const DagIntegration = struct {
         std.debug.assert(event.parent_events_len <= 8);
         // Create canvas node if it doesn't exist (simplified - use canvas_id as node_id).
         const canvas_node_id: u32 = event.canvas_id;
+        // Ensure canvas node exists in DAG (create if needed).
+        if (canvas_node_id >= dag.nodes_len) {
+            // Create canvas node with empty data.
+            const empty_data = "";
+            const empty_attrs = dag_core.DagCore.Node.Attributes{};
+            _ = dag.addNode(
+                dag_core.DagCore.NodeType.ui_component,
+                empty_data,
+                empty_attrs,
+            ) catch return false;
+        }
         // Convert DesignEvent to DAG Event.
         const event_data = event.event_data[0..event.event_data_len];
         const parent_ids = event.parent_events[0..event.parent_events_len];

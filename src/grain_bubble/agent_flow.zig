@@ -199,7 +199,7 @@ pub const AgentFlow = struct {
 
     pub fn init(canvas_state: *canvas.Canvas) AgentFlow {
         std.debug.assert(@intFromPtr(canvas_state) != 0);
-        var flow = AgentFlow{
+        const flow = AgentFlow{
             .nodes = undefined,
             .nodes_len = 0,
             .connections = undefined,

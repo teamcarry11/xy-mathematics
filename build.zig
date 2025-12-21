@@ -4432,4 +4432,18 @@ pub fn build(b: *std.Build) void {
     });
     const dag_operations_kernel_tests_run = b.addRunArtifact(dag_operations_kernel_tests);
     test_step.dependOn(&dag_operations_kernel_tests_run.step);
+
+    // File system integration test (VM integration)
+    const file_system_integration_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/098_file_system_integration_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+            },
+        }),
+    });
+    const file_system_integration_tests_run = b.addRunArtifact(file_system_integration_tests);
+    test_step.dependOn(&file_system_integration_tests_run.step);
 }

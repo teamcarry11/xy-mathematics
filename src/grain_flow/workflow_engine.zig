@@ -14,6 +14,7 @@ const event_bus = @import("event_bus.zig");
 const agent_coordinator = @import("agent_coordinator.zig");
 const workflow_metrics = @import("workflow_metrics.zig");
 const failure_pattern_metrics = @import("failure_pattern_metrics.zig");
+const performance_metrics = @import("performance_metrics.zig");
 
 // Bounded: Max workflow depth (max path length).
 pub const MAX_WORKFLOW_DEPTH: u32 = 1000;
@@ -246,6 +247,7 @@ pub const WorkflowEngine = struct {
     agent_coordinator: *agent_coordinator.AgentCoordinator,
     metrics_collector: ?*workflow_metrics.WorkflowMetricsCollector,
     failure_pattern_collector: ?*failure_pattern_metrics.FailurePatternMetricsCollector,
+    performance_collector: ?*performance_metrics.PerformanceMetricsCollector,
 
     pub fn init(
         event_bus_instance: *event_bus.EventBus,
@@ -261,6 +263,7 @@ pub const WorkflowEngine = struct {
             .agent_coordinator = coordinator_instance,
             .metrics_collector = null,
             .failure_pattern_collector = null,
+            .performance_collector = null,
         };
         var i: u32 = 0;
         while (i < 64) : (i += 1) {
@@ -316,6 +319,25 @@ pub const WorkflowEngine = struct {
         }
         workflow.?.status = WorkflowStatus.running;
         workflow.?.started_at = timestamp;
+        // Record wait time (time from creation to execution start).
+        if (self.performance_collector) |collector| {
+            _ = collector.record_wait_time(
+                workflow_id,
+                workflow.?.created_at,
+                timestamp,
+            );
+        }
+        // Record queue depth (workflows with pending status).
+        if (self.performance_collector) |collector| {
+            var pending_count: u32 = 0;
+            var i: u32 = 0;
+            while (i < self.workflows_len) : (i += 1) {
+                if (self.workflows[i].status == WorkflowStatus.pending) {
+                    pending_count += 1;
+                }
+            }
+            _ = collector.record_queue_depth(timestamp, pending_count);
+        }
         _ = self.event_bus.publish_event(
             event_bus.EventType.workflow_started,
             workflow_id,
@@ -482,6 +504,27 @@ pub const WorkflowEngine = struct {
     ) void {
         std.debug.assert(@intFromPtr(collector) != 0);
         self.failure_pattern_collector = collector;
+    }
+
+    // Set performance collector (optional, for observability).
+    pub fn set_performance_collector(
+        self: *WorkflowEngine,
+        collector: *performance_metrics.PerformanceMetricsCollector,
+    ) void {
+        std.debug.assert(@intFromPtr(collector) != 0);
+        self.performance_collector = collector;
+    }
+
+    // Get queue depth (number of pending workflows).
+    pub fn get_queue_depth(self: *const WorkflowEngine) u32 {
+        var count: u32 = 0;
+        var i: u32 = 0;
+        while (i < self.workflows_len) : (i += 1) {
+            if (self.workflows[i].status == WorkflowStatus.pending) {
+                count += 1;
+            }
+        }
+        return count;
     }
 
     // Get workflow count.

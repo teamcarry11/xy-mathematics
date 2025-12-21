@@ -53,15 +53,7 @@ test "text renderer render single character" {
 
     // Assert: Buffer modified (some pixels changed)
     // Note: Actual pixel values depend on font renderer implementation
-    var has_non_zero = false;
-    for (buffer) |pixel| {
-        if (pixel != 0) {
-            has_non_zero = true;
-            break;
-        }
-    }
     // Note: May be all zeros if character not rendered, which is acceptable
-    _ = has_non_zero;
 }
 
 test "text renderer render multiple characters" {

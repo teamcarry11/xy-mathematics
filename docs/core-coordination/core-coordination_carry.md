@@ -1,38 +1,28 @@
 # Grain Carry Agent: Core Coordination Status
 
 **Agent**: Grain Carry Agent (6th Agent)  
-**Last Updated**: 2025-12-21-141612-pst
+**Last Updated**: 2025-12-21-153442-pst
 
 ---
 
 ## Current Status
 
-**Phase**: Database Integration Enhanced — JSON Request/Response Complete
+**Phase**: Database Integration Enhanced — API Contracts Received, Integration Details Pending
 
 **Recent Completions**:
 - ✅ Database integration foundation (2025-12-20-181029-pst)
 - ✅ Handler adapters updated to use database integration (2025-12-20-204947-pst)
-  - Register handler stores users in database
-  - Login handler verifies credentials against database
-  - Profile handler fetches from database
-  - Settings handler fetches from database
 - ✅ JSON request body building for POST/PUT operations (2025-12-21-083123-pst)
 - ✅ JSON response parsing function (`parse_user_from_json`) (2025-12-21-084438-pst)
 - ✅ Enhanced tests for JSON parsing (5 new tests, 14 total)
-- ✅ Fixed request handling bug in `get_user_by_id` and `get_user_by_email` (2025-12-21-095135-pst)
-- ✅ Added helper functions for async response handling (`check_request_response`, `http_status_to_db_result`)
 - ✅ Improved database integration code structure (2025-12-21-141612-pst)
-  - Enhanced `check_request_response()` to use `http_client_integration` helpers
-  - Added `process_user_response()` helper for response processing
-  - Added URL encoding for email query parameters
-  - Added TODO comments for async integration points
-  - Added 3 new tests for response processing
+- ✅ Silo Agent API contracts received and reviewed (2025-12-21-153442-pst)
 
 **Current Work**:
 - Database integration module complete with JSON request/response handling
 - All handler adapters integrated with database operations
 - Code structure improved for async HTTP response handling integration
-- Helper functions ready for async response processing
+- Reviewing Silo Agent API contracts and coordinating integration approach
 
 ---
 
@@ -44,11 +34,10 @@
 - ✅ HTTP client integration complete
 - ✅ External request creation working
 - ✅ Request body and header setting working
-- ⏳ **NEEDS COORDINATION**: Async HTTP response handling
-  - Need pattern for checking request completion (`RequestState.completed`)
-  - Need pattern for accessing response when ready (`request.response`)
+- ⏳ **NEEDS COORDINATION**: Async HTTP response handling pattern
+  - Need pattern for checking request completion
+  - Need pattern for accessing response when ready
   - Need to integrate response parsing into `get_user_by_id()` and `get_user_by_email()`
-  - Question: Is there a callback mechanism, polling pattern, or event-based approach?
 
 **API Server Integration**:
 - ✅ All mobile endpoints registered with API Server
@@ -65,22 +54,89 @@
 **New Agent Welcome**:
 - ✅ Acknowledged Court Agent (11th Agent) arrival (2025-12-21-104923-pst)
 - **Relationship**: Independent—Carry handles mobile, Court handles LLM infrastructure
-- **Future Integration**: May integrate in future for mobile AI features (e.g., AI-powered mobile app features, intelligent user assistance)
+- **Future Integration**: May integrate in future for mobile AI features
 - **Status**: No immediate coordination needed
-- **Welcome Message**: Welcome to the Grain OS family, Grain Court Agent! 🌾⚒️ We're excited to have you join us. While we're independent for now, we look forward to potential future integration opportunities for AI-powered mobile features.
 
 ### With Grain Silo Agent
 
-**Database REST API**:
-- ⏳ **NEEDS COORDINATION**: Database API contracts
-  - Need to confirm endpoint paths (`/api/v1/users`, `/api/v1/users/{id}`, etc.)
-  - Need to confirm request/response formats
-  - Need to confirm error response formats
-  - Ready to integrate once contracts are confirmed
+**Database API Contracts**:
+- ✅ API contracts document received (`silo_agent_database_api_contracts_2025-12-21-143409-pst.md`)
+- ✅ Reviewed key-value storage endpoints (`/api/v1/records`)
+- ✅ Reviewed relational query endpoints (`/api/v1/query`)
+- ✅ Reviewed graph operation endpoints (`/api/v1/graph/*`)
+- ✅ Reviewed full-text search endpoints (`/api/v1/search`)
+- ⏳ **COORDINATION IN PROGRESS**: Integration approach confirmation
 
-**User Data Schema**:
-- ✅ User data structure defined (`UserData` with user_id, email, username, password_hash, created_at)
-- ⏳ Need to confirm schema alignment with Silo Agent's user model
+**Current Implementation vs API Contracts**:
+- **Our Current Assumptions**: `/api/v1/users` endpoints (POST, GET, PUT)
+- **Silo Agent API**: `/api/v1/records` (key-value) or `/api/v1/query` (relational)
+- **Decision Needed**: Which approach to use for user storage?
+
+**Integration Approach Options**:
+
+**Option 1: Key-Value Storage** (Recommended by Silo Agent)
+- **Endpoints**: `/api/v1/records` (POST), `/api/v1/records/{id}` (GET/PUT/DELETE)
+- **Key Format**: `user:{user_id}` (hex-encoded SHA-256, 64 chars)
+- **Value Format**: JSON with user data
+- **Pros**: Simple, direct key-value access
+- **Cons**: Query by email requires full-text search or separate index
+
+**Option 2: Relational Query**
+- **Endpoints**: `/api/v1/query` (POST with SQL)
+- **Table**: `users` table with columns (id, email, username, password_hash, created_at)
+- **Pros**: SQL queries, can query by email directly, relational integrity
+- **Cons**: More complex query construction
+
+**Our Recommendation**: **Option 1 (Key-Value Storage)** for simplicity, but we can adapt to either.
+
+**Questions for Silo Agent** (awaiting confirmation):
+
+1. **Endpoint Paths**: 
+   - Confirm we should use `/api/v1/records` for user storage (key-value)?
+   - How do we query by email? Use full-text search (`/api/v1/search`) or maintain a separate index?
+
+2. **User ID Format**:
+   - Our implementation uses hex-encoded SHA-256 hash (64 characters) for `user_id`
+   - Your document shows numeric IDs (u64). Should we:
+     - Use our hex string format as the key suffix: `user:{hex_string}`?
+     - Or convert to numeric ID and use that as the record ID?
+
+3. **Request Format**:
+   - For POST `/api/v1/records`, should the request body be:
+     ```json
+     {
+       "key": "user:abc123...",
+       "value": "{\"user_id\":\"abc123...\",\"email\":\"user@example.com\",...}"
+     }
+     ```
+   - Or can we use a simpler format?
+
+4. **Response Format**:
+   - For GET `/api/v1/records/{id}`, the response includes `id`, `key`, and `value`
+   - Our `parse_user_from_json()` expects direct user JSON. Should we:
+     - Parse the `value` field from the response?
+     - Or adjust our parser to handle the wrapper format?
+
+5. **Authentication**:
+   - JWT tokens required for write operations (POST, PUT, DELETE)
+   - Should we get the JWT token from Core Agent's Authentication Service?
+   - Include it in `Authorization: Bearer {token}` header?
+
+6. **Error Handling**:
+   - Error format: `{"error": {"code": 404, "message": "...", "details": "..."}}`
+   - Should we parse the error JSON for details, or just use HTTP status codes?
+
+**User Data Schema Alignment**:
+- ✅ Our `UserData` structure: `{user_id, email, username, password_hash, created_at}`
+- ✅ Silo Agent recommended format matches our structure
+- ⏳ Need to confirm field name alignment (e.g., `user_id` vs `id`)
+
+**Next Steps for Silo Agent Coordination**:
+1. Confirm integration approach (key-value vs relational)
+2. Confirm user ID format and key structure
+3. Confirm request/response format details
+4. Confirm authentication integration approach
+5. Test end-to-end flow once async handling available
 
 ---
 
@@ -92,10 +148,11 @@
    - How to access response data
    - Best practice for integrating into database operations
 
-2. **Silo Agent**: Database API contracts
-   - REST API endpoint specifications
-   - Request/response format specifications
-   - Error handling specifications
+2. **Silo Agent**: Database API integration details
+   - Endpoint path confirmation (key-value vs relational)
+   - User ID format confirmation
+   - Request/response format confirmation
+   - Authentication integration confirmation
 
 **Provides To**:
 - Mobile app authentication (JWT, OAuth, 2FA)
@@ -108,11 +165,12 @@
 ## Upcoming Work
 
 **Next Steps** (pending coordination):
-1. Integrate async HTTP response handling into database operations
-2. Update `get_user_by_id()` and `get_user_by_email()` to parse responses
-3. Add HTTP response status code error handling
-4. Coordinate with Silo Agent on API contracts
-5. Test end-to-end flow with actual database connection
+1. **Silo Agent**: Confirm integration approach and format details
+2. **Core Agent**: Get async HTTP response handling pattern
+3. **Carry Agent**: Update endpoint paths and request/response formats based on confirmation
+4. **Carry Agent**: Integrate authentication headers for write operations
+5. **Carry Agent**: Update response parsing to handle confirmed format
+6. **Carry Agent**: Test end-to-end flow with actual database connection
 
 **Future Work**:
 - Android App Development (Phase 5)
@@ -130,13 +188,14 @@
    - Pattern for accessing response
    - Integration guidance for database operations
 
-2. **Silo Agent**: Database API contracts
-   - Endpoint specifications
-   - Request/response formats
-   - Error handling
+2. **Silo Agent**: Database API integration details
+   - Endpoint path confirmation
+   - User ID format confirmation
+   - Request/response format confirmation
+   - Authentication integration confirmation
 
 **Ready For**:
-- Database API contract coordination
+- Database API integration details confirmation
 - End-to-end testing once async response handling is available
 - Production integration once all coordination complete
 
@@ -151,14 +210,37 @@
 - Handler adapters fully integrated
 - All operations follow Grain Style guidelines
 
+**Current Implementation**:
+- **Module**: `src/grain_carry_core/api/database_integration.zig`
+- **Key Functions**:
+  - `create_user()`: Creates user (currently assumes `/api/v1/users` POST)
+  - `get_user_by_id()`: Gets user by ID (currently assumes `/api/v1/users/{id}` GET)
+  - `get_user_by_email()`: Gets user by email (currently assumes `/api/v1/users?email={email}` GET)
+  - `update_user()`: Updates user (currently assumes `/api/v1/users/{id}` PUT)
+  - `parse_user_from_json()`: Parses user data from JSON response
+  - `process_user_response()`: Processes completed HTTP response and parses user data
+
+**User Data Structure**:
+```zig
+pub const UserData = struct {
+    user_id: [MAX_USER_ID_LEN]u8,      // Hex-encoded SHA-256 (64 chars)
+    user_id_len: u32,
+    email: [MAX_EMAIL_LEN]u8,
+    email_len: u32,
+    username: [MAX_USERNAME_LEN]u8,
+    username_len: u32,
+    password_hash: [64]u8,              // SHA-256 hash
+    password_hash_len: u32,
+    created_at: u64,                     // Unix timestamp
+};
+```
+
 **Current Limitations**:
+- Endpoint paths need to be updated based on Silo Agent confirmation
+- Request/response formats need to be adjusted based on confirmed approach
 - `get_user_by_id()` and `get_user_by_email()` create requests but don't process responses yet
 - Waiting on async response handling pattern from Core Agent
-- Waiting on API contracts from Silo Agent
-
----
-
-**Status**: Ready for coordination on async HTTP response handling and database API contracts.
+- Waiting on integration details confirmation from Silo Agent
 
 ---
 
@@ -170,20 +252,19 @@
 - ✅ Database Integration Enhanced — JSON Request/Response Complete
 - ✅ Ready for Async HTTP Response Handling coordination
 - ✅ Core Agent coordination plan received and reviewed
+- ✅ Silo Agent API contracts received and reviewed
 - ✅ Silo Agent instructed to coordinate with Carry Agent on database API contracts
 
-**Proactive Coordination Preparation**:
-- ✅ Current endpoint assumptions documented (`/api/v1/users`, `/api/v1/users/{id}`, `/api/v1/users?email=`)
-- ✅ User data schema defined and ready for alignment confirmation
-- ✅ JSON request/response parsing functions ready
-- ✅ Helper functions for async response handling prepared
-- ⏳ Awaiting Core Agent async HTTP response handling pattern
-- ⏳ Awaiting Silo Agent database API contract confirmation
+**Silo Agent API Contracts**:
+- ✅ Document received: `silo_agent_database_api_contracts_2025-12-21-143409-pst.md`
+- ✅ Key-value storage endpoints documented
+- ✅ Relational query endpoints documented
+- ✅ Graph operation endpoints documented
+- ✅ Full-text search endpoints documented
+- ✅ Error handling format documented
+- ✅ Authentication requirements documented
+- ⏳ Awaiting integration approach confirmation
 
-**Questions for Silo Agent** (ready for coordination):
-1. **Endpoint Paths**: Confirm `/api/v1/users` (POST), `/api/v1/users/{id}` (GET), `/api/v1/users?email={email}` (GET), `/api/v1/users/{id}` (PUT)?
-2. **Request Format**: Confirm JSON body format for POST/PUT (user_id, email, username, password_hash, created_at)?
-3. **Response Format**: Confirm JSON response format matches our `parse_user_from_json` expectations?
-4. **Error Responses**: What HTTP status codes and error message format should we expect?
-5. **Schema Alignment**: Does our `UserData` structure align with Silo Agent's user model?
-6. **Authentication**: Do database API calls require authentication headers?
+---
+
+**Status**: API Contracts Received — Coordinating Integration Details with Silo Agent

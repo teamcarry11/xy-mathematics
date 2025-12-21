@@ -546,13 +546,13 @@ pub const TextEditor = struct {
         if (record_undo) {
             const old_cursor_line = self.cursor.line;
             const old_cursor_col = self.cursor.column;
-            self.add_undo_entry(old_cursor_line, old_cursor_col, .insert, text[0..insert_len]);
+            self.add_undo_entry(old_cursor_line, old_cursor_col, .insert, converted_text[0..insert_len]);
         }
 
         // Insert new text
         @memcpy(
             current_line.content[self.cursor.column..self.cursor.column + insert_len],
-            text[0..insert_len],
+            converted_text[0..insert_len],
         );
         current_line.content_len += insert_len;
         self.cursor.column += insert_len;

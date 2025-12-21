@@ -234,3 +234,87 @@ test "workspace_file_storage_list_file_metadata" {
     const count = file_storage.list_file_metadata(&output);
     std.debug.assert(count >= 2);
 }
+
+test "nostr_profile_storage_validation" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deallocate();
+    const allocator = gpa.allocator();
+    var storage = try StorageEngine.init(allocator, 1024);
+    defer storage.deinit();
+    var g = try Graph.init(allocator);
+    defer g.deinit();
+    var profile_storage = NostrProfileStorage.init(&storage, &g);
+    const valid_npub = "npub1test123";
+    const invalid_npub = "invalid";
+    const profile_data = "{\"name\":\"Test\"}";
+    _ = try profile_storage.store_profile(valid_npub, profile_data);
+    const invalid_result = profile_storage.store_profile(invalid_npub, profile_data);
+    std.debug.assert(invalid_result == error.InvalidNpub);
+}
+
+test "workspace_file_storage_validation" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deallocate();
+    const allocator = gpa.allocator();
+    var storage = try StorageEngine.init(allocator, 1024);
+    defer storage.deinit();
+    var file_storage = WorkspaceFileStorage.init(&storage);
+    const valid_path = "/home/user/file.txt";
+    const invalid_path = "relative/path.txt";
+    const metadata = "{\"size\":1024}";
+    _ = try file_storage.store_file_metadata(valid_path, metadata);
+    const invalid_result = file_storage.store_file_metadata(invalid_path, metadata);
+    std.debug.assert(invalid_result == error.InvalidFilePath);
+}
+
+test "nostr_profile_storage_count" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deallocate();
+    const allocator = gpa.allocator();
+    var storage = try StorageEngine.init(allocator, 1024);
+    defer storage.deinit();
+    var g = try Graph.init(allocator);
+    defer g.deinit();
+    var profile_storage = NostrProfileStorage.init(&storage, &g);
+    const npub1 = "npub1count1";
+    const npub2 = "npub1count2";
+    const profile_data = "{\"name\":\"Test\"}";
+    _ = try profile_storage.store_profile(npub1, profile_data);
+    _ = try profile_storage.store_profile(npub2, profile_data);
+    const count = profile_storage.count_profiles();
+    std.debug.assert(count >= 2);
+}
+
+test "dag_website_storage_count" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deallocate();
+    const allocator = gpa.allocator();
+    var storage = try StorageEngine.init(allocator, 1024);
+    defer storage.deinit();
+    var g = try Graph.init(allocator);
+    defer g.deinit();
+    var website_storage = DagWebsiteStorage.init(&storage, &g);
+    const node1 = "count_node1";
+    const node2 = "count_node2";
+    const content = "<h1>Test</h1>";
+    _ = try website_storage.store_node(node1, content);
+    _ = try website_storage.store_node(node2, content);
+    const count = website_storage.count_nodes();
+    std.debug.assert(count >= 2);
+}
+
+test "workspace_file_storage_count" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deallocate();
+    const allocator = gpa.allocator();
+    var storage = try StorageEngine.init(allocator, 1024);
+    defer storage.deinit();
+    var file_storage = WorkspaceFileStorage.init(&storage);
+    const file1 = "/home/user/count1.txt";
+    const file2 = "/home/user/count2.txt";
+    const metadata = "{\"size\":1024}";
+    _ = try file_storage.store_file_metadata(file1, metadata);
+    _ = try file_storage.store_file_metadata(file2, metadata);
+    const count = file_storage.count_file_metadata();
+    std.debug.assert(count >= 2);
+}

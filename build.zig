@@ -4495,4 +4495,22 @@ pub fn build(b: *std.Build) void {
     });
     const file_system_integration_tests_run = b.addRunArtifact(file_system_integration_tests);
     test_step.dependOn(&file_system_integration_tests_run.step);
+
+    // AArch64 VM translation verification test
+    const aarch64_vm_translation_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/099_aarch64_vm_translation_verification_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "vm_aarch64", .module = b.addModule("vm_aarch64", .{
+                    .root_source_file = b.path("src/kernel_vm/vm_aarch64.zig"),
+                    .target = target,
+                    .optimize = optimize,
+                })},
+            },
+        }),
+    });
+    const aarch64_vm_translation_tests_run = b.addRunArtifact(aarch64_vm_translation_tests);
+    test_step.dependOn(&aarch64_vm_translation_tests_run.step);
 }

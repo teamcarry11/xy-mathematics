@@ -468,3 +468,175 @@ pub const Animation = struct {
         std.debug.assert(self.delay_ms <= 5000);
     }
 };
+
+// Preset design patterns: common design patterns for SLC products.
+pub const PresetPatterns = struct {
+    // Create profile form pattern (Nostr Profile Builder).
+    pub fn create_profile_form_pattern() DesignPattern {
+        var pattern = DesignPattern.init(1, .profile_form, "Profile Form");
+        pattern.color_scheme = DesignPattern.ColorScheme{
+            .primary = 0xFF0066FF, // Blue
+            .secondary = 0xFF00CCFF, // Light blue
+            .background = 0xFFFFFFFF, // White
+            .text = 0xFF000000, // Black
+            .accent = 0xFFFF6600, // Orange
+        };
+        pattern.spacing = DesignPattern.SpacingScheme{
+            .small = 4.0,
+            .medium = 8.0,
+            .large = 16.0,
+            .xlarge = 24.0,
+        };
+        pattern.typography = DesignPattern.TypographyScheme{
+            .heading_size = 20,
+            .body_size = 14,
+            .caption_size = 12,
+            .line_height = 1.6,
+        };
+        std.debug.assert(pattern.pattern_id == 1);
+        return pattern;
+    }
+
+    // Create profile viewer pattern (Nostr Profile Builder).
+    pub fn create_profile_viewer_pattern() DesignPattern {
+        var pattern = DesignPattern.init(2, .profile_viewer, "Profile Viewer");
+        pattern.color_scheme = DesignPattern.ColorScheme{
+            .primary = 0xFF0066FF, // Blue
+            .secondary = 0xFFE6F2FF, // Light blue background
+            .background = 0xFFFFFFFF, // White
+            .text = 0xFF1A1A1A, // Dark gray
+            .accent = 0xFFFF6600, // Orange
+        };
+        pattern.spacing = DesignPattern.SpacingScheme{
+            .small = 6.0,
+            .medium = 12.0,
+            .large = 24.0,
+            .xlarge = 32.0,
+        };
+        pattern.typography = DesignPattern.TypographyScheme{
+            .heading_size = 24,
+            .body_size = 16,
+            .caption_size = 12,
+            .line_height = 1.5,
+        };
+        std.debug.assert(pattern.pattern_id == 2);
+        return pattern;
+    }
+
+    // Create website editor pattern (DAG Website Builder).
+    pub fn create_website_editor_pattern() DesignPattern {
+        var pattern = DesignPattern.init(3, .website_editor, "Website Editor");
+        pattern.color_scheme = DesignPattern.ColorScheme{
+            .primary = 0xFF00AA00, // Green
+            .secondary = 0xFF66FF66, // Light green
+            .background = 0xFFF5F5F5, // Light gray
+            .text = 0xFF000000, // Black
+            .accent = 0xFFFF0000, // Red
+        };
+        pattern.spacing = DesignPattern.SpacingScheme{
+            .small = 4.0,
+            .medium = 8.0,
+            .large = 16.0,
+            .xlarge = 32.0,
+        };
+        pattern.typography = DesignPattern.TypographyScheme{
+            .heading_size = 22,
+            .body_size = 15,
+            .caption_size = 11,
+            .line_height = 1.6,
+        };
+        std.debug.assert(pattern.pattern_id == 3);
+        return pattern;
+    }
+
+    // Create workspace app pattern (Workspace App Suite).
+    pub fn create_workspace_app_pattern() DesignPattern {
+        var pattern = DesignPattern.init(4, .workspace_app, "Workspace App");
+        pattern.color_scheme = DesignPattern.ColorScheme{
+            .primary = 0xFF333333, // Dark gray
+            .secondary = 0xFF666666, // Medium gray
+            .background = 0xFFFFFFFF, // White
+            .text = 0xFF000000, // Black
+            .accent = 0xFF0066CC, // Blue
+        };
+        pattern.spacing = DesignPattern.SpacingScheme{
+            .small = 4.0,
+            .medium = 8.0,
+            .large = 16.0,
+            .xlarge = 24.0,
+        };
+        pattern.typography = DesignPattern.TypographyScheme{
+            .heading_size = 18,
+            .body_size = 14,
+            .caption_size = 11,
+            .line_height = 1.5,
+        };
+        std.debug.assert(pattern.pattern_id == 4);
+        return pattern;
+    }
+};
+
+// Preset animations: common animations for SLC components.
+pub const PresetAnimations = struct {
+    // Create fade in animation.
+    pub fn create_fade_in(duration_ms: u32) Animation {
+        std.debug.assert(duration_ms > 0);
+        std.debug.assert(duration_ms <= 10000);
+        return Animation.init(1, .fade_in, duration_ms, .ease_in_out);
+    }
+
+    // Create fade out animation.
+    pub fn create_fade_out(duration_ms: u32) Animation {
+        std.debug.assert(duration_ms > 0);
+        std.debug.assert(duration_ms <= 10000);
+        return Animation.init(2, .fade_out, duration_ms, .ease_in_out);
+    }
+
+    // Create slide in animation.
+    pub fn create_slide_in(duration_ms: u32) Animation {
+        std.debug.assert(duration_ms > 0);
+        std.debug.assert(duration_ms <= 10000);
+        return Animation.init(3, .slide_in, duration_ms, .ease_out);
+    }
+
+    // Create slide out animation.
+    pub fn create_slide_out(duration_ms: u32) Animation {
+        std.debug.assert(duration_ms > 0);
+        std.debug.assert(duration_ms <= 10000);
+        return Animation.init(4, .slide_out, duration_ms, .ease_in);
+    }
+
+    // Create scale in animation.
+    pub fn create_scale_in(duration_ms: u32) Animation {
+        std.debug.assert(duration_ms > 0);
+        std.debug.assert(duration_ms <= 10000);
+        return Animation.init(5, .scale_in, duration_ms, .ease_out);
+    }
+
+    // Create scale out animation.
+    pub fn create_scale_out(duration_ms: u32) Animation {
+        std.debug.assert(duration_ms > 0);
+        std.debug.assert(duration_ms <= 10000);
+        return Animation.init(6, .scale_out, duration_ms, .ease_in);
+    }
+
+    // Create quick fade in (200ms).
+    pub fn create_quick_fade_in() Animation {
+        return create_fade_in(200);
+    }
+
+    // Create smooth fade in (500ms).
+    pub fn create_smooth_fade_in() Animation {
+        return create_fade_in(500);
+    }
+
+    // Create quick slide in (250ms).
+    pub fn create_quick_slide_in() Animation {
+        return create_slide_in(250);
+    }
+
+    // Create smooth slide in (600ms).
+    pub fn create_smooth_slide_in() Animation {
+        return create_slide_in(600);
+    }
+};

@@ -131,3 +131,27 @@ test "parse user from json empty json" {
     const result = db_integration.parse_user_from_json(json, &user);
     try testing.expect(result == db_integration.DatabaseResult.validation_error);
 }
+
+test "http status to db result success" {
+    const grain_core_api = @import("grain_core").api_server;
+    const status_ok = grain_core_api.HttpStatus.ok;
+    const status_created = grain_core_api.HttpStatus.created;
+    const result_ok = db_integration.http_status_to_db_result(status_ok);
+    const result_created = db_integration.http_status_to_db_result(status_created);
+    try testing.expect(result_ok == db_integration.DatabaseResult.success);
+    try testing.expect(result_created == db_integration.DatabaseResult.success);
+}
+
+test "http status to db result not found" {
+    const grain_core_api = @import("grain_core").api_server;
+    const status = grain_core_api.HttpStatus.not_found;
+    const result = db_integration.http_status_to_db_result(status);
+    try testing.expect(result == db_integration.DatabaseResult.not_found);
+}
+
+test "http status to db result validation error" {
+    const grain_core_api = @import("grain_core").api_server;
+    const status = grain_core_api.HttpStatus.bad_request;
+    const result = db_integration.http_status_to_db_result(status);
+    try testing.expect(result == db_integration.DatabaseResult.validation_error);
+}

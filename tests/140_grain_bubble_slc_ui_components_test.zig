@@ -162,3 +162,84 @@ test "slc animation set delay" {
     anim.set_delay(100);
     std.debug.assert(anim.delay_ms == 100);
 }
+
+test "slc preset patterns profile form" {
+    const pattern = slc_ui_components.PresetPatterns.create_profile_form_pattern();
+    std.debug.assert(pattern.pattern_type == .profile_form);
+    std.debug.assert(pattern.color_scheme.primary == 0xFF0066FF);
+    std.debug.assert(pattern.spacing.medium == 8.0);
+    std.debug.assert(pattern.typography.heading_size == 20);
+}
+
+test "slc preset patterns profile viewer" {
+    const pattern = slc_ui_components.PresetPatterns.create_profile_viewer_pattern();
+    std.debug.assert(pattern.pattern_type == .profile_viewer);
+    std.debug.assert(pattern.color_scheme.primary == 0xFF0066FF);
+    std.debug.assert(pattern.spacing.large == 24.0);
+    std.debug.assert(pattern.typography.heading_size == 24);
+}
+
+test "slc preset patterns website editor" {
+    const pattern = slc_ui_components.PresetPatterns.create_website_editor_pattern();
+    std.debug.assert(pattern.pattern_type == .website_editor);
+    std.debug.assert(pattern.color_scheme.primary == 0xFF00AA00);
+    std.debug.assert(pattern.spacing.xlarge == 32.0);
+    std.debug.assert(pattern.typography.heading_size == 22);
+}
+
+test "slc preset patterns workspace app" {
+    const pattern = slc_ui_components.PresetPatterns.create_workspace_app_pattern();
+    std.debug.assert(pattern.pattern_type == .workspace_app);
+    std.debug.assert(pattern.color_scheme.primary == 0xFF333333);
+    std.debug.assert(pattern.spacing.medium == 8.0);
+    std.debug.assert(pattern.typography.heading_size == 18);
+}
+
+test "slc preset animations fade in" {
+    const anim = slc_ui_components.PresetAnimations.create_fade_in(300);
+    std.debug.assert(anim.animation_type == .fade_in);
+    std.debug.assert(anim.duration_ms == 300);
+    std.debug.assert(anim.easing == .ease_in_out);
+}
+
+test "slc preset animations slide in" {
+    const anim = slc_ui_components.PresetAnimations.create_slide_in(400);
+    std.debug.assert(anim.animation_type == .slide_in);
+    std.debug.assert(anim.duration_ms == 400);
+    std.debug.assert(anim.easing == .ease_out);
+}
+
+test "slc preset animations scale in" {
+    const anim = slc_ui_components.PresetAnimations.create_scale_in(350);
+    std.debug.assert(anim.animation_type == .scale_in);
+    std.debug.assert(anim.duration_ms == 350);
+    std.debug.assert(anim.easing == .ease_out);
+}
+
+test "slc preset animations quick fade in" {
+    const anim = slc_ui_components.PresetAnimations.create_quick_fade_in();
+    std.debug.assert(anim.animation_type == .fade_in);
+    std.debug.assert(anim.duration_ms == 200);
+    std.debug.assert(anim.easing == .ease_in_out);
+}
+
+test "slc preset animations smooth fade in" {
+    const anim = slc_ui_components.PresetAnimations.create_smooth_fade_in();
+    std.debug.assert(anim.animation_type == .fade_in);
+    std.debug.assert(anim.duration_ms == 500);
+    std.debug.assert(anim.easing == .ease_in_out);
+}
+
+test "slc preset animations quick slide in" {
+    const anim = slc_ui_components.PresetAnimations.create_quick_slide_in();
+    std.debug.assert(anim.animation_type == .slide_in);
+    std.debug.assert(anim.duration_ms == 250);
+    std.debug.assert(anim.easing == .ease_out);
+}
+
+test "slc preset animations smooth slide in" {
+    const anim = slc_ui_components.PresetAnimations.create_smooth_slide_in();
+    std.debug.assert(anim.animation_type == .slide_in);
+    std.debug.assert(anim.duration_ms == 600);
+    std.debug.assert(anim.easing == .ease_out);
+}

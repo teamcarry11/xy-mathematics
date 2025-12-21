@@ -16,7 +16,6 @@ test "workflow metrics analyzer initialization" {
     var analyzer = WorkflowMetricsAnalyzer.init(allocator);
     defer analyzer.deinit();
 
-    try testing.expect(analyzer.allocator.ptr != null);
     try testing.expect(analyzer.workflow_executions.items.len == 0);
     try testing.expect(analyzer.coordination_metrics.items.len == 0);
     try testing.expect(analyzer.failure_metrics.items.len == 0);
@@ -28,8 +27,9 @@ test "parse workflow metrics json" {
     var analyzer = WorkflowMetricsAnalyzer.init(allocator);
     defer analyzer.deinit();
 
+    // Flow Agent's actual JSON format (nested structure).
     const json_data =
-        \\{"workflow":{"executions":[{"workflow_id":1,"execution_time_ms":100,"status":0,"timestamp":1000}]}}
+        \\{"workflow":{"total_executions":1,"success_rate_percent":100,"failure_rate_percent":0,"avg_execution_time_ms":100,"executions":[{"workflow_id":1,"execution_time_ms":100,"status":0,"timestamp":1000}]}}
     ;
 
     try analyzer.parse_json_metrics(json_data);
@@ -44,8 +44,9 @@ test "parse coordination metrics json" {
     var analyzer = WorkflowMetricsAnalyzer.init(allocator);
     defer analyzer.deinit();
 
+    // Flow Agent's actual JSON format (nested structure).
     const json_data =
-        \\{"coordination":{"coordination_patterns":[{"source_agent_id":1,"target_agent_id":2,"coordination_latency_ms":50}]}}
+        \\{"coordination":{"total_coordinations":1,"success_rate_percent":100,"avg_coordination_latency_ms":50,"coordination_patterns":[{"source_agent_id":1,"target_agent_id":2,"coordination_latency_ms":50,"count":1}]}}
     ;
 
     try analyzer.parse_json_metrics(json_data);
@@ -59,8 +60,9 @@ test "parse failure metrics json" {
     var analyzer = WorkflowMetricsAnalyzer.init(allocator);
     defer analyzer.deinit();
 
+    // Flow Agent's actual JSON format (nested structure).
     const json_data =
-        \\{"failure":{"failure_type_distribution":{"transient":5,"permanent":2}}}
+        \\{"failure":{"total_failures":7,"recovery_success_rate_percent":80,"failure_type_distribution":{"transient":5,"permanent":2}}}
     ;
 
     try analyzer.parse_json_metrics(json_data);
@@ -73,8 +75,9 @@ test "parse performance metrics json" {
     var analyzer = WorkflowMetricsAnalyzer.init(allocator);
     defer analyzer.deinit();
 
+    // Flow Agent's actual JSON format (nested structure).
     const json_data =
-        \\{"performance":{"avg_queue_depth":3,"avg_wait_time_ms":200,"avg_cpu_percent":50}}
+        \\{"performance":{"avg_queue_depth":3,"avg_wait_time_ms":200,"avg_cpu_percent":50,"avg_memory_bytes":1048576}}
     ;
 
     try analyzer.parse_json_metrics(json_data);
@@ -87,8 +90,9 @@ test "calculate average execution time" {
     var analyzer = WorkflowMetricsAnalyzer.init(allocator);
     defer analyzer.deinit();
 
+    // Flow Agent's actual JSON format.
     const json_data =
-        \\{"workflow":{"executions":[
+        \\{"workflow":{"total_executions":3,"success_rate_percent":100,"failure_rate_percent":0,"avg_execution_time_ms":200,"executions":[
         \\{"workflow_id":1,"execution_time_ms":100,"status":0,"timestamp":1000},
         \\{"workflow_id":2,"execution_time_ms":200,"status":0,"timestamp":2000},
         \\{"workflow_id":3,"execution_time_ms":300,"status":0,"timestamp":3000}
@@ -125,10 +129,11 @@ test "calculate coordination success rate" {
     var analyzer = WorkflowMetricsAnalyzer.init(allocator);
     defer analyzer.deinit();
 
+    // Flow Agent's actual JSON format.
     const json_data =
-        \\{"coordination":{"coordination_patterns":[
-        \\{"source_agent_id":1,"target_agent_id":2,"coordination_latency_ms":50,"status":0},
-        \\{"source_agent_id":2,"target_agent_id":3,"coordination_latency_ms":75,"status":1}
+        \\{"coordination":{"total_coordinations":2,"success_rate_percent":50,"avg_coordination_latency_ms":62,"coordination_patterns":[
+        \\{"source_agent_id":1,"target_agent_id":2,"coordination_latency_ms":50,"status":0,"count":1},
+        \\{"source_agent_id":2,"target_agent_id":3,"coordination_latency_ms":75,"status":1,"count":1}
         \\]}}
     ;
 

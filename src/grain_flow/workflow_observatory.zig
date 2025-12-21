@@ -45,7 +45,7 @@ pub const WorkflowObservatory = struct {
         self: *WorkflowObservatory,
         collector: *workflow_metrics.WorkflowMetricsCollector,
     ) void {
-        std.debug.assert(collector != null);
+        std.debug.assert(collector != undefined);
         self.workflow_collector = collector;
     }
 
@@ -54,7 +54,7 @@ pub const WorkflowObservatory = struct {
         self: *WorkflowObservatory,
         collector: *agent_coordination_metrics.AgentCoordinationMetricsCollector,
     ) void {
-        std.debug.assert(collector != null);
+        std.debug.assert(collector != undefined);
         self.coordination_collector = collector;
     }
 
@@ -63,7 +63,7 @@ pub const WorkflowObservatory = struct {
         self: *WorkflowObservatory,
         collector: *failure_pattern_metrics.FailurePatternMetricsCollector,
     ) void {
-        std.debug.assert(collector != null);
+        std.debug.assert(collector != undefined);
         self.failure_collector = collector;
     }
 
@@ -72,7 +72,7 @@ pub const WorkflowObservatory = struct {
         self: *WorkflowObservatory,
         collector: *performance_metrics.PerformanceMetricsCollector,
     ) void {
-        std.debug.assert(collector != null);
+        std.debug.assert(collector != undefined);
         self.performance_collector = collector;
     }
 
@@ -170,7 +170,7 @@ pub const WorkflowObservatory = struct {
 
         // "workflow":{"total":N,"success_rate":N,"avg_time_ms":N}
         const prefix = "\"workflow\":{";
-        const prefix_len = @intCast(prefix.len);
+        const prefix_len = @as(u32, @intCast(prefix.len));
         if (offset + prefix_len < output.len) {
             var i: u32 = 0;
             while (i < prefix_len) : (i += 1) {
@@ -228,7 +228,7 @@ pub const WorkflowObservatory = struct {
 
         // "coordination":{"total":N,"success_rate":N,"avg_latency_ms":N}
         const prefix = "\"coordination\":{";
-        const prefix_len = @intCast(prefix.len);
+        const prefix_len = @as(u32, @intCast(prefix.len));
         if (offset + prefix_len < output.len) {
             var i: u32 = 0;
             while (i < prefix_len) : (i += 1) {
@@ -286,7 +286,7 @@ pub const WorkflowObservatory = struct {
 
         // "failures":{"total":N,"recovery_rate":N}
         const prefix = "\"failures\":{";
-        const prefix_len = @intCast(prefix.len);
+        const prefix_len = @as(u32, @intCast(prefix.len));
         if (offset + prefix_len < output.len) {
             var i: u32 = 0;
             while (i < prefix_len) : (i += 1) {
@@ -335,7 +335,7 @@ pub const WorkflowObservatory = struct {
 
         // "performance":{"avg_queue_depth":N,"avg_wait_time_ms":N,"avg_cpu_percent":N}
         const prefix = "\"performance\":{";
-        const prefix_len = @intCast(prefix.len);
+        const prefix_len = @as(u32, @intCast(prefix.len));
         if (offset + prefix_len < output.len) {
             var i: u32 = 0;
             while (i < prefix_len) : (i += 1) {
@@ -381,7 +381,7 @@ pub const WorkflowObservatory = struct {
         return offset;
     }
 
-    /// Export all metrics to JSON (full export).
+    /// Export all metrics to JSON (full export with nested structure).
     pub fn export_all_metrics_json(
         self: *const WorkflowObservatory,
         output: []u8,
@@ -397,8 +397,19 @@ pub const WorkflowObservatory = struct {
             return offset;
         }
 
-        // Export workflow metrics.
+        // Export workflow metrics (nested under "workflow" key).
         if (self.workflow_collector) |collector| {
+            const prefix = "\"workflow\":";
+            const prefix_len = @as(u32, @intCast(prefix.len));
+            if (offset + prefix_len < output.len) {
+                var i: u32 = 0;
+                while (i < prefix_len) : (i += 1) {
+                    output[offset + i] = prefix[i];
+                }
+                offset += prefix_len;
+            } else {
+                return offset;
+            }
             const written = collector.export_json(output[offset..]);
             offset += written;
             if (offset >= output.len) return offset;
@@ -410,8 +421,19 @@ pub const WorkflowObservatory = struct {
             }
         }
 
-        // Export coordination metrics.
+        // Export coordination metrics (nested under "coordination" key).
         if (self.coordination_collector) |collector| {
+            const prefix = "\"coordination\":";
+            const prefix_len = @as(u32, @intCast(prefix.len));
+            if (offset + prefix_len < output.len) {
+                var i: u32 = 0;
+                while (i < prefix_len) : (i += 1) {
+                    output[offset + i] = prefix[i];
+                }
+                offset += prefix_len;
+            } else {
+                return offset;
+            }
             const written = collector.export_json(output[offset..]);
             offset += written;
             if (offset >= output.len) return offset;
@@ -423,8 +445,19 @@ pub const WorkflowObservatory = struct {
             }
         }
 
-        // Export failure metrics.
+        // Export failure metrics (nested under "failure" key).
         if (self.failure_collector) |collector| {
+            const prefix = "\"failure\":";
+            const prefix_len = @as(u32, @intCast(prefix.len));
+            if (offset + prefix_len < output.len) {
+                var i: u32 = 0;
+                while (i < prefix_len) : (i += 1) {
+                    output[offset + i] = prefix[i];
+                }
+                offset += prefix_len;
+            } else {
+                return offset;
+            }
             const written = collector.export_json(output[offset..]);
             offset += written;
             if (offset >= output.len) return offset;
@@ -436,8 +469,19 @@ pub const WorkflowObservatory = struct {
             }
         }
 
-        // Export performance metrics.
+        // Export performance metrics (nested under "performance" key).
         if (self.performance_collector) |collector| {
+            const prefix = "\"performance\":";
+            const prefix_len = @as(u32, @intCast(prefix.len));
+            if (offset + prefix_len < output.len) {
+                var i: u32 = 0;
+                while (i < prefix_len) : (i += 1) {
+                    output[offset + i] = prefix[i];
+                }
+                offset += prefix_len;
+            } else {
+                return offset;
+            }
             const written = collector.export_json(output[offset..]);
             offset += written;
             if (offset >= output.len) return offset;

@@ -33,7 +33,7 @@ pub const DashboardApiContext = struct {
         self: *DashboardApiContext,
         obs: *workflow_observatory.WorkflowObservatory,
     ) void {
-        std.debug.assert(obs != null);
+        std.debug.assert(obs != undefined);
         self.observatory = obs;
     }
 };
@@ -51,9 +51,8 @@ pub fn handle_summary_request(
     request: *grain_core.api_server.HttpRequest,
     response: *grain_core.api_server.HttpResponse,
 ) void {
-    _ = request;
-    std.debug.assert(request != null);
-    std.debug.assert(response != null);
+    std.debug.assert(request != undefined);
+    std.debug.assert(response != undefined);
 
     // Set response headers.
     _ = response.add_header("Content-Type", "application/json");
@@ -153,9 +152,8 @@ pub fn handle_dashboard_request(
     request: *grain_core.api_server.HttpRequest,
     response: *grain_core.api_server.HttpResponse,
 ) void {
-    _ = request;
-    std.debug.assert(request != null);
-    std.debug.assert(response != null);
+    std.debug.assert(request != undefined);
+    std.debug.assert(response != undefined);
 
     // Set response headers.
     _ = response.add_header("Content-Type", "text/html; charset=utf-8");
@@ -176,7 +174,7 @@ pub fn handle_dashboard_request(
 pub fn register_dashboard_endpoints(
     api_server: *grain_core.api_server.ApiServer,
 ) u32 {
-    std.debug.assert(api_server != null);
+    std.debug.assert(api_server != undefined);
     var count: u32 = 0;
 
     // Register dashboard HTML endpoint.

@@ -1,8 +1,8 @@
 # Grain Flow Agent: API Contracts Registry
 
-**Date**: 2025-12-21-094141-pst  
+**Date**: 2025-12-21-094700-pst  
 **Agent**: Grain Flow Agent (9th Agent)  
-**Status**: API Contracts Documented — Phase 63 Preparation  
+**Status**: API Contracts Documented — Phase 63 Complete, Phase 64 Complete, ZON Format Integration Planned  
 **Purpose**: Document Flow Agent's public APIs for Core coordination and other agents
 
 ---
@@ -888,8 +888,69 @@ When breaking changes are introduced:
 
 ---
 
-**Date**: 2025-12-21-094141-pst  
+## ZON Format Integration
+
+**Status**: **PLANNED** ⏳ (2025-12-21-094700-pst)  
+**Priority**: **MEDIUM** — Cost savings opportunity, depends on Grain Court ZON module  
+**Estimated Time**: 1-2 weeks (after Court Agent ZON module is available)
+
+### Overview
+
+Flow Agent will integrate ZON (Zero Overhead Notation) format for workflow metrics export, enabling **35-70% token reduction** for LLM communication with Research Agent and other consumers.
+
+**Key Value**: Save ~50% on LLM API costs by using ZON for workflow metrics export while maintaining JSON compatibility.
+
+### Integration Points
+
+**Workflow Observatory ZON Export**:
+- Add ZON export option to `WorkflowObservatory.export_all_metrics_zon()`
+- Add ZON summary export to `WorkflowObservatory.get_aggregated_summary_zon()`
+- Support both JSON and ZON export formats (backward compatible)
+
+**Dashboard API ZON Support**:
+- Add ZON export endpoint: `/api/workflow-observatory/metrics?format=zon`
+- Add ZON summary endpoint: `/api/workflow-observatory/summary?format=zon`
+- Maintain JSON endpoints for backward compatibility
+
+### Dependencies
+
+**Blocking**:
+- ⏳ Grain Court ZON module (`src/grain_court/zon_format.zig`) — Court Agent Phase 1
+- ⏳ ZON encoder/decoder API availability
+
+**Non-Blocking**:
+- Research Agent ZON parser (can proceed in parallel)
+- Grainscript ZON serializer (independent)
+
+### Coordination Required
+
+**With Grain Court Agent**:
+- Coordinate on ZON module availability and API design
+- Review ZON encoder/decoder interface
+- Confirm format specification and data type support
+
+**With Research Agent**:
+- Coordinate on ZON export format requirements
+- Test ZON export with Research Agent's parser (when available)
+- Validate token count reduction (35-70% vs JSON)
+
+### Success Criteria
+
+- ✅ Workflow metrics exportable in ZON format
+- ✅ 35-70% token reduction vs JSON (validated)
+- ✅ Backward compatible (JSON still available)
+- ✅ Research Agent can parse ZON export
+
+### References
+
+- **ZON Format Proposal**: [`docs/research/zon_format_grain_court_grainscript_proposal_2025-12-20-210116-pst.md`](../research/zon_format_grain_court_grainscript_proposal_2025-12-20-210116-pst.md)
+- **ZON Token Efficiency Validation**: [`docs/research/zon_format_token_efficiency_validation_2025-12-20-211812-pst.md`](../research/zon_format_token_efficiency_validation_2025-12-20-211812-pst.md)
+- **Implementation Tasks**: [`docs/tasks/tasks_flow.md`](../tasks/tasks_flow.md) — ZON Format Integration section
+
+---
+
+**Date**: 2025-12-21-094700-pst  
 **Agent**: Grain Flow Agent  
-**Status**: API Contracts Documented — Ready for Core Coordination
+**Status**: API Contracts Documented — Ready for Core Coordination, ZON Format Integration Planned
 
 This document defines all public APIs that Flow Agent exposes to Core Agent and other agents. All APIs are stable and production-ready. Breaking changes will follow the deprecation timeline (6 months notice).

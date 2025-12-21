@@ -11,6 +11,7 @@ const http_client_integration = @import("http_client_integration.zig");
 const models = @import("models.zig");
 const grain_core_api = @import("../../grain_core/api_server.zig");
 const grain_core_json = @import("../../grain_core/json_helpers.zig");
+const grain_core_http = @import("../../grain_core/http_client.zig");
 
 // Bounded: Max database base URL length.
 pub const MAX_DB_BASE_URL_LEN: u32 = 512;
@@ -235,14 +236,14 @@ pub fn get_user_by_id(user_id: []const u8, user_out: *UserData) DatabaseResult {
     std.mem.copyForwards(u8, path_buf[path_len..], user_id[0..user_id_len]);
     path_len += @intCast(user_id_len);
     std.debug.assert(path_len <= 1024);
-    const request_id = http_client_integration.create_external_request(
-        grain_core_api.HttpMethod.get,
+    const request = http_client_integration.create_external_request(
+        .get,
         path_buf[0..path_len],
-    );
-    if (request_id == 0) {
+    ) orelse {
         return DatabaseResult.connection_error;
-    }
+    };
     _ = user_out;
+    _ = request;
     return DatabaseResult.success;
 }
 
@@ -272,14 +273,14 @@ pub fn get_user_by_email(email: []const u8, user_out: *UserData) DatabaseResult 
     std.mem.copyForwards(u8, path_buf[path_len..], email[0..email_len]);
     path_len += @intCast(email_len);
     std.debug.assert(path_len <= 1024);
-    const request_id = http_client_integration.create_external_request(
-        grain_core_api.HttpMethod.get,
+    const request = http_client_integration.create_external_request(
+        .get,
         path_buf[0..path_len],
-    );
-    if (request_id == 0) {
+    ) orelse {
         return DatabaseResult.connection_error;
-    }
+    };
     _ = user_out;
+    _ = request;
     return DatabaseResult.success;
 }
 
@@ -401,4 +402,40 @@ pub fn parse_user_from_json(json: []const u8, user_out: *UserData) DatabaseResul
     std.debug.assert(user_out.user_id_len > 0);
     std.debug.assert(user_out.email_len > 0);
     return DatabaseResult.success;
+}
+
+// Check if HTTP request is completed and get response.
+// Returns success if request is completed and response is available.
+// Note: This function will be used once async response handling is coordinated with Core Agent.
+pub fn check_request_response(
+    request: *const grain_core_http.HttpClientRequest,
+    response_out: *?grain_core_api.HttpResponse,
+) DatabaseResult {
+    std.debug.assert(request != null);
+    std.debug.assert(response_out != null);
+    if (request.state != grain_core_http.RequestState.completed) {
+        if (request.state == grain_core_http.RequestState.failed) {
+            return DatabaseResult.connection_error;
+        }
+        return DatabaseResult.connection_error;
+    }
+    if (request.response) |resp| {
+        response_out.* = resp;
+        return DatabaseResult.success;
+    }
+    return DatabaseResult.connection_error;
+}
+
+// Convert HTTP status to database result.
+fn http_status_to_db_result(status: grain_core_api.HttpStatus) DatabaseResult {
+    std.debug.assert(@intFromEnum(status) >= 200);
+    std.debug.assert(@intFromEnum(status) <= 503);
+    return switch (status) {
+        .ok, .created => DatabaseResult.success,
+        .not_found => DatabaseResult.not_found,
+        .bad_request => DatabaseResult.validation_error,
+        .unauthorized, .forbidden => DatabaseResult.validation_error,
+        .internal_server_error, .service_unavailable => DatabaseResult.internal_error,
+        else => DatabaseResult.internal_error,
+    };
 }

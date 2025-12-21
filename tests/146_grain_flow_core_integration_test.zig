@@ -262,38 +262,47 @@ test "flow event bus integration pattern" {
         1, // source_agent_id
         0, // destination_agent_id (broadcast)
         timestamp,
-        null, // payload
-        0, // payload_len
     );
     std.debug.assert(published);
     
     // Process events (standalone, future: via Core WebSocket).
-    const processed = event_bus.process_events();
-    std.debug.assert(processed >= 0);
+    event_bus.process_events();
 }
 
 // Test: Agent Coordinator integration pattern (future Core Auth integration).
 test "flow agent coordinator integration pattern" {
-    // Initialize coordinator.
-    var coordinator = grain_flow.AgentCoordinator.init();
+    // Initialize event bus.
+    var event_bus = grain_flow.EventBus.init();
+    
+    // Initialize coordinator (requires event bus).
+    var coordinator = grain_flow.AgentCoordinator.init(&event_bus);
     
     // Register agent (standalone, future: with Core Auth).
     const timestamp: u64 = 1000;
-    const agent_id = coordinator.register_agent("test_agent", timestamp);
-    std.debug.assert(agent_id > 0);
-    
-    // Get agent (standalone, future: with Core Auth verification).
-    const agent = coordinator.get_agent(agent_id);
-    std.debug.assert(agent != null);
-    if (agent) |a| {
-        std.debug.assert(a.status == grain_flow.AgentStatus.active);
+    const agent_id_opt = coordinator.register_agent("test_agent", timestamp);
+    std.debug.assert(agent_id_opt != null);
+    if (agent_id_opt) |agent_id| {
+        std.debug.assert(agent_id > 0);
+        
+        // Find agent (standalone, future: with Core Auth verification).
+        const agent = coordinator.find_agent(agent_id);
+        std.debug.assert(agent != null);
+        if (agent) |a| {
+            std.debug.assert(a.status == grain_flow.AgentStatus.active);
+        }
     }
 }
 
 // Test: Workflow Engine integration pattern (uses Core services indirectly).
 test "flow workflow engine integration pattern" {
-    // Initialize engine.
-    var engine = grain_flow.WorkflowEngine.init();
+    // Initialize event bus.
+    var event_bus = grain_flow.EventBus.init();
+    
+    // Initialize coordinator.
+    var coordinator = grain_flow.AgentCoordinator.init(&event_bus);
+    
+    // Initialize engine (requires event bus and coordinator).
+    var engine = grain_flow.WorkflowEngine.init(&event_bus, &coordinator);
     
     // Create workflow (uses Core services indirectly).
     const timestamp: u64 = 1000;

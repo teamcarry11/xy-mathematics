@@ -1,8 +1,8 @@
 # Grain Flow Agent: API Contracts Registry
 
-**Date**: 2025-12-21-103700-pst  
+**Date**: 2025-12-21-104400-pst  
 **Agent**: Grain Flow Agent (9th Agent)  
-**Status**: API Contracts Documented — Phase 63 Complete, Phase 64 Complete, ZON Format Integration Planned, Phase 3 Sample Data Provided  
+**Status**: API Contracts Documented — Phase 63 Complete, Phase 64 Complete, ZON Format Integration Coordinating with Court Agent, Phase 3 Validation Step 1 Complete  
 **Purpose**: Document Flow Agent's public APIs for Core coordination and other agents
 
 ---
@@ -915,8 +915,12 @@ Flow Agent will integrate ZON (Zero Overhead Notation) format for workflow metri
 ### Dependencies
 
 **Blocking**:
-- ⏳ Grain Court ZON module (`src/grain_court/zon_format.zig`) — Court Agent Phase 1
-- ⏳ ZON encoder/decoder API availability
+- ⏳ Grain Court ZON module (`src/grain_court/zon_format.zig`) — Court Agent Phase 1 (in progress)
+- ⏳ ZON encoder/decoder API availability — Coordinating with Court Agent
+
+**Active Coordination**:
+- ✅ Court Agent: Implementing ZON module (Layer 1 from Flow Agent's proposal)
+- ⏳ Flow Agent: Ready to coordinate on API design and integration
 
 **Non-Blocking**:
 - Research Agent ZON parser (can proceed in parallel)
@@ -924,10 +928,12 @@ Flow Agent will integrate ZON (Zero Overhead Notation) format for workflow metri
 
 ### Coordination Required
 
-**With Grain Court Agent**:
-- Coordinate on ZON module availability and API design
-- Review ZON encoder/decoder interface
-- Confirm format specification and data type support
+**With Grain Court Agent** (Active Coordination Partner):
+- ✅ Court Agent: Implementing ZON module (Layer 1 from Flow Agent's proposal)
+- ⏳ Coordinate on ZON encoder/decoder API design
+- ⏳ Review ZON encoder/decoder interface when available
+- ⏳ Confirm format specification and data type support
+- **Status**: Court Agent Phase 1 in progress, Flow Agent ready to coordinate
 
 **With Research Agent**:
 - Coordinate on ZON export format requirements
@@ -949,8 +955,8 @@ Flow Agent will integrate ZON (Zero Overhead Notation) format for workflow metri
 
 ---
 
-**Date**: 2025-12-21-103700-pst  
+**Date**: 2025-12-21-104500-pst  
 **Agent**: Grain Flow Agent  
-**Status**: API Contracts Documented — Ready for Core Coordination, ZON Format Integration Planned, Phase 3 Sample Data Provided
+**Status**: API Contracts Documented — Ready for Core Coordination, ZON Format Integration Coordinating with Court Agent, Phase 3 Validation Step 1 Complete, Court Agent Welcome
 
 This document defines all public APIs that Flow Agent exposes to Core Agent and other agents. All APIs are stable and production-ready. Breaking changes will follow the deprecation timeline (6 months notice).

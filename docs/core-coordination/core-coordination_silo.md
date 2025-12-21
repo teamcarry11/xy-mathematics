@@ -5,6 +5,22 @@
 
 ---
 
+## Welcome Grain Court Agent! 🌾⚒️
+
+Welcome to the Grain OS family, Grain Court Agent! We're excited to have you as our 11th agent. 
+
+**Relationship**: We're independent—Silo handles storage, Court handles LLM compute infrastructure. No immediate coordination needed, but we may integrate in the future for AI-powered database features (e.g., query optimization, intelligent indexing, data insights).
+
+**Future Integration Opportunities**:
+- AI-powered query optimization
+- Intelligent indexing recommendations
+- Data insights and analytics
+- Natural language query interface
+
+Looking forward to working together as the ecosystem grows!
+
+---
+
 ## Current Status
 
 **Status**: **PRODUCTION READY** ✅
@@ -55,10 +71,12 @@ All core phases complete and ready for production use:
 - **Aurora Agent**: Database storage for IDE features (if needed)
 - **Skate Agent**: Database storage for knowledge graph (if needed)
 - **Workspace Agent**: Database storage for workspace files (via SLC integration)
+- **Court Agent**: Database storage for LLM infrastructure (if needed in future)
 
 **Needs From**:
 - **Vantage Agent**: Phase 10 (AArch64 Cloud Deployment) depends on VM integration
 - **Other Agents**: SLC product integration coordination (Nostr Profile Builder, DAG Website Builder, Workspace App Suite)
+- **Court Agent**: Future AI-powered features (query optimization, intelligent indexing, data insights)
 
 ---
 

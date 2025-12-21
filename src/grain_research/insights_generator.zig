@@ -514,4 +514,11 @@ pub const InsightsGenerator = struct {
 
         return @intCast(self.hypothesis_results.items.len);
     }
+
+    // Get hypothesis results.
+    pub fn get_hypothesis_results(self: *const InsightsGenerator) []const HypothesisTestResult {
+        std.debug.assert(self.hypothesis_results.items.len <= MAX_INSIGHTS);
+
+        return self.hypothesis_results.items;
+    }
 };

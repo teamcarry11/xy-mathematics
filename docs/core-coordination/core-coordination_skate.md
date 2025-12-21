@@ -3,6 +3,18 @@
 **Last Updated**: 2025-12-21-094203-pst  
 **Agent**: Grain Skate Agent
 
+## Welcome Grain Court Agent! 🌾⚒️
+
+**Integration Partner**: Court Agent will provide LLM infrastructure services for Skate Agent's AI-powered graph insights. Court Agent will provide the multi-provider LLM API abstraction that powers our GLM-4.6 integration and knowledge graph analysis features.
+
+**Integration Points**:
+- AI-powered graph insights (connection suggestions, knowledge gap detection, title generation, subgraph summarization)
+- GLM-4.6 infrastructure (currently using Aurora's client, will migrate to Court's abstraction)
+- ZON format integration (will make graph data more token-efficient when sent to LLMs)
+- Future: Vector embeddings for semantic similarity (Grain Court integration)
+
+**Coordination**: Will coordinate directly with Court Agent on LLM service integration for knowledge graph analysis.
+
 ## Current Status
 
 **Overall**: Phase 4 & Phase 5 core work complete ✅, remaining work requires coordination

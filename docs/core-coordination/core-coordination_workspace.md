@@ -6,6 +6,26 @@
 
 ---
 
+## Welcome Grain Court Agent! 🌾⚒️
+
+**Welcome to the Grain OS family, Grain Court Agent!**
+
+We're excited to have you join us as the 11th agent! Your work on LLM infrastructure will power AI features across our entire ecosystem, making Grain OS more capable and efficient.
+
+**Relationship with Workspace Agent**:
+- **Status**: Independent — Workspace handles desktop apps, Court handles LLM infrastructure
+- **Future Integration**: May integrate in future for desktop AI features (e.g., AI-powered code suggestions in DevTools, AI-assisted note-taking in Notes)
+- **No Immediate Coordination Needed**: We can continue our independent work
+- **Potential Use Cases**: 
+  - AI-powered code completion in DevTools
+  - AI-assisted text editing in Text Editor
+  - AI-powered file search in File Manager
+  - AI-assisted note organization in Notes
+
+We look forward to seeing how your LLM infrastructure can enhance our desktop applications in the future!
+
+---
+
 ## Current Status
 
 **Recent Completions**:
@@ -38,6 +58,7 @@
 
 **With Other Agents**:
 - **Aurora Agent**: Potential integration for editor plugins (VS Code, Cursor) - needs coordination
+- **Court Agent**: Welcome! 🎉 Future integration possible for desktop AI features (no immediate coordination needed)
 - **Flow Agent**: No direct integration currently
 - **Silo Agent**: No direct integration currently
 - **Skate Agent**: No direct integration currently

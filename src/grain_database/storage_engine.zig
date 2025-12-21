@@ -308,5 +308,36 @@ pub const StorageEngine = struct {
     pub fn get_next_record_id(self: *const StorageEngine) u64 {
         return self.next_record_id;
     }
+
+    // Validate key format (non-empty, within bounds).
+    pub fn validate_key(key: []const u8) bool {
+        if (key.len == 0) {
+            return false;
+        }
+        if (key.len > MAX_KEY_LEN) {
+            return false;
+        }
+        return true;
+    }
+
+    // Validate value format (within bounds).
+    pub fn validate_value(value: []const u8) bool {
+        if (value.len > MAX_VALUE_LEN) {
+            return false;
+        }
+        return true;
+    }
+
+    // Check if record exists by key.
+    pub fn has_record(self: *const StorageEngine, key: []const u8) bool {
+        std.debug.assert(key.len <= MAX_KEY_LEN);
+        return self.find_record_by_key(key) != null;
+    }
+
+    // Check if record exists by ID.
+    pub fn has_record_by_id(self: *const StorageEngine, record_id: u64) bool {
+        std.debug.assert(record_id > 0);
+        return self.find_record_by_id(record_id) != null;
+    }
 };
 

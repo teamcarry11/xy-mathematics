@@ -245,3 +245,87 @@ test "parse command line arguments" {
     try testing.expect(file_paths[0] != null);
     try testing.expect(file_paths[1] != null);
 }
+
+test "load ignore patterns" {
+    const allocator = testing.allocator;
+    var cli = GrainStyleCLI.init(allocator);
+
+    // Create a temporary ignore file
+    const ignore_file = ".grainignore";
+    const ignore_content = "node_modules\n*.tmp\ntest/\n";
+
+    const file = try std.fs.cwd().createFile(ignore_file, .{});
+    defer file.close();
+    try file.writeAll(ignore_content);
+    defer std.fs.cwd().deleteFile(ignore_file) catch {};
+
+    const result = cli.load_ignore_patterns(ignore_file);
+
+    try testing.expect(result == true);
+    try testing.expect(cli.ignore_patterns_len > 0);
+}
+
+test "should ignore path" {
+    const allocator = testing.allocator;
+    var cli = GrainStyleCLI.init(allocator);
+
+    // Add ignore pattern manually
+    const pattern = "node_modules";
+    @memset(&cli.ignore_patterns[0], 0);
+    @memcpy(cli.ignore_patterns[0][0..pattern.len], pattern);
+    cli.ignore_patterns_len = 1;
+
+    const should_ignore_result = cli.should_ignore("src/node_modules/test.zig");
+    try testing.expect(should_ignore_result == true);
+
+    const should_not_ignore = cli.should_ignore("src/test.zig");
+    try testing.expect(should_not_ignore == false);
+}
+
+test "is directory" {
+    const allocator = testing.allocator;
+    var cli = GrainStyleCLI.init(allocator);
+
+    // Create a temporary directory
+    const test_dir = "test_dir_phase24";
+    try std.fs.cwd().makeDir(test_dir);
+    defer std.fs.cwd().deleteDir(test_dir) catch {};
+
+    const is_dir = cli.is_directory(test_dir);
+    try testing.expect(is_dir == true);
+
+    // Create a file and check it's not a directory
+    const test_file = "test_file_phase24.zig";
+    const file = try std.fs.cwd().createFile(test_file, .{});
+    defer file.close();
+    defer std.fs.cwd().deleteFile(test_file) catch {};
+
+    const is_file_dir = cli.is_directory(test_file);
+    try testing.expect(is_file_dir == false);
+}
+
+test "collect zig files" {
+    const allocator = testing.allocator;
+    var cli = GrainStyleCLI.init(allocator);
+
+    // Create a temporary directory with Zig files
+    const test_dir = "test_collect_dir";
+    try std.fs.cwd().makeDir(test_dir);
+    defer std.fs.cwd().deleteDir(test_dir) catch {};
+
+    // Create test files
+    const file1 = try std.fs.cwd().createFile(test_dir ++ "/test1.zig", .{});
+    defer file1.close();
+    try file1.writeAll("pub fn test() void {}\n");
+
+    const file2 = try std.fs.cwd().createFile(test_dir ++ "/test2.zig", .{});
+    defer file2.close();
+    try file2.writeAll("pub fn test2() void {}\n");
+
+    var files: [10]?[]const u8 = undefined;
+    var files_len: u32 = 0;
+    const result = cli.collect_zig_files(test_dir, &files, &files_len);
+
+    try testing.expect(result == true);
+    try testing.expect(files_len >= 2);
+}

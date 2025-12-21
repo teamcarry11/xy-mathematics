@@ -32,6 +32,9 @@ pub const workflow_visualizer = @import("workflow_visualizer.zig");
 // Workflow templates for pre-built workflow patterns.
 pub const workflow_templates = @import("workflow_templates.zig");
 
+// Workflow metrics for observability.
+pub const workflow_metrics = @import("workflow_metrics.zig");
+
 // Module exports.
 pub const EventBus = event_bus.EventBus;
 pub const EventType = event_bus.EventType;
@@ -56,3 +59,7 @@ pub const NodePosition = workflow_visualizer.NodePosition;
 
 pub const WorkflowTemplateBuilder = workflow_templates.WorkflowTemplateBuilder;
 pub const WorkflowTemplate = workflow_templates.WorkflowTemplate;
+
+pub const WorkflowMetricsCollector = workflow_metrics.WorkflowMetricsCollector;
+pub const WorkflowExecutionRecord = workflow_metrics.WorkflowExecutionRecord;
+pub const WorkflowExecutionStatus = workflow_metrics.WorkflowExecutionStatus;

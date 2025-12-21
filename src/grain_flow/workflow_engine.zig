@@ -12,6 +12,7 @@
 const std = @import("std");
 const event_bus = @import("event_bus.zig");
 const agent_coordinator = @import("agent_coordinator.zig");
+const workflow_metrics = @import("workflow_metrics.zig");
 
 // Bounded: Max workflow depth (max path length).
 pub const MAX_WORKFLOW_DEPTH: u32 = 1000;
@@ -242,6 +243,7 @@ pub const WorkflowEngine = struct {
     next_workflow_id: u32,
     event_bus: *event_bus.EventBus,
     agent_coordinator: *agent_coordinator.AgentCoordinator,
+    metrics_collector: ?*workflow_metrics.WorkflowMetricsCollector,
 
     pub fn init(
         event_bus_instance: *event_bus.EventBus,
@@ -255,6 +257,7 @@ pub const WorkflowEngine = struct {
             .next_workflow_id = 1,
             .event_bus = event_bus_instance,
             .agent_coordinator = coordinator_instance,
+            .metrics_collector = null,
         };
         var i: u32 = 0;
         while (i < 64) : (i += 1) {
@@ -397,6 +400,23 @@ pub const WorkflowEngine = struct {
                 0,
                 timestamp,
             );
+            // Record successful execution metric.
+            if (self.metrics_collector) |collector| {
+                var name_buf: [MAX_NODE_NAME_LEN]u8 = undefined;
+                var name_len: u32 = 0;
+                var i: u32 = 0;
+                while (i < workflow.?.name_len) : (i += 1) {
+                    name_buf[i] = workflow.?.name[i];
+                }
+                name_len = workflow.?.name_len;
+                _ = collector.record_execution(
+                    workflow_id,
+                    name_buf[0..name_len],
+                    workflow.?.started_at,
+                    timestamp,
+                    workflow_metrics.WorkflowExecutionStatus.success,
+                );
+            }
         } else {
             workflow.?.status = WorkflowStatus.failed;
             workflow.?.completed_at = timestamp;
@@ -406,8 +426,34 @@ pub const WorkflowEngine = struct {
                 0,
                 timestamp,
             );
+            // Record failed execution metric.
+            if (self.metrics_collector) |collector| {
+                var name_buf: [MAX_NODE_NAME_LEN]u8 = undefined;
+                var name_len: u32 = 0;
+                var i: u32 = 0;
+                while (i < workflow.?.name_len) : (i += 1) {
+                    name_buf[i] = workflow.?.name[i];
+                }
+                name_len = workflow.?.name_len;
+                _ = collector.record_execution(
+                    workflow_id,
+                    name_buf[0..name_len],
+                    workflow.?.started_at,
+                    timestamp,
+                    workflow_metrics.WorkflowExecutionStatus.failure,
+                );
+            }
         }
         return true;
+    }
+
+    // Set metrics collector (optional, for observability).
+    pub fn set_metrics_collector(
+        self: *WorkflowEngine,
+        collector: *workflow_metrics.WorkflowMetricsCollector,
+    ) void {
+        std.debug.assert(@intFromPtr(collector) != 0);
+        self.metrics_collector = collector;
     }
 
     // Get workflow count.

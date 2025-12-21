@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grain Flow Workflow Observatory</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            padding: 20px;
+        }
+        .header {
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #ffffff;
+        }
+        .header p {
+            color: #888;
+            font-size: 14px;
+        }
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .card h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #ffffff;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+        .metric {
+            margin-bottom: 15px;
+        }
+        .metric-label {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .metric-value {
+            font-size: 32px;
+            font-weight: 600;
+            color: #4a9eff;
+        }
+        .metric-unit {
+            font-size: 14px;
+            color: #666;
+            margin-left: 5px;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-success {
+            background: #4ade80;
+        }
+        .status-warning {
+            background: #fbbf24;
+        }
+        .status-error {
+            background: #f87171;
+        }
+        .refresh-btn {
+            background: #4a9eff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        .refresh-btn:hover {
+            background: #3a8eef;
+        }
+        .refresh-btn:active {
+            background: #2a7edf;
+        }
+        .error {
+            background: #2a1a1a;
+            border: 1px solid #f87171;
+            color: #f87171;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .loading {
+            color: #888;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🌾 Grain Flow Workflow Observatory</h1>
+        <p>Real-time workflow metrics and observability dashboard</p>
+    </div>
+
+    <button class="refresh-btn" onclick="loadMetrics()">🔄 Refresh Metrics</button>
+    <div id="error" style="display: none;"></div>
+
+    <div class="dashboard" id="dashboard">
+        <div class="loading">Loading metrics...</div>
+    </div>
+
+    <script>
+        const API_BASE = '/api/workflow-observatory';
+        let autoRefreshInterval = null;
+
+        async function loadMetrics() {
+            try {
+                const response = await fetch(`${API_BASE}/summary`);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                const data = await response.json();
+                renderDashboard(data);
+                hideError();
+            } catch (error) {
+                showError(`Failed to load metrics: ${error.message}`);
+                console.error('Error loading metrics:', error);
+            }
+        }
+
+        function renderDashboard(data) {
+            const dashboard = document.getElementById('dashboard');
+            dashboard.innerHTML = '';
+
+            if (data.workflow) {
+                dashboard.appendChild(createCard('Workflow Execution', [
+                    { label: 'Total Executions', value: data.workflow.total || 0, unit: '' },
+                    { label: 'Success Rate', value: data.workflow.success_rate || 0, unit: '%' },
+                    { label: 'Avg Execution Time', value: data.workflow.avg_time_ms || 0, unit: 'ms' }
+                ]));
+            }
+
+            if (data.coordination) {
+                dashboard.appendChild(createCard('Agent Coordination', [
+                    { label: 'Total Coordinations', value: data.coordination.total || 0, unit: '' },
+                    { label: 'Success Rate', value: data.coordination.success_rate || 0, unit: '%' },
+                    { label: 'Avg Latency', value: data.coordination.avg_latency_ms || 0, unit: 'ms' }
+                ]));
+            }
+
+            if (data.failures) {
+                dashboard.appendChild(createCard('Failure Patterns', [
+                    { label: 'Total Failures', value: data.failures.total || 0, unit: '' },
+                    { label: 'Recovery Rate', value: data.failures.recovery_rate || 0, unit: '%' }
+                ]));
+            }
+
+            if (data.performance) {
+                dashboard.appendChild(createCard('Performance', [
+                    { label: 'Avg Queue Depth', value: data.performance.avg_queue_depth || 0, unit: '' },
+                    { label: 'Avg Wait Time', value: data.performance.avg_wait_time_ms || 0, unit: 'ms' },
+                    { label: 'Avg CPU Usage', value: data.performance.avg_cpu_percent || 0, unit: '%' }
+                ]));
+            }
+        }
+
+        function createCard(title, metrics) {
+            const card = document.createElement('div');
+            card.className = 'card';
+            
+            const titleEl = document.createElement('h2');
+            titleEl.textContent = title;
+            card.appendChild(titleEl);
+
+            metrics.forEach(metric => {
+                const metricEl = document.createElement('div');
+                metricEl.className = 'metric';
+                
+                const label = document.createElement('div');
+                label.className = 'metric-label';
+                label.textContent = metric.label;
+                
+                const value = document.createElement('div');
+                value.className = 'metric-value';
+                value.innerHTML = `${formatValue(metric.value)}<span class="metric-unit">${metric.unit}</span>`;
+                
+                metricEl.appendChild(label);
+                metricEl.appendChild(value);
+                card.appendChild(metricEl);
+            });
+
+            return card;
+        }
+
+        function formatValue(value) {
+            if (typeof value === 'number') {
+                return value.toLocaleString();
+            }
+            return value;
+        }
+
+        function showError(message) {
+            const errorEl = document.getElementById('error');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+
+        function hideError() {
+            const errorEl = document.getElementById('error');
+            errorEl.style.display = 'none';
+        }
+
+        function startAutoRefresh(intervalMs = 5000) {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+            }
+            autoRefreshInterval = setInterval(loadMetrics, intervalMs);
+        }
+
+        function stopAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+            }
+        }
+
+        // Load metrics on page load
+        loadMetrics();
+        
+        // Auto-refresh every 5 seconds
+        startAutoRefresh(5000);
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', stopAutoRefresh);
+    </script>
+</body>
+</html>

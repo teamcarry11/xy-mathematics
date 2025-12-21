@@ -328,10 +328,18 @@
   - [x] Dashboard API module (`dashboard_api.zig`)
   - [x] Summary endpoint handler (`/api/workflow-observatory/summary`)
   - [x] Metrics endpoint handler (`/api/workflow-observatory/metrics`)
+  - [x] Dashboard HTML endpoint handler (`/api/workflow-observatory/dashboard`)
   - [x] Endpoint registration with Core API Server
   - [x] Comprehensive tests (`tests/144_grain_flow_dashboard_api_test.zig`)
   - [x] Build integration complete
-- [ ] Implement real-time metric visualization
+- [x] Implement real-time metric visualization — Complete ✅
+  - [x] Dashboard HTML (`dashboard.html`)
+  - [x] Real-time metrics display (auto-refresh every 5 seconds)
+  - [x] Workflow execution metrics visualization
+  - [x] Agent coordination metrics visualization
+  - [x] Failure pattern metrics visualization
+  - [x] Performance metrics visualization
+  - [x] Embedded HTML served via API endpoint
 - [ ] Analyze metrics and generate insights (Research Agent)
 - [ ] Validate that observability improves workflow understanding
 

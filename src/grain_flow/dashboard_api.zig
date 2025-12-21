@@ -148,12 +148,45 @@ pub fn handle_metrics_request(
     }
 }
 
+/// Handle GET /api/workflow-observatory/dashboard request (serve HTML).
+pub fn handle_dashboard_request(
+    request: *grain_core.api_server.HttpRequest,
+    response: *grain_core.api_server.HttpResponse,
+) void {
+    _ = request;
+    std.debug.assert(request != null);
+    std.debug.assert(response != null);
+
+    // Set response headers.
+    _ = response.add_header("Content-Type", "text/html; charset=utf-8");
+    _ = response.add_header("Access-Control-Allow-Origin", "*");
+
+    // Serve dashboard HTML (embedded).
+    const dashboard_html = @embedFile("dashboard.html");
+    const html_len = @min(dashboard_html.len, response.body.len);
+    var i: u32 = 0;
+    while (i < html_len) : (i += 1) {
+        response.body[i] = dashboard_html[i];
+    }
+    response.body_len = html_len;
+    response.status = grain_core.api_server.HttpStatus.ok;
+}
+
 /// Register dashboard API endpoints with Core API Server.
 pub fn register_dashboard_endpoints(
     api_server: *grain_core.api_server.ApiServer,
 ) u32 {
     std.debug.assert(api_server != null);
     var count: u32 = 0;
+
+    // Register dashboard HTML endpoint.
+    if (api_server.register_route(
+        grain_core.api_server.HttpMethod.get,
+        "/api/workflow-observatory/dashboard",
+        handle_dashboard_request,
+    )) {
+        count += 1;
+    }
 
     // Register summary endpoint.
     if (api_server.register_route(

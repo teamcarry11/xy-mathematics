@@ -99,5 +99,6 @@ pub const WorkflowObservatory = workflow_observatory.WorkflowObservatory;
 pub const DashboardApiContext = dashboard_api.DashboardApiContext;
 pub const set_dashboard_context = dashboard_api.set_dashboard_context;
 pub const register_dashboard_endpoints = dashboard_api.register_dashboard_endpoints;
+pub const handle_dashboard_request = dashboard_api.handle_dashboard_request;
 pub const handle_summary_request = dashboard_api.handle_summary_request;
 pub const handle_metrics_request = dashboard_api.handle_metrics_request;

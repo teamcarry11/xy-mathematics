@@ -1,8 +1,8 @@
 # Grain Flow Agent: Task List
 
 **Agent**: Grain Flow Agent (9th Agent)  
-**Status**: All Phases Complete ✅ (Phase 1-5 COMPLETE), SLC Product Workflow Templates Ready ✅, Research Agent Collaboration Started ✅  
-**Last Updated**: 2025-12-20-180635-pst
+**Status**: All Phases Complete ✅ (Phase 1-5 COMPLETE), SLC Product Workflow Templates Ready ✅, Research Agent Collaboration Started ✅, Instrumentation Design Prepared ✅  
+**Last Updated**: 2025-12-20-201029-pst
 
 ---
 
@@ -267,13 +267,17 @@
 - [ ] Research workflow observability metrics (Priority 1)
 - [ ] Deliver research document with metric definitions
 
-**Phase 2: Instrumentation** (Flow Agent, Week 2-3) — **PENDING RESEARCH**
-- [ ] Await Research Agent metric definitions
+**Phase 2: Instrumentation** (Flow Agent, Week 2-3) — **PREPARATION IN PROGRESS**
+- [x] Identify instrumentation points (preliminary design complete)
+- [ ] Await Research Agent metric definitions (Priority 1, Week 1-2)
+- [ ] Refine instrumentation design based on research findings
+- [ ] Implement metric collection module (`workflow_metrics.zig`)
 - [ ] Instrument workflow engine to emit metrics
 - [ ] Implement metric collection for workflow execution
 - [ ] Implement metric collection for agent coordination
 - [ ] Implement metric collection for failures
 - [ ] Store metrics in research-accessible format
+- [ ] Add comprehensive tests for metric collection
 
 **Phase 3: Observatory** (Together, Week 3-4) — **PENDING**
 - [ ] Build Workflow Observatory dashboard
@@ -289,6 +293,7 @@
 **Reference Documents**:
 - Flow Agent letter: [`docs/agent-communications/flow_to_research_letter_2025-12-20-175131-pst.md`](../agent-communications/flow_to_research_letter_2025-12-20-175131-pst.md)
 - Research Agent response: [`docs/agent-communications/research_to_flow_response_2025-12-20-175923-pst.md`](../agent-communications/research_to_flow_response_2025-12-20-175923-pst.md)
+- Instrumentation design (preliminary): [`docs/agent-communications/flow_workflow_instrumentation_design_2025-12-20-201029-pst.md`](../agent-communications/flow_workflow_instrumentation_design_2025-12-20-201029-pst.md)
 
 ---
 

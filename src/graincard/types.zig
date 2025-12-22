@@ -1,14 +1,15 @@
 const std = @import("std");
 
 // Graincard Types
-// Data structures for 75x100 graincard generation
+// Data structures for 103x80 graincard generation
 
 pub const GraincardConfig = struct {
     seed: u64,
-    width: usize = 75,
-    height: usize = 100,
-    content_width: usize = 73,
-    content_height: usize = 98,
+    width: usize = 103,
+    height: usize = 80,
+    content_width: usize = 103,
+    content_height: usize = 80,
+    // Note: Borders removed from character count (printer handles margins/borders)
     border_char: u8 = '|',
     border_top_bottom: u8 = '+',
     border_horizontal: u8 = '-',

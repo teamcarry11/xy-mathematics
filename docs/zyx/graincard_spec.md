@@ -2,13 +2,13 @@
 
 ## Overview
 
-**Graincard** is a deterministic ASCII art generator that creates unique "trading cards" for ecological grain systems. Each card is 75 characters wide by 100 lines tall, featuring a procedurally generated grain stalk with ecological metadata.
+**Graincard** is a deterministic ASCII art generator that creates unique "trading cards" for ecological grain systems. Each card is 103 characters wide by 80 lines tall, featuring a procedurally generated grain stalk with ecological metadata.
 
 ## Card Dimensions
 
-- **Total Size**: 75×100 characters
-- **Content Area**: 73×98 characters (accounting for 1-char borders)
-- **Border Style**: `+` corners, `-` horizontal, `|` vertical
+- **Total Size**: 103×80 characters (entirely content)
+- **No borders in count**: Borders and padding are handled by printer software, not included in character count
+- **Aspect Ratio**: Optimized for portrait-printed 8.5×11" standard printer paper (0.772 visual aspect ratio)
 
 ## Card Structure
 

@@ -2,7 +2,7 @@ const std = @import("std");
 const types = @import("types.zig");
 
 // Graincard Layout Engine
-// Handles 75x100 graincard assembly with 1-char borders
+// Handles 103x80 graincard assembly (content-only, borders optional)
 
 pub fn create_border(
     allocator: std.mem.Allocator,

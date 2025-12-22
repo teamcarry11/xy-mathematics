@@ -4761,4 +4761,43 @@ pub fn build(b: *std.Build) void {
     });
     const performance_benchmark_tests_run = b.addRunArtifact(performance_benchmark_tests);
     test_step.dependOn(&performance_benchmark_tests_run.step);
+
+    // Cross-platform compatibility tests (Phase 6.4)
+    const cross_platform_compatibility_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/101_cross_platform_compatibility_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+            },
+        }),
+    });
+    const cross_platform_compatibility_tests_run = b.addRunArtifact(cross_platform_compatibility_tests);
+    test_step.dependOn(&cross_platform_compatibility_tests_run.step);
+
+    // Interrupt and exception abstraction tests (Phase 6.4)
+    const interrupt_exception_abstraction_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/102_interrupt_exception_abstraction_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+            },
+        }),
+    });
+    const interrupt_exception_abstraction_tests_run = b.addRunArtifact(interrupt_exception_abstraction_tests);
+    test_step.dependOn(&interrupt_exception_abstraction_tests_run.step);
+
+    // Graincard format validation test
+    const graincard_format_validation_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/152_graincard_format_validation_test.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    const graincard_format_validation_tests_run = b.addRunArtifact(graincard_format_validation_tests);
+    test_step.dependOn(&graincard_format_validation_tests_run.step);
 }

@@ -6,7 +6,7 @@ tests stay in deterministic harmony. TigerStyle remains the guardrail for
 safety, performance, and developer experience: every function stays under
 70 lines, allocations are explicit, and assertions catch drift early.
 Matklad-style data-driven tests keep refactors fearless. I wrap prose to
-73 columns so the narrative fits Grain’s graincard constraints.
+103 columns so the narrative fits Grain's graincard constraints.
 
 ## Strategies in Active Use
 - **TigerStyle Coding Guidelines** — zero dependency bias, 100-column
@@ -35,7 +35,7 @@ Matklad-style data-driven tests keep refactors fearless. I wrap prose to
 - **Grain Lattice Spec** — `src/grain_lattice.zig` freezes Djinn’s DAG
   architecture for deterministic referencing and Matklad-style tests.
 - **Documentary Chronicle** — `docs/doc-series/` hosts a 12-part series
-  tracking intro → roadmap; each chapter stays under 73 columns so it
+  tracking intro → roadmap; each chapter stays under 103 columns so it
   flows with the rest of the plan.
 - **Direct Messages Module** — `src/dm.zig` couples X25519 key exchange
   with ChaCha20-Poly1305 to power Nostr-style DMs in the upcoming GUI.

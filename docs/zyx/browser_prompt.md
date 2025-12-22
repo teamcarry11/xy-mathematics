@@ -77,7 +77,7 @@ For initial development and testing:
 ## GrainStyle Constraints
 
 All code must follow GrainStyle:
-- **Line Width**: 73 characters (graincard compatible)
+- **Line Width**: 103 characters (graincard compatible)
 - **Function Length**: Max 70 lines
 - **Types**: Explicit (u32, u64, not usize)
 - **Memory**: Static allocation only (startup)

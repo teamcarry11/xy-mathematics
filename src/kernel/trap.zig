@@ -7,37 +7,12 @@ const InterruptController = @import("interrupt.zig").InterruptController;
 const BasinKernel = @import("basin_kernel.zig").BasinKernel;
 const Debug = @import("debug.zig");
 const page_fault_stats = @import("page_fault_stats.zig");
+const exception_types = @import("exception_types.zig");
 
-/// Exception type (RISC-V exception codes).
-/// Why: Explicit exception types for type safety.
-pub const ExceptionType = enum(u32) {
-    /// Instruction address misaligned.
-    instruction_address_misaligned = 0,
-    /// Instruction access fault.
-    instruction_access_fault = 1,
-    /// Illegal instruction.
-    illegal_instruction = 2,
-    /// Breakpoint.
-    breakpoint = 3,
-    /// Load address misaligned.
-    load_address_misaligned = 4,
-    /// Load access fault.
-    load_access_fault = 5,
-    /// Store/AMO address misaligned.
-    store_address_misaligned = 6,
-    /// Store/AMO access fault.
-    store_access_fault = 7,
-    /// Environment call from U-mode.
-    environment_call_from_u_mode = 8,
-    /// Environment call from S-mode.
-    environment_call_from_s_mode = 9,
-    /// Instruction page fault.
-    instruction_page_fault = 12,
-    /// Load page fault.
-    load_page_fault = 13,
-    /// Store/AMO page fault.
-    store_page_fault = 15,
-};
+/// Exception type (unified for RISC-V and AArch64).
+/// Why: Explicit exception types for type safety, architecture-agnostic.
+/// Note: Re-exports unified ExceptionType from exception_types.zig.
+pub const ExceptionType = exception_types.ExceptionType;
 
 /// Trap loop (main kernel loop).
 /// Why: Process interrupts and handle syscalls in main loop.

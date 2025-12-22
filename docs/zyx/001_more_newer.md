@@ -13,7 +13,7 @@ We keep the `[2 | 1 | 1]` envelope intact while growing new limbs.
   to keep refactors guilt-free.
 - **Zig-Orchestrated Monorepo** — `xy` stays self-hosted with deterministic
   build steps, no implicit Python or shell glue.
-- **Prose Mirrors Code** — documentation lives under 73 characters and
+- **Prose Mirrors Code** — documentation lives under 103 characters and
   is regenerated via `zig build wrap-docs`.
 - **Brewfile/Bundle** — declarative macOS provisioning (install Homebrew,
   `git`, `gh`, Cursor) inspired by Matthias Portzel’s Brewfile workflow

@@ -4,17 +4,12 @@
 
 const std = @import("std");
 const Debug = @import("debug.zig");
+const interrupt_types = @import("interrupt_types.zig");
 
-/// Interrupt type (RISC-V interrupt types).
-/// Why: Explicit interrupt types for type safety.
-pub const InterruptType = enum(u32) {
-    /// Software interrupt (from other cores or software).
-    software = 1,
-    /// Timer interrupt (from SBI timer or hardware timer).
-    timer = 5,
-    /// External interrupt (from devices, keyboard, mouse, etc.).
-    external = 9,
-};
+/// Interrupt type (unified for RISC-V and AArch64).
+/// Why: Explicit interrupt types for type safety, architecture-agnostic.
+/// Note: Re-exports unified InterruptType from interrupt_types.zig.
+pub const InterruptType = interrupt_types.InterruptType;
 
 /// Interrupt handler function type.
 /// Why: Type-safe interrupt handler registration.

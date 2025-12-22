@@ -151,9 +151,9 @@ You should see:
 
 ### Graincard Constraints
 
-- **Line width**: 73 characters (hard wrap)
+- **Line width**: 103 characters (hard wrap)
 - **Function length**: max 70 lines
-- **Total size**: 75×100 monospace teaching cards
+- **Total size**: 103×80 monospace teaching cards (content-only, optimized for portrait 8.5×11" paper)
 
 ### Safety & Assertions
 

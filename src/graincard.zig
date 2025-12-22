@@ -1,7 +1,7 @@
 const std = @import("std");
 
 // Graincard Generator
-// Main entry point for 75x100 graincard generation
+// Main entry point for 103x80 graincard generation
 
 pub const types = @import("graincard/types.zig");
 pub const layout = @import("graincard/layout.zig");

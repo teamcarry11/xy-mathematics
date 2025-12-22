@@ -109,8 +109,6 @@ test "platform_aarch64_console_putchar" {
     Debug.kassert(aarch64_platform.initialized, "Platform not initialized", .{});
 }
 
-/// Test platform time source for RISC-V.
-/// Why: Verify RISC-V time source works via platform abstraction.
 test "platform_riscv_get_time_ns" {
     // Initialize RISC-V platform.
     const riscv_platform = platform.Platform.init(
@@ -130,8 +128,6 @@ test "platform_riscv_get_time_ns" {
     Debug.kassert(riscv_platform.initialized, "Platform not initialized", .{});
 }
 
-/// Test platform time source for AArch64.
-/// Why: Verify AArch64 time source works via platform abstraction.
 test "platform_aarch64_get_time_ns" {
     // Initialize AArch64 platform.
     const aarch64_platform = platform.Platform.init(
@@ -151,8 +147,6 @@ test "platform_aarch64_get_time_ns" {
     Debug.kassert(aarch64_platform.initialized, "Platform not initialized", .{});
 }
 
-/// Test global platform instance.
-/// Why: Verify global platform instance works correctly.
 test "platform_global_instance" {
     // Initialize RISC-V platform.
     const riscv_platform = platform.Platform.init(

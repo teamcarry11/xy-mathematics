@@ -24,9 +24,9 @@ embroidered last.
 ### Graincard Constraints
 
 All Zig code should be written to fit within graincard constraints:
-- **Line width**: 73 characters per line (hard wrap)
+- **Line width**: 103 characters per line (hard wrap)
 - **Function length**: max 70 lines per function
-- **Total size**: 75×100 monospace teaching cards
+- **Total size**: 103×80 monospace teaching cards (content-only, optimized for portrait 8.5×11" paper)
 
 ### Zig-Specific Guidelines
 

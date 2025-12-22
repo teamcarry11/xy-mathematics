@@ -1,8 +1,8 @@
 # Grain Flow Agent: Task List
 
 **Agent**: Grain Flow Agent (9th Agent)  
-**Status**: All Phases Complete ✅ (Phase 1-5 COMPLETE), SLC Product Workflow Templates Ready ✅, Research Agent Collaboration Complete ✅, Instrumentation Design Prepared ✅, Phase 63 API Contracts Documented ✅, Phase 64 Integration Tests Created ✅, Phase 3 Validation COMPLETE ✅, ZON Format Integration Coordinating with Court Agent ⏳, Phase 3 Completion Reported to Core Agent ✅, TigerBeetle Enhancement Coordination Responded ⏳, Core Agent Coordination Plan Acknowledged ✅, Workflow Scheduler Cron Parser Enhanced ✅, Workflow Visualizer Hierarchical Layout Enhanced ✅, Build Configuration Coordination Requested ⏳, Core Coordination Document Updated ✅  
-**Last Updated**: 2025-12-21-142200-pst
+**Status**: All Phases Complete ✅ (Phase 1-5 COMPLETE), SLC Product Workflow Templates Ready ✅, Research Agent Collaboration Complete ✅, Instrumentation Design Prepared ✅, Phase 63 API Contracts Documented ✅, Phase 64 Integration Tests Created ✅, Phase 3 Validation COMPLETE ✅, ZON Format Integration Coordinating with Court Agent ⏳ (Priority 3, HIGH, COORDINATION NEEDED), Phase 3 Completion Reported to Core Agent ✅, TigerBeetle Enhancement Coordination Responded ⏳ (Medium Priority, Timeline Needed, COORDINATION NEEDED), Core Agent Coordination Plan Acknowledged ✅, Workflow Scheduler Cron Parser Enhanced ✅, Workflow Scheduler Cron Parser Step Value Support Enhanced ✅, Workflow Visualizer Hierarchical Layout Enhanced ✅, Event Bus Source Filtering Enhanced ✅, Build Configuration Coordination Requested ⏳ (Priority 2, HIGH, COORDINATION NEEDED), Core Coordination Document Rewritten ✅, Core Agent Coordination Plan 2025-12-21-183510-pst Acknowledged ✅  
+**Last Updated**: 2025-12-21-190000-pst
 
 ---
 
@@ -611,7 +611,15 @@
   - [x] Basic cron parser implemented (`calculate_next_cron_execution`)
   - [x] Supports common patterns: "* * * * *" (every minute), "0 * * * *" (every hour), numeric minutes
   - [x] Tests added for cron parser functionality
-  - [ ] Future: Enhanced cron parser with full range/list/step support
+- [x] Workflow Scheduler Cron Parser Step Value Support (2025-12-21-183600-pst)
+  - [x] Step value pattern support implemented (`*/N` for every N minutes)
+  - [x] Tests added for step value patterns (`*/5`, `*/10`)
+  - [ ] Future: Enhanced cron parser with full range/list support
+- [x] Event Bus Source Filtering Enhancement (2025-12-21-183600-pst)
+  - [x] Source filtering support implemented (`subscribe_with_source_filter()`)
+  - [x] Subscribers can filter events by source agent ID
+  - [x] Tests added for source filtering (match, no match, combined with destination filter)
+  - [x] Backward compatible (existing `subscribe()` continues to work)
 - [x] Workflow Visualizer Hierarchical Layout Enhancement (2025-12-21-141900-pst)
   - [x] Hierarchical layout algorithm implemented (replaces simple grid layout)
   - [x] Calculates node levels based on DAG structure (iterative, no recursion)

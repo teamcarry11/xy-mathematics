@@ -10,6 +10,7 @@
 const std = @import("std");
 const canvas = @import("canvas.zig");
 const component = @import("component.zig");
+const export_slc = @import("export_slc.zig");
 
 // Bounded: Max SLC components.
 pub const MAX_SLC_COMPONENTS: u32 = 64;
@@ -539,6 +540,60 @@ pub const SlcComponentLibrary = struct {
             return workspace_comp.base_component.variants_len;
         }
         return 0;
+    }
+
+    // Export profile component variant to SLC bundle.
+    pub fn export_profile_component_to_slc(
+        self: *const SlcComponentLibrary,
+        component_id: u32,
+        variant_id: u32,
+        bundle: *export_slc.SlcBundle,
+    ) bool {
+        std.debug.assert(@intFromPtr(self) != 0);
+        std.debug.assert(component_id > 0);
+        std.debug.assert(variant_id > 0);
+        std.debug.assert(@intFromPtr(bundle) != 0);
+        if (self.get_variant_for_profile(component_id, variant_id)) |variant| {
+            bundle.export_component_variant(variant);
+            return true;
+        }
+        return false;
+    }
+
+    // Export website component variant to SLC bundle.
+    pub fn export_website_component_to_slc(
+        self: *const SlcComponentLibrary,
+        component_id: u32,
+        variant_id: u32,
+        bundle: *export_slc.SlcBundle,
+    ) bool {
+        std.debug.assert(@intFromPtr(self) != 0);
+        std.debug.assert(component_id > 0);
+        std.debug.assert(variant_id > 0);
+        std.debug.assert(@intFromPtr(bundle) != 0);
+        if (self.get_variant_for_website(component_id, variant_id)) |variant| {
+            bundle.export_component_variant(variant);
+            return true;
+        }
+        return false;
+    }
+
+    // Export workspace component variant to SLC bundle.
+    pub fn export_workspace_component_to_slc(
+        self: *const SlcComponentLibrary,
+        component_id: u32,
+        variant_id: u32,
+        bundle: *export_slc.SlcBundle,
+    ) bool {
+        std.debug.assert(@intFromPtr(self) != 0);
+        std.debug.assert(component_id > 0);
+        std.debug.assert(variant_id > 0);
+        std.debug.assert(@intFromPtr(bundle) != 0);
+        if (self.get_variant_for_workspace(component_id, variant_id)) |variant| {
+            bundle.export_component_variant(variant);
+            return true;
+        }
+        return false;
     }
 };
 

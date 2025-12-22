@@ -5,6 +5,7 @@
 //! GrainStyle: grain_case, u32/u64, bounded allocations, assertions.
 //!
 //! 2025-12-20-161231-pst: Phase 17 SLC v1.0 Text Editor
+//! 2025-12-21-184709-pst: Phase 28 Find and Replace
 
 const std = @import("std");
 const grain_core = @import("grain_core");
@@ -20,6 +21,10 @@ pub const MAX_UNDO_HISTORY: u32 = 100;
 // Bounded: Max search results (explicit limit)
 // 2025-12-20-161231-pst: Phase 17 SLC v1.0
 pub const MAX_SEARCH_RESULTS: u32 = 256;
+
+// Bounded: Max replace query length (explicit limit, in bytes)
+// 2025-12-21-184709-pst: Phase 28 Find and Replace
+pub const MAX_REPLACE_QUERY_LEN: u32 = 256;
 
 // Bounded: Max line length (explicit limit, in bytes)
 // 2025-12-20-161231-pst: Phase 17 SLC v1.0
@@ -145,6 +150,8 @@ pub const TextEditor = struct {
     search_results_len: u32,
     search_query: [256]u8,
     search_query_len: u32,
+    replace_query: [MAX_REPLACE_QUERY_LEN]u8,
+    replace_query_len: u32,
     show_line_numbers: bool,
     plain_text_mode: bool,
     allocator: std.mem.Allocator,
@@ -169,6 +176,8 @@ pub const TextEditor = struct {
             .search_results_len = 0,
             .search_query = undefined,
             .search_query_len = 0,
+            .replace_query = undefined,
+            .replace_query_len = 0,
             .show_line_numbers = true,
             .plain_text_mode = false,
             .allocator = allocator,
@@ -191,6 +200,7 @@ pub const TextEditor = struct {
 
         // Initialize search query
         @memset(&editor.search_query, 0);
+        @memset(&editor.replace_query, 0);
 
         // Postcondition: Editor must be valid
         std.debug.assert(editor.lines_len == 0);
@@ -762,6 +772,133 @@ pub const TextEditor = struct {
             results[results_len.*] = self.search_results[i];
             results_len.* += 1;
         }
+    }
+
+    /// Set replace query.
+    // 2025-12-21-184709-pst: Phase 28 Find and Replace
+    pub fn set_replace_query(self: *TextEditor, query: []const u8) bool {
+        // Precondition: Query must be valid
+        std.debug.assert(query.len <= MAX_REPLACE_QUERY_LEN);
+
+        if (query.len > MAX_REPLACE_QUERY_LEN) {
+            return false;
+        }
+
+        @memset(&self.replace_query, 0);
+        @memcpy(self.replace_query[0..query.len], query[0..query.len]);
+        self.replace_query_len = @as(u32, @intCast(query.len));
+
+        // Postcondition: Replace query must be set
+        std.debug.assert(self.replace_query_len <= MAX_REPLACE_QUERY_LEN);
+
+        return true;
+    }
+
+    /// Get replace query.
+    // 2025-12-21-184709-pst: Phase 28 Find and Replace
+    pub fn get_replace_query(
+        self: *const TextEditor,
+        query: []u8,
+        query_len: *u32,
+    ) void {
+        // Precondition: Query buffer must be valid
+        std.debug.assert(query.len >= MAX_REPLACE_QUERY_LEN);
+
+        query_len.* = 0;
+        const len = @min(self.replace_query_len, query.len);
+        @memcpy(query[0..len], self.replace_query[0..len]);
+        query_len.* = len;
+    }
+
+    /// Replace text at specific search result.
+    // 2025-12-21-184709-pst: Phase 28 Find and Replace
+    pub fn replace_at_result(self: *TextEditor, result_idx: u32) bool {
+        // Precondition: File must be open
+        std.debug.assert(self.file_state != .closed);
+        std.debug.assert(result_idx < self.search_results_len);
+
+        if (self.file_state == .closed) {
+            return false;
+        }
+
+        if (result_idx >= self.search_results_len) {
+            return false;
+        }
+
+        if (self.replace_query_len == 0) {
+            return false; // No replace query set
+        }
+
+        const result = self.search_results[result_idx];
+        if (result.line >= self.lines_len) {
+            return false;
+        }
+
+        const line = &self.lines[result.line];
+        if (result.column + result.match_len > line.content_len) {
+            return false;
+        }
+
+        // Move cursor to replacement location
+        self.cursor.line = result.line;
+        self.cursor.column = result.column;
+
+        // Delete matched text
+        if (!self.delete_text_internal(result.match_len, true)) {
+            return false;
+        }
+
+        // Insert replacement text
+        const replace_text = self.replace_query[0..self.replace_query_len];
+        if (!self.insert_text_internal(replace_text, true)) {
+            return false;
+        }
+
+        // Mark as dirty
+        self.file_state = .dirty;
+
+        // Postcondition: Replacement must be done
+        std.debug.assert(self.file_state == .dirty);
+
+        return true;
+    }
+
+    /// Replace all occurrences of search query.
+    // 2025-12-21-184709-pst: Phase 28 Find and Replace
+    pub fn replace_all(self: *TextEditor) u32 {
+        // Precondition: File must be open
+        std.debug.assert(self.file_state != .closed);
+
+        if (self.file_state == .closed) {
+            return 0;
+        }
+
+        const initial_results_len = self.search_results_len;
+        if (initial_results_len == 0) {
+            return 0; // No search results
+        }
+
+        if (self.replace_query_len == 0) {
+            return 0; // No replace query set
+        }
+
+        // Replace in reverse order to preserve indices
+        var replace_count: u32 = 0;
+        var i: u32 = initial_results_len;
+        while (i > 0) : (i -= 1) {
+            const result_idx = i - 1;
+            if (self.replace_at_result(result_idx)) {
+                replace_count += 1;
+            }
+        }
+
+        // Clear search results after replacement
+        self.search_results_len = 0;
+
+        // Postcondition: Replace count must be valid
+        std.debug.assert(replace_count <= initial_results_len);
+
+        return replace_count;
     }
 
     /// Toggle line numbers display.

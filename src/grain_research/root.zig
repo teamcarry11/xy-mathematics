@@ -41,6 +41,10 @@ pub const retrieval_accuracy = @import("retrieval_accuracy.zig");
 pub const retrieval_serialization = @import("retrieval_serialization.zig");
 // Cost savings calculator for ZON format validation.
 pub const cost_savings = @import("cost_savings.zig");
+// Integration test harness for multi-agent testing.
+pub const integration_test_harness = @import("integration_test_harness.zig");
+// Integration test scenarios for reusable test patterns.
+pub const integration_test_scenarios = @import("integration_test_scenarios.zig");
 
 // Module exports.
 pub const ResearchEngine = research_engine.ResearchEngine;
@@ -86,3 +90,13 @@ pub const CostSavingsCalculator = cost_savings.CostSavingsCalculator;
 pub const UseCase = cost_savings.UseCase;
 pub const Pricing = cost_savings.Pricing;
 pub const CostResult = cost_savings.CostResult;
+pub const IntegrationTestHarness = integration_test_harness.IntegrationTestHarness;
+pub const MockLLMProvider = integration_test_harness.MockLLMProvider;
+pub const MockDatabase = integration_test_harness.MockDatabase;
+pub const TestDataGenerator = integration_test_harness.TestDataGenerator;
+pub const TestScenarioResult = integration_test_scenarios.TestScenarioResult;
+pub const scenario_agent_registration = integration_test_scenarios.scenario_agent_registration;
+pub const scenario_event_driven_coordination = integration_test_scenarios.scenario_event_driven_coordination;
+pub const scenario_data_export_import = integration_test_scenarios.scenario_data_export_import;
+pub const scenario_error_handling = integration_test_scenarios.scenario_error_handling;
+pub const scenario_workflow_execution = integration_test_scenarios.scenario_workflow_execution;

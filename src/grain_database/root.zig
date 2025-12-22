@@ -88,4 +88,10 @@ pub const MAX_FILE_KEY_LEN = @import("slc_integration.zig").MAX_FILE_KEY_LEN;
 pub const validate_npub = @import("slc_integration.zig").validate_npub;
 pub const validate_file_path = @import("slc_integration.zig").validate_file_path;
 pub const SlcError = @import("slc_integration.zig").SlcError;
+pub const UserStorage = @import("user_storage.zig").UserStorage;
+pub const MAX_USER_ID_LEN = @import("user_storage.zig").MAX_USER_ID_LEN;
+pub const MAX_EMAIL_LEN = @import("user_storage.zig").MAX_EMAIL_LEN;
+pub const validate_user_id = @import("user_storage.zig").validate_user_id;
+pub const validate_email = @import("user_storage.zig").validate_email;
+pub const UserStorageError = @import("user_storage.zig").UserStorageError;
 

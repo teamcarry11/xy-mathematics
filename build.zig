@@ -4739,6 +4739,36 @@ pub fn build(b: *std.Build) void {
     const grain_research_zon_cost_savings_tests_run = b.addRunArtifact(grain_research_zon_cost_savings_tests);
     test_step.dependOn(&grain_research_zon_cost_savings_tests_run.step);
 
+    // Integration Test Harness Tests (Priority 2).
+    const grain_research_integration_test_harness_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/154_grain_research_integration_test_harness_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_research", .module = grain_research_module },
+                .{ .name = "grain_flow", .module = grain_flow_module },
+            },
+        }),
+    });
+    const grain_research_integration_test_harness_tests_run = b.addRunArtifact(grain_research_integration_test_harness_tests);
+    test_step.dependOn(&grain_research_integration_test_harness_tests_run.step);
+
+    // Integration Test Scenarios Tests (Priority 2).
+    const grain_research_integration_test_scenarios_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/155_grain_research_integration_test_scenarios_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_research", .module = grain_research_module },
+                .{ .name = "grain_flow", .module = grain_flow_module },
+            },
+        }),
+    });
+    const grain_research_integration_test_scenarios_tests_run = b.addRunArtifact(grain_research_integration_test_scenarios_tests);
+    test_step.dependOn(&grain_research_integration_test_scenarios_tests_run.step);
+
     // Grain Bubble component tests
     const grain_bubble_component_tests = b.addTest(.{
         .root_module = b.createModule(.{

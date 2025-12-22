@@ -311,3 +311,158 @@ test "provider pool get default provider" {
     try testing.expect(default_provider.?.provider_type == .openai);
 }
 
+test "zon format encode simple key value" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const pairs = [_]struct {
+        key: []const u8,
+        value: grain_court.ZonFormat.ZonValue,
+    }{
+        .{
+            .key = "total_executions",
+            .value = grain_court.ZonFormat.ZonValue.from_u32(1000),
+        },
+    };
+    const result = try grain_court.ZonFormat.encode_zon(&pairs, allocator);
+    defer result.deinit();
+    try testing.expect(result.len > 0);
+    try testing.expect(std.mem.containsAtLeast(
+        u8,
+        result.data[0..result.len],
+        1,
+        "total_executions:1000",
+    ));
+}
+
+test "zon format encode boolean" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const pairs = [_]struct {
+        key: []const u8,
+        value: grain_court.ZonFormat.ZonValue,
+    }{
+        .{
+            .key = "active",
+            .value = grain_court.ZonFormat.ZonValue.from_bool(true),
+        },
+    };
+    const result = try grain_court.ZonFormat.encode_zon(&pairs, allocator);
+    defer result.deinit();
+    try testing.expect(result.len > 0);
+    try testing.expect(std.mem.containsAtLeast(
+        u8,
+        result.data[0..result.len],
+        1,
+        "active:T",
+    ));
+}
+
+test "zon format encode string" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const pairs = [_]struct {
+        key: []const u8,
+        value: grain_court.ZonFormat.ZonValue,
+    }{
+        .{
+            .key = "name",
+            .value = grain_court.ZonFormat.ZonValue.from_string("backup"),
+        },
+    };
+    const result = try grain_court.ZonFormat.encode_zon(&pairs, allocator);
+    defer result.deinit();
+    try testing.expect(result.len > 0);
+    try testing.expect(std.mem.containsAtLeast(
+        u8,
+        result.data[0..result.len],
+        1,
+        "name:backup",
+    ));
+}
+
+test "zon format encode tabular array" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const field_names = [_][]const u8{ "workflow_id", "name", "status" };
+    const row1 = [_]grain_court.ZonFormat.ZonValue{
+        grain_court.ZonFormat.ZonValue.from_u32(1),
+        grain_court.ZonFormat.ZonValue.from_string("backup"),
+        grain_court.ZonFormat.ZonValue.from_string("success"),
+    };
+    const row2 = [_]grain_court.ZonFormat.ZonValue{
+        grain_court.ZonFormat.ZonValue.from_u32(2),
+        grain_court.ZonFormat.ZonValue.from_string("sync"),
+        grain_court.ZonFormat.ZonValue.from_string("success"),
+    };
+    const rows = [_][]const grain_court.ZonFormat.ZonValue{ &row1, &row2 };
+    const result = try grain_court.ZonFormat.encode_tabular_array_zon(
+        "executions",
+        &field_names,
+        &rows,
+        allocator,
+    );
+    defer result.deinit();
+    try testing.expect(result.len > 0);
+    try testing.expect(std.mem.containsAtLeast(
+        u8,
+        result.data[0..result.len],
+        1,
+        "executions:@(2):workflow_id,name,status",
+    ));
+}
+
+test "zon format encode nested object" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const fields = [_]grain_court.ZonFormat.ZonNestedField{
+        .{
+            .key = "host",
+            .value = grain_court.ZonFormat.ZonValue.from_string("localhost"),
+        },
+        .{
+            .key = "port",
+            .value = grain_court.ZonFormat.ZonValue.from_u32(5432),
+        },
+    };
+    const result = try grain_court.ZonFormat.encode_nested_object_zon(
+        "config.database",
+        &fields,
+        allocator,
+    );
+    defer result.deinit();
+    try testing.expect(result.len > 0);
+    try testing.expect(std.mem.containsAtLeast(
+        u8,
+        result.data[0..result.len],
+        1,
+        "config.database{host:localhost,port:5432}",
+    ));
+}
+
+test "zon format decode simple" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const zon_str = "total_executions:1000\nactive:T";
+    const result = try grain_court.ZonFormat.decode_zon(zon_str, allocator);
+    defer result.deinit();
+    try testing.expect(result.pairs.len == 2);
+    try testing.expect(std.mem.eql(u8, result.pairs[0].key, "total_executions"));
+    try testing.expect(result.pairs[0].value.value_type == .u32_value);
+    try testing.expect(result.pairs[0].value.u32_val == 1000);
+    try testing.expect(std.mem.eql(u8, result.pairs[1].key, "active"));
+    try testing.expect(result.pairs[1].value.value_type == .bool_value);
+    try testing.expect(result.pairs[1].value.bool_val == true);
+}
+

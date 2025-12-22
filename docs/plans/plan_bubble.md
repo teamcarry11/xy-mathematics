@@ -65,6 +65,7 @@ src/grain_bubble/
 - ✅ Preset animations (quick/smooth fade, slide, scale animations)
 - ✅ Component variant support (get/create variants for profile, website, workspace components)
 - ✅ Variant count functions for all component types
+- ✅ Export helper functions (export SLC components to SLC bundles)
 
 **Dependencies**:
 - **Needs**: Phase 2 complete (Component System) ✅

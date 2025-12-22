@@ -232,3 +232,105 @@ test "event payload too large" {
     const result = event.set_payload(&large_payload);
     try std.testing.expect(result == false);
 }
+
+test "subscribe with source filter" {
+    var bus = event_bus.EventBus.init();
+    var received: bool = false;
+    const callback = struct {
+        fn handler(event: *const event_bus.Event, user_data: ?*anyopaque) void {
+            _ = event;
+            const received_ptr = @as(*bool, @ptrCast(@alignCast(user_data.?)));
+            received_ptr.* = true;
+        }
+    }.handler;
+    const result = bus.subscribe_with_source_filter(
+        event_bus.EventType.agent_started,
+        1,
+        callback,
+        @as(?*anyopaque, @ptrCast(&received)),
+        2, // Filter by source agent ID 2
+    );
+    try std.testing.expect(result == true);
+    try std.testing.expect(bus.get_subscriber_count() == 1);
+}
+
+test "event routing with source filter match" {
+    var bus = event_bus.EventBus.init();
+    var received: bool = false;
+    const callback = struct {
+        fn handler(event: *const event_bus.Event, user_data: ?*anyopaque) void {
+            _ = event;
+            const received_ptr = @as(*bool, @ptrCast(@alignCast(user_data.?)));
+            received_ptr.* = true;
+        }
+    }.handler;
+    _ = bus.subscribe_with_source_filter(
+        event_bus.EventType.agent_started,
+        1,
+        callback,
+        @as(?*anyopaque, @ptrCast(&received)),
+        2, // Filter by source agent ID 2
+    );
+    _ = bus.publish_event(
+        event_bus.EventType.agent_started,
+        2, // Source agent ID 2 (matches filter)
+        0,
+        1000,
+    );
+    bus.process_events();
+    try std.testing.expect(received == true);
+}
+
+test "event routing with source filter no match" {
+    var bus = event_bus.EventBus.init();
+    var received: bool = false;
+    const callback = struct {
+        fn handler(event: *const event_bus.Event, user_data: ?*anyopaque) void {
+            _ = event;
+            const received_ptr = @as(*bool, @ptrCast(@alignCast(user_data.?)));
+            received_ptr.* = true;
+        }
+    }.handler;
+    _ = bus.subscribe_with_source_filter(
+        event_bus.EventType.agent_started,
+        1,
+        callback,
+        @as(?*anyopaque, @ptrCast(&received)),
+        2, // Filter by source agent ID 2
+    );
+    _ = bus.publish_event(
+        event_bus.EventType.agent_started,
+        3, // Source agent ID 3 (does not match filter)
+        0,
+        1000,
+    );
+    bus.process_events();
+    try std.testing.expect(received == false);
+}
+
+test "event routing with source filter and destination filter" {
+    var bus = event_bus.EventBus.init();
+    var received: bool = false;
+    const callback = struct {
+        fn handler(event: *const event_bus.Event, user_data: ?*anyopaque) void {
+            _ = event;
+            const received_ptr = @as(*bool, @ptrCast(@alignCast(user_data.?)));
+            received_ptr.* = true;
+        }
+    }.handler;
+    _ = bus.subscribe_with_source_filter(
+        event_bus.EventType.agent_started,
+        1, // Subscriber agent ID 1
+        callback,
+        @as(?*anyopaque, @ptrCast(&received)),
+        2, // Filter by source agent ID 2
+    );
+    _ = bus.publish_event(
+        event_bus.EventType.agent_started,
+        2, // Source agent ID 2 (matches source filter)
+        1, // Destination agent ID 1 (matches subscriber)
+        1000,
+    );
+    bus.process_events();
+    try std.testing.expect(received == true);
+}

@@ -189,3 +189,43 @@ test "process user response validation error" {
     const result = db_integration.process_user_response(&response, &user);
     try testing.expect(result == db_integration.DatabaseResult.validation_error);
 }
+
+test "parse error response not found" {
+    const json = "{\"error\":{\"code\":404,\"message\":\"Record not found\",\"details\":\"Record with ID 123 does not exist\"}}";
+    const result = db_integration.parse_error_response(json);
+    try testing.expect(result != null);
+    try testing.expect(result.? == db_integration.DatabaseResult.not_found);
+}
+
+test "parse error response validation error" {
+    const json = "{\"error\":{\"code\":400,\"message\":\"Bad request\",\"details\":\"Invalid request body\"}}";
+    const result = db_integration.parse_error_response(json);
+    try testing.expect(result != null);
+    try testing.expect(result.? == db_integration.DatabaseResult.validation_error);
+}
+
+test "parse error response internal error" {
+    const json = "{\"error\":{\"code\":500,\"message\":\"Internal server error\",\"details\":\"Database connection failed\"}}";
+    const result = db_integration.parse_error_response(json);
+    try testing.expect(result != null);
+    try testing.expect(result.? == db_integration.DatabaseResult.internal_error);
+}
+
+test "parse error response invalid json" {
+    const json = "{invalid json}";
+    const result = db_integration.parse_error_response(json);
+    try testing.expect(result == null);
+}
+
+test "process user response with error json" {
+    const grain_core_api = @import("grain_core").api_server;
+    var response = grain_core_api.HttpResponse.init();
+    response.status = grain_core_api.HttpStatus.not_found;
+    const error_json = "{\"error\":{\"code\":404,\"message\":\"Record not found\"}}";
+    const body_len = @min(error_json.len, grain_core_api.MAX_RESPONSE_SIZE);
+    std.mem.copyForwards(u8, &response.body, error_json[0..body_len]);
+    response.body_len = @intCast(body_len);
+    var user = db_integration.UserData.init();
+    const result = db_integration.process_user_response(&response, &user);
+    try testing.expect(result == db_integration.DatabaseResult.not_found);
+}

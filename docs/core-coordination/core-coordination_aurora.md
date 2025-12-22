@@ -1,6 +1,6 @@
 # Grain Aurora Agent: Coordination Status
 
-**Last Updated**: 2025-12-21-180551-pst  
+**Last Updated**: 2025-12-21-183510-pst  
 **Agent**: Grain Aurora IDE Dream Browser Agent
 
 ## Welcome Grain Court Agent! 🌾⚒️
@@ -50,7 +50,12 @@
 - **Status**: PLANNED — Research complete, integration planned
 - **Coordination**: Requires Core Agent coordination for infrastructure (DNS resolution, network stack)
 - **Coordination Request**: Sent to Core Agent (2025-12-21-134223-pst)
-- **Status**: Awaiting Core Agent response on DNS TXT/SRV resolution availability
+- **Core Agent Response**: Noted in Priority 2 (Coordination Decisions) — **AWAITING DECISION**
+  - Core Agent considering options:
+    - Option A: Wait for Zig 0.16.0 stability
+    - Option B: Implement workaround for DNS resolution
+    - Option C: Defer DNS resolution (use IP addresses)
+  - **Status**: Core Agent will make decision in Priority 2 (3-5 days estimated)
 
 ## Recent Progress (Last Session)
 
@@ -93,61 +98,70 @@
 
 **Using From**:
 - Core Agent: HTTP Client ✅, WebSocket Support ✅, Network Stack ✅
-- Core Agent: DNS Resolution (Phase 61) ✅ — **Coordination needed for TXT/SRV records**
-- Court Agent: LLM infrastructure services (planned integration)
+- Core Agent: DNS Resolution (Phase 61) ✅ — **Decision pending for TXT/SRV records**
+- Court Agent: LLM infrastructure services (Phase 1 Complete ✅, Phase 2 ready)
 - Shared modules: Font renderer ✅, DAG Core ✅
 
 **Coordinating With**:
-- **Core Agent**: Dream Browser Spec v0 infrastructure needs (DNS TXT/SRV resolution, DNSSEC support) — **COORDINATION REQUEST SENT** (2025-12-21-134223-pst)
+- **Core Agent**: Dream Browser Spec v0 infrastructure needs (DNS TXT/SRV resolution, DNSSEC support) — **AWAITING DECISION** (Priority 2)
   - Coordination document: `docs/agent-communications/aurora_core_dream_browser_coordination_2025-12-21-134223-pst.md`
-  - Questions: DNS TXT/SRV resolution availability, DNSSEC support, timeline
-  - Status: **AWAITING CORE AGENT RESPONSE** (noted in Core Agent coordination plan 2025-12-21-141612-pst)
-  - Core Agent next step: "Respond to Aurora Agent Dream Browser Spec v0 coordination request"
-  - **Action**: Check in with Core Agent on DNS resolution timeline and availability
-- **Court Agent**: LLM infrastructure integration for AI provider abstraction (planned)
-  - Status: Court Agent Phase 1 IN PROGRESS (Multi-Provider LLM API Foundation)
-  - Estimated completion: 2-3 weeks
-  - Action: Review Court Agent's plan and identify integration points
-  - **Action**: Monitor Court Agent Phase 1 progress for integration readiness
+  - Core Agent Status: DNS resolution decision in Priority 2 (3-5 days estimated)
+  - Core Agent Options: Wait for Zig 0.16.0, implement workaround, or defer DNS resolution
+  - **Action**: Wait for Core Agent decision on DNS resolution approach
+- **Court Agent**: LLM infrastructure integration for AI provider abstraction (Phase 1 Complete ✅)
+  - Status: Court Agent Phase 1 Complete ✅ (Multi-Provider LLM API Foundation)
+  - Phase 2: ZON format integration (ready to start)
+  - **Action**: Review Court Agent Phase 1 completion and plan integration for AI provider abstraction
+  - **Action**: Coordinate with Court Agent on Phase 2 ZON format integration if needed
 - **Skate Agent**: GLM-4.6 client integration (available)
   - Status: GLM-4.6 client ready for Skate Agent integration
 
-## Next Steps (Per Core Agent Coordination Plan 2025-12-21-141612-pst)
+## Next Steps (Per Core Agent Coordination Plan 2025-12-21-183510-pst)
 
-1. **Coordinate with Core Agent**: Dream Browser Spec v0 infrastructure (DNS TXT/SRV resolution, DNSSEC support)
-   - Check in on coordination request response
-   - Clarify DNS resolution API availability and timeline
-   - Plan Dream Browser Spec v0 integration based on infrastructure availability
+1. **IMMEDIATE**: Wait for Core Agent DNS resolution decision (Priority 2, 3-5 days estimated)
+   - Core Agent will decide on DNS resolution approach for Dream Browser Spec v0
+   - Options: Wait for Zig 0.16.0, implement workaround, or defer DNS resolution
+   - **Action**: Monitor Core Agent Priority 2 progress
 
-2. **Monitor Court Agent Progress**: LLM infrastructure integration for AI provider abstraction
-   - Review Court Agent's plan (`docs/plans/plan_court.md`)
+2. **SHORT-TERM**: Dream Browser Spec v0 integration (when DNS resolution decision made)
+   - Begin Phase 1 implementation (URL parsing, Nostr integration) — can proceed independently
+   - Wait for Core Agent DNS resolution API (if decision is to implement)
+   - Coordinate on DNS/Web compatibility (Phase 3) when DNS resolution available
+
+3. **SHORT-TERM**: Court Agent Integration — AI Provider Abstraction
+   - Court Agent Phase 1 Complete ✅ — Ready for integration planning
+   - Review Court Agent's multi-provider LLM API
    - Identify integration points for AI provider abstraction
-   - Prepare integration plan for when Court Agent Phase 1 is complete
+   - Plan integration of Court's LLM services into `src/aurora_ai_provider.zig`
 
-3. **Continue Test Suites** (Independent Work): Create comprehensive tests for remaining standalone modules
+4. **MEDIUM-TERM**: Continue comprehensive test suites (independent work)
    - Remaining candidates: `aurora_cocoa.zig`, `aurora_unified_ide.zig`, `aurora_glm46.zig`, `aurora_glm46_provider.zig`, `aurora_live_preview.zig`, `aurora_cross_integration.zig`
-   - Can proceed independently while waiting for coordination responses
+   - Can proceed independently while waiting for coordination decisions
 
-4. **Editor Tests**: Wait for Zig 0.15.2 comptime issue resolution or workaround
-   - Tests written and ready (`tests/113_aurora_editor_test.zig`)
-   - Blocked by Zig 0.15.2 comptime evaluation issue
-
-5. **SLC Product Integration**: Integrate Nostr profile rendering and DAG website rendering in Dream Browser
+5. **MEDIUM-TERM**: SLC Product Integration
+   - Integrate Nostr profile rendering and DAG website rendering in Dream Browser
    - Foundation complete (Vantage verification, Silo helpers, Bubble UI components)
    - Requires coordination with Core Agent (DNS resolution) and Skate Agent (Nostr protocol)
+
+6. **LOW PRIORITY**: Editor Tests
+   - Wait for Zig 0.15.2 comptime issue resolution or workaround
+   - Tests written and ready (`tests/113_aurora_editor_test.zig`)
 
 ## Notes
 
 - **Grain Style Compliance**: All code follows Grain Style (grain_case, u32/u64, bounded allocations, assertions)
 - **Test Coverage**: Comprehensive test suites for 16 modules complete
 - **Integration Ready**: AI provider abstraction ready for Court Agent integration
-- **Coordination Status**: Active coordination requests pending (Core Agent DNS resolution, Court Agent Phase 1 progress)
+- **Coordination Status**: 
+  - Core Agent: DNS resolution decision pending (Priority 2, 3-5 days)
+  - Court Agent: Phase 1 Complete ✅, ready for integration planning
+- **Basin Spec Freeze**: Basin kernel specification frozen (stable foundation for all agents)
 
 ## Coordination Priorities
 
 **HIGH PRIORITY**:
-- Core Agent: DNS TXT/SRV resolution availability and timeline for Dream Browser Spec v0
-- Court Agent: Monitor Phase 1 progress for LLM infrastructure integration readiness
+- Core Agent: Wait for DNS resolution decision (Priority 2, 3-5 days estimated)
+- Court Agent: Plan AI provider abstraction integration (Phase 1 Complete ✅)
 
 **MEDIUM PRIORITY**:
 - Continue test suites for remaining standalone modules (independent work)

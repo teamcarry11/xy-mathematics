@@ -8,6 +8,7 @@
 //! GrainStyle: grain_case, u32/u64, bounded allocations, assertions.
 //!
 //! 2025-12-07-054000-pst: Phase 1 Event Bus Foundation
+//! 2025-12-21-183600-pst: Event Bus Source Filtering Enhancement
 
 const std = @import("std");
 
@@ -101,6 +102,7 @@ pub const EventSubscriber = struct {
     subscriber_fn: EventSubscriberFn,
     user_data: ?*anyopaque,
     agent_id: u32,
+    source_filter_agent_id: u32, // 0 = no filter, >0 = filter by source agent ID
     active: bool,
 };
 
@@ -141,6 +143,7 @@ pub const EventBus = struct {
                 .subscriber_fn = undefined,
                 .user_data = null,
                 .agent_id = 0,
+                .source_filter_agent_id = 0,
                 .active = false,
             };
         }
@@ -240,6 +243,42 @@ pub const EventBus = struct {
             .subscriber_fn = subscriber_fn,
             .user_data = user_data,
             .agent_id = agent_id,
+            .source_filter_agent_id = 0, // No source filter by default
+            .active = true,
+        };
+        self.subscribers_len += 1;
+        const type_sub_idx = self.subscribers_count_by_type[type_idx];
+        self.subscribers_by_type[type_idx][type_sub_idx] = sub_idx;
+        self.subscribers_count_by_type[type_idx] += 1;
+        return true;
+    }
+
+    // Subscribe to event type with source filter.
+    pub fn subscribe_with_source_filter(
+        self: *EventBus,
+        event_type: EventType,
+        agent_id: u32,
+        subscriber_fn: EventSubscriberFn,
+        user_data: ?*anyopaque,
+        source_filter_agent_id: u32,
+    ) bool {
+        std.debug.assert(agent_id > 0);
+        if (self.subscribers_len >= MAX_SUBSCRIBERS) {
+            return false;
+        }
+        const type_idx = @intFromEnum(event_type);
+        if (type_idx >= 256) {
+            return false;
+        }
+        if (self.subscribers_count_by_type[type_idx] >= MAX_SUBSCRIBERS) {
+            return false;
+        }
+        const sub_idx = self.subscribers_len;
+        self.subscribers[sub_idx] = EventSubscriber{
+            .subscriber_fn = subscriber_fn,
+            .user_data = user_data,
+            .agent_id = agent_id,
+            .source_filter_agent_id = source_filter_agent_id,
             .active = true,
         };
         self.subscribers_len += 1;
@@ -308,7 +347,12 @@ pub const EventBus = struct {
                     continue;
                 }
             }
-            // Filter by source if needed (future enhancement).
+            // Filter by source if specified.
+            if (subscriber.source_filter_agent_id > 0) {
+                if (event.source_agent_id != subscriber.source_filter_agent_id) {
+                    continue;
+                }
+            }
             subscriber.subscriber_fn(event, subscriber.user_data);
         }
         event.processed = true;

@@ -337,6 +337,12 @@ pub fn update_user(user_id: []const u8, user_data: *const UserData) DatabaseResu
     std.debug.assert(user_id.len > 0);
     std.debug.assert(user_id.len <= models.MAX_USER_ID_LEN);
     std.debug.assert(user_data != null);
+    if (user_id.len == 0 or user_id.len > models.MAX_USER_ID_LEN) {
+        return DatabaseResult.validation_error;
+    }
+    if (!validate_user_data(user_data)) {
+        return DatabaseResult.validation_error;
+    }
     if (!db_config.enabled) {
         return DatabaseResult.connection_error;
     }
@@ -490,6 +496,39 @@ pub fn http_status_to_db_result(status: grain_core_api.HttpStatus) DatabaseResul
     };
 }
 
+// Parse error response from JSON.
+// Silo Agent error format: {"error": {"code": 404, "message": "...", "details": "..."}}
+pub fn parse_error_response(json: []const u8) ?DatabaseResult {
+    std.debug.assert(json.len > 0);
+    if (json.len > MAX_USER_JSON_LEN) {
+        return DatabaseResult.validation_error;
+    }
+    const error_key_result = grain_core_json.find_json_key(json, "error");
+    if (error_key_result) |error_result| {
+        if (error_result.success) {
+            const code_key_result = grain_core_json.find_json_key(json, "code");
+            if (code_key_result) |code_result| {
+                if (code_result.success) {
+                    const code_val = grain_core_json.extract_json_number_value(json, &code_result);
+                    if (code_val) |code| {
+                        const status_code = @as(u32, @intFromFloat(code));
+                        if (status_code == 404) {
+                            return DatabaseResult.not_found;
+                        } else if (status_code == 400) {
+                            return DatabaseResult.validation_error;
+                        } else if (status_code == 401 or status_code == 403) {
+                            return DatabaseResult.validation_error;
+                        } else if (status_code >= 500) {
+                            return DatabaseResult.internal_error;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return null;
+}
+
 // Process completed HTTP response and parse user data.
 // Helper function for async response handling integration.
 pub fn process_user_response(
@@ -500,6 +539,12 @@ pub fn process_user_response(
     std.debug.assert(user_out != null);
     const status_result = http_status_to_db_result(response.status);
     if (status_result != DatabaseResult.success) {
+        if (response.body_len > 0) {
+            const body = response.body[0..response.body_len];
+            if (parse_error_response(body)) |error_result| {
+                return error_result;
+            }
+        }
         return status_result;
     }
     if (response.body_len == 0) {

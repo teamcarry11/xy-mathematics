@@ -8,6 +8,7 @@
 //!
 //! 2025-12-21-091028-pst: Workflow Scheduling Enhancement
 //! 2025-12-21-141800-pst: Cron Parser Enhancement (basic cron expression parsing)
+//! 2025-12-21-183600-pst: Cron Parser Step Value Support (*/N pattern support)
 
 const std = @import("std");
 const workflow_engine = @import("workflow_engine.zig");

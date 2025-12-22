@@ -438,6 +438,158 @@ pub const SlcDagIntegration = struct {
         
         return false;
     }
+    
+    /// Get all profile node IDs.
+    /// Returns count of profiles found.
+    pub fn get_all_profiles(
+        self: *const SlcDagIntegration,
+        profile_ids: []u32,
+    ) u32 {
+        // Assert: Output array must be valid
+        std.debug.assert(profile_ids.len > 0);
+        
+        var count: u32 = 0;
+        var i: u32 = 0;
+        while (i < self.dag.nodes_len and count < profile_ids.len) : (i += 1) {
+            const node = self.dag.nodes[i];
+            if (node.node_type == .data_source) {
+                profile_ids[count] = i;
+                count += 1;
+            }
+        }
+        
+        // Assert: Count is within bounds
+        std.debug.assert(count <= profile_ids.len);
+        
+        return count;
+    }
+    
+    /// Get all page node IDs.
+    /// Returns count of pages found.
+    pub fn get_all_pages(
+        self: *const SlcDagIntegration,
+        page_ids: []u32,
+    ) u32 {
+        // Assert: Output array must be valid
+        std.debug.assert(page_ids.len > 0);
+        
+        var count: u32 = 0;
+        var i: u32 = 0;
+        while (i < self.dag.nodes_len and count < page_ids.len) : (i += 1) {
+            const node = self.dag.nodes[i];
+            if (node.node_type == .data_source) {
+                page_ids[count] = i;
+                count += 1;
+            }
+        }
+        
+        // Assert: Count is within bounds
+        std.debug.assert(count <= page_ids.len);
+        
+        return count;
+    }
+    
+    /// Find page node ID by URL path.
+    /// Returns page ID if found, null otherwise.
+    pub fn find_page_by_url_path(
+        self: *const SlcDagIntegration,
+        url_path: []const u8,
+    ) ?u32 {
+        // Assert: URL path must be non-empty
+        std.debug.assert(url_path.len > 0);
+        
+        var i: u32 = 0;
+        while (i < self.dag.nodes_len) : (i += 1) {
+            const node = self.dag.nodes[i];
+            if (node.node_type == .data_source) {
+                const node_data = node.data[0..node.data_len];
+                // Simple check: look for URL path in node data
+                if (std.mem.indexOf(u8, node_data, url_path) != null) {
+                    return i;
+                }
+            }
+        }
+        
+        return null;
+    }
+    
+    /// Get pages with no links (orphaned pages).
+    /// Returns count of orphaned pages found.
+    pub fn get_orphaned_pages(
+        self: *const SlcDagIntegration,
+        orphaned_page_ids: []u32,
+    ) u32 {
+        // Assert: Output array must be valid
+        std.debug.assert(orphaned_page_ids.len > 0);
+        
+        var count: u32 = 0;
+        var i: u32 = 0;
+        while (i < self.dag.nodes_len and count < orphaned_page_ids.len) : (i += 1) {
+            const node = self.dag.nodes[i];
+            if (node.node_type == .data_source) {
+                // Check if page has any links (incoming or outgoing)
+                var has_links = false;
+                var j: u32 = 0;
+                while (j < self.dag.edges_len) : (j += 1) {
+                    const edge = self.dag.edges[j];
+                    if (edge.edge_type == .semantic and
+                        (edge.from_node == i or edge.to_node == i)) {
+                        has_links = true;
+                        break;
+                    }
+                }
+                
+                if (!has_links) {
+                    orphaned_page_ids[count] = i;
+                    count += 1;
+                }
+            }
+        }
+        
+        // Assert: Count is within bounds
+        std.debug.assert(count <= orphaned_page_ids.len);
+        
+        return count;
+    }
+    
+    /// Get profiles with no relationships (isolated profiles).
+    /// Returns count of isolated profiles found.
+    pub fn get_isolated_profiles(
+        self: *const SlcDagIntegration,
+        isolated_profile_ids: []u32,
+    ) u32 {
+        // Assert: Output array must be valid
+        std.debug.assert(isolated_profile_ids.len > 0);
+        
+        var count: u32 = 0;
+        var i: u32 = 0;
+        while (i < self.dag.nodes_len and count < isolated_profile_ids.len) : (i += 1) {
+            const node = self.dag.nodes[i];
+            if (node.node_type == .data_source) {
+                // Check if profile has any relationships
+                var has_relationships = false;
+                var j: u32 = 0;
+                while (j < self.dag.edges_len) : (j += 1) {
+                    const edge = self.dag.edges[j];
+                    if (edge.edge_type == .semantic and
+                        (edge.from_node == i or edge.to_node == i)) {
+                        has_relationships = true;
+                        break;
+                    }
+                }
+                
+                if (!has_relationships) {
+                    isolated_profile_ids[count] = i;
+                    count += 1;
+                }
+            }
+        }
+        
+        // Assert: Count is within bounds
+        std.debug.assert(count <= isolated_profile_ids.len);
+        
+        return count;
+    }
 };
 
 test "slc dag integration initialization" {

@@ -466,3 +466,47 @@ test "zon format decode simple" {
     try testing.expect(result.pairs[1].value.bool_val == true);
 }
 
+test "llm provider encode data to zon" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const data = [_]struct {
+        key: []const u8,
+        value: grain_court.ZonFormat.ZonValue,
+    }{
+        .{
+            .key = "total_executions",
+            .value = grain_court.ZonFormat.ZonValue.from_u32(1000),
+        },
+        .{
+            .key = "active",
+            .value = grain_court.ZonFormat.ZonValue.from_bool(true),
+        },
+    };
+    const zon_result = try grain_court.LlmProvider.encode_data_to_zon(&data, allocator);
+    defer allocator.free(zon_result);
+    try testing.expect(zon_result.len > 0);
+    try testing.expect(std.mem.containsAtLeast(
+        u8,
+        zon_result,
+        1,
+        "total_executions:1000",
+    ));
+}
+
+test "llm provider provider supports zon" {
+    try testing.expect(
+        !grain_court.LlmProvider.provider_supports_zon(.openai),
+    );
+    try testing.expect(
+        !grain_court.LlmProvider.provider_supports_zon(.anthropic),
+    );
+    try testing.expect(
+        !grain_court.LlmProvider.provider_supports_zon(.mistral),
+    );
+    try testing.expect(
+        grain_court.LlmProvider.provider_supports_zon(.self_hosted),
+    );
+}
+

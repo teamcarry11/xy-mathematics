@@ -693,6 +693,24 @@ pub fn build(b: *std.Build) void {
         },
     });
 
+    // Aurora GLM-4.6 Provider module (for test imports)
+    const aurora_glm46_provider_module = b.addModule("aurora_glm46_provider", .{
+        .root_source_file = b.path("src/aurora_glm46_provider.zig"),
+        .target = target,
+        .optimize = optimize,
+        .imports = &.{
+            .{ .name = "aurora_ai_provider", .module = aurora_ai_provider_module },
+            .{ .name = "aurora_glm46", .module = aurora_glm46_module },
+        },
+    });
+
+    // Aurora GLM-4.6 module (for test imports)
+    const aurora_glm46_module = b.addModule("aurora_glm46", .{
+        .root_source_file = b.path("src/aurora_glm46.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
     // Aurora Editor module (for test imports)
     const aurora_editor_module = b.addModule("aurora_editor", .{
         .root_source_file = b.path("src/aurora_editor.zig"),
@@ -1283,6 +1301,19 @@ pub fn build(b: *std.Build) void {
     });
     const run_live_preview_test_file = b.addRunArtifact(live_preview_test_file);
     test_step.dependOn(&run_live_preview_test_file.step);
+    const glm46_provider_test_file = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/130_aurora_glm46_provider_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "aurora_glm46_provider", .module = aurora_glm46_provider_module },
+                .{ .name = "aurora_ai_provider", .module = aurora_ai_provider_module },
+            },
+        }),
+    });
+    const run_glm46_provider_test_file = b.addRunArtifact(glm46_provider_test_file);
+    test_step.dependOn(&run_glm46_provider_test_file.step);
     const run_route_tests = b.addRunArtifact(route_tests);
     test_step.dependOn(&run_route_tests.step);
     const run_orchestrator_tests = b.addRunArtifact(orchestrator_tests);
@@ -4837,6 +4868,20 @@ pub fn build(b: *std.Build) void {
     const grain_research_integration_test_scenarios_tests_run = b.addRunArtifact(grain_research_integration_test_scenarios_tests);
     test_step.dependOn(&grain_research_integration_test_scenarios_tests_run.step);
 
+    // ZON Format Phase 4 Integration Validation Framework Tests.
+    const grain_research_zon_integration_validation_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/156_grain_research_zon_integration_validation_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_research", .module = grain_research_module },
+            },
+        }),
+    });
+    const grain_research_zon_integration_validation_tests_run = b.addRunArtifact(grain_research_zon_integration_validation_tests);
+    test_step.dependOn(&grain_research_zon_integration_validation_tests_run.step);
+
     // Grain Bubble component tests
     const grain_bubble_component_tests = b.addTest(.{
         .root_module = b.createModule(.{
@@ -4963,6 +5008,20 @@ pub fn build(b: *std.Build) void {
     });
     const vantage_adaptation_host_interface_tests_run = b.addRunArtifact(vantage_adaptation_host_interface_tests);
     test_step.dependOn(&vantage_adaptation_host_interface_tests_run.step);
+
+    // Vantage adaptation JIT integration tests (Priority 1)
+    const vantage_adaptation_jit_integration_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/104_vantage_adaptation_jit_integration_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+            },
+        }),
+    });
+    const vantage_adaptation_jit_integration_tests_run = b.addRunArtifact(vantage_adaptation_jit_integration_tests);
+    test_step.dependOn(&vantage_adaptation_jit_integration_tests_run.step);
 
     // Graincard format validation test
     const graincard_format_validation_tests = b.addTest(.{

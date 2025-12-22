@@ -208,3 +208,109 @@ test "temporal graph slider position from timestamp" {
     try std.testing.expect(pos_latest != null);
     try std.testing.expect(pos_latest.? == 1.0);
 }
+
+test "temporal graph get blocks created at timestamp" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+    
+    var dag_integration = try EditorDagIntegration.init(allocator);
+    defer dag_integration.deinit();
+    
+    const content = "line1\nline2\nline3";
+    _ = try dag_integration.create_buffer_node(content);
+    
+    // Create and process events
+    _ = try dag_integration.map_operation_to_event(.insert, 1, 5, "", "new1");
+    _ = try dag_integration.map_operation_to_event(.insert, 1, 9, "", "new2");
+    try dag_integration.process_events();
+    
+    var temporal = TemporalGraph.init(allocator, &dag_integration);
+    
+    const range = temporal.get_time_range();
+    try std.testing.expect(range.latest != null);
+    
+    // Get blocks created at latest timestamp
+    const count = temporal.get_blocks_created_at_timestamp(range.latest.?);
+    try std.testing.expect(count >= 2);
+}
+
+test "temporal graph get blocks modified in range" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+    
+    var dag_integration = try EditorDagIntegration.init(allocator);
+    defer dag_integration.deinit();
+    
+    const content = "line1\nline2\nline3";
+    _ = try dag_integration.create_buffer_node(content);
+    
+    // Create and process events
+    _ = try dag_integration.map_operation_to_event(.insert, 1, 5, "", "new1");
+    _ = try dag_integration.map_operation_to_event(.insert, 1, 9, "", "new2");
+    try dag_integration.process_events();
+    
+    var temporal = TemporalGraph.init(allocator, &dag_integration);
+    
+    const range = temporal.get_time_range();
+    try std.testing.expect(range.earliest != null);
+    try std.testing.expect(range.latest != null);
+    
+    // Get blocks modified in date range
+    const count = temporal.get_blocks_modified_in_range(range.earliest.?, range.latest.?);
+    try std.testing.expect(count >= 2);
+}
+
+test "temporal graph get earliest block timestamp" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+    
+    var dag_integration = try EditorDagIntegration.init(allocator);
+    defer dag_integration.deinit();
+    
+    const content = "line1\nline2\nline3";
+    _ = try dag_integration.create_buffer_node(content);
+    
+    // Create and process events
+    _ = try dag_integration.map_operation_to_event(.insert, 1, 5, "", "new1");
+    _ = try dag_integration.map_operation_to_event(.insert, 1, 9, "", "new2");
+    try dag_integration.process_events();
+    
+    var temporal = TemporalGraph.init(allocator, &dag_integration);
+    
+    // Get earliest block timestamp
+    const earliest = temporal.get_earliest_block_timestamp();
+    try std.testing.expect(earliest != null);
+    try std.testing.expect(earliest.? > 0);
+}
+
+test "temporal graph get latest block timestamp" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+    
+    var dag_integration = try EditorDagIntegration.init(allocator);
+    defer dag_integration.deinit();
+    
+    const content = "line1\nline2\nline3";
+    _ = try dag_integration.create_buffer_node(content);
+    
+    // Create and process events
+    _ = try dag_integration.map_operation_to_event(.insert, 1, 5, "", "new1");
+    _ = try dag_integration.map_operation_to_event(.insert, 1, 9, "", "new2");
+    try dag_integration.process_events();
+    
+    var temporal = TemporalGraph.init(allocator, &dag_integration);
+    
+    // Get latest block timestamp
+    const latest = temporal.get_latest_block_timestamp();
+    try std.testing.expect(latest != null);
+    try std.testing.expect(latest.? > 0);
+    
+    // Latest should be >= earliest
+    const earliest = temporal.get_earliest_block_timestamp();
+    try std.testing.expect(earliest != null);
+    try std.testing.expect(latest.? >= earliest.?);
+}

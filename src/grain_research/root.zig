@@ -45,6 +45,8 @@ pub const cost_savings = @import("cost_savings.zig");
 pub const integration_test_harness = @import("integration_test_harness.zig");
 // Integration test scenarios for reusable test patterns.
 pub const integration_test_scenarios = @import("integration_test_scenarios.zig");
+// ZON format Phase 4 integration validation framework.
+pub const zon_integration_validation = @import("zon_integration_validation.zig");
 
 // Module exports.
 pub const ResearchEngine = research_engine.ResearchEngine;
@@ -100,3 +102,7 @@ pub const scenario_event_driven_coordination = integration_test_scenarios.scenar
 pub const scenario_data_export_import = integration_test_scenarios.scenario_data_export_import;
 pub const scenario_error_handling = integration_test_scenarios.scenario_error_handling;
 pub const scenario_workflow_execution = integration_test_scenarios.scenario_workflow_execution;
+pub const IntegrationValidationFramework = zon_integration_validation.IntegrationValidationFramework;
+pub const IntegrationValidationResult = zon_integration_validation.IntegrationValidationResult;
+pub const RoundTripResult = zon_integration_validation.RoundTripResult;
+pub const PerformanceBenchmarkResult = zon_integration_validation.PerformanceBenchmarkResult;

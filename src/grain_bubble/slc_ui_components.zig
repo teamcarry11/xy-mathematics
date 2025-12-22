@@ -694,6 +694,343 @@ pub const SlcComponentLibrary = struct {
         }
         return false;
     }
+
+    // Apply design pattern colors to profile component.
+    pub fn apply_pattern_colors_to_profile(
+        self: *SlcComponentLibrary,
+        component_id: u32,
+        pattern: *const DesignPattern,
+    ) bool {
+        std.debug.assert(@intFromPtr(self) != 0);
+        std.debug.assert(component_id > 0);
+        std.debug.assert(@intFromPtr(pattern) != 0);
+        var i: u32 = 0;
+        while (i < self.profile_components_len) : (i += 1) {
+            if (self.profile_components[i].component_id == component_id) {
+                const base = self.profile_components[i].base_component;
+                if (base.design_tokens_len + 5 > component.MAX_DESIGN_TOKENS) {
+                    return false;
+                }
+                const token_names = [_][]const u8{ "primary", "secondary", "background", "text", "accent" };
+                const colors = [_]u32{
+                    pattern.color_scheme.primary,
+                    pattern.color_scheme.secondary,
+                    pattern.color_scheme.background,
+                    pattern.color_scheme.text,
+                    pattern.color_scheme.accent,
+                };
+                var j: u32 = 0;
+                while (j < 5) : (j += 1) {
+                    const token_id = base.design_tokens_len + 1;
+                    var token = component.DesignToken.init();
+                    token.id = token_id;
+                    token.token_type = .color;
+                    token.value = .{ .color = colors[j] };
+                    const name_len = @min(token_names[j].len, MAX_COMPONENT_NAME_LEN);
+                    @memset(token.name[0..name_len], 0);
+                    @memcpy(token.name[0..name_len], token_names[j][0..name_len]);
+                    token.name_len = @as(u32, @intCast(name_len));
+                    base.design_tokens[base.design_tokens_len] = token;
+                    base.design_tokens_len += 1;
+                }
+                std.debug.assert(base.design_tokens_len <= component.MAX_DESIGN_TOKENS);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Apply design pattern spacing to profile component.
+    pub fn apply_pattern_spacing_to_profile(
+        self: *SlcComponentLibrary,
+        component_id: u32,
+        pattern: *const DesignPattern,
+    ) bool {
+        std.debug.assert(@intFromPtr(self) != 0);
+        std.debug.assert(component_id > 0);
+        std.debug.assert(@intFromPtr(pattern) != 0);
+        var i: u32 = 0;
+        while (i < self.profile_components_len) : (i += 1) {
+            if (self.profile_components[i].component_id == component_id) {
+                const base = self.profile_components[i].base_component;
+                if (base.design_tokens_len + 4 > component.MAX_DESIGN_TOKENS) {
+                    return false;
+                }
+                const token_names = [_][]const u8{ "spacing_small", "spacing_medium", "spacing_large", "spacing_xlarge" };
+                const spacings = [_]f64{
+                    pattern.spacing.small,
+                    pattern.spacing.medium,
+                    pattern.spacing.large,
+                    pattern.spacing.xlarge,
+                };
+                var j: u32 = 0;
+                while (j < 4) : (j += 1) {
+                    const token_id = base.design_tokens_len + 1;
+                    var token = component.DesignToken.init();
+                    token.id = token_id;
+                    token.token_type = .spacing;
+                    token.value = .{ .spacing = spacings[j] };
+                    const name_len = @min(token_names[j].len, MAX_COMPONENT_NAME_LEN);
+                    @memset(token.name[0..name_len], 0);
+                    @memcpy(token.name[0..name_len], token_names[j][0..name_len]);
+                    token.name_len = @as(u32, @intCast(name_len));
+                    base.design_tokens[base.design_tokens_len] = token;
+                    base.design_tokens_len += 1;
+                }
+                std.debug.assert(base.design_tokens_len <= component.MAX_DESIGN_TOKENS);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Apply design pattern typography to profile component.
+    pub fn apply_pattern_typography_to_profile(
+        self: *SlcComponentLibrary,
+        component_id: u32,
+        pattern: *const DesignPattern,
+    ) bool {
+        std.debug.assert(@intFromPtr(self) != 0);
+        std.debug.assert(component_id > 0);
+        std.debug.assert(@intFromPtr(pattern) != 0);
+        var i: u32 = 0;
+        while (i < self.profile_components_len) : (i += 1) {
+            if (self.profile_components[i].component_id == component_id) {
+                const base = self.profile_components[i].base_component;
+                if (base.design_tokens_len + 3 > component.MAX_DESIGN_TOKENS) {
+                    return false;
+                }
+                const token_names = [_][]const u8{ "heading_size", "body_size", "caption_size" };
+                const font_sizes = [_]u32{
+                    pattern.typography.heading_size,
+                    pattern.typography.body_size,
+                    pattern.typography.caption_size,
+                };
+                var j: u32 = 0;
+                while (j < 3) : (j += 1) {
+                    const token_id = base.design_tokens_len + 1;
+                    var token = component.DesignToken.init();
+                    token.id = token_id;
+                    token.token_type = .typography;
+                    token.value = .{ .typography = component.DesignToken.TypographyValue{
+                        .font_size = font_sizes[j],
+                        .line_height = pattern.typography.line_height,
+                        .letter_spacing = 0.0,
+                    } };
+                    const name_len = @min(token_names[j].len, MAX_COMPONENT_NAME_LEN);
+                    @memset(token.name[0..name_len], 0);
+                    @memcpy(token.name[0..name_len], token_names[j][0..name_len]);
+                    token.name_len = @as(u32, @intCast(name_len));
+                    base.design_tokens[base.design_tokens_len] = token;
+                    base.design_tokens_len += 1;
+                }
+                std.debug.assert(base.design_tokens_len <= component.MAX_DESIGN_TOKENS);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Apply full design pattern to profile component (colors, spacing, typography).
+    pub fn apply_pattern_to_profile(
+        self: *SlcComponentLibrary,
+        component_id: u32,
+        pattern: *const DesignPattern,
+    ) bool {
+        std.debug.assert(@intFromPtr(self) != 0);
+        std.debug.assert(component_id > 0);
+        std.debug.assert(@intFromPtr(pattern) != 0);
+        if (!self.apply_pattern_colors_to_profile(component_id, pattern)) {
+            return false;
+        }
+        if (!self.apply_pattern_spacing_to_profile(component_id, pattern)) {
+            return false;
+        }
+        if (!self.apply_pattern_typography_to_profile(component_id, pattern)) {
+            return false;
+        }
+        return true;
+    }
+
+    // Apply full design pattern to website component (colors, spacing, typography).
+    pub fn apply_pattern_to_website(
+        self: *SlcComponentLibrary,
+        component_id: u32,
+        pattern: *const DesignPattern,
+    ) bool {
+        std.debug.assert(@intFromPtr(self) != 0);
+        std.debug.assert(component_id > 0);
+        std.debug.assert(@intFromPtr(pattern) != 0);
+        var i: u32 = 0;
+        while (i < self.website_components_len) : (i += 1) {
+            if (self.website_components[i].component_id == component_id) {
+                const base = self.website_components[i].base_component;
+                if (base.design_tokens_len + 12 > component.MAX_DESIGN_TOKENS) {
+                    return false;
+                }
+                const color_names = [_][]const u8{ "primary", "secondary", "background", "text", "accent" };
+                const colors = [_]u32{
+                    pattern.color_scheme.primary,
+                    pattern.color_scheme.secondary,
+                    pattern.color_scheme.background,
+                    pattern.color_scheme.text,
+                    pattern.color_scheme.accent,
+                };
+                var j: u32 = 0;
+                while (j < 5) : (j += 1) {
+                    const token_id = base.design_tokens_len + 1;
+                    var token = component.DesignToken.init();
+                    token.id = token_id;
+                    token.token_type = .color;
+                    token.value = .{ .color = colors[j] };
+                    const name_len = @min(color_names[j].len, MAX_COMPONENT_NAME_LEN);
+                    @memset(token.name[0..name_len], 0);
+                    @memcpy(token.name[0..name_len], color_names[j][0..name_len]);
+                    token.name_len = @as(u32, @intCast(name_len));
+                    base.design_tokens[base.design_tokens_len] = token;
+                    base.design_tokens_len += 1;
+                }
+                const spacing_names = [_][]const u8{ "spacing_small", "spacing_medium", "spacing_large", "spacing_xlarge" };
+                const spacings = [_]f64{
+                    pattern.spacing.small,
+                    pattern.spacing.medium,
+                    pattern.spacing.large,
+                    pattern.spacing.xlarge,
+                };
+                j = 0;
+                while (j < 4) : (j += 1) {
+                    const token_id = base.design_tokens_len + 1;
+                    var token = component.DesignToken.init();
+                    token.id = token_id;
+                    token.token_type = .spacing;
+                    token.value = .{ .spacing = spacings[j] };
+                    const name_len = @min(spacing_names[j].len, MAX_COMPONENT_NAME_LEN);
+                    @memset(token.name[0..name_len], 0);
+                    @memcpy(token.name[0..name_len], spacing_names[j][0..name_len]);
+                    token.name_len = @as(u32, @intCast(name_len));
+                    base.design_tokens[base.design_tokens_len] = token;
+                    base.design_tokens_len += 1;
+                }
+                const typo_names = [_][]const u8{ "heading_size", "body_size", "caption_size" };
+                const font_sizes = [_]u32{
+                    pattern.typography.heading_size,
+                    pattern.typography.body_size,
+                    pattern.typography.caption_size,
+                };
+                j = 0;
+                while (j < 3) : (j += 1) {
+                    const token_id = base.design_tokens_len + 1;
+                    var token = component.DesignToken.init();
+                    token.id = token_id;
+                    token.token_type = .typography;
+                    token.value = .{ .typography = component.DesignToken.TypographyValue{
+                        .font_size = font_sizes[j],
+                        .line_height = pattern.typography.line_height,
+                        .letter_spacing = 0.0,
+                    } };
+                    const name_len = @min(typo_names[j].len, MAX_COMPONENT_NAME_LEN);
+                    @memset(token.name[0..name_len], 0);
+                    @memcpy(token.name[0..name_len], typo_names[j][0..name_len]);
+                    token.name_len = @as(u32, @intCast(name_len));
+                    base.design_tokens[base.design_tokens_len] = token;
+                    base.design_tokens_len += 1;
+                }
+                std.debug.assert(base.design_tokens_len <= component.MAX_DESIGN_TOKENS);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Apply full design pattern to workspace component (colors, spacing, typography).
+    pub fn apply_pattern_to_workspace(
+        self: *SlcComponentLibrary,
+        component_id: u32,
+        pattern: *const DesignPattern,
+    ) bool {
+        std.debug.assert(@intFromPtr(self) != 0);
+        std.debug.assert(component_id > 0);
+        std.debug.assert(@intFromPtr(pattern) != 0);
+        var i: u32 = 0;
+        while (i < self.workspace_components_len) : (i += 1) {
+            if (self.workspace_components[i].component_id == component_id) {
+                const base = self.workspace_components[i].base_component;
+                if (base.design_tokens_len + 12 > component.MAX_DESIGN_TOKENS) {
+                    return false;
+                }
+                const color_names = [_][]const u8{ "primary", "secondary", "background", "text", "accent" };
+                const colors = [_]u32{
+                    pattern.color_scheme.primary,
+                    pattern.color_scheme.secondary,
+                    pattern.color_scheme.background,
+                    pattern.color_scheme.text,
+                    pattern.color_scheme.accent,
+                };
+                var j: u32 = 0;
+                while (j < 5) : (j += 1) {
+                    const token_id = base.design_tokens_len + 1;
+                    var token = component.DesignToken.init();
+                    token.id = token_id;
+                    token.token_type = .color;
+                    token.value = .{ .color = colors[j] };
+                    const name_len = @min(color_names[j].len, MAX_COMPONENT_NAME_LEN);
+                    @memset(token.name[0..name_len], 0);
+                    @memcpy(token.name[0..name_len], color_names[j][0..name_len]);
+                    token.name_len = @as(u32, @intCast(name_len));
+                    base.design_tokens[base.design_tokens_len] = token;
+                    base.design_tokens_len += 1;
+                }
+                const spacing_names = [_][]const u8{ "spacing_small", "spacing_medium", "spacing_large", "spacing_xlarge" };
+                const spacings = [_]f64{
+                    pattern.spacing.small,
+                    pattern.spacing.medium,
+                    pattern.spacing.large,
+                    pattern.spacing.xlarge,
+                };
+                j = 0;
+                while (j < 4) : (j += 1) {
+                    const token_id = base.design_tokens_len + 1;
+                    var token = component.DesignToken.init();
+                    token.id = token_id;
+                    token.token_type = .spacing;
+                    token.value = .{ .spacing = spacings[j] };
+                    const name_len = @min(spacing_names[j].len, MAX_COMPONENT_NAME_LEN);
+                    @memset(token.name[0..name_len], 0);
+                    @memcpy(token.name[0..name_len], spacing_names[j][0..name_len]);
+                    token.name_len = @as(u32, @intCast(name_len));
+                    base.design_tokens[base.design_tokens_len] = token;
+                    base.design_tokens_len += 1;
+                }
+                const typo_names = [_][]const u8{ "heading_size", "body_size", "caption_size" };
+                const font_sizes = [_]u32{
+                    pattern.typography.heading_size,
+                    pattern.typography.body_size,
+                    pattern.typography.caption_size,
+                };
+                j = 0;
+                while (j < 3) : (j += 1) {
+                    const token_id = base.design_tokens_len + 1;
+                    var token = component.DesignToken.init();
+                    token.id = token_id;
+                    token.token_type = .typography;
+                    token.value = .{ .typography = component.DesignToken.TypographyValue{
+                        .font_size = font_sizes[j],
+                        .line_height = pattern.typography.line_height,
+                        .letter_spacing = 0.0,
+                    } };
+                    const name_len = @min(typo_names[j].len, MAX_COMPONENT_NAME_LEN);
+                    @memset(token.name[0..name_len], 0);
+                    @memcpy(token.name[0..name_len], typo_names[j][0..name_len]);
+                    token.name_len = @as(u32, @intCast(name_len));
+                    base.design_tokens[base.design_tokens_len] = token;
+                    base.design_tokens_len += 1;
+                }
+                std.debug.assert(base.design_tokens_len <= component.MAX_DESIGN_TOKENS);
+                return true;
+            }
+        }
+        return false;
+    }
 };
 
 // Design pattern: reusable design pattern for SLC components.
@@ -999,5 +1336,80 @@ pub const PresetAnimations = struct {
     // Create smooth slide in (600ms).
     pub fn create_smooth_slide_in() Animation {
         return create_slide_in(600);
+    }
+};
+
+// Animation utilities: helper functions for working with animations.
+pub const AnimationUtils = struct {
+    // Bounded: Max CSS animation string length.
+    const MAX_ANIMATION_CSS_LEN: u32 = 256;
+
+    // Get easing function name from easing type.
+    pub fn get_easing_name(easing: Animation.EasingType) []const u8 {
+        return switch (easing) {
+            .linear => "linear",
+            .ease_in => "ease-in",
+            .ease_out => "ease-out",
+            .ease_in_out => "ease-in-out",
+        };
+    }
+
+    // Generate CSS animation property from animation.
+    pub fn generate_css_animation(
+        anim: *const Animation,
+        css_buf: []u8,
+    ) []const u8 {
+        std.debug.assert(@intFromPtr(anim) != 0);
+        std.debug.assert(css_buf.len >= MAX_ANIMATION_CSS_LEN);
+        const anim_name = switch (anim.animation_type) {
+            .fade_in => "fadeIn",
+            .fade_out => "fadeOut",
+            .slide_in => "slideIn",
+            .slide_out => "slideOut",
+            .scale_in => "scaleIn",
+            .scale_out => "scaleOut",
+        };
+        const easing = get_easing_name(anim.easing);
+        const duration_s = @as(f64, @floatFromInt(anim.duration_ms)) / 1000.0;
+        const delay_s = @as(f64, @floatFromInt(anim.delay_ms)) / 1000.0;
+        const css_str = std.fmt.bufPrint(
+            css_buf,
+            "{} {d:.2}s {} {d:.2}s",
+            .{ anim_name, duration_s, easing, delay_s },
+        ) catch return "";
+        std.debug.assert(css_str.len > 0);
+        return css_str;
+    }
+
+    // Generate CSS keyframes for animation type.
+    pub fn generate_css_keyframes(
+        anim_type: Animation.AnimationType,
+        keyframes_buf: []u8,
+    ) []const u8 {
+        std.debug.assert(keyframes_buf.len >= MAX_ANIMATION_CSS_LEN);
+        const keyframes = switch (anim_type) {
+            .fade_in => "@keyframes fadeIn {\n  from { opacity: 0; }\n  to { opacity: 1; }\n}\n",
+            .fade_out => "@keyframes fadeOut {\n  from { opacity: 1; }\n  to { opacity: 0; }\n}\n",
+            .slide_in => "@keyframes slideIn {\n  from { transform: translateX(-100%); }\n  to { transform: translateX(0); }\n}\n",
+            .slide_out => "@keyframes slideOut {\n  from { transform: translateX(0); }\n  to { transform: translateX(100%); }\n}\n",
+            .scale_in => "@keyframes scaleIn {\n  from { transform: scale(0); }\n  to { transform: scale(1); }\n}\n",
+            .scale_out => "@keyframes scaleOut {\n  from { transform: scale(1); }\n  to { transform: scale(0); }\n}\n",
+        };
+        const keyframes_len = @min(keyframes.len, keyframes_buf.len);
+        @memcpy(keyframes_buf[0..keyframes_len], keyframes[0..keyframes_len]);
+        std.debug.assert(keyframes_len > 0);
+        return keyframes_buf[0..keyframes_len];
+    }
+
+    // Get animation duration in seconds.
+    pub fn get_duration_seconds(anim: *const Animation) f64 {
+        std.debug.assert(@intFromPtr(anim) != 0);
+        return @as(f64, @floatFromInt(anim.duration_ms)) / 1000.0;
+    }
+
+    // Get animation delay in seconds.
+    pub fn get_delay_seconds(anim: *const Animation) f64 {
+        std.debug.assert(@intFromPtr(anim) != 0);
+        return @as(f64, @floatFromInt(anim.delay_ms)) / 1000.0;
     }
 };

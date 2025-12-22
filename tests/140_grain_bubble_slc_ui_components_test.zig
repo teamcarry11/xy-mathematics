@@ -397,3 +397,42 @@ test "slc component library validate workspace component" {
     std.debug.assert(library.validate_workspace_component(1) == true);
     std.debug.assert(library.validate_workspace_component(999) == false);
 }
+
+test "slc component library apply pattern to profile" {
+    var library = slc_ui_components.SlcComponentLibrary.init();
+    var base_comp = component.Component.init();
+    base_comp.id = 1;
+    _ = library.add_profile_component(.form, "Profile Form", &base_comp);
+    const pattern = slc_ui_components.PresetPatterns.create_profile_form_pattern();
+    const result = library.apply_pattern_to_profile(1, &pattern);
+    std.debug.assert(result == true);
+    const profile_comp = library.get_profile_component(1);
+    std.debug.assert(profile_comp != null);
+    std.debug.assert(profile_comp.?.base_component.design_tokens_len == 12);
+}
+
+test "slc component library apply pattern to website" {
+    var library = slc_ui_components.SlcComponentLibrary.init();
+    var base_comp = component.Component.init();
+    base_comp.id = 1;
+    _ = library.add_website_component(.dag_editor, "DAG Editor", &base_comp);
+    const pattern = slc_ui_components.PresetPatterns.create_website_editor_pattern();
+    const result = library.apply_pattern_to_website(1, &pattern);
+    std.debug.assert(result == true);
+    const website_comp = library.get_website_component(1);
+    std.debug.assert(website_comp != null);
+    std.debug.assert(website_comp.?.base_component.design_tokens_len == 12);
+}
+
+test "slc component library apply pattern to workspace" {
+    var library = slc_ui_components.SlcComponentLibrary.init();
+    var base_comp = component.Component.init();
+    base_comp.id = 1;
+    _ = library.add_workspace_component(.file_manager, "File Manager", &base_comp);
+    const pattern = slc_ui_components.PresetPatterns.create_workspace_app_pattern();
+    const result = library.apply_pattern_to_workspace(1, &pattern);
+    std.debug.assert(result == true);
+    const workspace_comp = library.get_workspace_component(1);
+    std.debug.assert(workspace_comp != null);
+    std.debug.assert(workspace_comp.?.base_component.design_tokens_len == 12);
+}

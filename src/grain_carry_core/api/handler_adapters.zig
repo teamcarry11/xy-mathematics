@@ -241,7 +241,12 @@ pub fn handle_login_adapter(
     std.debug.assert(login_req.email_len == email_len);
     std.debug.assert(login_req.password_len == password_len);
     if (!validation.validate_login_request(&login_req)) {
+        var error_json: [responses.MAX_JSON_RESPONSE_LEN]u8 = undefined;
+        const error_len = responses.build_error_response("validation_error", "Invalid email or password format", &error_json);
         response.status = grain_core_api.HttpStatus.bad_request;
+        _ = response.add_header("Content-Type", "application/json");
+        std.mem.copyForwards(u8, response.body[0..error_len], error_json[0..error_len]);
+        response.body_len = @intCast(error_len);
         return;
     }
     
@@ -249,7 +254,12 @@ pub fn handle_login_adapter(
     var user_data = database_integration.UserData.init();
     const db_result = database_integration.get_user_by_email(email, &user_data);
     if (db_result != database_integration.DatabaseResult.success) {
+        var error_json: [responses.MAX_JSON_RESPONSE_LEN]u8 = undefined;
+        const error_len = responses.build_error_response("unauthorized", "Invalid email or password", &error_json);
         response.status = grain_core_api.HttpStatus.unauthorized;
+        _ = response.add_header("Content-Type", "application/json");
+        std.mem.copyForwards(u8, response.body[0..error_len], error_json[0..error_len]);
+        response.body_len = @intCast(error_len);
         return;
     }
     
@@ -257,7 +267,12 @@ pub fn handle_login_adapter(
     var password_hash: [grain_core_auth.HASH_OUTPUT_LEN]u8 = undefined;
     auth_integration.hash_password(password, &password_hash);
     if (!std.mem.eql(u8, password_hash[0..], user_data.password_hash[0..user_data.password_hash_len])) {
+        var error_json: [responses.MAX_JSON_RESPONSE_LEN]u8 = undefined;
+        const error_len = responses.build_error_response("unauthorized", "Invalid email or password", &error_json);
         response.status = grain_core_api.HttpStatus.unauthorized;
+        _ = response.add_header("Content-Type", "application/json");
+        std.mem.copyForwards(u8, response.body[0..error_len], error_json[0..error_len]);
+        response.body_len = @intCast(error_len);
         return;
     }
     
@@ -500,14 +515,29 @@ pub fn handle_otp_verify_adapter(
     // Validate OTP code
     const current_time: u64 = @intCast(std.time.timestamp());
     if (!auth_service_integration.validate_email_otp(email, code, current_time)) {
+        var error_json: [responses.MAX_JSON_RESPONSE_LEN]u8 = undefined;
+        const error_len = responses.build_error_response("invalid_otp", "Invalid or expired OTP code", &error_json);
         response.status = grain_core_api.HttpStatus.unauthorized;
+        _ = response.add_header("Content-Type", "application/json");
+        std.mem.copyForwards(u8, response.body[0..error_len], error_json[0..error_len]);
+        response.body_len = @intCast(error_len);
         return;
     }
     
-    // Generate user_id from email (temporary until database available)
-    var user_id: [grain_core_auth.MAX_USER_ID_LEN]u8 = undefined;
-    const user_id_len = if (email_len <= grain_core_auth.MAX_USER_ID_LEN) email_len else grain_core_auth.MAX_USER_ID_LEN;
-    std.mem.copyForwards(u8, &user_id, email[0..user_id_len]);
+    // Get user from database by email
+    var user_data = database_integration.UserData.init();
+    const db_result = database_integration.get_user_by_email(email, &user_data);
+    if (db_result != database_integration.DatabaseResult.success) {
+        var error_json: [responses.MAX_JSON_RESPONSE_LEN]u8 = undefined;
+        const error_len = responses.build_error_response("user_not_found", "User not found", &error_json);
+        response.status = grain_core_api.HttpStatus.not_found;
+        _ = response.add_header("Content-Type", "application/json");
+        std.mem.copyForwards(u8, response.body[0..error_len], error_json[0..error_len]);
+        response.body_len = @intCast(error_len);
+        return;
+    }
+    
+    const user_id = user_data.user_id[0..user_data.user_id_len];
     
     // Generate tokens
     var access_token: [grain_core_auth.MAX_JWT_LEN]u8 = undefined;
@@ -640,12 +670,27 @@ pub fn handle_users_profile_adapter(
     const user_id_str = claims.user_id[0..claims.user_id_len];
     const db_result = database_integration.get_user_by_id(user_id_str, &user_data);
     if (db_result != database_integration.DatabaseResult.success) {
+        var error_json: [responses.MAX_JSON_RESPONSE_LEN]u8 = undefined;
+        const error_len = responses.build_error_response("user_not_found", "User profile not found", &error_json);
         response.status = grain_core_api.HttpStatus.not_found;
+        _ = response.add_header("Content-Type", "application/json");
+        std.mem.copyForwards(u8, response.body[0..error_len], error_json[0..error_len]);
+        response.body_len = @intCast(error_len);
         return;
     }
     
+    // Build user profile response with actual user data
     var json_buf: [responses.MAX_JSON_RESPONSE_LEN]u8 = undefined;
-    const json_len = responses.build_success_response("Profile retrieved", "", &json_buf);
+    const user_id = user_data.user_id[0..user_data.user_id_len];
+    const email = user_data.email[0..user_data.email_len];
+    const username = user_data.username[0..user_data.username_len];
+    const json_len = responses.build_user_profile_response(
+        user_id,
+        email,
+        username,
+        user_data.created_at,
+        &json_buf,
+    );
     response.status = grain_core_api.HttpStatus.ok;
     _ = response.add_header("Content-Type", "application/json");
     std.mem.copyForwards(u8, response.body[0..json_len], json_buf[0..json_len]);
@@ -680,12 +725,27 @@ pub fn handle_users_settings_adapter(
     const user_id_str = claims.user_id[0..claims.user_id_len];
     const db_result = database_integration.get_user_by_id(user_id_str, &user_data);
     if (db_result != database_integration.DatabaseResult.success) {
+        var error_json: [responses.MAX_JSON_RESPONSE_LEN]u8 = undefined;
+        const error_len = responses.build_error_response("user_not_found", "User settings not found", &error_json);
         response.status = grain_core_api.HttpStatus.not_found;
+        _ = response.add_header("Content-Type", "application/json");
+        std.mem.copyForwards(u8, response.body[0..error_len], error_json[0..error_len]);
+        response.body_len = @intCast(error_len);
         return;
     }
     
+    // Build user settings response with actual user data
     var json_buf: [responses.MAX_JSON_RESPONSE_LEN]u8 = undefined;
-    const json_len = responses.build_success_response("Settings retrieved", "", &json_buf);
+    const user_id = user_data.user_id[0..user_data.user_id_len];
+    const email = user_data.email[0..user_data.email_len];
+    const username = user_data.username[0..user_data.username_len];
+    const json_len = responses.build_user_profile_response(
+        user_id,
+        email,
+        username,
+        user_data.created_at,
+        &json_buf,
+    );
     response.status = grain_core_api.HttpStatus.ok;
     _ = response.add_header("Content-Type", "application/json");
     std.mem.copyForwards(u8, response.body[0..json_len], json_buf[0..json_len]);

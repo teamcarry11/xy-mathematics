@@ -6,6 +6,8 @@
 //!
 //! 2025-12-20-161231-pst: Phase 17 SLC v1.0 Text Editor
 //! 2025-12-21-184709-pst: Phase 28 Find and Replace
+//! 2025-12-21-234422-pst: Phase 29 Go to Line
+//! 2025-12-21-234422-pst: Phase 29 Go to Line
 
 const std = @import("std");
 const grain_core = @import("grain_core");
@@ -694,6 +696,164 @@ pub const TextEditor = struct {
             return 1; // At least one line
         }
         return self.lines_len;
+    }
+
+    /// Go to line number (1-indexed for user input).
+    // 2025-12-21-234422-pst: Phase 29 Go to Line
+    pub fn go_to_line(self: *TextEditor, line_number: u32) bool {
+        // Precondition: File must be open
+        std.debug.assert(self.file_state != .closed);
+        std.debug.assert(line_number > 0); // 1-indexed
+
+        if (self.file_state == .closed) {
+            return false;
+        }
+
+        if (line_number == 0) {
+            return false; // Line numbers are 1-indexed
+        }
+
+        // Convert 1-indexed to 0-indexed
+        const line_idx = line_number - 1;
+
+        if (self.lines_len == 0) {
+            // Empty file - move to first line
+            self.cursor = CursorPosition.init();
+            return true;
+        }
+
+        // Clamp to valid line range
+        const clamped_line = @min(line_idx, self.lines_len - 1);
+        const line_len = self.lines[clamped_line].content_len;
+
+        // Move cursor to start of line (column 0)
+        self.cursor.line = clamped_line;
+        self.cursor.column = 0;
+
+        // Postcondition: Cursor must be valid
+        std.debug.assert(self.cursor.line < self.lines_len);
+        std.debug.assert(self.cursor.column <= self.lines[self.cursor.line].content_len);
+
+        return true;
+    }
+
+    /// Go to line and column (1-indexed line, 0-indexed column for user input).
+    // 2025-12-21-234422-pst: Phase 29 Go to Line
+    pub fn go_to_line_column(self: *TextEditor, line_number: u32, column: u32) bool {
+        // Precondition: File must be open
+        std.debug.assert(self.file_state != .closed);
+        std.debug.assert(line_number > 0); // 1-indexed
+
+        if (self.file_state == .closed) {
+            return false;
+        }
+
+        if (line_number == 0) {
+            return false; // Line numbers are 1-indexed
+        }
+
+        // Convert 1-indexed to 0-indexed
+        const line_idx = line_number - 1;
+
+        if (self.lines_len == 0) {
+            // Empty file - move to first line
+            self.cursor = CursorPosition.init();
+            return true;
+        }
+
+        // Clamp to valid line range
+        const clamped_line = @min(line_idx, self.lines_len - 1);
+        const line_len = self.lines[clamped_line].content_len;
+
+        // Clamp column to valid range
+        const clamped_column = @min(column, line_len);
+
+        self.cursor.line = clamped_line;
+        self.cursor.column = clamped_column;
+
+        // Postcondition: Cursor must be valid
+        std.debug.assert(self.cursor.line < self.lines_len);
+        std.debug.assert(self.cursor.column <= self.lines[self.cursor.line].content_len);
+
+        return true;
+    }
+
+    /// Go to line number (1-indexed for user convenience).
+    // 2025-12-21-234422-pst: Phase 29 Go to Line
+    pub fn go_to_line(self: *TextEditor, line_number: u32) bool {
+        // Precondition: File must be open
+        std.debug.assert(self.file_state != .closed);
+
+        if (self.file_state == .closed) {
+            return false;
+        }
+
+        if (line_number == 0) {
+            return false; // Line numbers are 1-indexed
+        }
+
+        // Convert 1-indexed to 0-indexed
+        const line_idx = line_number - 1;
+
+        if (self.lines_len == 0) {
+            // Empty file - move to first line
+            self.cursor = CursorPosition.init();
+            return true;
+        }
+
+        // Clamp to valid range
+        const clamped_line = @min(line_idx, self.lines_len - 1);
+        const line_len = self.lines[clamped_line].content_len;
+
+        // Move cursor to start of line (column 0)
+        self.cursor.line = clamped_line;
+        self.cursor.column = 0;
+
+        // Postcondition: Cursor must be valid
+        std.debug.assert(self.cursor.line < self.lines_len);
+        std.debug.assert(self.cursor.column <= self.lines[self.cursor.line].content_len);
+
+        return true;
+    }
+
+    /// Go to line and column (1-indexed line, 0-indexed column for user convenience).
+    // 2025-12-21-234422-pst: Phase 29 Go to Line
+    pub fn go_to_line_and_column(self: *TextEditor, line_number: u32, column: u32) bool {
+        // Precondition: File must be open
+        std.debug.assert(self.file_state != .closed);
+
+        if (self.file_state == .closed) {
+            return false;
+        }
+
+        if (line_number == 0) {
+            return false; // Line numbers are 1-indexed
+        }
+
+        // Convert 1-indexed to 0-indexed
+        const line_idx = line_number - 1;
+
+        if (self.lines_len == 0) {
+            // Empty file - move to first line
+            self.cursor = CursorPosition.init();
+            return true;
+        }
+
+        // Clamp to valid range
+        const clamped_line = @min(line_idx, self.lines_len - 1);
+        const line_len = self.lines[clamped_line].content_len;
+
+        // Clamp column to valid range
+        const clamped_column = @min(column, line_len);
+
+        self.cursor.line = clamped_line;
+        self.cursor.column = clamped_column;
+
+        // Postcondition: Cursor must be valid
+        std.debug.assert(self.cursor.line < self.lines_len);
+        std.debug.assert(self.cursor.column <= self.lines[self.cursor.line].content_len);
+
+        return true;
     }
 
     /// Search text.

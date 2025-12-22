@@ -7,6 +7,7 @@
 
 const std = @import("std");
 const grain_core = @import("grain_core");
+const zon_format = @import("zon_format.zig");
 
 // LLM provider errors.
 pub const LlmProviderError = error{
@@ -58,6 +59,8 @@ pub const LlmRequest = struct {
     max_tokens: u32,
     temperature: f32,
     created_at: u64,
+    use_zon_format: bool,
+    zon_data: ?[]const u8,
 };
 
 // LLM response structure.
@@ -228,3 +231,119 @@ pub const ProviderPool = struct {
         return original_error;
     }
 };
+
+// Encode structured data to ZON format for LLM request.
+pub fn encode_data_to_zon(
+    data: []const struct { key: []const u8, value: zon_format.ZonValue },
+    allocator: std.mem.Allocator,
+) ![]u8 {
+    std.debug.assert(data.len > 0);
+    std.debug.assert(allocator != null);
+    const zon_result = try zon_format.encode_zon(data, allocator);
+    defer zon_result.deinit();
+    const result = try allocator.alloc(u8, zon_result.len);
+    @memcpy(result, zon_result.data[0..zon_result.len]);
+    std.debug.assert(result.len == zon_result.len);
+    return result;
+}
+
+// Check if provider supports ZON format.
+pub fn provider_supports_zon(provider_type: ProviderType) bool {
+    std.debug.assert(@intFromEnum(provider_type) < 4);
+    switch (provider_type) {
+        .openai => return false,
+        .anthropic => return false,
+        .mistral => return false,
+        .self_hosted => return true,
+    }
+}
+
+// Convert ZON format to JSON for providers that don't support ZON.
+pub fn convert_zon_to_json(
+    zon_data: []const u8,
+    allocator: std.mem.Allocator,
+) ![]u8 {
+    std.debug.assert(zon_data.len > 0);
+    std.debug.assert(allocator != null);
+    const decode_result = try zon_format.decode_zon(zon_data, allocator);
+    defer decode_result.deinit();
+    var json_buffer: [MAX_REQUEST_SIZE]u8 = undefined;
+    var json_pos: u32 = 0;
+    json_buffer[json_pos] = '{';
+    json_pos += 1;
+    var i: u32 = 0;
+    while (i < decode_result.pairs.len) : (i += 1) {
+        if (i > 0) {
+            json_buffer[json_pos] = ',';
+            json_pos += 1;
+        }
+        const pair = decode_result.pairs[i];
+        json_buffer[json_pos] = '"';
+        json_pos += 1;
+        var j: u32 = 0;
+        while (j < pair.key.len and json_pos < MAX_REQUEST_SIZE) : (j += 1) {
+            json_buffer[json_pos] = pair.key[j];
+            json_pos += 1;
+        }
+        json_buffer[json_pos] = '"';
+        json_pos += 1;
+        json_buffer[json_pos] = ':';
+        json_pos += 1;
+        switch (pair.value.value_type) {
+            .bool_value => {
+                if (pair.value.bool_val) {
+                    const true_str = "true";
+                    var k: u32 = 0;
+                    while (k < true_str.len and json_pos < MAX_REQUEST_SIZE) : (k += 1) {
+                        json_buffer[json_pos] = true_str[k];
+                        json_pos += 1;
+                    }
+                } else {
+                    const false_str = "false";
+                    var k: u32 = 0;
+                    while (k < false_str.len and json_pos < MAX_REQUEST_SIZE) : (k += 1) {
+                        json_buffer[json_pos] = false_str[k];
+                        json_pos += 1;
+                    }
+                }
+            },
+            .u32_value => {
+                const num_str = try std.fmt.bufPrint(
+                    json_buffer[json_pos..],
+                    "{d}",
+                    .{pair.value.u32_val},
+                );
+                json_pos += @intCast(num_str.len);
+            },
+            .string_value => {
+                json_buffer[json_pos] = '"';
+                json_pos += 1;
+                const str_val = pair.value.string_val[0..pair.value.string_val_len];
+                var k: u32 = 0;
+                while (k < str_val.len and json_pos < MAX_REQUEST_SIZE) : (k += 1) {
+                    json_buffer[json_pos] = str_val[k];
+                    json_pos += 1;
+                }
+                json_buffer[json_pos] = '"';
+                json_pos += 1;
+            },
+            else => {
+                const null_str = "null";
+                var k: u32 = 0;
+                while (k < null_str.len and json_pos < MAX_REQUEST_SIZE) : (k += 1) {
+                    json_buffer[json_pos] = null_str[k];
+                    json_pos += 1;
+                }
+            },
+        }
+        if (json_pos >= MAX_REQUEST_SIZE) {
+            break;
+        }
+    }
+    json_buffer[json_pos] = '}';
+    json_pos += 1;
+    std.debug.assert(json_pos <= MAX_REQUEST_SIZE);
+    const result = try allocator.alloc(u8, json_pos);
+    @memcpy(result, json_buffer[0..json_pos]);
+    return result;
+}

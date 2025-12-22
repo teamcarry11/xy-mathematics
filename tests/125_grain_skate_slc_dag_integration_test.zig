@@ -334,3 +334,119 @@ test "slc dag integration has website link" {
     // Reverse link should not exist
     try testing.expect(!integration.has_website_link(page2_id, page1_id));
 }
+
+test "slc dag integration get all profiles" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var integration = try SlcDagIntegration.init(allocator);
+    defer integration.deinit();
+
+    const profile1_id = try integration.create_profile_node("npub1", "Profile 1");
+    const profile2_id = try integration.create_profile_node("npub2", "Profile 2");
+    const profile3_id = try integration.create_profile_node("npub3", "Profile 3");
+
+    var all_profiles: [10]u32 = undefined;
+    const count = integration.get_all_profiles(&all_profiles);
+
+    // Assert: All profiles retrieved
+    try testing.expect(count == 3);
+    try testing.expect(all_profiles[0] == profile1_id);
+    try testing.expect(all_profiles[1] == profile2_id);
+    try testing.expect(all_profiles[2] == profile3_id);
+}
+
+test "slc dag integration get all pages" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var integration = try SlcDagIntegration.init(allocator);
+    defer integration.deinit();
+
+    const page1_id = try integration.create_website_page_node("Home", "Content", "/");
+    const page2_id = try integration.create_website_page_node("About", "Content", "/about");
+    const page3_id = try integration.create_website_page_node("Contact", "Content", "/contact");
+
+    var all_pages: [10]u32 = undefined;
+    const count = integration.get_all_pages(&all_pages);
+
+    // Assert: All pages retrieved
+    try testing.expect(count == 3);
+    try testing.expect(all_pages[0] == page1_id);
+    try testing.expect(all_pages[1] == page2_id);
+    try testing.expect(all_pages[2] == page3_id);
+}
+
+test "slc dag integration find page by url path" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var integration = try SlcDagIntegration.init(allocator);
+    defer integration.deinit();
+
+    const page1_id = try integration.create_website_page_node("Home", "Content", "/");
+    const page2_id = try integration.create_website_page_node("About", "Content", "/about");
+    _ = page1_id;
+
+    // Find page by URL path
+    const found_page_id = integration.find_page_by_url_path("/about");
+
+    // Assert: Page found
+    try testing.expect(found_page_id != null);
+    try testing.expect(found_page_id.? == page2_id);
+
+    // Find non-existent page
+    const not_found = integration.find_page_by_url_path("/nonexistent");
+    try testing.expect(not_found == null);
+}
+
+test "slc dag integration get orphaned pages" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var integration = try SlcDagIntegration.init(allocator);
+    defer integration.deinit();
+
+    const page1_id = try integration.create_website_page_node("Home", "Content", "/");
+    const page2_id = try integration.create_website_page_node("About", "Content", "/about");
+    const page3_id = try integration.create_website_page_node("Contact", "Content", "/contact");
+    _ = page1_id;
+
+    // Link page2 to page3 (page1 is orphaned)
+    try integration.create_website_link(page2_id, page3_id);
+
+    var orphaned: [10]u32 = undefined;
+    const count = integration.get_orphaned_pages(&orphaned);
+
+    // Assert: Orphaned page found (page1 has no links)
+    try testing.expect(count == 1);
+    try testing.expect(orphaned[0] == page1_id);
+}
+
+test "slc dag integration get isolated profiles" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var integration = try SlcDagIntegration.init(allocator);
+    defer integration.deinit();
+
+    const profile1_id = try integration.create_profile_node("npub1", "Profile 1");
+    const profile2_id = try integration.create_profile_node("npub2", "Profile 2");
+    const profile3_id = try integration.create_profile_node("npub3", "Profile 3");
+    _ = profile1_id;
+
+    // Create relationship between profile2 and profile3 (profile1 is isolated)
+    try integration.create_profile_relationship(profile2_id, profile3_id, .follows);
+
+    var isolated: [10]u32 = undefined;
+    const count = integration.get_isolated_profiles(&isolated);
+
+    // Assert: Isolated profile found (profile1 has no relationships)
+    try testing.expect(count == 1);
+    try testing.expect(isolated[0] == profile1_id);
+}

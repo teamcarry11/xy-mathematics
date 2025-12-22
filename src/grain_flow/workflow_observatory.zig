@@ -8,6 +8,7 @@
 //! GrainStyle: grain_case, u32/u64, bounded allocations, assertions.
 //!
 //! 2025-12-21-083202-pst: Phase 3 Workflow Observatory Foundation
+//! 2025-12-21-204511-pst: ZON Format Integration Preparation (structure prepared, awaiting Court Agent completion)
 
 const std = @import("std");
 const workflow_metrics = @import("workflow_metrics.zig");
@@ -17,6 +18,9 @@ const performance_metrics = @import("performance_metrics.zig");
 
 // Bounded: Max aggregated metrics JSON size (10MB).
 pub const MAX_AGGREGATED_JSON_SIZE: u32 = 10_485_760;
+
+// Bounded: Max aggregated metrics ZON size (10MB).
+pub const MAX_AGGREGATED_ZON_SIZE: u32 = 10_485_760;
 
 // Bounded: Max dashboard query parameters.
 pub const MAX_QUERY_PARAMS: u32 = 32;
@@ -493,5 +497,39 @@ pub const WorkflowObservatory = struct {
             offset += 1;
         }
         return offset;
+    }
+
+    /// Export all metrics to ZON format (full export with nested structure).
+    /// NOTE: Implementation pending Court Agent ZON module completion and bounded allocation coordination.
+    /// Court Agent ZON module currently uses allocators; Flow Agent uses bounded allocations.
+    /// Coordination needed: Bounded allocation version or fixed-size buffer approach.
+    pub fn export_all_metrics_zon(
+        self: *const WorkflowObservatory,
+        output: []u8,
+    ) u32 {
+        _ = self;
+        std.debug.assert(output.len > 0);
+        // TODO: Implement ZON export when Court Agent ZON module is complete.
+        // Coordination needed: Court Agent ZON module uses allocators, Flow Agent uses bounded allocations.
+        // Options:
+        // 1. Court Agent provides bounded allocation version
+        // 2. Use fixed-size buffer (MAX_AGGREGATED_JSON_SIZE)
+        // 3. Coordinate on allocator usage pattern
+        // For now, return 0 (not implemented).
+        return 0;
+    }
+
+    /// Get aggregated metrics summary in ZON format.
+    /// NOTE: Implementation pending Court Agent ZON module completion and bounded allocation coordination.
+    pub fn get_aggregated_summary_zon(
+        self: *const WorkflowObservatory,
+        output: []u8,
+    ) u32 {
+        _ = self;
+        std.debug.assert(output.len > 0);
+        // TODO: Implement ZON summary export when Court Agent ZON module is complete.
+        // Coordination needed: Court Agent ZON module uses allocators, Flow Agent uses bounded allocations.
+        // For now, return 0 (not implemented).
+        return 0;
     }
 };

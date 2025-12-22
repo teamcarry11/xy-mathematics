@@ -6,6 +6,7 @@
 //!
 //! 2025-12-20-161231-pst: Phase 17 SLC v1.0 Text Editor
 //! 2025-12-21-184709-pst: Phase 28 Find and Replace tests
+//! 2025-12-21-234422-pst: Phase 29 Go to Line tests
 
 const std = @import("std");
 const testing = std.testing;
@@ -569,4 +570,98 @@ test "replace all with no replace query" {
     // Replace all with no replace query set
     const replace_count = editor.replace_all();
     try testing.expect(replace_count == 0);
+}
+
+test "go to line" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    _ = editor.insert_text("Line 1");
+    _ = editor.insert_text("\n");
+    _ = editor.insert_text("Line 2");
+    _ = editor.insert_text("\n");
+    _ = editor.insert_text("Line 3");
+    
+    // Go to line 2 (1-indexed)
+    const result = editor.go_to_line(2);
+    try testing.expect(result == true);
+    try testing.expect(editor.cursor.line == 1); // 0-indexed
+    try testing.expect(editor.cursor.column == 0);
+}
+
+test "go to line first line" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    _ = editor.insert_text("Line 1");
+    _ = editor.insert_text("\n");
+    _ = editor.insert_text("Line 2");
+    
+    // Go to line 1 (1-indexed)
+    const result = editor.go_to_line(1);
+    try testing.expect(result == true);
+    try testing.expect(editor.cursor.line == 0); // 0-indexed
+    try testing.expect(editor.cursor.column == 0);
+}
+
+test "go to line beyond end" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    _ = editor.insert_text("Line 1");
+    _ = editor.insert_text("\n");
+    _ = editor.insert_text("Line 2");
+    
+    // Go to line 10 (beyond end, should clamp to last line)
+    const result = editor.go_to_line(10);
+    try testing.expect(result == true);
+    try testing.expect(editor.cursor.line == 1); // Clamped to last line (0-indexed)
+    try testing.expect(editor.cursor.column == 0);
+}
+
+test "go to line invalid" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    _ = editor.insert_text("Line 1");
+    
+    // Go to line 0 (invalid, 1-indexed)
+    const result = editor.go_to_line(0);
+    try testing.expect(result == false);
+}
+
+test "go to line column" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    _ = editor.insert_text("Line 1");
+    _ = editor.insert_text("\n");
+    _ = editor.insert_text("Line 2");
+    
+    // Go to line 2, column 3 (1-indexed line, 0-indexed column)
+    const result = editor.go_to_line_column(2, 3);
+    try testing.expect(result == true);
+    try testing.expect(editor.cursor.line == 1); // 0-indexed
+    try testing.expect(editor.cursor.column == 3);
+}
+
+test "go to line column beyond end" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    _ = editor.insert_text("Line 1");
+    _ = editor.insert_text("\n");
+    _ = editor.insert_text("Line 2");
+    
+    // Go to line 2, column 100 (beyond line length, should clamp)
+    const result = editor.go_to_line_column(2, 100);
+    try testing.expect(result == true);
+    try testing.expect(editor.cursor.line == 1); // 0-indexed
+    try testing.expect(editor.cursor.column == 6); // Clamped to line length
 }

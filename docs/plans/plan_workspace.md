@@ -1,9 +1,9 @@
 # Grain Workspace Agent: Development Plan
 
 **Agent**: Grain Workspace Agent (5th Agent)  
-**Status**: Phase 28 Find and Replace Complete ✅  
-**Last Updated**: 2025-12-21-190134-pst  
-**Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-21-183510-pst.md`
+**Status**: Phase 29 Go to Line Complete ✅  
+**Last Updated**: 2025-12-21-235745-pst  
+**Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-21-204511-pst.md`
 
 ---
 
@@ -1164,6 +1164,33 @@ All planned phases for Grain Workspace Agent have been completed:
 - Reverse-order replacement to preserve indices
 - Integration with existing search functionality
 - Undo/redo support (via existing undo system)
+
+**Grain Style Compliance**:
+- `grain_case` function names
+- `u32`/`u64` types (no `usize`)
+- Bounded allocations (all limits explicit)
+- Assertions for preconditions
+- Max 70 lines per function
+- All compiler warnings enabled
+
+### Phase 29: Text Editor Go to Line ✅ **COMPLETE**
+
+**Date**: 2025-12-21-235745-pst
+
+**Completed Work**:
+1. **Go to Line Functionality** (`src/grain_workspace/text_editor/app.zig`):
+   - Added `go_to_line()` function to navigate to specific line (1-indexed)
+   - Added `go_to_line_column()` function to navigate to specific line and column
+   - Handles line number validation and clamping
+   - Handles column validation and clamping
+   - Comprehensive tests (`tests/115_grain_workspace_text_editor_test.zig`)
+
+**Features**:
+- Go to line number (1-indexed for user input)
+- Go to line and column (1-indexed line, 0-indexed column)
+- Automatic clamping to valid line/column ranges
+- Handles edge cases (empty file, beyond end of file)
+- Integration with existing cursor movement
 
 **Grain Style Compliance**:
 - `grain_case` function names

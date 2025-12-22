@@ -1,8 +1,8 @@
 # Grain Flow Agent: Task List
 
 **Agent**: Grain Flow Agent (9th Agent)  
-**Status**: All Phases Complete ✅ (Phase 1-5 COMPLETE), SLC Product Workflow Templates Ready ✅, Research Agent Collaboration Complete ✅, Instrumentation Design Prepared ✅, Phase 63 API Contracts Documented ✅, Phase 64 Integration Tests Created ✅, Phase 3 Validation COMPLETE ✅, ZON Format Integration Coordinating with Court Agent ⏳ (Priority 3, HIGH, COORDINATION NEEDED), Phase 3 Completion Reported to Core Agent ✅, TigerBeetle Enhancement Coordination Responded ⏳ (Medium Priority, Timeline Needed, COORDINATION NEEDED), Core Agent Coordination Plan Acknowledged ✅, Workflow Scheduler Cron Parser Enhanced ✅, Workflow Scheduler Cron Parser Step Value Support Enhanced ✅, Workflow Visualizer Hierarchical Layout Enhanced ✅, Event Bus Source Filtering Enhanced ✅, Build Configuration Coordination Requested ⏳ (Priority 2, HIGH, COORDINATION NEEDED), Core Coordination Document Rewritten ✅, Core Agent Coordination Plan 2025-12-21-183510-pst Acknowledged ✅  
-**Last Updated**: 2025-12-21-190000-pst
+**Status**: All Phases Complete ✅ (Phase 1-5 COMPLETE), SLC Product Workflow Templates Ready ✅, Research Agent Collaboration Complete ✅, Instrumentation Design Prepared ✅, Phase 63 API Contracts Documented ✅, Phase 64 Integration Tests Created ✅, Phase 3 Validation COMPLETE ✅, ZON Format Integration Coordinating with Court Agent ⏳ (Priority 3, HIGH, ~70% Complete, COORDINATION IN PROGRESS), ZON Integration Structure Prepared ✅, ZON Allocator Coordination Message Sent ✅, Phase 3 Completion Reported to Core Agent ✅, TigerBeetle Enhancement Coordination Responded ⏳ (Medium Priority, Timeline Needed, COORDINATION NEEDED), Core Agent Coordination Plan Acknowledged ✅, Workflow Scheduler Cron Parser Enhanced ✅, Workflow Scheduler Cron Parser Step Value Support Enhanced ✅, Workflow Visualizer Hierarchical Layout Enhanced ✅, Event Bus Source Filtering Enhanced ✅, Build Configuration Coordination Requested ⏳ (Priority 2, HIGH, COORDINATION NEEDED), Core Coordination Document Rewritten ✅, Core Agent Coordination Plan 2025-12-21-204511-pst Acknowledged ✅  
+**Last Updated**: 2025-12-21-210000-pst
 
 ---
 
@@ -605,8 +605,10 @@
 
 **Phase 1: Coordination & Dependencies** ⏳
 - [x] Welcome Court Agent — Court Agent added as 11th agent (2025-12-21-103800-pst)
-- [x] Court Agent implementing ZON module — Layer 1 in progress (2025-12-21-103800-pst)
-- [ ] Coordinate with Court Agent on ZON encoder/decoder API design
+- [x] Court Agent implementing ZON module — Layer 1 ~70% complete, coordination in progress (2025-12-21-204511-pst)
+- [x] ZON integration structure prepared — Placeholder functions added (2025-12-21-204511-pst)
+- [x] ZON allocator coordination message sent — Proposed bounded allocation wrapper approach (2025-12-21-210000-pst)
+- [ ] Wait for Court Agent response on allocator approach (bounded allocation wrapper preferred)
 - [x] Workflow Scheduler Cron Parser Enhancement (2025-12-21-141800-pst)
   - [x] Basic cron parser implemented (`calculate_next_cron_execution`)
   - [x] Supports common patterns: "* * * * *" (every minute), "0 * * * *" (every hour), numeric minutes
@@ -638,10 +640,12 @@
 - [ ] Coordinate with Research Agent on ZON export format requirements
 
 **Phase 2: Workflow Observatory ZON Export** ⏳
-- [ ] Add ZON export option to `WorkflowObservatory` (`src/grain_flow/workflow_observatory.zig`)
-- [ ] Implement `export_all_metrics_zon()` function
-- [ ] Implement `get_aggregated_summary_zon()` function
-- [ ] Integrate with Court Agent's ZON encoder
+- [x] Add ZON export option to `WorkflowObservatory` (`src/grain_flow/workflow_observatory.zig`) (2025-12-21-204511-pst)
+  - [x] Placeholder functions added (`export_all_metrics_zon()`, `get_aggregated_summary_zon()`)
+  - [x] Coordination notes added (allocator vs bounded allocation)
+- [ ] Implement `export_all_metrics_zon()` function (pending Court Agent completion and allocator coordination)
+- [ ] Implement `get_aggregated_summary_zon()` function (pending Court Agent completion and allocator coordination)
+- [ ] Integrate with Court Agent's ZON encoder (pending allocator coordination)
 - [ ] Support both JSON and ZON export formats (backward compatible)
 - [ ] Add format selection parameter (JSON vs ZON)
 

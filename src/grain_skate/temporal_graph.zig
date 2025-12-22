@@ -195,6 +195,48 @@ pub const TemporalGraph = struct {
     pub fn reset_to_present(self: *TemporalGraph) void {
         self.current_timestamp = null;
     }
+    
+    /// Get blocks created before or at timestamp (using DAG events).
+    /// Returns count of events that represent block creation.
+    pub fn get_blocks_created_at_timestamp(
+        self: *const TemporalGraph,
+        timestamp: u64,
+    ) u32 {
+        // Assert: Timestamp must be valid
+        std.debug.assert(timestamp > 0);
+        
+        // Query events up to timestamp
+        const events = self.dag_integration.query_events_up_to_timestamp(timestamp);
+        
+        // Count events (each event could represent a block creation/modification)
+        return @as(u32, @intCast(events.len));
+    }
+    
+    /// Get blocks modified in date range (using DAG events).
+    /// Returns count of events in the date range.
+    pub fn get_blocks_modified_in_range(
+        self: *const TemporalGraph,
+        start_timestamp: u64,
+        end_timestamp: u64,
+    ) u32 {
+        // Assert: Date range must be valid
+        std.debug.assert(start_timestamp <= end_timestamp);
+        std.debug.assert(start_timestamp > 0);
+        
+        return self.dag_integration.count_events_by_time_range(start_timestamp, end_timestamp);
+    }
+    
+    /// Get earliest block creation timestamp from DAG events.
+    /// Returns earliest timestamp if events exist, null otherwise.
+    pub fn get_earliest_block_timestamp(self: *const TemporalGraph) ?u64 {
+        return self.dag_integration.get_earliest_timestamp();
+    }
+    
+    /// Get latest block modification timestamp from DAG events.
+    /// Returns latest timestamp if events exist, null otherwise.
+    pub fn get_latest_block_timestamp(self: *const TemporalGraph) ?u64 {
+        return self.dag_integration.get_latest_timestamp();
+    }
 };
 
 test "temporal graph initialization" {

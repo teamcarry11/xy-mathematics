@@ -3907,6 +3907,24 @@ pub fn build(b: *std.Build) void {
     const grain_database_network_integration_tests_run = b.addRunArtifact(grain_database_network_integration_tests);
     test_step.dependOn(&grain_database_network_integration_tests_run.step);
 
+    const grain_database_slc_integration_tests = b.addTest(.{
+        .root_source_file = b.path("tests/123_grain_database_slc_integration_test.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    grain_database_slc_integration_tests.root_module.addImport("grain_database", grain_database_module);
+    const grain_database_slc_integration_tests_run = b.addRunArtifact(grain_database_slc_integration_tests);
+    test_step.dependOn(&grain_database_slc_integration_tests_run.step);
+
+    const grain_database_user_storage_tests = b.addTest(.{
+        .root_source_file = b.path("tests/124_grain_database_user_storage_test.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    grain_database_user_storage_tests.root_module.addImport("grain_database", grain_database_module);
+    const grain_database_user_storage_tests_run = b.addRunArtifact(grain_database_user_storage_tests);
+    test_step.dependOn(&grain_database_user_storage_tests_run.step);
+
     // RISC-V Logo Display Program
     const riscv_logo_exe = b.addExecutable(.{
         .name = "riscv_logo",

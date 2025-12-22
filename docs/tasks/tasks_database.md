@@ -466,6 +466,37 @@
 - **DAG Website Builder**: Website content storage and DAG structure management
 - **Workspace App Suite**: File metadata storage with hot cache support
 
+### User Storage Helper ✅ **COMPLETE**
+**Priority**: **HIGH** — Carry Agent Integration  
+**Status**: **COMPLETE** — User storage helper implemented  
+**Date Completed**: 2025-12-21-190053-pst  
+**Estimated Time**: 1 day
+
+**Tasks Completed** ✅:
+- [x] Create user storage module (`src/grain_database/user_storage.zig`)
+- [x] Implement `UserStorage` helper for mobile app user data storage
+- [x] Add full CRUD operations (store_user, get_user, update_user, delete_user)
+- [x] Add search by email functionality (`search_by_email`)
+- [x] Add pagination support (`list_users_paginated`)
+- [x] Add list and count operations (`list_users`, `count_users`)
+- [x] Add validation helpers (`validate_user_id`, `validate_email`)
+- [x] Create comprehensive tests (`tests/124_grain_database_user_storage_test.zig`)
+- [x] Add tests to `build.zig`
+- [x] Export helpers from `root.zig`
+- [x] Update documentation
+
+**Deliverables**:
+- ✅ `UserStorage` - User data storage with key-value support
+- ✅ Email search functionality
+- ✅ Pagination support for large user datasets
+- ✅ Validation helpers for user ID and email
+- ✅ Comprehensive tests
+- ✅ All tests pass
+- ✅ Grain Style compliance
+
+**Integration Points**:
+- **Carry Agent**: Mobile app user storage (key-value with email search)
+
 ### Performance Optimizations ✅ **COMPLETE**
 **Status**: **COMPLETE** — Batch operations and test fixes implemented  
 **Date Completed**: 2025-12-20-201013-pst

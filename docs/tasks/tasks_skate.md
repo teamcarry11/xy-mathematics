@@ -2,7 +2,7 @@
 
 **Agent**: Grain Skate Terminal Silo Field Agent (3rd Agent)  
 **Status**: Phase 4 & Phase 5 In Progress (Core Complete, UI/GLM-4.6 Integration Pending)  
-**Last Updated**: 2025-12-21-084532-pst
+**Last Updated**: 2025-12-21-192912-pst
 
 ---
 
@@ -240,8 +240,8 @@
 
 **Date Started**: 2025-12-07-031415-pst
 
-**Priority**: **HIGH** — GLM-4.6 powered insights  
-**Status**: **IN PROGRESS** — Foundation complete, GLM-4.6 integration pending  
+**Priority**: **HIGH** — Multi-provider LLM powered insights  
+**Status**: **IN PROGRESS** — Foundation complete, Court Agent migration complete ✅  
 **Estimated Time**: 3-4 weeks
 
 ### Tasks
@@ -253,10 +253,15 @@
 - [x] Create tests (`tests/124_grain_skate_ai_insights_test.zig`)
 - [x] Add tests to `build.zig`
 - [x] Add `AiInsights` to `src/grain_skate/root.zig` exports
-- [x] Integrate with `src/aurora_glm46.zig` (GLM-4.6 client from Aurora) ✅
-- [x] Use HTTP client (`src/grain_core/http_client.zig`) for external AI API calls if needed ✅ (via GLM-4.6 client)
+- [x] Integrate with `src/aurora_glm46.zig` (GLM-4.6 client from Aurora) ✅ - MIGRATED
+- [x] Migrate to Court Agent provider abstraction (2025-12-21-192912-pst) ✅
+- [x] Update `init_with_glm46()` to `init_with_llm_provider()` with provider type selection ✅
+- [x] Convert streaming callback model to request/response model ✅
+- [x] Update all AI functions to use Court provider API ✅
+- [x] Use HTTP client (`src/grain_core/http_client.zig`) for external AI API calls ✅ (via Court provider)
+- [ ] ZON format integration (Court Agent Phase 2) for token efficiency
 - [ ] Use vector embeddings for semantic similarity (Grain Court integration) (Future enhancement)
-- [x] Implement actual AI analysis (replace placeholders with GLM-4.6 calls) ✅
+- [x] Implement actual AI analysis (using Court provider API) ✅
 - [x] Visual indicators for AI-suggested connections (graph renderer integration) ✅
   - [x] Added `set_ai_suggestions()` method to `GraphRenderer` ✅
   - [x] Added `COLOR_EDGE_AI_SUGGESTED` constant (orange/yellow) ✅
@@ -278,10 +283,10 @@
 
 ### Dependencies
 
-- **Needs**: GLM-4.6 client from Aurora Agent (exists) ✅
+- **Needs**: Court Agent provider abstraction (Phase 1 complete) ✅
 - **Needs**: HTTP client from Core Agent (Phase 61 complete) ✅
 - **Needs**: Grain Court (WSE spatial computing) for vector search
-- **Coordinates with**: Aurora Agent (GLM-4.6), Core Agent (HTTP client, Grain Court), Bubble Agent (visual design)
+- **Coordinates with**: Court Agent (LLM infrastructure), Core Agent (HTTP client), Bubble Agent (visual design)
 
 ### Cross-Platform
 

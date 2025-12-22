@@ -2,7 +2,7 @@
 
 **Agent**: Grain Skate Terminal Silo Field Agent (3rd Agent)  
 **Status**: Phase 4 & Phase 5 In Progress (Phase 5 Visual Indicators Complete ✅, Phase 4 UI Pending)  
-**Last Updated**: 2025-12-21-084532-pst
+**Last Updated**: 2025-12-21-192912-pst
 
 ---
 
@@ -500,24 +500,24 @@ Grain Skate Terminal Silo Field Agent is responsible for building Grain Skate (k
 
 **Date Started**: 2025-12-07-031415-pst
 
-**Status**: **IN PROGRESS** — GLM-4.6 integration complete ✅, visual indicators complete ✅, testing with actual API pending  
+**Status**: **IN PROGRESS** — Court Agent migration complete ✅, visual indicators complete ✅, testing with actual API pending  
 **Estimated Time**: 3-4 weeks
 
-**Objective**: GLM-4.6 powered insights for knowledge graph management
+**Objective**: Multi-provider LLM powered insights for knowledge graph management
 
 **Completed Work**:
 1. **AI Insights Module** (`src/grain_skate/ai_insights.zig`):
    - AI insights structure with DAG integration and block storage
-   - GLM-4.6 client integration (`init_with_glm46()` method) ✅
+   - Court Agent provider abstraction integration (`init_with_llm_provider()` method) ✅
    - Connection suggestion structure (`ConnectionSuggestion`)
    - Title suggestion structure (`TitleSuggestion`)
-   - **GLM-4.6 integrated functions**:
-     - `suggest_connections()` - Auto-suggest connections (GLM-4.6 powered) ✅
-     - `detect_knowledge_gaps()` - Detect missing links (GLM-4.6 powered) ✅
-     - `suggest_title()` - Generate block titles (GLM-4.6 powered) ✅
-     - `summarize_subgraph()` - Summarize subgraphs (GLM-4.6 powered) ✅
+   - **Multi-provider LLM integrated functions**:
+     - `suggest_connections()` - Auto-suggest connections (Court provider powered) ✅
+     - `detect_knowledge_gaps()` - Detect missing links (Court provider powered) ✅
+     - `suggest_title()` - Generate block titles (Court provider powered) ✅
+     - `summarize_subgraph()` - Summarize subgraphs (Court provider powered) ✅
    - `store_suggestion_as_dag_event()` - Store AI suggestions as DAG events ✅
-   - Streaming response collection (`collect_glm46_response()`) ✅
+   - Request/response model (`send_llm_request()` helper) ✅
    - Tests created (`tests/124_grain_skate_ai_insights_test.zig`)
    - Added to `src/grain_skate/root.zig` exports
    - Added tests to `build.zig`
@@ -527,13 +527,16 @@ Grain Skate Terminal Silo Field Agent is responsible for building Grain Skate (k
    - AI suggestions stored as DAG events (ai_completion type) ✅
    - Parent event references maintained for deterministic ordering ✅
 
-3. **GLM-4.6 Integration**:
-   - Integrated `Glm46Client` from `src/aurora_glm46.zig` ✅
-   - Streaming response collection for AI analysis ✅
+3. **Court Agent Integration** (2025-12-21-192912-pst):
+   - Migrated from Aurora's GLM-4.6 client to Court's provider abstraction ✅
+   - Multi-provider support (OpenAI, Anthropic, Mistral) ✅
+   - Provider pool management with fallback logic ✅
+   - Request/response model (converted from streaming callback) ✅
    - Prompt engineering for knowledge graph analysis ✅
    - Response parsing for structured AI outputs ✅
 
 **Remaining Work**:
+- ZON format integration (Court Agent Phase 2) for token-efficient communication
 - Use vector embeddings for semantic similarity (Grain Court integration - Future enhancement)
 - Test thoroughly with actual AI API calls (requires API key)
 
@@ -563,17 +566,19 @@ Grain Skate Terminal Silo Field Agent is responsible for building Grain Skate (k
 **Implementation Steps**:
 1. ✅ Create AI insights module foundation
 2. ✅ Store AI suggestions as DAG events
-3. ✅ Integrate with `src/aurora_glm46.zig` (GLM-4.6 client from Aurora)
-4. ✅ Implement actual AI analysis (replace placeholders with GLM-4.6 calls)
-5. ✅ Visual indicators for AI-suggested connections (graph renderer integration)
-6. ⏳ Use vector embeddings for semantic similarity (Grain Court integration - Future)
-7. ⏳ Test thoroughly with actual AI API calls (requires API key)
+3. ✅ Integrate with `src/aurora_glm46.zig` (GLM-4.6 client from Aurora) - MIGRATED
+4. ✅ Migrate to Court Agent provider abstraction (2025-12-21-192912-pst) ✅
+5. ✅ Implement actual AI analysis (using Court provider API)
+6. ✅ Visual indicators for AI-suggested connections (graph renderer integration)
+7. ⏳ ZON format integration (Court Agent Phase 2) for token efficiency
+8. ⏳ Use vector embeddings for semantic similarity (Grain Court integration - Future)
+9. ⏳ Test thoroughly with actual AI API calls (requires API key)
 
 **Dependencies**:
-- **Needs**: GLM-4.6 client from Aurora Agent (exists) ✅
+- **Needs**: Court Agent provider abstraction (Phase 1 complete) ✅
 - **Needs**: HTTP client from Core Agent (Phase 61 complete) ✅
 - **Needs**: Grain Court (WSE spatial computing) for vector search
-- **Coordinates with**: Aurora Agent (GLM-4.6), Core Agent (HTTP client, Grain Court), Bubble Agent (visual design)
+- **Coordinates with**: Court Agent (LLM infrastructure), Core Agent (HTTP client), Bubble Agent (visual design)
 
 **Cross-Platform**:
 - **Carry (Mobile)**: AI insights in mobile knowledge graph view

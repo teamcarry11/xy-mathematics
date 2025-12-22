@@ -1,31 +1,39 @@
 # Grain Skate Agent: Coordination Status
 
-**Last Updated**: 2025-12-21-200000-pst  
+**Last Updated**: 2025-12-22-081138-pst  
 **Agent**: Grain Skate Agent  
-**Status**: ✅ **READY FOR COORDINATION** - All independent work complete
+**Status**: ✅ **READY FOR COORDINATION** - All independent work complete, enhancements complete
 
 ---
 
 ## Executive Summary
 
-**Current Status**: All core functionality complete ✅, Court Agent migration COMPLETE ✅  
+**Current Status**: All core functionality complete ✅, Court Agent migration COMPLETE ✅, Enhanced queries COMPLETE ✅, Block version history COMPLETE ✅  
 **Coordination Ready**: YES - Ready to coordinate with Bubble, Aurora, Core, and Court agents  
 **Priority**: High - Integration work ready to begin
 
-**Latest Milestone**: Court Agent Phase 1 COMPLETE ✅ - Migration to Court's LLM provider abstraction COMPLETE ✅ (2025-12-21-192912-pst)
+**Latest Milestones**:
+- Court Agent Phase 1 COMPLETE ✅ - Migration to Court's LLM provider abstraction COMPLETE ✅ (2025-12-21-192912-pst)
+- Enhanced SLC DAG Query Operations COMPLETE ✅ (2025-12-21-200000-pst)
+- Block Version History Utilities COMPLETE ✅ (2025-12-21-200000-pst)
 
 ---
 
 ## ✅ Completed Work
 
 ### Phase 4: Temporal Knowledge Graph
-- **Status**: Core complete ✅, temporal filtering complete ✅, time slider utilities complete ✅
+- **Status**: Core complete ✅, temporal filtering complete ✅, time slider utilities complete ✅, block version history complete ✅
 - **What's Ready**:
   - Complete temporal graph implementation (`src/grain_skate/temporal_graph.zig`)
   - Time-travel capabilities (view graph at any point in time)
   - Temporal filtering in graph renderer (nodes/edges filtered by timestamp)
   - Time slider utilities (`timestamp_from_slider_position`, `slider_position_from_timestamp`)
   - GraphRenderer temporal integration (`set_temporal_graph`, `set_temporal_timestamp`)
+  - **Block version history utilities** (NEW):
+    - `get_blocks_created_at_timestamp()` - Get blocks created at or before timestamp
+    - `get_blocks_modified_in_range()` - Get blocks modified in date range
+    - `get_earliest_block_timestamp()` - Get earliest block creation timestamp
+    - `get_latest_block_timestamp()` - Get latest block modification timestamp
   - All tests passing, Grain Style compliant
 
 ### Phase 5: AI-Powered Graph Insights
@@ -44,6 +52,12 @@
   - Complete SLC DAG integration module (`src/grain_skate/slc_dag_integration.zig`)
   - Nostr Profile Builder: Profile nodes, relationships (follows, mentions, reposts), queries
   - DAG Website Builder: Page nodes, links, queries (outgoing/incoming links)
+  - **Enhanced query operations** (NEW):
+    - `get_all_profiles()` - Get all profile node IDs
+    - `get_all_pages()` - Get all page node IDs
+    - `find_page_by_url_path()` - Find page by URL path
+    - `get_orphaned_pages()` - Get pages with no links
+    - `get_isolated_profiles()` - Get profiles with no relationships
   - All tests passing, Grain Style compliant
 
 ---
@@ -62,6 +76,7 @@
   - `slider_position_from_timestamp(timestamp: u64)` - Convert timestamp to slider position (0.0-1.0)
   - `set_timestamp(timestamp: ?u64)` - Set time-travel timestamp
   - `get_timestamp()` - Get current timestamp
+  - Block version history utilities (see Phase 4 above)
 - Complete GraphRenderer integration:
   - `set_temporal_graph()` - Link temporal graph to renderer
   - `set_temporal_timestamp()` - Set time-travel timestamp (with validation)
@@ -81,6 +96,8 @@ pub fn get_time_range() struct { earliest: ?u64, latest: ?u64 }
 pub fn timestamp_from_slider_position(position: f32) ?u64
 pub fn slider_position_from_timestamp(timestamp: u64) ?f32
 pub fn set_timestamp(timestamp: ?u64) void
+pub fn get_blocks_created_at_timestamp(timestamp: u64) u32
+pub fn get_blocks_modified_in_range(start: u64, end: u64) u32
 
 // Graph renderer expects:
 pub fn set_temporal_timestamp(timestamp: ?u64) void
@@ -91,8 +108,9 @@ pub fn set_temporal_timestamp(timestamp: ?u64) void
 2. On slider change: Call `graph_renderer.set_temporal_timestamp(timestamp)`
 3. Animated transitions: Smooth interpolation between timestamps, nodes/edges fade in/out
 4. UI controls: Play/pause, jump to present button
+5. Block version display: Show block creation/modification counts at current timestamp
 
-**Coordination Message**: "Skate Agent temporal graph utilities complete and ready for UI integration. All API contracts defined. Ready to coordinate on time slider UI component design and implementation. Can provide integration examples and API documentation."
+**Coordination Message**: "Skate Agent temporal graph utilities complete and ready for UI integration. All API contracts defined, including block version history utilities. Ready to coordinate on time slider UI component design and implementation. Can provide integration examples and API documentation."
 
 **Timeline**: Ready immediately. Can provide API contracts and integration examples upon request.
 
@@ -112,6 +130,9 @@ pub fn set_temporal_timestamp(timestamp: ?u64) void
   - `get_profile_relationship_count()` - Count total relationships
   - `get_profile_data()` - Get profile node data (raw JSON)
   - `has_profile_relationship()` - Check if relationship exists
+  - **Enhanced queries** (NEW):
+    - `get_all_profiles()` - Get all profile node IDs
+    - `get_isolated_profiles()` - Get profiles with no relationships
 
 **What Skate Agent Needs**:
 - Nostr protocol integration in Dream Browser
@@ -121,22 +142,25 @@ pub fn set_temporal_timestamp(timestamp: ?u64) void
 **API Contract**:
 ```zig
 // Profile operations:
-pub fn create_profile_node(profile_data: []const u8) !u32
+pub fn create_profile_node(npub: []const u8, name: []const u8) !u32
 pub fn create_profile_relationship(
     from_profile_id: u32,
     to_profile_id: u32,
     relationship_type: ProfileRelationship,
-) !u64
-pub fn get_following_profiles(profile_id: u32) ![]u32
-pub fn get_follower_profiles(profile_id: u32) ![]u32
+) !void
+pub fn get_following_profiles(profile_id: u32, output: []u32) u32
+pub fn get_follower_profiles(profile_id: u32, output: []u32) u32
+pub fn get_all_profiles(output: []u32) u32
+pub fn get_isolated_profiles(output: []u32) u32
 ```
 
 **Integration Approach**:
 1. Profile creation: User creates/edits Nostr profile in Dream Browser → stored as DAG node
 2. Relationship management: Follows/mentions/reposts → call `create_profile_relationship()`
 3. Profile rendering: Dream Browser queries DAG for profile data, relationships visualized
+4. Profile discovery: Use `get_all_profiles()` and `get_isolated_profiles()` for profile management
 
-**Coordination Message**: "Skate Agent SLC DAG integration complete for Nostr Profile Builder. All profile node and relationship operations ready. DAG structure: profiles as nodes, relationships as edges. Ready to coordinate on Dream Browser integration for profile rendering and editing. Can provide API contracts and integration examples."
+**Coordination Message**: "Skate Agent SLC DAG integration complete for Nostr Profile Builder. All profile node and relationship operations ready, including enhanced query operations. DAG structure: profiles as nodes, relationships as edges. Ready to coordinate on Dream Browser integration for profile rendering and editing. Can provide API contracts and integration examples."
 
 **Timeline**: Ready immediately. Can provide integration examples and API documentation.
 
@@ -156,6 +180,10 @@ pub fn get_follower_profiles(profile_id: u32) ![]u32
   - `get_page_link_count()` - Count total links for a page
   - `get_page_data()` - Get page node data (raw JSON)
   - `has_website_link()` - Check if link exists
+  - **Enhanced queries** (NEW):
+    - `get_all_pages()` - Get all page node IDs
+    - `find_page_by_url_path()` - Find page by URL path
+    - `get_orphaned_pages()` - Get pages with no links
 
 **What Skate Agent Needs**:
 - Website publishing infrastructure (static site generation, hosting)
@@ -170,17 +198,22 @@ pub fn create_website_page_node(
     content: []const u8,
     url_path: []const u8,
 ) !u32
-pub fn create_website_link(from_page_id: u32, to_page_id: u32) !u64
-pub fn get_linked_pages(page_id: u32) ![]u32
-pub fn get_backlink_pages(page_id: u32) ![]u32
+pub fn create_website_link(from_page_id: u32, to_page_id: u32) !void
+pub fn get_linked_pages(page_id: u32, output: []u32) u32
+pub fn get_backlink_pages(page_id: u32, output: []u32) u32
+pub fn get_all_pages(output: []u32) u32
+pub fn find_page_by_url_path(url_path: []const u8) ?u32
+pub fn get_orphaned_pages(output: []u32) u32
 ```
 
 **Integration Approach**:
 1. Page creation: User creates/edits website page in DAG Website Builder → stored as DAG node
 2. Link management: User links pages → call `create_website_link()`
-3. Website publishing: Core Agent queries DAG for all pages, generates static site, serves via URL routing
+3. Website publishing: Core Agent queries DAG for all pages using `get_all_pages()`, generates static site, serves via URL routing
+4. URL resolution: Use `find_page_by_url_path()` for routing
+5. Site validation: Use `get_orphaned_pages()` to identify unlinked pages
 
-**Coordination Message**: "Skate Agent SLC DAG integration complete for DAG Website Builder. All page node and link operations ready. DAG structure: pages as nodes, links as edges. Ready to coordinate on website publishing infrastructure. Can provide API contracts and integration examples for static site generation from DAG structure."
+**Coordination Message**: "Skate Agent SLC DAG integration complete for DAG Website Builder. All page node and link operations ready, including enhanced query operations for site management. DAG structure: pages as nodes, links as edges. Ready to coordinate on website publishing infrastructure. Can provide API contracts and integration examples for static site generation from DAG structure."
 
 **Timeline**: Ready immediately. Can provide integration examples and API documentation.
 
@@ -194,6 +227,7 @@ pub fn get_backlink_pages(page_id: u32) ![]u32
 - Complete AI insights module with Court Agent integration (Phase 1 complete ✅)
 - Multi-provider LLM abstraction integration complete
 - Ready for ZON format integration
+- Graph data structures ready for ZON serialization
 
 **What Skate Agent Needs**:
 - ZON format implementation (Court Agent Phase 2)
@@ -203,11 +237,11 @@ pub fn get_backlink_pages(page_id: u32) ![]u32
 **Current Status**:
 - ✅ Court Agent Phase 1 complete (provider abstraction interface)
 - ✅ Migration to Court's LLM provider abstraction complete (2025-12-21-192912-pst)
-- ⏳ Waiting for Court Agent Phase 2 (ZON format)
+- ⏳ Waiting for Court Agent Phase 2 (ZON format) - ~70% complete per Core Agent coordination plan
 
 **Coordination Message**: "Skate Agent Court Agent Phase 1 migration complete. AI insights module fully integrated with Court's multi-provider abstraction. Ready for ZON format integration (Phase 2) when available. Can provide graph data structures for ZON format design."
 
-**Timeline**: Waiting for Court Agent Phase 2 completion.
+**Timeline**: Waiting for Court Agent Phase 2 completion (~70% complete, coordination in progress).
 
 ---
 
@@ -215,14 +249,14 @@ pub fn get_backlink_pages(page_id: u32) ![]u32
 
 ### Provides To
 - **Court Agent**: AI insights API contracts, migration readiness ✅
-- **Bubble Agent**: Time slider utilities, temporal graph API contracts ⏳
-- **Aurora Agent**: SLC DAG integration for Nostr profiles, API contracts ⏳
-- **Core Agent**: SLC DAG integration for websites, API contracts ⏳
+- **Bubble Agent**: Time slider utilities, temporal graph API contracts, block version history ⏳
+- **Aurora Agent**: SLC DAG integration for Nostr profiles, enhanced query operations, API contracts ⏳
+- **Core Agent**: SLC DAG integration for websites, enhanced query operations, API contracts ⏳
 - **Shared Modules**: DAG integration patterns, temporal query patterns ✅
 
 ### Depends On
 - **Core Agent**: HTTP Client (Phase 61) ✅ - Using for AI API calls
-- **Court Agent**: LLM infrastructure services ✅ - Phase 1 complete, Phase 2 pending
+- **Court Agent**: LLM infrastructure services ✅ - Phase 1 complete, Phase 2 pending (~70% complete)
 - **Bubble Agent**: Time slider UI component ⏳ - Ready for coordination
 - **Aurora Agent**: Nostr protocol integration ⏳ - Ready for coordination
 - **Core Agent**: Website publishing infrastructure ⏳ - Ready for coordination
@@ -238,10 +272,11 @@ pub fn get_backlink_pages(page_id: u32) ![]u32
 - ✅ Migration plan documented
 - ✅ Court Agent Phase 1 complete (provider abstraction interface)
 - ✅ Migration complete (2025-12-21-192912-pst)
-- ⏳ ZON format integration (Court Agent Phase 2) - Waiting for Court Agent
+- ⏳ ZON format integration (Court Agent Phase 2) - Waiting for Court Agent (~70% complete)
 
 ### Bubble Agent Integration
 - ✅ Time slider utilities complete
+- ✅ Block version history utilities complete
 - ✅ API contracts defined (`timestamp_from_slider_position`, `slider_position_from_timestamp`)
 - ✅ GraphRenderer temporal integration complete
 - ⏳ Ready for UI component design coordination
@@ -249,6 +284,7 @@ pub fn get_backlink_pages(page_id: u32) ![]u32
 
 ### Aurora Agent Integration
 - ✅ SLC DAG integration complete for Nostr profiles
+- ✅ Enhanced query operations complete (`get_all_profiles`, `get_isolated_profiles`)
 - ✅ Profile node and relationship operations ready
 - ✅ API contracts defined
 - ⏳ Ready for Dream Browser integration coordination
@@ -256,10 +292,30 @@ pub fn get_backlink_pages(page_id: u32) ![]u32
 
 ### Core Agent Integration
 - ✅ SLC DAG integration complete for websites
+- ✅ Enhanced query operations complete (`get_all_pages`, `find_page_by_url_path`, `get_orphaned_pages`)
 - ✅ Page node and link operations ready
 - ✅ API contracts defined
 - ⏳ Ready for website publishing infrastructure coordination
 - ⏳ Ready to provide integration examples
+
+---
+
+## Recent Enhancements (2025-12-21-200000-pst)
+
+### Enhanced SLC DAG Query Operations
+- Added `get_all_profiles()` - Get all profile node IDs
+- Added `get_all_pages()` - Get all page node IDs
+- Added `find_page_by_url_path()` - Find page by URL path
+- Added `get_orphaned_pages()` - Get pages with no links
+- Added `get_isolated_profiles()` - Get profiles with no relationships
+- Comprehensive tests added
+
+### Block Version History Utilities
+- Added `get_blocks_created_at_timestamp()` - Get blocks created at or before timestamp
+- Added `get_blocks_modified_in_range()` - Get blocks modified in date range
+- Added `get_earliest_block_timestamp()` - Get earliest block creation timestamp
+- Added `get_latest_block_timestamp()` - Get latest block modification timestamp
+- Comprehensive tests added
 
 ---
 
@@ -279,12 +335,12 @@ pub fn get_backlink_pages(page_id: u32) ![]u32
 1. **Bubble Agent**: Coordinate on time slider UI component design and implementation
 2. **Aurora Agent**: Coordinate on Nostr protocol integration for Profile Builder
 3. **Core Agent**: Coordinate on website publishing infrastructure for DAG Website Builder
-4. **Court Agent**: Wait for Phase 2 (ZON format) completion, then integrate
+4. **Court Agent**: Wait for Phase 2 (ZON format) completion (~70% complete), then integrate
 
 **Status**: ✅ **READY FOR COORDINATION**  
 **Action**: Awaiting coordination signals from Bubble, Aurora, Core, and Court agents, or ready to initiate coordination proactively using plans above.
 
 ---
 
-**Last Updated**: 2025-12-21-200000-pst  
+**Last Updated**: 2025-12-22-081138-pst  
 **Agent**: Grain Skate Agent

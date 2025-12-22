@@ -5,6 +5,7 @@
 //! GrainStyle: grain_case, u32/u64, bounded allocations, assertions.
 //!
 //! 2025-12-20-161231-pst: Phase 17 SLC v1.0 Text Editor
+//! 2025-12-21-184709-pst: Phase 28 Find and Replace tests
 
 const std = @import("std");
 const testing = std.testing;
@@ -465,4 +466,107 @@ test "cannot open file when file has unsaved changes" {
     const result = editor.open_file("/test/file2.txt");
     try testing.expect(result == false);
     try testing.expect(editor.file_state == .dirty);
+}
+
+test "set replace query" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    const result = editor.set_replace_query("replacement");
+    try testing.expect(result == true);
+    try testing.expect(editor.replace_query_len == 11);
+}
+
+test "get replace query" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    _ = editor.set_replace_query("replacement");
+    
+    var query: [256]u8 = undefined;
+    var query_len: u32 = 0;
+    editor.get_replace_query(&query, &query_len);
+    try testing.expect(query_len == 11);
+    try testing.expect(std.mem.eql(u8, query[0..query_len], "replacement"));
+}
+
+test "replace at result" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    _ = editor.insert_text("Hello World");
+    
+    // Search for "World"
+    const count = editor.search_text("World");
+    try testing.expect(count == 1);
+    
+    // Set replace query
+    _ = editor.set_replace_query("Universe");
+    
+    // Replace at first result
+    const result = editor.replace_at_result(0);
+    try testing.expect(result == true);
+    
+    // Verify replacement
+    try testing.expect(editor.lines[0].content_len == 13);
+    try testing.expect(std.mem.eql(u8, editor.lines[0].content[0..13], "Hello Universe"));
+}
+
+test "replace all" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    _ = editor.insert_text("foo bar foo");
+    
+    // Search for "foo"
+    const count = editor.search_text("foo");
+    try testing.expect(count == 2);
+    
+    // Set replace query
+    _ = editor.set_replace_query("baz");
+    
+    // Replace all
+    const replace_count = editor.replace_all();
+    try testing.expect(replace_count == 2);
+    
+    // Verify replacement
+    try testing.expect(editor.lines[0].content_len == 11);
+    try testing.expect(std.mem.eql(u8, editor.lines[0].content[0..11], "baz bar baz"));
+    
+    // Search results should be cleared
+    try testing.expect(editor.search_results_len == 0);
+}
+
+test "replace all with no results" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    _ = editor.insert_text("Hello World");
+    
+    // Set replace query
+    _ = editor.set_replace_query("replacement");
+    
+    // Replace all with no search results
+    const replace_count = editor.replace_all();
+    try testing.expect(replace_count == 0);
+}
+
+test "replace all with no replace query" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    _ = editor.insert_text("Hello World");
+    
+    // Search for "World"
+    _ = editor.search_text("World");
+    
+    // Replace all with no replace query set
+    const replace_count = editor.replace_all();
+    try testing.expect(replace_count == 0);
 }

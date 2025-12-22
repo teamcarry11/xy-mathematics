@@ -22,7 +22,9 @@
 //! GrainStyle: Comprehensive performance tracking, deterministic behavior, explicit limits
 
 const std = @import("std");
+const builtin = @import("builtin");
 const exception_stats_mod = @import("exception_stats.zig");
+const host_interface = @import("host_interface.zig");
 
 /// Performance metrics for VM execution.
 /// Why: Track execution performance for monitoring and optimization.

@@ -1,5 +1,6 @@
 const std = @import("std");
 const builtin = @import("builtin");
+const host_interface = @import("host_interface.zig");
 
 extern fn pthread_jit_write_protect_np(enabled: c_int) void;
 
@@ -305,21 +306,69 @@ pub const JitContext = struct {
         std.debug.assert(@intFromPtr(guest_ram.ptr) % 4 == 0);
 
         const buffer_size: u32 = 64 * 1024 * 1024;
-        const PROT_READ = 0x1;
-        const PROT_WRITE = 0x2;
-        const PROT_EXEC = 0x4;
-
-        const ptr = try std.posix.mmap(null, buffer_size, PROT_READ | PROT_WRITE | PROT_EXEC, .{ .TYPE = .PRIVATE, .ANONYMOUS = true, .JIT = true }, -1, 0);
-
-        const buffer = @as([]align(16384) u8, @alignCast(ptr[0..buffer_size]));
-
-        if (builtin.os.tag == .macos and builtin.cpu.arch == .aarch64) {
-            pthread_jit_write_protect_np(0);
-        }
-        @memset(buffer, 0);
-        if (builtin.os.tag == .macos and builtin.cpu.arch == .aarch64) {
-            pthread_jit_write_protect_np(1);
-        }
+        
+        // Use host interface for JIT memory allocation (if available).
+        const host = host_interface.get_host_interface();
+        const buffer: []align(16384) u8 = if (host) |host_if| blk: {
+            // Use host interface for memory allocation.
+            const memory_result = host_if.allocate_jit_memory_wrapper(buffer_size);
+            switch (memory_result) {
+                .success => |buf| {
+                    // Buffer allocated via host interface.
+                    // Note: Host interface handles write protection internally.
+                    break :blk buf;
+                },
+                .failed => {
+                    // Host interface allocation failed - fall back to direct mmap.
+                    const PROT_READ = 0x1;
+                    const PROT_WRITE = 0x2;
+                    const PROT_EXEC = 0x4;
+                    const ptr = try std.posix.mmap(
+                        null,
+                        buffer_size,
+                        PROT_READ | PROT_WRITE | PROT_EXEC,
+                        .{ .TYPE = .PRIVATE, .ANONYMOUS = true, .JIT = true },
+                        -1,
+                        0,
+                    );
+                    const buf = @as([]align(16384) u8, @alignCast(ptr[0..buffer_size]));
+                    
+                    // Set JIT write protection (disable for initialization).
+                    if (builtin.os.tag == .macos and builtin.cpu.arch == .aarch64) {
+                        pthread_jit_write_protect_np(0);
+                    }
+                    @memset(buf, 0);
+                    if (builtin.os.tag == .macos and builtin.cpu.arch == .aarch64) {
+                        pthread_jit_write_protect_np(1);
+                    }
+                    break :blk buf;
+                },
+            }
+        } else blk: {
+            // No host interface - use direct mmap (legacy path).
+            const PROT_READ = 0x1;
+            const PROT_WRITE = 0x2;
+            const PROT_EXEC = 0x4;
+            const ptr = try std.posix.mmap(
+                null,
+                buffer_size,
+                PROT_READ | PROT_WRITE | PROT_EXEC,
+                .{ .TYPE = .PRIVATE, .ANONYMOUS = true, .JIT = true },
+                -1,
+                0,
+            );
+            const buf = @as([]align(16384) u8, @alignCast(ptr[0..buffer_size]));
+            
+            // Set JIT write protection (disable for initialization).
+            if (builtin.os.tag == .macos and builtin.cpu.arch == .aarch64) {
+                pthread_jit_write_protect_np(0);
+            }
+            @memset(buf, 0);
+            if (builtin.os.tag == .macos and builtin.cpu.arch == .aarch64) {
+                pthread_jit_write_protect_np(1);
+            }
+            break :blk buf;
+        };
 
         var cache = std.AutoHashMap(u64, u32).init(allocator);
         try cache.ensureTotalCapacity(10_000);
@@ -365,7 +414,15 @@ pub const JitContext = struct {
         // Assert: cursor must be within bounds
         std.debug.assert(self.cursor <= self.code_buffer.len);
         
-        std.posix.munmap(self.code_buffer);
+        // Use host interface for JIT memory deallocation (if available).
+        const host = host_interface.get_host_interface();
+        if (host) |host_if| {
+            host_if.free_jit_memory_wrapper(self.code_buffer);
+        } else {
+            // No host interface - use direct munmap (legacy path).
+            _ = std.posix.munmap(self.code_buffer);
+        }
+        
         self.block_cache.deinit();
         self.pending_fixups.deinit();
     }
@@ -381,8 +438,15 @@ pub const JitContext = struct {
         // Assert: cursor must be within bounds
         std.debug.assert(self.cursor <= self.code_buffer.len);
         
-        if (builtin.os.tag == .macos and builtin.cpu.arch == .aarch64) {
-            pthread_jit_write_protect_np(1);
+        // Use host interface for JIT write protection (if available).
+        const host = host_interface.get_host_interface();
+        if (host) |host_if| {
+            host_if.set_jit_write_protection_wrapper(.enabled);
+        } else {
+            // No host interface - use direct call (legacy path).
+            if (builtin.os.tag == .macos and builtin.cpu.arch == .aarch64) {
+                pthread_jit_write_protect_np(1);
+            }
         }
     }
 
@@ -392,8 +456,15 @@ pub const JitContext = struct {
         // Assert: cursor must be within bounds
         std.debug.assert(self.cursor <= self.code_buffer.len);
 
-        if (builtin.os.tag == .macos and builtin.cpu.arch == .aarch64) {
-            pthread_jit_write_protect_np(0);
+        // Use host interface for JIT write protection (if available).
+        const host = host_interface.get_host_interface();
+        if (host) |host_if| {
+            host_if.set_jit_write_protection_wrapper(.disabled);
+        } else {
+            // No host interface - use direct call (legacy path).
+            if (builtin.os.tag == .macos and builtin.cpu.arch == .aarch64) {
+                pthread_jit_write_protect_np(0);
+            }
         }
     }
 

@@ -124,15 +124,63 @@ pub const MacOSFeatureFlags = struct {
         // Assert: Version must be valid.
         Debug.kassert(version.major >= 10, "Invalid macOS major version", .{});
         
-        // macOS Tahoe 26.3 Beta feature flags.
-        // Note: These are placeholders - actual feature detection will be implemented.
+        // macOS version-specific feature detection.
+        // macOS 11.0+ (Big Sur): JIT support with pthread_jit_write_protect_np
+        // macOS 12.0+ (Monterey): Enhanced JIT support
+        // macOS 13.0+ (Ventura): Improved performance counters
+        // macOS 14.0+ (Sonoma): Enhanced profiling tools
+        // macOS 26.0+ (Tahoe): Latest features
+        
+        const jit_supported = version.major >= 11; // JIT available on Big Sur+
+        const jit_code_signing_required = version.major < 11; // Code signing required on older versions
+        const performance_counters_available = version.major >= 13; // Enhanced counters on Ventura+
+        const profiling_tools_available = version.major >= 14; // Enhanced profiling on Sonoma+
+        const memory_protection_available = version.major >= 11; // Memory protection on Big Sur+
+        
         return MacOSFeatureFlags{
-            .jit_supported = true,
-            .jit_code_signing_required = false, // Placeholder
-            .performance_counters_available = true,
-            .profiling_tools_available = true,
-            .memory_protection_available = true,
+            .jit_supported = jit_supported,
+            .jit_code_signing_required = jit_code_signing_required,
+            .performance_counters_available = performance_counters_available,
+            .profiling_tools_available = profiling_tools_available,
+            .memory_protection_available = memory_protection_available,
         };
+    }
+    
+    /// Detect features at runtime.
+    /// Why: Runtime feature detection for adaptation.
+    /// Contract: Must be called on macOS.
+    pub fn detect_features_runtime() MacOSFeatureFlags {
+        // Assert: Must be running on macOS.
+        if (builtin.os.tag != .macos) {
+            // Not macOS - return minimal feature flags.
+            return MacOSFeatureFlags{
+                .jit_supported = false,
+                .jit_code_signing_required = false,
+                .performance_counters_available = false,
+                .profiling_tools_available = false,
+                .memory_protection_available = false,
+            };
+        }
+        
+        // Detect macOS version.
+        const version_result = detect_macos_version();
+        
+        switch (version_result) {
+            .success => |version| {
+                // Initialize feature flags from version.
+                return init_from_version(&version);
+            },
+            .failed => {
+                // Detection failed - return minimal feature flags.
+                return MacOSFeatureFlags{
+                    .jit_supported = false,
+                    .jit_code_signing_required = false,
+                    .performance_counters_available = false,
+                    .profiling_tools_available = false,
+                    .memory_protection_available = false,
+                };
+            },
+        }
     }
 };
 

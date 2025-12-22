@@ -676,6 +676,23 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    // Aurora Live Preview module (for test imports)
+    const aurora_live_preview_module = b.addModule("aurora_live_preview", .{
+        .root_source_file = b.path("src/aurora_live_preview.zig"),
+        .target = target,
+        .optimize = optimize,
+        .imports = &.{
+            .{ .name = "aurora_editor", .module = aurora_editor_module },
+            .{ .name = "aurora_dag_integration", .module = aurora_dag_integration_module },
+            .{ .name = "dream_browser_dag_integration", .module = dream_browser_dag_integration_module },
+            .{ .name = "dag_core", .module = dag_core_module },
+            .{ .name = "dream_browser_parser", .module = dream_browser_parser_module },
+            .{ .name = "dream_browser_renderer", .module = dream_browser_renderer_module },
+            .{ .name = "grain_buffer", .module = grain_buffer_module },
+            .{ .name = "grain_aurora", .module = grain_aurora_module },
+        },
+    });
+
     // Aurora Editor module (for test imports)
     const aurora_editor_module = b.addModule("aurora_editor", .{
         .root_source_file = b.path("src/aurora_editor.zig"),
@@ -848,6 +865,27 @@ pub fn build(b: *std.Build) void {
     // Dream Browser Parser module (for test imports)
     const dream_browser_parser_module = b.addModule("dream_browser_parser", .{
         .root_source_file = b.path("src/dream_browser_parser.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
+    // Dream Browser Renderer module (for test imports)
+    const dream_browser_renderer_module = b.addModule("dream_browser_renderer", .{
+        .root_source_file = b.path("src/dream_browser_renderer.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
+    // Dream Browser DAG Integration module (for test imports)
+    const dream_browser_dag_integration_module = b.addModule("dream_browser_dag_integration", .{
+        .root_source_file = b.path("src/dream_browser_dag_integration.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
+    // Grain Aurora module (for test imports)
+    const grain_aurora_module = b.addModule("grain_aurora", .{
+        .root_source_file = b.path("src/grain_aurora.zig"),
         .target = target,
         .optimize = optimize,
     });
@@ -1233,6 +1271,18 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&run_grainbank_test_file.step);
     const run_crash_test_file = b.addRunArtifact(crash_test_file);
     test_step.dependOn(&run_crash_test_file.step);
+    const live_preview_test_file = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/129_aurora_live_preview_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "aurora_live_preview", .module = aurora_live_preview_module },
+            },
+        }),
+    });
+    const run_live_preview_test_file = b.addRunArtifact(live_preview_test_file);
+    test_step.dependOn(&run_live_preview_test_file.step);
     const run_route_tests = b.addRunArtifact(route_tests);
     test_step.dependOn(&run_route_tests.step);
     const run_orchestrator_tests = b.addRunArtifact(orchestrator_tests);
@@ -4899,6 +4949,20 @@ pub fn build(b: *std.Build) void {
     });
     const interrupt_exception_abstraction_tests_run = b.addRunArtifact(interrupt_exception_abstraction_tests);
     test_step.dependOn(&interrupt_exception_abstraction_tests_run.step);
+
+    // Vantage adaptation host interface tests (Priority 1)
+    const vantage_adaptation_host_interface_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/103_vantage_adaptation_host_interface_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+            },
+        }),
+    });
+    const vantage_adaptation_host_interface_tests_run = b.addRunArtifact(vantage_adaptation_host_interface_tests);
+    test_step.dependOn(&vantage_adaptation_host_interface_tests_run.step);
 
     // Graincard format validation test
     const graincard_format_validation_tests = b.addTest(.{

@@ -337,3 +337,63 @@ test "slc component library variant count zero" {
     _ = library.add_profile_component(.form, "Profile Form", &base_comp);
     std.debug.assert(library.get_variant_count_for_profile(1) == 0);
 }
+
+test "slc component library get profile component by name" {
+    var library = slc_ui_components.SlcComponentLibrary.init();
+    var base_comp = component.Component.init();
+    base_comp.id = 1;
+    _ = library.add_profile_component(.form, "Profile Form", &base_comp);
+    const comp = library.get_profile_component_by_name("Profile Form");
+    std.debug.assert(comp != null);
+    std.debug.assert(comp.?.component_id == 1);
+}
+
+test "slc component library get website component by name" {
+    var library = slc_ui_components.SlcComponentLibrary.init();
+    var base_comp = component.Component.init();
+    base_comp.id = 1;
+    _ = library.add_website_component(.dag_editor, "DAG Editor", &base_comp);
+    const comp = library.get_website_component_by_name("DAG Editor");
+    std.debug.assert(comp != null);
+    std.debug.assert(comp.?.component_id == 1);
+}
+
+test "slc component library get workspace component by name" {
+    var library = slc_ui_components.SlcComponentLibrary.init();
+    var base_comp = component.Component.init();
+    base_comp.id = 1;
+    _ = library.add_workspace_component(.file_manager, "File Manager", &base_comp);
+    const comp = library.get_workspace_component_by_name("File Manager");
+    std.debug.assert(comp != null);
+    std.debug.assert(comp.?.component_id == 1);
+}
+
+test "slc component library validate profile component" {
+    var library = slc_ui_components.SlcComponentLibrary.init();
+    var base_comp = component.Component.init();
+    base_comp.id = 1;
+    _ = library.add_profile_component(.form, "Profile Form", &base_comp);
+    _ = library.create_variant_for_profile(1, "default", .state);
+    std.debug.assert(library.validate_profile_component(1) == true);
+    std.debug.assert(library.validate_profile_component(999) == false);
+}
+
+test "slc component library validate website component" {
+    var library = slc_ui_components.SlcComponentLibrary.init();
+    var base_comp = component.Component.init();
+    base_comp.id = 1;
+    _ = library.add_website_component(.dag_editor, "DAG Editor", &base_comp);
+    _ = library.create_variant_for_website(1, "default", .state);
+    std.debug.assert(library.validate_website_component(1) == true);
+    std.debug.assert(library.validate_website_component(999) == false);
+}
+
+test "slc component library validate workspace component" {
+    var library = slc_ui_components.SlcComponentLibrary.init();
+    var base_comp = component.Component.init();
+    base_comp.id = 1;
+    _ = library.add_workspace_component(.file_manager, "File Manager", &base_comp);
+    _ = library.create_variant_for_workspace(1, "default", .state);
+    std.debug.assert(library.validate_workspace_component(1) == true);
+    std.debug.assert(library.validate_workspace_component(999) == false);
+}

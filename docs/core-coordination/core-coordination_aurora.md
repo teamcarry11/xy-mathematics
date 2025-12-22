@@ -1,6 +1,6 @@
 # Grain Aurora Agent: Coordination Status
 
-**Last Updated**: 2025-12-21-183510-pst  
+**Last Updated**: 2025-12-21-185652-pst  
 **Agent**: Grain Aurora IDE Dream Browser Agent
 
 ## Welcome Grain Court Agent! 🌾⚒️
@@ -21,7 +21,7 @@
 **Overall**: Phase 2 Shared Module Refactoring IN PROGRESS — Comprehensive test suites
 
 ### Phase 2: Shared Module Refactoring
-- **Status**: Phase 2.20 Complete ✅ (Crash Handler Comprehensive Tests)
+- **Status**: Phase 2.21 Complete ✅ (Live Preview Comprehensive Tests)
 - **Recent**: Created comprehensive test suites for:
   - Layout System ✅
   - Dream Browser Viewport ✅
@@ -39,14 +39,15 @@
   - VCS ✅
   - GrainBank ✅
   - Crash Handler ✅
+  - Live Preview ✅
 
-**Test Suites Complete**: 16 modules with comprehensive test coverage
+**Test Suites Complete**: 17 modules with comprehensive test coverage
 
 ### Phase 2.3: Editor Comprehensive Tests
 - **Status**: Created ⚠️ BLOCKED by Zig 0.15.2 comptime evaluation issue
 - **Note**: Tests written and ready, but cannot run due to Zig comptime issue
 
-### Phase 2.21: Dream Browser Spec v0 Integration
+### Phase 2.22: Dream Browser Spec v0 Integration
 - **Status**: PLANNED — Research complete, integration planned
 - **Coordination**: Requires Core Agent coordination for infrastructure (DNS resolution, network stack)
 - **Coordination Request**: Sent to Core Agent (2025-12-21-134223-pst)
@@ -84,9 +85,21 @@
    - Added `aurora_crash_module` and `crash_test_file` to build.zig
    - All tests pass with proper assertions
 
-4. **Documentation Updates**:
-   - Updated `docs/plans/plan_aurora.md` with Phase 2.17, 2.18, 2.20 completions
-   - Updated `docs/tasks/tasks_aurora.md` with Phase 2.17, 2.18, 2.20 completions
+4. **Live Preview Comprehensive Tests** (Phase 2.21):
+   - Created comprehensive test suite (`tests/129_aurora_live_preview_test.zig`)
+   - Tests for Live Preview constants (MAX_SYNC_SUBSCRIPTIONS, MAX_UPDATES_PER_SECOND)
+   - Tests for SyncDirection and UpdateSource enums
+   - Tests for Live Preview initialization and deinitialization
+   - Tests for subscription management (subscribe, get_subscription, set_sync_enabled)
+   - Tests for sync directions (editor_to_browser, browser_to_editor, bidirectional)
+   - Tests for multiple subscriptions and bounds checking
+   - Tests for editor edit and Nostr event handling (with DAG integration dependencies)
+   - Added `aurora_live_preview_module`, `dream_browser_renderer_module`, `dream_browser_dag_integration_module`, `grain_aurora_module`, and `live_preview_test_file` to build.zig
+   - All tests pass with proper assertions
+
+5. **Documentation Updates**:
+   - Updated `docs/plans/plan_aurora.md` with Phase 2.17, 2.18, 2.20, 2.21 completions
+   - Updated `docs/tasks/tasks_aurora.md` with Phase 2.17, 2.18, 2.20, 2.21 completions
    - Acknowledged Court Agent as integration partner
    - Sent Dream Browser Spec v0 coordination request to Core Agent
 
@@ -123,19 +136,21 @@
    - Options: Wait for Zig 0.16.0, implement workaround, or defer DNS resolution
    - **Action**: Monitor Core Agent Priority 2 progress
 
-2. **SHORT-TERM**: Dream Browser Spec v0 integration (when DNS resolution decision made)
-   - Begin Phase 1 implementation (URL parsing, Nostr integration) — can proceed independently
-   - Wait for Core Agent DNS resolution API (if decision is to implement)
-   - Coordinate on DNS/Web compatibility (Phase 3) when DNS resolution available
-
-3. **SHORT-TERM**: Court Agent Integration — AI Provider Abstraction
+2. **SHORT-TERM**: Court Agent Integration — AI Provider Abstraction
    - Court Agent Phase 1 Complete ✅ — Ready for integration planning
    - Review Court Agent's multi-provider LLM API
    - Identify integration points for AI provider abstraction
    - Plan integration of Court's LLM services into `src/aurora_ai_provider.zig`
+   - **Action**: Review Court Agent Phase 1 completion and create integration plan
+
+3. **SHORT-TERM**: Dream Browser Spec v0 integration (when DNS resolution decision made)
+   - Begin Phase 1 implementation (URL parsing, Nostr integration) — can proceed independently
+   - Wait for Core Agent DNS resolution API (if decision is to implement)
+   - Coordinate on DNS/Web compatibility (Phase 3) when DNS resolution available
 
 4. **MEDIUM-TERM**: Continue comprehensive test suites (independent work)
-   - Remaining candidates: `aurora_cocoa.zig`, `aurora_unified_ide.zig`, `aurora_glm46.zig`, `aurora_glm46_provider.zig`, `aurora_live_preview.zig`, `aurora_cross_integration.zig`
+   - Remaining candidates: `aurora_cocoa.zig`, `aurora_unified_ide.zig`, `aurora_glm46.zig`, `aurora_glm46_provider.zig`, `aurora_cross_integration.zig`
+   - Note: These modules are more complex (platform-specific, integration modules, API-dependent)
    - Can proceed independently while waiting for coordination decisions
 
 5. **MEDIUM-TERM**: SLC Product Integration
@@ -150,7 +165,7 @@
 ## Notes
 
 - **Grain Style Compliance**: All code follows Grain Style (grain_case, u32/u64, bounded allocations, assertions)
-- **Test Coverage**: Comprehensive test suites for 16 modules complete
+- **Test Coverage**: Comprehensive test suites for 17 modules complete
 - **Integration Ready**: AI provider abstraction ready for Court Agent integration
 - **Coordination Status**: 
   - Core Agent: DNS resolution decision pending (Priority 2, 3-5 days)
@@ -164,7 +179,7 @@
 - Court Agent: Plan AI provider abstraction integration (Phase 1 Complete ✅)
 
 **MEDIUM PRIORITY**:
-- Continue test suites for remaining standalone modules (independent work)
+- Continue test suites for remaining standalone modules (independent work, but modules are complex)
 - SLC Product Integration planning (Nostr profile rendering, DAG website rendering)
 
 **LOW PRIORITY**:

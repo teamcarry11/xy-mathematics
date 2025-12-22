@@ -595,6 +595,105 @@ pub const SlcComponentLibrary = struct {
         }
         return false;
     }
+
+    // Get profile component by name.
+    pub fn get_profile_component_by_name(
+        self: *const SlcComponentLibrary,
+        name: []const u8,
+    ) ?*const ProfileComponent {
+        std.debug.assert(@intFromPtr(self) != 0);
+        std.debug.assert(name.len > 0);
+        std.debug.assert(name.len <= MAX_COMPONENT_NAME_LEN);
+        var i: u32 = 0;
+        while (i < self.profile_components_len) : (i += 1) {
+            const comp = &self.profile_components[i];
+            const comp_name = comp.name[0..comp.name_len];
+            if (std.mem.eql(u8, comp_name, name)) {
+                return comp;
+            }
+        }
+        return null;
+    }
+
+    // Get website component by name.
+    pub fn get_website_component_by_name(
+        self: *const SlcComponentLibrary,
+        name: []const u8,
+    ) ?*const WebsiteComponent {
+        std.debug.assert(@intFromPtr(self) != 0);
+        std.debug.assert(name.len > 0);
+        std.debug.assert(name.len <= MAX_COMPONENT_NAME_LEN);
+        var i: u32 = 0;
+        while (i < self.website_components_len) : (i += 1) {
+            const comp = &self.website_components[i];
+            const comp_name = comp.name[0..comp.name_len];
+            if (std.mem.eql(u8, comp_name, name)) {
+                return comp;
+            }
+        }
+        return null;
+    }
+
+    // Get workspace component by name.
+    pub fn get_workspace_component_by_name(
+        self: *const SlcComponentLibrary,
+        name: []const u8,
+    ) ?*const WorkspaceComponent {
+        std.debug.assert(@intFromPtr(self) != 0);
+        std.debug.assert(name.len > 0);
+        std.debug.assert(name.len <= MAX_COMPONENT_NAME_LEN);
+        var i: u32 = 0;
+        while (i < self.workspace_components_len) : (i += 1) {
+            const comp = &self.workspace_components[i];
+            const comp_name = comp.name[0..comp.name_len];
+            if (std.mem.eql(u8, comp_name, name)) {
+                return comp;
+            }
+        }
+        return null;
+    }
+
+    // Validate profile component (check if component exists and has variants).
+    pub fn validate_profile_component(
+        self: *const SlcComponentLibrary,
+        component_id: u32,
+    ) bool {
+        std.debug.assert(@intFromPtr(self) != 0);
+        std.debug.assert(component_id > 0);
+        if (self.get_profile_component(component_id)) |profile_comp| {
+            const base = profile_comp.base_component;
+            return base.variants_len > 0;
+        }
+        return false;
+    }
+
+    // Validate website component (check if component exists and has variants).
+    pub fn validate_website_component(
+        self: *const SlcComponentLibrary,
+        component_id: u32,
+    ) bool {
+        std.debug.assert(@intFromPtr(self) != 0);
+        std.debug.assert(component_id > 0);
+        if (self.get_website_component(component_id)) |website_comp| {
+            const base = website_comp.base_component;
+            return base.variants_len > 0;
+        }
+        return false;
+    }
+
+    // Validate workspace component (check if component exists and has variants).
+    pub fn validate_workspace_component(
+        self: *const SlcComponentLibrary,
+        component_id: u32,
+    ) bool {
+        std.debug.assert(@intFromPtr(self) != 0);
+        std.debug.assert(component_id > 0);
+        if (self.get_workspace_component(component_id)) |workspace_comp| {
+            const base = workspace_comp.base_component;
+            return base.variants_len > 0;
+        }
+        return false;
+    }
 };
 
 // Design pattern: reusable design pattern for SLC components.

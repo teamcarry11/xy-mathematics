@@ -1,9 +1,9 @@
 # Grain Workspace Agent: Development Plan
 
 **Agent**: Grain Workspace Agent (5th Agent)  
-**Status**: Phase 27 Full File Path Collection Complete ✅  
-**Last Updated**: 2025-12-21-152026-pst  
-**Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-21-141612-pst.md`
+**Status**: Phase 28 Find and Replace Complete ✅  
+**Last Updated**: 2025-12-21-190134-pst  
+**Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-21-183510-pst.md`
 
 ---
 
@@ -1139,6 +1139,36 @@ All planned phases for Grain Workspace Agent have been completed:
 - `grain_case` function names
 - `u32`/`u64` types (no `usize`)
 - Bounded allocations (MAX_FILES_TO_LINT limit enforced)
+- Assertions for preconditions
+- Max 70 lines per function
+- All compiler warnings enabled
+
+### Phase 28: Text Editor Find and Replace ✅ **COMPLETE**
+
+**Date**: 2025-12-21-190134-pst
+
+**Completed Work**:
+1. **Find and Replace Functionality** (`src/grain_workspace/text_editor/app.zig`):
+   - Added `set_replace_query()` function to set replacement text
+   - Added `get_replace_query()` function to get replacement text
+   - Added `replace_at_result()` function to replace at specific search result
+   - Added `replace_all()` function to replace all occurrences
+   - Added `MAX_REPLACE_QUERY_LEN` constant (256 bytes)
+   - Added `replace_query` field to `TextEditor` struct
+   - Comprehensive tests (`tests/115_grain_workspace_text_editor_test.zig`)
+
+**Features**:
+- Set/get replace query
+- Replace text at specific search result
+- Replace all occurrences of search query
+- Reverse-order replacement to preserve indices
+- Integration with existing search functionality
+- Undo/redo support (via existing undo system)
+
+**Grain Style Compliance**:
+- `grain_case` function names
+- `u32`/`u64` types (no `usize`)
+- Bounded allocations (all limits explicit)
 - Assertions for preconditions
 - Max 70 lines per function
 - All compiler warnings enabled

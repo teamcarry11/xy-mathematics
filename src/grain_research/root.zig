@@ -39,6 +39,8 @@ pub const insights_generator = @import("insights_generator.zig");
 pub const retrieval_accuracy = @import("retrieval_accuracy.zig");
 // Retrieval serialization for JSON and ZON formats.
 pub const retrieval_serialization = @import("retrieval_serialization.zig");
+// Cost savings calculator for ZON format validation.
+pub const cost_savings = @import("cost_savings.zig");
 
 // Module exports.
 pub const ResearchEngine = research_engine.ResearchEngine;
@@ -80,3 +82,7 @@ pub const RetrievalResult = retrieval_accuracy.RetrievalResult;
 pub const Serializer = retrieval_serialization.Serializer;
 pub const SerializationResult = retrieval_serialization.SerializationResult;
 pub const SerializationFormat = retrieval_serialization.SerializationResult.SerializationFormat;
+pub const CostSavingsCalculator = cost_savings.CostSavingsCalculator;
+pub const UseCase = cost_savings.UseCase;
+pub const Pricing = cost_savings.Pricing;
+pub const CostResult = cost_savings.CostResult;

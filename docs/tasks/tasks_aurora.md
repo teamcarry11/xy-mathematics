@@ -2,7 +2,7 @@
 
 **Agent**: Grain Aurora IDE Dream Browser Agent (2nd Agent)  
 **Status**: Active — Foundation components, shared modules  
-**Last Updated**: 2025-12-21-145649-pst
+**Last Updated**: 2025-12-21-180551-pst
 
 ---
 
@@ -259,6 +259,40 @@
 - [x] All tests pass with proper assertions
 - [x] Update `docs/plans/plan_aurora.md` and `docs/tasks/tasks_aurora.md`
 - **Date**: 2025-12-21-145649-PST
+
+#### Phase 2.18: GrainBank Comprehensive Tests ✅ **COMPLETE**
+
+- [x] Create comprehensive test suite (`tests/127_aurora_grainbank_test.zig`)
+- [x] Tests for GrainBank constants (MAX_ACTIVE_CONTRACTS, MAX_PENDING_PAYMENTS, MAX_CURRENCIES_PER_USER)
+- [x] Tests for ContractState and PaymentState enums
+- [x] Tests for Policy and Transfer structures
+- [x] Tests for AuroraGrainBank initialization and deinitialization
+- [x] Tests for contract creation and retrieval
+- [x] Tests for action execution (mint, burn, transfer, collect_tax)
+- [x] Tests for payment creation and processing
+- [x] Tests for bounds checking and state coverage
+- [x] Add `aurora_grainbank_module`, `dag_core_module`, and `grainbank_test_file` to build.zig
+- [x] GrainStyle compliance (grain_case, u32 types, max 73 chars per line)
+- [x] All tests pass with proper assertions
+- [x] Update `docs/plans/plan_aurora.md` and `docs/tasks/tasks_aurora.md`
+- **Date**: 2025-12-21-170706-PST
+
+#### Phase 2.20: Crash Handler Comprehensive Tests ✅ **COMPLETE**
+
+- [x] Create comprehensive test suite (`tests/128_aurora_crash_test.zig`)
+- [x] Tests for crash handler initialization and deinitialization
+- [x] Tests for crash log formatting (with and without stack trace)
+- [x] Tests for timestamp and platform information
+- [x] Tests for system context and Cocoa context (macOS)
+- [x] Tests for stack trace formatting (single and multiple frames)
+- [x] Tests for log structure and section ordering
+- [x] Tests for special characters and unicode handling
+- [x] Tests for log buffer reuse and bounds checking
+- [x] Add `aurora_crash_module` and `crash_test_file` to build.zig
+- [x] GrainStyle compliance (grain_case, u32 types, max 73 chars per line)
+- [x] All tests pass with proper assertions
+- [x] Update `docs/plans/plan_aurora.md` and `docs/tasks/tasks_aurora.md`
+- **Date**: 2025-12-21-180551-PST
 
 ### Grain Style Requirements
 

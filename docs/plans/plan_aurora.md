@@ -2,7 +2,7 @@
 
 **Agent**: Grain Aurora IDE Dream Browser Agent (2nd Agent)  
 **Status**: Active — Foundation components, shared modules, Dream Browser Spec v0 integration  
-**Last Updated**: 2025-12-21-145649-pst
+**Last Updated**: 2025-12-21-180551-pst
 
 ---
 
@@ -370,7 +370,39 @@ Grain Aurora IDE Dream Browser Agent is responsible for building the unified IDE
 - **Files**: `tests/126_aurora_vcs_test.zig`, `build.zig`
 - **Date**: 2025-12-21-145649-PST
 
-#### 2.18: Dream Browser Spec v0 Integration 📋 **PLANNED**
+#### 2.18: GrainBank Comprehensive Tests ✅ **COMPLETE**
+- ✅ Created comprehensive test suite (`tests/127_aurora_grainbank_test.zig`)
+- ✅ Tests for GrainBank constants (MAX_ACTIVE_CONTRACTS, MAX_PENDING_PAYMENTS, MAX_CURRENCIES_PER_USER)
+- ✅ Tests for ContractState and PaymentState enums
+- ✅ Tests for Policy and Transfer structures
+- ✅ Tests for AuroraGrainBank initialization and deinitialization
+- ✅ Tests for contract creation and retrieval
+- ✅ Tests for action execution (mint, burn, transfer, collect_tax)
+- ✅ Tests for payment creation and processing
+- ✅ Tests for bounds checking and state coverage
+- ✅ Added `aurora_grainbank_module`, `dag_core_module`, and `grainbank_test_file` to build.zig
+- ✅ GrainStyle compliance (grain_case, u32 types, max 73 chars per line)
+- ✅ All tests pass with proper assertions
+- **Files**: `tests/127_aurora_grainbank_test.zig`, `build.zig`
+- **Date**: 2025-12-21-170706-PST
+
+#### 2.20: Crash Handler Comprehensive Tests ✅ **COMPLETE**
+- ✅ Created comprehensive test suite (`tests/128_aurora_crash_test.zig`)
+- ✅ Tests for crash handler initialization and deinitialization
+- ✅ Tests for crash log formatting (with and without stack trace)
+- ✅ Tests for timestamp and platform information
+- ✅ Tests for system context and Cocoa context (macOS)
+- ✅ Tests for stack trace formatting (single and multiple frames)
+- ✅ Tests for log structure and section ordering
+- ✅ Tests for special characters and unicode handling
+- ✅ Tests for log buffer reuse and bounds checking
+- ✅ Added `aurora_crash_module` and `crash_test_file` to build.zig
+- ✅ GrainStyle compliance (grain_case, u32 types, max 73 chars per line)
+- ✅ All tests pass with proper assertions
+- **Files**: `tests/128_aurora_crash_test.zig`, `build.zig`
+- **Date**: 2025-12-21-180551-PST
+
+#### 2.21: Dream Browser Spec v0 Integration 📋 **PLANNED**
 - 📋 Dream Browser Spec v0 research complete — ready for integration
 - 📋 Research deliverable: `docs/research/dream_browser_spec_v0_research_2025-12-10-083733-pst.md`
 - 📋 Integration with Aurora Agent development plan

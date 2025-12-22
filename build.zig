@@ -655,6 +655,27 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    // DAG Core module (for test imports)
+    const dag_core_module = b.addModule("dag_core", .{
+        .root_source_file = b.path("src/dag_core.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
+    // Aurora GrainBank module (for test imports)
+    const aurora_grainbank_module = b.addModule("aurora_grainbank", .{
+        .root_source_file = b.path("src/aurora_grainbank.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
+    // Aurora Crash Handler module (for test imports)
+    const aurora_crash_module = b.addModule("aurora_crash", .{
+        .root_source_file = b.path("src/aurora_crash.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
     // Aurora Editor module (for test imports)
     const aurora_editor_module = b.addModule("aurora_editor", .{
         .root_source_file = b.path("src/aurora_editor.zig"),
@@ -779,6 +800,29 @@ pub fn build(b: *std.Build) void {
             .optimize = optimize,
             .imports = &.{
                 .{ .name = "aurora_vcs", .module = aurora_vcs_module },
+            },
+        }),
+    });
+
+    const grainbank_test_file = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/127_aurora_grainbank_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "aurora_grainbank", .module = aurora_grainbank_module },
+                .{ .name = "dag_core", .module = dag_core_module },
+            },
+        }),
+    });
+
+    const crash_test_file = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/128_aurora_crash_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "aurora_crash", .module = aurora_crash_module },
             },
         }),
     });
@@ -1185,6 +1229,10 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&run_filter_test_file.step);
     const run_vcs_test_file = b.addRunArtifact(vcs_test_file);
     test_step.dependOn(&run_vcs_test_file.step);
+    const run_grainbank_test_file = b.addRunArtifact(grainbank_test_file);
+    test_step.dependOn(&run_grainbank_test_file.step);
+    const run_crash_test_file = b.addRunArtifact(crash_test_file);
+    test_step.dependOn(&run_crash_test_file.step);
     const run_route_tests = b.addRunArtifact(route_tests);
     test_step.dependOn(&run_route_tests.step);
     const run_orchestrator_tests = b.addRunArtifact(orchestrator_tests);
@@ -4676,6 +4724,20 @@ pub fn build(b: *std.Build) void {
     });
     const grain_research_zon_retrieval_serialization_tests_run = b.addRunArtifact(grain_research_zon_retrieval_serialization_tests);
     test_step.dependOn(&grain_research_zon_retrieval_serialization_tests_run.step);
+
+    // ZON Format Cost Savings Tests (Phase 3).
+    const grain_research_zon_cost_savings_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/153_grain_research_zon_cost_savings_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_research", .module = grain_research_module },
+            },
+        }),
+    });
+    const grain_research_zon_cost_savings_tests_run = b.addRunArtifact(grain_research_zon_cost_savings_tests);
+    test_step.dependOn(&grain_research_zon_cost_savings_tests_run.step);
 
     // Grain Bubble component tests
     const grain_bubble_component_tests = b.addTest(.{

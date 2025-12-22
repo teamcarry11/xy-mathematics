@@ -413,6 +413,14 @@ Grain Skate Terminal Silo Field Agent is responsible for building Grain Skate (k
   - Added temporal filtering to `render_labels()` (consistent filtering)
   - Tests created for temporal node and edge filtering
 
+**Completed (2025-12-21-200000-pst)**:
+- Block version history utilities ✅
+  - `get_blocks_created_at_timestamp()` - Get blocks created at or before timestamp
+  - `get_blocks_modified_in_range()` - Get blocks modified in date range
+  - `get_earliest_block_timestamp()` - Get earliest block creation timestamp
+  - `get_latest_block_timestamp()` - Get latest block modification timestamp
+  - Comprehensive tests added
+
 **Remaining Work**:
 - Time slider UI component (UI layer integration - pending Bubble Agent coordination)
 - Block version history visualization (foundation ready with temporal filtering)
@@ -482,6 +490,15 @@ Grain Skate Terminal Silo Field Agent is responsible for building Grain Skate (k
 **Dependencies**:
 - **Needs**: DAG Core (exists) ✅
 - **Coordinates with**: Aurora Agent (Dream Browser integration), Silo Agent (storage)
+
+**Completed (2025-12-21-200000-pst)**:
+- Enhanced query operations ✅
+  - `get_all_profiles()` - Get all profile node IDs
+  - `get_all_pages()` - Get all page node IDs
+  - `find_page_by_url_path()` - Find page by URL path
+  - `get_orphaned_pages()` - Get pages with no links
+  - `get_isolated_profiles()` - Get profiles with no relationships
+  - Comprehensive tests added
 
 **Remaining Work**:
 - Integration with Nostr protocol (Aurora Agent coordination)

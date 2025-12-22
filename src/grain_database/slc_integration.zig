@@ -253,6 +253,8 @@ pub const NostrProfileStorage = struct {
         }
         const keys = try self.storage_engine.allocator.alloc([]const u8, npubs.len);
         defer self.storage_engine.allocator.free(keys);
+        const valid_data = try self.storage_engine.allocator.alloc([]const u8, npubs.len);
+        defer self.storage_engine.allocator.free(valid_data);
         var valid_count: u32 = 0;
         var i: u32 = 0;
         while (i < npubs.len) : (i += 1) {
@@ -266,6 +268,7 @@ pub const NostrProfileStorage = struct {
                 .{npubs[i]},
             );
             keys[valid_count] = key;
+            valid_data[valid_count] = profile_data[i];
             valid_count += 1;
         }
         defer {
@@ -276,7 +279,7 @@ pub const NostrProfileStorage = struct {
         }
         const count = try self.storage_engine.batch_create_records(
             keys[0..valid_count],
-            profile_data[0..valid_count],
+            valid_data[0..valid_count],
             output_record_ids,
         );
         std.debug.assert(count <= valid_count);
@@ -491,11 +494,12 @@ pub const DagWebsiteStorage = struct {
     ) !u32 {
         std.debug.assert(node_ids.len == contents.len);
         std.debug.assert(node_ids.len <= output_record_ids.len);
-        var keys: [100][]const u8 = undefined;
-        var keys_len: u32 = 0;
-        if (node_ids.len > keys.len) {
+        const MAX_BATCH_SIZE: u32 = 100;
+        if (node_ids.len > MAX_BATCH_SIZE) {
             return error.TooManyNodes;
         }
+        const keys = try self.storage_engine.allocator.alloc([]const u8, node_ids.len);
+        defer self.storage_engine.allocator.free(keys);
         var i: u32 = 0;
         while (i < node_ids.len) : (i += 1) {
             std.debug.assert(node_ids[i].len <= MAX_WEBSITE_KEY_LEN);
@@ -504,21 +508,20 @@ pub const DagWebsiteStorage = struct {
                 "dag:website:{s}",
                 .{node_ids[i]},
             );
-            keys[keys_len] = key;
-            keys_len += 1;
+            keys[i] = key;
         }
         defer {
             var j: u32 = 0;
-            while (j < keys_len) : (j += 1) {
+            while (j < node_ids.len) : (j += 1) {
                 self.storage_engine.allocator.free(keys[j]);
             }
         }
         const count = try self.storage_engine.batch_create_records(
-            keys[0..keys_len],
-            contents[0..keys_len],
+            keys,
+            contents,
             output_record_ids,
         );
-        std.debug.assert(count <= keys_len);
+        std.debug.assert(count <= node_ids.len);
         return count;
     }
 };
@@ -707,11 +710,15 @@ pub const WorkspaceFileStorage = struct {
     ) !u32 {
         std.debug.assert(file_paths.len == metadata.len);
         std.debug.assert(file_paths.len <= output_record_ids.len);
-        var keys: [100][]const u8 = undefined;
-        var keys_len: u32 = 0;
-        if (file_paths.len > keys.len) {
+        const MAX_BATCH_SIZE: u32 = 100;
+        if (file_paths.len > MAX_BATCH_SIZE) {
             return error.TooManyFiles;
         }
+        const keys = try self.storage_engine.allocator.alloc([]const u8, file_paths.len);
+        defer self.storage_engine.allocator.free(keys);
+        const valid_data = try self.storage_engine.allocator.alloc([]const u8, file_paths.len);
+        defer self.storage_engine.allocator.free(valid_data);
+        var valid_count: u32 = 0;
         var i: u32 = 0;
         while (i < file_paths.len) : (i += 1) {
             std.debug.assert(file_paths[i].len <= MAX_FILE_KEY_LEN);
@@ -723,21 +730,22 @@ pub const WorkspaceFileStorage = struct {
                 "workspace:file:{s}",
                 .{file_paths[i]},
             );
-            keys[keys_len] = key;
-            keys_len += 1;
+            keys[valid_count] = key;
+            valid_data[valid_count] = metadata[i];
+            valid_count += 1;
         }
         defer {
             var j: u32 = 0;
-            while (j < keys_len) : (j += 1) {
+            while (j < valid_count) : (j += 1) {
                 self.storage_engine.allocator.free(keys[j]);
             }
         }
         const count = try self.storage_engine.batch_create_records(
-            keys[0..keys_len],
-            metadata[0..keys_len],
+            keys[0..valid_count],
+            valid_data[0..valid_count],
             output_record_ids,
         );
-        std.debug.assert(count <= keys_len);
+        std.debug.assert(count <= valid_count);
         return count;
     }
 };

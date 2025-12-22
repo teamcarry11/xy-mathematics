@@ -5023,6 +5023,20 @@ pub fn build(b: *std.Build) void {
     const vantage_adaptation_jit_integration_tests_run = b.addRunArtifact(vantage_adaptation_jit_integration_tests);
     test_step.dependOn(&vantage_adaptation_jit_integration_tests_run.step);
 
+    // Vantage adaptation VM statistics tests (Priority 1)
+    const vantage_adaptation_vm_statistics_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/105_vantage_adaptation_vm_statistics_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+            },
+        }),
+    });
+    const vantage_adaptation_vm_statistics_tests_run = b.addRunArtifact(vantage_adaptation_vm_statistics_tests);
+    test_step.dependOn(&vantage_adaptation_vm_statistics_tests_run.step);
+
     // Graincard format validation test
     const graincard_format_validation_tests = b.addTest(.{
         .root_module = b.createModule(.{

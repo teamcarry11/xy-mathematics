@@ -436,3 +436,35 @@ test "slc component library apply pattern to workspace" {
     std.debug.assert(workspace_comp != null);
     std.debug.assert(workspace_comp.?.base_component.design_tokens_len == 12);
 }
+
+test "slc animation utils get easing name" {
+    std.debug.assert(std.mem.eql(u8, slc_ui_components.AnimationUtils.get_easing_name(.linear), "linear"));
+    std.debug.assert(std.mem.eql(u8, slc_ui_components.AnimationUtils.get_easing_name(.ease_in), "ease-in"));
+    std.debug.assert(std.mem.eql(u8, slc_ui_components.AnimationUtils.get_easing_name(.ease_out), "ease-out"));
+    std.debug.assert(std.mem.eql(u8, slc_ui_components.AnimationUtils.get_easing_name(.ease_in_out), "ease-in-out"));
+}
+
+test "slc animation utils generate css animation" {
+    var anim = slc_ui_components.Animation.init(1, .fade_in, 300, .ease_in_out);
+    anim.set_delay(100);
+    var css_buf: [256]u8 = undefined;
+    const css = slc_ui_components.AnimationUtils.generate_css_animation(&anim, &css_buf);
+    std.debug.assert(css.len > 0);
+    std.debug.assert(std.mem.indexOf(u8, css, "fadeIn") != null);
+}
+
+test "slc animation utils generate css keyframes" {
+    var keyframes_buf: [256]u8 = undefined;
+    const keyframes = slc_ui_components.AnimationUtils.generate_css_keyframes(.fade_in, &keyframes_buf);
+    std.debug.assert(keyframes.len > 0);
+    std.debug.assert(std.mem.indexOf(u8, keyframes, "@keyframes fadeIn") != null);
+}
+
+test "slc animation utils get duration and delay" {
+    var anim = slc_ui_components.Animation.init(1, .slide_in, 500, .ease_out);
+    anim.set_delay(200);
+    const duration = slc_ui_components.AnimationUtils.get_duration_seconds(&anim);
+    const delay = slc_ui_components.AnimationUtils.get_delay_seconds(&anim);
+    std.debug.assert(duration == 0.5);
+    std.debug.assert(delay == 0.2);
+}

@@ -164,6 +164,12 @@
   - [x] Added temporal filtering to render_ai_suggested_edges() ✅
   - [x] Added temporal filtering to render_labels() ✅
   - [x] Tests created for temporal node and edge filtering ✅
+- [x] Block version history utilities ✅ (2025-12-21-200000-pst)
+  - [x] `get_blocks_created_at_timestamp()` - Get blocks created at or before timestamp ✅
+  - [x] `get_blocks_modified_in_range()` - Get blocks modified in date range ✅
+  - [x] `get_earliest_block_timestamp()` - Get earliest block creation timestamp ✅
+  - [x] `get_latest_block_timestamp()` - Get latest block modification timestamp ✅
+  - [x] Comprehensive tests added ✅
 - [ ] Add time slider component (UI layer - pending Bubble Agent coordination)
 - [ ] Add animated transitions showing graph growth (UI layer - pending Bubble Agent coordination)
 - [ ] Test thoroughly with UI integration (time-travel, version history, branching)
@@ -217,7 +223,13 @@
 - [x] Add `SlcDagIntegration` to `src/grain_skate/root.zig` exports ✅
 - [ ] Integration with Nostr protocol (Aurora Agent coordination)
 - [ ] Integration with website publishing (Core Agent coordination)
-- [ ] Enhanced query operations (if needed)
+- [x] Enhanced query operations ✅ (2025-12-21-200000-pst)
+  - [x] `get_all_profiles()` - Get all profile node IDs ✅
+  - [x] `get_all_pages()` - Get all page node IDs ✅
+  - [x] `find_page_by_url_path()` - Find page by URL path ✅
+  - [x] `get_orphaned_pages()` - Get pages with no links ✅
+  - [x] `get_isolated_profiles()` - Get profiles with no relationships ✅
+  - [x] Comprehensive tests added ✅
 - [ ] Update `docs/plans/plan_skate.md` and `docs/tasks/tasks_skate.md` with completion
 
 ### Grain Style Requirements

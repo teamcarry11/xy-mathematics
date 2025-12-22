@@ -179,3 +179,63 @@ pub fn build_auth_response(
     
     return json_len;
 }
+
+// Build user profile response JSON.
+pub fn build_user_profile_response(
+    user_id: []const u8,
+    email: []const u8,
+    username: []const u8,
+    created_at: u64,
+    json_out: []u8,
+) u32 {
+    std.debug.assert(user_id.len > 0);
+    std.debug.assert(email.len > 0);
+    std.debug.assert(json_out.len >= MAX_JSON_RESPONSE_LEN);
+    
+    var json_len: u32 = 0;
+    json_out[json_len] = '{';
+    json_len += 1;
+    
+    write_json_key(json_out, &json_len, "status");
+    write_json_string_value(json_out, &json_len, "success");
+    
+    json_out[json_len] = ',';
+    json_len += 1;
+    write_json_key(json_out, &json_len, "data");
+    json_out[json_len] = '{';
+    json_len += 1;
+    
+    write_json_key(json_out, &json_len, "user_id");
+    write_json_string_value(json_out, &json_len, user_id);
+    
+    json_out[json_len] = ',';
+    json_len += 1;
+    write_json_key(json_out, &json_len, "email");
+    write_json_string_value(json_out, &json_len, email);
+    
+    if (username.len > 0) {
+        json_out[json_len] = ',';
+        json_len += 1;
+        write_json_key(json_out, &json_len, "username");
+        write_json_string_value(json_out, &json_len, username);
+    }
+    
+    json_out[json_len] = ',';
+    json_len += 1;
+    write_json_key(json_out, &json_len, "created_at");
+    var created_at_buf: [32]u8 = undefined;
+    const created_at_str = std.fmt.bufPrint(&created_at_buf, "{}", .{created_at}) catch return 0;
+    std.mem.copyForwards(u8, json_out[json_len..], created_at_str);
+    json_len += @intCast(created_at_str.len);
+    
+    json_out[json_len] = '}';
+    json_len += 1;
+    
+    json_out[json_len] = '}';
+    json_len += 1;
+    
+    std.debug.assert(json_len <= MAX_JSON_RESPONSE_LEN);
+    std.debug.assert(json_len <= json_out.len);
+    
+    return json_len;
+}

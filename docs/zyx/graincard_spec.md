@@ -205,7 +205,7 @@ zig build graincard -- --range <start>-<end> --output-dir <path> [--png]
 
 - `src/graincard/types.zig` - Core data structures
 - `src/graincard/ecology.zig` - Ecological parameter generation
-- `src/graincard/layout.zig` - 75×100 layout engine with padding/centering
+- `src/graincard/layout.zig` - 103×80 layout engine with padding/centering
 - `src/graincard/cli.zig` - Command-line interface
 - `src/graincard/png_generator.zig` - ASCII-to-PNG conversion
 - `src/graincard/font8x8.zig` - Bitmap font data

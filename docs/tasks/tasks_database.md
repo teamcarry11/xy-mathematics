@@ -451,6 +451,8 @@
 - [x] Add pagination support (`list_profiles_paginated`, `list_nodes_paginated`, `list_file_metadata_paginated`)
 - [x] Add search functionality (`search_profiles`, `search_nodes`, `search_file_metadata`)
 - [x] Comprehensive tests for pagination and search methods
+- [x] Add batch operations (`batch_store_profiles`, `batch_store_nodes`, `batch_store_file_metadata`)
+- [x] Comprehensive tests for batch operations
 - [x] Update documentation
 
 **Deliverables**:

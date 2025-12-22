@@ -425,3 +425,49 @@ test "workspace_file_storage_search" {
     const count = file_storage.search_file_metadata("text", &output);
     std.debug.assert(count >= 2);
 }
+
+test "nostr_profile_storage_batch_store" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deallocate();
+    const allocator = gpa.allocator();
+    var storage = try StorageEngine.init(allocator, 1024);
+    defer storage.deinit();
+    var g = try Graph.init(allocator);
+    defer g.deinit();
+    var profile_storage = NostrProfileStorage.init(&storage, &g);
+    const npubs = [_][]const u8{ "npub1batch1", "npub1batch2", "npub1batch3" };
+    const profile_data = [_][]const u8{ "{\"name\":\"User1\"}", "{\"name\":\"User2\"}", "{\"name\":\"User3\"}" };
+    var output: [10]u64 = undefined;
+    const count = try profile_storage.batch_store_profiles(&npubs, &profile_data, &output);
+    std.debug.assert(count >= 3);
+}
+
+test "dag_website_storage_batch_store" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deallocate();
+    const allocator = gpa.allocator();
+    var storage = try StorageEngine.init(allocator, 1024);
+    defer storage.deinit();
+    var g = try Graph.init(allocator);
+    defer g.deinit();
+    var website_storage = DagWebsiteStorage.init(&storage, &g);
+    const node_ids = [_][]const u8{ "batch1", "batch2", "batch3" };
+    const contents = [_][]const u8{ "<h1>Page1</h1>", "<h1>Page2</h1>", "<h1>Page3</h1>" };
+    var output: [10]u64 = undefined;
+    const count = try website_storage.batch_store_nodes(&node_ids, &contents, &output);
+    std.debug.assert(count >= 3);
+}
+
+test "workspace_file_storage_batch_store" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deallocate();
+    const allocator = gpa.allocator();
+    var storage = try StorageEngine.init(allocator, 1024);
+    defer storage.deinit();
+    var file_storage = WorkspaceFileStorage.init(&storage);
+    const file_paths = [_][]const u8{ "/home/user/batch1.txt", "/home/user/batch2.txt", "/home/user/batch3.txt" };
+    const metadata = [_][]const u8{ "{\"size\":1024}", "{\"size\":2048}", "{\"size\":3072}" };
+    var output: [10]u64 = undefined;
+    const count = try file_storage.batch_store_file_metadata(&file_paths, &metadata, &output);
+    std.debug.assert(count >= 3);
+}

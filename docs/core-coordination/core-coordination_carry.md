@@ -7,7 +7,7 @@
 
 ## Current Status
 
-**Phase**: Database Integration Enhanced — API Contracts Received, Integration Details Pending
+**Phase**: Database Integration Enhanced — Ready for Async Response Handling Integration
 
 **Recent Completions**:
 - ✅ Database integration foundation (2025-12-20-181029-pst)
@@ -29,8 +29,10 @@
 **Current Work**:
 - Database integration module complete with JSON request/response handling
 - All handler adapters integrated with database operations
-- Code structure improved for async HTTP response handling integration
-- Reviewing Silo Agent API contracts and coordinating integration approach
+- Code structure improved and ready for async HTTP response handling integration
+- Error handling aligned with Silo Agent's error format
+- Validation and helper functions complete
+- **Status**: Waiting for Core Agent async response handling pattern documentation (Priority 2, HIGH)
 
 ---
 
@@ -42,10 +44,12 @@
 - ✅ HTTP client integration complete
 - ✅ External request creation working
 - ✅ Request body and header setting working
-- ⏳ **NEEDS COORDINATION**: Async HTTP response handling pattern
-  - Need pattern for checking request completion
-  - Need pattern for accessing response when ready
-  - Need to integrate response parsing into `get_user_by_id()` and `get_user_by_email()`
+- ✅ Helper functions ready (`check_request_response`, `process_user_response`)
+- ⏳ **WAITING**: Async HTTP response handling pattern documentation (Priority 2, HIGH)
+  - Core Agent decision: Option B (Provide Pattern Documentation)
+  - Estimated: 3-5 days
+  - Status: This week
+  - Once available: Integrate pattern into `get_user_by_id()` and `get_user_by_email()`
 
 **API Server Integration**:
 - ✅ All mobile endpoints registered with API Server
@@ -73,12 +77,9 @@
 - ✅ Reviewed relational query endpoints (`/api/v1/query`)
 - ✅ Reviewed graph operation endpoints (`/api/v1/graph/*`)
 - ✅ Reviewed full-text search endpoints (`/api/v1/search`)
+- ✅ Error handling format documented and implemented
+- ✅ Authentication requirements documented
 - ⏳ **COORDINATION IN PROGRESS**: Integration approach confirmation
-
-**Current Implementation vs API Contracts**:
-- **Our Current Assumptions**: `/api/v1/users` endpoints (POST, GET, PUT)
-- **Silo Agent API**: `/api/v1/records` (key-value) or `/api/v1/query` (relational)
-- **Decision Needed**: Which approach to use for user storage?
 
 **Integration Approach Options**:
 
@@ -98,46 +99,12 @@
 **Our Recommendation**: **Option 1 (Key-Value Storage)** for simplicity, but we can adapt to either.
 
 **Questions for Silo Agent** (awaiting confirmation):
-
-1. **Endpoint Paths**: 
-   - Confirm we should use `/api/v1/records` for user storage (key-value)?
-   - How do we query by email? Use full-text search (`/api/v1/search`) or maintain a separate index?
-
-2. **User ID Format**:
-   - Our implementation uses hex-encoded SHA-256 hash (64 characters) for `user_id`
-   - Your document shows numeric IDs (u64). Should we:
-     - Use our hex string format as the key suffix: `user:{hex_string}`?
-     - Or convert to numeric ID and use that as the record ID?
-
-3. **Request Format**:
-   - For POST `/api/v1/records`, should the request body be:
-     ```json
-     {
-       "key": "user:abc123...",
-       "value": "{\"user_id\":\"abc123...\",\"email\":\"user@example.com\",...}"
-     }
-     ```
-   - Or can we use a simpler format?
-
-4. **Response Format**:
-   - For GET `/api/v1/records/{id}`, the response includes `id`, `key`, and `value`
-   - Our `parse_user_from_json()` expects direct user JSON. Should we:
-     - Parse the `value` field from the response?
-     - Or adjust our parser to handle the wrapper format?
-
-5. **Authentication**:
-   - JWT tokens required for write operations (POST, PUT, DELETE)
-   - Should we get the JWT token from Core Agent's Authentication Service?
-   - Include it in `Authorization: Bearer {token}` header?
-
-6. **Error Handling**:
-   - Error format: `{"error": {"code": 404, "message": "...", "details": "..."}}`
-   - Should we parse the error JSON for details, or just use HTTP status codes?
-
-**User Data Schema Alignment**:
-- ✅ Our `UserData` structure: `{user_id, email, username, password_hash, created_at}`
-- ✅ Silo Agent recommended format matches our structure
-- ⏳ Need to confirm field name alignment (e.g., `user_id` vs `id`)
+1. **Endpoint Paths**: Confirm we should use `/api/v1/records` for user storage (key-value)?
+2. **User ID Format**: Use hex string format as key suffix: `user:{hex_string}`?
+3. **Request Format**: Confirm request body format for POST `/api/v1/records`?
+4. **Response Format**: For GET `/api/v1/records/{id}`, parse the `value` field from response?
+5. **Authentication**: Get JWT token from Core Agent's Authentication Service, include in `Authorization: Bearer {token}` header?
+6. **Error Handling**: Parse error JSON for details, or just use HTTP status codes?
 
 **Next Steps for Silo Agent Coordination**:
 1. Confirm integration approach (key-value vs relational)
@@ -151,12 +118,13 @@
 ## Dependencies
 
 **Blocked On**:
-1. **Core Agent**: Async HTTP response handling pattern
-   - How to check if request is completed
-   - How to access response data
-   - Best practice for integrating into database operations
+1. **Core Agent**: Async HTTP response handling pattern documentation (Priority 2, HIGH)
+   - Decision: Option B (Provide Pattern Documentation)
+   - Estimated: 3-5 days
+   - Status: This week
+   - Impact: Unblocks database integration completion
 
-2. **Silo Agent**: Database API integration details
+2. **Silo Agent**: Database API integration details confirmation
    - Endpoint path confirmation (key-value vs relational)
    - User ID format confirmation
    - Request/response format confirmation
@@ -173,12 +141,13 @@
 ## Upcoming Work
 
 **Next Steps** (pending coordination):
-1. **Silo Agent**: Confirm integration approach and format details
-2. **Core Agent**: Get async HTTP response handling pattern
-3. **Carry Agent**: Update endpoint paths and request/response formats based on confirmation
-4. **Carry Agent**: Integrate authentication headers for write operations
-5. **Carry Agent**: Update response parsing to handle confirmed format
-6. **Carry Agent**: Test end-to-end flow with actual database connection
+1. **IMMEDIATE**: Wait for Core Agent async HTTP response handling pattern documentation (Priority 2, HIGH)
+2. **IMMEDIATE**: Wait for Silo Agent integration approach confirmation
+3. **SHORT-TERM**: Integrate async response handling pattern into database operations
+4. **SHORT-TERM**: Update endpoint paths and request/response formats based on Silo Agent confirmation
+5. **SHORT-TERM**: Integrate authentication headers for write operations
+6. **SHORT-TERM**: Update response parsing to handle confirmed format
+7. **MEDIUM-TERM**: Test end-to-end flow with actual database connection
 
 **Future Work**:
 - Android App Development (Phase 5)
@@ -191,19 +160,22 @@
 ## Coordination Needs
 
 **Immediate Coordination Required**:
-1. **Core Agent**: Async HTTP response handling
-   - Pattern for checking request state
-   - Pattern for accessing response
-   - Integration guidance for database operations
+1. **Core Agent**: Async HTTP response handling pattern documentation
+   - Priority 2 (HIGH)
+   - Estimated: 3-5 days
+   - Decision: Option B (Provide Pattern Documentation)
+   - Status: This week
+   - Once available: Integrate into `get_user_by_id()` and `get_user_by_email()`
 
-2. **Silo Agent**: Database API integration details
+2. **Silo Agent**: Database API integration details confirmation
    - Endpoint path confirmation
    - User ID format confirmation
    - Request/response format confirmation
    - Authentication integration confirmation
 
 **Ready For**:
-- Database API integration details confirmation
+- Async response handling pattern documentation (Core Agent Priority 2)
+- Database API integration details confirmation (Silo Agent)
 - End-to-end testing once async response handling is available
 - Production integration once all coordination complete
 
@@ -215,6 +187,7 @@
 - Uses HTTP client integration for Silo Agent REST API calls
 - JSON request bodies built for POST/PUT operations
 - JSON response parsing ready (`parse_user_from_json`)
+- Error response parsing ready (`parse_error_response`)
 - Handler adapters fully integrated
 - All operations follow Grain Style guidelines
 
@@ -226,7 +199,11 @@
   - `get_user_by_email()`: Gets user by email (currently assumes `/api/v1/users?email={email}` GET)
   - `update_user()`: Updates user (currently assumes `/api/v1/users/{id}` PUT)
   - `parse_user_from_json()`: Parses user data from JSON response
+  - `parse_error_response()`: Parses error JSON from Silo Agent format
   - `process_user_response()`: Processes completed HTTP response and parses user data
+  - `validate_user_data()`: Validates user data before database operations
+  - `check_request_response()`: Checks if HTTP request is completed and gets response
+  - `http_status_to_db_result()`: Converts HTTP status to database result
 
 **User Data Structure**:
 ```zig
@@ -247,7 +224,7 @@ pub const UserData = struct {
 - Endpoint paths need to be updated based on Silo Agent confirmation
 - Request/response formats need to be adjusted based on confirmed approach
 - `get_user_by_id()` and `get_user_by_email()` create requests but don't process responses yet
-- Waiting on async response handling pattern from Core Agent
+- Waiting on async response handling pattern from Core Agent (Priority 2, HIGH)
 - Waiting on integration details confirmation from Silo Agent
 
 ---
@@ -261,13 +238,17 @@ pub const UserData = struct {
 - ✅ Silo Agent API contracts received and reviewed
 - ✅ Core Agent coordination plan received and reviewed
 - ✅ Core Agent Priority 2 decision: Async response handling pattern documentation (Option B)
-- ⏳ Awaiting Core Agent async HTTP response handling pattern documentation
+- ✅ Error response parsing implemented (Silo Agent format)
+- ✅ Validation improvements complete
+- ⏳ Awaiting Core Agent async HTTP response handling pattern documentation (Priority 2, HIGH, this week)
 - ⏳ Awaiting Silo Agent integration approach confirmation
 
 **Core Agent Priority 2 Decision**:
 - **Async Response Handling**: Core Agent will provide pattern documentation (Option B)
+- **Priority**: HIGH
+- **Estimated Time**: 3-5 days
+- **Status**: This week
 - **Impact**: Unblocks Carry Agent database integration
-- **Status**: Waiting for pattern documentation
 - **Recommendation**: Document async response handling pattern for Carry Agent to implement
 
 **Silo Agent API Contracts**:
@@ -276,7 +257,7 @@ pub const UserData = struct {
 - ✅ Relational query endpoints documented
 - ✅ Graph operation endpoints documented
 - ✅ Full-text search endpoints documented
-- ✅ Error handling format documented
+- ✅ Error handling format documented and implemented
 - ✅ Authentication requirements documented
 - ⏳ Awaiting integration approach confirmation
 
@@ -289,10 +270,39 @@ pub const UserData = struct {
 
 **Carry Agent Status in Plan**:
 - **Status**: Database Integration Enhanced ✅, Async Response Handling Pending ⏳
-- **Current Work**: Waiting on Core Agent async HTTP response handling pattern (Priority 2)
+- **Current Work**: Waiting on Core Agent async HTTP response handling pattern (Priority 2, HIGH)
 - **Coordination**: Coordinating with Silo Agent on database integration approach
 - **Next Steps**: Wait for Core Agent pattern documentation, then integrate async response handling
 
 ---
 
-**Status**: API Contracts Received — Awaiting Core Agent Pattern Documentation and Silo Agent Integration Confirmation
+## Decision: Wait for Coordination
+
+**Rationale**:
+1. **Natural Stopping Point**: All independent preparation work is complete
+   - Error handling aligned with Silo Agent format
+   - Validation improvements complete
+   - Helper functions ready for async integration
+   - Code structure prepared for async response handling
+
+2. **Next Work Requires Coordination**:
+   - Async response handling integration requires pattern documentation from Core Agent
+   - Endpoint path updates require confirmation from Silo Agent
+   - Both coordinations are in progress and expected this week
+
+3. **Core Agent Priority**: 
+   - Priority 2 (HIGH) — unblocks 4 agents including Carry
+   - Estimated: 3-5 days
+   - Status: This week
+   - Decision: Option B (Provide Pattern Documentation)
+
+4. **Silo Agent Coordination**: 
+   - Proactive coordination message sent
+   - Questions prepared and documented
+   - Awaiting integration approach confirmation
+
+**Status**: Ready for coordination — waiting for Core Agent pattern documentation and Silo Agent integration confirmation.
+
+---
+
+**Status**: Database Integration Enhanced — Ready for Async Response Handling Integration — Waiting for Coordination

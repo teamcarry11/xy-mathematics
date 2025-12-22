@@ -74,12 +74,12 @@ test "ai insights suggest connections placeholder" {
     var ai_insights = AiInsights.init(allocator, &dag_integration, &block_storage);
     defer ai_insights.deinit();
     
-    // Test suggest connections (returns empty without GLM-4.6)
+    // Test suggest connections (returns empty without LLM provider)
     const block_ids = [_]u64{ 1, 2 };
     const suggestions = try ai_insights.suggest_connections(&block_ids);
     defer allocator.free(suggestions);
     
-    // Assert: Returns empty array without GLM-4.6 client
+    // Assert: Returns empty array without LLM provider pool
     try std.testing.expect(suggestions.len == 0);
 }
 
@@ -100,12 +100,12 @@ test "ai insights detect knowledge gaps placeholder" {
     var ai_insights = AiInsights.init(allocator, &dag_integration, &block_storage);
     defer ai_insights.deinit();
     
-    // Test detect knowledge gaps (returns empty without GLM-4.6)
+    // Test detect knowledge gaps (returns empty without LLM provider)
     const block_ids = [_]u64{ 1, 2, 3 };
     const gaps = try ai_insights.detect_knowledge_gaps(&block_ids);
     defer allocator.free(gaps);
     
-    // Assert: Returns empty array without GLM-4.6 client
+    // Assert: Returns empty array without LLM provider pool
     try std.testing.expect(gaps.len == 0);
 }
 

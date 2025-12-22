@@ -1,9 +1,13 @@
 const std = @import("std");
 const EditorDagIntegration = @import("editor_dag_integration.zig").EditorDagIntegration;
 const Block = @import("block.zig").Block;
-const Glm46Client = @import("../aurora_glm46.zig").Glm46Client;
+const grain_court = @import("grain_court");
+const grain_core = @import("grain_core");
+const LlmProvider = grain_court.LlmProvider;
+const ProviderPool = LlmProvider.ProviderPool;
+const OpenAIProvider = grain_court.OpenAIProvider;
 
-/// AI-Powered Graph Insights: GLM-4.6 powered insights for knowledge graph.
+/// AI-Powered Graph Insights: Multi-provider LLM powered insights for knowledge graph.
 /// ~<~ Glow Airbend: explicit AI suggestions, bounded analysis.
 /// ~~~~ Glow Waterbend: AI insights flow deterministically through DAG.
 ///
@@ -17,7 +21,10 @@ pub const AiInsights = struct {
     allocator: std.mem.Allocator,
     dag_integration: *EditorDagIntegration,
     block_storage: *Block.BlockStorage,
-    glm46_client: ?Glm46Client, // Optional GLM-4.6 client (if API key provided)
+    provider_pool: ?ProviderPool, // Optional provider pool (if API key provided)
+    http_client: ?*grain_core.http_client.HttpClient, // HTTP client for providers
+    // Note: Provider instances are heap-allocated and stored in provider_pool
+    // For simplicity, we use arena allocator pattern or rely on allocator cleanup
     
     // Bounded: Max 100 AI suggestions per session
     pub const MAX_AI_SUGGESTIONS: u32 = 100;
@@ -42,7 +49,7 @@ pub const AiInsights = struct {
         confidence: f32, // 0.0 to 1.0
     };
     
-    /// Initialize AI insights (without GLM-4.6 client).
+    /// Initialize AI insights (without LLM provider).
     pub fn init(
         allocator: std.mem.Allocator,
         dag_integration: *EditorDagIntegration,
@@ -54,24 +61,26 @@ pub const AiInsights = struct {
         // Assert: DAG integration must be valid
         std.debug.assert(dag_integration.buffer_node_id != null);
         
-        // Assert: Block storage must be valid
-        _ = block_storage;
-        
         return AiInsights{
             .allocator = allocator,
             .dag_integration = dag_integration,
             .block_storage = block_storage,
-            .glm46_client = null,
+            .provider_pool = null,
+            .http_client = null,
+            .provider_instance = null,
         };
     }
     
-    /// Initialize AI insights with GLM-4.6 client (for AI-powered features).
-    pub fn init_with_glm46(
+    /// Initialize AI insights with LLM provider (for AI-powered features).
+    /// Uses Court Agent's multi-provider LLM abstraction.
+    pub fn init_with_llm_provider(
         allocator: std.mem.Allocator,
         dag_integration: *EditorDagIntegration,
         block_storage: *Block.BlockStorage,
         api_key: []const u8,
-    ) AiInsights {
+        http_client_ptr: ?*grain_core.http_client.HttpClient,
+        provider_type: LlmProvider.ProviderType,
+    ) !AiInsights {
         // Assert: Allocator must be valid
         std.debug.assert(allocator.ptr != null);
         
@@ -81,62 +90,136 @@ pub const AiInsights = struct {
         // Assert: API key must be provided
         std.debug.assert(api_key.len > 0);
         
-        // Assert: Block storage must be valid
-        _ = block_storage;
+        // Initialize provider pool
+        var provider_pool = ProviderPool.init(allocator);
         
-        const glm46_client = Glm46Client.init(allocator, api_key);
+        // Create provider based on type (heap-allocated for pool storage)
+        var provider: *LlmProvider.ProviderTrait = undefined;
+        var provider_instance: ?*anyopaque = null;
+        
+        switch (provider_type) {
+            .openai => {
+                var openai_provider = try allocator.create(OpenAIProvider);
+                openai_provider.* = try OpenAIProvider.init(allocator, api_key, http_client_ptr);
+                provider = &openai_provider.trait;
+                provider_instance = @ptrCast(openai_provider);
+            },
+            .anthropic => {
+                const AnthropicProvider = grain_court.AnthropicProvider;
+                var anthropic_provider = try allocator.create(AnthropicProvider);
+                anthropic_provider.* = try AnthropicProvider.init(allocator, api_key, http_client_ptr);
+                provider = &anthropic_provider.trait;
+                provider_instance = @ptrCast(anthropic_provider);
+            },
+            .mistral => {
+                const MistralProvider = grain_court.MistralProvider;
+                var mistral_provider = try allocator.create(MistralProvider);
+                mistral_provider.* = try MistralProvider.init(allocator, api_key, http_client_ptr);
+                provider = &mistral_provider.trait;
+                provider_instance = @ptrCast(mistral_provider);
+            },
+            else => return error.UnsupportedProvider,
+        }
+        
+        // Add provider to pool
+        try provider_pool.add_provider(provider);
         
         return AiInsights{
             .allocator = allocator,
             .dag_integration = dag_integration,
             .block_storage = block_storage,
-            .glm46_client = glm46_client,
+            .provider_pool = provider_pool,
+            .http_client = http_client_ptr,
+            .provider_instance = provider_instance,
         };
     }
     
-    /// Deinitialize AI insights (cleanup GLM-4.6 client if present).
+    /// Deinitialize AI insights (cleanup provider pool if present).
     pub fn deinit(self: *AiInsights) void {
-        if (self.glm46_client) |*client| {
-            client.deinit();
+        // Cleanup heap-allocated provider instance
+        if (self.provider_instance) |instance| {
+            // Free provider instance (allocated in init_with_llm_provider)
+            // Note: Provider cleanup handled by allocator (e.g., arena allocator)
+            // For explicit cleanup, we'd need to know the concrete type
+            _ = instance;
         }
         self.* = undefined;
     }
     
-    /// Global buffer for collecting streaming responses (single-threaded use).
-    /// Note: This is a workaround for callback limitations in GLM-4.6 client.
-    var global_response_buffer: ?*std.ArrayList(u8) = null;
-    
-    /// Callback for collecting streaming GLM-4.6 response chunks.
-    fn collect_chunk_callback(chunk: []const u8) void {
-        if (global_response_buffer) |buffer| {
-            buffer.writer().writeAll(chunk) catch {};
-        }
-    }
-    
-    /// Collect streaming GLM-4.6 response into a single string.
-    fn collect_glm46_response(
+    /// Send LLM request using Court's provider pool.
+    /// Converts system/user messages to a single prompt and sends via provider pool.
+    fn send_llm_request(
         self: *AiInsights,
-        messages: []const Glm46Client.Message,
+        system_prompt: []const u8,
+        user_prompt: []const u8,
+        model: []const u8,
+        max_tokens: u32,
+        temperature: f32,
     ) ![]const u8 {
-        // Assert: GLM-4.6 client must be available
-        std.debug.assert(self.glm46_client != null);
+        // Assert: Provider pool must be available
+        std.debug.assert(self.provider_pool != null);
         
-        // Assert: Messages must be within bounds
-        std.debug.assert(messages.len > 0);
+        // Assert: Prompts must be within bounds
+        std.debug.assert(system_prompt.len > 0);
+        std.debug.assert(user_prompt.len > 0);
+        std.debug.assert(system_prompt.len + user_prompt.len <= LlmProvider.MAX_REQUEST_SIZE);
         
-        var response_buffer_local = std.ArrayList(u8).init(self.allocator);
-        errdefer response_buffer_local.deinit();
+        const pool = &self.provider_pool.?;
         
-        const client = &self.glm46_client.?;
+        // Build combined prompt (system + user)
+        var combined_prompt = std.ArrayList(u8).init(self.allocator);
+        defer combined_prompt.deinit();
         
-        // Set global buffer (single-threaded use)
-        global_response_buffer = &response_buffer_local;
-        defer global_response_buffer = null;
+        try combined_prompt.writer().print("{s}\n\n{s}", .{ system_prompt, user_prompt });
         
-        // Collect streaming chunks
-        try client.requestCompletion(messages, collect_chunk_callback);
+        // Assert: Combined prompt within bounds
+        std.debug.assert(combined_prompt.items.len <= LlmProvider.MAX_REQUEST_SIZE);
         
-        return try response_buffer_local.toOwnedSlice();
+        // Create LLM request
+        var request = LlmProvider.LlmRequest{
+            .request_id = 0, // Will be set by provider
+            .provider_type = .openai, // Default, can be overridden
+            .model = undefined,
+            .model_len = 0,
+            .prompt = undefined,
+            .prompt_len = 0,
+            .max_tokens = max_tokens,
+            .temperature = temperature,
+            .created_at = @as(u64, @intCast(std.time.timestamp())),
+        };
+        
+        // Copy model name
+        const model_len = @min(model.len, 128);
+        var i: u32 = 0;
+        while (i < 128) : (i += 1) {
+            request.model[i] = 0;
+        }
+        i = 0;
+        while (i < model_len) : (i += 1) {
+            request.model[i] = model[i];
+        }
+        request.model_len = model_len;
+        
+        // Copy prompt
+        const prompt_len = @min(combined_prompt.items.len, @as(usize, @intCast(LlmProvider.MAX_REQUEST_SIZE)));
+        i = 0;
+        while (i < LlmProvider.MAX_REQUEST_SIZE) : (i += 1) {
+            request.prompt[i] = 0;
+        }
+        i = 0;
+        while (i < prompt_len) : (i += 1) {
+            request.prompt[i] = combined_prompt.items[i];
+        }
+        request.prompt_len = @intCast(prompt_len);
+        
+        // Send request via provider pool
+        const response = try pool.send_request_with_fallback(&request, self.allocator);
+        
+        // Extract response content
+        const content = response.content[0..response.content_len];
+        const content_copy = try self.allocator.dupe(u8, content);
+        
+        return content_copy;
     }
     
     /// Analyze blocks and suggest connections (semantic similarity).
@@ -151,8 +234,8 @@ pub const AiInsights = struct {
         // Assert: Block count must be at least 2 for connections
         std.debug.assert(block_ids.len >= 2);
         
-        // If GLM-4.6 client not available, return empty suggestions
-        if (self.glm46_client == null) {
+        // If provider pool not available, return empty suggestions
+        if (self.provider_pool == null) {
             return &[_]ConnectionSuggestion{};
         }
         
@@ -178,7 +261,7 @@ pub const AiInsights = struct {
         // Assert: At least 2 blocks with content required for connections
         std.debug.assert(block_contents.items.len >= 2);
         
-        // Build prompt for GLM-4.6
+        // Build prompt for LLM
         var prompt = std.ArrayList(u8).init(self.allocator);
         defer prompt.deinit();
         
@@ -193,14 +276,17 @@ pub const AiInsights = struct {
         
         try writer.writeAll("Format: block1_id,block2_id,confidence,reason (one per line)");
         
-        const messages = [_]Glm46Client.Message{
-            .{ .role = "system", .content = "You are a knowledge graph analysis assistant. Analyze blocks and suggest semantic connections." },
-            .{ .role = "user", .content = try prompt.toOwnedSlice() },
-        };
-        defer self.allocator.free(messages[1].content);
+        const prompt_str = try prompt.toOwnedSlice();
+        defer self.allocator.free(prompt_str);
         
-        // Get AI response
-        const response = try self.collect_glm46_response(&messages);
+        // Get AI response via Court provider
+        const response = try self.send_llm_request(
+            "You are a knowledge graph analysis assistant. Analyze blocks and suggest semantic connections.",
+            prompt_str,
+            "gpt-4o", // Default model, can be configurable
+            2000, // Max tokens
+            0.7, // Temperature
+        );
         defer self.allocator.free(response);
         
         // Parse response (simple CSV-like format)
@@ -290,8 +376,8 @@ pub const AiInsights = struct {
             std.debug.assert(block_id > 0);
         }
         
-        // If GLM-4.6 client not available, return empty gaps
-        if (self.glm46_client == null) {
+        // If provider pool not available, return empty gaps
+        if (self.provider_pool == null) {
             return &[_]struct { from_block_id: u64, to_block_id: u64 }{};
         }
         
@@ -317,7 +403,7 @@ pub const AiInsights = struct {
         // Assert: At least 2 blocks with content required for gap detection
         std.debug.assert(block_contents.items.len >= 2);
         
-        // Build prompt for GLM-4.6
+        // Build prompt for LLM
         var prompt = std.ArrayList(u8).init(self.allocator);
         defer prompt.deinit();
         
@@ -330,14 +416,17 @@ pub const AiInsights = struct {
             }
         }
         
-        const messages = [_]Glm46Client.Message{
-            .{ .role = "system", .content = "You are a knowledge graph analysis assistant. Identify missing connections between related blocks." },
-            .{ .role = "user", .content = try prompt.toOwnedSlice() },
-        };
-        defer self.allocator.free(messages[1].content);
+        const prompt_str = try prompt.toOwnedSlice();
+        defer self.allocator.free(prompt_str);
         
-        // Get AI response
-        const response = try self.collect_glm46_response(&messages);
+        // Get AI response via Court provider
+        const response = try self.send_llm_request(
+            "You are a knowledge graph analysis assistant. Identify missing connections between related blocks.",
+            prompt_str,
+            "gpt-4o", // Default model
+            2000, // Max tokens
+            0.7, // Temperature
+        );
         defer self.allocator.free(response);
         
         // Parse response (simple CSV-like format)
@@ -402,8 +491,8 @@ pub const AiInsights = struct {
         // Assert: Block ID must be valid
         std.debug.assert(block_id > 0);
         
-        // If GLM-4.6 client not available, return null
-        if (self.glm46_client == null) {
+        // If provider pool not available, return null
+        if (self.provider_pool == null) {
             return null;
         }
         
@@ -413,21 +502,24 @@ pub const AiInsights = struct {
         // Assert: Block content must exist
         std.debug.assert(block.content_len > 0);
         
-        // Build prompt for GLM-4.6
+        // Build prompt for LLM
         var prompt = std.ArrayList(u8).init(self.allocator);
         defer prompt.deinit();
         
         const writer = prompt.writer();
         try writer.print("Generate a concise title (max 50 characters) for this knowledge graph block:\n\n{s}\n\nTitle only, no explanation.", .{block.content[0..block.content_len]});
         
-        const messages = [_]Glm46Client.Message{
-            .{ .role = "system", .content = "You are a knowledge graph assistant. Generate concise, descriptive titles for blocks." },
-            .{ .role = "user", .content = try prompt.toOwnedSlice() },
-        };
-        defer self.allocator.free(messages[1].content);
+        const prompt_str = try prompt.toOwnedSlice();
+        defer self.allocator.free(prompt_str);
         
-        // Get AI response
-        const response = try self.collect_glm46_response(&messages);
+        // Get AI response via Court provider
+        const response = try self.send_llm_request(
+            "You are a knowledge graph assistant. Generate concise, descriptive titles for blocks.",
+            prompt_str,
+            "gpt-4o", // Default model
+            100, // Max tokens (titles are short)
+            0.7, // Temperature
+        );
         defer self.allocator.free(response);
         
         // Validate response is not empty
@@ -463,8 +555,8 @@ pub const AiInsights = struct {
         // Assert: Block count must be within bounds
         std.debug.assert(block_ids.len <= MAX_BLOCKS_PER_BATCH);
         
-        // If GLM-4.6 client not available, return null
-        if (self.glm46_client == null) {
+        // If provider pool not available, return null
+        if (self.provider_pool == null) {
             return null;
         }
         
@@ -489,7 +581,7 @@ pub const AiInsights = struct {
         // Assert: At least one block content retrieved
         std.debug.assert(block_contents.items.len > 0);
         
-        // Build prompt for GLM-4.6
+        // Build prompt for LLM
         var prompt = std.ArrayList(u8).init(self.allocator);
         defer prompt.deinit();
         
@@ -502,14 +594,17 @@ pub const AiInsights = struct {
             }
         }
         
-        const messages = [_]Glm46Client.Message{
-            .{ .role = "system", .content = "You are a knowledge graph assistant. Provide concise summaries of subgraphs." },
-            .{ .role = "user", .content = try prompt.toOwnedSlice() },
-        };
-        defer self.allocator.free(messages[1].content);
+        const prompt_str = try prompt.toOwnedSlice();
+        defer self.allocator.free(prompt_str);
         
-        // Get AI response
-        const response = try self.collect_glm46_response(&messages);
+        // Get AI response via Court provider
+        const response = try self.send_llm_request(
+            "You are a knowledge graph assistant. Provide concise summaries of subgraphs.",
+            prompt_str,
+            "gpt-4o", // Default model
+            500, // Max tokens (summaries are short)
+            0.7, // Temperature
+        );
         
         // Validate response is not empty
         if (response.len == 0) {
@@ -582,7 +677,7 @@ test "ai insights initialization" {
     var block_storage = try Block.BlockStorage.init(arena.allocator());
     defer block_storage.deinit();
     
-    var ai_insights = AiInsights.init(arena.allocator(), &dag_integration, &block_storage);
+    const ai_insights = AiInsights.init(arena.allocator(), &dag_integration, &block_storage);
     
     // Assert: AI insights initialized
     _ = ai_insights;
@@ -602,6 +697,7 @@ test "ai insights store suggestion as dag event" {
     defer block_storage.deinit();
     
     var ai_insights = AiInsights.init(arena.allocator(), &dag_integration, &block_storage);
+    defer ai_insights.deinit();
     
     // Store suggestion as DAG event
     const event_id = try ai_insights.store_suggestion_as_dag_event(

@@ -1374,7 +1374,7 @@ pub const AnimationUtils = struct {
         const delay_s = @as(f64, @floatFromInt(anim.delay_ms)) / 1000.0;
         const css_str = std.fmt.bufPrint(
             css_buf,
-            "{} {d:.2}s {} {d:.2}s",
+            "{s} {d:.2}s {s} {d:.2}s",
             .{ anim_name, duration_s, easing, delay_s },
         ) catch return "";
         std.debug.assert(css_str.len > 0);

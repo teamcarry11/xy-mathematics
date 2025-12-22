@@ -32,10 +32,9 @@ test "jit_initialization_with_host_interface" {
             
             // Create guest state for JIT.
             var guest_state = jit_mod.GuestState{
-                .regs = undefined,
+                .regs = [_]u64{0} ** 32,
                 .pc = 0x80000000,
             };
-            @memset(&guest_state.regs, 0);
             
             // Create guest RAM.
             const ram_size: u64 = 1024 * 1024; // 1MB

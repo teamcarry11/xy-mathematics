@@ -62,9 +62,92 @@
 
 ---
 
+## ⚠️ Design Gaps Identified
+
+**Design Gaps Document**: `docs/grain_skate/integration_design_gaps.md`
+
+After reviewing Carry Agent, Bubble Agent, Research Agent, Court Agent, and Flow Agent coordination documents, we've identified **10 design gaps** in Skate Agent's integration patterns:
+
+- **2 Critical Gaps** (Must Fix):
+  1. AI Insights Timeout Handling - No timeout for LLM requests via Court Agent
+  2. AI Insights Error Handling - Limited error handling for LLM requests
+
+- **3 High Priority Gaps** (Should Fix):
+  3. DAG Operation Error Handling - Limited error handling for DAG operations
+  4. Retry Logic for Transient AI Failures - No retry logic for transient failures
+  5. Rate Limiting Handling for AI Insights - No handling for 429 responses
+
+- **3 Medium Priority Gaps** (Nice to Have):
+  6. Circuit Breaker Pattern for AI Insights - No circuit breaker for cascading failures
+  7. Operation Queuing for AI Insights - No queuing mechanism for pending operations
+  8. DAG Operation Retry Logic - No retry logic for transient DAG failures
+
+- **2 Low Priority Gaps** (Future):
+  9. Operation Deduplication - No deduplication for duplicate requests
+  10. Request/Response Logging - No logging for debugging/monitoring
+
+**Immediate Coordination Required**:
+1. **Court Agent**: Operation timeout handling coordination (CRITICAL)
+2. **Court Agent**: Error handling coordination (CRITICAL)
+3. **DAG Core**: Error handling coordination (HIGH PRIORITY)
+
+See `docs/grain_skate/integration_design_gaps.md` for full details.
+
+---
+
 ## 🔄 Coordination Needs
 
-### 1. Grain Bubble Agent: Time Slider UI Component
+### 1. Grain Court Agent: Critical Integration Issues
+
+**Status**: ⚠️ **CRITICAL COORDINATION NEEDED**
+
+**Critical Issues Identified**:
+1. **Timeout Handling** (CRITICAL):
+   - No timeout handling for LLM requests via Court Agent
+   - Operations could hang indefinitely
+   - **Questions**: Does Court Agent provider pool have built-in timeout support? Per-operation or global configuration?
+   
+2. **Error Handling** (CRITICAL):
+   - Limited error handling for LLM requests
+   - Operations fail without clear error messages
+   - **Questions**: What error types does Court Agent provider pool return? How to handle rate limiting (429 responses)?
+
+**Current Status**:
+- ✅ Court Agent Phase 1 complete (provider abstraction interface)
+- ✅ Migration complete (2025-12-21-192912-pst)
+- ⏳ Court Agent Phase 2 ~90% complete (ZON format integration)
+- ⚠️ **CRITICAL**: Timeout and error handling coordination needed before production use
+
+**Coordination Message**: "Skate Agent Court Agent Phase 1 migration complete. AI insights module fully integrated with Court's multi-provider abstraction. Identified critical gaps in timeout and error handling that need coordination before production use. Ready to coordinate on timeout configuration and error type definitions. See `docs/grain_skate/integration_design_gaps.md` for full details."
+
+**Timeline**: Critical coordination needed immediately for production readiness.
+
+---
+
+### 2. Grain DAG Core: Error Handling Coordination
+
+**Status**: ⚠️ **HIGH PRIORITY COORDINATION NEEDED**
+
+**High Priority Issue**:
+- Limited error handling for DAG operations (EditorDagIntegration, SlcDagIntegration)
+- Operations fail silently or return false without error information
+- Knowledge graph operations might not be recorded, causing data loss
+
+**Questions for DAG Core**:
+- What error types does DAG Core return?
+- How should we handle node/event limit exceeded (DAG_MAX_NODES, DAG_MAX_EVENTS)?
+- How should we handle invalid event data?
+- How should we handle DAG corruption or consistency issues?
+
+**Note**: Similar issue identified by Bubble Agent (HIGH PRIORITY gap #3)
+
+**Coordination Message**: "Skate Agent DAG integration complete. Identified high priority gap in error handling for DAG operations. Need coordination on error types and error handling patterns. Operations currently fail silently, risking data loss. Ready to coordinate on error handling improvements. See `docs/grain_skate/integration_design_gaps.md` for full details."
+
+**Timeline**: High priority coordination needed before production use.
+
+---
+
+### 3. Grain Bubble Agent: Time Slider UI Component
 
 **Status**: ⏳ **READY FOR COORDINATION**
 
@@ -260,11 +343,14 @@ pub fn get_orphaned_pages(output: []u32) u32
 
 ### Depends On
 - **Core Agent**: HTTP Client (Phase 61) ✅ - Using for AI API calls
-- **Court Agent**: LLM infrastructure services ✅ - Phase 1 complete, Phase 2 pending (~70% complete)
+- **Court Agent**: LLM infrastructure services ✅ - Phase 1 complete, Phase 2 pending (~90% complete)
+  - ⚠️ **CRITICAL**: Timeout handling coordination needed
+  - ⚠️ **CRITICAL**: Error handling coordination needed
+- **DAG Core**: Shared module ✅ - Foundation for all DAG operations
+  - ⚠️ **HIGH PRIORITY**: Error handling coordination needed
 - **Bubble Agent**: Time slider UI component ⏳ - Ready for coordination
 - **Aurora Agent**: Nostr protocol integration ⏳ - Ready for coordination
 - **Core Agent**: Website publishing infrastructure ⏳ - Ready for coordination
-- **DAG Core**: Shared module ✅ - Foundation for all DAG operations
 
 ---
 
@@ -276,7 +362,9 @@ pub fn get_orphaned_pages(output: []u32) u32
 - ✅ Migration plan documented
 - ✅ Court Agent Phase 1 complete (provider abstraction interface)
 - ✅ Migration complete (2025-12-21-192912-pst)
-- ⏳ ZON format integration (Court Agent Phase 2) - Waiting for Court Agent (~70% complete)
+- ⚠️ **CRITICAL**: Timeout handling coordination needed
+- ⚠️ **CRITICAL**: Error handling coordination needed
+- ⏳ ZON format integration (Court Agent Phase 2) - Waiting for Court Agent (~90% complete)
 
 ### Bubble Agent Integration
 - ✅ Time slider utilities complete
@@ -336,13 +424,19 @@ pub fn get_orphaned_pages(output: []u32) u32
 
 ## Next Actions
 
-1. **Bubble Agent**: Coordinate on time slider UI component design and implementation
-2. **Aurora Agent**: Coordinate on Nostr protocol integration for Profile Builder
-3. **Core Agent**: Coordinate on website publishing infrastructure for DAG Website Builder
-4. **Court Agent**: Wait for Phase 2 (ZON format) completion (~70% complete), then integrate
+**Priority 1: Critical Coordination (Blocking Production Use)**
+1. **Court Agent**: Coordinate on timeout handling for LLM requests (CRITICAL)
+2. **Court Agent**: Coordinate on error handling and error types (CRITICAL)
+3. **DAG Core**: Coordinate on error handling for DAG operations (HIGH PRIORITY)
 
-**Status**: ✅ **READY FOR COORDINATION**  
-**Action**: Awaiting coordination signals from Bubble, Aurora, Core, and Court agents, or ready to initiate coordination proactively using plans above.
+**Priority 2: Feature Coordination (Ready to Begin)**
+4. **Bubble Agent**: Coordinate on time slider UI component design and implementation
+5. **Aurora Agent**: Coordinate on Nostr protocol integration for Profile Builder
+6. **Core Agent**: Coordinate on website publishing infrastructure for DAG Website Builder
+7. **Court Agent**: Wait for Phase 2 (ZON format) completion (~90% complete), then integrate
+
+**Status**: ⚠️ **CRITICAL COORDINATION NEEDED** - Timeout and error handling issues must be resolved before production use  
+**Action**: Initiating coordination with Court Agent and DAG Core on critical gaps. Ready to coordinate with Bubble, Aurora, and Core agents on feature integrations.
 
 ---
 

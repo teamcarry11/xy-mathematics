@@ -1,8 +1,8 @@
 # Grain Flow Agent: Coordination Status
 
-**Last Updated**: 2025-12-21-210000-pst  
+**Last Updated**: 2025-12-23-173000-pst  
 **Agent**: Grain Flow Agent (9th Agent)  
-**Core Agent Coordination Plan**: 2025-12-21-204511-pst (acknowledged)
+**Core Agent Coordination Plan**: 2025-12-22-112149-pst (acknowledged)
 
 ---
 
@@ -16,29 +16,44 @@
 - ✅ Workflow Visualizer Hierarchical Layout: **COMPLETE** (improved DAG visualization)
 - ✅ ZON Format Integration Structure: **PREPARED** (placeholder functions, coordination notes)
 - ✅ ZON Format Allocator Coordination: **MESSAGE SENT** (proposed bounded allocation wrapper approach)
-- ⏳ ZON Format Integration: Waiting on Court Agent ZON module completion (~70% complete, remaining ~30%: LLM provider integration, Priority 3, HIGH)
+- ✅ ZON Format Integration Preparation: **COMPLETE** (comprehensive data structure mapping, conversion approach, implementation plan)
+- ⏳ ZON Format Integration: Waiting on Court Agent ZON module completion (~90% complete, Phase 4 helpers available, remaining ~10%: LLM provider integration, Priority 3, HIGH)
 - ⏳ TigerBeetle Enhancement: Waiting on Core Agent implementation timeline (Medium Priority)
 - ⏳ Build Configuration: Waiting on Core Agent guidance (Priority 2, HIGH)
 
-**Current Focus**: **WAITING ON DEPENDENCIES** — All independent work complete. ZON format integration structure prepared ✅, allocator coordination message sent to Court Agent ✅. Waiting on Court Agent (ZON module completion, allocator approach response) and Core Agent (build configuration guidance, TigerBeetle timeline) to proceed.
+**Current Focus**: **WAITING ON DEPENDENCIES** — All independent work complete. ZON format integration structure prepared ✅, allocator coordination message sent to Court Agent ✅, comprehensive integration preparation document created ✅. Research Agent Phase 4 implementation complete ✅. Waiting on Court Agent (ZON module completion ~90%, allocator approach response) and Core Agent (build configuration guidance, TigerBeetle timeline) to proceed.
 
 ---
 
 ## Recent Completions
 
 **Recent Completions**:
+- ✅ **ZON Format Integration Preparation Document**: Comprehensive integration preparation document created (2025-12-23-173000-pst)
+  - Workflow metrics data structure mapping to ZON format (scalar metrics, tabular arrays)
+  - Conversion approach documented (key-value pairs, tabular array format for arrays)
+  - Implementation plan prepared (3-4 days after Court Agent API available)
+  - Testing plan created (unit tests, integration tests, API tests, validation criteria)
+  - Token efficiency estimation (35-70% reduction expected)
+  - Integration points documented (WorkflowObservatory functions, Dashboard API endpoints)
+  - Ready for implementation when Court Agent provides bounded allocation API
+  - Document: `docs/agent-communications/flow_zon_integration_preparation_2025-12-23-173000-pst.md`
 - ✅ **ZON Format Allocator Coordination Message**: Coordination message sent to Court Agent (2025-12-21-210000-pst)
   - Proposed bounded allocation wrapper approach (Option 1: use existing `encode_tabular_array_internal()`)
   - Provided workflow metrics data structure documentation
   - Committed to backward compatibility (JSON export remains available)
   - Documented integration timeline (3-4 days after Court Agent completion)
   - Waiting on Court Agent response on allocator approach
+  - Document: `docs/agent-communications/flow_to_court_zon_allocator_coordination_2025-12-21-210000-pst.md`
 - ✅ **ZON Format Integration Structure Prepared**: Placeholder functions added, coordination notes documented (2025-12-21-204511-pst)
   - `export_all_metrics_zon()` placeholder function added to `WorkflowObservatory`
   - `get_aggregated_summary_zon()` placeholder function added to `WorkflowObservatory`
   - Coordination notes added (allocator vs bounded allocation approach)
   - `MAX_AGGREGATED_ZON_SIZE` constant added (10MB, matching JSON size)
   - Ready for implementation when Court Agent ZON module completes
+- ✅ **Core Agent Coordination Plan Acknowledged**: New coordination plan acknowledged (2025-12-22-112149-pst)
+  - Court Agent ZON module progress noted (~85% → ~90% complete)
+  - Research Agent Phase 4 framework prepared → implementation complete
+  - Flow Agent status: Waiting on Court Agent ZON module and allocator coordination
 - ✅ **Event Bus Source Filtering Enhancement**: Source filtering support complete (2025-12-21-183600-pst)
   - `subscribe_with_source_filter()` function implemented
   - Subscribers can filter events by source agent ID
@@ -56,7 +71,6 @@
 - ✅ **Workflow Scheduler Cron Parser Enhancement**: Basic cron parser complete (2025-12-21-141800-pst)
   - Basic cron parser implemented (`calculate_next_cron_execution`)
   - Supports common patterns: "* * * * *" (every minute), "0 * * * *" (every hour), numeric minutes
-- ✅ **Core Agent Coordination Plan Acknowledged**: Coordination plan acknowledged (2025-12-21-183510-pst)
 - ✅ **Phase 3 Validation Complete**: All success criteria met (2025-12-21-105500-pst)
 
 **Milestones**:
@@ -64,6 +78,7 @@
 - Phase 3 Validation COMPLETE: Research Agent collaboration complete
 - Independent Enhancements COMPLETE: Event Bus, Scheduler, Visualizer enhancements
 - ZON Format Integration Structure PREPARED: Ready for Court Agent completion
+- ZON Format Integration Preparation COMPLETE: Comprehensive preparation document ready
 
 ---
 
@@ -71,19 +86,20 @@
 
 ### Status
 
-**Flow Agent**: ✅ ZON format proposal created, integration structure prepared, allocator coordination message sent  
-**Court Agent**: ⏳ ZON module Phase 1 ~70% complete, **coordination in progress** (Priority 3, HIGH)  
-**Research Agent**: ✅ Phase 1-3 complete (token benchmarks, retrieval framework, cost savings), Phase 4 framework prepared
+**Flow Agent**: ✅ ZON format proposal created, integration structure prepared, allocator coordination message sent, integration preparation document complete  
+**Court Agent**: ⏳ ZON module Phase 1 ~90% complete, **Phase 4 helpers available**, coordination in progress (Priority 3, HIGH)  
+**Research Agent**: ✅ Phase 1-3 complete (token benchmarks, retrieval framework, cost savings), **Phase 4 implementation complete** ✅
 
 **Current Work**:
 - ✅ **COORDINATION MESSAGE SENT**: Allocator vs bounded allocation coordination message sent to Court Agent (2025-12-21-210000-pst)
+- ✅ **INTEGRATION PREPARATION COMPLETE**: Comprehensive integration preparation document created (2025-12-23-173000-pst)
 - ⏳ **WAITING ON COURT AGENT**: Response on allocator approach (bounded allocation wrapper preferred)
-- ⏳ **WAITING ON COURT AGENT**: ZON module completion (remaining ~30%: LLM provider integration)
+- ⏳ **WAITING ON COURT AGENT**: ZON module completion (remaining ~10%: LLM provider integration)
 - ⏳ Flow Agent: Ready to implement ZON export functions when Court Agent completes and allocator coordination resolved
 
 **Integration Points**:
-- Workflow Observatory ZON Export: `export_all_metrics_zon()` (placeholder prepared, pending Court Agent module)
-- Dashboard API ZON Support: `/api/workflow-observatory/metrics?format=zon` (pending Court Agent module)
+- Workflow Observatory ZON Export: `export_all_metrics_zon()` (placeholder prepared, implementation plan ready)
+- Dashboard API ZON Support: `/api/workflow-observatory/metrics?format=zon` (implementation plan ready)
 - Backward Compatibility: JSON export remains available (committed)
 
 **Allocator Coordination**:
@@ -92,15 +108,38 @@
 - **Status**: Coordination message sent, waiting on Court Agent response
 - **Timeline**: 3-4 days implementation after Court Agent completion and allocator coordination resolved
 
+**Integration Preparation**:
+- ✅ **Data Structure Mapping**: Complete mapping of workflow metrics to ZON format
+  - Scalar metrics: key-value pairs (`workflow:total_executions:1000`)
+  - Arrays: tabular format (`workflow:executions@(N):field1,field2`)
+  - Nested objects: dot notation or flattened keys
+- ✅ **Conversion Approach**: Documented conversion strategy
+  - Simple key-value pairs for scalar metrics
+  - Tabular array format for `executions` array (maximizes token efficiency)
+  - Bounded allocation API usage pattern
+- ✅ **Implementation Plan**: Step-by-step implementation approach
+  - Step 1: Convert scalar metrics (workflow, coordination, failure, performance)
+  - Step 2: Convert arrays (executions array using tabular format)
+  - Step 3: Aggregate all metrics into single ZON output
+- ✅ **Testing Plan**: Comprehensive testing strategy
+  - Unit tests for ZON export functions
+  - Integration tests with Court Agent ZON decoder (round-trip)
+  - API tests for Dashboard endpoints
+  - Validation criteria (format correctness, token reduction, data integrity)
+- ✅ **Token Efficiency Estimation**: Expected 35-70% token reduction
+  - Current JSON: ~900 bytes (example)
+  - Expected ZON: ~330-590 bytes (35-65% reduction)
+  - Token count reduction: 35-70% fewer tokens for LLM processing
+
 **Dependencies**:
-- ⏳ **Court Agent: ZON Module Phase 1** (Priority 3, HIGH, ~70% complete, remaining ~30%: LLM provider integration) — **COORDINATION IN PROGRESS**
+- ⏳ **Court Agent: ZON Module Phase 1** (Priority 3, HIGH, ~90% complete, remaining ~10%: LLM provider integration) — **COORDINATION IN PROGRESS**
 - ⏳ **Court Agent: Allocator approach response** (bounded allocation wrapper preferred) — **WAITING ON RESPONSE**
 - ⏳ Court Agent: API contract coordination (in progress)
 
 **Next Steps**:
 - ⏳ **WAITING ON COURT AGENT**: Response on allocator approach (bounded allocation wrapper preferred)
-- ⏳ **WAITING ON COURT AGENT**: ZON module completion (remaining ~30%: LLM provider integration)
-- When Court Agent ZON module complete and allocator coordination resolved: Implement ZON export functions (`export_all_metrics_zon()`, `get_aggregated_summary_zon()`)
+- ⏳ **WAITING ON COURT AGENT**: ZON module completion (remaining ~10%: LLM provider integration)
+- When Court Agent ZON module complete and allocator coordination resolved: Implement ZON export functions (`export_all_metrics_zon()`, `get_aggregated_summary_zon()`) using prepared implementation plan
 - Update API documentation with ZON format support
 - Add ZON export endpoints to Dashboard API
 
@@ -165,14 +204,14 @@
 
 ### Status
 
-**Flow Agent**: ✅ Welcome message sent, ZON format proposal ready, allocator coordination message sent  
-**Court Agent**: ⏳ ZON module ~70% complete, allocator coordination response pending
+**Flow Agent**: ✅ Welcome message sent, ZON format proposal ready, allocator coordination message sent, integration preparation document complete  
+**Court Agent**: ⏳ ZON module ~90% complete, Phase 4 helpers available, allocator coordination response pending
 
 ### Coordination Points
 
 1. **ZON Format Integration**:
-   - Flow Agent: ZON format proposal created, integration structure prepared, allocator coordination message sent
-   - Court Agent: ZON module implementation ~70% complete (remaining ~30%: LLM provider integration, Priority 3, HIGH)
+   - Flow Agent: ZON format proposal created, integration structure prepared, allocator coordination message sent, integration preparation document complete
+   - Court Agent: ZON module implementation ~90% complete (remaining ~10%: LLM provider integration, Priority 3, HIGH)
    - Together: Integrate ZON format with workflow metrics export
 
 2. **Allocator vs Bounded Allocation Coordination**:
@@ -181,17 +220,44 @@
    - Together: Resolve allocator vs bounded allocation approach for ZON encoding
 
 3. **API Contract Coordination**:
-   - Flow Agent: Ready to coordinate on ZON encoder/decoder API design
-   - Court Agent: ZON module API design in progress
+   - Flow Agent: Ready to coordinate on ZON encoder/decoder API design, integration preparation document complete
+   - Court Agent: ZON module API design in progress, Phase 4 helpers available
    - Together: Define integration points and test ZON format with Flow Agent metrics
 
-**Status**: ⏳ **COORDINATION IN PROGRESS** — Court Agent ZON module Phase 1 ~70% complete, allocator coordination message sent, waiting on Court Agent response
+**Status**: ⏳ **COORDINATION IN PROGRESS** — Court Agent ZON module Phase 1 ~90% complete, Phase 4 helpers available, allocator coordination message sent, integration preparation complete, waiting on Court Agent response
 
 **Next Steps**:
 - ⏳ **WAITING ON COURT AGENT**: Response on allocator approach (bounded allocation wrapper preferred)
-- ⏳ **WAITING ON COURT AGENT**: ZON module completion (remaining ~30%: LLM provider integration)
-- When Court Agent ZON module complete and allocator coordination resolved: Integrate ZON format with workflow metrics export
+- ⏳ **WAITING ON COURT AGENT**: ZON module completion (remaining ~10%: LLM provider integration)
+- When Court Agent ZON module complete and allocator coordination resolved: Integrate ZON format with workflow metrics export using prepared implementation plan
 - Test ZON format with workflow metrics export
+
+---
+
+## Research Agent Coordination
+
+### Status
+
+**Flow Agent**: ✅ Phase 3 validation complete, workflow metrics provided  
+**Research Agent**: ✅ Phase 1-3 complete, **Phase 4 implementation complete** ✅
+
+### Coordination Points
+
+1. **Workflow Observability**:
+   - Flow Agent: Phase 3 validation complete, workflow metrics export available
+   - Research Agent: Phase 3 validation complete, metrics analysis complete
+   - Together: Workflow observability collaboration complete ✅
+
+2. **ZON Format Validation**:
+   - Flow Agent: ZON format proposal created, integration structure prepared, integration preparation document complete
+   - Research Agent: Phase 1-3 complete, **Phase 4 implementation complete** ✅
+   - Together: Research Agent Phase 4 complete, Flow Agent waiting on Court Agent for integration
+
+**Status**: ✅ **COORDINATION COMPLETE** — Phase 3 validation complete, Research Agent Phase 4 implementation complete
+
+**Next Steps**:
+- ✅ **COMPLETE**: Phase 3 validation collaboration complete
+- Flow Agent: Continue with ZON format integration when Court Agent completes
 
 ---
 
@@ -200,7 +266,7 @@
 **Needs**:
 - ⏳ **Core Agent: Build configuration guidance** (Priority 2, HIGH, **WAITING**)
 - ⏳ **Core Agent: TigerBeetle implementation timeline** (Medium Priority, **WAITING**)
-- ⏳ **Court Agent: ZON module completion** (for ZON format integration, Priority 3, HIGH, ~70% complete, remaining ~30%: LLM provider integration, **COORDINATION IN PROGRESS**)
+- ⏳ **Court Agent: ZON module completion** (for ZON format integration, Priority 3, HIGH, ~90% complete, remaining ~10%: LLM provider integration, **COORDINATION IN PROGRESS**)
 - ⏳ **Court Agent: Allocator approach response** (bounded allocation wrapper preferred, **WAITING ON RESPONSE**)
 - ⏳ Court Agent: API contract coordination (in progress)
 
@@ -213,7 +279,7 @@
 - ZON format proposal (for Court Agent)
 
 **Integration Partners**:
-- Research Agent: Workflow observability (Phase 3 complete)
+- Research Agent: Workflow observability (Phase 3 complete ✅)
 - Court Agent: ZON format integration (waiting on Court Agent ZON module completion and allocator coordination)
 - Core Agent: API Server integration (complete), WebSocket integration (future)
 
@@ -222,18 +288,19 @@
 ## Upcoming Work
 
 **Immediate (WAITING ON DEPENDENCIES)**:
-1. ⏳ **Wait for Court Agent**: ZON module completion (~70% complete, remaining ~30%: LLM provider integration, Priority 3, HIGH)
+1. ⏳ **Wait for Court Agent**: ZON module completion (~90% complete, remaining ~10%: LLM provider integration, Priority 3, HIGH)
 2. ⏳ **Wait for Court Agent**: Allocator approach response (bounded allocation wrapper preferred)
 3. ⏳ **Wait for Core Agent**: Build configuration guidance (Priority 2, HIGH)
 4. ⏳ **Wait for Core Agent**: TigerBeetle implementation timeline (Medium Priority)
 
 **Short-term (When Dependencies Available)**:
 5. **ZON Format Integration**: When Court Agent ZON module is ready and allocator coordination resolved
-   - Implement `export_all_metrics_zon()` using Court Agent's bounded allocation API
+   - Implement `export_all_metrics_zon()` using Court Agent's bounded allocation API (prepared implementation plan)
    - Implement `get_aggregated_summary_zon()` using Court Agent's bounded allocation API
-   - Add ZON export endpoints to Dashboard API
+   - Add ZON export endpoints to Dashboard API (`/api/workflow-observatory/metrics?format=zon`, `/api/workflow-observatory/summary?format=zon`)
    - Update API documentation
-   - Integration testing with Court Agent
+   - Integration testing with Court Agent (round-trip validation)
+   - Validate token count reduction (35-70% target)
 6. **TigerBeetle Enhancement Coordination**: When Core Agent provides implementation timeline
    - Coordinate with Research Agent on implementation
    - Begin Phase 1 (Time Abstraction) when timeline available
@@ -251,13 +318,13 @@
 
 **Immediate Coordination**:
 - ⏳ **Court Agent: Allocator approach response** (bounded allocation wrapper preferred, **WAITING ON RESPONSE**)
-- ⏳ **Court Agent: ZON module completion** (Priority 3, HIGH, ~70% complete, remaining ~30%: LLM provider integration, **COORDINATION IN PROGRESS**)
+- ⏳ **Court Agent: ZON module completion** (Priority 3, HIGH, ~90% complete, remaining ~10%: LLM provider integration, **COORDINATION IN PROGRESS**)
 - ⏳ **Core Agent: Build configuration guidance** (Priority 2, HIGH, **WAITING**)
 - ⏳ **Core Agent: TigerBeetle implementation timeline** (Medium Priority, **WAITING**)
 
 **Future Coordination**:
 - Court Agent: API contract coordination when ZON module available
-- Research Agent: Continue workflow observability collaboration
+- Research Agent: Continue workflow observability collaboration (Phase 3 complete ✅)
 - Core Agent: Report ZON format integration completion when ready
 
 **No Conflicts Detected**:
@@ -273,6 +340,8 @@
 - ✅ Independent Enhancements: **COMPLETE** — Event Bus, Scheduler, Visualizer enhancements done
 - ✅ ZON Format Integration Structure: **PREPARED** — Placeholder functions ready for implementation
 - ✅ ZON Format Allocator Coordination: **MESSAGE SENT** — Waiting on Court Agent response
+- ✅ ZON Format Integration Preparation: **COMPLETE** — Comprehensive preparation document ready
+- ✅ Research Agent Phase 4: **IMPLEMENTATION COMPLETE** — Research Agent has completed Phase 4 integration validation
 - Flow Agent has completed all core phases (Phase 1-5)
 - ZON format integration requires Court Agent ZON module completion and allocator coordination (blocking dependencies, Priority 3, HIGH)
 - TigerBeetle enhancement requires Core Agent implementation timeline (Medium Priority)
@@ -285,12 +354,13 @@
 - Workflow Observatory: `src/grain_flow/workflow_observatory.zig` (ZON integration structure prepared)
 - ZON Format Proposal: `docs/research/zon_format_grain_court_grainscript_proposal_2025-12-20-210116-pst.md`
 - ZON Allocator Coordination: `docs/agent-communications/flow_to_court_zon_allocator_coordination_2025-12-21-210000-pst.md`
-- Core Coordination Plan: `docs/agent-communications/core_agent_coordination_plan_2025-12-21-204511-pst.md`
+- ZON Integration Preparation: `docs/agent-communications/flow_zon_integration_preparation_2025-12-23-173000-pst.md`
+- Core Coordination Plan: `docs/agent-communications/core_agent_coordination_plan_2025-12-22-112149-pst.md`
 
 ---
 
-**Date**: 2025-12-21-210000-pst  
+**Date**: 2025-12-23-173000-pst  
 **Agent**: Grain Flow Agent (9th Agent)  
-**Status**: All Independent Work Complete, Waiting on Dependencies
+**Status**: All Independent Work Complete, ZON Integration Preparation Complete, Waiting on Dependencies
 
-Flow Agent has completed all core phases (Phase 1-5) and recent independent enhancements (Event Bus source filtering, Cron parser step value support, Hierarchical layout). ZON format integration structure prepared with placeholder functions (`export_all_metrics_zon()`, `get_aggregated_summary_zon()`). **Allocator coordination message sent to Court Agent** (2025-12-21-210000-pst) proposing bounded allocation wrapper approach. ZON format integration is **coordination in progress** with Court Agent (ZON module Phase 1 ~70% complete, remaining ~30%: LLM provider integration). **WAITING ON COURT AGENT** response on allocator approach and ZON module completion. TigerBeetle enhancement coordination is pending Core Agent implementation timeline (Medium Priority). Build configuration fix is pending Core Agent guidance (Priority 2, HIGH). **ALL INDEPENDENT WORK COMPLETE** — Waiting on Court Agent (ZON module completion, allocator approach response) and Core Agent (build configuration guidance, TigerBeetle timeline) to proceed.
+Flow Agent has completed all core phases (Phase 1-5) and recent independent enhancements (Event Bus source filtering, Cron parser step value support, Hierarchical layout). ZON format integration structure prepared with placeholder functions (`export_all_metrics_zon()`, `get_aggregated_summary_zon()`). **Allocator coordination message sent to Court Agent** (2025-12-21-210000-pst) proposing bounded allocation wrapper approach. **Comprehensive ZON integration preparation document created** (2025-12-23-173000-pst) with data structure mapping, conversion approach, implementation plan, testing strategy, and token efficiency estimation. **Research Agent Phase 4 implementation complete** ✅ (2025-12-23-122000-pst). ZON format integration is **coordination in progress** with Court Agent (ZON module Phase 1 ~90% complete, Phase 4 helpers available, remaining ~10%: LLM provider integration). **WAITING ON COURT AGENT** response on allocator approach and ZON module completion. TigerBeetle enhancement coordination is pending Core Agent implementation timeline (Medium Priority). Build configuration fix is pending Core Agent guidance (Priority 2, HIGH). **ALL INDEPENDENT WORK COMPLETE** — ZON integration preparation complete, ready for implementation when Court Agent provides bounded allocation API. Waiting on Court Agent (ZON module completion ~90%, allocator approach response) and Core Agent (build configuration guidance, TigerBeetle timeline) to proceed.

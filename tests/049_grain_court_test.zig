@@ -510,3 +510,60 @@ test "llm provider provider supports zon" {
     );
 }
 
+test "zon format round trip test" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const pairs = [_]struct {
+        key: []const u8,
+        value: grain_court.ZonFormat.ZonValue,
+    }{
+        .{
+            .key = "total_executions",
+            .value = grain_court.ZonFormat.ZonValue.from_u32(1000),
+        },
+        .{
+            .key = "active",
+            .value = grain_court.ZonFormat.ZonValue.from_bool(true),
+        },
+        .{
+            .key = "name",
+            .value = grain_court.ZonFormat.ZonValue.from_string("backup"),
+        },
+    };
+    const result = try grain_court.ZonFormat.round_trip_test(&pairs, allocator);
+    defer result.deinit();
+    try testing.expect(result.success);
+    try testing.expect(result.data_integrity);
+    try testing.expect(result.encoded_data.len > 0);
+    try testing.expect(result.decoded_pairs.len == 3);
+}
+
+test "zon format benchmark encode" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const pairs = [_]struct {
+        key: []const u8,
+        value: grain_court.ZonFormat.ZonValue,
+    }{
+        .{
+            .key = "total_executions",
+            .value = grain_court.ZonFormat.ZonValue.from_u32(1000),
+        },
+    };
+    const elapsed_ms = try grain_court.ZonFormat.benchmark_encode(&pairs, 100, allocator);
+    try testing.expect(elapsed_ms >= 0);
+}
+
+test "zon format benchmark decode" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const zon_str = "total_executions:1000\nactive:T";
+    const elapsed_ms = try grain_court.ZonFormat.benchmark_decode(zon_str, 100, allocator);
+    try testing.expect(elapsed_ms >= 0);
+}

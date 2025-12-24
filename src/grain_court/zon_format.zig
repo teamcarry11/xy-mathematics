@@ -683,6 +683,151 @@ fn parse_zon_value(value_str: []const u8, allocator: std.mem.Allocator) !ZonValu
     return ZonValue.from_string(value_str);
 }
 
+// Round-trip test result for integration validation.
+pub const RoundTripTestResult = struct {
+    original_pairs: []const struct { key: []const u8, value: ZonValue },
+    encoded_data: []const u8,
+    decoded_pairs: []const struct { key: []const u8, value: ZonValue },
+    success: bool,
+    data_integrity: bool,
+    allocator: std.mem.Allocator,
+
+    pub fn deinit(self: *RoundTripTestResult) void {
+        std.debug.assert(self.allocator != null);
+        if (self.encoded_data.len > 0) {
+            self.allocator.free(self.encoded_data);
+        }
+        if (self.decoded_pairs.len > 0) {
+            self.allocator.free(self.decoded_pairs);
+        }
+        self.* = undefined;
+    }
+};
+
+// Perform round-trip test (encode then decode).
+pub fn round_trip_test(
+    pairs: []const struct { key: []const u8, value: ZonValue },
+    allocator: std.mem.Allocator,
+) !RoundTripTestResult {
+    std.debug.assert(pairs.len > 0);
+    std.debug.assert(allocator != null);
+    const encode_result = try encode_zon(pairs, allocator);
+    defer encode_result.deinit();
+    const encoded_data = try allocator.alloc(u8, encode_result.len);
+    @memcpy(encoded_data, encode_result.data[0..encode_result.len]);
+    const decode_result = try decode_zon(encoded_data, allocator);
+    defer decode_result.deinit();
+    const decoded_pairs = try allocator.alloc(
+        struct { key: []const u8, value: ZonValue },
+        decode_result.pairs.len,
+    );
+    var i: u32 = 0;
+    while (i < decode_result.pairs.len) : (i += 1) {
+        decoded_pairs[i] = decode_result.pairs[i];
+    }
+    var success = true;
+    var data_integrity = true;
+    if (pairs.len != decode_result.pairs.len) {
+        success = false;
+        data_integrity = false;
+    } else {
+        i = 0;
+        while (i < pairs.len) : (i += 1) {
+            if (!std.mem.eql(u8, pairs[i].key, decode_result.pairs[i].key)) {
+                success = false;
+                data_integrity = false;
+                break;
+            }
+            if (pairs[i].value.value_type != decode_result.pairs[i].value.value_type) {
+                success = false;
+                data_integrity = false;
+                break;
+            }
+            switch (pairs[i].value.value_type) {
+                .bool_value => {
+                    if (pairs[i].value.bool_val != decode_result.pairs[i].value.bool_val) {
+                        success = false;
+                        data_integrity = false;
+                        break;
+                    }
+                },
+                .u32_value => {
+                    if (pairs[i].value.u32_val != decode_result.pairs[i].value.u32_val) {
+                        success = false;
+                        data_integrity = false;
+                        break;
+                    }
+                },
+                .string_value => {
+                    const str1 = pairs[i].value.string_val[0..pairs[i].value.string_val_len];
+                    const str2 = decode_result.pairs[i].value.string_val[0..decode_result.pairs[i].value.string_val_len];
+                    if (!std.mem.eql(u8, str1, str2)) {
+                        success = false;
+                        data_integrity = false;
+                        break;
+                    }
+                },
+                else => {},
+            }
+        }
+    }
+    std.debug.assert(encoded_data.len > 0);
+    return RoundTripTestResult{
+        .original_pairs = pairs,
+        .encoded_data = encoded_data,
+        .decoded_pairs = decoded_pairs,
+        .success = success,
+        .data_integrity = data_integrity,
+        .allocator = allocator,
+    };
+}
+
+// Performance benchmark for encoding.
+pub fn benchmark_encode(
+    pairs: []const struct { key: []const u8, value: ZonValue },
+    iterations: u32,
+    allocator: std.mem.Allocator,
+) !u64 {
+    std.debug.assert(pairs.len > 0);
+    std.debug.assert(iterations > 0);
+    std.debug.assert(iterations <= 10000);
+    std.debug.assert(allocator != null);
+    const start_time = std.time.nanoTimestamp();
+    var i: u32 = 0;
+    while (i < iterations) : (i += 1) {
+        const result = try encode_zon(pairs, allocator);
+        result.deinit();
+    }
+    const end_time = std.time.nanoTimestamp();
+    const elapsed_ns = @as(u64, @intCast(end_time - start_time));
+    const elapsed_ms = elapsed_ns / 1_000_000;
+    std.debug.assert(elapsed_ms > 0);
+    return elapsed_ms;
+}
+
+// Performance benchmark for decoding.
+pub fn benchmark_decode(
+    zon_data: []const u8,
+    iterations: u32,
+    allocator: std.mem.Allocator,
+) !u64 {
+    std.debug.assert(zon_data.len > 0);
+    std.debug.assert(iterations > 0);
+    std.debug.assert(iterations <= 10000);
+    std.debug.assert(allocator != null);
+    const start_time = std.time.nanoTimestamp();
+    var i: u32 = 0;
+    while (i < iterations) : (i += 1) {
+        const result = try decode_zon(zon_data, allocator);
+        result.deinit();
+    }
+    const end_time = std.time.nanoTimestamp();
+    const elapsed_ns = @as(u64, @intCast(end_time - start_time));
+    const elapsed_ms = elapsed_ns / 1_000_000;
+    std.debug.assert(elapsed_ms > 0);
+    return elapsed_ms;
+}
+
 // ZON encoding errors.
 pub const ZonEncodeError = error{
     ZonEncodeBufferFull,

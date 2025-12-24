@@ -91,29 +91,59 @@ pub fn unified_to_riscv(exception_type: ExceptionType) u32 {
 
 /// AArch64 exception code to unified exception type conversion.
 /// Why: Map AArch64-specific exception codes to unified types.
-/// Contract: aarch64_code must be valid AArch64 exception code.
-/// Note: AArch64 exception codes are architecture-specific (ESR_ELx, etc.).
-///       This is a placeholder for future AArch64 exception support.
+/// Contract: aarch64_code must be valid AArch64 exception code (ESR_ELx format).
+/// Note: AArch64 uses ESR_ELx (Exception Syndrome Register) where:
+///       - EC (Exception Class) is in bits [31:26]
+///       - Common EC values: 0x00 (unknown), 0x15 (SVC), 0x20/0x21 (instruction abort),
+///         0x24/0x25 (data abort), 0x30 (brk), 0x3C (illegal execution state)
 pub fn aarch64_to_unified(aarch64_code: u32) ExceptionType {
-    // Assert: AArch64 exception code must be valid (placeholder).
-    // Note: Actual AArch64 exception codes will be defined when AArch64
-    //       exception handling is implemented.
-    _ = aarch64_code;
+    // Extract exception class (EC) from bits [31:26].
+    const ec = (aarch64_code >> 26) & 0x3F;
     
-    // Placeholder: Return illegal instruction for now.
-    // TODO: Implement proper AArch64 exception code mapping.
-    return .illegal_instruction;
+    // Map AArch64 exception classes to unified types.
+    return switch (ec) {
+        0x15 => .environment_call_from_u_mode,  // SVC (syscall)
+        0x20, 0x21 => .instruction_page_fault,  // Instruction abort
+        0x24, 0x25 => {
+            // Data abort: check WnR bit (bit 6) to distinguish load/store
+            const is_write = (aarch64_code & (1 << 6)) != 0;
+            return if (is_write) .store_page_fault else .load_page_fault;
+        },
+        0x30 => .breakpoint,  // Brk instruction
+        0x3C => .illegal_instruction,  // Illegal execution state
+        else => {
+            // Unknown exception class: map to illegal instruction.
+            Debug.kprint("kernel: unknown AArch64 exception class 0x{x}, mapping to illegal_instruction\n", .{ec});
+            return .illegal_instruction;
+        },
+    };
 }
 
 /// Unified exception type to AArch64 exception code conversion.
 /// Why: Map unified types to AArch64-specific exception codes.
 /// Contract: exception_type must be valid.
-/// Note: This is a placeholder for future AArch64 exception support.
+/// Note: Returns canonical AArch64 ESR_ELx format with EC in bits [31:26].
+///       Lower bits are set to 0 (ISS not specified).
 pub fn unified_to_aarch64(exception_type: ExceptionType) u32 {
-    // Placeholder: Return 0 for now.
-    // TODO: Implement proper AArch64 exception code mapping.
-    _ = exception_type;
-    return 0;
+    // Map unified types to AArch64 exception classes (EC in bits [31:26]).
+    const ec: u32 = switch (exception_type) {
+        .environment_call_from_u_mode => 0x15,  // SVC
+        .instruction_page_fault => 0x21,         // Instruction abort (same EL)
+        .load_page_fault => 0x25,                // Data abort (same EL, read)
+        .store_page_fault => 0x25 | (1 << 6),    // Data abort (same EL, write)
+        .breakpoint => 0x30,                     // Brk
+        .illegal_instruction => 0x3C,            // Illegal execution state
+        .instruction_access_fault => 0x21,       // Instruction abort
+        .load_access_fault => 0x25,              // Data abort (read)
+        .store_access_fault => 0x25 | (1 << 6),  // Data abort (write)
+        .instruction_address_misaligned => 0x21, // Instruction abort (misaligned)
+        .load_address_misaligned => 0x25,        // Data abort (misaligned, read)
+        .store_address_misaligned => 0x25 | (1 << 6), // Data abort (misaligned, write)
+        .environment_call_from_s_mode => 0x15,   // SVC (supervisor mode)
+    };
+    
+    // Return ESR_ELx format with EC in bits [31:26].
+    return ec << 26;
 }
 
 /// Convert architecture-specific exception code to unified type.

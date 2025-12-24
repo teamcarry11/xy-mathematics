@@ -2,7 +2,7 @@
 
 **Agent**: Grain Aurora IDE Dream Browser Agent (2nd Agent)  
 **Status**: Active — Foundation components, shared modules, Dream Browser Spec v0 integration  
-**Last Updated**: 2025-12-21-234944-pst
+**Last Updated**: 2025-12-23-165214-PST
 
 ---
 
@@ -431,6 +431,46 @@ Grain Aurora IDE Dream Browser Agent is responsible for building the unified IDE
 - ✅ All tests pass with proper assertions
 - **Files**: `tests/130_aurora_glm46_provider_test.zig`, `build.zig`
 - **Date**: 2025-12-21-234944-PST
+
+#### 2.24: GLM-4.6 Client Comprehensive Tests ✅ **COMPLETE**
+- ✅ Created comprehensive test suite (`tests/131_aurora_glm46_test.zig`)
+- ✅ Tests for GLM-4.6 client constants (MAX_CONTEXT_TOKENS, MAX_MESSAGE_SIZE)
+- ✅ Tests for Message, CompletionRequest, CompletionChunk, Choice, Delta structures
+- ✅ Tests for client initialization and deinitialization
+- ✅ Tests for default model and API URL
+- ✅ Tests for context window bounds checking
+- ✅ Tests for message size bounds checking
+- ✅ Tests for multiple messages support
+- ✅ Tests for transformation request structure (stub)
+- ✅ Tests for tool call request structure (stub)
+- ✅ Tests for tool name and args bounds checking
+- ✅ Tests for completion request with/without max tokens
+- ✅ Tests for temperature range
+- ✅ Tests for choice finish reasons
+- ✅ Tests for delta role/content combinations
+- ✅ Tests for multiple instances
+- ✅ Added `aurora_glm46_module` and `glm46_test_file` to build.zig
+- ✅ GrainStyle compliance (grain_case, u32 types, max 73 chars per line)
+- ✅ All tests pass with proper assertions
+- **Files**: `tests/131_aurora_glm46_test.zig`, `build.zig`
+- **Date**: 2025-12-23-163810-PST
+
+#### 2.25: Cocoa Comprehensive Tests ✅ **COMPLETE**
+- ✅ Created comprehensive test suite (`tests/132_aurora_cocoa_test.zig`)
+- ✅ Tests for MenuEntry structure (with and without action)
+- ✅ Tests for WindowConfig structure (default title, custom title, with menu)
+- ✅ Tests for App initialization and deinitialization
+- ✅ Tests for App present operations (empty menu, single entry, multiple entries)
+- ✅ Tests for menu entries with actions and without actions
+- ✅ Tests for mixed menu entries
+- ✅ Tests for multiple app instances
+- ✅ Tests for edge cases (long title, empty title, long menu title, long action)
+- ✅ Tests for multiple present calls
+- ✅ Added `aurora_cocoa_module` and `cocoa_test_file` to build.zig
+- ✅ GrainStyle compliance (grain_case, u32 types, max 73 chars per line)
+- ✅ All tests pass with proper assertions
+- **Files**: `tests/132_aurora_cocoa_test.zig`, `build.zig`
+- **Date**: 2025-12-23-165214-PST
 
 #### 2.23: Dream Browser Spec v0 Integration 📋 **PLANNED**
 - 📋 Dream Browser Spec v0 research complete — ready for integration

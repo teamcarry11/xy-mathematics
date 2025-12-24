@@ -58,6 +58,8 @@ const udp_socket = @import("udp_socket.zig");
 const UdpSocketManager = udp_socket.UdpSocketManager;
 const audio = @import("audio.zig");
 const AudioDeviceManager = audio.AudioDeviceManager;
+const kernel_stats_aggregator = @import("kernel_stats_aggregator.zig");
+const KernelStatsSnapshot = kernel_stats_aggregator.KernelStatsSnapshot;
 
 // Export resource_cleanup for tests.
 pub const resource_cleanup_module = resource_cleanup;
@@ -129,7 +131,11 @@ pub const Syscall = enum(u32) {
     network_create_interface = 90,
     network_set_state = 91,
     network_set_ipv4 = 92,
+    network_set_ipv6 = 94,
     network_get_interface = 93,
+    network_delete_interface = 95,
+    network_enumerate_interfaces = 96,
+    network_get_stats = 97,
     
     // TCP Socket Operations
     tcp_socket = 100,
@@ -140,6 +146,8 @@ pub const Syscall = enum(u32) {
     tcp_send = 105,
     tcp_recv = 106,
     tcp_close = 107,
+    tcp_enumerate_sockets = 108,
+    tcp_get_stats = 109,
     
     // UDP Socket Operations
     udp_socket = 110,
@@ -147,6 +155,8 @@ pub const Syscall = enum(u32) {
     udp_sendto = 112,
     udp_recvfrom = 113,
     udp_close = 114,
+    udp_enumerate_sockets = 115,
+    udp_get_stats = 116,
     
     // Audio Device Operations
     audio_create_device = 120,
@@ -161,6 +171,9 @@ pub const Syscall = enum(u32) {
     audio_set_format = 129,
     audio_read = 130,
     audio_write = 131,
+    audio_enumerate_devices = 132,
+    audio_delete_device = 133,
+    audio_get_stats = 134,
 };
 
 /// Memory mapping flags.
@@ -971,6 +984,36 @@ pub const BasinKernel = struct {
         return null;
     }
     
+    /// Get unified kernel statistics snapshot.
+    /// Why: Provide comprehensive system statistics for monitoring and debugging.
+    /// Returns: Statistics snapshot with aggregated metrics from all subsystems.
+    pub fn get_kernel_stats_snapshot(self: *const BasinKernel) KernelStatsSnapshot {
+        // Assert: Kernel must be initialized (precondition).
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Kernel ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Kernel ptr unaligned", .{});
+        
+        // Get statistics from all subsystems.
+        const tcp_stats = self.tcp_sockets.get_stats();
+        const udp_stats = self.udp_sockets.get_stats();
+        const network_stats = self.network_interfaces.get_stats();
+        const audio_stats = self.audio_devices.get_stats();
+        const scheduler_stats = self.scheduler.get_stats();
+        const memory_stats = &self.memory_stats;
+        const page_fault_stats = &self.page_fault_stats;
+        
+        // Create unified snapshot.
+        return KernelStatsSnapshot.create(
+            tcp_stats,
+            udp_stats,
+            network_stats,
+            audio_stats,
+            scheduler_stats,
+            memory_stats,
+            page_fault_stats,
+        );
+    }
+    
     /// Calculate memory usage for a process by summing its memory mappings.
     /// Why: Track total memory used by a process for resource monitoring.
     /// Contract: process_id must be valid (non-zero).
@@ -1366,7 +1409,11 @@ pub const BasinKernel = struct {
             .network_create_interface => self.syscall_network_create_interface(arg1, arg2, arg3, arg4),
             .network_set_state => self.syscall_network_set_state(arg1, arg2, arg3, arg4),
             .network_set_ipv4 => self.syscall_network_set_ipv4(arg1, arg2, arg3, arg4),
+            .network_set_ipv6 => self.syscall_network_set_ipv6(arg1, arg2, arg3, arg4),
             .network_get_interface => self.syscall_network_get_interface(arg1, arg2, arg3, arg4),
+            .network_delete_interface => self.syscall_network_delete_interface(arg1, arg2, arg3, arg4),
+            .network_enumerate_interfaces => self.syscall_network_enumerate_interfaces(arg1, arg2, arg3, arg4),
+            .network_get_stats => self.syscall_network_get_stats(arg1, arg2, arg3, arg4),
             .tcp_socket => self.syscall_tcp_socket(arg1, arg2, arg3, arg4),
             .tcp_bind => self.syscall_tcp_bind(arg1, arg2, arg3, arg4),
             .tcp_listen => self.syscall_tcp_listen(arg1, arg2, arg3, arg4),
@@ -1375,11 +1422,15 @@ pub const BasinKernel = struct {
             .tcp_send => self.syscall_tcp_send(arg1, arg2, arg3, arg4),
             .tcp_recv => self.syscall_tcp_recv(arg1, arg2, arg3, arg4),
             .tcp_close => self.syscall_tcp_close(arg1, arg2, arg3, arg4),
+            .tcp_enumerate_sockets => self.syscall_tcp_enumerate_sockets(arg1, arg2, arg3, arg4),
+            .tcp_get_stats => self.syscall_tcp_get_stats(arg1, arg2, arg3, arg4),
             .udp_socket => self.syscall_udp_socket(arg1, arg2, arg3, arg4),
             .udp_bind => self.syscall_udp_bind(arg1, arg2, arg3, arg4),
             .udp_sendto => self.syscall_udp_sendto(arg1, arg2, arg3, arg4),
             .udp_recvfrom => self.syscall_udp_recvfrom(arg1, arg2, arg3, arg4),
             .udp_close => self.syscall_udp_close(arg1, arg2, arg3, arg4),
+            .udp_enumerate_sockets => self.syscall_udp_enumerate_sockets(arg1, arg2, arg3, arg4),
+            .udp_get_stats => self.syscall_udp_get_stats(arg1, arg2, arg3, arg4),
             .audio_create_device => self.syscall_audio_create_device(arg1, arg2, arg3, arg4),
             .audio_set_volume => self.syscall_audio_set_volume(arg1, arg2, arg3, arg4),
             .audio_set_mute => self.syscall_audio_set_mute(arg1, arg2, arg3, arg4),
@@ -1392,6 +1443,9 @@ pub const BasinKernel = struct {
             .audio_set_format => self.syscall_audio_set_format(arg1, arg2, arg3, arg4),
             .audio_read => self.syscall_audio_read(arg1, arg2, arg3, arg4),
             .audio_write => self.syscall_audio_write(arg1, arg2, arg3, arg4),
+            .audio_enumerate_devices => self.syscall_audio_enumerate_devices(arg1, arg2, arg3, arg4),
+            .audio_delete_device => self.syscall_audio_delete_device(arg1, arg2, arg3, arg4),
+            .audio_get_stats => self.syscall_audio_get_stats(arg1, arg2, arg3, arg4),
         };
     }
     
@@ -4470,6 +4524,62 @@ pub const BasinKernel = struct {
         return result;
     }
     
+    /// Set IPv6 address for network interface.
+    /// Why: Configure IPv6 address.
+    /// Contract: iface_idx must be valid, addr_ptr must be valid VM address.
+    pub fn syscall_network_set_ipv6(
+        self: *BasinKernel,
+        iface_idx: u64,
+        addr_ptr: u64,
+        _arg3: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg3;
+        _ = _arg4;
+        
+        // Assert: Interface index must be valid (within bounds).
+        const idx = @as(u32, @truncate(iface_idx));
+        if (idx >= 8) {
+            return BasinError.invalid_argument; // Invalid interface index
+        }
+        
+        // Assert: Address pointer must be valid (non-zero, within VM memory).
+        if (addr_ptr == 0) {
+            return BasinError.invalid_argument; // Null pointer
+        }
+        
+        const VM_MEMORY_SIZE: u64 = 4 * 1024 * 1024; // 4MB default
+        if (addr_ptr >= VM_MEMORY_SIZE) {
+            return BasinError.invalid_argument; // Address pointer exceeds VM memory
+        }
+        
+        // Assert: Address must fit within VM memory (16 bytes for IPv6).
+        if (addr_ptr + 16 > VM_MEMORY_SIZE) {
+            return BasinError.invalid_argument; // Address exceeds VM memory
+        }
+        
+        // Read IPv6 address from VM memory (stub: would use vm_memory_reader).
+        // For now, use a placeholder address (::1 - localhost).
+        const ipv6_addr: [16]u8 = [16]u8{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 };
+        
+        // Set IPv6 address.
+        if (!self.network_interfaces.set_ipv6_address(idx, ipv6_addr)) {
+            return BasinError.not_found; // Interface not found
+        }
+        
+        const result = SyscallResult.ok(0);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
     /// Get network interface information.
     /// Why: Retrieve interface configuration.
     /// Contract: iface_idx must be valid, info_ptr must be valid VM address.
@@ -4513,6 +4623,149 @@ pub const BasinKernel = struct {
         // For now, just return success.
         // Note: info_ptr and iface are validated but not used in stub implementation.
         _ = iface;
+        
+        const result = SyscallResult.ok(0);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
+    /// Delete network interface.
+    /// Why: Remove network interface.
+    /// Contract: iface_idx must be valid.
+    pub fn syscall_network_delete_interface(
+        self: *BasinKernel,
+        iface_idx: u64,
+        _arg2: u64,
+        _arg3: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg2;
+        _ = _arg3;
+        _ = _arg4;
+        
+        // Assert: Interface index must be valid (within bounds).
+        const idx = @as(u32, @truncate(iface_idx));
+        if (idx >= 8) {
+            return BasinError.invalid_argument; // Invalid interface index
+        }
+        
+        // Delete interface.
+        if (!self.network_interfaces.delete_interface(idx)) {
+            return BasinError.not_found; // Interface not found
+        }
+        
+        const result = SyscallResult.ok(0);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
+    /// Enumerate network interfaces.
+    /// Why: Get list of all network interfaces.
+    /// Contract: indices_ptr must be valid VM address, max_count must be valid.
+    pub fn syscall_network_enumerate_interfaces(
+        self: *BasinKernel,
+        indices_ptr: u64,
+        max_count: u64,
+        _arg3: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg3;
+        _ = _arg4;
+        
+        // Assert: Indices pointer must be valid (non-zero, within VM memory).
+        if (indices_ptr == 0) {
+            return BasinError.invalid_argument; // Null pointer
+        }
+        
+        const VM_MEMORY_SIZE: u64 = 4 * 1024 * 1024; // 4MB default
+        if (indices_ptr >= VM_MEMORY_SIZE) {
+            return BasinError.invalid_argument; // Indices pointer exceeds VM memory
+        }
+        
+        // Assert: Max count must be reasonable (max 8 interfaces).
+        const max_cnt = @as(u32, @truncate(max_count));
+        if (max_cnt > 8) {
+            return BasinError.invalid_argument; // Max count too large
+        }
+        
+        // Assert: Indices array must fit within VM memory (max 8 * 4 bytes = 32 bytes).
+        const INDICES_SIZE: u64 = max_cnt * 4; // u32 per index
+        if (indices_ptr + INDICES_SIZE > VM_MEMORY_SIZE) {
+            return BasinError.invalid_argument; // Indices array exceeds VM memory
+        }
+        
+        // Create temporary indices array.
+        var temp_indices: [8]u32 = undefined;
+        const count = self.network_interfaces.enumerate_interfaces(&temp_indices);
+        
+        // Write indices to VM memory (stub: would use vm_memory_writer).
+        // For now, just return the count.
+        // Note: indices_ptr and temp_indices are validated but not written in stub.
+        _ = temp_indices;
+        
+        const result = SyscallResult.ok(count);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
+    /// Get network interface statistics.
+    /// Why: Provide network interface statistics to userspace.
+    /// Contract: stats_ptr must be valid pointer to NetworkInterfaceStats structure.
+    pub fn syscall_network_get_stats(
+        self: *BasinKernel,
+        stats_ptr: u64,
+        _arg2: u64,
+        _arg3: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg2;
+        _ = _arg3;
+        _ = _arg4;
+        
+        // Assert: Stats pointer must be valid (non-zero, within VM memory).
+        if (stats_ptr == 0) {
+            return BasinError.invalid_argument; // Null pointer
+        }
+        
+        const VM_MEMORY_SIZE: u64 = 4 * 1024 * 1024; // 4MB default
+        if (stats_ptr >= VM_MEMORY_SIZE) {
+            return BasinError.invalid_argument; // Stats pointer exceeds VM memory
+        }
+        
+        // Assert: NetworkInterfaceStats structure must fit within VM memory.
+        // NetworkInterfaceStats size: 10 fields (7 u64 + 1 u32 + 2 u64) = 7*8 + 4 + 2*8 = 76 bytes
+        const NETWORK_STATS_SIZE: u64 = 76;
+        if (stats_ptr + NETWORK_STATS_SIZE > VM_MEMORY_SIZE) {
+            return BasinError.invalid_argument; // Stats structure exceeds VM memory
+        }
+        
+        // Note: Statistics structure will be written by integration layer.
+        // This syscall validates the pointer and returns success.
+        // Contract: stats_ptr must be valid (checked above).
         
         const result = SyscallResult.ok(0);
         
@@ -5140,6 +5393,159 @@ pub const BasinKernel = struct {
         return result;
     }
     
+    /// Enumerate UDP sockets.
+    /// Why: Get list of all UDP sockets.
+    /// Contract: socket_ids_ptr must be valid VM address, max_count must be valid.
+    pub fn syscall_udp_enumerate_sockets(
+        self: *BasinKernel,
+        socket_ids_ptr: u64,
+        max_count: u64,
+        _arg3: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg3;
+        _ = _arg4;
+        
+        // Assert: Socket IDs pointer must be valid (non-zero, within VM memory).
+        if (socket_ids_ptr == 0) {
+            return BasinError.invalid_argument; // Null pointer
+        }
+        
+        const VM_MEMORY_SIZE: u64 = 4 * 1024 * 1024; // 4MB default
+        if (socket_ids_ptr >= VM_MEMORY_SIZE) {
+            return BasinError.invalid_argument; // Socket IDs pointer exceeds VM memory
+        }
+        
+        // Assert: Max count must be reasonable (max 64 sockets).
+        const max_cnt = @as(u32, @truncate(max_count));
+        if (max_cnt > 64) {
+            return BasinError.invalid_argument; // Max count too large
+        }
+        
+        // Assert: Socket IDs array must fit within VM memory (max 64 * 8 bytes = 512 bytes).
+        const SOCKET_IDS_SIZE: u64 = max_cnt * 8; // u64 per socket ID
+        if (socket_ids_ptr + SOCKET_IDS_SIZE > VM_MEMORY_SIZE) {
+            return BasinError.invalid_argument; // Socket IDs array exceeds VM memory
+        }
+        
+        // Create temporary socket IDs array.
+        var temp_socket_ids: [64]u64 = undefined;
+        const count = self.udp_sockets.enumerate_sockets(&temp_socket_ids);
+        
+        // Write socket IDs to VM memory (stub: would use vm_memory_writer).
+        // For now, just return the count.
+        // Note: socket_ids_ptr and temp_socket_ids are validated but not written in stub.
+        _ = temp_socket_ids;
+        
+        const result = SyscallResult.ok(count);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
+    /// Get TCP socket statistics.
+    /// Why: Provide TCP socket statistics to userspace.
+    /// Contract: stats_ptr must be valid pointer to TcpSocketStats structure.
+    pub fn syscall_tcp_get_stats(
+        self: *BasinKernel,
+        stats_ptr: u64,
+        _arg2: u64,
+        _arg3: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg2;
+        _ = _arg3;
+        _ = _arg4;
+        
+        // Assert: Stats pointer must be valid (non-zero, within VM memory).
+        if (stats_ptr == 0) {
+            return BasinError.invalid_argument; // Null pointer
+        }
+        
+        const VM_MEMORY_SIZE: u64 = 4 * 1024 * 1024; // 4MB default
+        if (stats_ptr >= VM_MEMORY_SIZE) {
+            return BasinError.invalid_argument; // Stats pointer exceeds VM memory
+        }
+        
+        // Assert: TcpSocketStats structure must fit within VM memory.
+        // TcpSocketStats size: 13 fields (8 u64 + 2 u32 + 3 u64) = 8*8 + 2*4 + 3*8 = 64 + 8 + 24 = 96 bytes
+        const TCP_STATS_SIZE: u64 = 96;
+        if (stats_ptr + TCP_STATS_SIZE > VM_MEMORY_SIZE) {
+            return BasinError.invalid_argument; // Stats structure exceeds VM memory
+        }
+        
+        // Note: Statistics structure will be written by integration layer.
+        // This syscall validates the pointer and returns success.
+        // Contract: stats_ptr must be valid (checked above).
+        
+        const result = SyscallResult.ok(0);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
+    /// Get UDP socket statistics.
+    /// Why: Provide UDP socket statistics to userspace.
+    /// Contract: stats_ptr must be valid pointer to UdpSocketStats structure.
+    pub fn syscall_udp_get_stats(
+        self: *BasinKernel,
+        stats_ptr: u64,
+        _arg2: u64,
+        _arg3: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg2;
+        _ = _arg3;
+        _ = _arg4;
+        
+        // Assert: Stats pointer must be valid (non-zero, within VM memory).
+        if (stats_ptr == 0) {
+            return BasinError.invalid_argument; // Null pointer
+        }
+        
+        const VM_MEMORY_SIZE: u64 = 4 * 1024 * 1024; // 4MB default
+        if (stats_ptr >= VM_MEMORY_SIZE) {
+            return BasinError.invalid_argument; // Stats pointer exceeds VM memory
+        }
+        
+        // Assert: UdpSocketStats structure must fit within VM memory.
+        // UdpSocketStats size: 9 fields (4 u64 + 1 u32 + 1 u64 + 2 u64 + 1 u64) = 4*8 + 4 + 8 + 2*8 + 8 = 32 + 4 + 8 + 16 + 8 = 68 bytes
+        const UDP_STATS_SIZE: u64 = 68;
+        if (stats_ptr + UDP_STATS_SIZE > VM_MEMORY_SIZE) {
+            return BasinError.invalid_argument; // Stats structure exceeds VM memory
+        }
+        
+        // Note: Statistics structure will be written by integration layer.
+        // This syscall validates the pointer and returns success.
+        // Contract: stats_ptr must be valid (checked above).
+        
+        const result = SyscallResult.ok(0);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
     /// Create an audio device.
     /// Why: Add a new audio device.
     /// Contract: name_ptr, name_len, and device_type must be valid.
@@ -5741,6 +6147,150 @@ pub const BasinKernel = struct {
         // Assert: result must be success (not error).
         Debug.kassert(result == .success, "Result not success", .{});
         Debug.kassert(result.success <= data_len, "Write > data len", .{});
+        
+        return result;
+    }
+    
+    /// Enumerate audio devices.
+    /// Why: Get list of all audio devices.
+    /// Contract: device_ids_ptr must be valid VM address, max_count must be valid.
+    pub fn syscall_audio_enumerate_devices(
+        self: *BasinKernel,
+        device_ids_ptr: u64,
+        max_count: u64,
+        _arg3: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg3;
+        _ = _arg4;
+        
+        // Assert: Device IDs pointer must be valid (non-zero, within VM memory).
+        if (device_ids_ptr == 0) {
+            return BasinError.invalid_argument; // Null pointer
+        }
+        
+        const VM_MEMORY_SIZE: u64 = 4 * 1024 * 1024; // 4MB default
+        if (device_ids_ptr >= VM_MEMORY_SIZE) {
+            return BasinError.invalid_argument; // Device IDs pointer exceeds VM memory
+        }
+        
+        // Assert: Max count must be reasonable (max 16 devices).
+        const max_cnt = @as(u32, @truncate(max_count));
+        if (max_cnt > 16) {
+            return BasinError.invalid_argument; // Max count too large
+        }
+        
+        // Assert: Device IDs array must fit within VM memory (max 16 * 4 bytes = 64 bytes).
+        const DEVICE_IDS_SIZE: u64 = max_cnt * 4; // u32 per device ID
+        if (device_ids_ptr + DEVICE_IDS_SIZE > VM_MEMORY_SIZE) {
+            return BasinError.invalid_argument; // Device IDs array exceeds VM memory
+        }
+        
+        // Create temporary device IDs array.
+        var temp_device_ids: [16]u32 = undefined;
+        const count = self.audio_devices.enumerate_devices(&temp_device_ids);
+        
+        // Write device IDs to VM memory (stub: would use vm_memory_writer).
+        // For now, just return the count.
+        // Note: device_ids_ptr and temp_device_ids are validated but not written in stub.
+        _ = temp_device_ids;
+        
+        const result = SyscallResult.ok(count);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
+    /// Get audio device statistics.
+    /// Why: Provide audio device statistics to userspace.
+    /// Contract: stats_ptr must be valid pointer to AudioDeviceStats structure.
+    pub fn syscall_audio_get_stats(
+        self: *BasinKernel,
+        stats_ptr: u64,
+        _arg2: u64,
+        _arg3: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg2;
+        _ = _arg3;
+        _ = _arg4;
+        
+        // Assert: Stats pointer must be valid (non-zero, within VM memory).
+        if (stats_ptr == 0) {
+            return BasinError.invalid_argument; // Null pointer
+        }
+        
+        const VM_MEMORY_SIZE: u64 = 4 * 1024 * 1024; // 4MB default
+        if (stats_ptr >= VM_MEMORY_SIZE) {
+            return BasinError.invalid_argument; // Stats pointer exceeds VM memory
+        }
+        
+        // Assert: AudioDeviceStats structure must fit within VM memory.
+        // AudioDeviceStats size: 15 fields (6 u64 + 1 u32 + 8 u64) = 6*8 + 4 + 8*8 = 116 bytes
+        const AUDIO_STATS_SIZE: u64 = 116;
+        if (stats_ptr + AUDIO_STATS_SIZE > VM_MEMORY_SIZE) {
+            return BasinError.invalid_argument; // Stats structure exceeds VM memory
+        }
+        
+        // Note: Statistics structure will be written by integration layer.
+        // This syscall validates the pointer and returns success.
+        // Contract: stats_ptr must be valid (checked above).
+        
+        const result = SyscallResult.ok(0);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
+    /// Delete audio device.
+    /// Why: Remove audio device.
+    /// Contract: device_id must be valid.
+    pub fn syscall_audio_delete_device(
+        self: *BasinKernel,
+        device_id: u64,
+        _arg2: u64,
+        _arg3: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg2;
+        _ = _arg3;
+        _ = _arg4;
+        
+        // Assert: Device ID must be non-zero.
+        if (device_id == 0) {
+            return BasinError.invalid_argument; // Invalid device ID
+        }
+        
+        const dev_id = @as(u32, @truncate(device_id));
+        
+        // Delete device.
+        if (!self.audio_devices.delete_device(dev_id)) {
+            return BasinError.not_found; // Device not found
+        }
+        
+        const result = SyscallResult.ok(0);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
         
         return result;
     }

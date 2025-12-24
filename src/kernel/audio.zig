@@ -4,6 +4,7 @@
 
 const std = @import("std");
 const Debug = @import("debug.zig");
+const AudioDeviceStats = @import("audio_device_stats.zig").AudioDeviceStats;
 
 /// Maximum number of audio devices.
 /// Why: Bounded allocation for device tracking.
@@ -257,6 +258,10 @@ pub const AudioDeviceManager = struct {
     /// Whether manager is initialized.
     initialized: bool,
     
+    /// Audio device statistics tracker.
+    /// Why: Track device operations and state changes.
+    stats: AudioDeviceStats,
+    
     /// Initialize audio device manager.
     /// Why: Set up manager state.
     pub fn init() AudioDeviceManager {
@@ -268,6 +273,7 @@ pub const AudioDeviceManager = struct {
             .active_output_device_id = 0,
             .active_input_device_id = 0,
             .initialized = true,
+            .stats = AudioDeviceStats.init(),
         };
         var i: u32 = 0;
         while (i < MAX_AUDIO_DEVICES) : (i += 1) {
@@ -291,11 +297,13 @@ pub const AudioDeviceManager = struct {
         
         // Assert: Name must be non-empty.
         if (name.len == 0) {
+            self.stats.record_creation_error();
             return null;
         }
         
         // Assert: Name must fit in buffer.
         if (name.len >= MAX_DEVICE_NAME_LEN) {
+            self.stats.record_creation_error();
             return null;
         }
         
@@ -313,6 +321,7 @@ pub const AudioDeviceManager = struct {
                 // Set name.
                 if (!self.devices[idx].set_name(name)) {
                     self.devices[idx].allocated = false;
+                    self.stats.record_creation_error();
                     return null;
                 }
                 
@@ -323,11 +332,15 @@ pub const AudioDeviceManager = struct {
                     self.next_device_id = 1; // Wrap around (skip 0)
                 }
                 
+                // Record statistics.
+                self.stats.record_device_created();
+                
                 return device_id;
             }
         }
         
         // No free slot found.
+        self.stats.record_creation_error();
         return null;
     }
     
@@ -372,14 +385,23 @@ pub const AudioDeviceManager = struct {
         
         // Assert: Volume must be valid (0-100).
         if (volume > 100) {
+            self.stats.record_configuration_error();
             return false;
         }
         
         const device = self.get_device(device_id) orelse {
+            self.stats.record_configuration_error();
             return false;
         };
         
+        const old_volume = device.volume;
         device.volume = volume;
+        
+        // Record statistics if volume changed.
+        if (old_volume != volume) {
+            self.stats.record_volume_change();
+        }
+        
         return true;
     }
     
@@ -395,10 +417,18 @@ pub const AudioDeviceManager = struct {
         Debug.kassert(self.initialized, "Manager not initialized", .{});
         
         const device = self.get_device(device_id) orelse {
+            self.stats.record_configuration_error();
             return false;
         };
         
+        const old_muted = device.muted;
         device.muted = muted;
+        
+        // Record statistics if mute state changed.
+        if (old_muted != muted) {
+            self.stats.record_mute_toggle();
+        }
+        
         return true;
     }
     
@@ -414,10 +444,22 @@ pub const AudioDeviceManager = struct {
         Debug.kassert(self.initialized, "Manager not initialized", .{});
         
         const device = self.get_device(device_id) orelse {
+            self.stats.record_configuration_error();
             return false;
         };
         
+        // Record state transition.
+        const old_state = device.state;
         device.state = state;
+        if (old_state != state) {
+            switch (state) {
+                .connected => self.stats.record_connected_transition(),
+                .active => self.stats.record_active_transition(),
+                .disabled => self.stats.record_disabled_transition(),
+                .disconnected => {}, // No specific transition counter for disconnected
+            }
+        }
+        
         return true;
     }
     
@@ -517,6 +559,32 @@ pub const AudioDeviceManager = struct {
         self.master_muted = muted;
     }
     
+    /// Enumerate all audio devices.
+    /// Why: Get list of all allocated devices.
+    /// Contract: device_ids array must be large enough (MAX_AUDIO_DEVICES).
+    /// Returns: Number of devices found.
+    pub fn enumerate_devices(
+        self: *AudioDeviceManager,
+        device_ids: []u32,
+    ) u32 {
+        // Assert: Manager must be initialized.
+        Debug.kassert(self.initialized, "Manager not initialized", .{});
+        
+        // Assert: Device IDs array must be large enough.
+        Debug.kassert(device_ids.len >= MAX_AUDIO_DEVICES, "Device IDs array too small", .{});
+        
+        var count: u32 = 0;
+        var idx: u32 = 0;
+        while (idx < MAX_AUDIO_DEVICES) : (idx += 1) {
+            if (self.devices[idx].allocated) {
+                device_ids[count] = self.devices[idx].device_id;
+                count += 1;
+            }
+        }
+        
+        return count;
+    }
+    
     /// Delete device.
     /// Why: Remove audio device.
     /// Contract: device_id must be valid.
@@ -541,11 +609,16 @@ pub const AudioDeviceManager = struct {
                 
                 // Deallocate device.
                 self.devices[idx] = AudioDevice.init();
+                
+                // Record statistics.
+                self.stats.record_device_deleted();
+                
                 return true;
             }
         }
         
         // Device not found.
+        self.stats.record_deletion_error();
         return false;
     }
     
@@ -562,14 +635,23 @@ pub const AudioDeviceManager = struct {
         
         // Assert: Format must be valid.
         if (!format.is_valid()) {
+            self.stats.record_configuration_error();
             return false;
         }
         
         const device = self.get_device(device_id) orelse {
+            self.stats.record_configuration_error();
             return false;
         };
         
-        return device.set_format(format);
+        const result = device.set_format(format);
+        if (result) {
+            self.stats.record_format_change();
+        } else {
+            self.stats.record_configuration_error();
+        }
+        
+        return result;
     }
     
     /// Read audio data from device.
@@ -586,15 +668,18 @@ pub const AudioDeviceManager = struct {
         
         // Assert: Buffer must be non-empty.
         if (buffer.len == 0) {
+            self.stats.record_io_error();
             return null;
         }
         
         // Assert: Buffer must fit within max size.
         if (buffer.len > MAX_AUDIO_BUFFER_SIZE) {
+            self.stats.record_io_error();
             return null;
         }
         
         const device = self.get_device(device_id) orelse {
+            self.stats.record_io_error();
             return null;
         };
         
@@ -602,11 +687,13 @@ pub const AudioDeviceManager = struct {
         if (device.device_type != .microphone and
             device.device_type != .bluetooth and
             device.device_type != .usb) {
+            self.stats.record_io_error();
             return null;
         }
         
         // Assert: Device must be active.
         if (device.state != .active) {
+            self.stats.record_io_error();
             return null;
         }
         
@@ -628,6 +715,9 @@ pub const AudioDeviceManager = struct {
             }
             
             device.input_buffer_len -= bytes_to_read;
+            
+            // Record statistics.
+            self.stats.record_bytes_read(bytes_to_read);
         }
         
         return bytes_to_read;
@@ -647,15 +737,18 @@ pub const AudioDeviceManager = struct {
         
         // Assert: Data must be non-empty.
         if (data.len == 0) {
+            self.stats.record_io_error();
             return null;
         }
         
         // Assert: Data must fit within max size.
         if (data.len > MAX_AUDIO_BUFFER_SIZE) {
+            self.stats.record_io_error();
             return null;
         }
         
         const device = self.get_device(device_id) orelse {
+            self.stats.record_io_error();
             return null;
         };
         
@@ -664,11 +757,13 @@ pub const AudioDeviceManager = struct {
             device.device_type != .headphone and
             device.device_type != .bluetooth and
             device.device_type != .usb) {
+            self.stats.record_io_error();
             return null;
         }
         
         // Assert: Device must be active.
         if (device.state != .active) {
+            self.stats.record_io_error();
             return null;
         }
         
@@ -683,9 +778,22 @@ pub const AudioDeviceManager = struct {
                 data[0..bytes_to_write]);
             
             device.output_buffer_len += bytes_to_write;
+            
+            // Record statistics.
+            self.stats.record_bytes_written(bytes_to_write);
         }
         
         return bytes_to_write;
+    }
+    
+    /// Get audio device statistics snapshot.
+    /// Why: Provide statistics for userspace queries.
+    /// Returns: Reference to statistics tracker.
+    pub fn get_stats(self: *const AudioDeviceManager) *const AudioDeviceStats {
+        // Assert: Manager must be initialized.
+        Debug.kassert(self.initialized, "Manager not initialized", .{});
+        
+        return &self.stats;
     }
 };
 

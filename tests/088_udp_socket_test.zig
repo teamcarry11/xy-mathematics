@@ -135,3 +135,30 @@ test "udp socket invalid port" {
     try testing.expectError(BasinError.invalid_argument, result2);
 }
 
+
+// Test: enumerate UDP sockets.
+test "udp enumerate sockets" {
+    var kernel = BasinKernel.init();
+    
+    // Create multiple sockets.
+    const result1 = try kernel.syscall_udp_socket(0, 0, 0, 0);
+    try testing.expect(result1 == .success);
+    const socket_id1 = result1.success;
+    
+    const result2 = try kernel.syscall_udp_socket(0, 0, 0, 0);
+    try testing.expect(result2 == .success);
+    const socket_id2 = result2.success;
+    
+    // Enumerate sockets.
+    const socket_ids_ptr: u64 = 0x30000;
+    const max_count: u64 = 64;
+    const result3 = try kernel.syscall_udp_enumerate_sockets(
+        socket_ids_ptr,
+        max_count,
+        0,
+        0,
+    );
+    try testing.expect(result3 == .success);
+    const count = result3.success;
+    try testing.expect(count >= 2); // At least 2 sockets
+}

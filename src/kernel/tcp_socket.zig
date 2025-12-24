@@ -4,6 +4,7 @@
 
 const std = @import("std");
 const Debug = @import("debug.zig");
+const TcpSocketStats = @import("tcp_socket_stats.zig").TcpSocketStats;
 
 /// Maximum number of TCP sockets.
 /// Why: Bounded allocation for socket tracking.
@@ -108,6 +109,10 @@ pub const TcpSocketManager = struct {
     /// Whether manager is initialized.
     initialized: bool,
     
+    /// TCP socket statistics tracker.
+    /// Why: Track socket performance metrics.
+    stats: TcpSocketStats,
+    
     /// Initialize TCP socket manager.
     /// Why: Set up manager state.
     pub fn init() TcpSocketManager {
@@ -115,6 +120,7 @@ pub const TcpSocketManager = struct {
             .sockets = [_]TcpSocket{TcpSocket.init()} ** MAX_TCP_SOCKETS,
             .next_socket_id = 1,
             .initialized = true,
+            .stats = TcpSocketStats.init(),
         };
         
         return manager;
@@ -237,6 +243,7 @@ pub const TcpSocketManager = struct {
         
         // Set socket to listening state.
         socket.state = .listening;
+        self.stats.record_listening_transition();
         
         return true;
     }
@@ -275,6 +282,11 @@ pub const TcpSocketManager = struct {
         new_socket.remote_addr = 0;
         new_socket.remote_port = 0;
         
+        // Record statistics.
+        self.stats.record_connected_transition();
+        self.stats.record_established_connection();
+        self.stats.record_active_connection();
+        
         return new_socket_id;
     }
     
@@ -291,11 +303,13 @@ pub const TcpSocketManager = struct {
         Debug.kassert(self.initialized, "Manager not initialized", .{});
         
         const socket = self.get_socket(socket_id) orelse {
+            self.stats.record_connection_error();
             return false;
         };
         
         // Assert: Socket must be in closed state.
         if (socket.state != .closed) {
+            self.stats.record_connection_error();
             return false;
         }
         
@@ -303,8 +317,13 @@ pub const TcpSocketManager = struct {
         socket.remote_addr = addr;
         socket.remote_port = port;
         
-        // Set socket to connected state (stub: would establish connection).
+        // Set socket to connecting state first, then connected (stub: would establish connection).
+        socket.state = .connecting;
+        self.stats.record_connecting_transition();
         socket.state = .connected;
+        self.stats.record_connected_transition();
+        self.stats.record_established_connection();
+        self.stats.record_active_connection();
         
         return true;
     }
@@ -322,24 +341,31 @@ pub const TcpSocketManager = struct {
         Debug.kassert(self.initialized, "Manager not initialized", .{});
         
         const socket = self.get_socket(socket_id) orelse {
+            self.stats.record_send_error();
             return null;
         };
         
         // Assert: Socket must be in connected state.
         if (socket.state != .connected) {
+            self.stats.record_send_error();
             return null;
         }
         
         // Assert: Data must fit in send buffer.
         if (socket.send_buffer_size + data.len > MAX_SOCKET_BUFFER_SIZE) {
+            self.stats.record_send_error();
             return null; // Buffer full
         }
         
         // Copy data to send buffer (stub: would transmit over network).
         std.mem.copyForwards(u8, socket.send_buffer[socket.send_buffer_size..], data);
-        socket.send_buffer_size += @as(u32, @truncate(data.len));
+        const bytes_sent = @as(u32, @truncate(data.len));
+        socket.send_buffer_size += bytes_sent;
         
-        return @as(u32, @truncate(data.len));
+        // Record statistics.
+        self.stats.record_bytes_sent(bytes_sent);
+        
+        return bytes_sent;
     }
     
     /// Receive data from socket.
@@ -355,16 +381,19 @@ pub const TcpSocketManager = struct {
         Debug.kassert(self.initialized, "Manager not initialized", .{});
         
         const socket = self.get_socket(socket_id) orelse {
+            self.stats.record_receive_error();
             return null;
         };
         
         // Assert: Socket must be in connected state.
         if (socket.state != .connected) {
+            self.stats.record_receive_error();
             return null;
         }
         
         // Assert: Buffer must be non-empty.
         if (buffer.len == 0) {
+            self.stats.record_receive_error();
             return null;
         }
         
@@ -375,9 +404,38 @@ pub const TcpSocketManager = struct {
             // Remove copied data from buffer (shift remaining data).
             std.mem.copyForwards(u8, socket.recv_buffer[0..], socket.recv_buffer[bytes_to_copy..socket.recv_buffer_size]);
             socket.recv_buffer_size -= bytes_to_copy;
+            
+            // Record statistics.
+            self.stats.record_bytes_received(bytes_to_copy);
         }
         
         return bytes_to_copy;
+    }
+    
+    /// Enumerate all TCP sockets.
+    /// Why: Get list of all allocated sockets.
+    /// Contract: socket_ids array must be large enough (MAX_TCP_SOCKETS).
+    /// Returns: Number of sockets found.
+    pub fn enumerate_sockets(
+        self: *TcpSocketManager,
+        socket_ids: []u64,
+    ) u32 {
+        // Assert: Manager must be initialized.
+        Debug.kassert(self.initialized, "Manager not initialized", .{});
+        
+        // Assert: Socket IDs array must be large enough.
+        Debug.kassert(socket_ids.len >= MAX_TCP_SOCKETS, "Socket IDs array too small", .{});
+        
+        var count: u32 = 0;
+        var idx: u32 = 0;
+        while (idx < MAX_TCP_SOCKETS) : (idx += 1) {
+            if (self.sockets[idx].allocated) {
+                socket_ids[count] = self.sockets[idx].socket_id;
+                count += 1;
+            }
+        }
+        
+        return count;
     }
     
     /// Close socket.
@@ -399,6 +457,16 @@ pub const TcpSocketManager = struct {
         socket.allocated = false;
         
         return true;
+    }
+    
+    /// Get TCP socket statistics snapshot.
+    /// Why: Provide statistics for userspace queries.
+    /// Returns: Reference to statistics tracker.
+    pub fn get_stats(self: *const TcpSocketManager) *const TcpSocketStats {
+        // Assert: Manager must be initialized.
+        Debug.kassert(self.initialized, "Manager not initialized", .{});
+        
+        return &self.stats;
     }
 };
 

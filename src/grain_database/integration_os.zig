@@ -208,6 +208,11 @@ pub fn register_database_endpoints_with_compositor(
         return false;
     }
 
+    // Health check endpoint.
+    if (!register_fn(HttpMethod.get, "/api/v1/health", handle_health_check)) {
+        return false;
+    }
+
     return true;
 }
 

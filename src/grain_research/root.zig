@@ -47,6 +47,10 @@ pub const integration_test_harness = @import("integration_test_harness.zig");
 pub const integration_test_scenarios = @import("integration_test_scenarios.zig");
 // ZON format Phase 4 integration validation framework.
 pub const zon_integration_validation = @import("zon_integration_validation.zig");
+// ZON format Phase 4 integration validation implementation.
+pub const zon_phase4_integration = @import("zon_phase4_integration.zig");
+// ZON format Phase 4 validation runner.
+pub const zon_phase4_validation_runner = @import("zon_phase4_validation_runner.zig");
 
 // Module exports.
 pub const ResearchEngine = research_engine.ResearchEngine;
@@ -106,3 +110,5 @@ pub const IntegrationValidationFramework = zon_integration_validation.Integratio
 pub const IntegrationValidationResult = zon_integration_validation.IntegrationValidationResult;
 pub const RoundTripResult = zon_integration_validation.RoundTripResult;
 pub const PerformanceBenchmarkResult = zon_integration_validation.PerformanceBenchmarkResult;
+pub const Phase4IntegrationValidator = zon_phase4_integration.Phase4IntegrationValidator;
+pub const Phase4ValidationRunner = zon_phase4_validation_runner.Phase4ValidationRunner;

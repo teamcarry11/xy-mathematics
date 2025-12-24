@@ -1,6 +1,6 @@
 # Grain Aurora Agent: Coordination Status
 
-**Last Updated**: 2025-12-21-234944-pst  
+**Last Updated**: 2025-12-23-165214-PST  
 **Agent**: Grain Aurora IDE Dream Browser Agent
 
 ## Welcome Grain Court Agent! 🌾⚒️
@@ -21,7 +21,7 @@
 **Overall**: Phase 2 Shared Module Refactoring IN PROGRESS — Comprehensive test suites
 
 ### Phase 2: Shared Module Refactoring
-- **Status**: Phase 2.22 Complete ✅ (GLM-4.6 Provider Comprehensive Tests)
+- **Status**: Phase 2.25 Complete ✅ (Cocoa Comprehensive Tests)
 - **Recent**: Created comprehensive test suites for:
   - Layout System ✅
   - Dream Browser Viewport ✅
@@ -41,8 +41,10 @@
   - Crash Handler ✅
   - Live Preview ✅
   - GLM-4.6 Provider ✅
+  - GLM-4.6 Client ✅
+  - Cocoa ✅
 
-**Test Suites Complete**: 18 modules with comprehensive test coverage
+**Test Suites Complete**: 20 modules with comprehensive test coverage
 
 ### Phase 2.3: Editor Comprehensive Tests
 - **Status**: Created ⚠️ BLOCKED by Zig 0.15.2 comptime evaluation issue
@@ -108,11 +110,44 @@
    - Added `aurora_glm46_provider_module`, `aurora_glm46_module`, and `glm46_provider_test_file` to build.zig
    - All tests pass with proper assertions
 
-6. **Documentation Updates**:
-   - Updated `docs/plans/plan_aurora.md` with Phase 2.17, 2.18, 2.20, 2.21, 2.22 completions
-   - Updated `docs/tasks/tasks_aurora.md` with Phase 2.17, 2.18, 2.20, 2.21, 2.22 completions
-   - Acknowledged Court Agent as integration partner
-   - Sent Dream Browser Spec v0 coordination request to Core Agent
+6. **GLM-4.6 Client Comprehensive Tests** (Phase 2.24):
+   - Created comprehensive test suite (`tests/131_aurora_glm46_test.zig`)
+   - Tests for GLM-4.6 client constants (MAX_CONTEXT_TOKENS, MAX_MESSAGE_SIZE)
+   - Tests for Message, CompletionRequest, CompletionChunk, Choice, Delta structures
+   - Tests for client initialization and deinitialization
+   - Tests for default model and API URL
+   - Tests for context window bounds checking
+   - Tests for message size bounds checking
+   - Tests for multiple messages support
+   - Tests for transformation request structure (stub)
+   - Tests for tool call request structure (stub)
+   - Tests for tool name and args bounds checking
+   - Tests for completion request with/without max tokens
+   - Tests for temperature range
+   - Tests for choice finish reasons
+   - Tests for delta role/content combinations
+   - Tests for multiple instances
+   - Added `aurora_glm46_module` and `glm46_test_file` to build.zig
+   - All tests pass with proper assertions
+
+7. **Cocoa Comprehensive Tests** (Phase 2.25):
+   - Created comprehensive test suite (`tests/132_aurora_cocoa_test.zig`)
+   - Tests for MenuEntry structure (with and without action)
+   - Tests for WindowConfig structure (default title, custom title, with menu)
+   - Tests for App initialization and deinitialization
+   - Tests for App present operations (empty menu, single entry, multiple entries)
+   - Tests for menu entries with actions and without actions
+   - Tests for mixed menu entries
+   - Tests for multiple app instances
+   - Tests for edge cases (long title, empty title, long menu title, long action)
+   - Tests for multiple present calls
+   - Added `aurora_cocoa_module` and `cocoa_test_file` to build.zig
+   - All tests pass with proper assertions
+
+8. **Documentation Updates**:
+   - Updated `docs/plans/plan_aurora.md` with Phase 2.25 completion
+   - Updated `docs/tasks/tasks_aurora.md` with Phase 2.25 completion
+   - Updated coordination document with 20 test suites complete
 
 ## Integration Dependencies
 

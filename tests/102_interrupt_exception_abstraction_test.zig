@@ -97,20 +97,100 @@ test "exception_types_arch_conversion" {
     try testing.expect(load_page_fault_riscv == 13);
 }
 
-test "interrupt_types_aarch64_placeholder" {
-    // Test AArch64 conversion (placeholder).
-    const timer_unified = interrupt_types.aarch64_to_unified(0);
+test "interrupt_types_aarch64_conversion" {
+    // Test AArch64 to unified conversion.
+    const software_unified = interrupt_types.aarch64_to_unified(0);
+    Debug.kassert(software_unified == .software, "Software interrupt mismatch", .{});
+    
+    const timer_unified = interrupt_types.aarch64_to_unified(27);
     Debug.kassert(timer_unified == .timer, "Timer interrupt mismatch", .{});
     
+    const external_unified = interrupt_types.aarch64_to_unified(32);
+    Debug.kassert(external_unified == .external, "External interrupt mismatch", .{});
+    
+    // Test unified to AArch64 conversion.
+    const software_aarch64 = interrupt_types.unified_to_aarch64(.software);
+    try testing.expect(software_aarch64 == 0);
+    
     const timer_aarch64 = interrupt_types.unified_to_aarch64(.timer);
-    try testing.expect(timer_aarch64 == 0);
+    try testing.expect(timer_aarch64 == 27);
+    
+    const external_aarch64 = interrupt_types.unified_to_aarch64(.external);
+    try testing.expect(external_aarch64 == 32);
 }
 
-test "exception_types_aarch64_placeholder" {
-    // Test AArch64 conversion (placeholder).
-    const illegal_unified = exception_types.aarch64_to_unified(0);
-    Debug.kassert(illegal_unified == .illegal_instruction, "Illegal instruction mismatch", .{});
+test "interrupt_types_aarch64_arch_conversion" {
+    // Test architecture-agnostic conversion for AArch64.
+    const software_unified = interrupt_types.arch_to_unified(.aarch64, 0);
+    Debug.kassert(software_unified == .software, "Software interrupt mismatch", .{});
     
-    const illegal_aarch64 = exception_types.unified_to_aarch64(.illegal_instruction);
-    try testing.expect(illegal_aarch64 == 0);
+    const timer_unified = interrupt_types.arch_to_unified(.aarch64, 27);
+    Debug.kassert(timer_unified == .timer, "Timer interrupt mismatch", .{});
+    
+    const external_unified = interrupt_types.arch_to_unified(.aarch64, 32);
+    Debug.kassert(external_unified == .external, "External interrupt mismatch", .{});
+    
+    // Test unified to architecture conversion for AArch64.
+    const software_aarch64 = interrupt_types.unified_to_arch(.aarch64, .software);
+    try testing.expect(software_aarch64 == 0);
+    
+    const timer_aarch64 = interrupt_types.unified_to_arch(.aarch64, .timer);
+    try testing.expect(timer_aarch64 == 27);
+    
+    const external_aarch64 = interrupt_types.unified_to_arch(.aarch64, .external);
+    try testing.expect(external_aarch64 == 32);
+}
+
+test "exception_types_aarch64_conversion" {
+    // Test AArch64 to unified conversion (ESR_ELx format).
+    // SVC (syscall): EC = 0x15
+    const svc_esr: u32 = 0x15 << 26;
+    const svc_unified = exception_types.aarch64_to_unified(svc_esr);
+    Debug.kassert(svc_unified == .environment_call_from_u_mode, "SVC mismatch", .{});
+    
+    // Breakpoint: EC = 0x30
+    const brk_esr: u32 = 0x30 << 26;
+    const brk_unified = exception_types.aarch64_to_unified(brk_esr);
+    Debug.kassert(brk_unified == .breakpoint, "Breakpoint mismatch", .{});
+    
+    // Data abort (read): EC = 0x25, WnR = 0
+    const data_abort_read_esr: u32 = 0x25 << 26;
+    const data_abort_read_unified = exception_types.aarch64_to_unified(data_abort_read_esr);
+    Debug.kassert(data_abort_read_unified == .load_page_fault, "Data abort read mismatch", .{});
+    
+    // Data abort (write): EC = 0x25, WnR = 1
+    const data_abort_write_esr: u32 = (0x25 << 26) | (1 << 6);
+    const data_abort_write_unified = exception_types.aarch64_to_unified(data_abort_write_esr);
+    Debug.kassert(data_abort_write_unified == .store_page_fault, "Data abort write mismatch", .{});
+    
+    // Test unified to AArch64 conversion.
+    const svc_aarch64 = exception_types.unified_to_aarch64(.environment_call_from_u_mode);
+    try testing.expect(svc_aarch64 == (0x15 << 26));
+    
+    const brk_aarch64 = exception_types.unified_to_aarch64(.breakpoint);
+    try testing.expect(brk_aarch64 == (0x30 << 26));
+    
+    const load_page_fault_aarch64 = exception_types.unified_to_aarch64(.load_page_fault);
+    try testing.expect(load_page_fault_aarch64 == (0x25 << 26));
+    
+    const store_page_fault_aarch64 = exception_types.unified_to_aarch64(.store_page_fault);
+    try testing.expect(store_page_fault_aarch64 == ((0x25 << 26) | (1 << 6)));
+}
+
+test "exception_types_aarch64_arch_conversion" {
+    // Test architecture-agnostic conversion for AArch64.
+    const svc_esr: u32 = 0x15 << 26;
+    const svc_unified = exception_types.arch_to_unified(.aarch64, svc_esr);
+    Debug.kassert(svc_unified == .environment_call_from_u_mode, "SVC mismatch", .{});
+    
+    const brk_esr: u32 = 0x30 << 26;
+    const brk_unified = exception_types.arch_to_unified(.aarch64, brk_esr);
+    Debug.kassert(brk_unified == .breakpoint, "Breakpoint mismatch", .{});
+    
+    // Test unified to architecture conversion for AArch64.
+    const svc_aarch64 = exception_types.unified_to_arch(.aarch64, .environment_call_from_u_mode);
+    try testing.expect(svc_aarch64 == (0x15 << 26));
+    
+    const brk_aarch64 = exception_types.unified_to_arch(.aarch64, .breakpoint);
+    try testing.expect(brk_aarch64 == (0x30 << 26));
 }

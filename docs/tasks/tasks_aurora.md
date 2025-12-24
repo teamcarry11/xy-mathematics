@@ -2,7 +2,7 @@
 
 **Agent**: Grain Aurora IDE Dream Browser Agent (2nd Agent)  
 **Status**: Active — Foundation components, shared modules  
-**Last Updated**: 2025-12-21-234944-pst
+**Last Updated**: 2025-12-23-163810-PST
 
 ---
 
@@ -325,6 +325,55 @@
 - [x] All tests pass with proper assertions
 - [x] Update `docs/plans/plan_aurora.md` and `docs/tasks/tasks_aurora.md`
 - **Date**: 2025-12-21-234944-PST
+
+#### Phase 2.24: GLM-4.6 Client Comprehensive Tests ✅ **COMPLETE**
+
+- [x] Create comprehensive test suite (`tests/131_aurora_glm46_test.zig`)
+- [x] Tests for GLM-4.6 client constants (MAX_CONTEXT_TOKENS, MAX_MESSAGE_SIZE)
+- [x] Tests for Message, CompletionRequest, CompletionChunk, Choice, Delta structures
+- [x] Tests for client initialization and deinitialization
+- [x] Tests for default model and API URL
+- [x] Tests for context window bounds checking
+- [x] Tests for message size bounds checking
+- [x] Tests for multiple messages support
+- [x] Tests for transformation request structure (stub)
+- [x] Tests for tool call request structure (stub)
+- [x] Tests for tool name and args bounds checking
+- [x] Tests for completion request with/without max tokens
+- [x] Tests for temperature range
+- [x] Tests for choice finish reasons
+- [x] Tests for delta role/content combinations
+- [x] Tests for multiple instances
+- [x] Add `aurora_glm46_module` and `glm46_test_file` to build.zig
+- [x] GrainStyle compliance (grain_case, u32 types, max 73 chars per line)
+- [x] All tests pass with proper assertions
+- [x] Update `docs/plans/plan_aurora.md` and `docs/tasks/tasks_aurora.md`
+- **Date**: 2025-12-23-163810-PST
+
+#### Phase 2.25: Cocoa Comprehensive Tests ✅ **COMPLETE**
+
+- [x] Create comprehensive test suite (`tests/132_aurora_cocoa_test.zig`)
+- [x] Tests for MenuEntry structure (with and without action)
+- [x] Tests for WindowConfig structure (default title, custom title, with menu)
+- [x] Tests for App initialization and deinitialization
+- [x] Tests for App present operations (empty menu, single entry, multiple entries)
+- [x] Tests for menu entries with actions and without actions
+- [x] Tests for mixed menu entries
+- [x] Tests for multiple app instances
+- [x] Tests for edge cases (long title, empty title, long menu title, long action)
+- [x] Tests for multiple present calls
+- [x] Add `aurora_cocoa_module` and `cocoa_test_file` to build.zig
+- [x] GrainStyle compliance (grain_case, u32 types, max 73 chars per line)
+- [x] All tests pass with proper assertions
+- [x] Update `docs/plans/plan_aurora.md` and `docs/tasks/tasks_aurora.md`
+- **Date**: 2025-12-23-165214-PST
+- [x] Tests for delta role/content combinations
+- [x] Tests for multiple instances
+- [x] Add `aurora_glm46_module` and `glm46_test_file` to build.zig
+- [x] GrainStyle compliance (grain_case, u32 types, max 73 chars per line)
+- [x] All tests pass with proper assertions
+- [x] Update `docs/plans/plan_aurora.md` and `docs/tasks/tasks_aurora.md`
+- **Date**: 2025-12-23-163810-PST
 
 ### Grain Style Requirements
 

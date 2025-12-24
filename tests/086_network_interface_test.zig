@@ -76,6 +76,69 @@ test "network set ipv4" {
     try testing.expect(result2 == .success);
 }
 
+// Test: set IPv6 address.
+test "network set ipv6" {
+    var kernel = BasinKernel.init();
+    
+    // Create interface first.
+    const name_ptr: u64 = 0x10000;
+    const name_len: u64 = 4; // "eth0"
+    const result1 = try kernel.syscall_network_create_interface(name_ptr, name_len, 0, 0);
+    try testing.expect(result1 == .success);
+    const iface_idx = result1.success;
+    
+    // Set IPv6 address (::1 - localhost).
+    const addr_ptr: u64 = 0x20000;
+    const result2 = try kernel.syscall_network_set_ipv6(iface_idx, addr_ptr, 0, 0);
+    try testing.expect(result2 == .success);
+}
+
+// Test: delete network interface.
+test "network delete interface" {
+    var kernel = BasinKernel.init();
+    
+    // Create interface first.
+    const name_ptr: u64 = 0x10000;
+    const name_len: u64 = 4; // "eth0"
+    const result1 = try kernel.syscall_network_create_interface(name_ptr, name_len, 0, 0);
+    try testing.expect(result1 == .success);
+    const iface_idx = result1.success;
+    
+    // Delete interface.
+    const result2 = try kernel.syscall_network_delete_interface(iface_idx, 0, 0, 0);
+    try testing.expect(result2 == .success);
+    
+    // Try to delete again (should fail).
+    const result3 = kernel.syscall_network_delete_interface(iface_idx, 0, 0, 0);
+    try testing.expectError(BasinError.not_found, result3);
+}
+
+// Test: enumerate network interfaces.
+test "network enumerate interfaces" {
+    var kernel = BasinKernel.init();
+    
+    // Create multiple interfaces.
+    const name_ptr1: u64 = 0x10000;
+    const name_len1: u64 = 4; // "eth0"
+    const result1 = try kernel.syscall_network_create_interface(name_ptr1, name_len1, 0, 0);
+    try testing.expect(result1 == .success);
+    const iface_idx1 = result1.success;
+    
+    const name_ptr2: u64 = 0x20000;
+    const name_len2: u64 = 4; // "eth1"
+    const result2 = try kernel.syscall_network_create_interface(name_ptr2, name_len2, 0, 0);
+    try testing.expect(result2 == .success);
+    const iface_idx2 = result2.success;
+    
+    // Enumerate interfaces.
+    const indices_ptr: u64 = 0x30000;
+    const max_count: u64 = 8;
+    const result3 = try kernel.syscall_network_enumerate_interfaces(indices_ptr, max_count, 0, 0);
+    try testing.expect(result3 == .success);
+    const count = result3.success;
+    try testing.expect(count >= 2); // At least 2 interfaces
+}
+
 // Test: get network interface.
 test "network get interface" {
     var kernel = BasinKernel.init();

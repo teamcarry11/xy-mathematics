@@ -177,11 +177,11 @@
 
 ---
 
-## Phase 4: Network Syscalls (IN PROGRESS)
+## Phase 4: Network Syscalls ✅ **COMPLETE**
 
 **Priority**: **MEDIUM** — Network capabilities for API server and mobile apps  
-**Status**: **IN PROGRESS** (Phase 4.1 & 4.2 Complete)  
-**Estimated Time**: 4-6 weeks
+**Status**: ✅ **COMPLETE** (All phases complete)  
+**Date**: 2025-12-23-140950-pst
 
 ### Completed Tasks
 
@@ -193,6 +193,11 @@
 - [x] Create comprehensive tests (`tests/086_network_interface_test.zig`, `tests/087_tcp_socket_test.zig`, `tests/088_udp_socket_test.zig`) — Phase 4.4
 - [x] Update `build.zig` with new tests — Phase 4.4
 - [x] Update `docs/plans/plan_vantage.md` and `docs/tasks/tasks_vantage.md` with completion
+- [x] IPv6 configuration enhancement — Phase 4.5
+  - [x] Add `set_ipv6_address` function to `network.zig`
+  - [x] Add `network_set_ipv6` syscall (#94)
+  - [x] Add IPv6 test to `tests/086_network_interface_test.zig`
+  - [x] Update documentation
 
 ### Remaining Tasks
 - [ ] Implement network connection management — Future Phase

@@ -4,6 +4,7 @@
 
 const std = @import("std");
 const Debug = @import("debug.zig");
+const UdpSocketStats = @import("udp_socket_stats.zig").UdpSocketStats;
 
 /// Maximum number of UDP sockets.
 /// Why: Bounded allocation for socket tracking.
@@ -97,6 +98,10 @@ pub const UdpSocketManager = struct {
     /// Whether manager is initialized.
     initialized: bool,
     
+    /// UDP socket statistics tracker.
+    /// Why: Track socket performance metrics.
+    stats: UdpSocketStats,
+    
     /// Initialize UDP socket manager.
     /// Why: Set up manager state.
     pub fn init() UdpSocketManager {
@@ -104,6 +109,7 @@ pub const UdpSocketManager = struct {
             .sockets = [_]UdpSocket{UdpSocket.init()} ** MAX_UDP_SOCKETS,
             .next_socket_id = 1,
             .initialized = true,
+            .stats = UdpSocketStats.init(),
         };
         
         return manager;
@@ -198,6 +204,9 @@ pub const UdpSocketManager = struct {
         socket.local_port = port;
         socket.state = .bound;
         
+        // Record statistics.
+        self.stats.record_bound_socket();
+        
         return true;
     }
     
@@ -216,28 +225,35 @@ pub const UdpSocketManager = struct {
         Debug.kassert(self.initialized, "Manager not initialized", .{});
         
         const socket = self.get_socket(socket_id) orelse {
+            self.stats.record_send_error();
             return null;
         };
         
         // Assert: Socket must be in bound state.
         if (socket.state != .bound) {
+            self.stats.record_send_error();
             return null;
         }
         
         // Assert: Data must fit in send buffer.
         if (socket.send_buffer_size + data.len > MAX_SOCKET_BUFFER_SIZE) {
+            self.stats.record_send_error();
             return null; // Buffer full
         }
         
         // Copy data to send buffer (stub: would transmit over network).
         std.mem.copyForwards(u8, socket.send_buffer[socket.send_buffer_size..], data);
-        socket.send_buffer_size += @as(u32, @truncate(data.len));
+        const bytes_sent = @as(u32, @truncate(data.len));
+        socket.send_buffer_size += bytes_sent;
+        
+        // Record statistics.
+        self.stats.record_bytes_sent(bytes_sent);
         
         // Note: addr and port are validated but not used in stub implementation.
         _ = addr;
         _ = port;
         
-        return @as(u32, @truncate(data.len));
+        return bytes_sent;
     }
     
     /// Receive data from socket.
@@ -255,16 +271,19 @@ pub const UdpSocketManager = struct {
         Debug.kassert(self.initialized, "Manager not initialized", .{});
         
         const socket = self.get_socket(socket_id) orelse {
+            self.stats.record_receive_error();
             return null;
         };
         
         // Assert: Socket must be in bound state.
         if (socket.state != .bound) {
+            self.stats.record_receive_error();
             return null;
         }
         
         // Assert: Buffer must be non-empty.
         if (buffer.len == 0) {
+            self.stats.record_receive_error();
             return null;
         }
         
@@ -275,6 +294,9 @@ pub const UdpSocketManager = struct {
             // Remove copied data from buffer (shift remaining data).
             std.mem.copyForwards(u8, socket.recv_buffer[0..], socket.recv_buffer[bytes_to_copy..socket.recv_buffer_size]);
             socket.recv_buffer_size -= bytes_to_copy;
+            
+            // Record statistics.
+            self.stats.record_bytes_received(bytes_to_copy);
         }
         
         // Set remote address and port (stub: would get from received packet).
@@ -286,6 +308,32 @@ pub const UdpSocketManager = struct {
         }
         
         return bytes_to_copy;
+    }
+    
+    /// Enumerate all UDP sockets.
+    /// Why: Get list of all allocated sockets.
+    /// Contract: socket_ids array must be large enough (MAX_UDP_SOCKETS).
+    /// Returns: Number of sockets found.
+    pub fn enumerate_sockets(
+        self: *UdpSocketManager,
+        socket_ids: []u64,
+    ) u32 {
+        // Assert: Manager must be initialized.
+        Debug.kassert(self.initialized, "Manager not initialized", .{});
+        
+        // Assert: Socket IDs array must be large enough.
+        Debug.kassert(socket_ids.len >= MAX_UDP_SOCKETS, "Socket IDs array too small", .{});
+        
+        var count: u32 = 0;
+        var idx: u32 = 0;
+        while (idx < MAX_UDP_SOCKETS) : (idx += 1) {
+            if (self.sockets[idx].allocated) {
+                socket_ids[count] = self.sockets[idx].socket_id;
+                count += 1;
+            }
+        }
+        
+        return count;
     }
     
     /// Close socket.
@@ -306,7 +354,20 @@ pub const UdpSocketManager = struct {
         socket.state = .closed;
         socket.allocated = false;
         
+        // Record statistics.
+        self.stats.record_closed_socket();
+        
         return true;
+    }
+    
+    /// Get UDP socket statistics snapshot.
+    /// Why: Provide statistics for userspace queries.
+    /// Returns: Reference to statistics tracker.
+    pub fn get_stats(self: *const UdpSocketManager) *const UdpSocketStats {
+        // Assert: Manager must be initialized.
+        Debug.kassert(self.initialized, "Manager not initialized", .{});
+        
+        return &self.stats;
     }
 };
 

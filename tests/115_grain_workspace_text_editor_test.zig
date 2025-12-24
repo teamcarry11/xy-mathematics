@@ -7,6 +7,7 @@
 //! 2025-12-20-161231-pst: Phase 17 SLC v1.0 Text Editor
 //! 2025-12-21-184709-pst: Phase 28 Find and Replace tests
 //! 2025-12-21-234422-pst: Phase 29 Go to Line tests
+//! 2025-12-23-194527-pst: Phase 30 Text Selection tests
 
 const std = @import("std");
 const testing = std.testing;
@@ -664,4 +665,195 @@ test "go to line column beyond end" {
     try testing.expect(result == true);
     try testing.expect(editor.cursor.line == 1); // 0-indexed
     try testing.expect(editor.cursor.column == 6); // Clamped to line length
+}
+
+test "start selection" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    _ = editor.insert_text("Hello, World!");
+    _ = editor.move_cursor(0, 5);
+    
+    editor.start_selection();
+    try testing.expect(editor.has_selection() == true);
+    try testing.expect(editor.selection.start.column == 5);
+    try testing.expect(editor.selection.end.column == 5);
+}
+
+test "extend selection" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    _ = editor.insert_text("Hello, World!");
+    _ = editor.move_cursor(0, 5);
+    editor.start_selection();
+    
+    _ = editor.move_cursor(0, 10);
+    editor.extend_selection();
+    try testing.expect(editor.has_selection() == true);
+    try testing.expect(editor.selection.end.column == 10);
+}
+
+test "clear selection" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    _ = editor.insert_text("Hello, World!");
+    _ = editor.move_cursor(0, 5);
+    editor.start_selection();
+    
+    editor.clear_selection();
+    try testing.expect(editor.has_selection() == false);
+}
+
+test "select all" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    _ = editor.insert_text("Line 1");
+    _ = editor.insert_text("\n");
+    _ = editor.insert_text("Line 2");
+    
+    editor.select_all();
+    try testing.expect(editor.has_selection() == true);
+    try testing.expect(editor.selection.start.line == 0);
+    try testing.expect(editor.selection.start.column == 0);
+    try testing.expect(editor.selection.end.line == 1);
+}
+
+test "get selected text single line" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    _ = editor.insert_text("Hello, World!");
+    _ = editor.move_cursor(0, 0);
+    editor.start_selection();
+    _ = editor.move_cursor(0, 5);
+    editor.extend_selection();
+    
+    var buffer: [256]u8 = undefined;
+    var buffer_len: u32 = 0;
+    const result = editor.get_selected_text(&buffer, &buffer_len);
+    try testing.expect(result == true);
+    try testing.expect(buffer_len == 5);
+    try testing.expect(std.mem.eql(u8, buffer[0..5], "Hello"));
+}
+
+test "get selected text multi line" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    _ = editor.insert_text("Line 1");
+    _ = editor.insert_text("\n");
+    _ = editor.insert_text("Line 2");
+    
+    _ = editor.move_cursor(0, 0);
+    editor.start_selection();
+    _ = editor.move_cursor(1, 3);
+    editor.extend_selection();
+    
+    var buffer: [256]u8 = undefined;
+    var buffer_len: u32 = 0;
+    const result = editor.get_selected_text(&buffer, &buffer_len);
+    try testing.expect(result == true);
+    try testing.expect(buffer_len > 0);
+}
+
+test "copy selection" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    _ = editor.insert_text("Hello, World!");
+    _ = editor.move_cursor(0, 0);
+    editor.start_selection();
+    _ = editor.move_cursor(0, 5);
+    editor.extend_selection();
+    
+    const result = editor.copy_selection();
+    try testing.expect(result == true);
+    try testing.expect(editor.clipboard_len == 5);
+    try testing.expect(std.mem.eql(u8, editor.clipboard[0..5], "Hello"));
+}
+
+test "cut selection" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    _ = editor.insert_text("Hello, World!");
+    _ = editor.move_cursor(0, 0);
+    editor.start_selection();
+    _ = editor.move_cursor(0, 5);
+    editor.extend_selection();
+    
+    const result = editor.cut_selection();
+    try testing.expect(result == true);
+    try testing.expect(editor.clipboard_len == 5);
+    try testing.expect(editor.lines[0].content_len == 8); // ", World!"
+    try testing.expect(editor.has_selection() == false);
+}
+
+test "delete selection" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    _ = editor.insert_text("Hello, World!");
+    _ = editor.move_cursor(0, 0);
+    editor.start_selection();
+    _ = editor.move_cursor(0, 5);
+    editor.extend_selection();
+    
+    const result = editor.delete_selection();
+    try testing.expect(result == true);
+    try testing.expect(editor.lines[0].content_len == 8); // ", World!"
+    try testing.expect(editor.has_selection() == false);
+}
+
+test "paste" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    _ = editor.insert_text("Hello, World!");
+    _ = editor.move_cursor(0, 0);
+    editor.start_selection();
+    _ = editor.move_cursor(0, 5);
+    editor.extend_selection();
+    _ = editor.copy_selection();
+    
+    _ = editor.move_cursor(0, 13);
+    const result = editor.paste();
+    try testing.expect(result == true);
+    try testing.expect(editor.lines[0].content_len == 18); // "Hello, World!Hello"
+}
+
+test "paste replaces selection" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    _ = editor.insert_text("Hello, World!");
+    _ = editor.move_cursor(0, 0);
+    editor.start_selection();
+    _ = editor.move_cursor(0, 5);
+    editor.extend_selection();
+    _ = editor.copy_selection();
+    
+    // Select different text
+    _ = editor.move_cursor(0, 7);
+    editor.start_selection();
+    _ = editor.move_cursor(0, 12);
+    editor.extend_selection();
+    
+    const result = editor.paste();
+    try testing.expect(result == true);
+    try testing.expect(editor.has_selection() == false);
 }

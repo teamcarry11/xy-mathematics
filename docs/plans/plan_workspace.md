@@ -1,8 +1,8 @@
 # Grain Workspace Agent: Development Plan
 
-**Agent**: Grain Workspace Agent (5th Agent)  
-**Status**: Phase 29 Go to Line Complete ✅  
-**Last Updated**: 2025-12-21-235745-pst  
+**Agent**: Grain Workspace Agent (8th Agent)  
+**Status**: Phase 30 Text Selection Complete ✅  
+**Last Updated**: 2025-12-23-200220-pst  
 **Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-21-204511-pst.md`
 
 ---
@@ -1190,6 +1190,45 @@ All planned phases for Grain Workspace Agent have been completed:
 - Go to line and column (1-indexed line, 0-indexed column)
 - Automatic clamping to valid line/column ranges
 - Handles edge cases (empty file, beyond end of file)
+- Integration with existing cursor movement
+
+**Grain Style Compliance**:
+- `grain_case` function names
+- `u32`/`u64` types (no `usize`)
+- Bounded allocations (all limits explicit)
+- Assertions for preconditions
+- Max 70 lines per function
+- All compiler warnings enabled
+
+### Phase 30: Text Editor Text Selection ✅ **COMPLETE**
+
+**Date**: 2025-12-23-200220-pst
+
+**Completed Work**:
+1. **Text Selection Functionality** (`src/grain_workspace/text_editor/app.zig`):
+   - Added `SelectionRange` structure for selection state
+   - Added `start_selection()` function to start selection at cursor
+   - Added `extend_selection()` function to extend selection to cursor
+   - Added `clear_selection()` function to clear selection
+   - Added `select_all()` function to select all text
+   - Added `has_selection()` function to check if selection is active
+   - Added `get_selected_text()` function to get selected text
+   - Added `copy_selection()` function to copy to clipboard
+   - Added `cut_selection()` function to cut to clipboard
+   - Added `delete_selection()` function to delete selected text
+   - Added `paste()` function to paste from clipboard
+   - Added `MAX_CLIPBOARD_SIZE` constant (1 MB)
+   - Added `selection` and `clipboard` fields to `TextEditor` struct
+   - Comprehensive tests (`tests/115_grain_workspace_text_editor_test.zig`)
+
+**Features**:
+- Start and extend text selection
+- Select all text
+- Copy/cut/paste operations
+- Delete selected text
+- Clipboard management (1 MB limit)
+- Selection normalization (start before end)
+- Multi-line selection support
 - Integration with existing cursor movement
 
 **Grain Style Compliance**:

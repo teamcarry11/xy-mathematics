@@ -711,6 +711,13 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    // Aurora Cocoa module (for test imports)
+    const aurora_cocoa_module = b.addModule("aurora_cocoa", .{
+        .root_source_file = b.path("src/aurora_cocoa.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
     // Aurora Editor module (for test imports)
     const aurora_editor_module = b.addModule("aurora_editor", .{
         .root_source_file = b.path("src/aurora_editor.zig"),
@@ -1314,6 +1321,30 @@ pub fn build(b: *std.Build) void {
     });
     const run_glm46_provider_test_file = b.addRunArtifact(glm46_provider_test_file);
     test_step.dependOn(&run_glm46_provider_test_file.step);
+    const glm46_test_file = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/131_aurora_glm46_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "aurora_glm46", .module = aurora_glm46_module },
+            },
+        }),
+    });
+    const run_glm46_test_file = b.addRunArtifact(glm46_test_file);
+    test_step.dependOn(&run_glm46_test_file.step);
+    const cocoa_test_file = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/132_aurora_cocoa_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "aurora_cocoa", .module = aurora_cocoa_module },
+            },
+        }),
+    });
+    const run_cocoa_test_file = b.addRunArtifact(cocoa_test_file);
+    test_step.dependOn(&run_cocoa_test_file.step);
     const run_route_tests = b.addRunArtifact(route_tests);
     test_step.dependOn(&run_route_tests.step);
     const run_orchestrator_tests = b.addRunArtifact(orchestrator_tests);
@@ -4881,6 +4912,36 @@ pub fn build(b: *std.Build) void {
     });
     const grain_research_zon_integration_validation_tests_run = b.addRunArtifact(grain_research_zon_integration_validation_tests);
     test_step.dependOn(&grain_research_zon_integration_validation_tests_run.step);
+
+    // ZON Format Phase 4 Integration Validation Tests.
+    const grain_research_zon_phase4_integration_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/157_grain_research_zon_phase4_integration_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_research", .module = grain_research_module },
+                .{ .name = "grain_court", .module = grain_court_module },
+            },
+        }),
+    });
+    const grain_research_zon_phase4_integration_tests_run = b.addRunArtifact(grain_research_zon_phase4_integration_tests);
+    test_step.dependOn(&grain_research_zon_phase4_integration_tests_run.step);
+
+    // ZON Format Phase 4 Validation Runner Tests.
+    const grain_research_zon_phase4_validation_runner_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/158_grain_research_zon_phase4_validation_runner_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_research", .module = grain_research_module },
+                .{ .name = "grain_court", .module = grain_court_module },
+            },
+        }),
+    });
+    const grain_research_zon_phase4_validation_runner_tests_run = b.addRunArtifact(grain_research_zon_phase4_validation_runner_tests);
+    test_step.dependOn(&grain_research_zon_phase4_validation_runner_tests_run.step);
 
     // Grain Bubble component tests
     const grain_bubble_component_tests = b.addTest(.{

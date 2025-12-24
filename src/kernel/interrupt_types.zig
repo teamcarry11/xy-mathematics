@@ -52,28 +52,45 @@ pub fn unified_to_riscv(interrupt_type: InterruptType) u32 {
 /// AArch64 interrupt ID to unified interrupt type conversion.
 /// Why: Map AArch64-specific interrupt IDs to unified types.
 /// Contract: aarch64_id must be valid AArch64 interrupt ID.
-/// Note: AArch64 interrupt IDs are architecture-specific (IRQ, FIQ, etc.).
-///       This is a placeholder for future AArch64 interrupt support.
+/// Note: AArch64 uses GIC (Generic Interrupt Controller):
+///       - SGI (Software Generated Interrupt): 0-15
+///       - PPI (Private Peripheral Interrupt): 16-31 (timer: 27-30)
+///       - SPI (Shared Peripheral Interrupt): 32-1019
 pub fn aarch64_to_unified(aarch64_id: u32) InterruptType {
-    // Assert: AArch64 interrupt ID must be valid (placeholder).
-    // Note: Actual AArch64 interrupt IDs will be defined when AArch64
-    //       interrupt handling is implemented.
-    _ = aarch64_id;
+    // Assert: AArch64 interrupt ID must be valid (within GIC range).
+    // Note: GIC supports up to 1020 interrupts (0-1019).
+    if (aarch64_id > 1019) {
+        Debug.kprint("kernel: invalid AArch64 interrupt ID {d}, mapping to external\n", .{aarch64_id});
+        return .external;
+    }
     
-    // Placeholder: Return timer interrupt for now.
-    // TODO: Implement proper AArch64 interrupt ID mapping.
-    return .timer;
+    // Map AArch64 interrupt IDs to unified types.
+    return if (aarch64_id < 16) {
+        // SGI (Software Generated Interrupt): 0-15
+        .software
+    } else if (aarch64_id >= 27 and aarch64_id <= 30) {
+        // PPI Timer interrupts: 27-30
+        .timer
+    } else {
+        // PPI/SPI External interrupts: 16-26, 31, 32-1019
+        .external
+    };
 }
 
 /// Unified interrupt type to AArch64 interrupt ID conversion.
 /// Why: Map unified types to AArch64-specific interrupt IDs.
 /// Contract: interrupt_type must be valid.
-/// Note: This is a placeholder for future AArch64 interrupt support.
+/// Note: Returns canonical AArch64 interrupt IDs:
+///       - Software: 0 (SGI)
+///       - Timer: 27 (PPI timer)
+///       - External: 32 (SPI base)
 pub fn unified_to_aarch64(interrupt_type: InterruptType) u32 {
-    // Placeholder: Return 0 for now.
-    // TODO: Implement proper AArch64 interrupt ID mapping.
-    _ = interrupt_type;
-    return 0;
+    // Map unified types to canonical AArch64 interrupt IDs.
+    return switch (interrupt_type) {
+        .software => 0,   // SGI base
+        .timer => 27,     // PPI timer
+        .external => 32,  // SPI base
+    };
 }
 
 /// Convert architecture-specific interrupt ID to unified type.

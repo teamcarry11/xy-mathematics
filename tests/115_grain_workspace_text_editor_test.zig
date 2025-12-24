@@ -13,6 +13,8 @@
 const std = @import("std");
 const testing = std.testing;
 const TextEditor = @import("../src/grain_workspace/text_editor/app.zig").TextEditor;
+const SyntaxToken = @import("../src/grain_workspace/text_editor/app.zig").SyntaxToken;
+const SyntaxTokenType = @import("../src/grain_workspace/text_editor/app.zig").SyntaxTokenType;
 
 test "text editor initialization" {
     const allocator = testing.allocator;
@@ -857,4 +859,166 @@ test "paste replaces selection" {
     const result = editor.paste();
     try testing.expect(result == true);
     try testing.expect(editor.has_selection() == false);
+}
+
+test "is zig file" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.zig");
+    const result = editor.is_zig_file();
+    try testing.expect(result == true);
+}
+
+test "is not zig file" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.txt");
+    const result = editor.is_zig_file();
+    try testing.expect(result == false);
+}
+
+test "toggle syntax highlighting" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    try testing.expect(editor.syntax_highlighting_enabled == true);
+    editor.toggle_syntax_highlighting();
+    try testing.expect(editor.syntax_highlighting_enabled == false);
+    editor.toggle_syntax_highlighting();
+    try testing.expect(editor.syntax_highlighting_enabled == true);
+}
+
+test "highlight zig line keywords" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.zig");
+    const line = "const x = 42;";
+    var tokens: [256]SyntaxToken = undefined;
+    var tokens_len: u32 = 0;
+
+    const result = editor.highlight_zig_line(line, &tokens, &tokens_len);
+    try testing.expect(result == true);
+    try testing.expect(tokens_len >= 1);
+    try testing.expect(tokens[0].token_type == .keyword);
+    try testing.expect(tokens[0].start == 0);
+    try testing.expect(tokens[0].end == 5); // "const"
+}
+
+test "highlight zig line string literal" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.zig");
+    const line = "const s = \"hello\";";
+    var tokens: [256]SyntaxToken = undefined;
+    var tokens_len: u32 = 0;
+
+    const result = editor.highlight_zig_line(line, &tokens, &tokens_len);
+    try testing.expect(result == true);
+    try testing.expect(tokens_len >= 2);
+    
+    // Find string literal token
+    var found_string = false;
+    var i: u32 = 0;
+    while (i < tokens_len) : (i += 1) {
+        if (tokens[i].token_type == .string_literal) {
+            found_string = true;
+            try testing.expect(tokens[i].start == 10); // "\"hello\""
+            try testing.expect(tokens[i].end == 17);
+            break;
+        }
+    }
+    try testing.expect(found_string == true);
+}
+
+test "highlight zig line comment" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.zig");
+    const line = "const x = 42; // This is a comment";
+    var tokens: [256]SyntaxToken = undefined;
+    var tokens_len: u32 = 0;
+
+    const result = editor.highlight_zig_line(line, &tokens, &tokens_len);
+    try testing.expect(result == true);
+    try testing.expect(tokens_len >= 1);
+    
+    // Last token should be comment
+    const last_token = tokens[tokens_len - 1];
+    try testing.expect(last_token.token_type == .comment);
+    try testing.expect(last_token.start == 13); // "// This is a comment"
+}
+
+test "highlight zig line number literal" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.zig");
+    const line = "const x = 42;";
+    var tokens: [256]SyntaxToken = undefined;
+    var tokens_len: u32 = 0;
+
+    const result = editor.highlight_zig_line(line, &tokens, &tokens_len);
+    try testing.expect(result == true);
+    
+    // Find number literal token
+    var found_number = false;
+    var i: u32 = 0;
+    while (i < tokens_len) : (i += 1) {
+        if (tokens[i].token_type == .number_literal) {
+            found_number = true;
+            try testing.expect(tokens[i].start == 10); // "42"
+            try testing.expect(tokens[i].end == 12);
+            break;
+        }
+    }
+    try testing.expect(found_number == true);
+}
+
+test "highlight zig line empty" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.zig");
+    const line = "";
+    var tokens: [256]SyntaxToken = undefined;
+    var tokens_len: u32 = 0;
+
+    const result = editor.highlight_zig_line(line, &tokens, &tokens_len);
+    try testing.expect(result == true);
+    try testing.expect(tokens_len == 0);
+}
+
+test "highlight zig line multiple keywords" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.zig");
+    const line = "pub fn main() void {";
+    var tokens: [256]SyntaxToken = undefined;
+    var tokens_len: u32 = 0;
+
+    const result = editor.highlight_zig_line(line, &tokens, &tokens_len);
+    try testing.expect(result == true);
+    try testing.expect(tokens_len >= 2);
+    
+    // Check for "pub" and "fn" keywords
+    var found_pub = false;
+    var found_fn = false;
+    var i: u32 = 0;
+    while (i < tokens_len) : (i += 1) {
+        if (tokens[i].token_type == .keyword) {
+            if (tokens[i].start == 0 and tokens[i].end == 3) {
+                found_pub = true;
+            } else if (tokens[i].start == 4 and tokens[i].end == 6) {
+                found_fn = true;
+            }
+        }
+    }
+    try testing.expect(found_pub == true);
+    try testing.expect(found_fn == true);
 }

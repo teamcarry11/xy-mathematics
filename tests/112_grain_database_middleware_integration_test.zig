@@ -15,6 +15,8 @@ const Schema = grain_database.Schema;
 const Graph = grain_database.Graph;
 const InvertedIndex = grain_database.InvertedIndex;
 const RateLimiter = grain_database.RateLimiter;
+const IdempotencyCache = grain_database.IdempotencyCache;
+const RequestDedupCache = grain_database.RequestDedupCache;
 const DatabaseContext = grain_database.DatabaseContext;
 const set_database_context = grain_database.set_database_context;
 const database_rate_limit_middleware = grain_database.database_rate_limit_middleware;
@@ -40,6 +42,12 @@ test "database rate limit middleware allows request" {
     var limiter = try RateLimiter.init(allocator, 100);
     defer limiter.deinit();
 
+    var idempotency_cache = try IdempotencyCache.init(allocator);
+    defer idempotency_cache.deinit();
+
+    var dedup_cache = try RequestDedupCache.init(allocator);
+    defer dedup_cache.deinit();
+
     var context = DatabaseContext.init(
         allocator,
         &storage,
@@ -47,6 +55,8 @@ test "database rate limit middleware allows request" {
         &graph_db,
         &fulltext,
         &limiter,
+        &idempotency_cache,
+        &dedup_cache,
     );
     defer context.deinit();
 

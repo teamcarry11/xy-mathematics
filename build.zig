@@ -258,6 +258,16 @@ pub fn build(b: *std.Build) void {
         },
     });
 
+    // Grain OS module (must be defined before grain_court_module)
+    const grain_core_module = b.addModule("grain_core", .{
+        .root_source_file = b.path("src/grain_core/root.zig"),
+        .target = target,
+        .optimize = optimize,
+        .imports = &.{
+            .{ .name = "basin_kernel", .module = basin_kernel_module },
+        },
+    });
+
     // Grain Court module (formerly Grain Field)
     const grain_court_module = b.addModule("grain_court", .{
         .root_source_file = b.path("src/grain_court/root.zig"),
@@ -280,16 +290,6 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/shared/font_renderer.zig"),
         .target = target,
         .optimize = optimize,
-    });
-
-    // Grain OS module
-    const grain_core_module = b.addModule("grain_core", .{
-        .root_source_file = b.path("src/grain_core/root.zig"),
-        .target = target,
-        .optimize = optimize,
-        .imports = &.{
-            .{ .name = "basin_kernel", .module = basin_kernel_module },
-        },
     });
 
     // Grain Mobile Core module
@@ -876,6 +876,17 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    // Aurora Cross Integration module (for test imports)
+    const aurora_cross_integration_module = b.addModule("aurora_cross_integration", .{
+        .root_source_file = b.path("src/aurora_cross_integration.zig"),
+        .target = target,
+        .optimize = optimize,
+        .imports = &.{
+            .{ .name = "aurora_editor", .module = aurora_editor_module },
+            .{ .name = "dream_browser_viewport", .module = dream_browser_viewport_module },
+        },
+    });
+
     const viewport_tests = b.addTest(.{
         .root_module = b.createModule(.{
             .root_source_file = b.path("tests/114_dream_browser_viewport_test.zig"),
@@ -913,6 +924,26 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/grain_aurora.zig"),
         .target = target,
         .optimize = optimize,
+    });
+
+    // Aurora Unified IDE module (for test imports)
+    const aurora_unified_ide_module = b.addModule("aurora_unified_ide", .{
+        .root_source_file = b.path("src/aurora_unified_ide.zig"),
+        .target = target,
+        .optimize = optimize,
+        .imports = &.{
+            .{ .name = "aurora_editor", .module = aurora_editor_module },
+            .{ .name = "aurora_layout", .module = aurora_layout_module },
+            .{ .name = "dream_browser_parser", .module = dream_browser_parser_module },
+            .{ .name = "dream_browser_renderer", .module = dream_browser_renderer_module },
+            .{ .name = "dream_browser_viewport", .module = dream_browser_viewport_module },
+            .{ .name = "grain_aurora", .module = grain_aurora_module },
+            .{ .name = "aurora_grainbank", .module = aurora_grainbank_module },
+            .{ .name = "dag_core", .module = dag_core_module },
+            .{ .name = "dream_browser_dag_integration", .module = dream_browser_dag_integration_module },
+            .{ .name = "aurora_live_preview", .module = aurora_live_preview_module },
+            .{ .name = "grain_buffer", .module = grain_buffer_module },
+        },
     });
 
     const parser_tests = b.addTest(.{
@@ -1345,6 +1376,30 @@ pub fn build(b: *std.Build) void {
     });
     const run_cocoa_test_file = b.addRunArtifact(cocoa_test_file);
     test_step.dependOn(&run_cocoa_test_file.step);
+    const cross_integration_test_file = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/133_aurora_cross_integration_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "aurora_cross_integration", .module = aurora_cross_integration_module },
+            },
+        }),
+    });
+    const run_cross_integration_test_file = b.addRunArtifact(cross_integration_test_file);
+    test_step.dependOn(&run_cross_integration_test_file.step);
+    const unified_ide_test_file = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/134_aurora_unified_ide_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "aurora_unified_ide", .module = aurora_unified_ide_module },
+            },
+        }),
+    });
+    const run_unified_ide_test_file = b.addRunArtifact(unified_ide_test_file);
+    test_step.dependOn(&run_unified_ide_test_file.step);
     const run_route_tests = b.addRunArtifact(route_tests);
     test_step.dependOn(&run_route_tests.step);
     const run_orchestrator_tests = b.addRunArtifact(orchestrator_tests);
@@ -5124,6 +5179,19 @@ pub fn build(b: *std.Build) void {
     });
     const kernel_stats_aggregator_tests_run = b.addRunArtifact(kernel_stats_aggregator_tests);
     test_step.dependOn(&kernel_stats_aggregator_tests_run.step);
+
+    const kernel_stats_health_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/112_kernel_stats_health_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+            },
+        }),
+    });
+    const kernel_stats_health_tests_run = b.addRunArtifact(kernel_stats_health_tests);
+    test_step.dependOn(&kernel_stats_health_tests_run.step);
 
     // Graincard format validation test
     const graincard_format_validation_tests = b.addTest(.{

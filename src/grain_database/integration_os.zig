@@ -15,6 +15,7 @@ const relational = @import("relational.zig");
 const graph = @import("graph.zig");
 const index = @import("index.zig");
 const query = @import("query.zig");
+const crypto = std.crypto;
 
 // Import Grain OS API Server types (when available).
 // For now, we define compatible types.
@@ -37,6 +38,7 @@ pub const HttpStatus = enum(u16) {
     forbidden = 403,
     not_found = 404,
     conflict = 409,
+    too_many_requests = 429,
     internal_server_error = 500,
     service_unavailable = 503,
 };
@@ -123,6 +125,106 @@ pub const HttpResponse = struct {
 // Route handler type (compatible with Grain OS API Server).
 pub const RouteHandler = *const fn (*HttpRequest, *HttpResponse) void;
 
+// Bounded: Max idempotency key length.
+const MAX_IDEMPOTENCY_KEY_LEN: u32 = 256;
+
+// Bounded: Max idempotency cache entries.
+const MAX_IDEMPOTENCY_ENTRIES: u32 = 1000;
+
+// Bounded: Idempotency cache TTL (seconds).
+const IDEMPOTENCY_CACHE_TTL: u64 = 3600; // 1 hour
+
+// Idempotency cache entry.
+const IdempotencyEntry = struct {
+    key: []const u8,
+    key_len: u32,
+    record_id: u64,
+    created_at: u64,
+    allocator: std.mem.Allocator,
+
+    pub fn init(
+        allocator: std.mem.Allocator,
+        key: []const u8,
+        record_id: u64,
+    ) !IdempotencyEntry {
+        std.debug.assert(key.len <= MAX_IDEMPOTENCY_KEY_LEN);
+        const key_copy = try allocator.dupe(u8, key);
+        errdefer allocator.free(key_copy);
+        const now_timestamp = std.time.timestamp();
+        const now = @as(u64, @intCast(if (now_timestamp < 0) 0 else now_timestamp));
+        return IdempotencyEntry{
+            .key = key_copy,
+            .key_len = @as(u32, @intCast(key_copy.len)),
+            .record_id = record_id,
+            .created_at = now,
+            .allocator = allocator,
+        };
+    }
+
+    pub fn deinit(self: *IdempotencyEntry) void {
+        if (self.key_len > 0) {
+            self.allocator.free(self.key);
+        }
+        self.* = undefined;
+    }
+
+    pub fn is_expired(self: *const IdempotencyEntry) bool {
+        const now_timestamp = std.time.timestamp();
+        const now = @as(u64, @intCast(if (now_timestamp < 0) 0 else now_timestamp));
+        return (now - self.created_at) > IDEMPOTENCY_CACHE_TTL;
+    }
+};
+
+// Idempotency cache.
+pub const IdempotencyCache = struct {
+    entries: []IdempotencyEntry,
+    entries_len: u32,
+    allocator: std.mem.Allocator,
+
+    pub fn init(allocator: std.mem.Allocator) !IdempotencyCache {
+        const entries = try allocator.alloc(IdempotencyEntry, MAX_IDEMPOTENCY_ENTRIES);
+        return IdempotencyCache{
+            .entries = entries,
+            .entries_len = 0,
+            .allocator = allocator,
+        };
+    }
+
+    pub fn deinit(self: *IdempotencyCache) void {
+        var i: u32 = 0;
+        while (i < self.entries_len) : (i += 1) {
+            self.entries[i].deinit();
+        }
+        self.allocator.free(self.entries);
+        self.* = undefined;
+    }
+
+    pub fn get(self: *IdempotencyCache, key: []const u8) ?u64 {
+        std.debug.assert(key.len <= MAX_IDEMPOTENCY_KEY_LEN);
+        var i: u32 = 0;
+        while (i < self.entries_len) : (i += 1) {
+            if (self.entries[i].is_expired()) {
+                continue;
+            }
+            if (std.mem.eql(u8, self.entries[i].key, key)) {
+                return self.entries[i].record_id;
+            }
+        }
+        return null;
+    }
+
+    pub fn put(self: *IdempotencyCache, key: []const u8, record_id: u64) !void {
+        std.debug.assert(key.len <= MAX_IDEMPOTENCY_KEY_LEN);
+        if (self.entries_len >= MAX_IDEMPOTENCY_ENTRIES) {
+            return;
+        }
+        var entry = try IdempotencyEntry.init(self.allocator, key, record_id);
+        errdefer entry.deinit();
+        self.entries[self.entries_len] = entry;
+        self.entries_len += 1;
+    }
+};
+
 // Database context for handlers.
 pub const DatabaseContext = struct {
     storage: *storage_engine.StorageEngine,
@@ -130,6 +232,8 @@ pub const DatabaseContext = struct {
     graph_db: *graph.Graph,
     fulltext_index: *index.InvertedIndex,
     rate_limiter: *api.RateLimiter,
+    idempotency_cache: *IdempotencyCache,
+    dedup_cache: *RequestDedupCache,
     allocator: std.mem.Allocator,
 
     // Initialize database context.
@@ -140,6 +244,8 @@ pub const DatabaseContext = struct {
         graph_db: *graph.Graph,
         fulltext_index: *index.InvertedIndex,
         rate_limiter: *api.RateLimiter,
+        idempotency_cache: *IdempotencyCache,
+        dedup_cache: *RequestDedupCache,
     ) DatabaseContext {
         return DatabaseContext{
             .storage = storage,
@@ -147,10 +253,13 @@ pub const DatabaseContext = struct {
             .graph_db = graph_db,
             .fulltext_index = fulltext_index,
             .rate_limiter = rate_limiter,
+            .idempotency_cache = idempotency_cache,
+            .dedup_cache = dedup_cache,
             .allocator = allocator,
         };
     }
 };
+
 
 // Global database context (set during initialization).
 var global_db_context: ?*DatabaseContext = null;
@@ -270,6 +379,16 @@ pub fn handle_get_record(req: *HttpRequest, res: *HttpResponse) void {
         return;
     };
     const path = req.path[0..req.path_len];
+    const body = req.body[0..req.body_len];
+    const request_hash = RequestDedupCache.hash_request(req.method, path, body);
+    if (context.dedup_cache.get(request_hash)) |cached| {
+        res.status = cached.status;
+        _ = res.add_header("Content-Type", "application/json");
+        const body_len = @min(cached.body.len, res.body.len);
+        @memcpy(res.body[0..body_len], cached.body[0..body_len]);
+        res.body_len = body_len;
+        return;
+    }
     const record_id = parse_record_id(path) orelse {
         res.status = HttpStatus.bad_request;
         return;
@@ -284,6 +403,7 @@ pub fn handle_get_record(req: *HttpRequest, res: *HttpResponse) void {
             return;
         };
         res.body_len = json_len;
+        _ = context.dedup_cache.put(request_hash, res.body[0..res.body_len], res.status) catch {};
     } else {
         res.status = HttpStatus.not_found;
         const error_len = serializer.serialize_error(
@@ -294,6 +414,7 @@ pub fn handle_get_record(req: *HttpRequest, res: *HttpResponse) void {
             return;
         };
         res.body_len = error_len;
+        _ = context.dedup_cache.put(request_hash, res.body[0..res.body_len], res.status) catch {};
     }
 }
 
@@ -334,6 +455,25 @@ pub fn handle_create_record(req: *HttpRequest, res: *HttpResponse) void {
         res.status = HttpStatus.internal_server_error;
         return;
     };
+    const idempotency_key = req.get_header("Idempotency-Key");
+    if (idempotency_key) |key| {
+        if (context.idempotency_cache.get(key)) |existing_id| {
+            res.status = HttpStatus.ok;
+            _ = res.add_header("Content-Type", "application/json");
+            var serializer = api.JsonSerializer.init(context.allocator);
+            const record = context.storage.read_record_by_id(existing_id);
+            if (record) |r| {
+                const json_len = serializer.serialize_record(r, res.body) catch {
+                    res.status = HttpStatus.internal_server_error;
+                    return;
+                };
+                res.body_len = json_len;
+            } else {
+                res.status = HttpStatus.not_found;
+            }
+            return;
+        }
+    }
     const body = req.body[0..req.body_len];
     const parsed = parse_create_record_body(body);
     if (parsed.key == null or parsed.value == null) {
@@ -351,6 +491,9 @@ pub fn handle_create_record(req: *HttpRequest, res: *HttpResponse) void {
         _ = serializer.serialize_error("Failed to create record", res.body) catch {};
         return;
     };
+    if (idempotency_key) |key| {
+        _ = context.idempotency_cache.put(key, record_id) catch {};
+    }
     res.status = HttpStatus.created;
     _ = res.add_header("Content-Type", "application/json");
     var serializer = api.JsonSerializer.init(context.allocator);

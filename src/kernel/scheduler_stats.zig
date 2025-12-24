@@ -287,3 +287,37 @@ test "scheduler stats reset" {
     try std.testing.expect(stats.total_preemptions == 0);
 }
 
+// Test: scheduler statistics helper functions.
+test "scheduler stats helper functions" {
+    var stats = SchedulerStats.init();
+    
+    // Test with no decisions (should return 0.0).
+    try std.testing.expect(stats.get_preemption_rate() == 0.0);
+    try std.testing.expect(stats.get_context_switch_rate() == 0.0);
+    try std.testing.expect(stats.get_avg_processes_per_decision() == 0.0);
+    try std.testing.expect(stats.get_scheduling_efficiency() == 1.0);
+    
+    // Record some operations.
+    stats.record_scheduling_decision();
+    stats.record_scheduling_decision();
+    stats.record_preemption();
+    stats.record_context_switch();
+    stats.record_process_scheduled();
+    stats.record_process_scheduled();
+    
+    // Test preemption rate (1 preemption / 2 decisions = 50%).
+    const preemption_rate = stats.get_preemption_rate();
+    try std.testing.expect(preemption_rate == 50.0);
+    
+    // Test context switch rate (1 switch / 2 decisions = 50%).
+    const context_switch_rate = stats.get_context_switch_rate();
+    try std.testing.expect(context_switch_rate == 50.0);
+    
+    // Test average processes per decision (2 processes / 2 decisions = 1.0).
+    const avg_processes = stats.get_avg_processes_per_decision();
+    try std.testing.expect(avg_processes == 1.0);
+    
+    // Test scheduling efficiency (1.0 - 0.5 = 0.5).
+    const efficiency = stats.get_scheduling_efficiency();
+    try std.testing.expect(efficiency == 0.5);
+}

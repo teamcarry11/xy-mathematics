@@ -1243,6 +1243,46 @@ All planned phases for Grain Workspace Agent have been completed:
 - Editor plugin integration (VS Code, Cursor)
 - Auto-fix capabilities (future phase)
 
+### Phase 31: Text Editor Syntax Highlighting (Zig Only) ✅ **COMPLETE**
+
+**Date**: 2025-12-23-210000-pst
+
+**Completed Work**:
+1. **Zig Syntax Highlighting** (`src/grain_workspace/text_editor/app.zig`):
+   - Added `SyntaxTokenType` enumeration (keyword, string_literal, number_literal, comment, identifier, operator, punctuation, normal)
+   - Added `SyntaxToken` structure for token tracking (start, end, token_type)
+   - Added `is_zig_file()` function to detect Zig files by extension
+   - Added `toggle_syntax_highlighting()` function to enable/disable highlighting
+   - Added `highlight_zig_line()` function to parse and highlight Zig code
+   - Added helper functions (`is_operator()`, `is_operator_or_punctuation()`, `is_whitespace_or_punct()`)
+   - Added `syntax_highlighting_enabled` field to `TextEditor` struct
+   - Added `MAX_SYNTAX_TOKENS_PER_LINE` constant (256)
+   - Comprehensive tests (`tests/115_grain_workspace_text_editor_test.zig`)
+
+**Features**:
+- Zig file detection (by .zig extension)
+- Syntax highlighting toggle (enable/disable)
+- Keyword highlighting (const, var, fn, pub, etc.)
+- String literal highlighting ("...", c"...")
+- Number literal highlighting (42, 0x123, 0b101)
+- Comment highlighting (// ...)
+- Operator and punctuation highlighting
+- Identifier highlighting
+- Bounded token storage (max 256 tokens per line)
+
+**Grain Style Compliance**:
+- `grain_case` function names
+- `u32`/`u64` types (no `usize`)
+- Bounded allocations (all limits explicit)
+- Assertions for preconditions
+- Max 70 lines per function
+- All compiler warnings enabled
+
+**Future Enhancements**:
+- Editor plugin integration (VS Code, Cursor)
+- Auto-fix capabilities (future phase)
+- Incremental syntax highlighting (only re-parse changed lines)
+
 **Creative Future Ideas** (Conceptual):
 - **System Auditor**: Security auditing and compliance checking
   - System configuration auditing

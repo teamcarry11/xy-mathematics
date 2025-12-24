@@ -318,6 +318,23 @@ pub const RateLimiter = struct {
         return true;
     }
 
+    // Get retry-after seconds for rate-limited client.
+    pub fn get_retry_after_seconds(
+        self: *RateLimiter,
+        client_id: []const u8,
+    ) !u32 {
+        std.debug.assert(client_id.len <= 256);
+        const now_timestamp = std.time.timestamp();
+        const now = @as(u64, @intCast(if (now_timestamp < 0) 0 else now_timestamp));
+        const window_seconds: u64 = 60;
+        const entry = try self.find_or_create_entry(client_id);
+        if (now - entry.window_start >= window_seconds) {
+            return 0;
+        }
+        const remaining = window_seconds - (now - entry.window_start);
+        return @as(u32, @intCast(remaining));
+    }
+
     // Find or create rate limit entry.
     fn find_or_create_entry(
         self: *RateLimiter,

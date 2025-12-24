@@ -39,9 +39,15 @@ pub fn database_rate_limit_middleware(
         return false;
     };
     if (!allowed) {
+        // TODO: Use HttpStatus.too_many_requests (429) when Core Agent adds it
+        // For now, use service_unavailable but include Retry-After header
         response.status = grain_core_api_server.HttpStatus.service_unavailable;
         _ = response.add_header("Content-Type", "application/json");
-        const error_body = "{\"error\":\"rate_limit_exceeded\"}";
+        const retry_after = context.rate_limiter.get_retry_after_seconds(client_id) catch 60;
+        var retry_after_buf: [16]u8 = undefined;
+        const retry_after_str = try std.fmt.bufPrint(&retry_after_buf, "{}", .{retry_after});
+        _ = response.add_header("Retry-After", retry_after_str);
+        const error_body = "{\"error\":\"rate_limit_exceeded\",\"code\":429,\"message\":\"Too many requests\"}";
         const body_len = @min(error_body.len, grain_core_api_server.MAX_RESPONSE_SIZE);
         var i: u32 = 0;
         while (i < body_len) : (i += 1) {

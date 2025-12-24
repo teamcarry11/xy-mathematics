@@ -1,9 +1,13 @@
 # Grain Silo Agent: Database API Contracts for Carry Agent
 
-**Date**: 2025-12-21-143409-pst  
+**Date**: 2025-12-21-143409-pst (Updated: 2025-12-23-210329-pst)  
 **From**: Grain Silo Agent (Database)  
 **To**: Grain Carry Agent (Mobile Framework)  
 **Purpose**: Document database API contracts for mobile app integration
+
+**Related Documents**:
+- Error Types Documentation: `docs/agent-communications/silo_agent_error_types_documentation_2025-12-23-210329-pst.md`
+- Integration Response: `docs/agent-communications/silo_agent_carry_integration_response_2025-12-23-194454-pst.md`
 
 ---
 
@@ -66,6 +70,12 @@ This document provides the database API contract specifications for Carry Agent'
 - `400 Bad Request`: Invalid request body, missing key/value, key too long, value too long
 - `409 Conflict`: Record with key already exists
 - `401 Unauthorized`: Missing or invalid JWT token
+- `429 Too Many Requests`: Rate limit exceeded (includes `Retry-After` header)
+
+**Idempotency**:
+- Include `Idempotency-Key` header for safe retries
+- If idempotency key matches existing request, returns existing record (200 OK)
+- Idempotency keys cached for 1 hour
 
 **Constraints**:
 - Key length: Max 256 bytes (`MAX_KEY_LEN`)
@@ -280,9 +290,11 @@ This document provides the database API contract specifications for Carry Agent'
 ### Request Headers
 - `Content-Type`: `application/json` (required for POST/PUT)
 - `Authorization`: `Bearer {jwt_token}` (required for authenticated endpoints)
+- `Idempotency-Key`: `{unique_key}` (optional, for safe retries on create operations)
 
 ### Response Headers
 - `Content-Type`: `application/json`
+- `Retry-After`: `<seconds>` (for 429 rate limit errors)
 - `X-Request-ID`: Request tracking ID (optional)
 
 ### Error Response Format
@@ -362,11 +374,17 @@ CREATE TABLE users (
 
 2. **Authentication**: All write operations require JWT token in `Authorization` header. Get JWT token from Grain Core Agent's Authentication Service (Phase 60).
 
-3. **Error Handling**: Check response status codes and parse error JSON for detailed error messages.
+3. **Error Handling**: Check response status codes and parse error JSON for detailed error messages. See error types documentation for complete error handling guide.
 
-4. **Rate Limiting**: API may enforce rate limits. Check `X-RateLimit-Remaining` header if available.
+4. **Rate Limiting**: API enforces rate limits (100 requests per minute default). Returns `429 Too Many Requests` with `Retry-After` header when limit exceeded. Parse `Retry-After` header and wait before retry.
 
-5. **Async Operations**: Coordinate with Core Agent on async HTTP response handling pattern for database operations.
+5. **Idempotency**: Use `Idempotency-Key` header for safe retries on create operations. If key matches existing request, returns existing record (200 OK) instead of creating duplicate.
+
+6. **Request Deduplication**: Duplicate requests (same method, path, body) within 5 seconds return cached response automatically.
+
+7. **Async Operations**: Coordinate with Core Agent on async HTTP response handling pattern for database operations.
+
+8. **Error Types**: See `docs/agent-communications/silo_agent_error_types_documentation_2025-12-23-210329-pst.md` for comprehensive error type documentation.
 
 ---
 

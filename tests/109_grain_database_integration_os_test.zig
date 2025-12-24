@@ -22,6 +22,8 @@ const Schema = grain_database.Schema;
 const Graph = grain_database.Graph;
 const InvertedIndex = grain_database.InvertedIndex;
 const RateLimiter = grain_database.RateLimiter;
+const IdempotencyCache = grain_database.IdempotencyCache;
+const RequestDedupCache = grain_database.RequestDedupCache;
 
 test "database context initialization" {
     const allocator = testing.allocator;
@@ -40,6 +42,12 @@ test "database context initialization" {
     var limiter = try RateLimiter.init(allocator, 100);
     defer limiter.deinit();
 
+    var idempotency_cache = try IdempotencyCache.init(allocator);
+    defer idempotency_cache.deinit();
+
+    var dedup_cache = try RequestDedupCache.init(allocator);
+    defer dedup_cache.deinit();
+
     const context = DatabaseContext.init(
         allocator,
         &storage,
@@ -47,6 +55,8 @@ test "database context initialization" {
         &graph_db,
         &fulltext,
         &limiter,
+        &idempotency_cache,
+        &dedup_cache,
     );
 
     try testing.expect(context.storage != null);
@@ -71,6 +81,9 @@ test "set and get database context" {
     var limiter = try RateLimiter.init(allocator, 100);
     defer limiter.deinit();
 
+    var idempotency_cache = try IdempotencyCache.init(allocator);
+    defer idempotency_cache.deinit();
+
     var context = DatabaseContext.init(
         allocator,
         &storage,
@@ -78,6 +91,7 @@ test "set and get database context" {
         &graph_db,
         &fulltext,
         &limiter,
+        &idempotency_cache,
     );
 
     set_database_context(&context);
@@ -141,6 +155,9 @@ test "handler function signature compatibility" {
     var limiter = try RateLimiter.init(allocator, 100);
     defer limiter.deinit();
 
+    var idempotency_cache = try IdempotencyCache.init(allocator);
+    defer idempotency_cache.deinit();
+
     var context = DatabaseContext.init(
         allocator,
         &storage,
@@ -148,6 +165,7 @@ test "handler function signature compatibility" {
         &graph_db,
         &fulltext,
         &limiter,
+        &idempotency_cache,
     );
 
     set_database_context(&context);

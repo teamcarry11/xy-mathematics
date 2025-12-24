@@ -552,6 +552,46 @@ All planned phases for Grain Workspace Agent have been completed. See completed 
 - Supports open-source service revenue model (consulting, training, hosted services)
 - Enhanced navigation capabilities
 
+### Phase 30: Text Editor Text Selection ✅ (2025-12-23-200220-pst)
+
+**Completed Tasks**:
+- [x] Add SelectionRange structure
+- [x] Add start_selection() function
+- [x] Add extend_selection() function
+- [x] Add clear_selection() function
+- [x] Add select_all() function
+- [x] Add copy_selection() function
+- [x] Add cut_selection() function
+- [x] Add paste() function
+- [x] Add delete_selection() function
+- [x] Add clipboard management
+- [x] Create comprehensive tests
+- [x] Update documentation
+
+**Files**: Updated `src/grain_workspace/text_editor/app.zig`, `tests/115_grain_workspace_text_editor_test.zig`
+
+### Phase 31: Text Editor Syntax Highlighting (Zig Only) ✅ (2025-12-23-210000-pst)
+
+**Completed Tasks**:
+- [x] Add SyntaxTokenType enumeration
+- [x] Add SyntaxToken structure
+- [x] Add is_zig_file() function
+- [x] Add toggle_syntax_highlighting() function
+- [x] Add highlight_zig_line() function
+- [x] Add helper functions for operators/punctuation
+- [x] Add syntax_highlighting_enabled field to TextEditor
+- [x] Create comprehensive tests
+- [x] Update documentation
+
+**Files**: Updated `src/grain_workspace/text_editor/app.zig`, `tests/115_grain_workspace_text_editor_test.zig`
+
+**Alignment with Research Agent's Open-Source Service Model**:
+- Text Editor: 100% open-source
+- Production-ready with Zig syntax highlighting
+- Foundation for Workspace App Suite (SLC v1.0)
+- Supports open-source service revenue model (consulting, training, hosted services)
+- Enhanced code editing capabilities
+
 ---
 
 ## Coordination Tasks

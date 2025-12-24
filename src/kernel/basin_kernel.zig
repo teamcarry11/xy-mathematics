@@ -174,6 +174,11 @@ pub const Syscall = enum(u32) {
     audio_enumerate_devices = 132,
     audio_delete_device = 133,
     audio_get_stats = 134,
+    
+    // Kernel Statistics & Health
+    kernel_get_stats = 135,
+    health_check = 136,
+    get_resource_usage = 137,
 };
 
 /// Memory mapping flags.
@@ -444,6 +449,28 @@ pub const BasinError = error{
     out_of_bounds,
     user_not_found,
     invalid_user,
+    // Network errors
+    network_error,
+    connection_failed,
+    connection_timeout,
+    connection_refused,
+    // File system errors
+    file_not_found,
+    file_exists,
+    file_too_large,
+    directory_not_empty,
+    // Process errors
+    process_not_found,
+    process_already_running,
+    process_terminated,
+    // IPC errors
+    channel_full,
+    channel_empty,
+    channel_closed,
+    // Resource errors
+    too_many_files,
+    too_many_processes,
+    too_many_connections,
 };
 
 /// Syscall result wrapper.
@@ -1446,6 +1473,8 @@ pub const BasinKernel = struct {
             .audio_enumerate_devices => self.syscall_audio_enumerate_devices(arg1, arg2, arg3, arg4),
             .audio_delete_device => self.syscall_audio_delete_device(arg1, arg2, arg3, arg4),
             .audio_get_stats => self.syscall_audio_get_stats(arg1, arg2, arg3, arg4),
+            .kernel_get_stats => self.syscall_kernel_get_stats(arg1, arg2, arg3, arg4),
+            .health_check => self.syscall_health_check(arg1, arg2, arg3, arg4),
         };
     }
     
@@ -6288,6 +6317,104 @@ pub const BasinKernel = struct {
         }
         
         const result = SyscallResult.ok(0);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
+    /// Get unified kernel statistics snapshot.
+    /// Why: Provide comprehensive system statistics for monitoring and debugging.
+    /// Contract: stats_ptr must be valid pointer (checked by integration layer).
+    /// Note: Integration layer will write KernelStatsSnapshot structure to stats_ptr.
+    pub fn syscall_kernel_get_stats(
+        self: *BasinKernel,
+        stats_ptr: u64,
+        _arg2: u64,
+        _arg3: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg2;
+        _ = _arg3;
+        _ = _arg4;
+        
+        // Assert: Stats pointer must be valid (non-zero, within VM memory).
+        if (stats_ptr == 0) {
+            return BasinError.invalid_argument; // Null pointer
+        }
+        
+        const VM_MEMORY_SIZE: u64 = 4 * 1024 * 1024; // 4MB default
+        if (stats_ptr >= VM_MEMORY_SIZE) {
+            return BasinError.invalid_argument; // Stats pointer exceeds VM memory
+        }
+        
+        // Assert: KernelStatsSnapshot structure must fit within VM memory.
+        // KernelStatsSnapshot size: 7 pointers (8 bytes each) + 2 u64 + 1 f64 = 7*8 + 2*8 + 8 = 80 bytes
+        const KERNEL_STATS_SIZE: u64 = 80;
+        if (stats_ptr + KERNEL_STATS_SIZE > VM_MEMORY_SIZE) {
+            return BasinError.invalid_argument; // Stats structure exceeds VM memory
+        }
+        
+        // Note: This syscall is handled by integration layer (needs VM access to write snapshot).
+        // This stub validates the pointer but integration layer will write the KernelStatsSnapshot structure.
+        // Contract: stats_ptr must be valid (checked above).
+        
+        // Get snapshot for validation (integration layer will use this).
+        _ = self.get_kernel_stats_snapshot();
+        
+        const result = SyscallResult.ok(0);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
+    /// Health check syscall.
+    /// Why: Provide overall system health status for monitoring.
+    /// Returns: Health status (0 = healthy, 1 = degraded, 2 = unhealthy).
+    pub fn syscall_health_check(
+        self: *BasinKernel,
+        _arg1: u64,
+        _arg2: u64,
+        _arg3: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg1;
+        _ = _arg2;
+        _ = _arg3;
+        _ = _arg4;
+        
+        // Get kernel statistics snapshot.
+        const snapshot = self.get_kernel_stats_snapshot();
+        
+        // Calculate health status based on health score.
+        // Health score: 0.0 to 100.0 (higher is better).
+        // Status: 0 = healthy (>= 80.0), 1 = degraded (50.0-79.9), 2 = unhealthy (< 50.0)
+        var health_status: u64 = 0;
+        if (snapshot.health_score < 50.0) {
+            health_status = 2; // Unhealthy
+        } else if (snapshot.health_score < 80.0) {
+            health_status = 1; // Degraded
+        } else {
+            health_status = 0; // Healthy
+        }
+        
+        // Assert: Health status must be valid (0, 1, or 2).
+        Debug.kassert(health_status <= 2, "Health status out of range", .{});
+        
+        const result = SyscallResult.ok(health_status);
         
         // Assert: result must be success (not error).
         Debug.kassert(result == .success, "Result not success", .{});

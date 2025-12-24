@@ -726,3 +726,27 @@ pub fn handle_fulltext_search(req: *HttpRequest, res: *HttpResponse) void {
     res.body_len = @as(u32, @intCast(stream.getPos()));
 }
 
+// Handler: Health check endpoint.
+pub fn handle_health_check(req: *HttpRequest, res: *HttpResponse) void {
+    std.debug.assert(req != null);
+    std.debug.assert(res != null);
+    const context = get_database_context() orelse {
+        res.status = HttpStatus.service_unavailable;
+        var stream = std.io.fixedBufferStream(res.body);
+        const writer = stream.writer();
+        _ = writer.print("{{\"status\":\"unhealthy\",\"message\":\"Database context not initialized\"}}", .{}) catch {};
+        res.body_len = @as(u32, @intCast(stream.getPos()));
+        return;
+    };
+    _ = context;
+    res.status = HttpStatus.ok;
+    _ = res.add_header("Content-Type", "application/json");
+    var stream = std.io.fixedBufferStream(res.body);
+    const writer = stream.writer();
+    const record_count = context.storage.get_record_count();
+    writer.print("{{\"status\":\"healthy\",\"record_count\":{}}}", .{record_count}) catch {
+        res.status = HttpStatus.internal_server_error;
+        return;
+    };
+    res.body_len = @as(u32, @intCast(stream.getPos()));
+}

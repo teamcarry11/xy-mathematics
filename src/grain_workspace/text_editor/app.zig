@@ -8,6 +8,7 @@
 //! 2025-12-21-184709-pst: Phase 28 Find and Replace
 //! 2025-12-21-234422-pst: Phase 29 Go to Line
 //! 2025-12-23-194527-pst: Phase 30 Text Selection
+//! 2025-12-23-210000-pst: Phase 31 Syntax Highlighting
 
 const std = @import("std");
 const grain_core = @import("grain_core");
@@ -31,6 +32,10 @@ pub const MAX_REPLACE_QUERY_LEN: u32 = 256;
 // Bounded: Max clipboard size (explicit limit, in bytes)
 // 2025-12-23-194527-pst: Phase 30 Text Selection
 pub const MAX_CLIPBOARD_SIZE: u32 = 1_048_576; // 1 MB
+
+// Bounded: Max syntax tokens per line (explicit limit)
+// 2025-12-23-210000-pst: Phase 31 Syntax Highlighting (Zig only)
+pub const MAX_SYNTAX_TOKENS_PER_LINE: u32 = 256;
 
 // Bounded: Max line length (explicit limit, in bytes)
 // 2025-12-20-161231-pst: Phase 17 SLC v1.0
@@ -179,6 +184,35 @@ pub const SelectionRange = struct {
     }
 };
 
+// Syntax token type enumeration (Zig only).
+// 2025-12-23-210000-pst: Phase 31 Syntax Highlighting
+pub const SyntaxTokenType = enum(u8) {
+    keyword, // Zig keywords (const, var, fn, pub, etc.)
+    string_literal, // String literals ("...", c"...")
+    number_literal, // Number literals (123, 0x123, 0b101)
+    comment, // Comments (// ..., //! ..., /// ...)
+    identifier, // Identifiers (variable names, function names)
+    operator, // Operators (+, -, *, /, ==, !=, etc.)
+    punctuation, // Punctuation ({, }, (, ), [, ], etc.)
+    normal, // Normal text (no special highlighting)
+};
+
+// Syntax token structure.
+// 2025-12-23-210000-pst: Phase 31 Syntax Highlighting
+pub const SyntaxToken = struct {
+    start: u32, // Start column (0-indexed)
+    end: u32, // End column (0-indexed, exclusive)
+    token_type: SyntaxTokenType, // Token type
+
+    pub fn init() SyntaxToken {
+        return SyntaxToken{
+            .start = 0,
+            .end = 0,
+            .token_type = .normal,
+        };
+    }
+};
+
 // Text Editor application state.
 // 2025-12-20-161231-pst: Phase 17 SLC v1.0
 pub const TextEditor = struct {
@@ -199,6 +233,7 @@ pub const TextEditor = struct {
     replace_query_len: u32,
     show_line_numbers: bool,
     plain_text_mode: bool,
+    syntax_highlighting_enabled: bool, // Enable Zig syntax highlighting
     selection: SelectionRange,
     clipboard: [MAX_CLIPBOARD_SIZE]u8,
     clipboard_len: u32,
@@ -228,6 +263,7 @@ pub const TextEditor = struct {
             .replace_query_len = 0,
             .show_line_numbers = true,
             .plain_text_mode = false,
+            .syntax_highlighting_enabled = true,
             .selection = SelectionRange.init(),
             .clipboard = undefined,
             .clipboard_len = 0,
@@ -1683,5 +1719,285 @@ pub const TextEditor = struct {
         }
 
         return true;
+    }
+
+    /// Check if current file is a Zig file (by extension).
+    // 2025-12-23-210000-pst: Phase 31 Syntax Highlighting
+    pub fn is_zig_file(self: *const TextEditor) bool {
+        std.debug.assert(self.file_path_len > 0);
+
+        if (self.file_path_len < 4) {
+            return false; // ".zig" is 4 chars
+        }
+
+        const ext_start = self.file_path_len - 4;
+        const ext = self.file_path[ext_start..self.file_path_len];
+        return std.mem.eql(u8, ext, ".zig");
+    }
+
+    /// Toggle syntax highlighting on/off.
+    // 2025-12-23-210000-pst: Phase 31 Syntax Highlighting
+    pub fn toggle_syntax_highlighting(self: *TextEditor) void {
+        self.syntax_highlighting_enabled = !self.syntax_highlighting_enabled;
+    }
+
+    /// Highlight a line of Zig code and return tokens.
+    // 2025-12-23-210000-pst: Phase 31 Syntax Highlighting
+    pub fn highlight_zig_line(
+        self: *const TextEditor,
+        line_content: []const u8,
+        tokens: []SyntaxToken,
+        tokens_len: *u32,
+    ) bool {
+        std.debug.assert(tokens.len <= MAX_SYNTAX_TOKENS_PER_LINE);
+        std.debug.assert(tokens_len != null);
+
+        tokens_len.* = 0;
+
+        if (line_content.len == 0) {
+            return true;
+        }
+
+        // Zig keywords
+        const zig_keywords = [_][]const u8{
+            "const", "var", "fn", "pub", "priv", "export", "extern", "inline",
+            "noinline", "comptime", "anytype", "anyframe", "async", "await",
+            "suspend", "resume", "defer", "errdefer", "if", "else", "switch",
+            "while", "for", "break", "continue", "return", "try", "catch",
+            "orelse", "and", "or", "struct", "enum", "union", "error", "opaque",
+            "packed", "test", "usingnamespace", "align", "linksection",
+            "callconv", "allowzero", "volatile", "threadlocal", "addrspace",
+        };
+
+        var i: u32 = 0;
+        var in_string = false;
+        var string_char: u8 = 0; // ' or "
+        var in_raw_string = false;
+        var token_start: u32 = 0;
+        var token_type: SyntaxTokenType = .normal;
+
+        while (i < line_content.len and tokens_len.* < tokens.len) : (i += 1) {
+            const ch = line_content[i];
+            const is_whitespace = (ch == ' ' or ch == '\t' or ch == '\r');
+
+            // Handle comments
+            if (!in_string and !in_raw_string) {
+                if (i + 1 < line_content.len and line_content[i] == '/' and
+                    line_content[i + 1] == '/')
+                {
+                    // Finish previous token
+                    if (token_start < i and tokens_len.* < tokens.len) {
+                        tokens[tokens_len.*] = SyntaxToken{
+                            .start = token_start,
+                            .end = i,
+                            .token_type = token_type,
+                        };
+                        tokens_len.* += 1;
+                    }
+                    // Comment spans rest of line
+                    if (tokens_len.* < tokens.len) {
+                        tokens[tokens_len.*] = SyntaxToken{
+                            .start = i,
+                            .end = @as(u32, @intCast(line_content.len)),
+                            .token_type = .comment,
+                        };
+                        tokens_len.* += 1;
+                    }
+                    break;
+                }
+            }
+
+            // Handle strings
+            if (!in_string and !in_raw_string) {
+                if (ch == '"' or ch == '\'') {
+                    // Finish previous token
+                    if (token_start < i and tokens_len.* < tokens.len) {
+                        tokens[tokens_len.*] = SyntaxToken{
+                            .start = token_start,
+                            .end = i,
+                            .token_type = token_type,
+                        };
+                        tokens_len.* += 1;
+                    }
+                    token_start = i;
+                    token_type = .string_literal;
+                    in_string = true;
+                    string_char = ch;
+                    // Check for raw string (c"...")
+                    if (i + 1 < line_content.len and line_content[i + 1] == 'c' and
+                        i + 2 < line_content.len and line_content[i + 2] == ch)
+                    {
+                        in_raw_string = true;
+                        i += 2;
+                    }
+                }
+            } else if (in_string) {
+                if (ch == string_char) {
+                    // End string
+                    if (tokens_len.* < tokens.len) {
+                        tokens[tokens_len.*] = SyntaxToken{
+                            .start = token_start,
+                            .end = i + 1,
+                            .token_type = .string_literal,
+                        };
+                        tokens_len.* += 1;
+                    }
+                    in_string = false;
+                    token_start = i + 1;
+                    token_type = .normal;
+                } else if (ch == '\\' and i + 1 < line_content.len) {
+                    // Escape sequence
+                    i += 1;
+                }
+            } else if (in_raw_string) {
+                if (ch == string_char and i + 1 < line_content.len and
+                    line_content[i + 1] == 'c' and i + 2 < line_content.len and
+                    line_content[i + 2] == string_char)
+                {
+                    // End raw string
+                    if (tokens_len.* < tokens.len) {
+                        tokens[tokens_len.*] = SyntaxToken{
+                            .start = token_start,
+                            .end = i + 3,
+                            .token_type = .string_literal,
+                        };
+                        tokens_len.* += 1;
+                    }
+                    in_raw_string = false;
+                    i += 2;
+                    token_start = i + 1;
+                    token_type = .normal;
+                }
+            }
+
+            // Handle numbers and identifiers
+            if (!in_string and !in_raw_string) {
+                if ((ch >= '0' and ch <= '9') or
+                    (ch == '0' and i + 1 < line_content.len and
+                    (line_content[i + 1] == 'x' or line_content[i + 1] == 'b' or
+                    line_content[i + 1] == 'o')))
+                {
+                    if (token_type != .number_literal) {
+                        if (token_start < i and tokens_len.* < tokens.len) {
+                            tokens[tokens_len.*] = SyntaxToken{
+                                .start = token_start,
+                                .end = i,
+                                .token_type = token_type,
+                            };
+                            tokens_len.* += 1;
+                        }
+                        token_start = i;
+                        token_type = .number_literal;
+                    }
+                } else if (is_whitespace or is_operator_or_punctuation(ch)) {
+                    // Finish current token
+                    if (token_start < i and tokens_len.* < tokens.len) {
+                        // Check if it's a keyword
+                        const word_start = token_start;
+                        const word_end = i;
+                        if (word_end > word_start) {
+                            var is_keyword = false;
+                            for (zig_keywords) |keyword| {
+                                if (word_end - word_start == keyword.len) {
+                                    var match = true;
+                                    var j: u32 = 0;
+                                    while (j < keyword.len) : (j += 1) {
+                                        if (line_content[word_start + j] != keyword[j]) {
+                                            match = false;
+                                            break;
+                                        }
+                                    }
+                                    if (match) {
+                                        is_keyword = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            tokens[tokens_len.*] = SyntaxToken{
+                                .start = word_start,
+                                .end = word_end,
+                                .token_type = if (is_keyword) .keyword else token_type,
+                            };
+                            tokens_len.* += 1;
+                        }
+                    }
+                    // Handle operators/punctuation
+                    if (is_operator_or_punctuation(ch) and tokens_len.* < tokens.len) {
+                        tokens[tokens_len.*] = SyntaxToken{
+                            .start = i,
+                            .end = i + 1,
+                            .token_type = if (is_operator(ch)) .operator else .punctuation,
+                        };
+                        tokens_len.* += 1;
+                    }
+                    token_start = i + 1;
+                    token_type = .normal;
+                } else {
+                    // Continue identifier
+                    if (token_type != .identifier and token_type != .keyword) {
+                        if (token_start < i and tokens_len.* < tokens.len) {
+                            tokens[tokens_len.*] = SyntaxToken{
+                                .start = token_start,
+                                .end = i,
+                                .token_type = token_type,
+                            };
+                            tokens_len.* += 1;
+                        }
+                        token_start = i;
+                        token_type = .identifier;
+                    }
+                }
+            }
+        }
+
+        // Finish last token
+        if (token_start < line_content.len and tokens_len.* < tokens.len) {
+            // Check if it's a keyword
+            const word_start = token_start;
+            const word_end = @as(u32, @intCast(line_content.len));
+            if (word_end > word_start) {
+                var is_keyword = false;
+                for (zig_keywords) |keyword| {
+                    if (word_end - word_start == keyword.len) {
+                        var match = true;
+                        var j: u32 = 0;
+                        while (j < keyword.len) : (j += 1) {
+                            if (line_content[word_start + j] != keyword[j]) {
+                                match = false;
+                                break;
+                            }
+                        }
+                        if (match) {
+                            is_keyword = true;
+                            break;
+                        }
+                    }
+                }
+                tokens[tokens_len.*] = SyntaxToken{
+                    .start = word_start,
+                    .end = word_end,
+                    .token_type = if (is_keyword) .keyword else token_type,
+                };
+                tokens_len.* += 1;
+            }
+        }
+
+        return true;
+    }
+
+    /// Check if character is an operator.
+    // 2025-12-23-210000-pst: Phase 31 Syntax Highlighting
+    fn is_operator(ch: u8) bool {
+        return (ch == '+' or ch == '-' or ch == '*' or ch == '/' or ch == '%' or
+            ch == '=' or ch == '!' or ch == '<' or ch == '>' or ch == '&' or
+            ch == '|' or ch == '^' or ch == '~' or ch == '?');
+    }
+
+    /// Check if character is operator or punctuation.
+    // 2025-12-23-210000-pst: Phase 31 Syntax Highlighting
+    fn is_operator_or_punctuation(ch: u8) bool {
+        return (is_operator(ch) or ch == '{' or ch == '}' or ch == '(' or
+            ch == ')' or ch == '[' or ch == ']' or ch == ',' or ch == ';' or
+            ch == ':' or ch == '.' or ch == '?');
     }
 };

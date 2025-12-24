@@ -134,6 +134,70 @@ pub const SchedulerStats = struct {
         Debug.kassert(self.time_slice_expirations > 0, "Counter not incremented", .{});
     }
     
+    /// Get preemption rate (preemptions per scheduling decision).
+    /// Why: Calculate how often processes are preempted relative to scheduling decisions.
+    /// Returns: Preemption rate as a percentage (0.0 to 100.0), or 0.0 if no decisions.
+    pub fn get_preemption_rate(self: *const SchedulerStats) f64 {
+        if (self.total_scheduling_decisions == 0) {
+            return 0.0;
+        }
+        
+        const rate = @as(f64, @floatFromInt(self.total_preemptions)) /
+            @as(f64, @floatFromInt(self.total_scheduling_decisions)) * 100.0;
+        
+        // Assert: Rate must be between 0.0 and 100.0.
+        Debug.kassert(rate >= 0.0 and rate <= 100.0, "Preemption rate out of range", .{});
+        
+        return rate;
+    }
+    
+    /// Get context switch rate (context switches per scheduling decision).
+    /// Why: Calculate how often processes are switched relative to scheduling decisions.
+    /// Returns: Context switch rate as a percentage (0.0 to 100.0), or 0.0 if no decisions.
+    pub fn get_context_switch_rate(self: *const SchedulerStats) f64 {
+        if (self.total_scheduling_decisions == 0) {
+            return 0.0;
+        }
+        
+        const rate = @as(f64, @floatFromInt(self.total_context_switches)) /
+            @as(f64, @floatFromInt(self.total_scheduling_decisions)) * 100.0;
+        
+        // Assert: Rate must be between 0.0 and 100.0.
+        Debug.kassert(rate >= 0.0 and rate <= 100.0, "Context switch rate out of range", .{});
+        
+        return rate;
+    }
+    
+    /// Get average processes per scheduling decision.
+    /// Why: Calculate average number of processes scheduled per decision.
+    /// Returns: Average processes per decision, or 0.0 if no decisions.
+    pub fn get_avg_processes_per_decision(self: *const SchedulerStats) f64 {
+        if (self.total_scheduling_decisions == 0) {
+            return 0.0;
+        }
+        
+        const avg = @as(f64, @floatFromInt(self.total_processes_scheduled)) /
+            @as(f64, @floatFromInt(self.total_scheduling_decisions));
+        
+        // Assert: Average must be non-negative.
+        Debug.kassert(avg >= 0.0, "Average processes per decision negative", .{});
+        
+        return avg;
+    }
+    
+    /// Get scheduling efficiency (1.0 - preemption_rate / 100.0).
+    /// Why: Calculate scheduling efficiency based on preemption rate.
+    /// Returns: Efficiency score (0.0 to 1.0), where 1.0 is most efficient.
+    pub fn get_scheduling_efficiency(self: *const SchedulerStats) f64 {
+        const preemption_rate = self.get_preemption_rate();
+        const efficiency = 1.0 - (preemption_rate / 100.0);
+        
+        // Assert: Efficiency must be between 0.0 and 1.0.
+        Debug.kassert(efficiency >= 0.0 and efficiency <= 1.0, "Scheduling efficiency out of range", .{});
+        
+        return efficiency;
+    }
+    
     /// Print scheduler statistics.
     /// Why: Display scheduler behavior metrics for monitoring.
     pub fn print_stats(self: *const SchedulerStats) void {
@@ -154,6 +218,17 @@ pub const SchedulerStats = struct {
                 @as(f64, @floatFromInt(self.total_scheduling_decisions)) * 100.0;
             std.debug.print("  Priority Selection Rate: {d:.2}%\n", .{priority_pct});
             std.debug.print("  Round-Robin Selection Rate: {d:.2}%\n", .{round_robin_pct});
+            
+            // Display calculated metrics.
+            const preemption_rate = self.get_preemption_rate();
+            const context_switch_rate = self.get_context_switch_rate();
+            const avg_processes = self.get_avg_processes_per_decision();
+            const efficiency = self.get_scheduling_efficiency();
+            
+            std.debug.print("  Preemption Rate: {d:.2}%\n", .{preemption_rate});
+            std.debug.print("  Context Switch Rate: {d:.2}%\n", .{context_switch_rate});
+            std.debug.print("  Average Processes per Decision: {d:.2}\n", .{avg_processes});
+            std.debug.print("  Scheduling Efficiency: {d:.2}\n", .{efficiency});
         }
     }
     

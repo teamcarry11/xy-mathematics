@@ -643,3 +643,71 @@ test "audio write to input device fails" {
     try testing.expectError(BasinError.not_found, result3);
 }
 
+// Test: enumerate audio devices.
+test "audio enumerate devices" {
+    var kernel = BasinKernel.init();
+    
+    // Create multiple devices.
+    const name_ptr1: u64 = 0x10000;
+    const name_len1: u64 = 15; // "Built-in Speaker"
+    const device_type1: u64 = 1; // speaker
+    const result1 = try kernel.syscall_audio_create_device(
+        name_ptr1,
+        name_len1,
+        device_type1,
+        0,
+    );
+    try testing.expect(result1 == .success);
+    const device_id1 = result1.success;
+    
+    const name_ptr2: u64 = 0x20000;
+    const name_len2: u64 = 10; // "Microphone"
+    const device_type2: u64 = 3; // microphone
+    const result2 = try kernel.syscall_audio_create_device(
+        name_ptr2,
+        name_len2,
+        device_type2,
+        0,
+    );
+    try testing.expect(result2 == .success);
+    const device_id2 = result2.success;
+    
+    // Enumerate devices.
+    const device_ids_ptr: u64 = 0x30000;
+    const max_count: u64 = 16;
+    const result3 = try kernel.syscall_audio_enumerate_devices(
+        device_ids_ptr,
+        max_count,
+        0,
+        0,
+    );
+    try testing.expect(result3 == .success);
+    const count = result3.success;
+    try testing.expect(count >= 2); // At least 2 devices
+}
+
+// Test: delete audio device.
+test "audio delete device" {
+    var kernel = BasinKernel.init();
+    
+    // Create device first.
+    const name_ptr: u64 = 0x10000;
+    const name_len: u64 = 15; // "Built-in Speaker"
+    const device_type: u64 = 1; // speaker
+    const result1 = try kernel.syscall_audio_create_device(
+        name_ptr,
+        name_len,
+        device_type,
+        0,
+    );
+    try testing.expect(result1 == .success);
+    const device_id = result1.success;
+    
+    // Delete device.
+    const result2 = try kernel.syscall_audio_delete_device(device_id, 0, 0, 0);
+    try testing.expect(result2 == .success);
+    
+    // Try to delete again (should fail).
+    const result3 = kernel.syscall_audio_delete_device(device_id, 0, 0, 0);
+    try testing.expectError(BasinError.not_found, result3);
+}

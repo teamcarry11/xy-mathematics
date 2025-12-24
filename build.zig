@@ -5112,6 +5112,19 @@ pub fn build(b: *std.Build) void {
     const vantage_adaptation_full_integration_tests_run = b.addRunArtifact(vantage_adaptation_full_integration_tests);
     test_step.dependOn(&vantage_adaptation_full_integration_tests_run.step);
 
+    const kernel_stats_aggregator_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/110_kernel_stats_aggregator_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+            },
+        }),
+    });
+    const kernel_stats_aggregator_tests_run = b.addRunArtifact(kernel_stats_aggregator_tests);
+    test_step.dependOn(&kernel_stats_aggregator_tests_run.step);
+
     // Graincard format validation test
     const graincard_format_validation_tests = b.addTest(.{
         .root_module = b.createModule(.{

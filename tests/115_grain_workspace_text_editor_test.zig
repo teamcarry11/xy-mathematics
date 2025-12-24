@@ -8,6 +8,7 @@
 //! 2025-12-21-184709-pst: Phase 28 Find and Replace tests
 //! 2025-12-21-234422-pst: Phase 29 Go to Line tests
 //! 2025-12-23-194527-pst: Phase 30 Text Selection tests
+//! 2025-12-23-210000-pst: Phase 31 Syntax Highlighting tests
 
 const std = @import("std");
 const testing = std.testing;

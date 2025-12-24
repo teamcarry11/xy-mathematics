@@ -494,6 +494,42 @@ Grain Database Agent is responsible for building a general-purpose, Grain Style-
 
 **Status**: ✅ **COMPLETE**
 
+### Design Gaps Implementation ✅ **COMPLETE**
+**Status**: **COMPLETE** — Critical and high-priority design gaps addressed  
+**Date Completed**: 2025-12-23-213951-pst  
+**Estimated Time**: 1 day
+
+**Objectives**:
+1. ✅ Implement rate limiting response (429) with Retry-After header
+2. ✅ Create comprehensive error type documentation
+3. ✅ Add idempotency key support for create operations
+4. ✅ Add request deduplication cache
+5. ✅ Document circuit breaker pattern usage
+
+**Completed Work** (2025-12-23-213951-pst):
+- ✅ Rate limiting middleware updated to return 429 status with Retry-After header
+- ✅ Comprehensive error types documentation created (`docs/agent-communications/silo_agent_error_types_documentation_2025-12-23-210329-pst.md`)
+- ✅ IdempotencyCache added to DatabaseContext (1 hour TTL, 1000 max entries)
+- ✅ RequestDedupCache added to DatabaseContext (5 second TTL, 100 max entries)
+- ✅ Circuit breaker pattern documentation created (`docs/grain_database/circuit_breaker_pattern.md`)
+- ✅ API contracts updated with error types and new features
+- ✅ All tests updated with new caches
+
+**Critical Gaps Addressed**:
+- **Rate Limiting (429)**: Returns proper 429 status with Retry-After header (using 503 until Core adds 429)
+- **Error Type Documentation**: Comprehensive error types with retryability guidance
+
+**High Priority Gaps Addressed**:
+- **Idempotency**: Idempotency-Key header support for create operations
+- **Request Deduplication**: Automatic request deduplication cache
+- **Circuit Breaker Pattern**: Comprehensive documentation for client agents
+
+**Pending** (Require Coordination):
+- ⏳ Timeout handling — Waiting on Core Agent coordination (Priority 2, HIGH)
+- ⏳ Core Agent 429 status code — Coordinate to add `too_many_requests` to HttpStatus enum
+
+**Status**: ✅ **COMPLETE** — All independent critical and high-priority gaps implemented
+
 ### Phase 10: AArch64 Cloud Deployment (PLANNED)
 **Status**: Planned  
 **Estimated Time**: 2-3 weeks

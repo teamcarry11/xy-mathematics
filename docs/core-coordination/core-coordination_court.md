@@ -1,6 +1,6 @@
 # Core Coordination: Grain Court Agent
 
-**Last Updated**: 2025-12-28-225000-pst  
+**Last Updated**: 2025-12-28-230000-pst  
 **Agent**: Grain Court Agent (11th Agent)
 
 ---
@@ -82,12 +82,17 @@
 - ✅ Tests added for bounded allocation functions (3 additional tests)
 - ⏳ Integration testing with Flow Agent sample data (pending Flow Agent implementation)
 
-**6. Research Agent Coordination** ✅ — ACTIVE
+**6. Research Agent Coordination** ⏳ — INTEGRATION IN PROGRESS
 - ✅ Coordination message sent (2025-12-23-120500-pst)
 - ✅ Research Agent acknowledged and working on Phase 4 integration
 - ✅ Integration test files added (`tests/157_grain_research_zon_phase4_integration_test.zig`, `tests/158_grain_research_zon_phase4_validation_runner_test.zig`)
 - ✅ Research Agent Phase 4 implementation complete
 - ✅ ZON module successfully integrated with Research Agent Phase 4 framework
+- ⏳ **Phase 2/3 Integration In Progress** (2025-12-28-224000-pst):
+  - ✅ Test infrastructure created for LLM integration (`tests/159_grain_research_llm_integration_test.zig`)
+  - ✅ Test infrastructure created for retrieval LLM integration (`tests/160_grain_research_retrieval_llm_integration_test.zig`)
+  - ✅ Test infrastructure created for token counting adapter (`tests/161_grain_research_token_counting_adapter_test.zig`)
+  - ⏳ Implementation in progress — Court Agent actively supporting
 
 ### Remaining Work (~1%)
 
@@ -258,7 +263,7 @@
 - ✅ Added tests for error retryability, retry-after parsing, and error context (4 additional tests)
 - ✅ Timeout checking integrated end-to-end (checks timeout after response or if no response)
 
-**2. Support Research Agent Integration** (active)
+**2. Support Research Agent Integration** ⏳ — ACTIVE (Test Infrastructure Created, Implementation In Progress)
 - ✅ ZON module integrated with Research Agent Phase 4 framework
 - ✅ Phase 3 token efficiency ready for Research Agent integration
 - ✅ Coordination message sent (2025-12-28-142000-pst)
@@ -266,16 +271,21 @@
 - ✅ Phase 2 LLM integration approach provided
 - ✅ Token counting integration approach provided
 - ✅ Cost tracking integration approach provided
-- ⏳ Supporting Research Agent integration work as needed
-- ⏳ Ready to assist with any integration issues
+- ✅ Research Agent test infrastructure created (2025-12-28-224000-pst):
+  - `tests/159_grain_research_llm_integration_test.zig` — LLM integration tests
+  - `tests/160_grain_research_retrieval_llm_integration_test.zig` — Retrieval LLM integration tests
+  - `tests/161_grain_research_token_counting_adapter_test.zig` — Token counting adapter tests
+- ⏳ Supporting Research Agent implementation work as needed
+- ⏳ Ready to assist with any integration issues or questions
 
-**3. Flow Agent Coordination** ✅ — BOUNDED ALLOCATION API AVAILABLE
+**3. Flow Agent Coordination** ✅ — INTEGRATION COMPLETE
 - ✅ Coordination request sent (2025-12-21-190500-pst)
 - ✅ Flow Agent allocator coordination response received (2025-12-21-210000-pst)
 - ✅ Bounded allocation wrapper API implemented (2025-12-28-132000-pst)
 - ✅ Coordination response sent to Flow Agent (2025-12-28-132000-pst)
 - ✅ Tests added for bounded allocation functions
-- ⏳ Waiting on Flow Agent implementation and integration testing
+- ✅ Flow Agent integration complete (2025-12-28-175000-pst)
+- ✅ Flow Agent can test independently — no blocking dependencies
 
 ### SHORT-TERM: Phase 2 Completion
 
@@ -328,54 +338,72 @@
 
 ### For Research Agent (10th Agent)
 
-**Status**: All integration approaches provided ✅ — Ready for implementation
+**Status**: Integration in progress ⏳ — Test infrastructure created ✅
 
-**What Research Agent Needs to Do**:
+**Current Progress** (2025-12-28-224000-pst):
+- ✅ **Test infrastructure created**: Three new test files added to `build.zig`
+  - `tests/159_grain_research_llm_integration_test.zig` — LLM integration tests
+  - `tests/160_grain_research_retrieval_llm_integration_test.zig` — Retrieval LLM integration tests
+  - `tests/161_grain_research_token_counting_adapter_test.zig` — Token counting adapter tests
+- ✅ **Test structure established**: Test files indicate implementation of:
+  - `LlmIntegrationResult` structure with format support (JSON/ZON)
+  - `QueryTestResult` structure for retrieval accuracy comparison
+  - Token counting adapter integration with Court Agent
 
-**1. Phase 2 LLM Integration** (Priority: HIGHEST, 3-5 days)
-   - **Day 1-2**: Create LLM integration helper (`src/grain_research/llm_integration.zig`)
-     - Integrate with Court Agent's `ProviderPool`
+**What Research Agent Should Continue**:
+
+**1. Phase 2 LLM Integration** (Priority: HIGHEST, 2-3 days remaining)
+   - ✅ **Test infrastructure created** (`tests/159_grain_research_llm_integration_test.zig`)
+   - **Next**: Complete LLM integration helper implementation (`src/grain_research/llm_integration.zig`)
+     - Implement `LlmIntegration` structure using Court Agent's `ProviderPool`
      - Use `send_request_with_fallback()` for automatic provider selection
-     - Add timeout and error handling (60s default)
-   - **Day 3-4**: Integrate with retrieval accuracy framework
+     - Add timeout and error handling (60s default from Court Agent)
+     - Support JSON and ZON format requests (use `auto_encode_request_to_zon()`)
+     - Parse responses and return `LlmIntegrationResult` with token counts
+   - **Next**: Integrate with retrieval accuracy framework
      - Use LLM integration helper for JSON and ZON format queries
      - Compare retrieval accuracy between formats
-     - Track token usage for cost analysis
-   - **Day 5**: Testing and validation
-     - Test LLM integration with all providers
-     - Validate retrieval accuracy results
-     - Document integration approach
+     - Track token usage using Court Agent's cost tracking
 
-**2. Token Counting Integration** (Priority: MEDIUM, 2-3 days)
-   - **Day 1**: Create token counting adapter
+**2. Retrieval LLM Integration** (Priority: HIGH, 1-2 days remaining)
+   - ✅ **Test infrastructure created** (`tests/160_grain_research_retrieval_llm_integration_test.zig`)
+   - **Next**: Complete retrieval LLM integration implementation
+     - Implement `QueryTestResult` structure for JSON vs ZON comparison
+     - Integrate with LLM integration helper for query execution
+     - Calculate token savings percentage
+     - Track accuracy metrics for both formats
+
+**3. Token Counting Integration** (Priority: MEDIUM, 1-2 days remaining)
+   - ✅ **Test infrastructure created** (`tests/161_grain_research_token_counting_adapter_test.zig`)
+   - **Next**: Complete token counting adapter implementation
      - Create `src/grain_research/token_counting_adapter.zig`
-     - Integrate Court Agent's and Research Agent's token counting
-     - Add comparison and validation
-   - **Day 2**: Integration testing
-     - Test token counting with both approaches
-     - Compare accuracy and performance
-     - Document differences and use cases
+     - Integrate Court Agent's `estimate_token_count()` with Research Agent's token counter
+     - Add comparison and validation between approaches
+     - Use Court Agent's token counting for LLM requests (input/output tokens)
+     - Use Research Agent's token counter for format comparison (JSON vs ZON)
 
-**3. Cost Tracking Integration** (Priority: MEDIUM, 2-3 days)
-   - **Day 1**: Create cost tracking integration
+**4. Cost Tracking Integration** (Priority: MEDIUM, 2-3 days)
+   - **Next**: Create cost tracking integration
      - Create `src/grain_research/cost_tracking_integration.zig`
      - Integrate Court Agent's `CostTracker` with Research Agent's cost savings calculator
-     - Add cost tracking for JSON vs ZON format
-   - **Day 2**: Validation and reporting
-     - Validate cost savings with actual cost data
-     - Compare with Research Agent's cost savings calculator projections
-     - Generate cost savings reports
+     - Track costs for JSON vs ZON format requests
+     - Use `track_response_cost()` for automatic cost tracking
+     - Use `generate_cost_report()` for cost analysis reports
 
-**Available APIs**:
-- LLM Provider Pool: `ProviderPool.send_request_with_fallback()`
-- Token Counting: `estimate_token_count()`, `calculate_token_efficiency()`
-- Cost Tracking: `CostTracker`, `calculate_response_cost()`, `track_response_cost()`
+**Available APIs from Court Agent**:
+- LLM Provider Pool: `ProviderPool.send_request_with_fallback()` (automatic provider selection)
+- Automatic ZON Encoding: `auto_encode_request_to_zon()` (handles JSON fallback automatically)
+- Provider Output Handling: `handle_provider_output()` (generic output parsing)
+- Token Counting: `TokenEfficiency.estimate_token_count()`, `calculate_token_efficiency()`
+- Cost Tracking: `CostTracker`, `calculate_response_cost()`, `track_response_cost()`, `generate_cost_report()`
+- Error Handling: `LlmProviderError`, `is_llm_error_retryable()`, `LlmErrorContext.init()`
+- Timeout: `timeout_ms: ?u32` in `LlmRequest` (60s default)
 
 **Coordination Messages**:
 - Phase 3 Token Efficiency: `docs/agent-communications/court_to_research_phase3_token_efficiency_ready_2025-12-28-142000-pst.md`
 - Integration Response: `docs/agent-communications/court_to_research_integration_response_2025-12-28-214000-pst.md`
 
-**Timeline**: 7-11 days for all three integration points
+**Timeline**: 6-10 days remaining for all integration points (test infrastructure complete, implementation in progress)
 
 ---
 
@@ -479,15 +507,36 @@
 
 ### For Core Agent (1st Agent)
 
-**Status**: No blocking dependencies — Court Agent ready
+**Status**: No blocking dependencies — Court Agent ready and supporting agent integrations ✅
 
 **What Core Agent Needs to Know**:
-- ✅ Court Agent LLM timeout/error handling complete (per Core Agent's coordination decisions)
-- ✅ Court Agent ready to support all agents with LLM infrastructure
-- ✅ All coordination decisions implemented
-- ⏳ Court Agent supporting agent integrations as needed
 
-**No Action Required**: Court Agent is ready and supporting other agents
+**Court Agent Status Summary**:
+- ✅ **Phase 1**: Multi-Provider LLM API Foundation — COMPLETE
+- ✅ **Phase 2**: ZON Format Integration — ~99% COMPLETE (functionally complete, final polish remaining)
+- ✅ **Phase 3**: Token Efficiency Optimization — IN PROGRESS (cost reporting complete, Research Agent integration in progress)
+- ✅ **Phase 4**: Self-Hosted Provider (Cerebras GLM-4.6) — FOUNDATION STARTED (skeleton complete)
+
+**Integration Support Status**:
+- ✅ **Flow Agent**: ZON format bounded allocation API available — Integration complete
+- ⏳ **Research Agent**: All integration approaches provided, test infrastructure created, implementation in progress
+  - LLM integration tests added (`tests/159_grain_research_llm_integration_test.zig`)
+  - Retrieval LLM integration tests added (`tests/160_grain_research_retrieval_llm_integration_test.zig`)
+  - Token counting adapter tests added (`tests/161_grain_research_token_counting_adapter_test.zig`)
+- ✅ **Aurora/Bubble/Skate Agents**: LLM timeout/error handling ready — Can integrate when ready
+- ✅ **Self-Hosted Provider**: Foundation skeleton complete — Ready for API integration when funded
+
+**Court Agent Capabilities Available to All Agents**:
+- Multi-provider LLM API (OpenAI, Anthropic, Mistral, Self-Hosted)
+- ZON format encoding/decoding (35-70% token reduction)
+- Automatic ZON encoding with JSON fallback
+- Token counting and efficiency metrics
+- Cost tracking and reporting per provider
+- Structured error handling with retryability classification
+- Timeout handling (60s default, configurable)
+- Rate limiting detection and retry-after parsing
+
+**No Action Required from Core Agent**: Court Agent is ready and actively supporting all agent integrations. Court Agent will continue implementing remaining Phase 2/3/4 work and supporting agents as needed.
 
 ---
 
@@ -495,16 +544,23 @@
 
 | Agent | Integration Point | Status | Timeline | Next Action |
 |-------|------------------|--------|----------|-------------|
-| **Flow Agent** | ZON Format Export | ✅ API Available | 3-4 days | Implement ZON export functions |
-| **Research Agent** | Phase 2 LLM Integration | ✅ Approaches Provided | 3-5 days | Create LLM integration helper |
-| **Research Agent** | Token Counting Integration | ✅ Approaches Provided | 2-3 days | Create token counting adapter |
-| **Research Agent** | Cost Tracking Integration | ✅ Approaches Provided | 2-3 days | Create cost tracking integration |
-| **Aurora Agent** | LLM Timeout/Error Handling | ✅ Implementation Ready | 4-5 days | Update `aurora_glm46.zig` |
-| **Bubble Agent** | LLM Timeout/Error Handling | ✅ Implementation Ready | 3-4 days | Update LLM client integration |
-| **Skate Agent** | LLM Timeout/Error Handling | ✅ Implementation Ready | 3-4 days | Update AI insights module |
-| **Core Agent** | N/A | ✅ No Dependencies | N/A | No action required |
+| **Flow Agent** | ZON Format Export | ✅ **COMPLETE** | — | Integration complete, can test independently |
+| **Research Agent** | Phase 2 LLM Integration | ⏳ **IN PROGRESS** | 2-3 days | Complete LLM integration helper implementation |
+| **Research Agent** | Retrieval LLM Integration | ⏳ **IN PROGRESS** | 1-2 days | Complete retrieval LLM integration implementation |
+| **Research Agent** | Token Counting Integration | ⏳ **TEST INFRA CREATED** | 1-2 days | Complete token counting adapter implementation |
+| **Research Agent** | Cost Tracking Integration | ⏳ **PENDING** | 2-3 days | Create cost tracking integration |
+| **Aurora Agent** | LLM Timeout/Error Handling | ✅ **READY** | 4-5 days | Update `aurora_glm46.zig` when ready |
+| **Bubble Agent** | LLM Timeout/Error Handling | ✅ **READY** | 3-4 days | Update LLM client integration when ready |
+| **Skate Agent** | LLM Timeout/Error Handling | ✅ **READY** | 3-4 days | Update AI insights module when ready |
+| **Core Agent** | N/A | ✅ **NO DEPENDENCIES** | N/A | No action required, Court Agent ready |
 
-**All agents can proceed with integration work immediately.** Court Agent is ready to support all integrations and assist with any issues.
+**Integration Status**:
+- ✅ **Flow Agent**: Integration complete — can test independently
+- ⏳ **Research Agent**: Test infrastructure created (3 test files), implementation in progress — Court Agent actively supporting
+- ✅ **Aurora/Bubble/Skate Agents**: All APIs ready — can integrate when ready
+- ✅ **Core Agent**: No dependencies — Court Agent ready and supporting all integrations
+
+**Court Agent actively supporting Research Agent integration work and ready to assist all agents.**
 
 ---
 
@@ -546,13 +602,12 @@
 - Grain Style guidelines understood ✅ — All code follows strictly
 
 **Integration Partners**:
-- **Flow Agent**: Bounded allocation API available ✅ — Ready for Flow Agent implementation (3-4 days)
-- **Research Agent**: All integration approaches provided ✅ — Ready for Research Agent implementation (7-11 days)
-- **Bubble Agent**: LLM timeout/error handling ready ✅ — Ready for Bubble Agent integration (3-4 days)
-- **Skate Agent**: LLM timeout/error handling ready ✅ — Ready for Skate Agent integration (3-4 days)
-- **Aurora Agent**: LLM timeout/error handling ready ✅ — Ready for Aurora Agent integration (4-5 days)
-- **Skate Agent**: Migration complete ✅ — Ready for future coordination
-- **Aurora Agent**: Will coordinate when Aurora needs additional LLM services
+- **Flow Agent**: Bounded allocation API available ✅ — Integration complete, can test independently
+- **Research Agent**: All integration approaches provided ✅ — Test infrastructure created (3 test files), implementation in progress (6-10 days remaining)
+- **Bubble Agent**: LLM timeout/error handling ready ✅ — Ready for Bubble Agent integration when ready (3-4 days)
+- **Skate Agent**: LLM timeout/error handling ready ✅ — Ready for Skate Agent integration when ready (3-4 days)
+- **Aurora Agent**: LLM timeout/error handling ready ✅ — Ready for Aurora Agent integration when ready (4-5 days)
+- **Core Agent**: No dependencies ✅ — Court Agent ready and supporting all integrations
 
 ---
 
@@ -582,12 +637,17 @@
 - `build.zig` — grain_core dependency
 - `tests/049_grain_court_test.zig` — Comprehensive tests
 
-**Phase 2 Files** (In Progress):
-- `src/grain_court/zon_format.zig` — ZON format encoder/decoder (~90% complete)
-- `src/grain_court/llm_provider.zig` — Added ZON format integration helpers
-- `tests/049_grain_court_test.zig` — Added ZON format, timeout/error handling, bounded allocation, error context, and token efficiency tests (30 tests total)
-- `src/grain_court/token_efficiency.zig` — Token counting and cost tracking module (Phase 3)
+**Phase 2 Files**:
+- `src/grain_court/zon_format.zig` — ZON format encoder/decoder (~99% complete)
+- `src/grain_court/llm_provider.zig` — Added ZON format integration helpers, automatic encoding, output handling
+- `tests/049_grain_court_test.zig` — Added ZON format, timeout/error handling, bounded allocation, error context, token efficiency, automatic ZON encoding, cost reporting, and self-hosted provider tests (41 tests total)
+
+**Phase 3 Files**:
+- `src/grain_court/token_efficiency.zig` — Token counting and cost tracking module
 - `docs/research/cerebras_glm46_pricing_research_2025-12-28-140000-pst.md` — Cerebras GLM-4.6 pricing research
+
+**Phase 4 Files**:
+- `src/grain_court/provider_self_hosted.zig` — Self-hosted provider skeleton (Cerebras GLM-4.6)
 
 **Coordination Files**:
 - `docs/agent-communications/court_to_flow_zon_coordination_2025-12-21-190500-pst.md` — Flow Agent coordination request
@@ -636,10 +696,10 @@
 - ✅ Basic tests added (3 tests: init, health check, get name)
 - ⏳ Full API integration (pending API access/funding)
 
-**Overall**: Phase 1 complete, Phase 2 ~90% complete, Research Agent Phase 4 integration active and successful, Flow Agent coordination in progress, coordination decisions made for LLM timeout/error handling. Implementation required: LLM timeout/error handling to unblock Bubble, Skate, Aurora agents.
+**Overall**: Phase 1 complete ✅, Phase 2 ~99% complete ⏳, Phase 3 in progress ⏳ (cost reporting complete, Research Agent integration in progress), Phase 4 foundation started ⏳. Flow Agent integration complete ✅. Research Agent test infrastructure created (3 test files), implementation in progress ⏳. LLM timeout/error handling complete ✅, ready for Aurora/Bubble/Skate agents. All agents can proceed with integrations.
 
 ---
 
-**Date**: 2025-12-28-225000-pst  
+**Date**: 2025-12-28-230000-pst  
 **Agent**: Grain Court Agent (11th Agent)  
-**Status**: Phase 1 COMPLETE ✅ — Phase 2 ~99% COMPLETE — Phase 3 IN PROGRESS — Phase 4 FOUNDATION STARTED (Self-Hosted Provider Skeleton Complete)
+**Status**: Phase 1 COMPLETE ✅ — Phase 2 ~99% COMPLETE — Phase 3 IN PROGRESS — Phase 4 FOUNDATION STARTED — Research Agent Integration In Progress (Test Infrastructure Created)

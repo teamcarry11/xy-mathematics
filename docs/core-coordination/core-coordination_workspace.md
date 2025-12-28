@@ -529,15 +529,16 @@
 
 ---
 
-**Status**: Phase 32 complete. Component API implementation complete. All coordination decisions made. **Component API structure ready for integration.** Coordinate with Bubble and Aurora agents on component integration. This unblocks SLC product integration.
+**Status**: Phase 33 complete. Bracket matching implementation complete. Component API implementation complete. All coordination decisions made. **Component API structure ready for integration.** Coordinate with Bubble and Aurora agents on component integration. This unblocks SLC product integration.
 
 ---
 
 ## Next Steps for Other Agents
 
-**Component API Implementation Complete** (Phase 32, 2025-12-28-125036-pst)
+**Component API Implementation Complete** (Phase 32, 2025-12-28-125036-pst)  
+**Bracket Matching Implementation Complete** (Phase 33, 2025-12-28-223816-pst)
 
-The Workspace Agent has completed the Component API structure implementation per the approved design. The following section outlines what each agent needs to do next to integrate with this implementation.
+The Workspace Agent has completed the Component API structure implementation per the approved design, and continues with independent Text Editor enhancements. The following section outlines what each agent needs to do next to integrate with this implementation and coordinate effectively.
 
 ### For Bubble Agent — **IMMEDIATE ACTION REQUIRED**
 
@@ -690,4 +691,72 @@ api.terminal.terminal_view.set_theme(.high_contrast);
 
 ---
 
-**Summary**: Component API implementation complete. Bubble Agent should begin integration immediately (2-3 days). Aurora Agent should coordinate with Bubble Agent on Dream Browser component API (1-2 days). All other agents can continue with their current work. Component API structure is ready for integration and unblocks SLC product integration.
+### For Core Agent — **PRIORITY 1, CRITICAL**
+
+**What Was Completed by Workspace Agent**:
+- ✅ Component API structure implemented in `src/grain_workspace/components.zig`
+- ✅ Text Editor bracket matching implemented (Phase 33)
+- ✅ All independent work complete and ready for integration
+
+**What Core Agent Needs to Do** (Per Latest Coordination Plan, 2025-12-28-223816-pst):
+1. **Complete Coordination Decisions Implementation** (Priority 1, CRITICAL, unblocks 6 agents):
+   - **Timeout Handling Implementation** (2-3 days remaining):
+     - Complete HTTP client timeout implementation
+     - Complete WebSocket timeout implementation
+     - Complete file I/O timeout implementation
+     - All agents waiting on Core Agent implementation
+   - **Error Handling Implementation** (2-3 days remaining):
+     - Complete error types implementation (`HttpClientError`, `WebSocketError`, `FileIoError`)
+     - Complete retryability classification
+     - Complete rate limiting detection
+     - All agents waiting on Core Agent implementation
+   - **Service-to-Service Authentication Implementation** (2-3 days remaining):
+     - Complete service account token implementation
+     - Complete token generation and validation via `AuthService`
+     - Complete integration with existing JWT infrastructure
+     - All agents waiting on Core Agent implementation
+   - **Async Pattern Integration** (1-2 days remaining):
+     - Complete async pattern integration with Flow Agent Event Bus
+     - Complete event types for HTTP, WebSocket, File I/O operations
+     - Complete async response handling via event bus
+     - All agents waiting on Core Agent implementation
+
+2. **Component API Integration** (When Ready):
+   - Component API structure is complete and ready for compositor integration
+   - When compositor integration is ready, components can be integrated with Grain Core compositor
+   - Component API structure supports native compositor integration
+   - No immediate action required, but ready for integration when compositor is available
+
+3. **File I/O Error Types** (When Ready):
+   - Create `src/grain_core/file_io_errors.zig` with `FileIoError` enum
+   - Implement retryability checking function: `is_file_io_error_retryable()`
+   - Document error handling pattern
+   - Workspace Agent ready to integrate when available
+
+**Impact**: Core Agent's coordination decisions implementation **unblocks 6 agents** (Carry, Bubble, Aurora, Skate, Workspace, and others waiting on timeout/error handling patterns).
+
+**Timeline**: 2-3 days for timeout handling, 2-3 days for error handling, 2-3 days for authentication, 1-2 days for async pattern integration (total: ~7-11 days for all coordination decisions implementation).
+
+**Coordination**: Core Agent is implementing coordination decisions. Workspace Agent is ready to integrate timeout/error handling patterns once Core Agent completes. No blockers from Workspace Agent side.
+
+---
+
+### For Other Agents — **NO ACTION REQUIRED (FOR NOW)**
+
+**Carry Agent**: No direct integration with Component API. Continue with mobile framework development and coordinating with Silo Agent on database integration. Integrate timeout/error handling once Core Agent completes.
+
+**Court Agent**: No direct integration with Component API. Continue with ZON Module Phase 2 completion (~0.5 day remaining). Coordinate with Flow Agent on integration testing. Coordinate with Research Agent on Phase 2 LLM integration.
+
+**Flow Agent**: No direct integration with Component API. Continue coordinating with Court Agent on integration testing. Coordinate with Research Agent on validation. Continue independent enhancements.
+
+**Research Agent**: No direct integration with Component API. Run Phase 4 validation tests (when build issues resolved). Coordinate with Court Agent on Phase 2 LLM integration, token counting integration, and cost tracking integration.
+
+**Silo Agent**: No direct integration with Component API. Continue production use and SLC product integration. Continue coordinating with Carry Agent on database integration.
+
+**Skate Agent**: No direct integration with Component API. Continue feature coordination with Bubble, Aurora, and Core agents. Integrate timeout/error handling once Core Agent completes.
+
+**Vantage Agent**: No direct integration with Component API. Continue supporting other agents with kernel-level features. Service-to-service authentication and async patterns are userspace (no kernel changes needed). Timeout mechanism already complete ✅.
+
+---
+
+**Summary**: Component API implementation complete. Bracket matching implementation complete. **Core Agent should prioritize coordination decisions implementation (Priority 1, CRITICAL, unblocks 6 agents).** Bubble Agent should begin integration immediately (2-3 days). Aurora Agent should coordinate with Bubble Agent on Dream Browser component API (1-2 days). All other agents can continue with their current work. Component API structure is ready for integration and unblocks SLC product integration.

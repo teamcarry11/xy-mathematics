@@ -52,6 +52,7 @@ pub const HttpClientRequest = struct {
     socket_id: ?u32,
     response: ?api_server.HttpResponse,
     created_at: u64,
+    timeout_ms: u32,
 
     pub fn init(request_id: u32) HttpClientRequest {
         std.debug.assert(request_id > 0);
@@ -73,6 +74,7 @@ pub const HttpClientRequest = struct {
             .socket_id = null,
             .response = null,
             .created_at = 0,
+            .timeout_ms = DEFAULT_API_TIMEOUT_MS,
         };
         var i: u32 = 0;
         while (i < MAX_URL_LEN) : (i += 1) {
@@ -143,6 +145,24 @@ pub const HttpClientRequest = struct {
         self.headers_len += 1;
         return true;
     }
+
+    // Set timeout for request.
+    pub fn set_timeout(self: *HttpClientRequest, timeout_ms: ?u32) void {
+        if (timeout_ms) |timeout| {
+            self.timeout_ms = timeout;
+        } else {
+            self.timeout_ms = DEFAULT_API_TIMEOUT_MS;
+        }
+    }
+
+    // Check if request has timed out.
+    pub fn is_timed_out(self: *const HttpClientRequest, current_time: u64) bool {
+        if (self.created_at == 0) {
+            return false;
+        }
+        const elapsed_ms = (current_time - self.created_at) / 1000000; // Convert ns to ms
+        return elapsed_ms > self.timeout_ms;
+    }
 };
 
 // HTTP client manager.
@@ -178,6 +198,7 @@ pub const HttpClient = struct {
         self: *HttpClient,
         method: api_server.HttpMethod,
         url: []const u8,
+        timeout_ms: ?u32,
     ) ?*HttpClientRequest {
         std.debug.assert(url.len > 0);
         if (self.requests_len >= MAX_CONCURRENT_REQUESTS) {
@@ -187,6 +208,8 @@ pub const HttpClient = struct {
         self.next_request_id += 1;
         var req = HttpClientRequest.init(request_id);
         req.method = method;
+        req.set_timeout(timeout_ms);
+        req.created_at = std.time.nanoTimestamp();
         if (!req.set_url(url)) {
             return null;
         }
@@ -199,6 +222,18 @@ pub const HttpClient = struct {
             }
         }
         return null;
+    }
+
+    // Check for timed out requests and mark them as failed.
+    pub fn check_timeouts(self: *HttpClient, current_time: u64) void {
+        var i: u32 = 0;
+        while (i < MAX_CONCURRENT_REQUESTS) : (i += 1) {
+            if (self.requests[i]) |*req| {
+                if (req.is_timed_out(current_time)) {
+                    req.state = RequestState.failed;
+                }
+            }
+        }
     }
 
     pub fn find_request(

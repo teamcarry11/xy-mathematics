@@ -261,6 +261,7 @@
 - [x] Implement token counting tool (Phase 1) — Token counter module created (2025-12-21-083221-pst)
 - [ ] Run token count benchmarks (Phase 1) — Test with 4 test data structures, calculate reduction percentages
 - [x] Run retrieval accuracy tests (Phase 2) — LLM integration helper created (`src/grain_research/llm_integration.zig`), retrieval LLM integration created (`src/grain_research/retrieval_llm_integration.zig`) with `execute_query_test()` function for JSON vs ZON format comparison, tests created (`tests/159_grain_research_llm_integration_test.zig`, `tests/160_grain_research_retrieval_llm_integration_test.zig`), ready for integration testing with actual LLM providers (2025-12-28-224000-pst)
+- [x] Token Counting Integration (Phase 2) — Token counting adapter created (`src/grain_research/token_counting_adapter.zig`) to integrate Court Agent's character-based estimation with Research Agent's provider-specific estimation, unified interface with approach comparison (`compare_approaches()`), tests created (`tests/161_grain_research_token_counting_adapter_test.zig`), ready for validation testing (2025-12-28-224000-pst)
 - [ ] Calculate cost savings (Phase 3)
 - [x] Validate integration (Phase 4) — Implementation complete, validation tests ready (2025-12-28-125036-pst)
 

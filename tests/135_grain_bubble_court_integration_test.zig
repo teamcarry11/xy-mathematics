@@ -17,6 +17,8 @@ test "court integration init" {
     const integration = court_integration.CourtIntegration.init();
     std.debug.assert(integration.compute == null);
     std.debug.assert(integration.next_suggestion_id == 1);
+    std.debug.assert(integration.timeout_api_ms == court_integration.DEFAULT_TIMEOUT_API_MS);
+    std.debug.assert(integration.timeout_content_ms == court_integration.DEFAULT_TIMEOUT_CONTENT_MS);
 }
 
 test "court integration set compute" {
@@ -35,12 +37,12 @@ test "court integration search similar components" {
     while (i < results.len) : (i += 1) {
         results[i] = court_integration.ComponentMatch.init();
     }
-    const count = integration.search_similar_components(
+    const result = integration.search_similar_components(
         query_vector[0..],
         results[0..],
     );
-    // Returns 0 when compute not set (expected for Phase 3).
-    std.debug.assert(count == 0);
+    // Returns error when compute not set (expected for Phase 3).
+    std.debug.assert(result == error.ComputeNotSet);
 }
 
 test "court integration get design suggestions" {
@@ -51,12 +53,12 @@ test "court integration get design suggestions" {
     while (i < suggestions.len) : (i += 1) {
         suggestions[i] = court_integration.DesignSuggestion.init();
     }
-    const count = integration.get_design_suggestions(
+    const result = integration.get_design_suggestions(
         context,
         suggestions[0..],
     );
-    // Returns 0 when compute not set (expected for Phase 3).
-    std.debug.assert(count == 0);
+    // Returns error when compute not set (expected for Phase 3).
+    std.debug.assert(result == error.ComputeNotSet);
 }
 
 test "court integration generate component embedding" {
@@ -80,8 +82,8 @@ test "court integration generate component embedding" {
         var embedding: [128]f32 = undefined;
         @memset(embedding[0..], 0.0);
         const result = integration.generate_component_embedding(comp, embedding[0..]);
-        // Returns false when compute not set (expected for Phase 3).
-        std.debug.assert(result == false);
+        // Returns error when compute not set (expected for Phase 3).
+        std.debug.assert(result == error.ComputeNotSet);
     }
 }
 
@@ -128,3 +130,21 @@ test "court integration canvas to context" {
     std.debug.assert(len <= 512);
 }
 
+test "court integration timeout configuration" {
+    var integration = court_integration.CourtIntegration.init();
+    std.debug.assert(integration.timeout_api_ms == court_integration.DEFAULT_TIMEOUT_API_MS);
+    std.debug.assert(integration.timeout_content_ms == court_integration.DEFAULT_TIMEOUT_CONTENT_MS);
+    integration.set_timeout_api(15000);
+    std.debug.assert(integration.timeout_api_ms == 15000);
+    integration.set_timeout_content(90000);
+    std.debug.assert(integration.timeout_content_ms == 90000);
+}
+
+test "court integration error retryability" {
+    std.debug.assert(court_integration.is_retryable_error(court_integration.CourtComputeError.SramAllocationFailed) == true);
+    std.debug.assert(court_integration.is_retryable_error(court_integration.CourtComputeError.OperationFailed) == true);
+    std.debug.assert(court_integration.is_retryable_error(court_integration.CourtComputeError.OperationTimeout) == true);
+    std.debug.assert(court_integration.is_retryable_error(court_integration.CourtComputeError.ComputeNotSet) == false);
+    std.debug.assert(court_integration.is_retryable_error(court_integration.CourtComputeError.InvalidInput) == false);
+    std.debug.assert(court_integration.is_retryable_error(court_integration.CourtComputeError.OperationNotCompleted) == true);
+}

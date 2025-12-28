@@ -5063,6 +5063,20 @@ pub fn build(b: *std.Build) void {
     const grain_research_retrieval_llm_integration_tests_run = b.addRunArtifact(grain_research_retrieval_llm_integration_tests);
     test_step.dependOn(&grain_research_retrieval_llm_integration_tests_run.step);
 
+    const grain_research_token_counting_adapter_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/161_grain_research_token_counting_adapter_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_research", .module = grain_research_module },
+                .{ .name = "grain_court", .module = grain_court_module },
+            },
+        }),
+    });
+    const grain_research_token_counting_adapter_tests_run = b.addRunArtifact(grain_research_token_counting_adapter_tests);
+    test_step.dependOn(&grain_research_token_counting_adapter_tests_run.step);
+
     // Grain Bubble component tests
     const grain_bubble_component_tests = b.addTest(.{
         .root_module = b.createModule(.{

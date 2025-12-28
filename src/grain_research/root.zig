@@ -30,6 +30,8 @@ pub const code_analysis = @import("code_analysis.zig");
 pub const codebase_analyzer = @import("codebase_analyzer.zig");
 // Token counter for LLM provider token counting.
 pub const token_counter = @import("token_counter.zig");
+// Token counting adapter for unified token counting interface.
+pub const token_counting_adapter = @import("token_counting_adapter.zig");
 // Workflow metrics analyzer for Flow Agent collaboration.
 pub const workflow_metrics_analyzer = @import("workflow_metrics_analyzer.zig");
 
@@ -71,6 +73,9 @@ pub const FileAnalysisResult = codebase_analyzer.FileAnalysisResult;
 pub const TokenCounter = token_counter.TokenCounter;
 pub const TokenCountResult = token_counter.TokenCountResult;
 pub const LLMProvider = token_counter.LLMProvider;
+pub const TokenCountingAdapter = token_counting_adapter.TokenCountingAdapter;
+pub const TokenCountingApproach = token_counting_adapter.TokenCountingApproach;
+pub const UnifiedTokenCountResult = token_counting_adapter.UnifiedTokenCountResult;
 pub const WorkflowMetricsAnalyzer = workflow_metrics_analyzer.WorkflowMetricsAnalyzer;
 pub const WorkflowExecutionMetric = workflow_metrics_analyzer.WorkflowExecutionMetric;
 pub const WorkflowStatus = workflow_metrics_analyzer.WorkflowStatus;

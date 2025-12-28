@@ -501,6 +501,144 @@ switch (result) {
 
 ---
 
+## Next Steps for Core Agent
+
+### ✅ Kernel Timeout Mechanism Complete — Core Agent Can Proceed
+
+**Status**: ✅ **KERNEL IMPLEMENTATION COMPLETE** (2025-12-28-150000-pst)  
+**Core Agent Status**: ⏳ **USESPACE IMPLEMENTATION IN PROGRESS**
+
+**What Vantage Agent Has Completed**:
+- ✅ Kernel-level timeout mechanism implemented
+- ✅ TCP syscalls support timeout (`tcp_connect`, `tcp_send`, `tcp_recv`)
+- ✅ File I/O syscalls support timeout (`read`, `write`)
+- ✅ IPC syscalls support timeout (`channel_send`, `channel_recv`)
+- ✅ Timeout error types available (`network_timeout`, `file_io_timeout`, `ipc_timeout`)
+
+**What Core Agent Should Do Next**:
+
+1. **Complete HTTP Client Timeout Implementation** (2-3 days remaining)
+   - Use `syscall_tcp_connect` with `timeout_ns` parameter for HTTP connections
+   - Use `syscall_tcp_send` with `timeout_ns` parameter for HTTP request sending
+   - Use `syscall_tcp_recv` with `timeout_ns` parameter for HTTP response receiving
+   - Convert timeout_ms to nanoseconds: `timeout_ns = timeout_ms * 1_000_000`
+   - Default timeouts: 30s for API calls (30000000000 ns), 60s for content (60000000000 ns)
+   - Handle `network_timeout` error from syscalls
+   - **Kernel Support**: ✅ Ready — All required syscalls support timeout
+
+2. **Complete WebSocket Timeout Implementation** (2-3 days remaining)
+   - Use `syscall_tcp_connect` with 10s timeout (10000000000 ns) for WebSocket connections
+   - Use `syscall_tcp_send` with 5s timeout (5000000000 ns) for WebSocket message sending
+   - Use `syscall_tcp_recv` with 5s timeout for WebSocket message receiving
+   - Handle `network_timeout` error from syscalls
+   - **Kernel Support**: ✅ Ready — All required syscalls support timeout
+
+3. **Complete File I/O Timeout Implementation** (2-3 days remaining)
+   - Use `syscall_read` with `timeout_ns` parameter for file reading
+   - Use `syscall_write` with `timeout_ns` parameter for file writing
+   - Default timeout: 30s for file I/O (30000000000 ns)
+   - Handle `file_io_timeout` error from syscalls
+   - **Kernel Support**: ✅ Ready — All required syscalls support timeout
+
+4. **Complete Error Handling Implementation** (2-3 days remaining)
+   - Use enhanced `BasinError` enum with specific error types
+   - Map kernel errors to userspace error types
+   - Implement retryability classification
+   - Handle rate limiting (429 responses, `Retry-After` header)
+   - **Kernel Support**: ✅ Ready — Enhanced error reporting available
+
+5. **Complete Service-to-Service Authentication Implementation** (2-3 days remaining)
+   - Implement service account token generation via AuthService
+   - Implement service account token validation via AuthService
+   - Integrate with existing JWT infrastructure
+   - **Kernel Support**: ✅ Confirmed userspace pattern — No kernel changes needed
+
+6. **Complete Async Pattern Integration** (1-2 days remaining)
+   - Integrate with Flow Agent Event Bus
+   - Add event types for HTTP, WebSocket, File I/O operations
+   - Implement async response handling via event bus
+   - **Kernel Support**: ✅ Confirmed userspace pattern — No kernel changes needed
+
+**Coordination Notes for Core Agent**:
+- **Kernel Timeout Support**: ✅ Complete — All network, file I/O, and IPC syscalls support timeout
+- **Error Types**: ✅ Complete — Enhanced `BasinError` enum with 20+ specific error types
+- **No Kernel Blockers**: ✅ All kernel-level features ready for Core Agent to use
+- **Userspace Implementation**: Core Agent can proceed with userspace timeout/error handling implementation
+
+**Expected Timeline**: Core Agent should complete userspace implementation in 2-3 days (timeout), 2-3 days (error handling), 2-3 days (authentication), 1-2 days (async pattern) — Total: 7-11 days
+
+---
+
+## Next Steps for Other Agents
+
+### ✅ Kernel Ready — Agents Can Proceed
+
+**Status**: ✅ **KERNEL IMPLEMENTATION COMPLETE** — All agents can use kernel features
+
+### For Carry Agent
+
+**What You Can Do Now**:
+1. **Use Kernel Timeout Mechanism** (Ready Now)
+   - Use `syscall_tcp_connect`, `syscall_tcp_send`, `syscall_tcp_recv` with `timeout_ns` parameter
+   - Convert timeout_ms to nanoseconds: `timeout_ns = timeout_ms * 1_000_000`
+   - Default timeouts: 30s for API calls (30000000000 ns), 60s for content (60000000000 ns)
+   - Handle `network_timeout` error from syscalls
+   - **Kernel Support**: ✅ Ready — All required syscalls support timeout
+
+2. **Wait for Core Agent Userspace Implementation** (2-3 days)
+   - Core Agent is implementing HTTP client timeout handling
+   - Core Agent is implementing error handling patterns
+   - Core Agent is implementing service-to-service authentication
+   - Core Agent is implementing async pattern integration
+   - **Recommendation**: Use kernel syscalls directly if needed, or wait for Core Agent's userspace implementation
+
+**Coordination Notes**:
+- **Kernel Timeout Support**: ✅ Complete — You can use kernel syscalls with timeout now
+- **Core Agent Implementation**: ⏳ In progress — Will provide userspace HTTP client with timeout support
+- **No Kernel Blockers**: ✅ All kernel-level features ready
+
+### For Bubble Agent
+
+**What You Can Do Now**:
+1. **Use Kernel Timeout Mechanism** (Ready Now)
+   - Use `syscall_tcp_connect`, `syscall_tcp_send`, `syscall_tcp_recv` with `timeout_ns` parameter for Court compute operations
+   - Use `syscall_channel_send`, `syscall_channel_recv` with `timeout_ns` parameter for IPC operations
+   - Convert timeout_ms to nanoseconds: `timeout_ns = timeout_ms * 1_000_000`
+   - Handle `network_timeout` and `ipc_timeout` errors from syscalls
+   - **Kernel Support**: ✅ Ready — All required syscalls support timeout
+
+2. **Wait for Core Agent Userspace Implementation** (2-3 days)
+   - Core Agent is implementing timeout handling patterns
+   - Core Agent is implementing error handling patterns
+   - **Recommendation**: Use kernel syscalls directly if needed, or wait for Core Agent's userspace implementation
+
+**Coordination Notes**:
+- **Kernel Timeout Support**: ✅ Complete — You can use kernel syscalls with timeout now
+- **Core Agent Implementation**: ⏳ In progress — Will provide userspace patterns
+- **No Kernel Blockers**: ✅ All kernel-level features ready
+
+### For Other Agents (Silo, Flow, Research, Court, Skate, Workspace, Aurora)
+
+**What You Can Do Now**:
+1. **Use Kernel Features** (Ready Now)
+   - Use `kernel_get_stats` syscall for system monitoring
+   - Use `health_check` syscall for health status
+   - Use `get_resource_usage` syscall for per-process resource monitoring
+   - Use file I/O syscalls with timeout (`read`, `write` with `timeout_ns` parameter)
+   - Use IPC syscalls with timeout (`channel_send`, `channel_recv` with `timeout_ns` parameter)
+   - Handle timeout errors appropriately
+
+2. **Wait for Core Agent Userspace Implementation** (2-3 days)
+   - Core Agent is implementing userspace patterns for timeout, error handling, authentication, async
+   - **Recommendation**: Use kernel syscalls directly if needed, or wait for Core Agent's userspace implementation
+
+**Coordination Notes**:
+- **Kernel Features**: ✅ Complete — All kernel features ready for use
+- **Core Agent Implementation**: ⏳ In progress — Will provide userspace patterns
+- **No Kernel Blockers**: ✅ All kernel-level features ready
+
+---
+
 ## Next Steps
 
 ### ✅ COMPLETE: Syscall Timeout Mechanism Implementation
@@ -667,6 +805,32 @@ switch (result) {
 
 ---
 
-**Date**: 2025-12-28-150000-pst  
+**Date**: 2025-12-28-230000-pst  
 **Agent**: Grain Vantage Agent  
 **Status**: Phase 1, 2 & 3 COMPLETE ✅ — Timeout Mechanism COMPLETE ✅ — **READY FOR OTHER AGENTS**
+
+---
+
+## Summary for Other Agents
+
+**Kernel Status**: ✅ **ALL CRITICAL FEATURES COMPLETE**
+
+**What's Ready**:
+- ✅ Timeout mechanism (network, file I/O, IPC syscalls)
+- ✅ Enhanced error reporting (20+ specific error types)
+- ✅ Resource usage tracking (per-process monitoring)
+- ✅ Kernel statistics and health checks
+- ✅ All previous kernel features
+
+**What Core Agent Is Doing**:
+- ⏳ Implementing userspace timeout handling (2-3 days)
+- ⏳ Implementing userspace error handling (2-3 days)
+- ⏳ Implementing service-to-service authentication (2-3 days)
+- ⏳ Implementing async pattern integration (1-2 days)
+
+**What You Should Do**:
+- ✅ **Use kernel syscalls directly** if you need timeout support now
+- ⏳ **Wait for Core Agent** if you prefer userspace patterns (2-3 days)
+- ✅ **No kernel blockers** — All kernel features ready for use
+
+**Coordination**: All kernel-level work complete. Core Agent and other agents can proceed with userspace implementation.

@@ -6,9 +6,14 @@
 
 const std = @import("std");
 const api_server = @import("api_server.zig");
+const websocket_errors = @import("websocket_errors.zig");
 
 // Bounded: Max WebSocket connections.
 pub const MAX_WEBSOCKET_CONNECTIONS: u32 = 128;
+
+// Default timeout values (milliseconds).
+pub const DEFAULT_CONNECT_TIMEOUT_MS: u32 = 10000; // 10 seconds
+pub const DEFAULT_MESSAGE_TIMEOUT_MS: u32 = 5000; // 5 seconds
 
 // Bounded: Max WebSocket frame size (64KB).
 pub const MAX_FRAME_SIZE: u32 = 65536;
@@ -74,6 +79,8 @@ pub const WebSocketConnection = struct {
             .socket_fd = socket_fd,
             .created_at = 0,
             .last_activity = 0,
+            .connect_timeout_ms = DEFAULT_CONNECT_TIMEOUT_MS,
+            .message_timeout_ms = DEFAULT_MESSAGE_TIMEOUT_MS,
             .path = undefined,
             .path_len = 0,
             .subprotocol = undefined,
@@ -89,6 +96,45 @@ pub const WebSocketConnection = struct {
             conn.subprotocol[i] = 0;
         }
         return conn;
+    }
+
+    // Set connection timeout.
+    pub fn set_connect_timeout(self: *WebSocketConnection, timeout_ms: ?u32) void {
+        if (timeout_ms) |timeout| {
+            self.connect_timeout_ms = timeout;
+        } else {
+            self.connect_timeout_ms = DEFAULT_CONNECT_TIMEOUT_MS;
+        }
+    }
+
+    // Set message timeout.
+    pub fn set_message_timeout(self: *WebSocketConnection, timeout_ms: ?u32) void {
+        if (timeout_ms) |timeout| {
+            self.message_timeout_ms = timeout;
+        } else {
+            self.message_timeout_ms = DEFAULT_MESSAGE_TIMEOUT_MS;
+        }
+    }
+
+    // Check if connection has timed out.
+    pub fn is_connect_timed_out(self: *const WebSocketConnection, current_time: u64) bool {
+        if (self.created_at == 0) {
+            return false;
+        }
+        if (self.state != ConnectionState.connecting) {
+            return false;
+        }
+        const elapsed_ms = (current_time - self.created_at) / 1000000;
+        return elapsed_ms > self.connect_timeout_ms;
+    }
+
+    // Check if message operation has timed out.
+    pub fn is_message_timed_out(self: *const WebSocketConnection, current_time: u64) bool {
+        if (self.last_activity == 0) {
+            return false;
+        }
+        const elapsed_ms = (current_time - self.last_activity) / 1000000;
+        return elapsed_ms > self.message_timeout_ms;
     }
 };
 
@@ -144,6 +190,8 @@ pub const WebSocketManager = struct {
     pub fn add_connection(
         self: *WebSocketManager,
         socket_fd: u32,
+        connect_timeout_ms: ?u32,
+        message_timeout_ms: ?u32,
     ) ?*WebSocketConnection {
         std.debug.assert(socket_fd > 0);
         if (self.connections_len >= MAX_WEBSOCKET_CONNECTIONS) {
@@ -155,8 +203,12 @@ pub const WebSocketManager = struct {
             conn_id,
             socket_fd,
         );
-        self.connections[self.connections_len].active = true;
         const conn = &self.connections[self.connections_len];
+        conn.active = true;
+        conn.created_at = std.time.nanoTimestamp();
+        conn.last_activity = conn.created_at;
+        conn.set_connect_timeout(connect_timeout_ms);
+        conn.set_message_timeout(message_timeout_ms);
         self.connections_len += 1;
         return conn;
     }
@@ -196,6 +248,20 @@ pub const WebSocketManager = struct {
             }
         }
         return null;
+    }
+
+    // Check for timed out connections and mark them as closed.
+    pub fn check_timeouts(self: *WebSocketManager, current_time: u64) void {
+        var i: u32 = 0;
+        while (i < self.connections_len) : (i += 1) {
+            const conn = &self.connections[i];
+            if (conn.is_connect_timed_out(current_time)) {
+                conn.state = ConnectionState.closed;
+                conn.active = false;
+            } else if (conn.is_message_timed_out(current_time)) {
+                conn.state = ConnectionState.closing;
+            }
+        }
     }
 };
 
@@ -400,3 +466,150 @@ pub fn generate_websocket_frame(
     return offset;
 }
 
+
+        }
+        offset += 1;
+    }
+    return offset;
+}
+
+
+    buffer[offset] = byte1;
+    offset += 1;
+    var byte2: u8 = 0;
+    if (frame.flags.masked) {
+        byte2 |= 0x80;
+    }
+    const payload_len = frame.payload_len;
+    if (payload_len < 126) {
+        byte2 |= @as(u8, @truncate(payload_len));
+        buffer[offset] = byte2;
+        offset += 1;
+    } else if (payload_len < 65536) {
+        byte2 |= 126;
+        buffer[offset] = byte2;
+        offset += 1;
+        buffer[offset] = @as(u8, @truncate(payload_len >> 8));
+        offset += 1;
+        buffer[offset] = @as(u8, @truncate(payload_len));
+        offset += 1;
+    } else {
+        byte2 |= 127;
+        buffer[offset] = byte2;
+        offset += 1;
+        var i: u32 = 0;
+        while (i < 8) : (i += 1) {
+            const byte_idx: u32 = 7 - i;
+            const shift_amt: u6 = @intCast(byte_idx * 8);
+            buffer[offset] = @as(u8, @truncate(payload_len >> shift_amt));
+            offset += 1;
+        }
+    }
+    if (frame.flags.masked) {
+        var i: u32 = 0;
+        while (i < 4) : (i += 1) {
+            buffer[offset] = frame.flags.mask_key[i];
+            offset += 1;
+        }
+    }
+    var i: u32 = 0;
+    while (i < payload_len) : (i += 1) {
+        if (frame.flags.masked) {
+            buffer[offset] = frame.payload[i] ^ frame.flags.mask_key[i % 4];
+        } else {
+            buffer[offset] = frame.payload[i];
+        }
+        offset += 1;
+    }
+    return offset;
+}
+
+
+        }
+        offset += 1;
+    }
+    return offset;
+}
+
+        var i: u32 = 0;
+        while (i < 4) : (i += 1) {
+            buffer[offset] = frame.flags.mask_key[i];
+            offset += 1;
+        }
+    }
+    var i: u32 = 0;
+    while (i < payload_len) : (i += 1) {
+        if (frame.flags.masked) {
+            buffer[offset] = frame.payload[i] ^ frame.flags.mask_key[i % 4];
+        } else {
+            buffer[offset] = frame.payload[i];
+        }
+        offset += 1;
+    }
+    return offset;
+}
+
+
+        }
+        offset += 1;
+    }
+    return offset;
+}
+
+
+    buffer[offset] = byte1;
+    offset += 1;
+    var byte2: u8 = 0;
+    if (frame.flags.masked) {
+        byte2 |= 0x80;
+    }
+    const payload_len = frame.payload_len;
+    if (payload_len < 126) {
+        byte2 |= @as(u8, @truncate(payload_len));
+        buffer[offset] = byte2;
+        offset += 1;
+    } else if (payload_len < 65536) {
+        byte2 |= 126;
+        buffer[offset] = byte2;
+        offset += 1;
+        buffer[offset] = @as(u8, @truncate(payload_len >> 8));
+        offset += 1;
+        buffer[offset] = @as(u8, @truncate(payload_len));
+        offset += 1;
+    } else {
+        byte2 |= 127;
+        buffer[offset] = byte2;
+        offset += 1;
+        var i: u32 = 0;
+        while (i < 8) : (i += 1) {
+            const byte_idx: u32 = 7 - i;
+            const shift_amt: u6 = @intCast(byte_idx * 8);
+            buffer[offset] = @as(u8, @truncate(payload_len >> shift_amt));
+            offset += 1;
+        }
+    }
+    if (frame.flags.masked) {
+        var i: u32 = 0;
+        while (i < 4) : (i += 1) {
+            buffer[offset] = frame.flags.mask_key[i];
+            offset += 1;
+        }
+    }
+    var i: u32 = 0;
+    while (i < payload_len) : (i += 1) {
+        if (frame.flags.masked) {
+            buffer[offset] = frame.payload[i] ^ frame.flags.mask_key[i % 4];
+        } else {
+            buffer[offset] = frame.payload[i];
+        }
+        offset += 1;
+    }
+    return offset;
+}
+
+
+        }
+        offset += 1;
+    }
+    return offset;
+}

@@ -449,11 +449,19 @@ pub const HttpClientRequest = struct {
 
 **Impact**: Async response handling will work synchronously (with fallback) until events are published. Performance will improve once async.
 
+**Current Status**: ⏳ Core Agent actively implementing (1-2 days remaining per coordination plan)
+
+**Additional Notes**:
+- ✅ Flow Agent has already added event types to Event Bus (`http_request_completed`, `http_request_failed`)
+- ✅ Flow Agent has created async pattern documentation
+- ⏳ Core Agent needs to integrate HTTP client with Event Bus publishing (in progress)
+
 ---
 
 ### For Flow Agent
 
-**Priority**: HIGH — Required for async response handling
+**Priority**: HIGH — Required for async response handling  
+**Status**: ⏳ **INITIALIZATION NEEDED**
 
 #### Event Bus Initialization and Provision
 

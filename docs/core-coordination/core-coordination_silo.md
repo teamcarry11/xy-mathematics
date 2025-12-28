@@ -911,8 +911,17 @@ All core phases complete and ready for production use:
   - SLC product integration coordination (Priority 4 now ready)
   - **Payment/Passwords/Bank Design** (2025-12-28-213448-pst):
     - ✅ Design complete — ready for storage schema coordination
-    - ⏳ Coordinate on storage schema design (Grain Passwords, Grain Pay, Grainbank)
-    - ⏳ Design storage helpers (PasswordStorage, PaymentStorage, BankStorage)
+    - ✅ **Storage schema design complete** (2025-12-28-230000-pst)
+      - ✅ Comprehensive storage schema design document created
+      - ✅ Key formats, data structures, and storage helper APIs designed
+      - ✅ Validation, encryption requirements, and integration patterns documented
+      - **Document**: `docs/grain_database/payment_vault_storage_schema.md`
+    - ⏳ **IMMEDIATE**: Coordinate on storage schema design approval
+      - Review schema design with Core Agent
+      - Get approval for key formats and data structures
+      - Coordinate on encryption requirements
+    - ⏳ **SHORT-TERM**: Review storage helper API design with Core Agent
+    - ⏳ **MEDIUM-TERM**: Implement storage helpers once Core Agent begins Phase 1
   - **Coordination decisions implementation status** (2025-12-28-223816-pst):
     - ⏳ Timeout handling pattern — Implementation in progress
     - ⏳ Error handling pattern — Implementation in progress

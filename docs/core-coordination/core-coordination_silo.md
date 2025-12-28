@@ -469,6 +469,224 @@ All core phases complete and ready for production use:
 
 ---
 
+## Next Steps for Other Agents
+
+### For Carry Agent (Mobile Framework)
+
+**Current Status**: User Storage Helper ready, integration questions answered, waiting on Core Agent implementation
+
+**Immediate Next Steps** (while waiting on Core Agent):
+
+1. **Review Integration Documentation**:
+   - Review User Storage Helper (`src/grain_database/user_storage.zig`)
+   - Review API contracts (`docs/agent-communications/silo_agent_database_api_contracts_2025-12-21-143409-pst.md`)
+   - Review error types documentation (`docs/agent-communications/silo_agent_error_types_documentation_2025-12-23-210329-pst.md`)
+   - Review circuit breaker pattern guide (`docs/grain_database/circuit_breaker_pattern.md`)
+
+2. **Prepare Integration Code**:
+   - Prepare database integration module structure
+   - Prepare error handling code using Silo Agent's error types
+   - Prepare circuit breaker implementation using health check endpoint
+   - Prepare idempotency key generation for create operations
+
+3. **Once Core Agent Implements**:
+   - **Service-to-Service Authentication**: Integrate service account tokens from Core Agent AuthService
+     - Use `generate_service_account_token()` to get token for Silo Agent requests
+     - Include `Authorization: Bearer {service_account_token}` header in all write operations
+     - Handle token refresh using `refresh_service_account_token()` (7-day tokens)
+   - **Timeout Handling**: Use per-request timeout with 30s default for API calls
+     - Set `timeout_ms: 30000` for database API requests
+     - Handle `HttpTimeoutError` from Core Agent's HTTP client
+   - **Error Handling**: Use structured error unions from Core Agent
+     - Handle `HttpClientError` enum (timeout, network_error, rate_limit, etc.)
+     - Use retryability classification (`is_http_error_retryable()`) for retry logic
+     - Map Silo Agent error types to Core Agent error types
+   - **Async Pattern**: Use Flow Agent Event Bus for async HTTP responses
+     - Subscribe to `http_request_completed` and `http_request_failed` events
+     - Implement async database operations using event-driven pattern
+
+4. **Integration Testing**:
+   - Test User Storage Helper with mobile app user data
+   - Test circuit breaker pattern with health check endpoint
+   - Test idempotency keys for safe retries
+   - Test error handling with various error scenarios
+
+**Key Resources**:
+- User Storage Helper: `src/grain_database/user_storage.zig`
+- API Contracts: `docs/agent-communications/silo_agent_database_api_contracts_2025-12-21-143409-pst.md`
+- Error Types: `docs/agent-communications/silo_agent_error_types_documentation_2025-12-23-210329-pst.md`
+- Circuit Breaker: `docs/grain_database/circuit_breaker_pattern.md`
+- Integration Response: `docs/agent-communications/silo_agent_carry_integration_response_2025-12-23-194454-pst.md`
+
+---
+
+### For Aurora Agent (IDE/Browser) - SLC Product Integration
+
+**Current Status**: SLC helpers ready (Nostr Profile Builder), Priority 4 ready
+
+**Immediate Next Steps**:
+
+1. **Review SLC Integration Helpers**:
+   - Review `NostrProfileStorage` helper (`src/grain_database/slc_integration.zig`)
+   - Review pagination, search, and batch operations
+   - Review error handling patterns
+
+2. **Implement Circuit Breaker Pattern**:
+   - Use health check endpoint (`GET /api/v1/health`) for circuit breaker logic
+   - Implement three-state circuit breaker (Closed, Open, Half-Open)
+   - Use thresholds: 5 failures to open, 30s recovery timeout, 2 successes to close
+   - Reference: `docs/grain_database/circuit_breaker_pattern.md`
+
+3. **Prepare for Core Agent Implementation**:
+   - Prepare timeout handling (30s default for API calls)
+   - Prepare error handling using structured error unions
+   - Prepare service-to-service authentication (when Core Agent implements)
+
+4. **SLC Product Integration Testing**:
+   - Use batch operations for efficient bulk loading (`batch_store_profiles()`)
+   - Test pagination for large profile lists (`list_profiles_paginated()`)
+   - Test search functionality (`search_profiles()`)
+   - Test circuit breaker pattern with health check endpoint
+
+**Key Resources**:
+- SLC Helpers: `src/grain_database/slc_integration.zig` (NostrProfileStorage)
+- Circuit Breaker: `docs/grain_database/circuit_breaker_pattern.md`
+- Error Types: `docs/agent-communications/silo_agent_error_types_documentation_2025-12-23-210329-pst.md`
+
+---
+
+### For Skate Agent (Knowledge Graph) - SLC Product Integration
+
+**Current Status**: SLC helpers ready (DAG Website Builder), Priority 4 ready
+
+**Immediate Next Steps**:
+
+1. **Review SLC Integration Helpers**:
+   - Review `DagWebsiteStorage` helper (`src/grain_database/slc_integration.zig`)
+   - Review pagination, search, and batch operations
+   - Review error handling patterns
+
+2. **Implement Circuit Breaker Pattern**:
+   - Use health check endpoint (`GET /api/v1/health`) for circuit breaker logic
+   - Implement three-state circuit breaker (Closed, Open, Half-Open)
+   - Use thresholds: 5 failures to open, 30s recovery timeout, 2 successes to close
+   - Reference: `docs/grain_database/circuit_breaker_pattern.md`
+
+3. **Prepare for Core Agent Implementation**:
+   - Prepare timeout handling (30s default for API calls, 60s for content fetching)
+   - Prepare error handling using structured error unions
+   - Prepare service-to-service authentication (when Core Agent implements)
+
+4. **SLC Product Integration Testing**:
+   - Use batch operations for efficient bulk loading (`batch_store_nodes()`)
+   - Test pagination for large node lists (`list_nodes_paginated()`)
+   - Test search functionality (`search_nodes()`)
+   - Test circuit breaker pattern with health check endpoint
+
+**Key Resources**:
+- SLC Helpers: `src/grain_database/slc_integration.zig` (DagWebsiteStorage)
+- Circuit Breaker: `docs/grain_database/circuit_breaker_pattern.md`
+- Error Types: `docs/agent-communications/silo_agent_error_types_documentation_2025-12-23-210329-pst.md`
+
+---
+
+### For Workspace Agent (Desktop Apps) - SLC Product Integration
+
+**Current Status**: SLC helpers ready (Workspace App Suite), Priority 4 ready
+
+**Immediate Next Steps**:
+
+1. **Review SLC Integration Helpers**:
+   - Review `WorkspaceFileStorage` helper (`src/grain_database/slc_integration.zig`)
+   - Review pagination, search, and batch operations
+   - Review error handling patterns
+
+2. **Implement Circuit Breaker Pattern**:
+   - Use health check endpoint (`GET /api/v1/health`) for circuit breaker logic
+   - Implement three-state circuit breaker (Closed, Open, Half-Open)
+   - Use thresholds: 5 failures to open, 30s recovery timeout, 2 successes to close
+   - Reference: `docs/grain_database/circuit_breaker_pattern.md`
+
+3. **Prepare for Core Agent Implementation**:
+   - Prepare timeout handling (30s default for API calls, 30s for file I/O)
+   - Prepare error handling using structured error unions
+   - Prepare service-to-service authentication (when Core Agent implements)
+
+4. **SLC Product Integration Testing**:
+   - Use batch operations for efficient bulk loading (`batch_store_file_metadata()`)
+   - Test pagination for large file lists (`list_file_metadata_paginated()`)
+   - Test search functionality (`search_file_metadata()`)
+   - Test circuit breaker pattern with health check endpoint
+
+**Key Resources**:
+- SLC Helpers: `src/grain_database/slc_integration.zig` (WorkspaceFileStorage)
+- Circuit Breaker: `docs/grain_database/circuit_breaker_pattern.md`
+- Error Types: `docs/agent-communications/silo_agent_error_types_documentation_2025-12-23-210329-pst.md`
+
+---
+
+### For Bubble Agent (Design Tool)
+
+**Current Status**: Can use database for design data storage (if needed)
+
+**Next Steps** (if database integration needed):
+
+1. **Review Database API**:
+   - Review API contracts (`docs/agent-communications/silo_agent_database_api_contracts_2025-12-21-143409-pst.md`)
+   - Review error types documentation
+   - Review circuit breaker pattern guide
+
+2. **Implement Circuit Breaker Pattern**:
+   - Use health check endpoint for circuit breaker logic
+   - Reference: `docs/grain_database/circuit_breaker_pattern.md`
+
+3. **Prepare for Core Agent Implementation**:
+   - Prepare timeout handling (30s default for API calls)
+   - Prepare error handling using structured error unions
+   - Prepare service-to-service authentication (when Core Agent implements)
+
+**Key Resources**:
+- API Contracts: `docs/agent-communications/silo_agent_database_api_contracts_2025-12-21-143409-pst.md`
+- Circuit Breaker: `docs/grain_database/circuit_breaker_pattern.md`
+- Error Types: `docs/agent-communications/silo_agent_error_types_documentation_2025-12-23-210329-pst.md`
+
+---
+
+### For All Agents Using Database API
+
+**Common Next Steps**:
+
+1. **Review Documentation**:
+   - API Contracts: `docs/agent-communications/silo_agent_database_api_contracts_2025-12-21-143409-pst.md`
+   - Error Types: `docs/agent-communications/silo_agent_error_types_documentation_2025-12-23-210329-pst.md`
+   - Circuit Breaker: `docs/grain_database/circuit_breaker_pattern.md`
+
+2. **Implement Reliability Patterns**:
+   - **Circuit Breaker**: Use health check endpoint (`GET /api/v1/health`) for fault tolerance
+   - **Idempotency**: Use `Idempotency-Key` header for safe retries (1 hour TTL)
+   - **Error Handling**: Use Silo Agent's error types with retryability classification
+   - **Rate Limiting**: Handle 429 responses with `Retry-After` header (exponential backoff)
+
+3. **Prepare for Core Agent Implementation**:
+   - **Timeout Handling**: Use per-request timeout (30s default for API calls)
+   - **Error Handling**: Use structured error unions (`HttpClientError`, `WebSocketError`, `FileIoError`)
+   - **Service-to-Service Auth**: Use service account tokens from Core Agent AuthService
+   - **Async Pattern**: Use Flow Agent Event Bus for async operations
+
+4. **Integration Best Practices**:
+   - Use batch operations for bulk loading (100 records max)
+   - Use pagination for large datasets
+   - Use search functionality for filtering
+   - Implement proper error handling with retry logic
+   - Monitor health check endpoint for circuit breaker logic
+
+**Key Resources**:
+- All documentation: `docs/agent-communications/` and `docs/grain_database/`
+- Source code: `src/grain_database/`
+- Tests: `tests/` (reference implementations)
+
+---
+
 ## Coordination Needs
 
 ### Ready to Coordinate

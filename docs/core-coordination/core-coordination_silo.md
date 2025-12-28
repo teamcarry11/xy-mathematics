@@ -853,6 +853,56 @@ All core phases complete and ready for production use:
 
 ---
 
+### For Court Agent (LLM Infrastructure) - Payment/Passwords/Bank Integration
+
+**Current Status**: Storage schema design complete ✅, ready for LLM API key storage coordination
+
+**Storage Schema Design Complete** (2025-12-28-230000-pst):
+- ✅ Storage schema design document available for reference
+- ✅ Grain Passwords integration pattern documented (for LLM API key storage)
+- ✅ Storage helper APIs designed (PasswordStorage for secure key storage)
+- **Document**: `docs/grain_database/payment_vault_storage_schema.md`
+
+**Integration Points** (from Payment/Vault/Bank design):
+- **Grain Passwords**: Secure storage of LLM API keys and tokens
+- **Grainbank**: Future integration opportunities (AI-powered currency recommendations)
+
+**Immediate Next Steps** (for Court Agent):
+
+1. **Review Storage Schema Design**:
+   - Review Grain Passwords storage schema for LLM API key storage
+   - Review encryption requirements (Grain Passwords encrypts before storage)
+   - Review key derivation parameters storage
+   - Understand integration pattern with Grain Passwords module
+
+2. **Coordinate on LLM API Key Storage**:
+   - Coordinate with Core Agent on Grain Passwords integration
+   - Plan LLM API key storage using PasswordStorage helper
+   - Plan token refresh and key rotation strategies
+   - Ensure secure key management for multiple LLM providers
+
+3. **Prepare for Core Agent Phase 1**:
+   - Review Grain Passwords module design (when Core Agent begins Phase 1)
+   - Plan integration with PasswordStorage helper
+   - Plan secure key retrieval for LLM provider authentication
+
+4. **Future Integration Opportunities**:
+   - AI-powered currency recommendations (Grainbank integration)
+   - Market analysis using knowledge graph (Skate Agent integration)
+   - Currency relationship insights
+
+**Key Resources**:
+- Storage Schema Design: `docs/grain_database/payment_vault_storage_schema.md`
+- Payment/Vault/Bank Design: `docs/zyx/grain_payment_vault_design_2025-12-28-213448-pst.md`
+- PasswordStorage Helper API: See storage schema design document
+
+**Coordination Points**:
+- **LLM API Key Storage**: Coordinate with Core Agent on Grain Passwords integration
+- **Secure Key Management**: Plan secure storage and retrieval of LLM provider keys
+- **Integration Timeline**: Coordinate with Core Agent on Phase 1 timing
+
+---
+
 ## Coordination Needs
 
 ### Ready to Coordinate

@@ -104,15 +104,27 @@ All core phases complete and ready for production use:
    - **Integration**: Silo, Workspace, Pay, Court, Skate
 
 **Next Steps for Silo Agent**:
-1. **IMMEDIATE**: Coordinate with Core Agent on storage schema design
-   - Review encryption requirements for Grain Passwords
-   - Design transaction storage schema for Grain Pay
-   - Design account/balance storage schema for Grainbank
-2. **SHORT-TERM**: Design storage helpers (similar to SLC integration helpers)
-   - `PasswordStorage` helper for encrypted secret management
-   - `PaymentStorage` helper for transaction history
-   - `BankStorage` helper for account balances and currency data
-3. **MEDIUM-TERM**: Implement storage helpers once Core Agent begins Phase 1
+1. ✅ **COMPLETE**: Storage schema design complete (2025-12-28-230000-pst)
+   - ✅ Comprehensive storage schema design document created
+   - ✅ Key formats defined for all three modules
+   - ✅ Data structures defined (JSON schemas)
+   - ✅ Storage helper APIs designed (PasswordStorage, PaymentStorage, BankStorage)
+   - ✅ Validation constants and functions defined
+   - ✅ Encryption requirements documented
+   - ✅ Integration patterns documented
+   - ✅ Index recommendations provided
+   - **Document**: `docs/grain_database/payment_vault_storage_schema.md`
+2. **IMMEDIATE**: Coordinate with Core Agent on storage schema design approval
+   - Review schema design with Core Agent
+   - Get approval for key formats and data structures
+   - Coordinate on encryption requirements
+3. **SHORT-TERM**: Review storage helper API design with Core Agent
+   - Ensure API matches Core Agent's needs
+   - Coordinate on integration patterns
+4. **MEDIUM-TERM**: Implement storage helpers once Core Agent begins Phase 1
+   - Implement `PasswordStorage` helper
+   - Implement `PaymentStorage` helper
+   - Implement `BankStorage` helper
 
 **Key Resources**:
 - Design Document: `docs/zyx/grain_payment_vault_design_2025-12-28-213448-pst.md`

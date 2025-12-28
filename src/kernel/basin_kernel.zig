@@ -348,6 +348,40 @@ pub const ProcessInfo = struct {
     }
 };
 
+/// Resource usage information for a process.
+/// Why: Expose per-process resource usage (CPU, memory, network, file descriptors).
+/// Grain Style: Explicit types (u32/u64 not usize), static allocation.
+pub const ResourceUsage = struct {
+    /// Process ID.
+    pid: u32,
+    /// Total CPU time used (nanoseconds).
+    cpu_time_ns: u64,
+    /// Memory used (bytes).
+    memory_used: u64,
+    /// Network bytes sent (total).
+    network_bytes_sent: u64,
+    /// Network bytes received (total).
+    network_bytes_received: u64,
+    /// Number of open file descriptors.
+    open_file_descriptors: u32,
+    /// Number of open network connections.
+    open_connections: u32,
+    
+    /// Initialize ResourceUsage with default values.
+    /// Why: Explicit initialization, prevent uninitialized fields.
+    pub fn init() ResourceUsage {
+        return ResourceUsage{
+            .pid = 0,
+            .cpu_time_ns = 0,
+            .memory_used = 0,
+            .network_bytes_sent = 0,
+            .network_bytes_received = 0,
+            .open_file_descriptors = 0,
+            .open_connections = 0,
+        };
+    }
+};
+
 /// User ID (32-bit, explicit type per GrainStyle).
 /// Why: Explicit type instead of usize for portability.
 pub const UserId = u32;
@@ -660,6 +694,18 @@ pub const Process = struct {
     /// Memory used (bytes).
     /// Why: Track memory usage for resource monitoring.
     memory_used: u64,
+    /// Network bytes sent (total).
+    /// Why: Track network usage for resource monitoring.
+    network_bytes_sent: u64,
+    /// Network bytes received (total).
+    /// Why: Track network usage for resource monitoring.
+    network_bytes_received: u64,
+    /// Number of open file descriptors.
+    /// Why: Track file descriptor usage for resource monitoring.
+    open_file_descriptors: u32,
+    /// Number of open network connections.
+    /// Why: Track network connection usage for resource monitoring.
+    open_connections: u32,
     /// Parent process ID (0 if no parent).
     /// Why: Track parent-child relationships.
     parent_pid: u64,
@@ -694,6 +740,10 @@ pub const Process = struct {
             .signals = SignalTable.init(),
             .cpu_time_ns = 0,
             .memory_used = 0,
+            .network_bytes_sent = 0,
+            .network_bytes_received = 0,
+            .open_file_descriptors = 0,
+            .open_connections = 0,
             .parent_pid = 0,
             .priority = 0, // Default priority (nice value 0)
             .time_slice_quantum = 1000, // Default time slice (1000 instruction steps)
@@ -1475,6 +1525,7 @@ pub const BasinKernel = struct {
             .audio_get_stats => self.syscall_audio_get_stats(arg1, arg2, arg3, arg4),
             .kernel_get_stats => self.syscall_kernel_get_stats(arg1, arg2, arg3, arg4),
             .health_check => self.syscall_health_check(arg1, arg2, arg3, arg4),
+            .get_resource_usage => self.syscall_get_resource_usage(arg1, arg2, arg3, arg4),
         };
     }
     
@@ -5059,6 +5110,17 @@ pub const BasinKernel = struct {
             return BasinError.not_found; // Socket not found or invalid state
         };
         
+        // Update process resource usage (network bytes sent).
+        const current_pid = self.scheduler.get_current();
+        if (current_pid > 0) {
+            for (0..MAX_PROCESSES) |i| {
+                if (self.processes[i].allocated and self.processes[i].id == current_pid) {
+                    self.processes[i].network_bytes_sent += bytes_sent;
+                    break;
+                }
+            }
+        }
+        
         const result = SyscallResult.ok(bytes_sent);
         
         // Assert: result must be success (not error).
@@ -5120,6 +5182,17 @@ pub const BasinKernel = struct {
         const bytes_received = self.tcp_sockets.recv_data(socket_id, buffer_slice) orelse {
             return BasinError.not_found; // Socket not found or invalid state
         };
+        
+        // Update process resource usage (network bytes received).
+        const current_pid = self.scheduler.get_current();
+        if (current_pid > 0) {
+            for (0..MAX_PROCESSES) |i| {
+                if (self.processes[i].allocated and self.processes[i].id == current_pid) {
+                    self.processes[i].network_bytes_received += bytes_received;
+                    break;
+                }
+            }
+        }
         
         // Write data to VM memory (stub: would use vm_memory_writer).
         // For now, just return bytes received.
@@ -5307,6 +5380,17 @@ pub const BasinKernel = struct {
             return BasinError.not_found; // Socket not found or invalid state
         };
         
+        // Update process resource usage (network bytes sent).
+        const current_pid = self.scheduler.get_current();
+        if (current_pid > 0) {
+            for (0..MAX_PROCESSES) |i| {
+                if (self.processes[i].allocated and self.processes[i].id == current_pid) {
+                    self.processes[i].network_bytes_sent += bytes_sent;
+                    break;
+                }
+            }
+        }
+        
         const result = SyscallResult.ok(bytes_sent);
         
         // Assert: result must be success (not error).
@@ -5372,6 +5456,17 @@ pub const BasinKernel = struct {
         const bytes_received = self.udp_sockets.recvfrom(socket_id, buffer_slice, addr_ptr_opt, port_ptr_opt) orelse {
             return BasinError.not_found; // Socket not found or invalid state
         };
+        
+        // Update process resource usage (network bytes received).
+        const current_pid = self.scheduler.get_current();
+        if (current_pid > 0) {
+            for (0..MAX_PROCESSES) |i| {
+                if (self.processes[i].allocated and self.processes[i].id == current_pid) {
+                    self.processes[i].network_bytes_received += bytes_received;
+                    break;
+                }
+            }
+        }
         
         // Write data and address/port to VM memory (stub: would use vm_memory_writer).
         // For now, just return bytes received.
@@ -6415,6 +6510,109 @@ pub const BasinKernel = struct {
         Debug.kassert(health_status <= 2, "Health status out of range", .{});
         
         const result = SyscallResult.ok(health_status);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
+    /// Get resource usage syscall.
+    /// Why: Expose per-process resource usage (CPU, memory, network, file descriptors).
+    /// Returns: Resource usage information for the specified process.
+    /// Arguments:
+    ///   - arg1: Process ID (pid)
+    ///   - arg2: Resource usage pointer (ResourceUsage struct in VM memory)
+    ///   - arg3: Unused
+    ///   - arg4: Unused
+    pub fn syscall_get_resource_usage(
+        self: *BasinKernel,
+        pid: u64,
+        usage_ptr: u64,
+        _arg3: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg3;
+        _ = _arg4;
+        
+        // Assert: Process ID must be valid (non-zero).
+        if (pid == 0) {
+            return BasinError.invalid_argument; // Invalid process ID
+        }
+        
+        // Assert: Usage pointer must be valid (non-zero, within VM memory).
+        if (usage_ptr == 0) {
+            return BasinError.invalid_argument; // Null pointer
+        }
+        
+        const VM_MEMORY_SIZE: u64 = 4 * 1024 * 1024;
+        if (usage_ptr >= VM_MEMORY_SIZE) {
+            return BasinError.invalid_argument; // Pointer out of bounds
+        }
+        
+        // Calculate ResourceUsage struct size (8 + 8 + 8 + 8 + 8 + 4 + 4 = 48 bytes).
+        const RESOURCE_USAGE_SIZE: u64 = 48;
+        if (usage_ptr + RESOURCE_USAGE_SIZE > VM_MEMORY_SIZE) {
+            return BasinError.invalid_argument; // Buffer extends beyond VM memory
+        }
+        
+        // Find process in process table.
+        var found: ?u32 = null;
+        for (0..MAX_PROCESSES) |i| {
+            if (self.processes[i].allocated and self.processes[i].id == pid) {
+                found = @intCast(i);
+                break;
+            }
+        }
+        
+        // Assert: Process must exist.
+        if (found == null) {
+            return BasinError.process_not_found; // Process not found
+        }
+        
+        const process_idx = found.?;
+        const process = &self.processes[process_idx];
+        
+        // Count open file descriptors for this process.
+        var file_descriptor_count: u32 = 0;
+        for (self.handles) |handle| {
+            if (handle.allocated and handle.owner_process_id == @intCast(pid)) {
+                file_descriptor_count += 1;
+            }
+        }
+        
+        // Count open network connections for this process.
+        // Note: This is a simplified count - in a full implementation, we would
+        // track which sockets belong to which process.
+        var connection_count: u32 = 0;
+        // Stub: Connection counting would iterate through TCP/UDP socket managers
+        // and count sockets owned by this process. For now, we use the process's
+        // open_connections field which should be updated by socket operations.
+        connection_count = process.open_connections;
+        
+        // Create ResourceUsage struct.
+        const usage = ResourceUsage{
+            .pid = @intCast(pid),
+            .cpu_time_ns = process.cpu_time_ns,
+            .memory_used = process.memory_used,
+            .network_bytes_sent = process.network_bytes_sent,
+            .network_bytes_received = process.network_bytes_received,
+            .open_file_descriptors = file_descriptor_count,
+            .open_connections = connection_count,
+        };
+        
+        // Stub: In a real VM, this would write the ResourceUsage struct to VM memory at usage_ptr.
+        _ = usage;
+        
+        // Assert: Usage must be valid.
+        Debug.kassert(usage.pid == @intCast(pid), "Usage PID mismatch", .{});
+        
+        const result = SyscallResult.ok(0);
         
         // Assert: result must be success (not error).
         Debug.kassert(result == .success, "Result not success", .{});

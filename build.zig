@@ -568,6 +568,13 @@ pub fn build(b: *std.Build) void {
     });
 
     // Aurora Layout module
+    // Aurora Errors module (foundational error types)
+    const aurora_errors_module = b.addModule("aurora_errors", .{
+        .root_source_file = b.path("src/aurora_errors.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
     const aurora_layout_module = b.addModule("aurora_layout", .{
         .root_source_file = b.path("src/aurora_layout.zig"),
         .target = target,
@@ -5192,6 +5199,19 @@ pub fn build(b: *std.Build) void {
     });
     const kernel_stats_health_tests_run = b.addRunArtifact(kernel_stats_health_tests);
     test_step.dependOn(&kernel_stats_health_tests_run.step);
+
+    const get_resource_usage_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/113_get_resource_usage_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+            },
+        }),
+    });
+    const get_resource_usage_tests_run = b.addRunArtifact(get_resource_usage_tests);
+    test_step.dependOn(&get_resource_usage_tests_run.step);
 
     // Graincard format validation test
     const graincard_format_validation_tests = b.addTest(.{

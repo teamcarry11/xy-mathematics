@@ -576,6 +576,67 @@ All core phases complete and ready for production use:
 
 ## Next Steps for Other Agents
 
+### For Core Agent (System Services) - Payment/Passwords/Bank Integration
+
+**Current Status**: Storage schema design complete ✅, ready for Core Agent coordination
+
+**Storage Schema Design Complete** (2025-12-28-230000-pst):
+- ✅ Comprehensive storage schema design document created
+- ✅ Key formats defined for all three modules (`password:*`, `pay:*`, `bank:*`)
+- ✅ Data structures defined (JSON schemas for all value types)
+- ✅ Storage helper APIs designed (PasswordStorage, PaymentStorage, BankStorage)
+- ✅ Validation constants and functions defined
+- ✅ Encryption requirements documented
+- ✅ Integration patterns documented
+- ✅ Index recommendations provided
+- **Document**: `docs/grain_database/payment_vault_storage_schema.md`
+
+**Immediate Next Steps** (for Core Agent):
+
+1. **Review Storage Schema Design**:
+   - Review storage schema design document (`docs/grain_database/payment_vault_storage_schema.md`)
+   - Review key formats for all three modules
+   - Review data structures (JSON schemas)
+   - Review storage helper API designs
+   - Provide feedback or approval on schema design
+
+2. **Coordinate on Encryption Requirements**:
+   - Confirm encryption flow (Grain Passwords encrypts before storage)
+   - Confirm encryption parameters storage (algorithm, key_id, nonce)
+   - Coordinate on key derivation parameters storage
+   - Ensure alignment with Grain Passwords module design
+
+3. **Coordinate on Integration Patterns**:
+   - Review Grain Passwords integration pattern (encrypt before storage)
+   - Review Grain Pay integration pattern (use PasswordStorage for credentials)
+   - Review Grainbank integration pattern (atomic balance updates)
+   - Ensure alignment with module designs
+
+4. **Approve Storage Helper API Design**:
+   - Review PasswordStorage helper API
+   - Review PaymentStorage helper API
+   - Review BankStorage helper API
+   - Provide feedback or approval on API design
+
+5. **Once Approved, Begin Phase 1 Implementation**:
+   - Begin Grain Passwords Foundation implementation
+   - Coordinate with Silo Agent on storage helper implementation timing
+   - Test integration with Silo Agent storage helpers
+
+**Key Resources**:
+- Storage Schema Design: `docs/grain_database/payment_vault_storage_schema.md`
+- Payment/Vault/Bank Design: `docs/zyx/grain_payment_vault_design_2025-12-28-213448-pst.md`
+- SLC Integration Helpers (reference pattern): `src/grain_database/slc_integration.zig`
+
+**Coordination Points**:
+- **Storage Schema Approval**: Review and approve key formats and data structures
+- **Encryption Requirements**: Confirm encryption flow and parameter storage
+- **Integration Patterns**: Ensure alignment with module designs
+- **API Design Approval**: Review and approve storage helper APIs
+- **Implementation Timing**: Coordinate on storage helper implementation timing
+
+---
+
 ### For Carry Agent (Mobile Framework)
 
 **Current Status**: User Storage Helper ready, integration questions answered, waiting on Core Agent implementation

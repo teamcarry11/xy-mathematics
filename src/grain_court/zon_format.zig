@@ -319,6 +319,17 @@ pub fn encode_tabular_array_zon(
     };
 }
 
+// Encode tabular array to ZON format (bounded allocation, for Flow Agent).
+pub fn encode_tabular_array_zon_bounded(
+    key: []const u8,
+    field_names: []const []const u8,
+    rows: []const []const ZonValue,
+    output: []u8,
+    output_pos: *u32,
+) bool {
+    return encode_tabular_array_internal(key, field_names, rows, output, output_pos);
+}
+
 // Encode tabular array to ZON format (internal).
 fn encode_tabular_array_internal(
     key: []const u8,
@@ -400,6 +411,31 @@ fn encode_tabular_array_internal(
         }
         output[output_pos.*] = '\n';
         output_pos.* += 1;
+    }
+    std.debug.assert(output_pos.* <= output.len);
+    return true;
+}
+
+// Encode ZON format from key-value pairs (bounded allocation, for Flow Agent).
+pub fn encode_zon_bounded(
+    pairs: []const struct { key: []const u8, value: ZonValue },
+    output: []u8,
+    output_pos: *u32,
+) bool {
+    std.debug.assert(pairs.len > 0);
+    std.debug.assert(output.len > 0);
+    var i: u32 = 0;
+    while (i < pairs.len) : (i += 1) {
+        if (i > 0) {
+            if (output_pos.* + 1 > output.len) {
+                return false;
+            }
+            output[output_pos.*] = '\n';
+            output_pos.* += 1;
+        }
+        if (!encode_key_value(pairs[i].key, pairs[i].value, output, output_pos)) {
+            return false;
+        }
     }
     std.debug.assert(output_pos.* <= output.len);
     return true;

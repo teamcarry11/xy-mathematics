@@ -9,12 +9,15 @@
 //!
 //! 2025-12-21-083202-pst: Phase 3 Workflow Observatory Foundation
 //! 2025-12-21-204511-pst: ZON Format Integration Preparation (structure prepared, awaiting Court Agent completion)
+//! 2025-12-28-173500-pst: ZON Format Integration Implementation (using Court Agent bounded allocation API)
+//! 2025-12-28-174500-pst: ZON Format Integration Tests Added (comprehensive test coverage)
 
 const std = @import("std");
 const workflow_metrics = @import("workflow_metrics.zig");
 const agent_coordination_metrics = @import("agent_coordination_metrics.zig");
 const failure_pattern_metrics = @import("failure_pattern_metrics.zig");
 const performance_metrics = @import("performance_metrics.zig");
+const grain_court = @import("grain_court");
 
 // Bounded: Max aggregated metrics JSON size (10MB).
 pub const MAX_AGGREGATED_JSON_SIZE: u32 = 10_485_760;
@@ -500,36 +503,209 @@ pub const WorkflowObservatory = struct {
     }
 
     /// Export all metrics to ZON format (full export with nested structure).
-    /// NOTE: Implementation pending Court Agent ZON module completion and bounded allocation coordination.
-    /// Court Agent ZON module currently uses allocators; Flow Agent uses bounded allocations.
-    /// Coordination needed: Bounded allocation version or fixed-size buffer approach.
+    /// Uses Court Agent's bounded allocation API for ZON encoding.
     pub fn export_all_metrics_zon(
         self: *const WorkflowObservatory,
         output: []u8,
     ) u32 {
-        _ = self;
         std.debug.assert(output.len > 0);
-        // TODO: Implement ZON export when Court Agent ZON module is complete.
-        // Coordination needed: Court Agent ZON module uses allocators, Flow Agent uses bounded allocations.
-        // Options:
-        // 1. Court Agent provides bounded allocation version
-        // 2. Use fixed-size buffer (MAX_AGGREGATED_JSON_SIZE)
-        // 3. Coordinate on allocator usage pattern
-        // For now, return 0 (not implemented).
-        return 0;
+        var output_pos: u32 = 0;
+
+        // Helper to create ZonValue from u64 (no from_u64 function available).
+        const create_u64_value = struct {
+            fn create(value: u64) grain_court.ZonFormat.ZonValue {
+                var zv = grain_court.ZonFormat.ZonValue{
+                    .value_type = .u64_value,
+                    .bool_val = false,
+                    .u32_val = 0,
+                    .u64_val = value,
+                    .i32_val = 0,
+                    .i64_val = 0,
+                    .f32_val = 0.0,
+                    .f64_val = 0.0,
+                    .string_val = undefined,
+                    .string_val_len = 0,
+                };
+                var i: u32 = 0;
+                while (i < grain_court.ZonFormat.MAX_STRING_VALUE_LEN) : (i += 1) {
+                    zv.string_val[i] = 0;
+                }
+                std.debug.assert(zv.value_type == .u64_value);
+                return zv;
+            }
+        }.create;
+
+        // Build key-value pairs for scalar metrics.
+        var pairs: [32]struct { key: []const u8, value: grain_court.ZonFormat.ZonValue } = undefined;
+        var pairs_len: u32 = 0;
+
+        // Workflow metrics scalars.
+        if (self.workflow_collector) |collector| {
+            pairs[pairs_len] = .{ .key = "workflow:total_executions", .value = grain_court.ZonFormat.ZonValue.from_u32(@intCast(collector.total_executions)) };
+            pairs_len += 1;
+            pairs[pairs_len] = .{ .key = "workflow:success_rate_percent", .value = grain_court.ZonFormat.ZonValue.from_u32(collector.get_success_rate_percent()) };
+            pairs_len += 1;
+            pairs[pairs_len] = .{ .key = "workflow:failure_rate_percent", .value = grain_court.ZonFormat.ZonValue.from_u32(collector.get_failure_rate_percent()) };
+            pairs_len += 1;
+            pairs[pairs_len] = .{ .key = "workflow:avg_execution_time_ms", .value = create_u64_value(collector.get_average_execution_time_ms()) };
+            pairs_len += 1;
+
+            // Encode workflow scalar pairs first.
+            if (!grain_court.ZonFormat.encode_zon_bounded(pairs[0..pairs_len], output, &output_pos)) {
+                return 0;
+            }
+            pairs_len = 0;
+
+            // Encode executions array as tabular format (if executions exist).
+            if (collector.executions_len > 0) {
+                const field_names = [_][]const u8{ "workflow_id", "name", "execution_time_ms", "status" };
+                var rows: [workflow_metrics.MAX_WORKFLOW_EXECUTIONS][]const grain_court.ZonFormat.ZonValue = undefined;
+                var row_values: [workflow_metrics.MAX_WORKFLOW_EXECUTIONS][4]grain_court.ZonFormat.ZonValue = undefined;
+                var rows_len: u32 = 0;
+                var i: u32 = 0;
+                while (i < collector.executions_len and rows_len < workflow_metrics.MAX_WORKFLOW_EXECUTIONS) : (i += 1) {
+                    const exec = collector.executions[i];
+                    row_values[rows_len][0] = grain_court.ZonFormat.ZonValue.from_u32(exec.workflow_id);
+                    row_values[rows_len][1] = grain_court.ZonFormat.ZonValue.from_string(exec.workflow_name[0..exec.workflow_name_len]);
+                    row_values[rows_len][2] = grain_court.ZonFormat.ZonValue.from_u32(@intCast(exec.execution_time_ms)); // Convert u64 to u32 for tabular format
+                    const status_str = if (exec.status == .success) "success" else "failure";
+                    row_values[rows_len][3] = grain_court.ZonFormat.ZonValue.from_string(status_str);
+                    rows[rows_len] = row_values[rows_len][0..4];
+                    rows_len += 1;
+                }
+                if (!grain_court.ZonFormat.encode_tabular_array_zon_bounded("workflow:executions", &field_names, rows[0..rows_len], output, &output_pos)) {
+                    return 0; // Buffer full or encoding error
+                }
+            }
+        }
+
+        // Coordination metrics scalars.
+        if (self.coordination_collector) |collector| {
+            pairs[pairs_len] = .{ .key = "coordination:total_coordinations", .value = grain_court.ZonFormat.ZonValue.from_u32(@intCast(collector.total_coordinations)) };
+            pairs_len += 1;
+            pairs[pairs_len] = .{ .key = "coordination:success_rate", .value = grain_court.ZonFormat.ZonValue.from_u32(collector.get_coordination_success_rate_percent()) };
+            pairs_len += 1;
+            pairs[pairs_len] = .{ .key = "coordination:avg_latency_ms", .value = create_u64_value(collector.get_average_coordination_latency_ms()) };
+            pairs_len += 1;
+            if (!grain_court.ZonFormat.encode_zon_bounded(pairs[0..pairs_len], output, &output_pos)) {
+                return 0;
+            }
+            pairs_len = 0;
+        }
+
+        // Failure metrics scalars.
+        if (self.failure_collector) |collector| {
+            pairs[pairs_len] = .{ .key = "failures:total_failures", .value = grain_court.ZonFormat.ZonValue.from_u32(@intCast(collector.total_failures)) };
+            pairs_len += 1;
+            pairs[pairs_len] = .{ .key = "failures:recovery_rate", .value = grain_court.ZonFormat.ZonValue.from_u32(collector.get_recovery_success_rate_percent()) };
+            pairs_len += 1;
+            if (!grain_court.ZonFormat.encode_zon_bounded(pairs[0..pairs_len], output, &output_pos)) {
+                return 0;
+            }
+            pairs_len = 0;
+        }
+
+        // Performance metrics scalars.
+        if (self.performance_collector) |collector| {
+            pairs[pairs_len] = .{ .key = "performance:avg_queue_depth", .value = grain_court.ZonFormat.ZonValue.from_u32(collector.get_average_queue_depth()) };
+            pairs_len += 1;
+            pairs[pairs_len] = .{ .key = "performance:avg_wait_time_ms", .value = create_u64_value(collector.get_average_wait_time_ms()) };
+            pairs_len += 1;
+            pairs[pairs_len] = .{ .key = "performance:avg_cpu_percent", .value = grain_court.ZonFormat.ZonValue.from_u32(collector.get_average_cpu_percent()) };
+            pairs_len += 1;
+            if (!grain_court.ZonFormat.encode_zon_bounded(pairs[0..pairs_len], output, &output_pos)) {
+                return 0;
+            }
+            pairs_len = 0;
+        }
+
+        std.debug.assert(output_pos <= output.len);
+        return output_pos;
     }
 
     /// Get aggregated metrics summary in ZON format.
-    /// NOTE: Implementation pending Court Agent ZON module completion and bounded allocation coordination.
+    /// Uses Court Agent's bounded allocation API for ZON encoding.
     pub fn get_aggregated_summary_zon(
         self: *const WorkflowObservatory,
         output: []u8,
     ) u32 {
-        _ = self;
         std.debug.assert(output.len > 0);
-        // TODO: Implement ZON summary export when Court Agent ZON module is complete.
-        // Coordination needed: Court Agent ZON module uses allocators, Flow Agent uses bounded allocations.
-        // For now, return 0 (not implemented).
-        return 0;
+        var output_pos: u32 = 0;
+
+        // Helper to create ZonValue from u64 (no from_u64 function available).
+        const create_u64_value = struct {
+            fn create(value: u64) grain_court.ZonFormat.ZonValue {
+                var zv = grain_court.ZonFormat.ZonValue{
+                    .value_type = .u64_value,
+                    .bool_val = false,
+                    .u32_val = 0,
+                    .u64_val = value,
+                    .i32_val = 0,
+                    .i64_val = 0,
+                    .f32_val = 0.0,
+                    .f64_val = 0.0,
+                    .string_val = undefined,
+                    .string_val_len = 0,
+                };
+                var i: u32 = 0;
+                while (i < grain_court.ZonFormat.MAX_STRING_VALUE_LEN) : (i += 1) {
+                    zv.string_val[i] = 0;
+                }
+                std.debug.assert(zv.value_type == .u64_value);
+                return zv;
+            }
+        }.create;
+
+        // Build key-value pairs for all metrics.
+        var pairs: [64]struct { key: []const u8, value: grain_court.ZonFormat.ZonValue } = undefined;
+        var pairs_len: u32 = 0;
+
+        // Workflow metrics summary.
+        if (self.workflow_collector) |collector| {
+            pairs[pairs_len] = .{ .key = "workflow:total_executions", .value = grain_court.ZonFormat.ZonValue.from_u32(@intCast(collector.total_executions)) };
+            pairs_len += 1;
+            pairs[pairs_len] = .{ .key = "workflow:success_rate_percent", .value = grain_court.ZonFormat.ZonValue.from_u32(collector.get_success_rate_percent()) };
+            pairs_len += 1;
+            pairs[pairs_len] = .{ .key = "workflow:avg_execution_time_ms", .value = create_u64_value(collector.get_average_execution_time_ms()) };
+            pairs_len += 1;
+        }
+
+        // Coordination metrics summary.
+        if (self.coordination_collector) |collector| {
+            pairs[pairs_len] = .{ .key = "coordination:total_coordinations", .value = grain_court.ZonFormat.ZonValue.from_u32(@intCast(collector.total_coordinations)) };
+            pairs_len += 1;
+            pairs[pairs_len] = .{ .key = "coordination:success_rate", .value = grain_court.ZonFormat.ZonValue.from_u32(collector.get_coordination_success_rate_percent()) };
+            pairs_len += 1;
+            pairs[pairs_len] = .{ .key = "coordination:avg_latency_ms", .value = create_u64_value(collector.get_average_coordination_latency_ms()) };
+            pairs_len += 1;
+        }
+
+        // Failure metrics summary.
+        if (self.failure_collector) |collector| {
+            pairs[pairs_len] = .{ .key = "failures:total_failures", .value = grain_court.ZonFormat.ZonValue.from_u32(@intCast(collector.total_failures)) };
+            pairs_len += 1;
+            pairs[pairs_len] = .{ .key = "failures:recovery_rate", .value = grain_court.ZonFormat.ZonValue.from_u32(collector.get_recovery_success_rate_percent()) };
+            pairs_len += 1;
+        }
+
+        // Performance metrics summary.
+        if (self.performance_collector) |collector| {
+            pairs[pairs_len] = .{ .key = "performance:avg_queue_depth", .value = grain_court.ZonFormat.ZonValue.from_u32(collector.get_average_queue_depth()) };
+            pairs_len += 1;
+            pairs[pairs_len] = .{ .key = "performance:avg_wait_time_ms", .value = create_u64_value(collector.get_average_wait_time_ms()) };
+            pairs_len += 1;
+            pairs[pairs_len] = .{ .key = "performance:avg_cpu_percent", .value = grain_court.ZonFormat.ZonValue.from_u32(collector.get_average_cpu_percent()) };
+            pairs_len += 1;
+        }
+
+        // Encode pairs to ZON format.
+        if (pairs_len > 0) {
+            if (!grain_court.ZonFormat.encode_zon_bounded(pairs[0..pairs_len], output, &output_pos)) {
+                return 0; // Buffer full or encoding error
+            }
+        }
+
+        std.debug.assert(output_pos <= output.len);
+        return output_pos;
     }
 };

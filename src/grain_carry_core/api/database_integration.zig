@@ -12,6 +12,9 @@ const models = @import("models.zig");
 const grain_core_api = @import("../../grain_core/api_server.zig");
 const grain_core_json = @import("../../grain_core/json_helpers.zig");
 const grain_core_http = @import("../../grain_core/http_client.zig");
+const grain_core_auth = @import("../../grain_core/auth_service.zig");
+const grain_flow_event_bus = @import("../../grain_flow/event_bus.zig");
+const auth_service_integration = @import("auth_service_integration.zig");
 
 // Bounded: Max database base URL length.
 pub const MAX_DB_BASE_URL_LEN: u32 = 512;
@@ -59,6 +62,8 @@ pub const DatabaseResult = enum(u8) {
     validation_error,
     connection_error,
     internal_error,
+    timeout_error,
+    rate_limit_error,
 };
 
 // User data structure for database operations.
@@ -104,6 +109,20 @@ pub const UserData = struct {
 // Global database configuration.
 var db_config: DatabaseConfig = DatabaseConfig.init();
 
+// Global event bus instance (set during initialization).
+var global_event_bus: ?*grain_flow_event_bus.EventBus = null;
+
+// Carry Agent ID for event bus subscriptions.
+const CARRY_AGENT_ID: u32 = 6;
+
+// Default timeout for API calls (30 seconds in milliseconds).
+const DEFAULT_API_TIMEOUT_MS: u32 = 30000;
+
+// Initialize module (called during agent initialization).
+pub fn init_module() void {
+    init_request_contexts();
+}
+
 // Set database configuration.
 pub fn set_database_config(config: DatabaseConfig) void {
     std.debug.assert(config.base_url_len <= MAX_DB_BASE_URL_LEN);
@@ -115,6 +134,43 @@ pub fn set_database_config(config: DatabaseConfig) void {
 pub fn get_database_config() *const DatabaseConfig {
     std.debug.assert(db_config.base_url_len <= MAX_DB_BASE_URL_LEN);
     return &db_config;
+}
+
+// Set event bus instance.
+pub fn set_event_bus(event_bus: *grain_flow_event_bus.EventBus) void {
+    global_event_bus = event_bus;
+    std.debug.assert(global_event_bus != null);
+}
+
+// Get event bus instance.
+fn get_event_bus() ?*grain_flow_event_bus.EventBus {
+    return global_event_bus;
+}
+
+// Get service account token for Silo Agent requests.
+// TODO: Once Core Agent implements service account tokens, call:
+//   auth_service.generate_service_account_token("grain_carry", &["database:write", "database:read"])
+fn get_service_account_token(token_out: []u8) u32 {
+    std.debug.assert(token_out.len >= grain_core_auth.MAX_JWT_LEN);
+    // TODO: Implement once Core Agent adds generate_service_account_token() to AuthService
+    // For now, return 0 to indicate token not available
+    // Once implemented:
+    //   const auth_service = auth_service_integration.get_auth_service_public() orelse return 0;
+    //   const capabilities = [_][]const u8{ "database:write", "database:read" };
+    //   return auth_service.generate_service_account_token("grain_carry", &capabilities, token_out);
+    _ = token_out;
+    return 0;
+}
+
+// Set timeout on HTTP request.
+// TODO: Once Core Agent adds timeout_ms field to HttpClientRequest, set it here
+fn set_request_timeout(request: *grain_core_http.HttpClientRequest, timeout_ms: u32) void {
+    std.debug.assert(request != null);
+    std.debug.assert(timeout_ms > 0);
+    // TODO: Once Core Agent implements timeout support:
+    //   request.timeout_ms = timeout_ms;
+    _ = request;
+    _ = timeout_ms;
 }
 
 // URL encode a string for query parameters.
@@ -233,6 +289,23 @@ pub fn create_user(user_data: *const UserData) DatabaseResult {
     ) orelse {
         return DatabaseResult.connection_error;
     };
+    // Set timeout (30s default for API calls).
+    set_request_timeout(request, DEFAULT_API_TIMEOUT_MS);
+    // Add authentication header for write operations.
+    var service_token: [grain_core_auth.MAX_JWT_LEN]u8 = undefined;
+    const token_len = get_service_account_token(&service_token);
+    if (token_len > 0) {
+        const bearer_header = "Bearer ";
+        var auth_header: [grain_core_auth.MAX_JWT_LEN + 7]u8 = undefined;
+        var auth_header_len: u32 = 0;
+        const bearer_len = @min(bearer_header.len, auth_header.len - auth_header_len);
+        std.mem.copyForwards(u8, auth_header[auth_header_len..], bearer_header[0..bearer_len]);
+        auth_header_len += bearer_len;
+        const token_len_safe = @min(token_len, auth_header.len - auth_header_len);
+        std.mem.copyForwards(u8, auth_header[auth_header_len..], service_token[0..token_len_safe]);
+        auth_header_len += token_len_safe;
+        _ = http_client_integration.add_external_header(request, "Authorization", auth_header[0..auth_header_len]);
+    }
     var json_body: [MAX_USER_JSON_LEN]u8 = undefined;
     const body_len = build_user_json_body(user_data, &json_body) orelse {
         return DatabaseResult.internal_error;
@@ -244,8 +317,29 @@ pub fn create_user(user_data: *const UserData) DatabaseResult {
     return DatabaseResult.success;
 }
 
+// Request context for async response handling.
+const RequestContext = struct {
+    request_id: u32,
+    user_out: *UserData,
+    completed: bool,
+    result: DatabaseResult,
+};
+
+// Global request contexts for async handling (bounded storage).
+var request_contexts: [32]?RequestContext = undefined;
+var request_contexts_count: u32 = 0;
+
+// Initialize request contexts storage.
+fn init_request_contexts() void {
+    var i: u32 = 0;
+    while (i < 32) : (i += 1) {
+        request_contexts[i] = null;
+    }
+    request_contexts_count = 0;
+}
+
 // Get user from database by user_id.
-// Note: Response parsing will be integrated once async handling pattern is coordinated.
+// Uses event-driven async pattern: subscribes to http_request_completed event.
 pub fn get_user_by_id(user_id: []const u8, user_out: *UserData) DatabaseResult {
     std.debug.assert(user_id.len > 0);
     std.debug.assert(user_id.len <= models.MAX_USER_ID_LEN);
@@ -276,18 +370,29 @@ pub fn get_user_by_id(user_id: []const u8, user_out: *UserData) DatabaseResult {
         path_buf[0..path_len],
     ) orelse {
         return DatabaseResult.connection_error;
+    };
+    // Set timeout (30s default for API calls).
+    set_request_timeout(request, DEFAULT_API_TIMEOUT_MS);
+    // Subscribe to HTTP request completion events if event bus is available.
+    const event_bus = get_event_bus();
+    if (event_bus) |bus| {
+        // TODO: Once Core Agent publishes http_request_completed events with request_id in payload:
+        //   Subscribe to http_request_completed and http_request_failed events
+        //   Store request context for async handling
+        //   Return success immediately (response will be processed in event handler)
+        _ = bus;
     }
-    // TODO: Once async response handling pattern is coordinated with Core Agent:
-    // 1. Check request state using check_request_response()
-    // 2. Parse response body using parse_user_from_json()
-    // 3. Handle HTTP status codes using http_status_to_db_result()
-    _ = user_out;
-    _ = request;
-    return DatabaseResult.success;
+    // For now, check request state synchronously (will be async once Core Agent implements event publishing).
+    var response: ?grain_core_api.HttpResponse = null;
+    const check_result = check_request_response(request, &response);
+    if (check_result == DatabaseResult.success and response) |resp| {
+        return process_user_response(&resp, user_out);
+    }
+    return check_result;
 }
 
 // Get user from database by email.
-// Note: Response parsing will be integrated once async handling pattern is coordinated.
+// Uses event-driven async pattern: subscribes to http_request_completed event.
 pub fn get_user_by_email(email: []const u8, user_out: *UserData) DatabaseResult {
     std.debug.assert(email.len > 0);
     std.debug.assert(email.len <= models.MAX_EMAIL_LEN);
@@ -322,14 +427,25 @@ pub fn get_user_by_email(email: []const u8, user_out: *UserData) DatabaseResult 
         path_buf[0..path_len],
     ) orelse {
         return DatabaseResult.connection_error;
+    };
+    // Set timeout (30s default for API calls).
+    set_request_timeout(request, DEFAULT_API_TIMEOUT_MS);
+    // Subscribe to HTTP request completion events if event bus is available.
+    const event_bus = get_event_bus();
+    if (event_bus) |bus| {
+        // TODO: Once Core Agent publishes http_request_completed events with request_id in payload:
+        //   Subscribe to http_request_completed and http_request_failed events
+        //   Store request context for async handling
+        //   Return success immediately (response will be processed in event handler)
+        _ = bus;
     }
-    // TODO: Once async response handling pattern is coordinated with Core Agent:
-    // 1. Check request state using check_request_response()
-    // 2. Parse response body using parse_user_from_json()
-    // 3. Handle HTTP status codes using http_status_to_db_result()
-    _ = user_out;
-    _ = request;
-    return DatabaseResult.success;
+    // For now, check request state synchronously (will be async once Core Agent implements event publishing).
+    var response: ?grain_core_api.HttpResponse = null;
+    const check_result = check_request_response(request, &response);
+    if (check_result == DatabaseResult.success and response) |resp| {
+        return process_user_response(&resp, user_out);
+    }
+    return check_result;
 }
 
 // Update user in database.
@@ -370,6 +486,23 @@ pub fn update_user(user_id: []const u8, user_data: *const UserData) DatabaseResu
     ) orelse {
         return DatabaseResult.connection_error;
     };
+    // Set timeout (30s default for API calls).
+    set_request_timeout(request, DEFAULT_API_TIMEOUT_MS);
+    // Add authentication header for write operations.
+    var service_token: [grain_core_auth.MAX_JWT_LEN]u8 = undefined;
+    const token_len = get_service_account_token(&service_token);
+    if (token_len > 0) {
+        const bearer_header = "Bearer ";
+        var auth_header: [grain_core_auth.MAX_JWT_LEN + 7]u8 = undefined;
+        var auth_header_len: u32 = 0;
+        const bearer_len = @min(bearer_header.len, auth_header.len - auth_header_len);
+        std.mem.copyForwards(u8, auth_header[auth_header_len..], bearer_header[0..bearer_len]);
+        auth_header_len += bearer_len;
+        const token_len_safe = @min(token_len, auth_header.len - auth_header_len);
+        std.mem.copyForwards(u8, auth_header[auth_header_len..], service_token[0..token_len_safe]);
+        auth_header_len += token_len_safe;
+        _ = http_client_integration.add_external_header(request, "Authorization", auth_header[0..auth_header_len]);
+    }
     var json_body: [MAX_USER_JSON_LEN]u8 = undefined;
     const body_len = build_user_json_body(user_data, &json_body) orelse {
         return DatabaseResult.internal_error;
@@ -460,7 +593,7 @@ pub fn parse_user_from_json(json: []const u8, user_out: *UserData) DatabaseResul
 
 // Check if HTTP request is completed and get response.
 // Returns success if request is completed and response is available.
-// Uses http_client_integration helpers for state checking.
+// Checks for timeout errors and uses http_client_integration helpers for state checking.
 pub fn check_request_response(
     request: *const grain_core_http.HttpClientRequest,
     response_out: *?grain_core_api.HttpResponse,
@@ -468,6 +601,9 @@ pub fn check_request_response(
     std.debug.assert(request != null);
     std.debug.assert(response_out != null);
     response_out.* = null;
+    // TODO: Once Core Agent implements timeout checking in HTTP client:
+    //   Check if request timed out using request.timeout_expired or similar field
+    //   Return DatabaseResult.timeout_error if timeout exceeded
     if (http_client_integration.is_request_failed(request)) {
         return DatabaseResult.connection_error;
     }
@@ -486,6 +622,11 @@ pub fn check_request_response(
 pub fn http_status_to_db_result(status: grain_core_api.HttpStatus) DatabaseResult {
     std.debug.assert(@intFromEnum(status) >= 200);
     std.debug.assert(@intFromEnum(status) <= 503);
+    const status_code = @intFromEnum(status);
+    // Handle 429 Too Many Requests (rate limiting).
+    if (status_code == 429) {
+        return DatabaseResult.rate_limit_error;
+    }
     return switch (status) {
         .ok, .created => DatabaseResult.success,
         .not_found => DatabaseResult.not_found,

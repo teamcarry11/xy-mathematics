@@ -99,6 +99,120 @@ test "workflow observatory export all metrics" {
     std.debug.assert(written < output.len);
 }
 
+test "workflow observatory aggregated summary zon" {
+    var observatory = grain_flow.WorkflowObservatory.init();
+    var workflow_collector = grain_flow.WorkflowMetricsCollector.init();
+    var coordination_collector = grain_flow.AgentCoordinationMetricsCollector.init();
+    var failure_collector = grain_flow.FailurePatternMetricsCollector.init();
+    var performance_collector = grain_flow.PerformanceMetricsCollector.init();
+
+    observatory.set_workflow_collector(&workflow_collector);
+    observatory.set_coordination_collector(&coordination_collector);
+    observatory.set_failure_collector(&failure_collector);
+    observatory.set_performance_collector(&performance_collector);
+
+    // Record some test data.
+    _ = workflow_collector.record_execution(
+        1,
+        "test_workflow",
+        1000,
+        2000,
+        grain_flow.WorkflowExecutionStatus.success,
+    );
+    _ = coordination_collector.record_coordination_start(1, 2, 0, 1, 1000);
+    _ = coordination_collector.record_coordination_completion(1, 0, 2000, grain_flow.AgentCoordinationStatus.success);
+    _ = failure_collector.record_failure(
+        1,
+        1,
+        1,
+        grain_flow.FailureType.transient,
+        1000,
+        grain_flow.WorkflowComplexity.init(5, 4, 2),
+    );
+    _ = performance_collector.record_queue_depth(1000, 5);
+    _ = performance_collector.record_wait_time(1, 500, 1000);
+
+    // Get aggregated summary in ZON format.
+    var output: [4096]u8 = undefined;
+    const written = observatory.get_aggregated_summary_zon(&output);
+    std.debug.assert(written > 0);
+    std.debug.assert(written < output.len);
+
+    // Verify ZON format contains expected keys.
+    const result = output[0..written];
+    std.debug.assert(std.mem.indexOf(u8, result, "workflow:total_executions") != null);
+    std.debug.assert(std.mem.indexOf(u8, result, "coordination:total_coordinations") != null);
+    std.debug.assert(std.mem.indexOf(u8, result, "failures:total_failures") != null);
+    std.debug.assert(std.mem.indexOf(u8, result, "performance:avg_queue_depth") != null);
+}
+
+test "workflow observatory export all metrics zon" {
+    var observatory = grain_flow.WorkflowObservatory.init();
+    var workflow_collector = grain_flow.WorkflowMetricsCollector.init();
+    var coordination_collector = grain_flow.AgentCoordinationMetricsCollector.init();
+    var failure_collector = grain_flow.FailurePatternMetricsCollector.init();
+    var performance_collector = grain_flow.PerformanceMetricsCollector.init();
+
+    observatory.set_workflow_collector(&workflow_collector);
+    observatory.set_coordination_collector(&coordination_collector);
+    observatory.set_failure_collector(&failure_collector);
+    observatory.set_performance_collector(&performance_collector);
+
+    // Record test data.
+    _ = workflow_collector.record_execution(
+        1,
+        "test_workflow",
+        1000,
+        2000,
+        grain_flow.WorkflowExecutionStatus.success,
+    );
+
+    // Export all metrics in ZON format.
+    var output: [8192]u8 = undefined;
+    const written = observatory.export_all_metrics_zon(&output);
+    std.debug.assert(written > 0);
+    std.debug.assert(written < output.len);
+
+    // Verify ZON format contains expected keys.
+    const result = output[0..written];
+    std.debug.assert(std.mem.indexOf(u8, result, "workflow:total_executions") != null);
+    std.debug.assert(std.mem.indexOf(u8, result, "workflow:executions") != null);
+    std.debug.assert(std.mem.indexOf(u8, result, "coordination:total_coordinations") != null);
+}
+
+test "workflow observatory zon empty collectors" {
+    var observatory = grain_flow.WorkflowObservatory.init();
+
+    // Test with no collectors set (should return 0 bytes).
+    var output: [4096]u8 = undefined;
+    const summary_written = observatory.get_aggregated_summary_zon(&output);
+    std.debug.assert(summary_written == 0);
+
+    const export_written = observatory.export_all_metrics_zon(&output);
+    std.debug.assert(export_written == 0);
+}
+
+test "workflow observatory zon buffer too small" {
+    var observatory = grain_flow.WorkflowObservatory.init();
+    var workflow_collector = grain_flow.WorkflowMetricsCollector.init();
+    observatory.set_workflow_collector(&workflow_collector);
+
+    // Record test data.
+    _ = workflow_collector.record_execution(
+        1,
+        "test_workflow",
+        1000,
+        2000,
+        grain_flow.WorkflowExecutionStatus.success,
+    );
+
+    // Test with very small buffer (should handle gracefully).
+    var output: [1]u8 = undefined;
+    const written = observatory.get_aggregated_summary_zon(&output);
+    // Should return 0 if buffer is too small (encoding fails).
+    std.debug.assert(written == 0);
+}
+
 test "workflow observatory empty collectors" {
     const observatory = grain_flow.WorkflowObservatory.init();
     var output: [1024]u8 = undefined;

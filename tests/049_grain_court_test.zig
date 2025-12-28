@@ -510,6 +510,245 @@ test "llm provider provider supports zon" {
     );
 }
 
+test "llm provider error retryability" {
+    try testing.expect(
+        grain_court.LlmProvider.is_llm_error_retryable(.Timeout),
+    );
+    try testing.expect(
+        grain_court.LlmProvider.is_llm_error_retryable(.RateLimit),
+    );
+    try testing.expect(
+        grain_court.LlmProvider.is_llm_error_retryable(.NetworkError),
+    );
+    try testing.expect(
+        !grain_court.LlmProvider.is_llm_error_retryable(.InvalidRequest),
+    );
+    try testing.expect(
+        !grain_court.LlmProvider.is_llm_error_retryable(.AuthenticationError),
+    );
+}
+
+test "llm provider parse retry after header" {
+    const retry_after = grain_court.LlmProvider.parse_retry_after_header("60");
+    try testing.expect(retry_after != null);
+    try testing.expect(retry_after.? == 60000);
+    const retry_after_invalid = grain_court.LlmProvider.parse_retry_after_header("");
+    try testing.expect(retry_after_invalid == null);
+}
+
+test "zon format encode bounded simple key value" {
+    var output: [1024]u8 = undefined;
+    var output_pos: u32 = 0;
+    const pairs = [_]struct { key: []const u8, value: grain_court.ZonFormat.ZonValue }{
+        .{ .key = "test_key", .value = grain_court.ZonFormat.ZonValue.from_u32(42) },
+    };
+    const success = grain_court.ZonFormat.encode_zon_bounded(&pairs, &output, &output_pos);
+    try testing.expect(success == true);
+    try testing.expect(output_pos > 0);
+    const result = output[0..output_pos];
+    try testing.expect(std.mem.indexOf(u8, result, "test_key") != null);
+    try testing.expect(std.mem.indexOf(u8, result, "42") != null);
+}
+
+test "zon format encode bounded tabular array" {
+    var output: [1024]u8 = undefined;
+    var output_pos: u32 = 0;
+    const field_names = [_][]const u8{ "id", "name" };
+    const rows = [_][]const grain_court.ZonFormat.ZonValue{
+        &[_]grain_court.ZonFormat.ZonValue{
+            grain_court.ZonFormat.ZonValue.from_u32(1),
+            grain_court.ZonFormat.ZonValue.from_string("test"),
+        },
+    };
+    const success = grain_court.ZonFormat.encode_tabular_array_zon_bounded(
+        "test_table",
+        &field_names,
+        &rows,
+        &output,
+        &output_pos,
+    );
+    try testing.expect(success == true);
+    try testing.expect(output_pos > 0);
+    const result = output[0..output_pos];
+    try testing.expect(std.mem.indexOf(u8, result, "test_table") != null);
+    try testing.expect(std.mem.indexOf(u8, result, "@(1)") != null);
+}
+
+test "zon format encode bounded nested object" {
+    var output: [1024]u8 = undefined;
+    var output_pos: u32 = 0;
+    const fields = [_]grain_court.ZonFormat.ZonNestedField{
+        .{ .key = "host", .value = grain_court.ZonFormat.ZonValue.from_string("localhost") },
+        .{ .key = "port", .value = grain_court.ZonFormat.ZonValue.from_u32(5432) },
+    };
+    const success = grain_court.ZonFormat.encode_nested_object_zon_bounded(
+        "config.database",
+        &fields,
+        &output,
+        &output_pos,
+    );
+    try testing.expect(success == true);
+    try testing.expect(output_pos > 0);
+    const result = output[0..output_pos];
+    try testing.expect(std.mem.indexOf(u8, result, "config.database") != null);
+    try testing.expect(std.mem.indexOf(u8, result, "localhost") != null);
+}
+
+test "llm provider error context init" {
+    const ctx = grain_court.LlmProvider.LlmErrorContext.init(
+        .Timeout,
+        "send_request",
+        0,
+        null,
+        "Request timed out",
+    );
+    try testing.expect(ctx.error_type == .Timeout);
+    try testing.expect(ctx.operation_len > 0);
+    try testing.expect(ctx.message_len > 0);
+    try testing.expect(ctx.status_code == null);
+    try testing.expect(ctx.retry_after_ms == null);
+}
+
+test "llm provider error context with status code" {
+    const ctx = grain_court.LlmProvider.LlmErrorContext.init(
+        .RateLimit,
+        "send_request",
+        429,
+        60000,
+        "Rate limit exceeded",
+    );
+    try testing.expect(ctx.error_type == .RateLimit);
+    try testing.expect(ctx.status_code.? == 429);
+    try testing.expect(ctx.retry_after_ms.? == 60000);
+    try testing.expect(ctx.message_len > 0);
+}
+
+test "token efficiency estimate token count" {
+    const text = "Hello, world! This is a test.";
+    const count = grain_court.TokenEfficiency.estimate_token_count(text);
+    try testing.expect(count > 0);
+    try testing.expect(count <= grain_court.TokenEfficiency.MAX_TOKENS_PER_REQUEST);
+    const empty_count = grain_court.TokenEfficiency.estimate_token_count("");
+    try testing.expect(empty_count == 0);
+}
+
+test "token efficiency calculate openai cost" {
+    const cost = grain_court.TokenEfficiency.calculate_openai_cost(1000, 500);
+    try testing.expect(cost > 0.0);
+    try testing.expect(cost < 100.0);
+    const zero_cost = grain_court.TokenEfficiency.calculate_openai_cost(0, 0);
+    try testing.expect(zero_cost == 0.0);
+}
+
+test "token efficiency calculate anthropic cost" {
+    const cost = grain_court.TokenEfficiency.calculate_anthropic_cost(1000, 500);
+    try testing.expect(cost > 0.0);
+    try testing.expect(cost < 100.0);
+    const zero_cost = grain_court.TokenEfficiency.calculate_anthropic_cost(0, 0);
+    try testing.expect(zero_cost == 0.0);
+}
+
+test "token efficiency calculate mistral cost" {
+    const cost = grain_court.TokenEfficiency.calculate_mistral_cost(1000, 500);
+    try testing.expect(cost > 0.0);
+    try testing.expect(cost < 100.0);
+    const zero_cost = grain_court.TokenEfficiency.calculate_mistral_cost(0, 0);
+    try testing.expect(zero_cost == 0.0);
+}
+
+test "token efficiency calculate cerebras cost" {
+    const cost = grain_court.TokenEfficiency.calculate_cerebras_cost(1000, 500);
+    try testing.expect(cost > 0.0);
+    try testing.expect(cost < 100.0);
+    const zero_cost = grain_court.TokenEfficiency.calculate_cerebras_cost(0, 0);
+    try testing.expect(zero_cost == 0.0);
+}
+
+test "token efficiency calculate provider cost" {
+    const openai_cost = grain_court.TokenEfficiency.calculate_provider_cost(.openai, 1000, 500);
+    try testing.expect(openai_cost > 0.0);
+    const anthropic_cost = grain_court.TokenEfficiency.calculate_provider_cost(.anthropic, 1000, 500);
+    try testing.expect(anthropic_cost > 0.0);
+    const mistral_cost = grain_court.TokenEfficiency.calculate_provider_cost(.mistral, 1000, 500);
+    try testing.expect(mistral_cost > 0.0);
+    const cerebras_cost = grain_court.TokenEfficiency.calculate_provider_cost(.self_hosted, 1000, 500);
+    try testing.expect(cerebras_cost > 0.0);
+}
+
+test "token efficiency cost tracker init" {
+    var tracker = grain_court.TokenEfficiency.CostTracker.init();
+    try testing.expect(tracker.entries_len == 0);
+    try testing.expect(tracker.total_cost_usd == 0.0);
+    const total = tracker.get_total_cost();
+    try testing.expect(total == 0.0);
+}
+
+test "token efficiency cost tracker add entry" {
+    var tracker = grain_court.TokenEfficiency.CostTracker.init();
+    const success = tracker.add_cost_entry(
+        .openai,
+        "gpt-4o",
+        1000,
+        500,
+        5.0,
+    );
+    try testing.expect(success == true);
+    try testing.expect(tracker.entries_len == 1);
+    try testing.expect(tracker.total_cost_usd == 5.0);
+    const total = tracker.get_total_cost();
+    try testing.expect(total == 5.0);
+    const provider_cost = tracker.get_cost_by_provider(.openai);
+    try testing.expect(provider_cost == 5.0);
+}
+
+test "token efficiency calculate token efficiency" {
+    const text = "Hello, world!";
+    const token_count: u32 = 3;
+    const efficiency = grain_court.TokenEfficiency.calculate_token_efficiency(text, token_count);
+    try testing.expect(efficiency > 0.0);
+    try testing.expect(efficiency < 1.0);
+    const empty_efficiency = grain_court.TokenEfficiency.calculate_token_efficiency("", 0);
+    try testing.expect(empty_efficiency == 0.0);
+}
+
+test "token efficiency calculate response cost" {
+    var response = grain_court.LlmProvider.LlmResponse{
+        .request_id = 1,
+        .provider_type = .openai,
+        .content = undefined,
+        .content_len = 0,
+        .tokens_used = 1500,
+        .input_tokens = 1000,
+        .output_tokens = 500,
+        .finish_reason = undefined,
+        .finish_reason_len = 0,
+        .created_at = 0,
+    };
+    const cost = grain_court.TokenEfficiency.calculate_response_cost(&response);
+    try testing.expect(cost > 0.0);
+    try testing.expect(cost < 100.0);
+}
+
+test "token efficiency track response cost" {
+    var tracker = grain_court.TokenEfficiency.CostTracker.init();
+    var response = grain_court.LlmProvider.LlmResponse{
+        .request_id = 1,
+        .provider_type = .openai,
+        .content = undefined,
+        .content_len = 0,
+        .tokens_used = 1500,
+        .input_tokens = 1000,
+        .output_tokens = 500,
+        .finish_reason = undefined,
+        .finish_reason_len = 0,
+        .created_at = 0,
+    };
+    const success = grain_court.TokenEfficiency.track_response_cost(&tracker, &response, "gpt-4o");
+    try testing.expect(success == true);
+    try testing.expect(tracker.entries_len == 1);
+    try testing.expect(tracker.total_cost_usd > 0.0);
+}
+
 test "zon format round trip test" {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();

@@ -9,6 +9,7 @@
 //!
 //! 2025-12-07-054000-pst: Phase 1 Event Bus Foundation
 //! 2025-12-21-183600-pst: Event Bus Source Filtering Enhancement
+//! 2025-12-28-173000-pst: Async Pattern Event Types Added (HTTP, WebSocket, File I/O)
 
 const std = @import("std");
 
@@ -40,6 +41,13 @@ pub const EventType = enum(u16) {
     data_backup_failed = 11,
     database_query_completed = 12,
     api_request_completed = 13,
+    // Async pattern event types (for HTTP, WebSocket, File I/O operations).
+    http_request_completed = 14,
+    http_request_failed = 15,
+    websocket_connected = 16,
+    websocket_message_received = 17,
+    file_io_completed = 18,
+    file_io_failed = 19,
     custom = 1000,
 };
 

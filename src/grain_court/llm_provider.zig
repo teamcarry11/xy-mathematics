@@ -9,7 +9,7 @@ const std = @import("std");
 const grain_core = @import("grain_core");
 const zon_format = @import("zon_format.zig");
 
-// LLM provider errors.
+// LLM provider errors (structured error types with retryability).
 pub const LlmProviderError = error{
     TooManyProviders,
     ProviderPoolFull,
@@ -18,7 +18,144 @@ pub const LlmProviderError = error{
     NoHealthyProvider,
     InvalidRequest,
     InvalidResponse,
+    Timeout,
+    NetworkError,
+    RateLimit,
+    AuthenticationError,
+    ProviderError,
+    DnsError,
+    ConnectionRefused,
 };
+
+// LLM error context (for detailed error information).
+pub const LlmErrorContext = struct {
+    error_type: LlmProviderError,
+    operation: [64]u8,
+    operation_len: u32,
+    status_code: ?u32,
+    retry_after_ms: ?u64,
+    message: [256]u8,
+    message_len: u32,
+
+    // Initialize error context.
+    pub fn init(
+        err: LlmProviderError,
+        operation_name: []const u8,
+        status: ?u32,
+        retry_after: ?u64,
+        err_message: []const u8,
+    ) LlmErrorContext {
+        std.debug.assert(operation_name.len > 0);
+        std.debug.assert(operation_name.len <= 64);
+        std.debug.assert(err_message.len <= 256);
+        var ctx = LlmErrorContext{
+            .error_type = err,
+            .operation = undefined,
+            .operation_len = 0,
+            .status_code = status,
+            .retry_after_ms = retry_after,
+            .message = undefined,
+            .message_len = 0,
+        };
+        var i: u32 = 0;
+        while (i < 64) : (i += 1) {
+            ctx.operation[i] = 0;
+        }
+        i = 0;
+        const op_len = @min(operation_name.len, 64);
+        while (i < op_len) : (i += 1) {
+            ctx.operation[i] = operation_name[i];
+        }
+        ctx.operation_len = op_len;
+        i = 0;
+        while (i < 256) : (i += 1) {
+            ctx.message[i] = 0;
+        }
+        i = 0;
+        const msg_len = @min(err_message.len, 256);
+        while (i < msg_len) : (i += 1) {
+            ctx.message[i] = err_message[i];
+        }
+        ctx.message_len = msg_len;
+        std.debug.assert(ctx.operation_len > 0);
+        return ctx;
+    }
+};
+
+// Check if LLM error is retryable.
+pub fn is_llm_error_retryable(err: LlmProviderError) bool {
+    std.debug.assert(@intFromEnum(err) < 15);
+    switch (err) {
+        .Timeout => return true,
+        .NetworkError => return true,
+        .RateLimit => return true,
+        .ProviderError => return true,
+        .TooManyProviders => return false,
+        .ProviderPoolFull => return false,
+        .HttpClientNotAvailable => return false,
+        .RequestCreationFailed => return false,
+        .NoHealthyProvider => return false,
+        .InvalidRequest => return false,
+        .InvalidResponse => return false,
+        .AuthenticationError => return false,
+        .DnsError => return false,
+        .ConnectionRefused => return false,
+    }
+}
+
+// Parse Retry-After header value (seconds or HTTP date).
+pub fn parse_retry_after_header(value: []const u8) ?u64 {
+    std.debug.assert(value.len > 0);
+    if (value.len == 0) {
+        return null;
+    }
+    var i: u32 = 0;
+    while (i < value.len and value[i] == ' ') : (i += 1) {}
+    if (i >= value.len) {
+        return null;
+    }
+    var num: u64 = 0;
+    while (i < value.len and value[i] >= '0' and value[i] <= '9') : (i += 1) {
+        num = num * 10 + (value[i] - '0');
+    }
+    if (num > 0) {
+        return num * 1000;
+    }
+    return null;
+}
+
+// Check HTTP response for rate limiting (429 status).
+pub fn check_rate_limit_response(
+    http_resp: *const grain_core.api_server.HttpResponse,
+) ?u64 {
+    std.debug.assert(http_resp != null);
+    const status_code = @intFromEnum(http_resp.status);
+    if (status_code == 429) {
+        var i: u32 = 0;
+        while (i < http_resp.headers_len) : (i += 1) {
+            const header = http_resp.headers[i];
+            const header_name = header.name[0..header.name_len];
+            if (std.mem.eql(u8, header_name, "Retry-After")) {
+                const header_value = header.value[0..header.value_len];
+                return parse_retry_after_header(header_value);
+            }
+        }
+        return 60000;
+    }
+    return null;
+}
+
+// Check if request timed out.
+pub fn check_request_timeout(
+    request: *const LlmRequest,
+    start_time: u64,
+    current_time: u64,
+) bool {
+    std.debug.assert(request != null);
+    const timeout_ms = request.timeout_ms orelse DEFAULT_LLM_TIMEOUT_MS;
+    const elapsed_ms = (current_time - start_time) / 1_000_000;
+    return elapsed_ms >= timeout_ms;
+}
 
 // Bounded: Max providers in pool.
 pub const MAX_PROVIDERS: u32 = 10;
@@ -48,6 +185,9 @@ pub const ProviderState = enum(u8) {
     disabled,
 };
 
+// Bounded: Default timeout for LLM operations (60 seconds).
+pub const DEFAULT_LLM_TIMEOUT_MS: u32 = 60000;
+
 // LLM request structure.
 pub const LlmRequest = struct {
     request_id: u32,
@@ -61,6 +201,7 @@ pub const LlmRequest = struct {
     created_at: u64,
     use_zon_format: bool,
     zon_data: ?[]const u8,
+    timeout_ms: ?u32,
 };
 
 // LLM response structure.
@@ -70,6 +211,8 @@ pub const LlmResponse = struct {
     content: [MAX_RESPONSE_SIZE]u8,
     content_len: u32,
     tokens_used: u32,
+    input_tokens: u32,
+    output_tokens: u32,
     finish_reason: [32]u8,
     finish_reason_len: u32,
     created_at: u64,

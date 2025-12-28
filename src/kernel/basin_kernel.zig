@@ -488,7 +488,9 @@ pub const BasinError = error{
     connection_failed,
     connection_timeout,
     connection_refused,
+    network_timeout,
     // File system errors
+    file_io_timeout,
     file_not_found,
     file_exists,
     file_too_large,
@@ -501,6 +503,7 @@ pub const BasinError = error{
     channel_full,
     channel_empty,
     channel_closed,
+    ipc_timeout,
     // Resource errors
     too_many_files,
     too_many_processes,
@@ -1403,6 +1406,36 @@ pub const BasinKernel = struct {
         // The test will validate the count.
         
         return count;
+    }
+    
+    /// Check if timeout has expired.
+    /// Why: Helper function to check timeout expiration for syscalls.
+    /// Contract: start_time_ns must be valid monotonic time, timeout_ns is in nanoseconds (0 = no timeout).
+    fn check_timeout(self: *const BasinKernel, start_time_ns: u64, timeout_ns: u64) bool {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        // No timeout if timeout_ns is 0.
+        if (timeout_ns == 0) {
+            return false;
+        }
+        
+        // Get current monotonic time.
+        const current_time_ns = self.timer.get_monotonic_ns();
+        
+        // Assert: Current time must be >= start time (monotonic clock).
+        Debug.kassert(current_time_ns >= start_time_ns, "Current time < start time", .{});
+        
+        // Calculate elapsed time.
+        const elapsed_ns = current_time_ns - start_time_ns;
+        
+        // Assert: Elapsed time must be non-negative.
+        Debug.kassert(elapsed_ns >= 0, "Elapsed time negative", .{});
+        
+        // Check if timeout has expired.
+        return elapsed_ns >= timeout_ns;
     }
     
     /// Handle syscall from user space.
@@ -2397,14 +2430,15 @@ pub const BasinKernel = struct {
         channel: u64,
         data_ptr: u64,
         data_len: u64,
-        _arg4: u64,
+        timeout_ns: u64,
     ) BasinError!SyscallResult {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);
         Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
         Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
         
-        _ = _arg4;
+        // Record start time for timeout checking.
+        const start_time_ns = self.timer.get_monotonic_ns();
         
         // Assert: channel ID must be valid (non-zero).
         if (channel == 0) {
@@ -2448,6 +2482,11 @@ pub const BasinKernel = struct {
         Debug.kassert(ch.allocated, "Channel not allocated", .{});
         Debug.kassert(ch.id == channel, "Channel ID mismatch", .{});
         
+        // Check timeout before operation.
+        if (self.check_timeout(start_time_ns, timeout_ns)) {
+            return BasinError.ipc_timeout; // Timeout expired
+        }
+        
         // Read data from VM memory.
         // Why: Copy data from VM memory to channel message queue.
         if (self.vm_memory_reader == null) {
@@ -2468,9 +2507,19 @@ pub const BasinKernel = struct {
         
         // Send message to channel.
         // Why: Add message to channel queue.
+        // Note: In a real implementation, this would be a blocking operation that checks timeout periodically.
         const sent = ch.send(data_slice);
         if (!sent) {
+            // Check timeout after operation.
+            if (self.check_timeout(start_time_ns, timeout_ns)) {
+                return BasinError.ipc_timeout; // Timeout expired
+            }
             return BasinError.would_block; // Channel queue full
+        }
+        
+        // Check timeout after operation.
+        if (self.check_timeout(start_time_ns, timeout_ns)) {
+            return BasinError.ipc_timeout; // Timeout expired
         }
         
         // Assert: Message must be sent (postcondition).
@@ -2490,14 +2539,15 @@ pub const BasinKernel = struct {
         channel: u64,
         buffer_ptr: u64,
         buffer_len: u64,
-        _arg4: u64,
+        timeout_ns: u64,
     ) BasinError!SyscallResult {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);
         Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
         Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
         
-        _ = _arg4;
+        // Record start time for timeout checking.
+        const start_time_ns = self.timer.get_monotonic_ns();
         
         // Assert: channel ID must be valid (non-zero).
         if (channel == 0) {
@@ -2541,18 +2591,33 @@ pub const BasinKernel = struct {
         Debug.kassert(ch.allocated, "Channel not allocated", .{});
         Debug.kassert(ch.id == channel, "Channel ID mismatch", .{});
         
+        // Check timeout before operation.
+        if (self.check_timeout(start_time_ns, timeout_ns)) {
+            return BasinError.ipc_timeout; // Timeout expired
+        }
+        
         // Receive message from channel.
         // Why: Get message from channel queue.
+        // Note: In a real implementation, this would be a blocking operation that checks timeout periodically.
         var message_buffer: [4096]u8 = undefined;
         const bytes_received_u32 = ch.receive(&message_buffer);
         
         if (bytes_received_u32 == 0) {
+            // Check timeout after operation.
+            if (self.check_timeout(start_time_ns, timeout_ns)) {
+                return BasinError.ipc_timeout; // Timeout expired
+            }
             // Queue empty: return 0 bytes received (non-blocking).
             // Why: Non-blocking receive - return immediately if no message.
             const result = SyscallResult.ok(0);
             Debug.kassert(result == .success, "Result not success", .{});
             Debug.kassert(result.success == 0, "Result not 0", .{});
             return result;
+        }
+        
+        // Check timeout after operation.
+        if (self.check_timeout(start_time_ns, timeout_ns)) {
+            return BasinError.ipc_timeout; // Timeout expired
         }
         
         // Write message data to VM memory.
@@ -2703,14 +2768,15 @@ pub const BasinKernel = struct {
         handle: u64,
         buffer_ptr: u64,
         buffer_len: u64,
-        _arg4: u64,
+        timeout_ns: u64,
     ) BasinError!SyscallResult {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);
         Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
         Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
         
-        _ = _arg4;
+        // Record start time for timeout checking.
+        const start_time_ns = self.timer.get_monotonic_ns();
         
         // Assert: handle must be valid (non-zero).
         if (handle == 0) {
@@ -2756,6 +2822,11 @@ pub const BasinKernel = struct {
             return SyscallResult.fail(BasinError.permission_denied); // Handle not readable
         }
         
+        // Check timeout before operation.
+        if (self.check_timeout(start_time_ns, timeout_ns)) {
+            return SyscallResult.fail(BasinError.file_io_timeout); // Timeout expired
+        }
+        
         // Note: Actual file data reading is handled by integration layer.
         // This kernel syscall validates parameters and calculates read size.
         // Integration layer will:
@@ -2764,6 +2835,7 @@ pub const BasinKernel = struct {
         // 3. Write data to VM memory at buffer_ptr
         // For now, we use handle buffer (in-memory file data).
         // Calculate bytes to read (min of available data and buffer size).
+        // Note: In a real implementation, this would be a blocking operation that checks timeout periodically.
         const available = if (file_handle.position < file_handle.buffer_size)
             file_handle.buffer_size - file_handle.position
         else
@@ -2773,6 +2845,11 @@ pub const BasinKernel = struct {
         // Note: Integration layer will write data to VM memory.
         // For now, just update position (data is in handle buffer).
         file_handle.position += bytes_to_read;
+        
+        // Check timeout after operation.
+        if (self.check_timeout(start_time_ns, timeout_ns)) {
+            return SyscallResult.fail(BasinError.file_io_timeout); // Timeout expired
+        }
         
         // Assert: Position must not exceed buffer size.
         Debug.kassert(file_handle.position <= file_handle.buffer_size, "Position > buffer size", .{});
@@ -2793,14 +2870,15 @@ pub const BasinKernel = struct {
         handle: u64,
         data_ptr: u64,
         data_len: u64,
-        _arg4: u64,
+        timeout_ns: u64,
     ) BasinError!SyscallResult {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);
         Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
         Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
         
-        _ = _arg4;
+        // Record start time for timeout checking.
+        const start_time_ns = self.timer.get_monotonic_ns();
         
         // Assert: handle must be valid (non-zero).
         if (handle == 0) {
@@ -2846,6 +2924,11 @@ pub const BasinKernel = struct {
             return SyscallResult.fail(BasinError.permission_denied); // Handle not writable
         }
         
+        // Check timeout before operation.
+        if (self.check_timeout(start_time_ns, timeout_ns)) {
+            return SyscallResult.fail(BasinError.file_io_timeout); // Timeout expired
+        }
+        
         // Calculate bytes to write (min of data length and available buffer space).
         const data_len_u32 = @as(u32, @intCast(data_len));
         const max_buffer_size = file_handle.buffer.len;
@@ -2856,10 +2939,16 @@ pub const BasinKernel = struct {
         const bytes_to_write = @min(data_len_u32, available_space);
         
         // Write data to handle buffer (simulated - in real implementation, would read from VM memory).
+        // Note: In a real implementation, this would be a blocking operation that checks timeout periodically.
         // For now, just update position and buffer size.
         file_handle.position += bytes_to_write;
         if (file_handle.position > file_handle.buffer_size) {
             file_handle.buffer_size = @as(u32, @intCast(file_handle.position));
+        }
+        
+        // Check timeout after operation.
+        if (self.check_timeout(start_time_ns, timeout_ns)) {
+            return SyscallResult.fail(BasinError.file_io_timeout); // Timeout expired
         }
         
         // Assert: Position and buffer size must be valid.
@@ -5021,14 +5110,15 @@ pub const BasinKernel = struct {
         socket_id: u64,
         addr: u64,
         port: u64,
-        _arg4: u64,
+        timeout_ns: u64,
     ) BasinError!SyscallResult {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);
         Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
         Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
         
-        _ = _arg4;
+        // Record start time for timeout checking.
+        const start_time_ns = self.timer.get_monotonic_ns();
         
         // Assert: Socket ID must be non-zero.
         if (socket_id == 0) {
@@ -5040,12 +5130,27 @@ pub const BasinKernel = struct {
             return BasinError.invalid_argument; // Invalid port
         }
         
+        // Check timeout before operation.
+        if (self.check_timeout(start_time_ns, timeout_ns)) {
+            return BasinError.network_timeout; // Timeout expired
+        }
+        
         const ipv4_addr = @as(u32, @truncate(addr));
         const ipv4_port = @as(u16, @truncate(port));
         
         // Connect socket.
+        // Note: In a real implementation, this would be a blocking operation that checks timeout periodically.
         if (!self.tcp_sockets.connect_socket(socket_id, ipv4_addr, ipv4_port)) {
+            // Check timeout after operation.
+            if (self.check_timeout(start_time_ns, timeout_ns)) {
+                return BasinError.network_timeout; // Timeout expired
+            }
             return BasinError.not_found; // Socket not found or invalid state
+        }
+        
+        // Check timeout after operation.
+        if (self.check_timeout(start_time_ns, timeout_ns)) {
+            return BasinError.network_timeout; // Timeout expired
         }
         
         const result = SyscallResult.ok(0);
@@ -5064,14 +5169,15 @@ pub const BasinKernel = struct {
         socket_id: u64,
         data_ptr: u64,
         data_len: u64,
-        _arg4: u64,
+        timeout_ns: u64,
     ) BasinError!SyscallResult {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);
         Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
         Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
         
-        _ = _arg4;
+        // Record start time for timeout checking.
+        const start_time_ns = self.timer.get_monotonic_ns();
         
         // Assert: Socket ID must be non-zero.
         if (socket_id == 0) {
@@ -5101,14 +5207,29 @@ pub const BasinKernel = struct {
             return BasinError.invalid_argument; // Data exceeds VM memory
         }
         
+        // Check timeout before operation.
+        if (self.check_timeout(start_time_ns, timeout_ns)) {
+            return BasinError.network_timeout; // Timeout expired
+        }
+        
         // Read data from VM memory (stub: would use vm_memory_reader).
         // For now, use a placeholder data slice.
         const data = "test";
         
         // Send data.
+        // Note: In a real implementation, this would check timeout periodically if blocking.
         const bytes_sent = self.tcp_sockets.send_data(socket_id, data) orelse {
+            // Check timeout after operation.
+            if (self.check_timeout(start_time_ns, timeout_ns)) {
+                return BasinError.network_timeout; // Timeout expired
+            }
             return BasinError.not_found; // Socket not found or invalid state
         };
+        
+        // Check timeout after operation.
+        if (self.check_timeout(start_time_ns, timeout_ns)) {
+            return BasinError.network_timeout; // Timeout expired
+        }
         
         // Update process resource usage (network bytes sent).
         const current_pid = self.scheduler.get_current();
@@ -5137,14 +5258,15 @@ pub const BasinKernel = struct {
         socket_id: u64,
         buffer_ptr: u64,
         buffer_len: u64,
-        _arg4: u64,
+        timeout_ns: u64,
     ) BasinError!SyscallResult {
         // Assert: self pointer must be valid.
         const self_ptr = @intFromPtr(self);
         Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
         Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
         
-        _ = _arg4;
+        // Record start time for timeout checking.
+        const start_time_ns = self.timer.get_monotonic_ns();
         
         // Assert: Socket ID must be non-zero.
         if (socket_id == 0) {
@@ -5174,14 +5296,29 @@ pub const BasinKernel = struct {
             return BasinError.invalid_argument; // Buffer exceeds VM memory
         }
         
+        // Check timeout before operation.
+        if (self.check_timeout(start_time_ns, timeout_ns)) {
+            return BasinError.network_timeout; // Timeout expired
+        }
+        
         // Create buffer slice (stub: would use vm_memory_writer).
         var buffer: [64 * 1024]u8 = undefined;
         const buffer_slice = buffer[0..@as(usize, @intCast(buffer_len))];
         
         // Receive data.
+        // Note: In a real implementation, this would be a blocking operation that checks timeout periodically.
         const bytes_received = self.tcp_sockets.recv_data(socket_id, buffer_slice) orelse {
+            // Check timeout after operation.
+            if (self.check_timeout(start_time_ns, timeout_ns)) {
+                return BasinError.network_timeout; // Timeout expired
+            }
             return BasinError.not_found; // Socket not found or invalid state
         };
+        
+        // Check timeout after operation.
+        if (self.check_timeout(start_time_ns, timeout_ns)) {
+            return BasinError.network_timeout; // Timeout expired
+        }
         
         // Update process resource usage (network bytes received).
         const current_pid = self.scheduler.get_current();

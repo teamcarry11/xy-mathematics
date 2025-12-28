@@ -59,15 +59,24 @@ fn parse_anthropic_response(
     }
     if (grain_core.json_helpers.find_json_key(json, "usage")) |usage_result| {
         var usage_json = json[usage_result.value_start..usage_result.value_start + usage_result.value_len];
-        if (grain_core.json_helpers.find_json_key(usage_json, "input_tokens")) |_| {
-            if (grain_core.json_helpers.find_json_key(usage_json, "output_tokens")) |out_tokens_result| {
-                if (grain_core.json_helpers.extract_json_number_value(
-                    usage_json,
-                    &out_tokens_result,
-                )) |tokens| {
-                    if (tokens > 0) {
-                        response.tokens_used = @intCast(tokens);
-                    }
+        if (grain_core.json_helpers.find_json_key(usage_json, "input_tokens")) |input_result| {
+            if (grain_core.json_helpers.extract_json_number_value(
+                usage_json,
+                &input_result,
+            )) |tokens| {
+                if (tokens > 0) {
+                    response.input_tokens = @intCast(tokens);
+                }
+            }
+        }
+        if (grain_core.json_helpers.find_json_key(usage_json, "output_tokens")) |out_tokens_result| {
+            if (grain_core.json_helpers.extract_json_number_value(
+                usage_json,
+                &out_tokens_result,
+            )) |tokens| {
+                if (tokens > 0) {
+                    response.output_tokens = @intCast(tokens);
+                    response.tokens_used = response.input_tokens + @intCast(tokens);
                 }
             }
         }
@@ -137,6 +146,7 @@ pub const AnthropicProvider = struct {
         if (self.http_client == null) {
             return llm_provider.LlmProviderError.HttpClientNotAvailable;
         }
+        const start_time = std.time.nanoTimestamp();
         const client = self.http_client.?;
         const url = "https://api.anthropic.com/v1/messages";
         const http_req = client.create_request(
@@ -172,6 +182,8 @@ pub const AnthropicProvider = struct {
             .content = undefined,
             .content_len = 0,
             .tokens_used = 0,
+            .input_tokens = 0,
+            .output_tokens = 0,
             .finish_reason = undefined,
             .finish_reason_len = 0,
             .created_at = 0,
@@ -181,8 +193,36 @@ pub const AnthropicProvider = struct {
             response.content[i] = 0;
         }
         if (http_req.response) |http_resp| {
+            const current_time_ns = std.time.nanoTimestamp();
+            const start_time_u64 = @as(u64, @intCast(start_time));
+            const current_time_u64 = @as(u64, @intCast(current_time_ns));
+            if (llm_provider.check_request_timeout(request, start_time_u64, current_time_u64)) {
+                return llm_provider.LlmProviderError.Timeout;
+            }
+            if (llm_provider.check_rate_limit_response(http_resp)) |retry_after_ms| {
+                _ = retry_after_ms;
+                return llm_provider.LlmProviderError.RateLimit;
+            }
+            const status_code = @intFromEnum(http_resp.status);
+            if (status_code >= 500) {
+                return llm_provider.LlmProviderError.ProviderError;
+            }
+            if (status_code == 401) {
+                return llm_provider.LlmProviderError.AuthenticationError;
+            }
+            if (status_code >= 400) {
+                return llm_provider.LlmProviderError.InvalidRequest;
+            }
             const resp_body = http_resp.body[0..http_resp.body_len];
             try parse_anthropic_response(resp_body, &response);
+        } else {
+            const current_time_ns = std.time.nanoTimestamp();
+            const start_time_u64 = @as(u64, @intCast(start_time));
+            const current_time_u64 = @as(u64, @intCast(current_time_ns));
+            if (llm_provider.check_request_timeout(request, start_time_u64, current_time_u64)) {
+                return llm_provider.LlmProviderError.Timeout;
+            }
+            return llm_provider.LlmProviderError.NetworkError;
         }
         std.debug.assert(response.request_id == request.request_id);
         return response;

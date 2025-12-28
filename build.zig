@@ -339,6 +339,7 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
         .imports = &.{
             .{ .name = "grain_core", .module = grain_core_module },
+            .{ .name = "grain_court", .module = grain_court_module },
         },
     });
 
@@ -347,7 +348,10 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/grain_research/root.zig"),
         .target = target,
         .optimize = optimize,
-        .imports = &.{},
+        .imports = &.{
+            .{ .name = "grain_court", .module = grain_court_module },
+            .{ .name = "grain_flow", .module = grain_flow_module },
+        },
     });
 
     // Kernel VM test executable (for testing VM functionality).
@@ -411,6 +415,21 @@ pub fn build(b: *std.Build) void {
     const conduct_step = b.step("conduct", "Run Grain Conductor command suite");
     const run_conductor = b.addRunArtifact(conductor_exe);
     conduct_step.dependOn(&run_conductor.step);
+
+    const run_zon_phase4_validation_exe = b.addExecutable(.{
+        .name = "run_zon_phase4_validation",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tools/run_zon_phase4_validation.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_research", .module = grain_research_module },
+            },
+        }),
+    });
+    const run_zon_phase4_validation_step = b.step("run_zon_phase4_validation", "Run ZON Format Phase 4 Validation");
+    const run_zon_phase4_validation_run = b.addRunArtifact(run_zon_phase4_validation_exe);
+    run_zon_phase4_validation_step.dependOn(&run_zon_phase4_validation_run.step);
 
     const ray_tests = b.addTest(.{
         .root_module = b.createModule(.{
@@ -3653,6 +3672,19 @@ pub fn build(b: *std.Build) void {
     const grain_workspace_text_editor_tests_run = b.addRunArtifact(grain_workspace_text_editor_tests);
     test_step.dependOn(&grain_workspace_text_editor_tests_run.step);
 
+    const grain_workspace_components_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/116_grain_workspace_components_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_workspace", .module = grain_workspace_module },
+            },
+        }),
+    });
+    const grain_workspace_components_tests_run = b.addRunArtifact(grain_workspace_components_tests);
+    test_step.dependOn(&grain_workspace_components_tests_run.step);
+
     // Grain Database tests
     const grain_database_storage_engine_tests = b.addTest(.{
         .root_module = b.createModule(.{
@@ -5212,6 +5244,19 @@ pub fn build(b: *std.Build) void {
     });
     const get_resource_usage_tests_run = b.addRunArtifact(get_resource_usage_tests);
     test_step.dependOn(&get_resource_usage_tests_run.step);
+
+    const syscall_timeout_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/117_syscall_timeout_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+            },
+        }),
+    });
+    const syscall_timeout_tests_run = b.addRunArtifact(syscall_timeout_tests);
+    test_step.dependOn(&syscall_timeout_tests_run.step);
 
     // Graincard format validation test
     const graincard_format_validation_tests = b.addTest(.{

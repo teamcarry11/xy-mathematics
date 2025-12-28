@@ -15,4 +15,5 @@ pub const network_tools = @import("network_tools/app.zig");
 pub const devtools = @import("devtools/app.zig");
 pub const text_editor = @import("text_editor/app.zig");
 pub const grain_style_cli = @import("grain_style_cli/main.zig");
+pub const components = @import("components.zig");
 

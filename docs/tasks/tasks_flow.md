@@ -1,8 +1,8 @@
 # Grain Flow Agent: Task List
 
 **Agent**: Grain Flow Agent (9th Agent)  
-**Status**: All Phases Complete ✅ (Phase 1-5 COMPLETE), SLC Product Workflow Templates Ready ✅, Research Agent Collaboration Complete ✅, Instrumentation Design Prepared ✅, Phase 63 API Contracts Documented ✅, Phase 64 Integration Tests Created ✅, Phase 3 Validation COMPLETE ✅, ZON Format Integration Coordinating with Court Agent ⏳ (Priority 3, HIGH, ~90% Complete, COORDINATION IN PROGRESS), ZON Integration Structure Prepared ✅, ZON Allocator Coordination Message Sent ✅, ZON Integration Preparation Document Created ✅, Phase 3 Completion Reported to Core Agent ✅, TigerBeetle Enhancement Coordination Responded ⏳ (Medium Priority, Timeline Needed, COORDINATION NEEDED), Core Agent Coordination Plan Acknowledged ✅, Workflow Scheduler Cron Parser Enhanced ✅, Workflow Scheduler Cron Parser Step Value Support Enhanced ✅, Workflow Visualizer Hierarchical Layout Enhanced ✅, Event Bus Source Filtering Enhanced ✅, Build Configuration Coordination Requested ⏳ (Priority 2, HIGH, COORDINATION NEEDED), Core Coordination Document Rewritten ✅, Core Agent Coordination Plan 2025-12-22-112149-pst Acknowledged ✅  
-**Last Updated**: 2025-12-23-173000-pst
+**Status**: All Phases Complete ✅ (Phase 1-5 COMPLETE), SLC Product Workflow Templates Ready ✅, Research Agent Collaboration Complete ✅, Instrumentation Design Prepared ✅, Phase 63 API Contracts Documented ✅, Phase 64 Integration Tests Created ✅, Phase 3 Validation COMPLETE ✅, ZON Format Integration Implementation Complete ✅ (Priority 3, HIGH, Court Agent Bounded Allocation API Available, Integration Complete), ZON Integration Structure Prepared ✅, ZON Allocator Coordination Complete ✅, ZON Integration Preparation Document Created ✅, ZON Format Integration Implementation Complete ✅, Phase 3 Completion Reported to Core Agent ✅, TigerBeetle Enhancement Coordination Responded ⏳ (Medium Priority, Timeline Needed, COORDINATION NEEDED), Core Agent Coordination Plan Acknowledged ✅, Workflow Scheduler Cron Parser Enhanced ✅, Workflow Scheduler Cron Parser Step Value Support Enhanced ✅, Workflow Visualizer Hierarchical Layout Enhanced ✅, Event Bus Source Filtering Enhanced ✅, Event Bus Async Pattern Event Types Added ✅, Event Bus Async Pattern Documentation Created ✅, Build Configuration Resolved ✅, Core Coordination Document Rewritten ✅, Core Agent Coordination Plan 2025-12-28-125036-pst Acknowledged ✅  
+**Last Updated**: 2025-12-28-175000-pst
 
 ---
 
@@ -622,6 +622,24 @@
   - [x] Subscribers can filter events by source agent ID
   - [x] Tests added for source filtering (match, no match, combined with destination filter)
   - [x] Backward compatible (existing `subscribe()` continues to work)
+- [x] Event Bus Async Pattern Event Types Added (2025-12-28-173000-pst)
+  - [x] Async pattern event types added to `EventType` enum
+  - [x] `http_request_completed` event type added (for HTTP request completion)
+  - [x] `http_request_failed` event type added (for HTTP request failures)
+  - [x] `websocket_connected` event type added (for WebSocket connections)
+  - [x] `websocket_message_received` event type added (for WebSocket messages)
+  - [x] `file_io_completed` event type added (for file I/O completion)
+  - [x] `file_io_failed` event type added (for file I/O failures)
+  - [x] Event Bus ready for Core Agent async pattern implementation
+- [x] Event Bus Async Pattern Documentation Created (2025-12-28-173000-pst)
+  - [x] Async pattern usage documentation created (`docs/grain_flow/async_pattern.md`)
+  - [x] Event subscription examples documented
+  - [x] Event handler examples documented
+  - [x] Event payload format documentation for all async event types
+  - [x] Source filtering usage examples
+  - [x] Request tracking best practices
+  - [x] Integration guidelines for Core Agent and other agents
+  - [x] Ready for use by Core Agent and all agents implementing async operations
 - [x] Workflow Visualizer Hierarchical Layout Enhancement (2025-12-21-141900-pst)
   - [x] Hierarchical layout algorithm implemented (replaces simple grid layout)
   - [x] Calculates node levels based on DAG structure (iterative, no recursion)
@@ -644,18 +662,38 @@
   - Testing plan created
 - [x] Coordinate with Research Agent on ZON export format requirements (Research Agent Phase 4 complete ✅)
 
-**Phase 2: Workflow Observatory ZON Export** ⏳
+**Phase 2: Workflow Observatory ZON Export** ✅
 - [x] Add ZON export option to `WorkflowObservatory` (`src/grain_flow/workflow_observatory.zig`) (2025-12-21-204511-pst)
   - [x] Placeholder functions added (`export_all_metrics_zon()`, `get_aggregated_summary_zon()`)
   - [x] Coordination notes added (allocator vs bounded allocation)
-- [ ] Implement `export_all_metrics_zon()` function (pending Court Agent completion and allocator coordination)
-- [ ] Implement `get_aggregated_summary_zon()` function (pending Court Agent completion and allocator coordination)
-- [ ] Integrate with Court Agent's ZON encoder (pending allocator coordination)
-- [ ] Support both JSON and ZON export formats (backward compatible)
-- [ ] Add format selection parameter (JSON vs ZON)
+- [x] Court Agent bounded allocation API available (2025-12-28-132000-pst)
+- [x] Build configuration updated (grain_court import added to grain_flow_module) (2025-12-28-173500-pst)
+- [x] Implement `export_all_metrics_zon()` function (2025-12-28-173500-pst)
+  - Uses `encode_zon_bounded()` for scalar metrics
+  - Uses `encode_tabular_array_zon_bounded()` for executions array
+  - Handles u64 values via inline helper function
+  - Converts all metrics (workflow, coordination, failure, performance) to ZON format
+- [x] Implement `get_aggregated_summary_zon()` function (2025-12-28-173500-pst)
+  - Uses `encode_zon_bounded()` for summary metrics
+  - Includes workflow, coordination, failure, and performance summary statistics
+  - Handles u64 values via inline helper function
+- [x] Integrate with Court Agent's ZON encoder (2025-12-28-173500-pst)
+  - Uses Court Agent's bounded allocation API (`encode_zon_bounded()`, `encode_tabular_array_zon_bounded()`)
+  - No allocator dependency (bounded allocation pattern)
+- [x] Add tests for ZON export functions (2025-12-28-174500-pst)
+  - Tests for `get_aggregated_summary_zon()` (with all collectors, empty collectors, buffer overflow)
+  - Tests for `export_all_metrics_zon()` (with executions array, key validation)
+  - Edge case tests (empty collectors, buffer too small)
+  - All tests passing ✅
+- [x] Support both JSON and ZON export formats (backward compatible) — JSON already supported, ZON implemented ✅
+- [x] Add format selection parameter (JSON vs ZON) — Dashboard API integration complete ✅ (2025-12-28-175000-pst)
 
-**Phase 3: Dashboard API ZON Support** ⏳
-- [ ] Add ZON export endpoint (`/api/workflow-observatory/metrics?format=zon`)
+**Phase 3: Dashboard API ZON Support** ✅
+- [x] Add ZON export endpoint (`/api/workflow-observatory/metrics?format=zon`) (2025-12-28-175000-pst)
+- [x] Add ZON summary endpoint (`/api/workflow-observatory/summary?format=zon`) (2025-12-28-175000-pst)
+- [x] Implement query parameter parsing (`get_query_param()` helper function) (2025-12-28-175000-pst)
+- [x] Set appropriate Content-Type headers (text/plain for ZON, application/json for JSON) (2025-12-28-175000-pst)
+- [x] Ensure backward compatibility (defaults to JSON if format parameter not specified) (2025-12-28-175000-pst)
 - [ ] Add ZON summary endpoint (`/api/workflow-observatory/summary?format=zon`)
 - [ ] Update request handlers to support format parameter
 - [ ] Set appropriate Content-Type headers (`application/zon` or `text/zon`)

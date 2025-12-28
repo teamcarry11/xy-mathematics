@@ -1,8 +1,8 @@
 # Grain Silo Agent: Coordination Status
 
-**Last Updated**: 2025-12-23-220000-pst  
+**Last Updated**: 2025-12-28-130000-pst  
 **Agent**: Grain Silo Agent (Database)  
-**Status**: **PRODUCTION READY** ✅ — **DESIGN GAPS ADDRESSED** ✅ — **CIRCUIT BREAKER DOCUMENTED** ✅
+**Status**: **PRODUCTION READY** ✅ — **DESIGN GAPS ADDRESSED** ✅ — **CIRCUIT BREAKER DOCUMENTED** ✅ — **COORDINATION DECISIONS ACKNOWLEDGED** ✅
 
 ---
 
@@ -169,9 +169,10 @@ All core phases complete and ready for production use:
 - `docs/agent-communications/silo_agent_database_api_contracts_2025-12-21-143409-pst.md` — Updated with error types
 - `docs/grain_database/circuit_breaker_pattern.md` — Circuit breaker pattern guide
 
-**Pending Implementations** (Require Coordination):
-- ⏳ Timeout handling — Waiting on Core Agent coordination (Priority 2, HIGH)
-- ⏳ Core Agent 429 status code — Coordinate to add `too_many_requests` to HttpStatus enum
+**Pending Implementations** (Waiting on Core Agent Implementation):
+- ⏳ Timeout handling — Core Agent decision made (per-request timeout with 30s default), waiting on implementation
+- ⏳ Core Agent 429 status code — Coordinate to add `too_many_requests` to HttpStatus enum (waiting on Core Agent implementation)
+- ⏳ Service-to-Service Authentication — Core Agent decision made (service account tokens via AuthService), waiting on implementation
 
 ### Design Gaps Analysis Complete (2025-12-23-203252-pst) ✅
 
@@ -184,7 +185,7 @@ All core phases complete and ready for production use:
 **Key Findings**:
 - **Critical**: Rate limiting response (429) handling — ✅ IMPLEMENTED
 - **Critical**: Error type documentation and standardization — ✅ IMPLEMENTED
-- **High Priority**: Request timeout handling — ⏳ PENDING (Core Agent coordination)
+- **High Priority**: Request timeout handling — ✅ DECISION MADE (Core Agent: per-request timeout with 30s default), ⏳ WAITING ON IMPLEMENTATION
 - **High Priority**: Idempotency for create operations — ✅ IMPLEMENTED
 - **High Priority**: Request deduplication — ✅ IMPLEMENTED
 - **High Priority**: Circuit breaker pattern support — ✅ DOCUMENTED
@@ -314,12 +315,18 @@ All core phases complete and ready for production use:
 - ✅ **Index Manager**: Index management complete
 - ✅ **Backup Manager**: Backup/restore complete
 
-**Coordination Needs**:
-- ⏳ **429 Status Code**: Add `too_many_requests` to HttpStatus enum in `api_server.zig`
-- ⏳ **Timeout Handling**: Coordinate timeout handling pattern for database operations
-- ⏳ **Service-to-Service Auth**: Coordinate JWT token management for agent-to-agent communication
+**Coordination Decisions Acknowledged** (2025-12-28-125036-pst):
+- ✅ **Timeout Handling Pattern**: Per-request timeout with global defaults (30s API, 60s content, 10s WebSocket connect, 5s WebSocket message, 30s file I/O)
+- ✅ **Error Handling Pattern**: Structured error unions (`HttpClientError`, `WebSocketError`, `FileIoError`) with retryability classification
+- ✅ **Service-to-Service Authentication**: Service account tokens via AuthService (userspace pattern, no kernel changes needed)
+- ✅ **Async Pattern**: Event-driven using Flow Agent Event Bus (userspace pattern, no kernel changes needed)
 
-**Status**: All Core Agent dependencies satisfied. Ready for production use.
+**Coordination Needs**:
+- ⏳ **429 Status Code**: Add `too_many_requests` to HttpStatus enum in `api_server.zig` (waiting on Core Agent implementation)
+- ⏳ **Timeout Handling Implementation**: Waiting on Core Agent to implement timeout handling pattern (decision made, implementation in progress)
+- ⏳ **Service-to-Service Auth Implementation**: Waiting on Core Agent to implement service account tokens (decision made, implementation in progress)
+
+**Status**: All Core Agent dependencies satisfied. Coordination decisions made, waiting on Core Agent implementation. Ready for production use.
 
 ### With Other Agents
 
@@ -420,12 +427,16 @@ All core phases complete and ready for production use:
 ## Coordination Needs
 
 ### Ready to Coordinate
-- ✅ **Core Agent**: 
+- ✅ **Core Agent**:
   - Ready for production use confirmation
   - SLC product integration coordination (Priority 4 now ready)
-  - 429 status code support coordination
-  - Timeout handling pattern coordination
-  - Service-to-service authentication coordination
+  - **Coordination decisions acknowledged** (2025-12-28-125036-pst):
+    - ✅ Timeout handling pattern decision made (per-request timeout with 30s default)
+    - ✅ Error handling pattern decision made (structured error unions with retryability)
+    - ✅ Service-to-service authentication decision made (service account tokens via AuthService)
+    - ✅ Async pattern decision made (event-driven using Flow Agent Event Bus)
+  - ⏳ **Waiting on Core Agent implementation** of coordination decisions
+  - ⏳ 429 status code support (add `too_many_requests` to HttpStatus enum)
 
 - ✅ **Aurora Agent**: 
   - SLC product integration (Nostr Profile Builder) — **Priority 4 now ready**
@@ -472,6 +483,7 @@ All core phases complete and ready for production use:
 - **Batch operations added for efficient Priority 4 testing**
 - **Design gaps addressed (rate limiting, error types, idempotency, deduplication)**
 - **Circuit breaker pattern documentation complete**
+- **Core Agent coordination decisions acknowledged** (timeout, error handling, authentication, async patterns)
 
 ---
 
@@ -641,9 +653,10 @@ Looking forward to working together as the ecosystem grows!
 - **Batch operations added for efficient Priority 4 testing**
 - **Design gaps addressed (rate limiting, error types, idempotency, deduplication)**
 - **Circuit breaker pattern documentation complete for client agents**
+- **Core Agent coordination decisions acknowledged** (2025-12-28-125036-pst): timeout handling (per-request with 30s default), error handling (structured error unions), service-to-service authentication (service account tokens), async patterns (Flow Agent Event Bus)
 - All code follows Grain Style guidelines (grain_case, u32/u64, bounded allocations, assertions)
 - Grain Style updated: Max 103 characters per line (`grainwrap-100` — updated for 103×80 graincards)
 
 ---
 
-**Status**: Ready for coordination and production use. No blockers. Priority 5 (Other Agent Coordination) — can proceed in parallel with other priorities. User Storage Helper complete and ready for Carry Agent review. **Priority 4 (SLC Product Integration Testing) NOW READY** — batch operations added for efficient testing. Design gaps addressed (rate limiting, error types, idempotency, deduplication). Circuit breaker pattern documentation complete for client agents. Waiting on coordination with Carry Agent for User Storage Helper integration (Priority 5) and SLC product integration coordination (Priority 4).
+**Status**: Ready for coordination and production use. No blockers. Priority 5 (Other Agent Coordination) — can proceed in parallel with other priorities. User Storage Helper complete and ready for Carry Agent review. **Priority 4 (SLC Product Integration Testing) NOW READY** — batch operations added for efficient testing. Design gaps addressed (rate limiting, error types, idempotency, deduplication). Circuit breaker pattern documentation complete for client agents. **Core Agent coordination decisions acknowledged** (2025-12-28-125036-pst): timeout handling, error handling, service-to-service authentication, async patterns. Waiting on Core Agent implementation of coordination decisions. Waiting on coordination with Carry Agent for User Storage Helper integration (Priority 5) and SLC product integration coordination (Priority 4).

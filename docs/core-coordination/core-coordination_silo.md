@@ -1,8 +1,8 @@
 # Grain Silo Agent: Coordination Status
 
-**Last Updated**: 2025-12-28-130000-pst  
+**Last Updated**: 2025-12-28-230000-pst  
 **Agent**: Grain Silo Agent (Database)  
-**Status**: **PRODUCTION READY** ✅ — **DESIGN GAPS ADDRESSED** ✅ — **CIRCUIT BREAKER DOCUMENTED** ✅ — **COORDINATION DECISIONS ACKNOWLEDGED** ✅
+**Status**: **PRODUCTION READY** ✅ — **DESIGN GAPS ADDRESSED** ✅ — **CIRCUIT BREAKER DOCUMENTED** ✅ — **COORDINATION DECISIONS ACKNOWLEDGED** ✅ — **READY FOR PAYMENT/VAULT INTEGRATION** ✅
 
 ---
 
@@ -80,6 +80,72 @@ All core phases complete and ready for production use:
 
 ## Recent Progress
 
+### Payment/Passwords/Bank Design Acknowledged (2025-12-28-230000-pst) ✅
+
+**Status**: ✅ **DESIGN COMPLETE** — Ready for storage schema coordination
+
+**New Modules Designed** (from Core Agent 2025-12-28-213448-pst):
+1. **Grain Passwords** (`grain_passwords`): Secure encryption and secret management
+   - Encrypted secret storage (passwords, API keys, tokens, credentials)
+   - Key management, access control, audit logging
+   - **Storage Needs**: Encrypted records in Silo Agent database
+   - **Integration**: Security Manager, Silo, Pay, Court
+
+2. **Grain Pay** (`grain_pay`): Payment processing and transaction handling
+   - Payment processing, payment methods, webhooks
+   - Transaction history, fraud detection
+   - **Storage Needs**: Transaction records, payment method data, webhook logs
+   - **Integration**: Passwords, Silo, Workspace, Grainbank
+
+3. **Grainbank** (`grainbank`): Modern monetary system with currency issuance
+   - Currency issuance, account balances, transfers
+   - Currency conversion, Workspace wallet interface
+   - **Storage Needs**: Account balances, transaction history, currency metadata
+   - **Integration**: Silo, Workspace, Pay, Court, Skate
+
+**Next Steps for Silo Agent**:
+1. **IMMEDIATE**: Coordinate with Core Agent on storage schema design
+   - Review encryption requirements for Grain Passwords
+   - Design transaction storage schema for Grain Pay
+   - Design account/balance storage schema for Grainbank
+2. **SHORT-TERM**: Design storage helpers (similar to SLC integration helpers)
+   - `PasswordStorage` helper for encrypted secret management
+   - `PaymentStorage` helper for transaction history
+   - `BankStorage` helper for account balances and currency data
+3. **MEDIUM-TERM**: Implement storage helpers once Core Agent begins Phase 1
+
+**Key Resources**:
+- Design Document: `docs/zyx/grain_payment_vault_design_2025-12-28-213448-pst.md`
+- Implementation Timeline: 25-35 weeks total (5 phases)
+- Phase 1: Grain Passwords Foundation (first to implement)
+
+### ZON Format Integration Progress Acknowledged (2025-12-28-230000-pst) ✅
+
+**Status**: ⏳ **~95% COMPLETE** — Research Agent Phase 4 complete ✅, Flow Agent integration complete ✅
+
+**Agent Status**:
+- ✅ **Research Agent**: Phase 4 Implementation COMPLETE (2025-12-28-213411-pst)
+  - Phase 4 Integration Validator complete
+  - Phase 4 Validation Runner complete
+  - Comprehensive tests complete
+  - Standalone validation tool created
+  - Integration with Court Agent ZON module complete
+- ✅ **Flow Agent**: ZON Integration COMPLETE (Dashboard API integration complete)
+  - ZON export functions implemented
+  - Dashboard API format query parameter support (`?format=zon`)
+  - Comprehensive tests complete
+  - Integration with Court Agent bounded allocation API complete
+- ⏳ **Court Agent**: ZON Module Phase 2 ~90% complete (~0.5 day remaining)
+
+**Impact on Silo Agent**:
+- ZON format provides 35-70% token reduction for LLM communication
+- No immediate database changes needed (ZON is encoding format, not storage format)
+- Future integration opportunities: ZON-encoded query results for LLM processing
+
+**Next Steps**:
+- Monitor ZON format adoption across agents
+- Consider ZON-encoded query result export for LLM integration (future enhancement)
+
 ### Circuit Breaker Pattern Documentation Complete (2025-12-23-220000-pst) ✅
 
 **Status**: ✅ **COMPLETE** — Comprehensive circuit breaker pattern guide created
@@ -148,11 +214,38 @@ All core phases complete and ready for production use:
 - Userspace patterns (no kernel changes needed) simplify implementation
 - Comprehensive error handling and timeout support improve reliability
 
+**Implementation Status** (2025-12-28-223816-pst):
+- ⏳ **Core Agent**: Implementation in progress (timeout, error handling, authentication, async patterns)
+  - HTTP client timeout implementation in progress
+  - Error types implementation in progress
+  - Service account token implementation in progress
+  - Async pattern integration in progress
+- ✅ **Vantage Agent**: Syscall timeout mechanism complete (2025-12-28-150000-pst)
+  - Timeout parameter added to network syscalls, file operations, IPC operations
+  - Timeout error type added to `BasinError` enum
+- ✅ **Court Agent**: LLM timeout/error handling complete (2025-12-28-135000-pst)
+  - LLM timeout handling implemented (60s default)
+  - LLM error handling implemented (structured error unions)
+  - Rate limiting handling implemented (429 detection, `Retry-After` parsing)
+- ✅ **Workspace Agent**: Component API complete ✅ (ready for Bubble/Aurora integration)
+  - `DesktopComponentAPI` structure implemented
+  - Component variant support complete
+  - Design pattern application utilities complete
+- ✅ **Research Agent**: Phase 4 implementation complete ✅ (2025-12-28-213411-pst)
+  - Phase 4 Integration Validator complete
+  - Phase 4 Validation Runner complete
+  - Comprehensive tests complete
+- ✅ **Flow Agent**: ZON integration complete ✅
+  - ZON export functions implemented
+  - Dashboard API format query parameter support
+  - Integration with Court Agent bounded allocation API complete
+
 **Next Steps**:
-- Wait for Core Agent to implement coordination decisions
+- Wait for Core Agent to complete coordination decisions implementation
 - Integrate timeout and error handling patterns once Core Agent implements
 - Update API contracts documentation with new patterns
 - Coordinate with Carry Agent on service-to-service authentication integration
+- **NEW**: Coordinate with Core Agent on Payment/Passwords/Bank storage schema design
 
 ### Design Gaps Implementation Complete (2025-12-23-213951-pst) ✅
 
@@ -693,12 +786,15 @@ All core phases complete and ready for production use:
 - ✅ **Core Agent**:
   - Ready for production use confirmation
   - SLC product integration coordination (Priority 4 now ready)
-  - **Coordination decisions acknowledged** (2025-12-28-125036-pst):
-    - ✅ Timeout handling pattern decision made (per-request timeout with 30s default)
-    - ✅ Error handling pattern decision made (structured error unions with retryability)
-    - ✅ Service-to-service authentication decision made (service account tokens via AuthService)
-    - ✅ Async pattern decision made (event-driven using Flow Agent Event Bus)
-  - ⏳ **Waiting on Core Agent implementation** of coordination decisions
+  - **Payment/Passwords/Bank Design** (2025-12-28-213448-pst):
+    - ✅ Design complete — ready for storage schema coordination
+    - ⏳ Coordinate on storage schema design (Grain Passwords, Grain Pay, Grainbank)
+    - ⏳ Design storage helpers (PasswordStorage, PaymentStorage, BankStorage)
+  - **Coordination decisions implementation status** (2025-12-28-223816-pst):
+    - ⏳ Timeout handling pattern — Implementation in progress
+    - ⏳ Error handling pattern — Implementation in progress
+    - ⏳ Service-to-service authentication — Implementation in progress
+    - ⏳ Async pattern — Implementation in progress
   - ⏳ 429 status code support (add `too_many_requests` to HttpStatus enum)
 
 - ✅ **Aurora Agent**: 
@@ -730,6 +826,16 @@ All core phases complete and ready for production use:
 
 - ✅ **Court Agent**: 
   - Welcome and future integration opportunities (no immediate coordination needed)
+  - ✅ LLM timeout/error handling complete (2025-12-28-135000-pst)
+  - ⏳ ZON Module Phase 2 ~90% complete (~0.5 day remaining)
+
+- ✅ **Research Agent**:
+  - ✅ Phase 4 implementation complete (2025-12-28-213411-pst)
+  - ⏳ Ready for validation tests (when build issues resolved)
+
+- ✅ **Flow Agent**:
+  - ✅ ZON integration complete (Dashboard API integration)
+  - ⏳ Ready for coordination with Court Agent on integration testing
 
 ### No Blockers
 - All dependencies satisfied

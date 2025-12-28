@@ -109,6 +109,51 @@ All core phases complete and ready for production use:
 
 **Status**: ✅ **COMPLETE** — Client agents can now implement circuit breaker pattern using health check endpoint
 
+### Core Agent Coordination Decisions Acknowledged (2025-12-28-130000-pst) ✅
+
+**Status**: ✅ **ACKNOWLEDGED** — Coordination decisions made, waiting on Core Agent implementation
+
+**Coordination Decisions** (from Core Agent summary 2025-12-28-125036-pst):
+
+1. **Timeout Handling Pattern** ✅
+   - **Decision**: Per-request timeout with global defaults
+   - **Defaults**: 30s for API calls, 60s for content fetching, 10s for WebSocket connections, 5s for WebSocket messages, 30s for file I/O
+   - **Implementation**: Core Agent will add `timeout_ms: ?u32` field to `HttpClientRequest` struct
+   - **Impact**: Enables proper timeout handling for database API requests
+   - **Status**: ⏳ Waiting on Core Agent implementation
+
+2. **Error Handling Pattern** ✅
+   - **Decision**: Structured error unions with retryability classification
+   - **Error Types**: `HttpClientError`, `WebSocketError`, `FileIoError` enums
+   - **Retryability**: Retryable errors (network_error, timeout, rate_limit, server_error) vs non-retryable (dns_error, connection_refused, not_found, permission_denied, invalid_response)
+   - **Alignment**: Aligns with Silo Agent's error types documentation pattern
+   - **Status**: ⏳ Waiting on Core Agent implementation
+
+3. **Service-to-Service Authentication** ✅
+   - **Decision**: Service account tokens via AuthService (userspace pattern)
+   - **Token Format**: JWT tokens with `token_type: service_account` in claims
+   - **Implementation**: Core Agent will add `ServiceAccount` struct and token generation/validation functions
+   - **Impact**: Enables Carry Agent and other agents to authenticate with Silo Agent for write operations
+   - **Status**: ⏳ Waiting on Core Agent implementation
+
+4. **Async Pattern** ✅
+   - **Decision**: Event-driven using Flow Agent Event Bus (userspace pattern)
+   - **Event Types**: `http_request_completed`, `http_request_failed`, `websocket_connected`, `websocket_message_received`, `file_io_completed`, `file_io_failed`
+   - **Impact**: Enables async HTTP response handling for client agents
+   - **Status**: ⏳ Waiting on Core Agent and Flow Agent implementation
+
+**Benefits**:
+- Clear coordination decisions unblock multiple agents
+- Patterns align with Silo Agent's existing error types documentation
+- Userspace patterns (no kernel changes needed) simplify implementation
+- Comprehensive error handling and timeout support improve reliability
+
+**Next Steps**:
+- Wait for Core Agent to implement coordination decisions
+- Integrate timeout and error handling patterns once Core Agent implements
+- Update API contracts documentation with new patterns
+- Coordinate with Carry Agent on service-to-service authentication integration
+
 ### Design Gaps Implementation Complete (2025-12-23-213951-pst) ✅
 
 **Status**: ✅ **COMPLETE** — All independent critical and high-priority gaps implemented

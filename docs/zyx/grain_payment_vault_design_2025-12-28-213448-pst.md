@@ -11,17 +11,17 @@
 This document outlines three new Grain OS modules that enable secure payment processing, encrypted secret storage, and a modern monetary system integrated with the Workspace app interface. These modules work together to provide a complete financial infrastructure for Grain OS applications.
 
 **Modules**:
-- **Grain Vault** (`grain_vault`): Secure encryption and secret management
-- **Grain Tender** (`grain_tender`): Payment processing and transaction handling
+- **Grain Passwords** (`grain_passwords`): Secure encryption and secret management (passwords, API keys, tokens, credentials)
+- **Grain Pay** (`grain_pay`): Payment processing and transaction handling
 - **Grainbank** (`grainbank`): Modern monetary system with currency issuance
 
 ---
 
-## Module 1: Grain Vault (`grain_vault`)
+## Module 1: Grain Passwords (`grain_passwords`)
 
-**Purpose**: Secure encryption, secret storage, and key management for sensitive data.
+**Purpose**: Secure encryption, secret storage, and key management for sensitive data including passwords, API keys, tokens, and credentials.
 
-**Location**: `src/grain_vault/`
+**Location**: `src/grain_passwords/`
 
 **Core Responsibilities**:
 - Encrypt and decrypt sensitive data using authenticated encryption
@@ -40,7 +40,7 @@ This document outlines three new Grain OS modules that enable secure payment pro
 **Integration Points**:
 - **Grain Core Security Manager**: Permission checks for secret access
 - **Grain Silo**: Persistent storage for encrypted secrets
-- **Grain Tender**: Secure storage of payment credentials and API keys
+- **Grain Pay**: Secure storage of payment credentials and API keys
 - **Grain Court**: Secure storage of LLM API keys and tokens
 
 **Use Cases**:
@@ -51,7 +51,7 @@ This document outlines three new Grain OS modules that enable secure payment pro
 
 **Module Structure**:
 ```
-src/grain_vault/
+src/grain_passwords/
 ├── root.zig              # Public API and module exports
 ├── secret_store.zig      # Secret storage and retrieval
 ├── encryption.zig        # Encryption/decryption operations
@@ -61,11 +61,11 @@ src/grain_vault/
 
 ---
 
-## Module 2: Grain Tender (`grain_tender`)
+## Module 2: Grain Pay (`grain_pay`)
 
 **Purpose**: Payment processing, transaction handling, and payment method management.
 
-**Location**: `src/grain_tender/`
+**Location**: `src/grain_pay/`
 
 **Core Responsibilities**:
 - Process payment transactions (charges, refunds, transfers)
@@ -83,7 +83,7 @@ src/grain_vault/
 - **Fraud Prevention**: Basic fraud detection and risk assessment
 
 **Integration Points**:
-- **Grain Vault**: Secure storage of payment credentials and API keys
+- **Grain Passwords**: Secure storage of payment credentials and API keys
 - **Grain Silo**: Transaction history and payment method storage
 - **Grain Workspace**: User interface for payment management
 - **Grainbank**: Currency conversion and settlement
@@ -96,7 +96,7 @@ src/grain_vault/
 
 **Module Structure**:
 ```
-src/grain_tender/
+src/grain_pay/
 ├── root.zig              # Public API and module exports
 ├── payment_processor.zig # Payment processing operations
 ├── payment_method.zig    # Payment method management
@@ -131,7 +131,7 @@ src/grain_tender/
 **Integration Points**:
 - **Grain Silo**: Account balances and transaction history storage
 - **Grain Workspace**: Wallet interface for viewing balances and making transfers
-- **Grain Tender**: Convert between user currencies and external payment methods
+- **Grain Pay**: Convert between user currencies and external payment methods
 - **Grain Court**: AI-powered currency recommendations and market analysis
 - **Grain Skate**: Knowledge graph integration for currency relationships
 
@@ -170,18 +170,18 @@ The Workspace app provides a unified interface for all three modules:
 **Security Features**:
 - Biometric authentication for sensitive operations
 - Transaction confirmation dialogs
-- Secure credential storage via Grain Vault
+- Secure credential storage via Grain Passwords
 - Permission-based access control
 
 ### Silo Integration
 
 All three modules use Grain Silo for persistent storage:
 
-**Grain Vault**:
+**Grain Passwords**:
 - Encrypted secrets table (encrypted_data, metadata, version)
 - Key derivation parameters (key_id, derivation_params)
 
-**Grain Tender**:
+**Grain Pay**:
 - Payment methods table (method_id, encrypted_credentials, type)
 - Transactions table (transaction_id, amount, status, metadata)
 
@@ -194,14 +194,14 @@ All three modules use Grain Silo for persistent storage:
 
 **Encryption Flow**:
 1. User provides sensitive data (payment credentials, secrets)
-2. Grain Vault encrypts data using authenticated encryption
+2. Grain Passwords encrypts data using authenticated encryption
 3. Encrypted data stored in Grain Silo
 4. Encryption keys derived from master secret (never stored)
 5. Access controlled via Grain Core Security Manager
 
 **Payment Processing Flow**:
 1. User initiates payment via Workspace app
-2. Grain Tender retrieves encrypted payment method from Grain Vault
+2. Grain Pay retrieves encrypted payment method from Grain Passwords
 3. Payment processed through external processor API
 4. Transaction recorded in Grain Silo
 5. Webhook received and processed for status updates
@@ -217,19 +217,19 @@ All three modules use Grain Silo for persistent storage:
 
 ## Implementation Phases
 
-### Phase 1: Grain Vault Foundation (4-6 weeks)
+### Phase 1: Grain Passwords Foundation (4-6 weeks)
 - Core encryption/decryption operations
 - Secret storage and retrieval
 - Key derivation and management
 - Integration with Grain Core Security Manager
 - Basic audit logging
 
-### Phase 2: Grain Tender Foundation (5-7 weeks)
+### Phase 2: Grain Pay Foundation (5-7 weeks)
 - Payment processing operations
 - Payment method management
 - Transaction handling
 - Webhook processing
-- Integration with Grain Vault for credential storage
+- Integration with Grain Passwords for credential storage
 
 ### Phase 3: Grainbank Foundation (6-8 weeks)
 - Currency issuance and management
@@ -300,13 +300,13 @@ All modules follow Grain Style guidelines:
 
 ## Future Enhancements
 
-**Grain Vault**:
+**Grain Passwords**:
 - Hardware security module (HSM) integration
 - Multi-factor authentication for secret access
 - Secret sharing and delegation
 - Advanced key rotation strategies
 
-**Grain Tender**:
+**Grain Pay**:
 - Support for additional payment processors
 - Recurring payment subscriptions
 - Payment splitting and escrow
@@ -328,7 +328,7 @@ The Workspace app integration provides a unified, user-friendly interface for al
 
 **Next Steps**:
 1. Review and approve module designs
-2. Begin Phase 1 implementation (Grain Vault Foundation)
+2. Begin Phase 1 implementation (Grain Passwords Foundation)
 3. Coordinate with Silo Agent for storage schema design
 4. Coordinate with Workspace Agent for UI component design
 5. Establish security review process for encryption implementation

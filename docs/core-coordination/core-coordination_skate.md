@@ -1,28 +1,29 @@
 # Grain Skate Agent: Coordination Status
 
-**Last Updated**: 2025-12-24-035106-pst  
+**Last Updated**: 2025-12-28-125036-pst  
 **Agent**: Grain Skate Agent  
-**Status**: ⚠️ **CRITICAL COORDINATION NEEDED** - Production-blocking issues identified, feature work ready
+**Status**: ✅ **COORDINATION DECISIONS MADE** - Court Agent implementing timeout/error handling, feature work ready
 
 ---
 
 ## Executive Summary
 
 **Current Status**: All core functionality complete ✅, Court Agent migration COMPLETE ✅, Enhanced queries COMPLETE ✅, Block version history COMPLETE ✅  
-**Coordination Status**: ⚠️ **CRITICAL BLOCKING ISSUES** - 2 Critical gaps blocking production use  
-**Design Gaps**: 10 gaps identified (2 Critical, 3 High Priority, 3 Medium, 2 Low)  
-**Priority**: **CRITICAL** - Timeout and error handling coordination required before production use
+**Coordination Status**: ✅ **COORDINATION DECISIONS MADE** - Court Agent timeout/error handling decisions made, Court Agent implementing  
+**Design Gaps**: 10 gaps identified (2 Critical → RESOLVED ✅, 3 High Priority, 3 Medium, 2 Low)  
+**Priority**: **HIGH** - DAG error handling coordination needed, Court Agent implementation in progress
 
 **Latest Milestones**:
 - Court Agent Phase 1 COMPLETE ✅ - Migration to Court's LLM provider abstraction COMPLETE ✅ (2025-12-21-192912-pst)
 - Enhanced SLC DAG Query Operations COMPLETE ✅ (2025-12-21-200000-pst)
 - Block Version History Utilities COMPLETE ✅ (2025-12-21-200000-pst)
 - Design Gaps Analysis COMPLETE ✅ (2025-12-24-035106-pst)
+- Coordination Decisions Made ✅ - Court Agent timeout/error handling decisions made (2025-12-28-125036-pst)
 
-**Critical Findings**:
-- ⚠️ **CRITICAL**: AI Insights timeout handling missing - Operations could hang indefinitely
-- ⚠️ **CRITICAL**: AI Insights error handling limited - Operations fail without clear error messages
-- ⚠️ **HIGH PRIORITY**: DAG operation error handling limited - Operations fail silently, risking data loss
+**Coordination Status Updates**:
+- ✅ **RESOLVED**: AI Insights timeout handling - Court Agent implementing per-operation timeout with 60s default
+- ✅ **RESOLVED**: AI Insights error handling - Court Agent implementing structured error unions with retryability classification
+- ⚠️ **HIGH PRIORITY**: DAG operation error handling limited - Operations fail silently, risking data loss (coordination still needed)
 
 **Full Design Gaps Document**: `docs/grain_skate/integration_design_gaps.md`
 
@@ -81,17 +82,17 @@ After reviewing Carry Agent, Bubble Agent, Research Agent, Court Agent, and Flow
 
 ### Critical Gaps (Must Fix - Blocking Production)
 
-1. **AI Insights Timeout Handling** ⚠️ **CRITICAL**
+1. **AI Insights Timeout Handling** ✅ **RESOLVED**
    - **Issue**: No timeout handling for LLM requests via Court Agent
    - **Impact**: Operations could hang indefinitely, causing UI freeze and resource exhaustion
-   - **Status**: ⏳ **COORDINATION NEEDED** with Court Agent
-   - **Questions**: Does Court Agent provider pool have built-in timeout support? Per-operation or global configuration?
+   - **Status**: ✅ **COORDINATION DECISION MADE** (2025-12-28-125036-pst) - Court Agent implementing per-operation timeout with 60s default
+   - **Decision**: Per-operation timeout with 60s default for LLM operations, Court Agent implementing
 
-2. **AI Insights Error Handling** ⚠️ **CRITICAL**
+2. **AI Insights Error Handling** ✅ **RESOLVED**
    - **Issue**: Limited error handling for LLM requests via Court Agent
    - **Impact**: Operations fail without clear error messages, making debugging difficult
-   - **Status**: ⏳ **COORDINATION NEEDED** with Court Agent
-   - **Questions**: What error types does Court Agent provider pool return? How to handle rate limiting (429 responses)?
+   - **Status**: ✅ **COORDINATION DECISION MADE** (2025-12-28-125036-pst) - Court Agent implementing structured error unions with retryability classification
+   - **Decision**: Structured error unions (`LlmProviderError` enum) with retryability classification, rate limiting handling with `Retry-After` header support, Court Agent implementing
 
 ### High Priority Gaps (Should Fix)
 
@@ -101,15 +102,15 @@ After reviewing Carry Agent, Bubble Agent, Research Agent, Court Agent, and Flow
    - **Status**: ⏳ **COORDINATION NEEDED** with DAG Core/Aurora Agent
    - **Note**: Similar issue identified by Bubble Agent
 
-4. **Retry Logic for Transient AI Failures** ⚠️ **HIGH PRIORITY**
+4. **Retry Logic for Transient AI Failures** ⏳ **HIGH PRIORITY**
    - **Issue**: No retry logic for transient failures
    - **Impact**: Transient network issues cause permanent failures
-   - **Status**: ⏳ **IMPLEMENTATION NEEDED** (after error types coordinated)
+   - **Status**: ⏳ **IMPLEMENTATION NEEDED** (after Court Agent error types implementation complete)
 
-5. **Rate Limiting Handling for AI Insights** ⚠️ **HIGH PRIORITY**
+5. **Rate Limiting Handling for AI Insights** ✅ **RESOLVED** (via Court Agent)
    - **Issue**: No handling for 429 Too Many Requests responses
    - **Impact**: Requests fail without retry when rate limited
-   - **Status**: ⏳ **IMPLEMENTATION NEEDED** (after error types coordinated)
+   - **Status**: ✅ **COORDINATION DECISION MADE** - Court Agent implementing rate limiting handling with `Retry-After` header support
 
 ### Medium Priority Gaps (Nice to Have)
 
@@ -128,56 +129,54 @@ After reviewing Carry Agent, Bubble Agent, Research Agent, Court Agent, and Flow
 
 ## 🔄 Coordination Needs
 
-### Priority 1: Critical Coordination (Blocking Production Use)
+### Priority 1: Court Agent Implementation (Coordination Resolved ✅, Waiting on Implementation)
 
-#### 1. Grain Court Agent: Timeout & Error Handling Coordination ⚠️ **CRITICAL**
+#### 1. Grain Court Agent: Timeout & Error Handling Coordination ✅ **RESOLVED**
 
-**Status**: ⚠️ **CRITICAL COORDINATION NEEDED** - Blocking production use
+**Status**: ✅ **COORDINATION DECISIONS MADE** (2025-12-28-125036-pst) - Court Agent implementing
 
-**Critical Issues Identified**:
+**Coordination Decisions Made** (by Core Agent):
 
-1. **Timeout Handling** (CRITICAL):
-   - **Problem**: No timeout handling for LLM requests via Court Agent
-   - **Impact**: Operations (`suggest_connections`, `detect_knowledge_gaps`, `suggest_title`, `summarize_subgraph`) could hang indefinitely
-   - **Current State**: `send_llm_request()` calls `pool.send_request_with_fallback()` with no timeout mechanism
-   - **Questions for Court Agent**:
-     - Does Court Agent's provider pool have built-in timeout support?
-     - Should timeout be per-operation or global configuration?
-     - How should we handle long-running LLM inference operations?
-     - What timeout values are appropriate for different operations (suggestions vs. summaries)?
+1. **Timeout Handling** ✅ **DECISION MADE**:
+   - **Decision**: Per-operation timeout with 60s default for LLM operations
+   - **Implementation**: Court Agent adding `timeout_ms: ?u32` parameter to LLM provider request functions (default: 60000)
+   - **Status**: ⏳ Court Agent implementing (Priority 3, HIGH)
+   - **Timeline**: Court Agent implementation in progress (1-2 days estimated)
 
-2. **Error Handling** (CRITICAL):
-   - **Problem**: Limited error handling for LLM requests via Court Agent
-   - **Impact**: Operations fail silently or return empty results without error information
-   - **Current State**: `send_llm_request()` propagates errors but no distinction between error types
-   - **Questions for Court Agent**:
-     - What error types does Court Agent's provider pool return?
-     - What error information is available in `LlmProviderError` enum?
-     - How should we handle SRAM allocation failures (if applicable)?
-     - How should we handle operation failures (network errors, provider errors)?
-     - How should we handle rate limiting (429 responses)?
+2. **Error Handling** ✅ **DECISION MADE**:
+   - **Decision**: Structured error unions (`LlmProviderError` enum) with retryability classification
+   - **Implementation**: Court Agent extending `LlmProviderError` enum with structured error types (`timeout`, `network_error`, `rate_limit`, `invalid_response`, `provider_error`), adding `is_llm_error_retryable()` function
+   - **Status**: ⏳ Court Agent implementing (Priority 3, HIGH)
+   - **Timeline**: Court Agent implementation in progress (1-2 days estimated)
+
+3. **Rate Limiting Handling** ✅ **DECISION MADE**:
+   - **Decision**: Detect 429 responses, parse `Retry-After` header, return `rate_limit` error with retry-after timestamp
+   - **Implementation**: Court Agent implementing rate limiting detection and `Retry-After` header parsing
+   - **Status**: ⏳ Court Agent implementing (Priority 3, HIGH)
+   - **Timeline**: Court Agent implementation in progress (1 day estimated)
 
 **Current Integration Status**:
 - ✅ Court Agent Phase 1 complete (provider abstraction interface)
 - ✅ Migration complete (2025-12-21-192912-pst)
 - ✅ AI insights module fully integrated with Court's multi-provider abstraction
 - ⏳ Court Agent Phase 2 ~90% complete (ZON format integration)
-- ⚠️ **CRITICAL**: Timeout and error handling coordination needed before production use
+- ✅ **COORDINATION DECISIONS MADE** - Court Agent timeout/error handling decisions made (2025-12-28-125036-pst)
+- ⏳ **COURT AGENT IMPLEMENTING** - Timeout and error handling implementation in progress
 
 **What Skate Agent Provides**:
 - Complete AI insights module with Court Agent integration
 - Clear API contracts for AI operations
-- Ready to implement timeout and error handling once coordinated
+- Ready to use timeout and error handling once Court Agent implementation complete
 
-**Coordination Message**: "Skate Agent Court Agent Phase 1 migration complete. AI insights module fully integrated with Court's multi-provider abstraction. Identified critical gaps in timeout and error handling that must be resolved before production use. Operations could hang indefinitely or fail without clear error messages. Ready to coordinate on timeout configuration and error type definitions. See `docs/grain_skate/integration_design_gaps.md` for full details. Can provide integration examples and API usage patterns."
+**Coordination Message**: "Skate Agent Court Agent Phase 1 migration complete. AI insights module fully integrated with Court's multi-provider abstraction. Coordination decisions made for timeout and error handling (2025-12-28-125036-pst). Waiting on Court Agent implementation completion. Ready to integrate timeout/error handling once Court Agent implementation is complete."
 
-**Timeline**: **CRITICAL** - Coordination needed immediately for production readiness.
+**Timeline**: ⏳ **WAITING ON COURT AGENT IMPLEMENTATION** - Court Agent implementing (Priority 3, HIGH, estimated 3-4 days)
 
-**Implementation Plan** (After Coordination):
-- Implement timeout handling based on Court Agent's timeout mechanism
-- Implement comprehensive error handling with proper error type distinctions
-- Add retry logic for transient failures (HIGH PRIORITY gap #4)
-- Add rate limiting handling with exponential backoff (HIGH PRIORITY gap #5)
+**Implementation Plan** (After Court Agent Implementation):
+- Integrate timeout handling using Court Agent's timeout mechanism
+- Integrate error handling using Court Agent's structured error types
+- Add retry logic for transient failures (HIGH PRIORITY gap #4) using error retryability classification
+- Test timeout and error handling integration
 
 ---
 
@@ -440,8 +439,9 @@ pub fn get_orphaned_pages(output: []u32) u32
 - ✅ Migration plan documented
 - ✅ Court Agent Phase 1 complete (provider abstraction interface)
 - ✅ Migration complete (2025-12-21-192912-pst)
-- ⚠️ **CRITICAL**: Timeout handling coordination needed (blocking production)
-- ⚠️ **CRITICAL**: Error handling coordination needed (blocking production)
+- ✅ **COORDINATION RESOLVED**: Timeout handling coordination decisions made (2025-12-28-125036-pst)
+- ✅ **COORDINATION RESOLVED**: Error handling coordination decisions made (2025-12-28-125036-pst)
+- ⏳ **WAITING ON IMPLEMENTATION**: Court Agent implementing timeout/error handling (Priority 3, HIGH, estimated 3-4 days)
 - ⏳ ZON format integration (Court Agent Phase 2) - Waiting for Court Agent (~90% complete)
 
 ### DAG Core Integration
@@ -515,34 +515,42 @@ pub fn get_orphaned_pages(output: []u32) u32
 
 ## Next Actions
 
-### Priority 1: Critical Coordination (Blocking Production Use)
+### Priority 1: Court Agent Implementation (Waiting on Implementation)
 
-**IMMEDIATE ACTION REQUIRED**:
+**Status**: ✅ **COORDINATION DECISIONS MADE** (2025-12-28-125036-pst) - Court Agent implementing
 
-1. **Court Agent**: Coordinate on timeout handling for LLM requests (CRITICAL)
-   - Does Court Agent provider pool have built-in timeout support?
-   - Per-operation or global configuration?
-   - Timeout values for different operations?
-   - **Impact**: Operations could hang indefinitely without timeout
+**Waiting On**:
+1. **Court Agent**: Timeout handling implementation (⏳ IN PROGRESS)
+   - ✅ Decision made: Per-operation timeout with 60s default for LLM operations
+   - ⏳ Court Agent implementing `timeout_ms: ?u32` parameter to LLM provider request functions
+   - **Timeline**: Court Agent Priority 3, HIGH (1-2 days estimated)
 
-2. **Court Agent**: Coordinate on error handling and error types (CRITICAL)
-   - What error types does Court Agent provider pool return?
-   - What error information is available in `LlmProviderError` enum?
-   - How to handle rate limiting (429 responses)?
-   - **Impact**: Operations fail without clear error messages
+2. **Court Agent**: Error handling implementation (⏳ IN PROGRESS)
+   - ✅ Decision made: Structured error unions (`LlmProviderError` enum) with retryability classification
+   - ⏳ Court Agent extending `LlmProviderError` enum, adding `is_llm_error_retryable()` function
+   - **Timeline**: Court Agent Priority 3, HIGH (1-2 days estimated)
 
-3. **DAG Core**: Coordinate on error handling for DAG operations (HIGH PRIORITY)
-   - What error types does DAG Core return?
-   - How to handle node/event limit exceeded?
-   - How to handle invalid event data?
-   - **Impact**: Operations fail silently, risking data loss
+3. **Court Agent**: Rate limiting handling implementation (⏳ IN PROGRESS)
+   - ✅ Decision made: Detect 429 responses, parse `Retry-After` header, return `rate_limit` error
+   - ⏳ Court Agent implementing rate limiting detection and `Retry-After` header parsing
+   - **Timeline**: Court Agent Priority 3, HIGH (1 day estimated)
 
-**After Coordination**:
-- Implement timeout handling for AI insights operations
-- Implement comprehensive error handling for AI insights operations
-- Implement comprehensive error handling for DAG operations
-- Implement retry logic for transient AI failures (HIGH PRIORITY)
-- Implement rate limiting handling for AI insights (HIGH PRIORITY)
+**After Court Agent Implementation**:
+- Integrate timeout handling using Court Agent's timeout mechanism
+- Integrate error handling using Court Agent's structured error types
+- Add retry logic for transient AI failures (HIGH PRIORITY gap #4) using error retryability classification
+- Test timeout and error handling integration
+
+---
+
+### Priority 2: High Priority Coordination
+
+**DAG Core**: Coordinate on error handling for DAG operations (HIGH PRIORITY)
+- What error types does DAG Core return?
+- How to handle node/event limit exceeded?
+- How to handle invalid event data?
+- **Impact**: Operations fail silently, risking data loss
+- **Status**: ⏳ **COORDINATION NEEDED** with DAG Core/Aurora Agent
 
 ### Priority 2: Feature Coordination (Ready to Begin)
 
@@ -555,18 +563,19 @@ pub fn get_orphaned_pages(output: []u32) u32
 
 ## Status Summary
 
-**Overall Status**: ⚠️ **CRITICAL COORDINATION NEEDED**
+**Overall Status**: ✅ **COORDINATION DECISIONS MADE** - Court Agent implementing, feature work ready
 
-- ✅ **Completed**: All core functionality, Court Agent Phase 1 migration, enhanced queries, block version history
-- ⚠️ **Blocking**: Timeout and error handling coordination with Court Agent (CRITICAL)
-- ⚠️ **High Priority**: Error handling coordination with DAG Core
-- ⏳ **Ready**: Feature coordination with Bubble, Aurora, and Core agents
+- ✅ **Completed**: All core functionality, Court Agent Phase 1 migration, enhanced queries, block version history, design gaps analysis
+- ✅ **Coordination Resolved**: Court Agent timeout/error handling coordination decisions made (2025-12-28-125036-pst)
+- ⏳ **Waiting On**: Court Agent implementation of timeout/error handling (Priority 3, HIGH, estimated 3-4 days)
+- ⚠️ **High Priority**: Error handling coordination with DAG Core (still needed)
+- ⏳ **Ready**: Feature coordination with Bubble, Aurora, and Core agents (can proceed in parallel)
 
-**Action**: **Initiating coordination with Court Agent and DAG Core on critical gaps**. Ready to coordinate with Bubble, Aurora, and Core agents on feature integrations.
+**Action**: **Waiting on Court Agent implementation**. Ready to integrate timeout/error handling once Court Agent implementation is complete. Can proceed with feature coordination in parallel. Continue coordinating with DAG Core on error handling.
 
 **Design Gaps Document**: `docs/grain_skate/integration_design_gaps.md` - Full analysis and implementation plans
 
 ---
 
-**Last Updated**: 2025-12-24-035106-pst  
+**Last Updated**: 2025-12-28-125036-pst  
 **Agent**: Grain Skate Agent

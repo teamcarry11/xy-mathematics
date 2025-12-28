@@ -9,6 +9,7 @@
 //! 2025-12-21-234422-pst: Phase 29 Go to Line
 //! 2025-12-23-194527-pst: Phase 30 Text Selection
 //! 2025-12-23-210000-pst: Phase 31 Syntax Highlighting
+//! 2025-12-28-223816-pst: Phase 33 Bracket Matching
 
 const std = @import("std");
 const grain_core = @import("grain_core");
@@ -36,6 +37,10 @@ pub const MAX_CLIPBOARD_SIZE: u32 = 1_048_576; // 1 MB
 // Bounded: Max syntax tokens per line (explicit limit)
 // 2025-12-23-210000-pst: Phase 31 Syntax Highlighting (Zig only)
 pub const MAX_SYNTAX_TOKENS_PER_LINE: u32 = 256;
+
+// Bounded: Max bracket pairs for matching (explicit limit)
+// 2025-12-28-223816-pst: Phase 33 Bracket Matching
+pub const MAX_BRACKET_PAIRS: u32 = 64;
 
 // Bounded: Max line length (explicit limit, in bytes)
 // 2025-12-20-161231-pst: Phase 17 SLC v1.0
@@ -213,6 +218,40 @@ pub const SyntaxToken = struct {
     }
 };
 
+// Bracket pair structure for matching.
+// 2025-12-28-223816-pst: Phase 33 Bracket Matching
+pub const BracketPair = struct {
+    open: u8, // Opening bracket character
+    close: u8, // Closing bracket character
+
+    pub fn init(open_char: u8, close_char: u8) BracketPair {
+        std.debug.assert(open_char != 0);
+        std.debug.assert(close_char != 0);
+        return BracketPair{
+            .open = open_char,
+            .close = close_char,
+        };
+    }
+};
+
+// Bracket match result structure.
+// 2025-12-28-223816-pst: Phase 33 Bracket Matching
+pub const BracketMatch = struct {
+    found: bool, // Whether a match was found
+    line: u32, // Line number of matching bracket (0-indexed)
+    column: u32, // Column number of matching bracket (0-indexed)
+    is_opening: bool, // True if cursor is on opening bracket, false if closing
+
+    pub fn init() BracketMatch {
+        return BracketMatch{
+            .found = false,
+            .line = 0,
+            .column = 0,
+            .is_opening = false,
+        };
+    }
+};
+
 // Text Editor application state.
 // 2025-12-20-161231-pst: Phase 17 SLC v1.0
 pub const TextEditor = struct {
@@ -237,6 +276,8 @@ pub const TextEditor = struct {
     selection: SelectionRange,
     clipboard: [MAX_CLIPBOARD_SIZE]u8,
     clipboard_len: u32,
+    bracket_matching_enabled: bool, // Enable bracket matching
+    bracket_match: BracketMatch, // Current bracket match result
     allocator: std.mem.Allocator,
 
     /// Initialize text editor.
@@ -267,6 +308,8 @@ pub const TextEditor = struct {
             .selection = SelectionRange.init(),
             .clipboard = undefined,
             .clipboard_len = 0,
+            .bracket_matching_enabled = true,
+            .bracket_match = BracketMatch.init(),
             .allocator = allocator,
         };
 
@@ -1999,5 +2042,140 @@ pub const TextEditor = struct {
         return (is_operator(ch) or ch == '{' or ch == '}' or ch == '(' or
             ch == ')' or ch == '[' or ch == ']' or ch == ',' or ch == ';' or
             ch == ':' or ch == '.' or ch == '?');
+    }
+
+    /// Toggle bracket matching on/off.
+    // 2025-12-28-223816-pst: Phase 33 Bracket Matching
+    pub fn toggle_bracket_matching(self: *TextEditor) void {
+        std.debug.assert(@intFromPtr(self) != 0);
+        self.bracket_matching_enabled = !self.bracket_matching_enabled;
+        if (!self.bracket_matching_enabled) {
+            self.bracket_match = BracketMatch.init();
+        }
+        std.debug.assert(self.bracket_match.found == false or self.bracket_matching_enabled);
+    }
+
+    /// Find matching bracket at cursor position.
+    // 2025-12-28-223816-pst: Phase 33 Bracket Matching
+    pub fn find_matching_bracket(self: *TextEditor) void {
+        std.debug.assert(@intFromPtr(self) != 0);
+        std.debug.assert(self.lines_len > 0);
+        std.debug.assert(self.cursor.line < self.lines_len);
+
+        if (!self.bracket_matching_enabled) {
+            self.bracket_match = BracketMatch.init();
+            return;
+        }
+
+        // Reset match
+        self.bracket_match = BracketMatch.init();
+
+        // Get bracket pairs
+        const pairs = [_]BracketPair{
+            BracketPair.init('{', '}'),
+            BracketPair.init('(', ')'),
+            BracketPair.init('[', ']'),
+        };
+
+        // Get current line and column
+        const current_line = &self.lines[self.cursor.line];
+        const line_content = current_line.content[0..current_line.content_len];
+        const cursor_col = self.cursor.column;
+
+        // Check if cursor is on a bracket
+        if (cursor_col >= line_content.len) {
+            return;
+        }
+
+        const ch = line_content[cursor_col];
+        var bracket_pair: ?BracketPair = null;
+        var is_opening: bool = false;
+
+        // Find which bracket pair this character belongs to
+        for (pairs) |pair| {
+            if (ch == pair.open) {
+                bracket_pair = pair;
+                is_opening = true;
+                break;
+            } else if (ch == pair.close) {
+                bracket_pair = pair;
+                is_opening = false;
+                break;
+            }
+        }
+
+        if (bracket_pair == null) {
+            return;
+        }
+
+        const pair = bracket_pair.?;
+
+        // Find matching bracket
+        if (is_opening) {
+            // Search forward for closing bracket
+            var depth: u32 = 1;
+            var line_idx = self.cursor.line;
+            var col_idx = cursor_col + 1;
+
+            while (line_idx < self.lines_len) {
+                const line = &self.lines[line_idx];
+                const content = line.content[0..line.content_len];
+
+                while (col_idx < content.len) {
+                    const current_ch = content[col_idx];
+                    if (current_ch == pair.open) {
+                        depth += 1;
+                    } else if (current_ch == pair.close) {
+                        depth -= 1;
+                        if (depth == 0) {
+                            self.bracket_match.found = true;
+                            self.bracket_match.line = line_idx;
+                            self.bracket_match.column = col_idx;
+                            self.bracket_match.is_opening = true;
+                            return;
+                        }
+                    }
+                    col_idx += 1;
+                }
+                line_idx += 1;
+                col_idx = 0;
+            }
+        } else {
+            // Search backward for opening bracket
+            var depth: u32 = 1;
+            var line_idx = self.cursor.line;
+            var col_idx = if (cursor_col > 0) cursor_col - 1 else 0;
+
+            while (true) {
+                const line = &self.lines[line_idx];
+                const content = line.content[0..line.content_len];
+
+                while (col_idx < content.len) {
+                    const current_ch = content[col_idx];
+                    if (current_ch == pair.close) {
+                        depth += 1;
+                    } else if (current_ch == pair.open) {
+                        depth -= 1;
+                        if (depth == 0) {
+                            self.bracket_match.found = true;
+                            self.bracket_match.line = line_idx;
+                            self.bracket_match.column = col_idx;
+                            self.bracket_match.is_opening = false;
+                            return;
+                        }
+                    }
+                    if (col_idx == 0) {
+                        break;
+                    }
+                    col_idx -= 1;
+                }
+
+                if (line_idx == 0) {
+                    break;
+                }
+                line_idx -= 1;
+                col_idx = if (self.lines[line_idx].content_len > 0) self.lines[line_idx].content_len - 1 else 0;
+            }
+        }
     }
 };

@@ -9,6 +9,7 @@
 //! 2025-12-21-234422-pst: Phase 29 Go to Line tests
 //! 2025-12-23-194527-pst: Phase 30 Text Selection tests
 //! 2025-12-23-210000-pst: Phase 31 Syntax Highlighting tests
+//! 2025-12-28-223816-pst: Phase 33 Bracket Matching tests
 
 const std = @import("std");
 const testing = std.testing;
@@ -1021,4 +1022,130 @@ test "highlight zig line multiple keywords" {
     }
     try testing.expect(found_pub == true);
     try testing.expect(found_fn == true);
+}
+
+test "toggle bracket matching" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    try testing.expect(editor.bracket_matching_enabled == true);
+    editor.toggle_bracket_matching();
+    try testing.expect(editor.bracket_matching_enabled == false);
+    editor.toggle_bracket_matching();
+    try testing.expect(editor.bracket_matching_enabled == true);
+}
+
+test "find matching bracket - simple curly braces" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.zig");
+    _ = editor.insert_text("fn test() { return; }");
+    editor.cursor.line = 0;
+    editor.cursor.column = 10; // Position on opening '{'
+    editor.find_matching_bracket();
+    try testing.expect(editor.bracket_match.found == true);
+    try testing.expect(editor.bracket_match.line == 0);
+    try testing.expect(editor.bracket_match.column == 20); // Position of closing '}'
+    try testing.expect(editor.bracket_match.is_opening == true);
+}
+
+test "find matching bracket - closing brace" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.zig");
+    _ = editor.insert_text("fn test() { return; }");
+    editor.cursor.line = 0;
+    editor.cursor.column = 20; // Position on closing '}'
+    editor.find_matching_bracket();
+    try testing.expect(editor.bracket_match.found == true);
+    try testing.expect(editor.bracket_match.line == 0);
+    try testing.expect(editor.bracket_match.column == 10); // Position of opening '{'
+    try testing.expect(editor.bracket_match.is_opening == false);
+}
+
+test "find matching bracket - parentheses" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.zig");
+    _ = editor.insert_text("fn test(x: u32) void");
+    editor.cursor.line = 0;
+    editor.cursor.column = 8; // Position on opening '('
+    editor.find_matching_bracket();
+    try testing.expect(editor.bracket_match.found == true);
+    try testing.expect(editor.bracket_match.line == 0);
+    try testing.expect(editor.bracket_match.column == 15); // Position of closing ')'
+    try testing.expect(editor.bracket_match.is_opening == true);
+}
+
+test "find matching bracket - square brackets" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.zig");
+    _ = editor.insert_text("var arr = [1, 2, 3];");
+    editor.cursor.line = 0;
+    editor.cursor.column = 10; // Position on opening '['
+    editor.find_matching_bracket();
+    try testing.expect(editor.bracket_match.found == true);
+    try testing.expect(editor.bracket_match.line == 0);
+    try testing.expect(editor.bracket_match.column == 17); // Position of closing ']'
+    try testing.expect(editor.bracket_match.is_opening == true);
+}
+
+test "find matching bracket - nested brackets" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.zig");
+    _ = editor.insert_text("fn test() { if (true) { return; } }");
+    editor.cursor.line = 0;
+    editor.cursor.column = 10; // Position on first opening '{'
+    editor.find_matching_bracket();
+    try testing.expect(editor.bracket_match.found == true);
+    try testing.expect(editor.bracket_match.line == 0);
+    try testing.expect(editor.bracket_match.column == 37); // Position of last closing '}'
+    try testing.expect(editor.bracket_match.is_opening == true);
+}
+
+test "find matching bracket - no bracket at cursor" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.zig");
+    _ = editor.insert_text("fn test() void");
+    editor.cursor.line = 0;
+    editor.cursor.column = 3; // Position on 't' in "test"
+    editor.find_matching_bracket();
+    try testing.expect(editor.bracket_match.found == false);
+}
+
+test "find matching bracket - disabled" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.zig");
+    _ = editor.insert_text("fn test() { return; }");
+    editor.bracket_matching_enabled = false;
+    editor.cursor.line = 0;
+    editor.cursor.column = 10; // Position on opening '{'
+    editor.find_matching_bracket();
+    try testing.expect(editor.bracket_match.found == false);
+}
+
+test "find matching bracket - multi-line" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.zig");
+    _ = editor.insert_text("fn test() {\n    return;\n}");
+    editor.cursor.line = 0;
+    editor.cursor.column = 10; // Position on opening '{'
+    editor.find_matching_bracket();
+    try testing.expect(editor.bracket_match.found == true);
+    try testing.expect(editor.bracket_match.line == 2);
+    try testing.expect(editor.bracket_match.column == 0); // Position of closing '}'
+    try testing.expect(editor.bracket_match.is_opening == true);
 }

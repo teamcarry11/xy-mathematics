@@ -511,4 +511,134 @@ pub const WorkflowMetricsAnalyzer = struct {
 
         return @intCast(self.performance_metrics.items.len);
     }
+
+    // Failure pattern analysis result.
+    pub const FailurePatternAnalysis = struct {
+        transient_failure_rate_percent: u32,
+        permanent_failure_rate_percent: u32,
+        timeout_failure_rate_percent: u32,
+        unknown_failure_rate_percent: u32,
+        total_failures: u32,
+    };
+
+    // Analyze failure patterns and calculate failure rates by type.
+    pub fn analyze_failure_patterns(
+        self: *const WorkflowMetricsAnalyzer,
+    ) FailurePatternAnalysis {
+        std.debug.assert(self.failure_metrics.items.len <= MAX_METRIC_ENTRIES);
+
+        var result = FailurePatternAnalysis{
+            .transient_failure_rate_percent = 0,
+            .permanent_failure_rate_percent = 0,
+            .timeout_failure_rate_percent = 0,
+            .unknown_failure_rate_percent = 0,
+            .total_failures = @intCast(self.failure_metrics.items.len),
+        };
+
+        if (result.total_failures == 0) {
+            return result;
+        }
+
+        var transient_count: u32 = 0;
+        var permanent_count: u32 = 0;
+        var timeout_count: u32 = 0;
+        var unknown_count: u32 = 0;
+
+        var i: u32 = 0;
+        while (i < self.failure_metrics.items.len) : (i += 1) {
+            const metric = self.failure_metrics.items[i];
+            switch (metric.failure_type) {
+                .transient => transient_count += 1,
+                .permanent => permanent_count += 1,
+                .timeout => timeout_count += 1,
+                .unknown => unknown_count += 1,
+            }
+        }
+
+        result.transient_failure_rate_percent =
+            (transient_count * 100) / result.total_failures;
+        result.permanent_failure_rate_percent =
+            (permanent_count * 100) / result.total_failures;
+        result.timeout_failure_rate_percent =
+            (timeout_count * 100) / result.total_failures;
+        result.unknown_failure_rate_percent =
+            (unknown_count * 100) / result.total_failures;
+
+        std.debug.assert(result.transient_failure_rate_percent <= 100);
+        std.debug.assert(result.permanent_failure_rate_percent <= 100);
+        std.debug.assert(result.timeout_failure_rate_percent <= 100);
+        std.debug.assert(result.unknown_failure_rate_percent <= 100);
+
+        return result;
+    }
+
+    // Get failure count by type.
+    pub fn get_failure_count_by_type(
+        self: *const WorkflowMetricsAnalyzer,
+        failure_type: FailureType,
+    ) u32 {
+        std.debug.assert(self.failure_metrics.items.len <= MAX_METRIC_ENTRIES);
+
+        var count: u32 = 0;
+        var i: u32 = 0;
+        while (i < self.failure_metrics.items.len) : (i += 1) {
+            if (self.failure_metrics.items[i].failure_type == failure_type) {
+                count += 1;
+            }
+        }
+
+        return count;
+    }
+
+    // Get recovered failure count.
+    pub fn get_recovered_failure_count(
+        self: *const WorkflowMetricsAnalyzer,
+    ) u32 {
+        std.debug.assert(self.failure_metrics.items.len <= MAX_METRIC_ENTRIES);
+
+        var count: u32 = 0;
+        var i: u32 = 0;
+        while (i < self.failure_metrics.items.len) : (i += 1) {
+            if (self.failure_metrics.items[i].recovered) {
+                count += 1;
+            }
+        }
+
+        return count;
+    }
+
+    // Get unrecovered failure count.
+    pub fn get_unrecovered_failure_count(
+        self: *const WorkflowMetricsAnalyzer,
+    ) u32 {
+        std.debug.assert(self.failure_metrics.items.len <= MAX_METRIC_ENTRIES);
+
+        var count: u32 = 0;
+        var i: u32 = 0;
+        while (i < self.failure_metrics.items.len) : (i += 1) {
+            if (!self.failure_metrics.items[i].recovered) {
+                count += 1;
+            }
+        }
+
+        return count;
+    }
+
+    // Get failure count by workflow ID.
+    pub fn get_failure_count_by_workflow(
+        self: *const WorkflowMetricsAnalyzer,
+        workflow_id: u32,
+    ) u32 {
+        std.debug.assert(self.failure_metrics.items.len <= MAX_METRIC_ENTRIES);
+
+        var count: u32 = 0;
+        var i: u32 = 0;
+        while (i < self.failure_metrics.items.len) : (i += 1) {
+            if (self.failure_metrics.items[i].workflow_id == workflow_id) {
+                count += 1;
+            }
+        }
+
+        return count;
+    }
 };

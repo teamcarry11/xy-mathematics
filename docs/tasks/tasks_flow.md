@@ -2,7 +2,7 @@
 
 **Agent**: Grain Flow Agent (9th Agent)  
 **Status**: All Phases Complete ✅ (Phase 1-5 COMPLETE), SLC Product Workflow Templates Ready ✅, Research Agent Collaboration Complete ✅, Instrumentation Design Prepared ✅, Phase 63 API Contracts Documented ✅, Phase 64 Integration Tests Created ✅, Phase 3 Validation COMPLETE ✅, ZON Format Integration Implementation Complete ✅ (Priority 3, HIGH, Court Agent Bounded Allocation API Available, Integration Complete), ZON Integration Structure Prepared ✅, ZON Allocator Coordination Complete ✅, ZON Integration Preparation Document Created ✅, ZON Format Integration Implementation Complete ✅, Phase 3 Completion Reported to Core Agent ✅, TigerBeetle Enhancement Coordination Responded ⏳ (Medium Priority, Timeline Needed, COORDINATION NEEDED), Core Agent Coordination Plan Acknowledged ✅, Workflow Scheduler Cron Parser Enhanced ✅, Workflow Scheduler Cron Parser Step Value Support Enhanced ✅, Workflow Visualizer Hierarchical Layout Enhanced ✅, Event Bus Source Filtering Enhanced ✅, Event Bus Async Pattern Event Types Added ✅, Event Bus Async Pattern Documentation Created ✅, Build Configuration Resolved ✅, Core Coordination Document Rewritten ✅, Core Agent Coordination Plan 2025-12-28-125036-pst Acknowledged ✅  
-**Last Updated**: 2025-12-28-175000-pst
+**Last Updated**: 2025-12-28-224800-pst
 
 ---
 
@@ -694,28 +694,33 @@
 - [x] Implement query parameter parsing (`get_query_param()` helper function) (2025-12-28-175000-pst)
 - [x] Set appropriate Content-Type headers (text/plain for ZON, application/json for JSON) (2025-12-28-175000-pst)
 - [x] Ensure backward compatibility (defaults to JSON if format parameter not specified) (2025-12-28-175000-pst)
-- [ ] Add ZON summary endpoint (`/api/workflow-observatory/summary?format=zon`)
-- [ ] Update request handlers to support format parameter
-- [ ] Set appropriate Content-Type headers (`application/zon` or `text/zon`)
-- [ ] Maintain JSON endpoints for backward compatibility
 
-**Phase 4: Testing & Validation** ⏳
-- [ ] Create tests for ZON export functionality
-- [ ] Test ZON export with Research Agent's parser (when available)
-- [ ] Validate token count reduction (35-70% vs JSON)
-- [ ] Test round-trip conversion (ZON → JSON → ZON)
-- [ ] Performance benchmarks (encoding/decoding time)
+**Phase 4: Integration Testing Coordination** ⏳
+- [x] Integration testing coordination message drafted (2025-12-28-224000-pst)
+  - Coordination message created for Court Agent at `docs/agent-communications/flow_to_court_integration_testing_coordination_2025-12-28-224000-pst.md`
+  - Covers round-trip validation, token count validation, format correctness validation
+  - Questions included for Court Agent on ZON decoder availability, token counting, test data format, validation approach
+  - Awaiting Court Agent response
+- [ ] Integration testing execution (pending Court Agent response)
+- [ ] Round-trip validation (ZON encode → decode → compare)
+- [ ] Token count validation (verify 35-70% reduction)
+- [ ] Format correctness validation (ensure ZON is parsable by Court Agent decoder)
 
 **Phase 5: Documentation & Integration** ⏳
-- [ ] Update API documentation with ZON format support
-- [ ] Document ZON export format specification
-- [ ] Update coordination documents with ZON integration status
-- [ ] Coordinate with Research Agent on ZON format validation
+- [x] Update API documentation with ZON format support (optional, can be done independently) (2025-12-28-224600-pst)
+  - API documentation created at `docs/grain_flow/dashboard_api.md`
+  - Documents both endpoints (`/summary`, `/metrics`)
+  - Documents format query parameter (JSON vs ZON)
+  - Includes usage examples and integration details
+- [ ] Document ZON export format specification (optional, can be done independently)
+- [x] Update coordination documents with ZON integration status (2025-12-28-224000-pst)
+- [x] Coordinate with Court Agent on ZON format integration testing (2025-12-28-224000-pst)
 
 ### Dependencies
 
 **Blocking**:
-- ⏳ Grain Court ZON module (`src/grain_court/zon_format.zig`) — Court Agent Phase 1 (in progress)
+- ✅ Grain Court ZON module bounded allocation API (`src/grain_court/zon_format.zig`) — Court Agent Phase 1 ~95% complete, bounded allocation API implemented ✅
+- ⏳ Court Agent ZON decoder availability for integration testing (awaiting Court Agent response)
 - ⏳ ZON encoder/decoder API availability — Coordinating with Court Agent
 
 **Active Coordination**:

@@ -490,3 +490,34 @@ pub fn convert_zon_to_json(
     @memcpy(result, json_buffer[0..json_pos]);
     return result;
 }
+
+// Automatically encode LLM request data to ZON format if provider supports it.
+pub fn auto_encode_request_to_zon(
+    request: *LlmRequest,
+    data: []const struct { key: []const u8, value: zon_format.ZonValue },
+    allocator: std.mem.Allocator,
+) !void {
+    std.debug.assert(request != null);
+    std.debug.assert(data.len > 0);
+    std.debug.assert(allocator != null);
+    if (provider_supports_zon(request.provider_type)) {
+        const zon_data = try encode_data_to_zon(data, allocator);
+        request.use_zon_format = true;
+        request.zon_data = zon_data;
+    } else {
+        request.use_zon_format = false;
+        request.zon_data = null;
+    }
+    std.debug.assert(request.use_zon_format == provider_supports_zon(request.provider_type));
+}
+
+// Handle provider-specific output format (ZON/JSON).
+pub fn handle_provider_output(
+    response: *const LlmResponse,
+    allocator: std.mem.Allocator,
+) ![]u8 {
+    std.debug.assert(response != null);
+    std.debug.assert(allocator != null);
+    const content = response.content[0..response.content_len];
+    return try allocator.dupe(u8, content);
+}

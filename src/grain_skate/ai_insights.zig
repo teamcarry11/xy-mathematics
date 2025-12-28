@@ -175,7 +175,7 @@ pub const AiInsights = struct {
         // Assert: Combined prompt within bounds
         std.debug.assert(combined_prompt.items.len <= LlmProvider.MAX_REQUEST_SIZE);
         
-        // Create LLM request
+        // Create LLM request with timeout (60s default for LLM operations)
         var request = LlmProvider.LlmRequest{
             .request_id = 0, // Will be set by provider
             .provider_type = .openai, // Default, can be overridden
@@ -186,6 +186,9 @@ pub const AiInsights = struct {
             .max_tokens = max_tokens,
             .temperature = temperature,
             .created_at = @as(u64, @intCast(std.time.timestamp())),
+            .use_zon_format = false,
+            .zon_data = null,
+            .timeout_ms = LlmProvider.DEFAULT_LLM_TIMEOUT_MS, // 60 seconds default
         };
         
         // Copy model name
@@ -212,14 +215,38 @@ pub const AiInsights = struct {
         }
         request.prompt_len = @intCast(prompt_len);
         
-        // Send request via provider pool
-        const response = try pool.send_request_with_fallback(&request, self.allocator);
+        // Send request via provider pool with retry logic for retryable errors
+        const max_retries: u32 = 3;
+        var retry_count: u32 = 0;
+        var last_error: ?LlmProvider.LlmProviderError = null;
         
-        // Extract response content
-        const content = response.content[0..response.content_len];
-        const content_copy = try self.allocator.dupe(u8, content);
+        while (retry_count < max_retries) : (retry_count += 1) {
+            const response = pool.send_request_with_fallback(&request, self.allocator) catch |err| {
+                last_error = err;
+                
+                // Check if error is retryable
+                if (LlmProvider.is_llm_error_retryable(err)) {
+                    // Exponential backoff: 1s, 2s, 4s
+                    if (retry_count < max_retries - 1) {
+                        const delay_ms = (@as(u64, 1) << @as(u6, @intCast(retry_count))) * 1000;
+                        std.time.sleep(delay_ms * 1_000_000); // Convert to nanoseconds
+                        continue;
+                    }
+                }
+                
+                // Non-retryable error or max retries exceeded
+                return err;
+            };
+            
+            // Success: Extract response content
+            const content = response.content[0..response.content_len];
+            const content_copy = try self.allocator.dupe(u8, content);
+            
+            return content_copy;
+        }
         
-        return content_copy;
+        // Max retries exceeded
+        return last_error orelse LlmProvider.LlmProviderError.NetworkError;
     }
     
     /// Analyze blocks and suggest connections (semantic similarity).

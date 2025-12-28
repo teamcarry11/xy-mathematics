@@ -5037,6 +5037,32 @@ pub fn build(b: *std.Build) void {
     const grain_research_zon_phase4_validation_runner_tests_run = b.addRunArtifact(grain_research_zon_phase4_validation_runner_tests);
     test_step.dependOn(&grain_research_zon_phase4_validation_runner_tests_run.step);
 
+    const grain_research_llm_integration_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/159_grain_research_llm_integration_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_research", .module = grain_research_module },
+            },
+        }),
+    });
+    const grain_research_llm_integration_tests_run = b.addRunArtifact(grain_research_llm_integration_tests);
+    test_step.dependOn(&grain_research_llm_integration_tests_run.step);
+
+    const grain_research_retrieval_llm_integration_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/160_grain_research_retrieval_llm_integration_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_research", .module = grain_research_module },
+            },
+        }),
+    });
+    const grain_research_retrieval_llm_integration_tests_run = b.addRunArtifact(grain_research_retrieval_llm_integration_tests);
+    test_step.dependOn(&grain_research_retrieval_llm_integration_tests_run.step);
+
     // Grain Bubble component tests
     const grain_bubble_component_tests = b.addTest(.{
         .root_module = b.createModule(.{

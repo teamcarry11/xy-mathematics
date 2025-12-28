@@ -134,6 +134,39 @@ pub const CostTracker = struct {
         std.debug.assert(total >= 0.0);
         return total;
     }
+
+    pub fn get_request_count(self: *const CostTracker) u32 {
+        std.debug.assert(self.entries_len <= MAX_COST_ENTRIES);
+        return self.entries_len;
+    }
+
+    pub fn get_request_count_by_provider(
+        self: *const CostTracker,
+        provider_type: llm_provider.ProviderType,
+    ) u32 {
+        std.debug.assert(@intFromEnum(provider_type) < 4);
+        var count: u32 = 0;
+        var i: u32 = 0;
+        while (i < self.entries_len) : (i += 1) {
+            if (self.entries[i]) |entry| {
+                if (entry.provider_type == provider_type) {
+                    count += 1;
+                }
+            }
+        }
+        std.debug.assert(count <= self.entries_len);
+        return count;
+    }
+
+    pub fn get_average_cost_per_request(self: *const CostTracker) f64 {
+        std.debug.assert(self.entries_len <= MAX_COST_ENTRIES);
+        if (self.entries_len == 0) {
+            return 0.0;
+        }
+        const avg = self.total_cost_usd / @as(f64, @floatFromInt(self.entries_len));
+        std.debug.assert(avg >= 0.0);
+        return avg;
+    }
 };
 
 // Estimate token count for text (rough approximation).
@@ -276,4 +309,34 @@ pub fn track_response_cost(
         output_tokens,
         cost,
     );
+}
+
+// Cost report summary.
+pub const CostReport = struct {
+    total_cost_usd: f64,
+    total_requests: u32,
+    average_cost_per_request: f64,
+    cost_by_provider: [4]f64,
+    request_count_by_provider: [4]u32,
+};
+
+// Generate cost report from tracker.
+pub fn generate_cost_report(tracker: *const CostTracker) CostReport {
+    std.debug.assert(tracker != null);
+    var report = CostReport{
+        .total_cost_usd = tracker.get_total_cost(),
+        .total_requests = tracker.get_request_count(),
+        .average_cost_per_request = tracker.get_average_cost_per_request(),
+        .cost_by_provider = undefined,
+        .request_count_by_provider = undefined,
+    };
+    var i: u32 = 0;
+    while (i < 4) : (i += 1) {
+        const provider_type = @as(llm_provider.ProviderType, @enumFromInt(i));
+        report.cost_by_provider[i] = tracker.get_cost_by_provider(provider_type);
+        report.request_count_by_provider[i] = tracker.get_request_count_by_provider(provider_type);
+    }
+    std.debug.assert(report.total_cost_usd >= 0.0);
+    std.debug.assert(report.total_requests <= MAX_COST_ENTRIES);
+    return report;
 }

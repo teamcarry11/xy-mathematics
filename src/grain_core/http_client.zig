@@ -8,6 +8,7 @@ const std = @import("std");
 const network_stack = @import("network_stack.zig");
 const api_server = @import("api_server.zig");
 const dns_resolver = @import("dns_resolver.zig");
+const http_errors = @import("http_errors.zig");
 
 // Bounded: Max concurrent requests.
 pub const MAX_CONCURRENT_REQUESTS: u32 = 32;
@@ -17,6 +18,10 @@ pub const MAX_URL_LEN: u32 = 2048;
 
 // Bounded: Max hostname length.
 pub const MAX_HOSTNAME_LEN: u32 = 255;
+
+// Default timeout values (milliseconds).
+pub const DEFAULT_API_TIMEOUT_MS: u32 = 30000; // 30 seconds
+pub const DEFAULT_CONTENT_TIMEOUT_MS: u32 = 60000; // 60 seconds
 
 // Request state.
 pub const RequestState = enum(u8) {

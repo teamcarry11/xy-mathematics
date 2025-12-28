@@ -41,6 +41,10 @@ pub const retrieval_accuracy = @import("retrieval_accuracy.zig");
 pub const retrieval_serialization = @import("retrieval_serialization.zig");
 // Cost savings calculator for ZON format validation.
 pub const cost_savings = @import("cost_savings.zig");
+// LLM integration for Court Agent ProviderPool integration.
+pub const llm_integration = @import("llm_integration.zig");
+// Retrieval LLM integration for Phase 2 LLM integration.
+pub const retrieval_llm_integration = @import("retrieval_llm_integration.zig");
 // Integration test harness for multi-agent testing.
 pub const integration_test_harness = @import("integration_test_harness.zig");
 // Integration test scenarios for reusable test patterns.
@@ -89,6 +93,11 @@ pub const Fact = retrieval_accuracy.Fact;
 pub const Query = retrieval_accuracy.Query;
 pub const QueryType = retrieval_accuracy.Query.QueryType;
 pub const RetrievalResult = retrieval_accuracy.RetrievalResult;
+pub const LlmIntegration = llm_integration.LlmIntegration;
+pub const LlmIntegrationResult = llm_integration.LlmIntegrationResult;
+pub const SerializationFormat = llm_integration.SerializationFormat;
+pub const QueryTestResult = retrieval_llm_integration.QueryTestResult;
+pub const execute_query_test = retrieval_llm_integration.execute_query_test;
 pub const Serializer = retrieval_serialization.Serializer;
 pub const SerializationResult = retrieval_serialization.SerializationResult;
 pub const SerializationFormat = retrieval_serialization.SerializationResult.SerializationFormat;

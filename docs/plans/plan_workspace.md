@@ -1,8 +1,8 @@
 # Grain Workspace Agent: Development Plan
 
 **Agent**: Grain Workspace Agent (8th Agent)  
-**Status**: Phase 32 Component API Implementation Complete ✅  
-**Last Updated**: 2025-12-28-125036-pst  
+**Status**: Phase 33 Bracket Matching Complete ✅  
+**Last Updated**: 2025-12-28-223816-pst  
 **Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-21-204511-pst.md`
 
 ---
@@ -1328,6 +1328,46 @@ All planned phases for Grain Workspace Agent have been completed:
 - Animation preferences implementation (smooth transitions for state changes)
 - Component event handling
 - Component styling system integration
+
+### Phase 33: Text Editor Bracket Matching ✅ **COMPLETE**
+
+**Date**: 2025-12-28-223816-pst
+
+**Completed Work**:
+1. **Bracket Matching** (`src/grain_workspace/text_editor/app.zig`):
+   - Added `BracketPair` structure for bracket pair definitions
+   - Added `BracketMatch` structure for bracket match results
+   - Added `bracket_matching_enabled` and `bracket_match` fields to `TextEditor` struct
+   - Added `MAX_BRACKET_PAIRS` constant (64)
+   - Implemented `toggle_bracket_matching()` function to enable/disable bracket matching
+   - Implemented `find_matching_bracket()` function to find matching bracket at cursor position
+   - Supports curly braces `{}`, parentheses `()`, and square brackets `[]`
+   - Handles nested brackets correctly
+   - Works across multiple lines
+   - Comprehensive tests (`tests/115_grain_workspace_text_editor_test.zig`)
+
+**Features**:
+- Bracket matching toggle (enable/disable)
+- Find matching bracket at cursor position
+- Support for curly braces, parentheses, and square brackets
+- Nested bracket handling
+- Multi-line bracket matching
+- Opening and closing bracket detection
+- Bounded bracket pair storage (max 64 pairs)
+
+**Grain Style Compliance**:
+- `grain_case` function names
+- `u32`/`u64` types (no `usize`)
+- Bounded allocations (all limits explicit)
+- Assertions for preconditions (minimum 2 per function)
+- Max 70 lines per function
+- All compiler warnings enabled
+
+**Future Enhancements**:
+- Bracket pair highlighting in UI
+- Auto-close bracket insertion
+- Bracket pair navigation (jump to matching bracket)
+- Multiple bracket pair types support
 
 **Creative Future Ideas** (Conceptual):
 - **System Auditor**: Security auditing and compliance checking

@@ -265,14 +265,30 @@ After reviewing coordination documents for Carry, Bubble, Research, Court, Skate
 ## Summary
 
 ### Critical Gaps (Must Address)
-1. ✅ Syscall Timeout Mechanism
-2. ✅ Enhanced Error Reporting
-3. ✅ Service-to-Service Authentication
+1. ✅ **Syscall Timeout Mechanism** — **COMPLETE** (2025-12-28-150000-pst)
+   - Timeout parameter added to TCP syscalls (connect, send, recv)
+   - Timeout parameter added to file I/O syscalls (read, write)
+   - Timeout parameter added to IPC syscalls (channel_send, channel_recv)
+   - Timeout error types added (network_timeout, file_io_timeout, ipc_timeout)
+2. ✅ **Enhanced Error Reporting** — **COMPLETE** (2025-12-23-212000-pst)
+   - Extended `BasinError` enum with 20+ specific error types
+   - Network errors, file system errors, process errors, IPC errors, resource errors
+3. ✅ **Service-to-Service Authentication** — **USESPACE PATTERN** (2025-12-28-125036-pst)
+   - Confirmed userspace pattern via Core Agent AuthService
+   - No kernel changes needed
 
 ### High Priority Gaps (Should Address)
-4. ✅ Resource Limits and Rate Limiting
-5. ✅ Health Check and Monitoring Syscalls
-6. ✅ Async Syscall Support
+4. ✅ **Resource Limits and Rate Limiting** — **PARTIAL** (2025-12-23-220000-pst)
+   - ✅ Resource usage tracking complete (`get_resource_usage` syscall)
+   - ⏳ Resource limits enforcement (future work)
+   - ⏳ Rate limiting support (future work)
+5. ✅ **Health Check and Monitoring Syscalls** — **COMPLETE** (2025-12-23-212000-pst)
+   - ✅ `kernel_get_stats` syscall (#135) complete
+   - ✅ `health_check` syscall (#136) complete
+   - ✅ Comprehensive kernel statistics aggregation
+6. ✅ **Async Syscall Support** — **USESPACE PATTERN** (2025-12-28-125036-pst)
+   - Confirmed userspace pattern via Flow Agent Event Bus
+   - No kernel changes needed
 
 ### Medium Priority Gaps (Nice to Have)
 7. ✅ DNS Resolution Support

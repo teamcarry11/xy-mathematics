@@ -71,6 +71,77 @@ test "parse failure metrics json" {
     try testing.expect(analyzer.get_failure_metric_count() == 7);
 }
 
+test "analyze failure patterns" {
+    const allocator = testing.allocator;
+    var analyzer = WorkflowMetricsAnalyzer.init(allocator);
+    defer analyzer.deinit();
+
+    // Flow Agent's actual JSON format with mixed failure types.
+    const json_data =
+        \\{"failure":{"total_failures":10,"recovery_success_rate_percent":70,"failure_type_distribution":{"transient":5,"permanent":2,"timeout":2,"unknown":1}}}
+    ;
+
+    try analyzer.parse_json_metrics(json_data);
+
+    const analysis = analyzer.analyze_failure_patterns();
+    try testing.expect(analysis.total_failures == 10);
+    try testing.expect(analysis.transient_failure_rate_percent == 50);
+    try testing.expect(analysis.permanent_failure_rate_percent == 20);
+    try testing.expect(analysis.timeout_failure_rate_percent == 20);
+    try testing.expect(analysis.unknown_failure_rate_percent == 10);
+}
+
+test "get failure count by type" {
+    const allocator = testing.allocator;
+    var analyzer = WorkflowMetricsAnalyzer.init(allocator);
+    defer analyzer.deinit();
+
+    const json_data =
+        \\{"failure":{"total_failures":6,"recovery_success_rate_percent":80,"failure_type_distribution":{"transient":3,"permanent":2,"timeout":1}}}
+    ;
+
+    try analyzer.parse_json_metrics(json_data);
+
+    const FailureType = grain_research.FailureType;
+    try testing.expect(analyzer.get_failure_count_by_type(.transient) == 3);
+    try testing.expect(analyzer.get_failure_count_by_type(.permanent) == 2);
+    try testing.expect(analyzer.get_failure_count_by_type(.timeout) == 1);
+    try testing.expect(analyzer.get_failure_count_by_type(.unknown) == 0);
+}
+
+test "get recovered and unrecovered failure counts" {
+    const allocator = testing.allocator;
+    var analyzer = WorkflowMetricsAnalyzer.init(allocator);
+    defer analyzer.deinit();
+
+    const json_data =
+        \\{"failure":{"total_failures":5,"recovery_success_rate_percent":60,"failure_type_distribution":{"transient":3,"permanent":2}}}
+    ;
+
+    try analyzer.parse_json_metrics(json_data);
+
+    // Note: Current parser doesn't set recovered flag from JSON.
+    // This test verifies the function works with existing data.
+    const recovered = analyzer.get_recovered_failure_count();
+    const unrecovered = analyzer.get_unrecovered_failure_count();
+    const total = analyzer.get_failure_metric_count();
+
+    try testing.expect(recovered + unrecovered == total);
+}
+
+test "analyze failure patterns with zero failures" {
+    const allocator = testing.allocator;
+    var analyzer = WorkflowMetricsAnalyzer.init(allocator);
+    defer analyzer.deinit();
+
+    const analysis = analyzer.analyze_failure_patterns();
+    try testing.expect(analysis.total_failures == 0);
+    try testing.expect(analysis.transient_failure_rate_percent == 0);
+    try testing.expect(analysis.permanent_failure_rate_percent == 0);
+    try testing.expect(analysis.timeout_failure_rate_percent == 0);
+    try testing.expect(analysis.unknown_failure_rate_percent == 0);
+}
+
 test "parse performance metrics json" {
     const allocator = testing.allocator;
     var analyzer = WorkflowMetricsAnalyzer.init(allocator);

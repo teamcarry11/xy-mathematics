@@ -244,6 +244,55 @@ test "mistral provider get name" {
     try testing.expect(std.mem.eql(u8, name, "Mistral"));
 }
 
+test "self hosted provider init" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const api_key = "test-api-key-12345";
+    var provider = try grain_court.SelfHostedProvider.init(
+        allocator,
+        api_key,
+        null,
+        null,
+    );
+    try testing.expect(provider.trait.provider_type == .self_hosted);
+    try testing.expect(provider.trait.state == .idle);
+    try testing.expect(provider.trait.api_key_len > 0);
+}
+
+test "self hosted provider check health" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const api_key = "test-api-key";
+    var provider = try grain_court.SelfHostedProvider.init(
+        allocator,
+        api_key,
+        null,
+        null,
+    );
+    const is_healthy = provider.trait.check_health(&provider.trait);
+    try testing.expect(is_healthy == false); // No HTTP client
+}
+
+test "self hosted provider get name" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const api_key = "test-api-key";
+    var provider = try grain_court.SelfHostedProvider.init(
+        allocator,
+        api_key,
+        null,
+        null,
+    );
+    const name = provider.trait.get_name(&provider.trait);
+    try testing.expect(std.mem.eql(u8, name, "Cerebras GLM-4.6"));
+}
+
 test "provider pool multiple providers" {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
@@ -747,6 +796,93 @@ test "token efficiency track response cost" {
     try testing.expect(success == true);
     try testing.expect(tracker.entries_len == 1);
     try testing.expect(tracker.total_cost_usd > 0.0);
+}
+
+test "token efficiency cost tracker request count" {
+    var tracker = grain_court.TokenEfficiency.CostTracker.init();
+    try testing.expect(tracker.get_request_count() == 0);
+    _ = tracker.add_cost_entry(.openai, "gpt-4o", 1000, 500, 5.0);
+    try testing.expect(tracker.get_request_count() == 1);
+    const provider_count = tracker.get_request_count_by_provider(.openai);
+    try testing.expect(provider_count == 1);
+}
+
+test "token efficiency cost tracker average cost" {
+    var tracker = grain_court.TokenEfficiency.CostTracker.init();
+    try testing.expect(tracker.get_average_cost_per_request() == 0.0);
+    _ = tracker.add_cost_entry(.openai, "gpt-4o", 1000, 500, 5.0);
+    _ = tracker.add_cost_entry(.openai, "gpt-4o", 1000, 500, 5.0);
+    const avg = tracker.get_average_cost_per_request();
+    try testing.expect(avg == 5.0);
+}
+
+test "token efficiency generate cost report" {
+    var tracker = grain_court.TokenEfficiency.CostTracker.init();
+    _ = tracker.add_cost_entry(.openai, "gpt-4o", 1000, 500, 5.0);
+    _ = tracker.add_cost_entry(.anthropic, "claude-3.5", 1000, 500, 6.0);
+    const report = grain_court.TokenEfficiency.generate_cost_report(&tracker);
+    try testing.expect(report.total_cost_usd == 11.0);
+    try testing.expect(report.total_requests == 2);
+    try testing.expect(report.average_cost_per_request == 5.5);
+    try testing.expect(report.cost_by_provider[0] == 5.0);
+    try testing.expect(report.cost_by_provider[1] == 6.0);
+}
+
+test "llm provider auto encode request to zon" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var request = grain_court.LlmProvider.LlmRequest{
+        .request_id = 1,
+        .provider_type = .self_hosted,
+        .model = undefined,
+        .model_len = 0,
+        .prompt = undefined,
+        .prompt_len = 0,
+        .max_tokens = 1000,
+        .temperature = 0.7,
+        .created_at = 0,
+        .use_zon_format = false,
+        .zon_data = null,
+        .timeout_ms = null,
+    };
+    const data = [_]struct { key: []const u8, value: grain_court.ZonFormat.ZonValue }{
+        .{ .key = "test_key", .value = grain_court.ZonFormat.ZonValue.from_u32(42) },
+    };
+    try grain_court.LlmProvider.auto_encode_request_to_zon(&request, &data, allocator);
+    try testing.expect(request.use_zon_format == true);
+    try testing.expect(request.zon_data != null);
+    if (request.zon_data) |zon_data| {
+        allocator.free(zon_data);
+    }
+}
+
+test "llm provider auto encode request to zon fallback" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var request = grain_court.LlmProvider.LlmRequest{
+        .request_id = 1,
+        .provider_type = .openai,
+        .model = undefined,
+        .model_len = 0,
+        .prompt = undefined,
+        .prompt_len = 0,
+        .max_tokens = 1000,
+        .temperature = 0.7,
+        .created_at = 0,
+        .use_zon_format = false,
+        .zon_data = null,
+        .timeout_ms = null,
+    };
+    const data = [_]struct { key: []const u8, value: grain_court.ZonFormat.ZonValue }{
+        .{ .key = "test_key", .value = grain_court.ZonFormat.ZonValue.from_u32(42) },
+    };
+    try grain_court.LlmProvider.auto_encode_request_to_zon(&request, &data, allocator);
+    try testing.expect(request.use_zon_format == false);
+    try testing.expect(request.zon_data == null);
 }
 
 test "zon format round trip test" {

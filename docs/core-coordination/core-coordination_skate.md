@@ -553,12 +553,197 @@ pub fn get_orphaned_pages(output: []u32) u32
 - **Impact**: Operations fail silently, risking data loss
 - **Status**: ⏳ **COORDINATION NEEDED** with DAG Core/Aurora Agent
 
-### Priority 2: Feature Coordination (Ready to Begin)
+### Priority 3: Feature Coordination (Ready to Begin)
 
 4. **Bubble Agent**: Coordinate on time slider UI component design and implementation
 5. **Aurora Agent**: Coordinate on Nostr protocol integration for Profile Builder
 6. **Core Agent**: Coordinate on website publishing infrastructure for DAG Website Builder
 7. **Court Agent**: Wait for Phase 2 (ZON format) completion (~90% complete), then integrate
+
+---
+
+## Next Steps for Other Agents
+
+### For Bubble Agent (Time Slider UI Component)
+
+**Status**: ⏳ **READY FOR COORDINATION** - All temporal graph utilities ready
+
+**What Bubble Agent Needs to Know**:
+- Skate Agent temporal graph utilities are complete and ready for UI integration
+- All API contracts are defined and documented
+- Block version history utilities are available for UI display
+- GraphRenderer temporal integration is complete
+
+**What Bubble Agent Should Do**:
+1. **Coordinate on Time Slider UI Component Design**:
+   - Review temporal graph API contracts (see Priority 3: Feature Coordination section above)
+   - Design horizontal slider component (0.0 to 1.0 position range)
+   - Coordinate on animated transitions (smooth interpolation, nodes/edges fade in/out)
+   - Design UI controls (play/pause, jump to present button)
+
+2. **Integration Approach**:
+   - On slider change: Call `graph_renderer.set_temporal_timestamp(timestamp)`
+   - Use `timestamp_from_slider_position(position: f32)` to convert slider position to timestamp
+   - Use `slider_position_from_timestamp(timestamp: u64)` to convert timestamp to slider position
+   - Display block version counts using `get_blocks_created_at_timestamp()` and `get_blocks_modified_in_range()`
+
+3. **Timeline**: Can begin immediately. Skate Agent can provide integration examples and API documentation upon request.
+
+**Integration Points**:
+- Temporal graph utilities: `src/grain_skate/temporal_graph.zig`
+- GraphRenderer integration: Temporal filtering already implemented (nodes/edges filtered by timestamp)
+- Block version history: Utilities for displaying block creation/modification counts
+
+---
+
+### For Aurora Agent (Nostr Profile Builder Integration)
+
+**Status**: ⏳ **READY FOR COORDINATION** - All SLC DAG integration ready
+
+**What Aurora Agent Needs to Know**:
+- Skate Agent SLC DAG integration for Nostr Profile Builder is complete
+- All profile node and relationship operations are ready
+- Enhanced query operations are available (`get_all_profiles()`, `get_isolated_profiles()`)
+- API contracts are defined and documented
+
+**What Aurora Agent Should Do**:
+1. **Coordinate on Dream Browser Integration**:
+   - Review profile node API contracts (see Priority 3: Feature Coordination section above)
+   - Design profile rendering and editing capabilities in Dream Browser
+   - Design relationship visualization (follows, mentions, reposts)
+
+2. **Integration Approach**:
+   - Profile creation: User creates/edits Nostr profile in Dream Browser → call `create_profile_node()`
+   - Relationship management: Follows/mentions/reposts → call `create_profile_relationship()`
+   - Profile rendering: Query DAG for profile data using `get_profile_data()`, `get_following_profiles()`, `get_follower_profiles()`
+   - Profile discovery: Use `get_all_profiles()` and `get_isolated_profiles()` for profile management
+
+3. **Timeline**: Can begin immediately. Skate Agent can provide integration examples and API documentation upon request.
+
+**Integration Points**:
+- SLC DAG Integration: `src/grain_skate/slc_dag_integration.zig`
+- Profile operations: Profile node creation, relationship creation, profile queries
+- DAG structure: Profiles as nodes, relationships as edges
+
+---
+
+### For Core Agent (Website Publishing Infrastructure)
+
+**Status**: ⏳ **READY FOR COORDINATION** - All SLC DAG integration ready
+
+**What Core Agent Needs to Know**:
+- Skate Agent SLC DAG integration for DAG Website Builder is complete
+- All page node and link operations are ready
+- Enhanced query operations are available (`get_all_pages()`, `find_page_by_url_path()`, `get_orphaned_pages()`)
+- API contracts are defined and documented
+
+**What Core Agent Should Do**:
+1. **Coordinate on Website Publishing Infrastructure**:
+   - Review website page API contracts (see Priority 3: Feature Coordination section above)
+   - Design static site generation from DAG structure
+   - Design URL routing and page serving
+   - Design website deployment workflow
+
+2. **Integration Approach**:
+   - Page creation: User creates/edits website page in DAG Website Builder → call `create_website_page_node()`
+   - Link management: User links pages → call `create_website_link()`
+   - Website publishing: Query DAG for all pages using `get_all_pages()`, generate static site, serve via URL routing
+   - URL resolution: Use `find_page_by_url_path()` for routing
+   - Site validation: Use `get_orphaned_pages()` to identify unlinked pages
+
+3. **Timeline**: Can begin immediately. Skate Agent can provide integration examples and API documentation upon request.
+
+**Integration Points**:
+- SLC DAG Integration: `src/grain_skate/slc_dag_integration.zig`
+- Website operations: Page node creation, link creation, website queries
+- DAG structure: Pages as nodes, links as edges
+
+---
+
+### For Court Agent (Timeout/Error Handling Implementation)
+
+**Status**: ⏳ **WAITING ON COURT AGENT IMPLEMENTATION** - Coordination decisions made, Court Agent implementing
+
+**What Court Agent Needs to Know**:
+- Skate Agent Court Agent Phase 1 migration is complete
+- AI insights module is fully integrated with Court's multi-provider abstraction
+- Coordination decisions for timeout and error handling have been made (2025-12-28-125036-pst)
+- Skate Agent is ready to integrate timeout/error handling once Court Agent implementation is complete
+
+**What Court Agent Should Do**:
+1. **Continue Implementation** (Priority 3, HIGH):
+   - Implement LLM timeout handling: Add `timeout_ms: ?u32` parameter to LLM provider request functions (default: 60000)
+   - Implement LLM error handling: Extend `LlmProviderError` enum with structured error types, add `is_llm_error_retryable()` function
+   - Implement rate limiting handling: Detect 429 responses, parse `Retry-After` header, return `rate_limit` error
+
+2. **Coordinate on Integration**:
+   - Once implementation is complete, coordinate with Skate Agent on integration
+   - Provide documentation for timeout/error handling API usage
+   - Provide examples for error handling patterns
+
+3. **Timeline**: Court Agent Priority 3, HIGH (estimated 3-4 days for timeout/error handling implementation)
+
+**Integration Points**:
+- AI Insights Module: `src/grain_skate/ai_insights.zig`
+- LLM Provider Integration: Using Court Agent's `LlmProvider` interface and `ProviderPool`
+- AI Operations: `suggest_connections()`, `detect_knowledge_gaps()`, `suggest_title()`, `summarize_subgraph()`
+
+---
+
+### For DAG Core / Aurora Agent (Error Handling Coordination)
+
+**Status**: ⚠️ **HIGH PRIORITY COORDINATION NEEDED** - Risk of data loss
+
+**What DAG Core / Aurora Agent Needs to Know**:
+- Skate Agent DAG integration is complete (EditorDagIntegration, SlcDagIntegration)
+- Operations currently fail silently or return false without error information, risking data loss
+- Similar issue identified by Bubble Agent (HIGH PRIORITY gap #3)
+- All DAG operations are affected (knowledge graph event recording, profile/page node creation, relationship/link creation, temporal query operations)
+
+**What DAG Core / Aurora Agent Should Do**:
+1. **Coordinate on Error Handling**:
+   - Define error types that DAG Core returns
+   - Specify how to handle node/event limit exceeded (DAG_MAX_NODES, DAG_MAX_EVENTS)
+   - Specify how to handle invalid event data
+   - Specify how to handle DAG corruption or consistency issues
+   - Document error information available in DAG Core error unions
+
+2. **Provide Error Handling Patterns**:
+   - Document error handling patterns for DAG operations
+   - Provide examples for error handling in knowledge graph operations
+   - Provide examples for error handling in SLC product operations
+
+3. **Timeline**: High priority coordination needed before production use.
+
+**Integration Points**:
+- Editor DAG Integration: `src/grain_skate/editor_dag_integration.zig`
+- SLC DAG Integration: `src/grain_skate/slc_dag_integration.zig`
+- DAG Operations: Event recording, node creation, relationship creation, temporal queries
+
+---
+
+### For Other Agents (Silo, Vantage, Research, Flow, Carry, Workspace)
+
+**Status**: No immediate coordination needed
+
+**What Other Agents Need to Know**:
+- Skate Agent core functionality is complete
+- Skate Agent is waiting on Court Agent implementation for timeout/error handling
+- Skate Agent is ready for feature coordination with Bubble, Aurora, and Core agents
+- Skate Agent can provide knowledge graph services if needed in future
+
+**No Action Needed**:
+- No immediate action needed from other agents
+- Skate Agent will coordinate if integration is needed
+- Skate Agent will update status as implementation progresses
+
+**Future Integration Opportunities**:
+- **Silo Agent**: Knowledge graph data storage integration (if needed)
+- **Vantage Agent**: SLC product testing integration (if needed)
+- **Research Agent**: Knowledge graph research integration (if needed)
+- **Flow Agent**: Knowledge graph workflow integration (if needed)
+- **Carry Agent**: Knowledge graph mobile integration (if needed)
+- **Workspace Agent**: Knowledge graph workspace integration (if needed)
 
 ---
 

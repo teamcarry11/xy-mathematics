@@ -629,7 +629,7 @@ pub fn get_orphaned_pages(output: []u32) u32
 
 ---
 
-### For Core Agent (Website Publishing Infrastructure)
+### For Core Agent (Website Publishing Infrastructure & Coordination Support)
 
 **Status**: ⏳ **READY FOR COORDINATION** - All SLC DAG integration ready
 
@@ -638,57 +638,119 @@ pub fn get_orphaned_pages(output: []u32) u32
 - All page node and link operations are ready
 - Enhanced query operations are available (`get_all_pages()`, `find_page_by_url_path()`, `get_orphaned_pages()`)
 - API contracts are defined and documented
+- Skate Agent is ready to coordinate on website publishing infrastructure
+- Skate Agent depends on Core Agent's HTTP Client (already using ✅)
 
 **What Core Agent Should Do**:
-1. **Coordinate on Website Publishing Infrastructure**:
-   - Review website page API contracts (see Priority 3: Feature Coordination section above)
-   - Design static site generation from DAG structure
-   - Design URL routing and page serving
-   - Design website deployment workflow
+
+1. **Coordinate on Website Publishing Infrastructure** (Priority 3, Feature Coordination):
+   - **Review Website Page API Contracts**: Review `src/grain_skate/slc_dag_integration.zig` API contracts
+   - **Design Static Site Generation**: Design system to generate static HTML/CSS/JS from DAG structure
+     - Query all pages using `get_all_pages()`
+     - Generate HTML from page content stored in DAG nodes
+     - Generate site navigation from page links
+     - Generate sitemap from page structure
+   - **Design URL Routing**: Design URL routing system for serving generated pages
+     - Use `find_page_by_url_path()` for route resolution
+     - Handle 404s for missing pages
+     - Support custom URL paths per page
+   - **Design Page Serving**: Design HTTP server integration for serving generated pages
+     - Integrate with Core Agent's HTTP Server (Phase 59)
+     - Serve static assets (CSS, JS, images)
+     - Handle dynamic content if needed
+   - **Design Website Deployment Workflow**: Design deployment process
+     - Build static site from DAG
+     - Deploy to hosting infrastructure
+     - Update on DAG changes (if real-time updates needed)
 
 2. **Integration Approach**:
-   - Page creation: User creates/edits website page in DAG Website Builder → call `create_website_page_node()`
-   - Link management: User links pages → call `create_website_link()`
-   - Website publishing: Query DAG for all pages using `get_all_pages()`, generate static site, serve via URL routing
-   - URL resolution: Use `find_page_by_url_path()` for routing
-   - Site validation: Use `get_orphaned_pages()` to identify unlinked pages
+   - **Page Creation Flow**: User creates/edits website page in DAG Website Builder → stored as DAG node via `create_website_page_node()`
+   - **Link Management Flow**: User links pages → call `create_website_link()` to create DAG edges
+   - **Website Publishing Flow**: 
+     - Query DAG for all pages using `get_all_pages()`
+     - Generate static HTML files from page content
+     - Generate navigation structure from page links (using `get_linked_pages()`, `get_backlink_pages()`)
+     - Serve via URL routing using `find_page_by_url_path()`
+   - **Site Validation**: Use `get_orphaned_pages()` to identify unlinked pages (for validation/debugging)
 
-3. **Timeline**: Can begin immediately. Skate Agent can provide integration examples and API documentation upon request.
+3. **Implementation Considerations**:
+   - **Static vs Dynamic**: Decide if pages are pre-generated or generated on-demand
+   - **Caching Strategy**: Cache generated pages to reduce DAG query overhead
+   - **Incremental Updates**: Consider incremental site regeneration on page updates
+   - **Asset Management**: Design system for managing static assets (CSS, JS, images)
+   - **URL Structure**: Coordinate on URL path conventions and routing rules
+
+4. **Timeline**: Can begin immediately. Skate Agent can provide integration examples and API documentation upon request.
+
+**What Skate Agent Provides**:
+- Complete SLC DAG Integration module (`src/grain_skate/slc_dag_integration.zig`)
+- Website page node creation: `create_website_page_node(title, content, url_path)`
+- Website links: `create_website_link(from_page_id, to_page_id)`
+- Website queries:
+  - `get_all_pages(output)` - Get all page node IDs
+  - `find_page_by_url_path(url_path)` - Find page by URL path
+  - `get_linked_pages(page_id, output)` - Get pages linked from a page
+  - `get_backlink_pages(page_id, output)` - Get pages that link to a page
+  - `get_orphaned_pages(output)` - Get pages with no links
+  - `get_page_data(page_id)` - Get page node data (raw JSON)
 
 **Integration Points**:
 - SLC DAG Integration: `src/grain_skate/slc_dag_integration.zig`
 - Website operations: Page node creation, link creation, website queries
 - DAG structure: Pages as nodes, links as edges
+- Core Agent dependencies: HTTP Server (Phase 59) ✅, HTTP Client (Phase 61) ✅
+
+**Coordination Message**: "Skate Agent SLC DAG integration complete for DAG Website Builder. All page node and link operations ready, including enhanced query operations for site management. DAG structure: pages as nodes, links as edges. Ready to coordinate on website publishing infrastructure. Can provide API contracts, integration examples, and DAG structure documentation. Ready to begin coordination on static site generation, URL routing, and deployment workflow."
 
 ---
 
-### For Court Agent (Timeout/Error Handling Implementation)
+### For Court Agent (Timeout/Error Handling & ZON Format Integration)
 
-**Status**: ⏳ **WAITING ON COURT AGENT IMPLEMENTATION** - Coordination decisions made, Court Agent implementing
+**Status**: ✅ **TIMEOUT/ERROR HANDLING COMPLETE** - Integration complete, ZON format ready when available
 
 **What Court Agent Needs to Know**:
 - Skate Agent Court Agent Phase 1 migration is complete
 - AI insights module is fully integrated with Court's multi-provider abstraction
-- Coordination decisions for timeout and error handling have been made (2025-12-28-125036-pst)
-- Skate Agent is ready to integrate timeout/error handling once Court Agent implementation is complete
+- ✅ **Timeout/Error Handling Integration Complete** (2025-12-28-223816-pst)
+- ⏳ **ZON Format Integration**: Ready to integrate when Court Agent Phase 2 complete (~90% complete)
 
 **What Court Agent Has Done**:
-1. ✅ **Implementation Complete** (2025-12-28-135000-pst):
+1. ✅ **Timeout/Error Handling Implementation Complete** (2025-12-28-135000-pst):
    - ✅ LLM timeout handling implemented: `timeout_ms: ?u32` parameter added (default: 60000)
    - ✅ LLM error handling implemented: `LlmProviderError` enum extended with structured error types, `is_llm_error_retryable()` function added
    - ✅ Rate limiting handling implemented: 429 detection, `Retry-After` header parsing, `rate_limit` error
 
-2. ✅ **Integration Complete** (2025-12-28-223816-pst):
-   - ✅ Skate Agent integrated timeout/error handling
+2. ✅ **Skate Agent Integration Complete** (2025-12-28-223816-pst):
+   - ✅ Skate Agent integrated timeout/error handling into AI insights module
    - ✅ All AI insights operations now use timeout (60s default) and structured error handling
-   - ✅ Retry logic implemented (exponential backoff, max 3 retries)
+   - ✅ Retry logic implemented (exponential backoff: 1s, 2s, 4s, max 3 retries)
+   - ✅ Using `is_llm_error_retryable()` for retryability classification
 
-3. **Status**: ✅ **COMPLETE** - Court Agent implementation complete, Skate Agent integration complete
+**Next Steps for Court Agent**:
+1. **Complete ZON Format Integration** (Phase 2 ~90% complete):
+   - Complete remaining ZON module work (~0.5 day estimated)
+   - Coordinate with Research Agent on Phase 2 LLM integration
+   - Coordinate with Flow Agent on integration testing
+
+2. **Coordinate with Skate Agent on ZON Integration** (when ready):
+   - Skate Agent ready to integrate ZON format for AI insights token efficiency (35-70% token reduction)
+   - Graph data structures ready for ZON serialization
+   - AI insights request/response model ready for ZON encoding
+   - Can provide graph data structures and AI insights prompts for ZON format integration
+
+**What Skate Agent Provides** (for ZON Integration):
+- Graph data structures ready for ZON serialization
+- AI insights prompts ready for ZON encoding
+- Knowledge graph node/edge data for efficient transmission
+- Ready to integrate ZON format for token-efficient graph data transmission
 
 **Integration Points**:
-- AI Insights Module: `src/grain_skate/ai_insights.zig`
+- AI Insights Module: `src/grain_skate/ai_insights.zig` (timeout/error handling integrated ✅)
 - LLM Provider Integration: Using Court Agent's `LlmProvider` interface and `ProviderPool`
 - AI Operations: `suggest_connections()`, `detect_knowledge_gaps()`, `suggest_title()`, `summarize_subgraph()`
+- ZON Integration (future): Graph data structures, AI insights prompts
+
+**Coordination Message**: "Skate Agent timeout/error handling integration complete. All AI insights operations now have timeout (60s default), structured error handling, and retry logic. Ready for ZON format integration when Court Agent Phase 2 complete. Can provide graph data structures and AI insights prompts for ZON format integration. Ready to coordinate on ZON encoding for knowledge graph data."
 
 ---
 
@@ -729,23 +791,53 @@ pub fn get_orphaned_pages(output: []u32) u32
 **Status**: No immediate coordination needed
 
 **What Other Agents Need to Know**:
-- Skate Agent core functionality is complete
-- Skate Agent is waiting on Court Agent implementation for timeout/error handling
-- Skate Agent is ready for feature coordination with Bubble, Aurora, and Core agents
-- Skate Agent can provide knowledge graph services if needed in future
+- ✅ Skate Agent core functionality is complete
+- ✅ Court Agent timeout/error handling integration complete (2025-12-28-223816-pst)
+- ⏳ Skate Agent ready for feature coordination with Bubble, Aurora, and Core agents
+- ⏳ Skate Agent can provide knowledge graph services if needed in future
+- ⚠️ DAG Core error handling coordination still needed (HIGH PRIORITY, but not blocking other agents)
 
-**No Action Needed**:
+**No Immediate Action Needed**:
 - No immediate action needed from other agents
 - Skate Agent will coordinate if integration is needed
 - Skate Agent will update status as implementation progresses
 
-**Future Integration Opportunities**:
-- **Silo Agent**: Knowledge graph data storage integration (if needed)
-- **Vantage Agent**: SLC product testing integration (if needed)
-- **Research Agent**: Knowledge graph research integration (if needed)
-- **Flow Agent**: Knowledge graph workflow integration (if needed)
-- **Carry Agent**: Knowledge graph mobile integration (if needed)
-- **Workspace Agent**: Knowledge graph workspace integration (if needed)
+**For Silo Agent**:
+- **Status**: No immediate coordination needed
+- **Future Integration Opportunities**: Knowledge graph data storage integration (if needed for persistence)
+- **Current Dependencies**: None (Skate Agent uses DAG Core directly)
+
+**For Vantage Agent**:
+- **Status**: No immediate coordination needed
+- **Future Integration Opportunities**: SLC product testing integration (if needed for testing DAG operations)
+- **Current Dependencies**: None (Skate Agent works at userspace level)
+
+**For Research Agent**:
+- **Status**: No immediate coordination needed
+- **Future Integration Opportunities**: 
+  - Knowledge graph research integration (if needed for research workflows)
+  - ZON format integration coordination (Court Agent Phase 2 ~90% complete)
+- **Current Dependencies**: None (independent work)
+
+**For Flow Agent**:
+- **Status**: No immediate coordination needed
+- **Future Integration Opportunities**: 
+  - Knowledge graph workflow integration (if needed for workflow orchestration)
+  - Event bus integration (if needed for async DAG operations)
+- **Current Dependencies**: None (independent work)
+- **Note**: Flow Agent ZON integration complete ✅, may coordinate on patterns
+
+**For Carry Agent**:
+- **Status**: No immediate coordination needed
+- **Future Integration Opportunities**: Knowledge graph mobile integration (if needed for mobile apps)
+- **Current Dependencies**: None (independent work)
+
+**For Workspace Agent**:
+- **Status**: No immediate coordination needed
+- **Future Integration Opportunities**: 
+  - Knowledge graph workspace integration (if needed for workspace features)
+  - Component API integration (Workspace Agent Component API complete ✅, may coordinate if needed)
+- **Current Dependencies**: None (independent work)
 
 ---
 

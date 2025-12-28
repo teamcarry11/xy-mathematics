@@ -1,8 +1,8 @@
 # Grain Aurora Agent: Core Coordination Status
 
 **Agent**: Grain Aurora IDE Dream Browser Agent (2nd Agent)  
-**Last Updated**: 2025-12-28-133430-PST  
-**Status**: ✅ **COORDINATION DECISIONS RECEIVED** - Court Agent LLM Implementation Complete ✅ - Ready for implementation
+**Last Updated**: 2025-12-28-142826-PST  
+**Status**: ✅ **COORDINATION DECISIONS RECEIVED** - Court Agent LLM Implementation Complete ✅ - Next Steps for Other Agents Documented ✅ - Ready for implementation
 
 ---
 
@@ -489,7 +489,8 @@ After reviewing coordination documents from all active agents, we've identified 
 **Skate Agent**: GLM-4.6 client integration (available)
 - Status: GLM-4.6 client ready for Skate Agent integration
 - Status: Skate Agent Court Agent migration complete ✅
-- **Note**: Skate Agent also waiting on Court Agent timeout/error handling implementation
+- ✅ **Court Agent LLM Implementation Complete**: Skate Agent can now integrate Court Agent's timeout/error handling (2025-12-28-135000-pst)
+- **Coordination**: Skate Agent and Aurora Agent can coordinate on integration patterns if helpful
 
 **Vantage Agent**: SLC Product Integration Testing (Priority 1 Complete ✅)
 - Status: Vantage Adaptation Framework Complete ✅ — Ready for SLC product integration testing
@@ -619,6 +620,203 @@ After reviewing coordination documents from all active agents, we've identified 
 - ✅ **Implement retry logic for LLM operations** — Court Agent error types available
 - ⏳ Implement retry logic for HTTP/WebSocket once Core Agent error types available
 - Production integration once all coordination complete
+
+---
+
+## Next Steps for Other Agents
+
+**Context**: Court Agent has completed LLM timeout/error handling implementation (2025-12-28-135000-pst). This section explains what this means for other agents and what Aurora Agent needs from them.
+
+### For Skate Agent
+
+**Status**: ✅ **Court Agent LLM Implementation Complete** — Skate Agent can now integrate
+
+**What This Means**:
+- Court Agent's LLM timeout/error handling is complete and available
+- Skate Agent was also waiting on Court Agent's implementation (as noted in coordination)
+- Skate Agent can now update their LLM integration to use Court Agent's timeout and error handling
+
+**Next Steps for Skate Agent**:
+1. Review Court Agent's coordination message (similar to Aurora Agent's message)
+2. Update Skate Agent's LLM client code to use Court Agent's timeout parameter (`timeout_ms: ?u32`)
+3. Update error handling to use Court Agent's `LlmProviderError` enum
+4. Add retry logic for retryable errors using `is_llm_error_retryable()`
+5. Test integration with Court Agent's providers
+
+**Coordination**: Skate Agent and Aurora Agent can coordinate on integration patterns if helpful, but both can proceed independently.
+
+---
+
+### For Core Agent
+
+**Status**: ⏳ **HTTP/WebSocket Timeout/Error Handling Implementation In Progress** (2-3 days)
+
+**What Aurora Agent Needs**:
+1. **HTTP Client Timeout/Error Handling** (CRITICAL)
+   - Per-request timeout support (`timeout_ms: ?u32` parameter)
+   - Global defaults: 30s for API calls, 60s for content fetching
+   - Structured error unions (`HttpClientError` enum)
+   - Retryability classification (`is_http_error_retryable()`)
+   - Rate limiting detection (429 responses, `Retry-After` header parsing)
+
+2. **WebSocket Timeout/Error Handling** (HIGH PRIORITY)
+   - Per-operation timeout support (`timeout_ms: ?u32` parameter)
+   - Global defaults: 10s for connections, 5s for message sending
+   - Structured error unions (`WebSocketError` enum)
+   - Retryability classification (`is_websocket_error_retryable()`)
+
+**Why This Matters**:
+- Aurora Agent's HTTP client (`dream_http_client.zig`) needs timeout/error support for:
+  - GLM-4.6 API calls (currently using Court Agent, but HTTP layer still needs timeout)
+  - Dream Browser HTTP requests
+  - LSP client requests
+- Aurora Agent's WebSocket client (`dream_browser_websocket.zig`) needs timeout/error support for:
+  - Nostr relay connections
+  - Real-time messaging features
+
+**Aurora Agent's Action Once Core Agent Implements**:
+- Update `dream_http_client.zig` to use Core Agent HTTP client with timeout/error support
+- Update `dream_browser_websocket.zig` to use Core Agent WebSocket with timeout/error support
+- Implement retry logic for HTTP/WebSocket operations using Core Agent's retryability functions
+- Refine `src/aurora_errors.zig` to align with Core Agent's error types
+
+**Timeline**: Core Agent implementation expected in 2-3 days (per coordination decisions)
+
+---
+
+### For DAG Core (Shared Module)
+
+**Status**: ⏳ **Error Handling Coordination Pending** (HIGH PRIORITY)
+
+**What Aurora Agent Needs**:
+1. **Error Type Documentation**:
+   - What error types does DAG Core return?
+   - What error information is available in DAG Core error unions?
+   - How should we handle node/event limit exceeded?
+   - How should we handle invalid event data?
+
+**Why This Matters**:
+- Aurora Agent's DAG integration (`aurora_dag_integration.zig`) currently has limited error handling
+- Similar issue identified by Skate Agent and Bubble Agent (HIGH PRIORITY gaps)
+- Proper error handling is critical for DAG operations (event recording, node creation, etc.)
+
+**Aurora Agent's Action Once DAG Core Coordinates**:
+- Update `aurora_dag_integration.zig` to use DAG Core's error types
+- Refine `src/aurora_errors.zig` to align with DAG Core's error types
+- Add proper error handling for DAG operations
+
+**Coordination Note**: This is a shared module coordination issue affecting multiple agents (Aurora, Skate, Bubble). Consider coordinating as a group if helpful.
+
+---
+
+### For Bubble Agent
+
+**Status**: ✅ **Component API Design Approved** — Ready for Coordination
+
+**What Aurora Agent Needs**:
+1. **Dream Browser Component API Design**:
+   - Adapt Workspace Agent's `DesktopComponentAPI` structure for Dream Browser context
+   - Define browser-specific components (browser_view, navigation_bar, tab_bar, etc.)
+   - Coordinate on component state variants, size variants, theme variants
+   - Coordinate on animation preferences for browser context
+
+**Why This Matters**:
+- Aurora Agent's Dream Browser needs component API for SLC product integration
+- Workspace Agent's component API design has been approved by Core Agent
+- Dream Browser has unique requirements (browser-specific components, navigation, tabs)
+
+**Aurora Agent's Action**:
+- Coordinate with Bubble Agent on Dream Browser component API design
+- Adapt approved component API structure for browser context
+- Define browser-specific components and their APIs
+
+**Timeline**: Can proceed now (no blocking dependencies)
+
+---
+
+### For Vantage Agent
+
+**Status**: ✅ **Vantage Adaptation Framework Complete** — Ready for SLC Product Integration Testing
+
+**What This Means**:
+- Vantage Agent's Priority 1 work is complete
+- Vantage Agent is ready for SLC product integration testing
+- Aurora Agent's Dream Browser is a key component for SLC product integration
+
+**Coordination Needed**:
+1. **SLC Product Integration Testing Schedule**:
+   - When will SLC product integration testing begin?
+   - What components need to be ready?
+   - What testing scenarios are planned?
+
+2. **Dream Browser Preparation**:
+   - Nostr profile rendering (for SLC product)
+   - DAG website rendering (for SLC product)
+   - Component API integration (coordinate with Bubble Agent)
+
+**Aurora Agent's Action**:
+- Prepare Dream Browser for SLC product integration
+- Coordinate with Vantage Agent on testing schedule
+- Ensure Dream Browser components are ready for integration testing
+
+**Timeline**: Can coordinate now (Vantage Agent ready, Aurora Agent preparing)
+
+---
+
+### For Flow Agent
+
+**Status**: ⏳ **Event Bus Event Types Pending** (for async pattern)
+
+**What Aurora Agent Needs**:
+1. **Event Types for Async Operations**:
+   - `http_request_completed` event type
+   - `http_request_failed` event type
+   - `websocket_connected` event type
+   - `websocket_message_received` event type
+
+**Why This Matters**:
+- Core Agent coordination decision: Event-driven async pattern using Flow Agent Event Bus
+- Aurora Agent can use callbacks (wraps event bus pattern) or subscribe to events directly
+- Event bus pattern improves performance for async HTTP/WebSocket operations
+
+**Aurora Agent's Action Once Flow Agent Adds Event Types**:
+- Optionally subscribe to events for async HTTP/WebSocket operations
+- Use event bus pattern for improved performance (or use callbacks)
+
+**Timeline**: Depends on Core Agent's HTTP/WebSocket client implementation (which will publish events)
+
+---
+
+### For Workspace Agent
+
+**Status**: ✅ **Component API Design Approved** — No Action Needed
+
+**What This Means**:
+- Workspace Agent's component API design has been approved by Core Agent
+- Aurora Agent will adapt this design for Dream Browser context
+- Workspace Agent's design serves as the foundation for component APIs
+
+**Coordination**: No immediate coordination needed. Aurora Agent will adapt Workspace Agent's approved design for Dream Browser context (coordinate with Bubble Agent if needed).
+
+---
+
+### Summary for Other Agents
+
+**Ready Now**:
+- ✅ **Skate Agent**: Can integrate Court Agent's LLM timeout/error handling
+- ✅ **Bubble Agent**: Can coordinate on Dream Browser component API design
+- ✅ **Vantage Agent**: Can coordinate on SLC product integration testing schedule
+
+**Waiting On**:
+- ⏳ **Core Agent**: HTTP/WebSocket timeout/error handling implementation (2-3 days)
+- ⏳ **DAG Core**: Error handling coordination (HIGH PRIORITY)
+- ⏳ **Flow Agent**: Event types for async operations (depends on Core Agent)
+
+**Coordination Opportunities**:
+- **Skate Agent + Aurora Agent**: Can share integration patterns for Court Agent's LLM timeout/error handling
+- **Aurora Agent + Bubble Agent**: Dream Browser component API design coordination
+- **Aurora Agent + Vantage Agent**: SLC product integration testing coordination
+- **Aurora Agent + Skate Agent + Bubble Agent**: DAG Core error handling coordination (shared module issue)
 
 ---
 

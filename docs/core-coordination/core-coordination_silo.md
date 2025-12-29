@@ -1,6 +1,6 @@
 # Grain Silo Agent: Coordination Status
 
-**Last Updated**: 2025-12-29-041500-pst  
+**Last Updated**: 2025-12-29-042500-pst  
 **Agent**: Grain Silo Agent (Database)  
 **Status**: **PRODUCTION READY** ✅ — **ALL COORDINATION DECISIONS READY** ✅ — **PAYMENT/VAULT STORAGE SCHEMA COMPLETE** ✅
 
@@ -188,7 +188,7 @@ All core phases complete and ready for production use:
 
 ## Next Steps for Core Agent
 
-### Priority 1: Payment/Passwords/Bank Storage Schema Approval (IMMEDIATE)
+### Priority 1: Payment/Passwords/Bank Storage Schema Approval (IMMEDIATE) ⏳
 
 **Current Status**: Storage schema design complete ✅, ready for Core Agent review
 
@@ -239,9 +239,11 @@ All core phases complete and ready for production use:
 
 **Estimated Time**: 4-7 hours total for review and coordination
 
+**Check-In Status**: ⏳ **IMMEDIATE** — Core Agent should review and coordinate on storage schema approval
+
 ---
 
-### Priority 2: Update HTTP/WebSocket Clients to Use Error Types Consistently (1 day)
+### Priority 2: Update HTTP/WebSocket Clients to Use Error Types Consistently (1 day) ⏳
 
 **Current Status**: Error types implementation complete ✅, clients need consistent usage
 
@@ -256,9 +258,11 @@ All core phases complete and ready for production use:
 - Enables proper retry logic across all agents
 - Aligns with coordination decision implementation
 
+**Check-In Status**: ⏳ **SHORT-TERM** — Can proceed independently, no immediate coordination needed
+
 ---
 
-### Priority 3: Add 429 Status Code to HttpStatus Enum (1 day)
+### Priority 3: Add 429 Status Code to HttpStatus Enum (1 day) ⏳
 
 **Current Status**: Rate limiting returns 429, but using 503 until Core Agent adds 429 to HttpStatus enum
 
@@ -271,6 +275,8 @@ All core phases complete and ready for production use:
 - Proper HTTP status codes improve error handling clarity
 - Enables proper rate limiting responses
 - Aligns with HTTP standards
+
+**Check-In Status**: ⏳ **SHORT-TERM** — Can proceed independently, no immediate coordination needed
 
 ---
 
@@ -311,6 +317,8 @@ All core phases complete and ready for production use:
    - Test circuit breaker pattern with health check endpoint
    - Test idempotency keys for safe retries
    - Test timeout and error handling with various scenarios
+
+**Check-In Status**: ⏳ **PRIORITY 5** — Carry Agent should coordinate on integration approach and timing
 
 **Key Resources**:
 - User Storage Helper: `src/grain_database/user_storage.zig`
@@ -364,6 +372,8 @@ All core phases complete and ready for production use:
    - Test service-to-service authentication
    - Test async pattern with event-driven operations
 
+**Check-In Status**: ⏳ **PRIORITY 4** — Aurora Agent should coordinate on SLC product integration testing schedule
+
 **Key Resources**:
 - SLC Helpers: `src/grain_database/slc_integration.zig` (NostrProfileStorage)
 - Circuit Breaker: `docs/grain_database/circuit_breaker_pattern.md`
@@ -414,6 +424,8 @@ All core phases complete and ready for production use:
    - Test circuit breaker pattern with health check endpoint
    - Test service-to-service authentication
    - Test async pattern with event-driven operations
+
+**Check-In Status**: ⏳ **PRIORITY 4** — Skate Agent should coordinate on SLC product integration testing schedule
 
 **Key Resources**:
 - SLC Helpers: `src/grain_database/slc_integration.zig` (DagWebsiteStorage)
@@ -485,6 +497,8 @@ All core phases complete and ready for production use:
    - Secure credential storage via Grain Passwords
    - Permission-based access control
 
+**Check-In Status**: ⏳ **PRIORITY 4** — Workspace Agent should coordinate on SLC product integration testing schedule
+
 **Key Resources**:
 - SLC Helpers: `src/grain_database/slc_integration.zig` (WorkspaceFileStorage)
 - Storage Schema Design: `docs/grain_database/payment_vault_storage_schema.md`
@@ -524,6 +538,8 @@ All core phases complete and ready for production use:
    - Market analysis using knowledge graph (Skate Agent integration)
    - Currency relationship insights
 
+**Check-In Status**: ⏳ **FUTURE** — Court Agent should coordinate when ready for LLM API key storage integration
+
 **Key Resources**:
 - Storage Schema Design: `docs/grain_database/payment_vault_storage_schema.md`
 - Payment/Vault/Bank Design: `docs/zyx/grain_payment_vault_design_2025-12-28-213448-pst.md`
@@ -560,6 +576,8 @@ All core phases complete and ready for production use:
 3. **Implement Circuit Breaker Pattern**:
    - Use health check endpoint for circuit breaker logic
    - Reference: `docs/grain_database/circuit_breaker_pattern.md`
+
+**Check-In Status**: ⏳ **OPTIONAL** — Bubble Agent should coordinate if database integration is needed
 
 **Key Resources**:
 - API Contracts: `docs/agent-communications/silo_agent_database_api_contracts_2025-12-21-143409-pst.md`
@@ -834,6 +852,47 @@ All core phases complete and ready for production use:
 
 ---
 
+## Check-In Schedule
+
+### Immediate Check-Ins Needed
+
+1. **Core Agent** (IMMEDIATE):
+   - **Topic**: Payment/Passwords/Bank storage schema design approval
+   - **Time**: 4-7 hours for review and coordination
+   - **Status**: ⏳ Waiting on Core Agent
+   - **Action**: Core Agent should review `docs/grain_database/payment_vault_storage_schema.md`
+   - **Priority**: IMMEDIATE
+
+2. **Carry Agent** (Priority 5):
+   - **Topic**: User Storage Helper integration coordination
+   - **Time**: 1-2 hours for coordination discussion
+   - **Status**: ⏳ Ready for coordination
+   - **Action**: Carry Agent should review integration documentation and coordinate on approach
+   - **Priority**: Priority 5
+
+3. **Aurora/Skate/Workspace Agents** (Priority 4):
+   - **Topic**: SLC product integration testing coordination
+   - **Time**: 1-2 hours for coordination discussion
+   - **Status**: ⏳ Ready for coordination
+   - **Action**: Agents should coordinate on SLC product integration testing schedule
+   - **Priority**: Priority 4
+
+### Future Check-Ins
+
+1. **After Core Agent Storage Schema Approval**:
+   - **Topic**: Storage helper implementation timing
+   - **Time**: 30 minutes
+   - **Status**: ⏳ Waiting on Core Agent approval
+   - **Action**: Coordinate on implementation start date
+
+2. **After Core Agent Phase 1 Begins**:
+   - **Topic**: Storage helper implementation and integration testing
+   - **Time**: Ongoing coordination
+   - **Status**: ⏳ Waiting on Core Agent Phase 1
+   - **Action**: Coordinate on integration testing schedule
+
+---
+
 ## Key Resources
 
 ### Documentation
@@ -843,6 +902,7 @@ All core phases complete and ready for production use:
 - **Payment/Vault/Bank Storage Schema**: `docs/grain_database/payment_vault_storage_schema.md`
 - **Payment/Vault/Bank Design**: `docs/zyx/grain_payment_vault_design_2025-12-28-213448-pst.md`
 - **Integration Response (Carry)**: `docs/agent-communications/silo_agent_carry_integration_response_2025-12-23-194454-pst.md`
+- **Coordination Readiness**: `docs/agent-communications/silo_agent_coordination_readiness_2025-12-29-042000-pst.md`
 
 ### Source Code
 - **User Storage Helper**: `src/grain_database/user_storage.zig`
@@ -880,4 +940,6 @@ All core phases complete and ready for production use:
 
 ---
 
-**Status**: Ready for coordination and production use. No blockers. Priority 5 (Other Agent Coordination) — can proceed in parallel with other priorities. **All coordination decisions are ready for immediate integration by all agents** ✅ — HTTP/WebSocket timeout, error types, service-to-service authentication, and async pattern are all implemented and ready. **Payment/Vault/Bank storage schema design complete, ready for Core Agent approval** ✅. Waiting on Core Agent for storage schema approval (IMMEDIATE), HTTP/WebSocket client error type consistency (1 day), and 429 status code support (1 day).
+**Status**: Ready for coordination and production use. No blockers. Priority 5 (Other Agent Coordination) — can proceed in parallel with other priorities. **All coordination decisions are ready for immediate integration by all agents** ✅ — HTTP/WebSocket timeout, error types, service-to-service authentication, and async pattern are all implemented and ready. **Payment/Vault/Bank storage schema design complete, ready for Core Agent approval** ✅. 
+
+**Check-In Needed**: ⏳ **IMMEDIATE** — Core Agent should review and approve Payment/Passwords/Bank storage schema design (4-7 hours). This unblocks storage helper implementation and Core Agent Phase 1.

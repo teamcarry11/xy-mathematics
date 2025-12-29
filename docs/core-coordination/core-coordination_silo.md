@@ -786,6 +786,7 @@ All core phases complete and ready for production use:
 - ⏳ **Flow Agent**: Event Bus initialization for Carry Agent async pattern (high priority)
 - ⏳ **Vantage Agent**: Phase 10 (AArch64 Cloud Deployment) — Can proceed now that Priority 1 is complete
 - ⏳ **Core Agent**: Payment/Passwords/Bank storage schema approval (IMMEDIATE)
+- ⏳ **Core Agent**: JG project module requirements and data structures coordination (IMMEDIATE - for storage schema design)
 - ⏳ **Core Agent**: Update HTTP/WebSocket clients to use error types consistently (1 day)
 - ⏳ **Core Agent**: 429 status code support (add `too_many_requests` to HttpStatus enum)
 

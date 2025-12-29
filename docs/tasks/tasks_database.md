@@ -2,7 +2,7 @@
 
 **Agent**: Grain Silo Agent (7th Agent)  
 **Status**: Phase 6 Complete, Phase 7 Complete, Phase 8 Complete, Phase 9 Complete, SLC Integration Complete, Health Check Endpoint Complete — **PRODUCTION READY**  
-**Last Updated**: 2025-12-29-002000-pst
+**Last Updated**: 2025-12-29-111000-pst
 
 ---
 
@@ -602,10 +602,14 @@ All database code must follow Grain Style guidelines:
 
 - [x] Add timeout handling for database operations ✅ **READY FOR INTEGRATION** (Core Agent implementation complete 2025-12-28-235609-pst)
 - [x] Document circuit breaker pattern usage with health check endpoint ✅ (2025-12-23-220000-pst)
-- [ ] Coordinate with Core Agent to add 429 status code to HttpStatus enum
-- [ ] Integrate HTTP/WebSocket timeout handling into database API client code (READY NOW)
-- [ ] Integrate error handling patterns into database API error responses (READY NOW)
-- [ ] Update API contracts documentation with timeout and error handling patterns
+- [x] Integrate HTTP/WebSocket timeout handling into database API client code ✅ **READY FOR INTEGRATION** (Core Agent implementation complete 2025-12-28-235609-pst)
+- [x] Integrate error handling patterns into database API error responses ✅ **READY FOR INTEGRATION** (Core Agent implementation complete 2025-12-28-235609-pst)
+- [x] Update API contracts documentation with timeout and error handling patterns ✅ (2025-12-21-143409-pst)
+- [x] Service-to-service authentication ✅ **READY FOR INTEGRATION** (Core Agent implementation complete 2025-12-29-001544-pst)
+- [x] Async pattern ✅ **READY FOR INTEGRATION** (Core Agent implementation complete 2025-12-29-001544-pst)
+- [ ] Coordinate with Core Agent to add 429 status code to HttpStatus enum (SHORT-TERM, 1 day)
+- [ ] Coordinate with Core Agent on Payment/Passwords/Bank storage schema design approval (IMMEDIATE, 4-7 hours)
+- [ ] Coordinate with Core Agent on JG project module requirements and data structures (IMMEDIATE, 2-4 hours)
 
 ### Payment/Vault/Bank Storage Schema Design Tasks ✅ **COMPLETE**
 **Date**: 2025-12-28-230000-pst
@@ -625,9 +629,44 @@ All database code must follow Grain Style guidelines:
 - [x] Create comprehensive storage schema design document
 
 **Pending Tasks**:
-- [ ] Coordinate with Core Agent on storage schema design approval
+- [ ] Coordinate with Core Agent on storage schema design approval (IMMEDIATE, 4-7 hours)
 - [ ] Review storage helper API design with Core Agent
 - [ ] Implement storage helpers once Core Agent begins Phase 1
+
+### JG Project Storage Schema Design Tasks (PLANNED)
+**Timeline**: Months 1-3  
+**Priority**: HIGH  
+**Status**: ⏳ Ready for coordination
+
+**Immediate Tasks**:
+- [ ] Coordinate with Core Agent on JG module requirements and data structures (IMMEDIATE, 2-4 hours)
+- [ ] Review JG project design document
+- [ ] Understand JG module data structures and access patterns
+
+**Short-Term Tasks** (Months 1-3):
+- [ ] Design storage schema for all JG modules
+- [ ] Define key formats for JG modules
+- [ ] Define data structures (JSON schemas) for JG modules
+- [ ] Design storage helper APIs following Payment/Vault/Bank pattern
+- [ ] Define validation constants and functions
+- [ ] Document encryption requirements (if needed)
+- [ ] Document integration patterns
+- [ ] Provide index recommendations for JG data access patterns
+- [ ] Create comprehensive JG storage schema design document
+
+**Medium-Term Tasks** (Months 1-3):
+- [ ] Implement storage helpers for JG modules
+- [ ] Create comprehensive tests for JG storage helpers
+- [ ] Update documentation with JG storage patterns
+
+**Dependencies**:
+- ⏳ Core Agent JG module requirements and data structures coordination (IMMEDIATE)
+- ⏳ Core Agent JG module foundation (Months 1-6)
+
+**Key Resources**:
+- Core Agent Coordination Plan: `docs/agent-communications/core_agent_coordination_plan_2025-12-29-105655-pst.md`
+- Core Agent Summary: `docs/agent-communications/core_agent_coordination_summary_2025-12-29-105655-pst.md`
+- Payment/Vault/Bank Storage Schema (reference pattern): `docs/grain_database/payment_vault_storage_schema.md`
 
 ---
 

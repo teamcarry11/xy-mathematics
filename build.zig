@@ -589,11 +589,6 @@ pub fn build(b: *std.Build) void {
 
     // Aurora Layout module
     // Aurora Errors module (foundational error types)
-    const aurora_errors_module = b.addModule("aurora_errors", .{
-        .root_source_file = b.path("src/aurora_errors.zig"),
-        .target = target,
-        .optimize = optimize,
-    });
 
     const aurora_layout_module = b.addModule("aurora_layout", .{
         .root_source_file = b.path("src/aurora_layout.zig"),
@@ -703,6 +698,41 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    // Aurora Editor module (for test imports)
+    const aurora_editor_module = b.addModule("aurora_editor", .{
+        .root_source_file = b.path("src/aurora_editor.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
+    // Dream Browser Parser module (for test imports)
+    const dream_browser_parser_module = b.addModule("dream_browser_parser", .{
+        .root_source_file = b.path("src/dream_browser_parser.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
+    // Dream Browser Renderer module (for test imports)
+    const dream_browser_renderer_module = b.addModule("dream_browser_renderer", .{
+        .root_source_file = b.path("src/dream_browser_renderer.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
+    // Dream Browser DAG Integration module (for test imports)
+    const dream_browser_dag_integration_module = b.addModule("dream_browser_dag_integration", .{
+        .root_source_file = b.path("src/dream_browser_dag_integration.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
+    // Grain Aurora module (for test imports)
+    const grain_aurora_module = b.addModule("grain_aurora", .{
+        .root_source_file = b.path("src/grain_aurora.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
     // Aurora Live Preview module (for test imports)
     const aurora_live_preview_module = b.addModule("aurora_live_preview", .{
         .root_source_file = b.path("src/aurora_live_preview.zig"),
@@ -720,6 +750,13 @@ pub fn build(b: *std.Build) void {
         },
     });
 
+    // Aurora GLM-4.6 module (for test imports)
+    const aurora_glm46_module = b.addModule("aurora_glm46", .{
+        .root_source_file = b.path("src/aurora_glm46.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
     // Aurora GLM-4.6 Provider module (for test imports)
     const aurora_glm46_provider_module = b.addModule("aurora_glm46_provider", .{
         .root_source_file = b.path("src/aurora_glm46_provider.zig"),
@@ -731,23 +768,9 @@ pub fn build(b: *std.Build) void {
         },
     });
 
-    // Aurora GLM-4.6 module (for test imports)
-    const aurora_glm46_module = b.addModule("aurora_glm46", .{
-        .root_source_file = b.path("src/aurora_glm46.zig"),
-        .target = target,
-        .optimize = optimize,
-    });
-
     // Aurora Cocoa module (for test imports)
     const aurora_cocoa_module = b.addModule("aurora_cocoa", .{
         .root_source_file = b.path("src/aurora_cocoa.zig"),
-        .target = target,
-        .optimize = optimize,
-    });
-
-    // Aurora Editor module (for test imports)
-    const aurora_editor_module = b.addModule("aurora_editor", .{
-        .root_source_file = b.path("src/aurora_editor.zig"),
         .target = target,
         .optimize = optimize,
     });
@@ -923,34 +946,6 @@ pub fn build(b: *std.Build) void {
                 .{ .name = "dream_browser_viewport", .module = dream_browser_viewport_module },
             },
         }),
-    });
-
-    // Dream Browser Parser module (for test imports)
-    const dream_browser_parser_module = b.addModule("dream_browser_parser", .{
-        .root_source_file = b.path("src/dream_browser_parser.zig"),
-        .target = target,
-        .optimize = optimize,
-    });
-
-    // Dream Browser Renderer module (for test imports)
-    const dream_browser_renderer_module = b.addModule("dream_browser_renderer", .{
-        .root_source_file = b.path("src/dream_browser_renderer.zig"),
-        .target = target,
-        .optimize = optimize,
-    });
-
-    // Dream Browser DAG Integration module (for test imports)
-    const dream_browser_dag_integration_module = b.addModule("dream_browser_dag_integration", .{
-        .root_source_file = b.path("src/dream_browser_dag_integration.zig"),
-        .target = target,
-        .optimize = optimize,
-    });
-
-    // Grain Aurora module (for test imports)
-    const grain_aurora_module = b.addModule("grain_aurora", .{
-        .root_source_file = b.path("src/grain_aurora.zig"),
-        .target = target,
-        .optimize = optimize,
     });
 
     // Aurora Unified IDE module (for test imports)
@@ -4115,18 +4110,27 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&grain_database_network_integration_tests_run.step);
 
     const grain_database_slc_integration_tests = b.addTest(.{
-        .root_source_file = b.path("tests/123_grain_database_slc_integration_test.zig"),
-        .target = target,
-        .optimize = optimize,
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/123_grain_database_slc_integration_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_database", .module = grain_database_module },
+            },
+        }),
     });
-    grain_database_slc_integration_tests.root_module.addImport("grain_database", grain_database_module);
     const grain_database_slc_integration_tests_run = b.addRunArtifact(grain_database_slc_integration_tests);
     test_step.dependOn(&grain_database_slc_integration_tests_run.step);
 
     const grain_database_user_storage_tests = b.addTest(.{
-        .root_source_file = b.path("tests/124_grain_database_user_storage_test.zig"),
-        .target = target,
-        .optimize = optimize,
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/124_grain_database_user_storage_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_database", .module = grain_database_module },
+            },
+        }),
     });
     grain_database_user_storage_tests.root_module.addImport("grain_database", grain_database_module);
     const grain_database_user_storage_tests_run = b.addRunArtifact(grain_database_user_storage_tests);

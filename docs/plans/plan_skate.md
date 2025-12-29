@@ -604,7 +604,10 @@ Grain Skate Terminal Silo Field Agent is responsible for building Grain Skate (k
 - **Needs**: Court Agent provider abstraction (Phase 1 complete) ✅
 - **Needs**: HTTP client from Core Agent (Phase 61 complete) ✅
 - **Needs**: Grain Court (WSE spatial computing) for vector search
-- **Coordinates with**: Court Agent (LLM infrastructure), Core Agent (HTTP client), Bubble Agent (visual design)
+- **Coordinates with**: 
+  - Court Agent (LLM infrastructure - timeout/error handling integrated ✅)
+  - Core Agent (HTTP client - timeout/error handling complete ✅, indirect benefit via Court Agent)
+  - Bubble Agent (visual design)
 
 **Cross-Platform**:
 - **Carry (Mobile)**: AI insights in mobile knowledge graph view

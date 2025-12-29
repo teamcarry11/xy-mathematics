@@ -750,10 +750,18 @@ All core phases complete and ready for production use:
    - Use thresholds: 5 failures to open, 30s recovery timeout, 2 successes to close
    - Reference: `docs/grain_database/circuit_breaker_pattern.md`
 
-3. **Prepare for Core Agent Implementation**:
-   - Prepare timeout handling (30s default for API calls, 60s for content fetching)
-   - Prepare error handling using structured error unions
-   - Prepare service-to-service authentication (when Core Agent implements)
+3. **Integrate HTTP/WebSocket Timeout and Error Handling** (READY NOW ✅):
+   - **Timeout Handling**: Use per-request timeout (30s default for API calls, 60s for content)
+     - Set `timeout_ms: 30000` for API requests (or use `DEFAULT_API_TIMEOUT_MS`)
+     - Set `timeout_ms: 60000` for content fetching (or use `DEFAULT_CONTENT_TIMEOUT_MS`)
+     - Use `is_timed_out()` function to check for timeouts
+   - **Error Handling**: Use structured error unions from Core Agent
+     - Handle `HttpClientError` enum with retryability classification
+     - Use `is_http_error_retryable()` for retry logic
+     - Use error message helpers: `get_http_error_message()`
+
+4. **Prepare for Remaining Core Agent Implementation**:
+   - Prepare service-to-service authentication (when Core Agent implements, 2-3 days remaining)
 
 4. **SLC Product Integration Testing**:
    - Use batch operations for efficient bulk loading (`batch_store_nodes()`)

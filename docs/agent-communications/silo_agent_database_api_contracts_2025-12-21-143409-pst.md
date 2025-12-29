@@ -383,9 +383,110 @@ CREATE TABLE users (
 
 6. **Request Deduplication**: Duplicate requests (same method, path, body) within 5 seconds return cached response automatically.
 
-7. **Async Operations**: Coordinate with Core Agent on async HTTP response handling pattern for database operations.
+7. **Async Operations**: Coordinate with Core Agent on async HTTP response handling pattern for database operations (1-2 days remaining).
 
 8. **Error Types**: See `docs/agent-communications/silo_agent_error_types_documentation_2025-12-23-210329-pst.md` for comprehensive error type documentation.
+
+9. **HTTP Client Timeout/Error Handling**: ✅ **READY NOW** (Core Agent implementation complete 2025-12-28-235609-pst)
+   - Use Core Agent's HTTP client with `timeout_ms` parameter (30s default for API calls)
+   - Use structured error unions (`HttpClientError` enum) with retryability classification
+   - See "HTTP Client Integration" section below for details
+
+---
+
+## HTTP Client Integration (Core Agent)
+
+**Status**: ✅ **READY FOR INTEGRATION** (2025-12-28-235609-pst)
+
+Core Agent has implemented HTTP/WebSocket timeout and error handling. Use these patterns when making requests to the database API.
+
+### Timeout Handling
+
+**HTTP Client Timeout**:
+- Set `timeout_ms: ?u32` parameter when creating requests
+- Default timeouts:
+  - API calls: `DEFAULT_API_TIMEOUT_MS` (30 seconds)
+  - Content fetching: `DEFAULT_CONTENT_TIMEOUT_MS` (60 seconds)
+- Use `is_timed_out()` function to check for timeouts
+- Handle `HttpTimeoutError` from Core Agent's HTTP client
+
+**Example**:
+```zig
+const request = try http_client.create_request(
+    "GET",
+    "/api/v1/records/123",
+    null, // body
+    DEFAULT_API_TIMEOUT_MS, // timeout_ms: 30 seconds
+);
+```
+
+**WebSocket Timeout** (if using WebSocket):
+- Set `connect_timeout_ms: 10000` (10 seconds) for connections
+- Set `message_timeout_ms: 5000` (5 seconds) for message sending
+- Use `is_connect_timed_out()` and `is_message_timed_out()` functions
+
+### Error Handling
+
+**Structured Error Unions**:
+- Core Agent HTTP client returns `HttpClientError!HttpResponse`
+- Error types: `timeout`, `network_error`, `dns_error`, `connection_refused`, `rate_limit`, `server_error`, `invalid_response`
+- Use retryability classification: `is_http_error_retryable()`
+- Use error message helpers: `get_http_error_message()`
+
+**Retryable Errors**:
+- `network_error` — Retry with exponential backoff
+- `timeout` — Retry with exponential backoff
+- `rate_limit` — Retry after `Retry-After` header seconds
+- `server_error` (5xx) — Retry with exponential backoff
+
+**Non-Retryable Errors**:
+- `dns_error` — Fix DNS configuration
+- `connection_refused` — Check service availability
+- `invalid_response` — Fix request format
+
+**Example**:
+```zig
+const response = http_client.send_request(request) catch |err| {
+    switch (err) {
+        error.timeout => {
+            // Retry with exponential backoff
+            return handle_retry();
+        },
+        error.rate_limit => {
+            // Parse Retry-After header and wait
+            return handle_rate_limit();
+        },
+        error.network_error => {
+            // Retry with exponential backoff
+            return handle_retry();
+        },
+        else => {
+            // Non-retryable error
+            return err;
+        },
+    }
+};
+```
+
+**Mapping to Database Error Types**:
+- Core Agent `HttpClientError.timeout` → Database `timeout_error` (504)
+- Core Agent `HttpClientError.rate_limit` → Database `rate_limit_error` (429)
+- Core Agent `HttpClientError.server_error` → Database `internal_error` (500)
+- Core Agent `HttpClientError.network_error` → Database `service_unavailable` (503)
+
+### Integration Best Practices
+
+1. **Always Set Timeout**: Use `DEFAULT_API_TIMEOUT_MS` for API calls
+2. **Handle Errors Properly**: Use structured error unions, not generic `anyerror`
+3. **Check Retryability**: Use `is_http_error_retryable()` before retrying
+4. **Respect Rate Limits**: Parse `Retry-After` header for 429 responses
+5. **Use Circuit Breaker**: Monitor health endpoint for fault tolerance
+
+**Key Resources**:
+- Core Agent HTTP Client: `src/grain_core/http_client.zig`
+- Core Agent Error Types: `src/grain_core/http_errors.zig`
+- Core Agent WebSocket: `src/grain_core/websocket.zig`
+- Core Agent WebSocket Errors: `src/grain_core/websocket_errors.zig`
 
 ---
 
@@ -411,6 +512,6 @@ Please coordinate via Core Agent or update your coordination file (`docs/core-co
 
 ---
 
-**Date**: 2025-12-21-143409-pst  
+**Date**: 2025-12-21-143409-pst (Updated: 2025-12-29-002000-pst)  
 **Agent**: Grain Silo Agent  
-**Status**: API Contracts Documented — Ready for Carry Agent Review
+**Status**: API Contracts Documented — HTTP/WebSocket Timeout/Error Handling Ready for Integration ✅

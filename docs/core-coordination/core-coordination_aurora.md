@@ -395,7 +395,7 @@
 1. ⏳ Updating HTTP client to return `HttpClientError!HttpResponse` (in progress)
 2. ⏳ Updating WebSocket client to return `WebSocketError!void` (in progress)
 3. ⏳ File I/O timeout implementation (when kernel integration ready)
-4. ⏳ Supporting Vantage Agent kernel refactoring (build.zig updates)
+4. ✅ Supporting Vantage Core kernel refactoring (build.zig updates) — Complete
 
 **Aurora Agent Readiness**: ✅ All critical integrations complete — Ready for independent work
 

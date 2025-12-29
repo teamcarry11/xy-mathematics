@@ -1,8 +1,8 @@
 # Grain Silo Agent: Coordination Status
 
-**Last Updated**: 2025-12-29-010000-pst  
+**Last Updated**: 2025-12-29-041500-pst  
 **Agent**: Grain Silo Agent (Database)  
-**Status**: **PRODUCTION READY** ✅ — **HTTP/WEBSOCKET TIMEOUT/ERROR HANDLING READY** ✅ — **PAYMENT/VAULT STORAGE SCHEMA COMPLETE** ✅
+**Status**: **PRODUCTION READY** ✅ — **ALL COORDINATION DECISIONS READY** ✅ — **PAYMENT/VAULT STORAGE SCHEMA COMPLETE** ✅
 
 ---
 
@@ -21,6 +21,9 @@ All core phases complete and ready for production use:
 - ✅ Design Gaps Implementation: Complete (4 critical/high-priority gaps implemented)
 - ✅ Circuit Breaker Pattern Documentation: Complete (comprehensive guide for client agents)
 - ✅ Payment/Vault/Bank Storage Schema: Complete (ready for Core Agent approval)
+- ✅ HTTP/WebSocket Timeout/Error Handling: Ready for integration ✅
+- ✅ Service-to-Service Authentication: Ready for integration ✅
+- ✅ Async Pattern: Ready for integration ✅
 
 **Priority**: Priority 5 (Other Agent Coordination) — Can proceed in parallel with other priorities
 
@@ -81,32 +84,45 @@ All core phases complete and ready for production use:
 
 ## Recent Progress
 
-### HTTP/WebSocket Timeout and Error Handling Ready (2025-12-29-002000-pst) ✅
+### All Coordination Decisions Complete (2025-12-29-041147-pst) ✅
 
-**Status**: ✅ **READY FOR INTEGRATION** — Core Agent implementation complete
+**Status**: ✅ **ALL IMPLEMENTATION COMPLETE** — Ready for immediate integration by all agents
 
-**Core Agent Implementation Complete** (2025-12-28-235609-pst):
-- ✅ HTTP client timeout: `timeout_ms` field, default timeouts (30s API, 60s content)
-- ✅ WebSocket timeout: `connect_timeout_ms`, `message_timeout_ms` fields, default timeouts (10s connect, 5s message)
-- ✅ Error types: `HttpClientError`, `WebSocketError`, `FileIoError` enums with retryability
-- ✅ Retryability functions: `is_http_error_retryable()`, `is_websocket_error_retryable()`, `is_file_io_error_retryable()`
-- ✅ Error message helpers: `get_http_error_message()`, `get_websocket_error_message()`, `get_file_io_error_message()`
+**Core Agent Implementation Complete**:
+- ✅ **HTTP/WebSocket Timeout**: Implementation COMPLETE (2025-12-28-235609-pst)
+  - HTTP client timeout: `timeout_ms` field, default timeouts (30s API, 60s content)
+  - WebSocket timeout: `connect_timeout_ms`, `message_timeout_ms` fields, default timeouts (10s connect, 5s message)
+  - Timeout checking functions implemented
+- ✅ **Error Handling Pattern**: Implementation COMPLETE (2025-12-28-235609-pst)
+  - `HttpClientError`, `WebSocketError`, `FileIoError` enums with retryability
+  - Retryability functions: `is_http_error_retryable()`, `is_websocket_error_retryable()`, `is_file_io_error_retryable()`
+  - Error message helpers: `get_http_error_message()`, `get_websocket_error_message()`, `get_file_io_error_message()`
+- ✅ **Service-to-Service Authentication**: Implementation COMPLETE (2025-12-29-001544-pst)
+  - `SERVICE_ACCOUNT_TOKEN_EXPIRY` constant (24 hours)
+  - `TokenType.service_account` enum variant
+  - `AuthService.generate_service_account_token()` function
+  - Ready for all agents to integrate
+- ✅ **Async Pattern**: Implementation COMPLETE (2025-12-29-001544-pst)
+  - Flow Agent: Async pattern event types added (HTTP, WebSocket, File I/O)
+  - Flow Agent: Async pattern documentation created
+  - Core Agent: Async pattern integration module created (`src/grain_core/async_pattern.zig`)
+  - `publish_http_request_completed()` and `publish_http_request_failed()` helpers
+  - Ready for Flow Agent Event Bus integration
 
 **Impact**:
-- All agents can now integrate HTTP/WebSocket timeout and error handling immediately
+- **All agents can now integrate all coordination decisions immediately** ✅
 - Proper timeout handling prevents indefinite blocking
 - Structured error handling enables proper retry logic
-- Retryability classification guides client error handling
-
-**Next Steps for Silo Agent**:
-- ✅ API contracts document updated with HTTP client integration section
-- ⏳ Monitor agent integration progress
-- ⏳ Provide support for agents integrating timeout/error handling
+- Service-to-service authentication enables secure agent-to-agent communication
+- Async pattern enables event-driven HTTP/WebSocket operations
 
 **Key Resources**:
 - API Contracts: `docs/agent-communications/silo_agent_database_api_contracts_2025-12-21-143409-pst.md` (HTTP Client Integration section)
 - Core Agent HTTP Client: `src/grain_core/http_client.zig`
 - Core Agent Error Types: `src/grain_core/http_errors.zig`
+- Core Agent Auth Service: `src/grain_core/auth_service.zig`
+- Core Agent Async Pattern: `src/grain_core/async_pattern.zig`
+- Flow Agent Event Bus: `src/grain_flow/event_bus.zig`
 
 ### Payment/Passwords/Bank Storage Schema Design Complete (2025-12-28-230000-pst) ✅
 
@@ -225,36 +241,20 @@ All core phases complete and ready for production use:
 
 ---
 
-### Priority 2: Complete Remaining Coordination Decisions Implementation (2-4 days)
+### Priority 2: Update HTTP/WebSocket Clients to Use Error Types Consistently (1 day)
 
-**Current Status**: HTTP/WebSocket timeout and error handling COMPLETE ✅, service-to-service auth and async pattern in progress
+**Current Status**: Error types implementation complete ✅, clients need consistent usage
 
-**What Core Agent Needs to Complete**:
-
-1. **Service-to-Service Authentication** (2-3 days remaining):
-   - Add `ServiceAccount` struct to `AuthService`
-   - Add `generate_service_account_token()` function
-   - Add `validate_service_account_token()` function
-   - Add `refresh_service_account_token()` function
-   - Extend `JwtClaims` for service accounts
-   - Document service account token format
-   - **Impact**: Unblocks Carry Agent and other agents for database write operations
-
-2. **Async Pattern Integration** (1-2 days remaining):
-   - Document async pattern using Flow Agent Event Bus
-   - Add event types to `grain_flow.event_bus.EventType` enum
-   - Update HTTP client to publish events on completion/failure
-   - Create async pattern documentation with examples
-   - **Impact**: Enables async HTTP response handling for client agents
+**What Core Agent Needs to Do**:
+- Update HTTP client to return `HttpClientError!HttpResponse` consistently
+- Update WebSocket client to return `WebSocketError` consistently
+- Ensure all error paths use structured error unions
+- Update documentation with consistent error handling examples
 
 **Why This Matters**:
-- Service-to-service authentication enables secure agent-to-agent communication
-- Async pattern improves performance for HTTP/WebSocket operations
-- Both patterns are critical for production use
-
-**Key Resources**:
-- Core Agent Coordination Plan: `docs/agent-communications/core_agent_coordination_plan_2025-12-29-001544-pst.md`
-- Flow Agent Event Bus: `src/grain_flow/event_bus.zig`
+- Consistent error handling improves developer experience
+- Enables proper retry logic across all agents
+- Aligns with coordination decision implementation
 
 ---
 
@@ -278,53 +278,39 @@ All core phases complete and ready for production use:
 
 ### For Carry Agent (Mobile Framework)
 
-**Current Status**: User Storage Helper ready ✅, HTTP/WebSocket timeout/error handling ready ✅, waiting on service-to-service authentication
+**Current Status**: User Storage Helper ready ✅, timeout/error handling integrated ✅, service-to-service auth and async pattern ready ✅
 
 **Immediate Next Steps** (Can Do Now):
 
-1. **Integrate HTTP/WebSocket Timeout and Error Handling** (READY NOW ✅):
-   - **Timeout Handling**: Use per-request timeout with 30s default for API calls
-     - Set `timeout_ms: 30000` for database API requests (or use `DEFAULT_API_TIMEOUT_MS`)
-     - Use `is_timed_out()` function to check for timeouts
-     - Handle `HttpTimeoutError` from Core Agent's HTTP client
-   - **Error Handling**: Use structured error unions from Core Agent
-     - Handle `HttpClientError` enum (timeout, network_error, rate_limit, etc.)
-     - Use retryability classification (`is_http_error_retryable()`) for retry logic
-     - Use error message helpers: `get_http_error_message()`
-     - Map Silo Agent error types to Core Agent error types
+1. **Integrate Service-to-Service Authentication** (READY NOW ✅):
+   - Use `AuthService.generate_service_account_token()` to get token for Silo Agent requests
+   - Include `Authorization: Bearer {service_account_token}` header in all write operations
+   - Handle token refresh (24-hour tokens, use `refresh_service_account_token()` if needed)
+   - **Key Resource**: `src/grain_core/auth_service.zig`
 
-2. **Review Integration Documentation**:
+2. **Integrate Async Pattern** (READY NOW ✅):
+   - Use Flow Agent Event Bus for async HTTP responses
+   - Subscribe to `http_request_completed` and `http_request_failed` events
+   - Use Core Agent's `publish_http_request_completed()` and `publish_http_request_failed()` helpers
+   - Implement async database operations using event-driven pattern
+   - **Key Resources**: 
+     - `src/grain_core/async_pattern.zig`
+     - `src/grain_flow/event_bus.zig`
+
+3. **Review Integration Documentation**:
    - Review User Storage Helper (`src/grain_database/user_storage.zig`)
    - Review API contracts (`docs/agent-communications/silo_agent_database_api_contracts_2025-12-21-143409-pst.md`)
    - Review HTTP Client Integration section in API contracts
    - Review error types documentation (`docs/agent-communications/silo_agent_error_types_documentation_2025-12-23-210329-pst.md`)
    - Review circuit breaker pattern guide (`docs/grain_database/circuit_breaker_pattern.md`)
 
-3. **Prepare Integration Code**:
-   - Prepare database integration module structure
-   - Prepare error handling code using Silo Agent's error types
-   - Prepare circuit breaker implementation using health check endpoint
-   - Prepare idempotency key generation for create operations
-   - Integrate HTTP/WebSocket timeout and error handling
-
 4. **Integration Testing**:
    - Test User Storage Helper with mobile app user data
+   - Test service-to-service authentication with database write operations
+   - Test async pattern with event-driven database operations
    - Test circuit breaker pattern with health check endpoint
    - Test idempotency keys for safe retries
    - Test timeout and error handling with various scenarios
-
-**Once Core Agent Implements** (2-3 days remaining):
-
-5. **Service-to-Service Authentication**:
-   - Integrate service account tokens from Core Agent AuthService
-   - Use `generate_service_account_token()` to get token for Silo Agent requests
-   - Include `Authorization: Bearer {service_account_token}` header in all write operations
-   - Handle token refresh using `refresh_service_account_token()` (7-day tokens)
-
-6. **Async Pattern** (1-2 days remaining):
-   - Use Flow Agent Event Bus for async HTTP responses
-   - Subscribe to `http_request_completed` and `http_request_failed` events
-   - Implement async database operations using event-driven pattern
 
 **Key Resources**:
 - User Storage Helper: `src/grain_database/user_storage.zig`
@@ -332,17 +318,19 @@ All core phases complete and ready for production use:
 - Error Types: `docs/agent-communications/silo_agent_error_types_documentation_2025-12-23-210329-pst.md`
 - Circuit Breaker: `docs/grain_database/circuit_breaker_pattern.md`
 - Integration Response: `docs/agent-communications/silo_agent_carry_integration_response_2025-12-23-194454-pst.md`
+- Auth Service: `src/grain_core/auth_service.zig`
+- Async Pattern: `src/grain_core/async_pattern.zig`
 
 ---
 
 ### For Aurora Agent (IDE/Browser) - SLC Product Integration
 
-**Current Status**: SLC helpers ready (Nostr Profile Builder), Priority 4 ready, HTTP/WebSocket timeout/error handling ready ✅
+**Current Status**: SLC helpers ready (Nostr Profile Builder), Priority 4 ready, all coordination decisions ready ✅
 
 **Immediate Next Steps**:
 
-1. **Integrate HTTP/WebSocket Timeout and Error Handling** (READY NOW ✅):
-   - **Timeout Handling**: Use per-request timeout (30s default for API calls, 60s for content)
+1. **Integrate All Coordination Decisions** (READY NOW ✅):
+   - **HTTP/WebSocket Timeout**: Use per-request timeout (30s default for API calls, 60s for content)
      - Set `timeout_ms: 30000` for API requests (or use `DEFAULT_API_TIMEOUT_MS`)
      - Set `timeout_ms: 60000` for content fetching (or use `DEFAULT_CONTENT_TIMEOUT_MS`)
      - Use `is_timed_out()` function to check for timeouts
@@ -350,6 +338,12 @@ All core phases complete and ready for production use:
      - Handle `HttpClientError` enum with retryability classification
      - Use `is_http_error_retryable()` for retry logic
      - Use error message helpers: `get_http_error_message()`
+   - **Service-to-Service Authentication**: Use service account tokens
+     - Use `AuthService.generate_service_account_token()` for database write operations
+     - Include `Authorization: Bearer {service_account_token}` header
+   - **Async Pattern**: Use Flow Agent Event Bus
+     - Subscribe to `http_request_completed` and `http_request_failed` events
+     - Use Core Agent's async pattern helpers
 
 2. **Review SLC Integration Helpers**:
    - Review `NostrProfileStorage` helper (`src/grain_database/slc_integration.zig`)
@@ -367,23 +361,27 @@ All core phases complete and ready for production use:
    - Test pagination for large profile lists (`list_profiles_paginated()`)
    - Test search functionality (`search_profiles()`)
    - Test circuit breaker pattern with health check endpoint
+   - Test service-to-service authentication
+   - Test async pattern with event-driven operations
 
 **Key Resources**:
 - SLC Helpers: `src/grain_database/slc_integration.zig` (NostrProfileStorage)
 - Circuit Breaker: `docs/grain_database/circuit_breaker_pattern.md`
 - Error Types: `docs/agent-communications/silo_agent_error_types_documentation_2025-12-23-210329-pst.md`
 - API Contracts: `docs/agent-communications/silo_agent_database_api_contracts_2025-12-21-143409-pst.md`
+- Auth Service: `src/grain_core/auth_service.zig`
+- Async Pattern: `src/grain_core/async_pattern.zig`
 
 ---
 
 ### For Skate Agent (Knowledge Graph) - SLC Product Integration
 
-**Current Status**: SLC helpers ready (DAG Website Builder), Priority 4 ready, HTTP/WebSocket timeout/error handling ready ✅
+**Current Status**: SLC helpers ready (DAG Website Builder), Priority 4 ready, all coordination decisions ready ✅
 
 **Immediate Next Steps**:
 
-1. **Integrate HTTP/WebSocket Timeout and Error Handling** (READY NOW ✅):
-   - **Timeout Handling**: Use per-request timeout (30s default for API calls, 60s for content)
+1. **Integrate All Coordination Decisions** (READY NOW ✅):
+   - **HTTP/WebSocket Timeout**: Use per-request timeout (30s default for API calls, 60s for content)
      - Set `timeout_ms: 30000` for API requests (or use `DEFAULT_API_TIMEOUT_MS`)
      - Set `timeout_ms: 60000` for content fetching (or use `DEFAULT_CONTENT_TIMEOUT_MS`)
      - Use `is_timed_out()` function to check for timeouts
@@ -391,6 +389,12 @@ All core phases complete and ready for production use:
      - Handle `HttpClientError` enum with retryability classification
      - Use `is_http_error_retryable()` for retry logic
      - Use error message helpers: `get_http_error_message()`
+   - **Service-to-Service Authentication**: Use service account tokens
+     - Use `AuthService.generate_service_account_token()` for database write operations
+     - Include `Authorization: Bearer {service_account_token}` header
+   - **Async Pattern**: Use Flow Agent Event Bus
+     - Subscribe to `http_request_completed` and `http_request_failed` events
+     - Use Core Agent's async pattern helpers
 
 2. **Review SLC Integration Helpers**:
    - Review `DagWebsiteStorage` helper (`src/grain_database/slc_integration.zig`)
@@ -408,29 +412,39 @@ All core phases complete and ready for production use:
    - Test pagination for large node lists (`list_nodes_paginated()`)
    - Test search functionality (`search_nodes()`)
    - Test circuit breaker pattern with health check endpoint
+   - Test service-to-service authentication
+   - Test async pattern with event-driven operations
 
 **Key Resources**:
 - SLC Helpers: `src/grain_database/slc_integration.zig` (DagWebsiteStorage)
 - Circuit Breaker: `docs/grain_database/circuit_breaker_pattern.md`
 - Error Types: `docs/agent-communications/silo_agent_error_types_documentation_2025-12-23-210329-pst.md`
 - API Contracts: `docs/agent-communications/silo_agent_database_api_contracts_2025-12-21-143409-pst.md`
+- Auth Service: `src/grain_core/auth_service.zig`
+- Async Pattern: `src/grain_core/async_pattern.zig`
 
 ---
 
 ### For Workspace Agent (Desktop Apps) - SLC Product Integration + Payment/Vault/Bank UI
 
-**Current Status**: SLC helpers ready (Workspace App Suite), Priority 4 ready, HTTP/WebSocket timeout/error handling ready ✅, Component API complete ✅
+**Current Status**: SLC helpers ready (Workspace App Suite), Priority 4 ready, Component API complete ✅, all coordination decisions ready ✅
 
 **Immediate Next Steps**:
 
-1. **Integrate HTTP/WebSocket Timeout and Error Handling** (READY NOW ✅):
-   - **Timeout Handling**: Use per-request timeout (30s default for API calls, 30s for file I/O)
+1. **Integrate All Coordination Decisions** (READY NOW ✅):
+   - **HTTP/WebSocket Timeout**: Use per-request timeout (30s default for API calls, 30s for file I/O)
      - Set `timeout_ms: 30000` for API requests (or use `DEFAULT_API_TIMEOUT_MS`)
      - Use `is_timed_out()` function to check for timeouts
    - **Error Handling**: Use structured error unions from Core Agent
      - Handle `HttpClientError` enum with retryability classification
      - Use `is_http_error_retryable()` for retry logic
      - Use error message helpers: `get_http_error_message()`
+   - **Service-to-Service Authentication**: Use service account tokens
+     - Use `AuthService.generate_service_account_token()` for database write operations
+     - Include `Authorization: Bearer {service_account_token}` header
+   - **Async Pattern**: Use Flow Agent Event Bus
+     - Subscribe to `http_request_completed` and `http_request_failed` events
+     - Use Core Agent's async pattern helpers
 
 2. **Review SLC Integration Helpers**:
    - Review `WorkspaceFileStorage` helper (`src/grain_database/slc_integration.zig`)
@@ -448,6 +462,8 @@ All core phases complete and ready for production use:
    - Test pagination for large file lists (`list_file_metadata_paginated()`)
    - Test search functionality (`search_file_metadata()`)
    - Test circuit breaker pattern with health check endpoint
+   - Test service-to-service authentication
+   - Test async pattern with event-driven operations
 
 **Payment/Vault/Bank UI Integration** (After Core Agent Phase 1):
 
@@ -475,6 +491,8 @@ All core phases complete and ready for production use:
 - Payment/Vault/Bank Design: `docs/zyx/grain_payment_vault_design_2025-12-28-213448-pst.md`
 - Circuit Breaker: `docs/grain_database/circuit_breaker_pattern.md`
 - Component API: Workspace Agent Component API (approved design)
+- Auth Service: `src/grain_core/auth_service.zig`
+- Async Pattern: `src/grain_core/async_pattern.zig`
 
 ---
 
@@ -515,7 +533,7 @@ All core phases complete and ready for production use:
 
 ### For Bubble Agent (Design Tool)
 
-**Current Status**: Can use database for design data storage (if needed), HTTP/WebSocket timeout/error handling ready ✅
+**Current Status**: Can use database for design data storage (if needed), all coordination decisions ready ✅
 
 **Next Steps** (if database integration needed):
 
@@ -524,14 +542,20 @@ All core phases complete and ready for production use:
    - Review error types documentation
    - Review circuit breaker pattern guide
 
-2. **Integrate HTTP/WebSocket Timeout and Error Handling** (READY NOW ✅):
-   - **Timeout Handling**: Use per-request timeout (30s default for API calls)
+2. **Integrate All Coordination Decisions** (READY NOW ✅):
+   - **HTTP/WebSocket Timeout**: Use per-request timeout (30s default for API calls)
      - Set `timeout_ms: 30000` for database API requests (or use `DEFAULT_API_TIMEOUT_MS`)
      - Use `is_timed_out()` function to check for timeouts
    - **Error Handling**: Use structured error unions from Core Agent
      - Handle `HttpClientError` enum (timeout, network_error, rate_limit, etc.)
      - Use retryability classification (`is_http_error_retryable()`) for retry logic
      - Use error message helpers: `get_http_error_message()`
+   - **Service-to-Service Authentication**: Use service account tokens
+     - Use `AuthService.generate_service_account_token()` for database write operations
+     - Include `Authorization: Bearer {service_account_token}` header
+   - **Async Pattern**: Use Flow Agent Event Bus
+     - Subscribe to `http_request_completed` and `http_request_failed` events
+     - Use Core Agent's async pattern helpers
 
 3. **Implement Circuit Breaker Pattern**:
    - Use health check endpoint for circuit breaker logic
@@ -541,6 +565,8 @@ All core phases complete and ready for production use:
 - API Contracts: `docs/agent-communications/silo_agent_database_api_contracts_2025-12-21-143409-pst.md`
 - Circuit Breaker: `docs/grain_database/circuit_breaker_pattern.md`
 - Error Types: `docs/agent-communications/silo_agent_error_types_documentation_2025-12-23-210329-pst.md`
+- Auth Service: `src/grain_core/auth_service.zig`
+- Async Pattern: `src/grain_core/async_pattern.zig`
 
 ---
 
@@ -559,8 +585,8 @@ All core phases complete and ready for production use:
    - **Error Handling**: Use Silo Agent's error types with retryability classification
    - **Rate Limiting**: Handle 429 responses with `Retry-After` header (exponential backoff)
 
-3. **Integrate HTTP/WebSocket Timeout and Error Handling** (READY NOW ✅):
-   - **Timeout Handling**: Use per-request timeout (30s default for API calls)
+3. **Integrate All Coordination Decisions** (READY NOW ✅):
+   - **HTTP/WebSocket Timeout**: Use per-request timeout (30s default for API calls)
      - Set `timeout_ms: 30000` for database API requests (or use `DEFAULT_API_TIMEOUT_MS`)
      - Use `is_timed_out()` function to check for timeouts
      - Handle `HttpTimeoutError` from Core Agent's HTTP client
@@ -572,12 +598,16 @@ All core phases complete and ready for production use:
      - Set `connect_timeout_ms: 10000` and `message_timeout_ms: 5000`
      - Use `is_connect_timed_out()` and `is_message_timed_out()` functions
    - **WebSocket Error Handling**: Use `WebSocketError` enum with retryability
+   - **Service-to-Service Authentication**: Use service account tokens
+     - Use `AuthService.generate_service_account_token()` for database write operations
+     - Include `Authorization: Bearer {service_account_token}` header
+     - Handle token refresh (24-hour tokens)
+   - **Async Pattern**: Use Flow Agent Event Bus
+     - Subscribe to `http_request_completed` and `http_request_failed` events
+     - Use Core Agent's `publish_http_request_completed()` and `publish_http_request_failed()` helpers
+     - Implement async database operations using event-driven pattern
 
-4. **Prepare for Remaining Core Agent Implementation**:
-   - **Service-to-Service Auth**: Use service account tokens from Core Agent AuthService (2-3 days remaining)
-   - **Async Pattern**: Use Flow Agent Event Bus for async operations (1-2 days remaining)
-
-5. **Integration Best Practices**:
+4. **Integration Best Practices**:
    - Use batch operations for bulk loading (100 records max)
    - Use pagination for large datasets
    - Use search functionality for filtering
@@ -588,6 +618,9 @@ All core phases complete and ready for production use:
 - All documentation: `docs/agent-communications/` and `docs/grain_database/`
 - Source code: `src/grain_database/`
 - Tests: `tests/` (reference implementations)
+- Core Agent Auth Service: `src/grain_core/auth_service.zig`
+- Core Agent Async Pattern: `src/grain_core/async_pattern.zig`
+- Flow Agent Event Bus: `src/grain_flow/event_bus.zig`
 
 ---
 
@@ -604,19 +637,18 @@ All core phases complete and ready for production use:
 - ✅ **Index Manager**: Index management complete
 - ✅ **Backup Manager**: Backup/restore complete
 
-**Coordination Decisions Implementation Status** (2025-12-29-001544-pst):
+**Coordination Decisions Implementation Status** (2025-12-29-041147-pst):
 - ✅ **HTTP/WebSocket Timeout**: Implementation COMPLETE (2025-12-28-235609-pst) — **READY FOR INTEGRATION** ✅
 - ✅ **Error Handling Pattern**: Implementation COMPLETE (2025-12-28-235609-pst) — **READY FOR INTEGRATION** ✅
-- ⏳ **Service-to-Service Authentication**: Implementation in progress (2-3 days remaining)
-- ⏳ **Async Pattern**: Implementation in progress (1-2 days remaining)
+- ✅ **Service-to-Service Authentication**: Implementation COMPLETE (2025-12-29-001544-pst) — **READY FOR INTEGRATION** ✅
+- ✅ **Async Pattern**: Implementation COMPLETE (2025-12-29-001544-pst) — **READY FOR INTEGRATION** ✅
 
 **Coordination Needs**:
 - ⏳ **IMMEDIATE**: Payment/Passwords/Bank storage schema design approval (4-7 hours)
-- ⏳ **SHORT-TERM**: Complete service-to-service authentication (2-3 days)
-- ⏳ **SHORT-TERM**: Complete async pattern integration (1-2 days)
+- ⏳ **SHORT-TERM**: Update HTTP/WebSocket clients to use error types consistently (1 day)
 - ⏳ **MEDIUM-TERM**: Add 429 status code to HttpStatus enum (1 day)
 
-**Status**: All Core Agent dependencies satisfied. HTTP/WebSocket timeout and error handling ready for integration. Ready for production use.
+**Status**: All Core Agent dependencies satisfied. **All coordination decisions ready for integration** ✅. Ready for production use.
 
 ### With Other Agents
 
@@ -629,25 +661,25 @@ All core phases complete and ready for production use:
   - ✅ Error types documented
   - ✅ Idempotency and deduplication support
   - ✅ Circuit breaker pattern documentation
-  - ✅ HTTP/WebSocket timeout/error handling ready
+  - ✅ All coordination decisions ready ✅
 
 - **Aurora Agent**: Database storage for IDE features and SLC products (Nostr Profile Builder)
   - ✅ SLC helpers ready (pagination, search, batch operations)
   - ✅ Priority 4 ready for SLC product integration testing
   - ✅ Circuit breaker pattern documentation available
-  - ✅ HTTP/WebSocket timeout/error handling ready
+  - ✅ All coordination decisions ready ✅
 
 - **Skate Agent**: Database storage for knowledge graph and SLC products (DAG Website Builder)
   - ✅ SLC helpers ready (pagination, search, batch operations)
   - ✅ Priority 4 ready for SLC product integration testing
   - ✅ Circuit breaker pattern documentation available
-  - ✅ HTTP/WebSocket timeout/error handling ready
+  - ✅ All coordination decisions ready ✅
 
 - **Workspace Agent**: Database storage for workspace files (Workspace App Suite)
   - ✅ SLC helpers ready (pagination, search, batch operations)
   - ✅ Priority 4 ready for SLC product integration testing
   - ✅ Circuit breaker pattern documentation available
-  - ✅ HTTP/WebSocket timeout/error handling ready
+  - ✅ All coordination decisions ready ✅
   - ✅ Payment/Vault/Bank storage schema ready for UI integration
 
 - **Court Agent**: Database storage for LLM infrastructure (if needed in future)
@@ -685,14 +717,15 @@ All core phases complete and ready for production use:
 - ✅ Basin Kernel Specification Freeze (stable foundation)
 - ✅ **Vantage Agent Priority 1 COMPLETE** ✅ — Vantage Adaptation Framework ready
 - ✅ **HTTP/WebSocket Timeout/Error Handling COMPLETE** ✅ — Ready for integration
+- ✅ **Service-to-Service Authentication COMPLETE** ✅ — Ready for integration
+- ✅ **Async Pattern COMPLETE** ✅ — Ready for integration
 
 ### Pending Dependencies
 - ⏳ **SLC Product Integration**: Coordination with Aurora, Skate, Workspace agents for production use — **Priority 4 (NOW READY)** ✅
 - ⏳ **Carry Agent**: User Storage Helper review and integration coordination — Priority 5
 - ⏳ **Vantage Agent**: Phase 10 (AArch64 Cloud Deployment) — Can proceed now that Priority 1 is complete
 - ⏳ **Core Agent**: Payment/Passwords/Bank storage schema approval (IMMEDIATE)
-- ⏳ **Core Agent**: Service-to-service authentication implementation (2-3 days remaining)
-- ⏳ **Core Agent**: Async pattern integration (1-2 days remaining)
+- ⏳ **Core Agent**: Update HTTP/WebSocket clients to use error types consistently (1 day)
 - ⏳ **Core Agent**: 429 status code support (add `too_many_requests` to HttpStatus enum)
 
 ---
@@ -708,22 +741,20 @@ All core phases complete and ready for production use:
 - ✅ API contracts documented
 - ✅ Design gaps addressed (rate limiting, error types, idempotency, deduplication)
 - ✅ Circuit breaker pattern documentation complete
-- ✅ HTTP/WebSocket timeout/error handling ready for integration
+- ✅ **All coordination decisions ready for integration** ✅
 - ✅ Payment/Vault/Bank storage schema design complete
 
 ### Next Priorities
 1. **IMMEDIATE**: Coordinate with Core Agent on Payment/Passwords/Bank storage schema design approval
-2. **IMMEDIATE**: Support agents integrating HTTP/WebSocket timeout and error handling
+2. **IMMEDIATE**: Support agents integrating all coordination decisions (timeout, error, auth, async)
 3. **IMMEDIATE**: Coordinate with Carry Agent on User Storage Helper integration — Priority 5
 4. **SHORT-TERM**: **SLC product integration (database support) — Priority 4 (NOW READY)** ✅
    - Vantage Adaptation Framework complete — SLC product integration testing can proceed
    - Batch operations added for efficient bulk loading during testing
    - Coordinate with Aurora, Skate, and Workspace agents
-5. **SHORT-TERM**: Wait for Core Agent service-to-service authentication (2-3 days remaining)
-6. **SHORT-TERM**: Wait for Core Agent async pattern integration (1-2 days remaining)
-7. **MEDIUM-TERM**: Implement Payment/Passwords/Bank storage helpers once Core Agent begins Phase 1
-8. **MEDIUM-TERM**: Continue performance optimizations
-9. **MEDIUM-TERM**: Phase 10 (AArch64 Cloud Deployment) — Can proceed now that Vantage Priority 1 is complete
+5. **MEDIUM-TERM**: Implement Payment/Passwords/Bank storage helpers once Core Agent begins Phase 1
+6. **MEDIUM-TERM**: Continue performance optimizations
+7. **MEDIUM-TERM**: Phase 10 (AArch64 Cloud Deployment) — Can proceed now that Vantage Priority 1 is complete
 
 ---
 
@@ -732,29 +763,28 @@ All core phases complete and ready for production use:
 ### Ready to Coordinate
 - ✅ **Core Agent**:
   - **IMMEDIATE**: Payment/Passwords/Bank storage schema design approval (4-7 hours)
-  - **SHORT-TERM**: Service-to-service authentication implementation (2-3 days remaining)
-  - **SHORT-TERM**: Async pattern integration (1-2 days remaining)
+  - **SHORT-TERM**: Update HTTP/WebSocket clients to use error types consistently (1 day)
   - **MEDIUM-TERM**: 429 status code support (add `too_many_requests` to HttpStatus enum)
   - SLC product integration coordination (Priority 4 now ready)
-  - HTTP/WebSocket timeout/error handling ready ✅ (implementation complete)
+  - **All coordination decisions ready** ✅ (timeout, error, auth, async all complete)
 
 - ✅ **Aurora Agent**: 
   - SLC product integration (Nostr Profile Builder) — **Priority 4 now ready**
   - Helpers ready with pagination/search/batch
   - Circuit breaker pattern documentation available
-  - HTTP/WebSocket timeout/error handling ready ✅
+  - **All coordination decisions ready** ✅
 
 - ✅ **Skate Agent**: 
   - SLC product integration (DAG Website Builder) — **Priority 4 now ready**
   - Helpers ready with pagination/search/batch
   - Circuit breaker pattern documentation available
-  - HTTP/WebSocket timeout/error handling ready ✅
+  - **All coordination decisions ready** ✅
 
 - ✅ **Workspace Agent**: 
   - SLC product integration (Workspace App Suite) — **Priority 4 now ready**
   - Helpers ready with pagination/search/batch
   - Circuit breaker pattern documentation available
-  - HTTP/WebSocket timeout/error handling ready ✅
+  - **All coordination decisions ready** ✅
   - Payment/Vault/Bank storage schema ready for UI integration
 
 - ✅ **Carry Agent**: 
@@ -765,7 +795,7 @@ All core phases complete and ready for production use:
   - Error types documented
   - Idempotency and deduplication support
   - Circuit breaker pattern documentation available
-  - HTTP/WebSocket timeout/error handling ready ✅
+  - **All coordination decisions ready** ✅
 
 - ✅ **Vantage Agent**: 
   - Phase 10 dependency check — Priority 1 complete, can proceed with Phase 10
@@ -799,7 +829,7 @@ All core phases complete and ready for production use:
 - **Batch operations added for efficient Priority 4 testing**
 - **Design gaps addressed (rate limiting, error types, idempotency, deduplication)**
 - **Circuit breaker pattern documentation complete for client agents**
-- **HTTP/WebSocket timeout/error handling ready for integration** ✅
+- **All coordination decisions ready for integration** ✅
 - **Payment/Vault/Bank storage schema design complete** ✅
 
 ---
@@ -819,6 +849,9 @@ All core phases complete and ready for production use:
 - **SLC Integration Helpers**: `src/grain_database/slc_integration.zig`
 - **Core Agent HTTP Client**: `src/grain_core/http_client.zig`
 - **Core Agent Error Types**: `src/grain_core/http_errors.zig`
+- **Core Agent Auth Service**: `src/grain_core/auth_service.zig`
+- **Core Agent Async Pattern**: `src/grain_core/async_pattern.zig`
+- **Flow Agent Event Bus**: `src/grain_flow/event_bus.zig`
 
 ### Tests
 - **User Storage Tests**: `tests/124_grain_database_user_storage_test.zig`
@@ -840,11 +873,11 @@ All core phases complete and ready for production use:
 - **Batch operations added for efficient Priority 4 testing**
 - **Design gaps addressed (rate limiting, error types, idempotency, deduplication)**
 - **Circuit breaker pattern documentation complete for client agents**
-- **HTTP/WebSocket timeout/error handling ready for integration** ✅
+- **All coordination decisions ready for integration** ✅
 - **Payment/Vault/Bank storage schema design complete** ✅
 - All code follows Grain Style guidelines (grain_case, u32/u64, bounded allocations, assertions)
 - Grain Style updated: Max 103 characters per line (`grainwrap-100` — updated for 103×80 graincards)
 
 ---
 
-**Status**: Ready for coordination and production use. No blockers. Priority 5 (Other Agent Coordination) — can proceed in parallel with other priorities. **HTTP/WebSocket timeout/error handling ready for immediate integration by all agents** ✅. **Payment/Vault/Bank storage schema design complete, ready for Core Agent approval** ✅. Waiting on Core Agent for storage schema approval (IMMEDIATE), service-to-service authentication (2-3 days), and async pattern integration (1-2 days).
+**Status**: Ready for coordination and production use. No blockers. Priority 5 (Other Agent Coordination) — can proceed in parallel with other priorities. **All coordination decisions are ready for immediate integration by all agents** ✅ — HTTP/WebSocket timeout, error types, service-to-service authentication, and async pattern are all implemented and ready. **Payment/Vault/Bank storage schema design complete, ready for Core Agent approval** ✅. Waiting on Core Agent for storage schema approval (IMMEDIATE), HTTP/WebSocket client error type consistency (1 day), and 429 status code support (1 day).

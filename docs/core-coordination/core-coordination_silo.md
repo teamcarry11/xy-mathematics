@@ -284,41 +284,59 @@ All core phases complete and ready for production use:
 
 ### For Carry Agent (Mobile Framework)
 
-**Current Status**: User Storage Helper ready ✅, timeout/error handling integrated ✅, service-to-service auth and async pattern ready ✅
+**Current Status**: Service account token integration complete ✅, timeout/error handling integrated ✅, ready for database integration testing ✅
 
-**Immediate Next Steps** (Can Do Now):
+**Completed** (2025-12-29-043000-pst):
+- ✅ Service account token integration — write operations are authenticated
+- ✅ Core-coordination document updated — reflects current status
+- ✅ Coordination checkpoints document created — clear timeline for coordination
+- ✅ All Core Agent features integrated and functional
+- ✅ Database integration ready for production testing
 
-1. **Integrate Service-to-Service Authentication** (READY NOW ✅):
-   - Use `AuthService.generate_service_account_token()` to get token for Silo Agent requests
-   - Include `Authorization: Bearer {service_account_token}` header in all write operations
-   - Handle token refresh (24-hour tokens, use `refresh_service_account_token()` if needed)
-   - **Key Resource**: `src/grain_core/auth_service.zig`
+**Immediate Next Steps**:
 
-2. **Integrate Async Pattern** (READY NOW ✅):
-   - Use Flow Agent Event Bus for async HTTP responses
-   - Subscribe to `http_request_completed` and `http_request_failed` events
-   - Use Core Agent's `publish_http_request_completed()` and `publish_http_request_failed()` helpers
-   - Implement async database operations using event-driven pattern
-   - **Key Resources**: 
-     - `src/grain_core/async_pattern.zig`
-     - `src/grain_flow/event_bus.zig`
+1. **Review Endpoint Paths Confirmation** (READY NOW ✅):
+   - Review endpoint paths confirmation document (`docs/agent-communications/silo_agent_endpoint_paths_confirmation_2025-12-29-044000-pst.md`)
+   - Confirm endpoint paths match expectations (`/api/v1/records`, `/api/v1/health`, `/api/v1/search`)
+   - Confirm key format pattern (`user:{user_id}`)
+   - Can proceed with integration testing using confirmed paths
 
-3. **Review Integration Documentation**:
-   - Review User Storage Helper (`src/grain_database/user_storage.zig`)
-   - Review API contracts (`docs/agent-communications/silo_agent_database_api_contracts_2025-12-21-143409-pst.md`)
-   - Review HTTP Client Integration section in API contracts
-   - Review error types documentation (`docs/agent-communications/silo_agent_error_types_documentation_2025-12-23-210329-pst.md`)
-   - Review circuit breaker pattern guide (`docs/grain_database/circuit_breaker_pattern.md`)
-
-4. **Integration Testing**:
+2. **Continue Database API Integration** (READY NOW ✅):
+   - Continue coordinating on integration approach with Silo Agent
    - Test User Storage Helper with mobile app user data
    - Test service-to-service authentication with database write operations
-   - Test async pattern with event-driven database operations
    - Test circuit breaker pattern with health check endpoint
    - Test idempotency keys for safe retries
    - Test timeout and error handling with various scenarios
 
-**Check-In Status**: ⏳ **PRIORITY 5** — Carry Agent should coordinate on integration approach and timing
+3. **Async Pattern Integration** (Pending Flow Agent):
+   - **Status**: Synchronous fallback works for now
+   - **Waiting On**: Flow Agent Event Bus initialization (check now - high priority)
+   - **Action**: Check with Flow Agent on Event Bus initialization timeline
+   - **Impact**: Needed for full async operation (synchronous fallback works for now)
+   - Once Event Bus is available:
+     - Use Flow Agent Event Bus for async HTTP responses
+     - Subscribe to `http_request_completed` and `http_request_failed` events
+     - Use Core Agent's `publish_http_request_completed()` and `publish_http_request_failed()` helpers
+     - Implement async database operations using event-driven pattern
+
+4. **HTTP Request Event Publishing** (Pending Core Agent):
+   - **Status**: Implementation in progress (1-2 days remaining per coordination plan)
+   - **Action**: Check with Core Agent in 1-2 days on completion status
+   - **Impact**: Needed for full async operation (synchronous fallback works for now)
+
+**Review Integration Documentation**:
+- Review User Storage Helper (`src/grain_database/user_storage.zig`)
+- Review API contracts (`docs/agent-communications/silo_agent_database_api_contracts_2025-12-21-143409-pst.md`)
+- Review endpoint paths confirmation (`docs/agent-communications/silo_agent_endpoint_paths_confirmation_2025-12-29-044000-pst.md`) (NEW)
+- Review HTTP Client Integration section in API contracts
+- Review error types documentation (`docs/agent-communications/silo_agent_error_types_documentation_2025-12-23-210329-pst.md`)
+- Review circuit breaker pattern guide (`docs/grain_database/circuit_breaker_pattern.md`)
+
+**Check-In Status**: ⏳ **ONGOING** — Carry Agent coordinating on database API integration details
+- **Silo Agent**: Continue coordinating on integration approach (endpoint paths confirmation document created)
+- **Flow Agent**: Check now about Event Bus initialization (high priority)
+- **Core Agent**: Check in 1-2 days about HTTP request event publishing (medium priority)
 
 **Key Resources**:
 - User Storage Helper: `src/grain_database/user_storage.zig`

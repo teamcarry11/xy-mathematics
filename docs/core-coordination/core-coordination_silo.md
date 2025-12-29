@@ -853,11 +853,23 @@ All core phases complete and ready for production use:
    - **Error Handling**: Use Silo Agent's error types with retryability classification
    - **Rate Limiting**: Handle 429 responses with `Retry-After` header (exponential backoff)
 
-3. **Prepare for Core Agent Implementation**:
+3. **Integrate HTTP/WebSocket Timeout and Error Handling** (READY NOW ✅):
    - **Timeout Handling**: Use per-request timeout (30s default for API calls)
-   - **Error Handling**: Use structured error unions (`HttpClientError`, `WebSocketError`, `FileIoError`)
-   - **Service-to-Service Auth**: Use service account tokens from Core Agent AuthService
-   - **Async Pattern**: Use Flow Agent Event Bus for async operations
+     - Set `timeout_ms: 30000` for database API requests (or use `DEFAULT_API_TIMEOUT_MS`)
+     - Use `is_timed_out()` function to check for timeouts
+     - Handle `HttpTimeoutError` from Core Agent's HTTP client
+   - **Error Handling**: Use structured error unions from Core Agent
+     - Handle `HttpClientError` enum (timeout, network_error, rate_limit, etc.)
+     - Use retryability classification (`is_http_error_retryable()`) for retry logic
+     - Use error message helpers: `get_http_error_message()`
+   - **WebSocket Timeout**: Use per-operation timeout (10s connect, 5s message)
+     - Set `connect_timeout_ms: 10000` and `message_timeout_ms: 5000`
+     - Use `is_connect_timed_out()` and `is_message_timed_out()` functions
+   - **WebSocket Error Handling**: Use `WebSocketError` enum with retryability
+
+4. **Prepare for Remaining Core Agent Implementation**:
+   - **Service-to-Service Auth**: Use service account tokens from Core Agent AuthService (2-3 days remaining)
+   - **Async Pattern**: Use Flow Agent Event Bus for async operations (1-2 days remaining)
 
 4. **Integration Best Practices**:
    - Use batch operations for bulk loading (100 records max)

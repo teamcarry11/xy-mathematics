@@ -22,6 +22,31 @@ This document proposes an evolution of the Grain OS agent architecture to:
 
 ---
 
+## Critical Architecture Principle: RISC-V-Only Grain OS
+
+**Fundamental Rule**: All Grain OS software is **RISC-V-only**. There is no ARM64-specific code in Grain OS.
+
+**Vantage VM Role**:
+- **Vantage** is a **development tool** (RISC-V emulator/VM) that runs on ARM64 (macOS)
+- **Purpose**: Enable Basin kernel development and testing on Apple Silicon
+- **NOT part of Grain OS**: Vantage is a development tool, not Grain OS software
+- **When Vantage works**: All Grain OS software can run on ARM64 machines via emulation, but the software itself is exclusively RISC-V
+
+**Grain OS Software**:
+- **Basin Kernel**: RISC-V64 kernel (pure RISC-V)
+- **Core Agent**: RISC-V system services (uses RISC-V syscalls)
+- **All other agents**: RISC-V-only code
+- **Production target**: RISC-V hardware (Framework 13, etc.)
+
+**Development Workflow**:
+1. Develop Grain OS software in RISC-V
+2. Test on Vantage VM (RISC-V emulator on ARM64 macOS)
+3. Deploy to RISC-V hardware
+
+**This principle applies to all agent work**: No agent should introduce ARM64-specific code into Grain OS. Vantage VM development is separate from Grain OS development.
+
+---
+
 ## Current Agent Structure (11 Agents)
 
 1. **Grain Core Agent** (System Services)

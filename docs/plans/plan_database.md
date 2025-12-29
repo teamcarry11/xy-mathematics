@@ -2,7 +2,7 @@
 
 **Agent**: Grain Silo Agent (7th Agent)  
 **Status**: Phase 6 Complete, Phase 7 Complete, Phase 8 Complete, Phase 9 Complete, SLC Integration Complete, Health Check Endpoint Complete — **PRODUCTION READY**  
-**Last Updated**: 2025-12-23-213951-pst
+**Last Updated**: 2025-12-29-002000-pst
 
 ---
 
@@ -524,11 +524,18 @@ Grain Database Agent is responsible for building a general-purpose, Grain Style-
 - **Request Deduplication**: Automatic request deduplication cache
 - **Circuit Breaker Pattern**: Comprehensive documentation for client agents
 
-**Pending** (Require Coordination):
-- ⏳ Timeout handling — Waiting on Core Agent coordination (Priority 2, HIGH)
-- ⏳ Core Agent 429 status code — Coordinate to add `too_many_requests` to HttpStatus enum
-
 **Status**: ✅ **COMPLETE** — All independent critical and high-priority gaps implemented
+
+**Coordination Decisions Implementation Status** (2025-12-29-001544-pst):
+- ✅ **HTTP/WebSocket Timeout**: Core Agent implementation COMPLETE (2025-12-28-235609-pst) — **READY FOR INTEGRATION** ✅
+- ✅ **Error Handling Pattern**: Core Agent implementation COMPLETE (2025-12-28-235609-pst) — **READY FOR INTEGRATION** ✅
+- ⏳ **Service-to-Service Authentication**: Core Agent implementation in progress (2-3 days remaining)
+- ⏳ **Async Pattern**: Core Agent implementation in progress (1-2 days remaining)
+
+**Pending** (Require Coordination):
+- ⏳ Core Agent 429 status code — Coordinate to add `too_many_requests` to HttpStatus enum
+- ⏳ Service-to-service authentication — Wait for Core Agent implementation (2-3 days remaining)
+- ⏳ Async pattern — Wait for Core Agent implementation (1-2 days remaining)
 
 ### Phase 10: AArch64 Cloud Deployment (PLANNED)
 **Status**: Planned  

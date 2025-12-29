@@ -2,7 +2,7 @@
 
 **Agent**: Grain Silo Agent (7th Agent)  
 **Status**: Phase 6 Complete, Phase 7 Complete, Phase 8 Complete, Phase 9 Complete, SLC Integration Complete, Health Check Endpoint Complete — **PRODUCTION READY**  
-**Last Updated**: 2025-12-23-213951-pst
+**Last Updated**: 2025-12-29-002000-pst
 
 ---
 
@@ -600,9 +600,34 @@ All database code must follow Grain Style guidelines:
 
 ### Pending Tasks (Require Coordination)
 
-- [ ] Add timeout handling for database operations (waiting on Core Agent coordination)
+- [x] Add timeout handling for database operations ✅ **READY FOR INTEGRATION** (Core Agent implementation complete 2025-12-28-235609-pst)
 - [x] Document circuit breaker pattern usage with health check endpoint ✅ (2025-12-23-220000-pst)
 - [ ] Coordinate with Core Agent to add 429 status code to HttpStatus enum
+- [ ] Integrate HTTP/WebSocket timeout handling into database API client code (READY NOW)
+- [ ] Integrate error handling patterns into database API error responses (READY NOW)
+- [ ] Update API contracts documentation with timeout and error handling patterns
+
+### Payment/Vault/Bank Storage Schema Design Tasks ✅ **COMPLETE**
+**Date**: 2025-12-28-230000-pst
+
+**Completed Tasks**:
+- [x] Review Payment/Vault/Bank design document
+- [x] Design storage schema for Grain Passwords module
+- [x] Design storage schema for Grain Pay module
+- [x] Design storage schema for Grainbank module
+- [x] Define key formats for all three modules
+- [x] Define data structures (JSON schemas)
+- [x] Design storage helper APIs (PasswordStorage, PaymentStorage, BankStorage)
+- [x] Define validation constants and functions
+- [x] Document encryption requirements
+- [x] Document integration patterns
+- [x] Provide index recommendations
+- [x] Create comprehensive storage schema design document
+
+**Pending Tasks**:
+- [ ] Coordinate with Core Agent on storage schema design approval
+- [ ] Review storage helper API design with Core Agent
+- [ ] Implement storage helpers once Core Agent begins Phase 1
 
 ---
 

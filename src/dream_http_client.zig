@@ -1,9 +1,15 @@
 const std = @import("std");
 const TlsClient = @import("grain_tls/tls_client.zig").TlsClient;
+const http_errors = @import("grain_core/http_errors.zig");
+const aurora_errors = @import("aurora_errors.zig");
 
 /// HTTP client for Dream Editor/Browser: HTTPS support via TLS.
 /// ~<~ Glow Airbend: explicit HTTP requests, bounded buffers.
 /// ~~~~ Glow Waterbend: streaming responses flow deterministically.
+/// 
+/// **Integration**: Uses Core Agent's HTTP error types and timeout handling.
+/// Timeout support: Per-request timeout with default values (30s API, 60s content).
+/// Error handling: Structured error unions with retryability classification.
 pub const HttpClient = struct {
     allocator: std.mem.Allocator,
     
@@ -12,6 +18,10 @@ pub const HttpClient = struct {
     
     // Bounded: Max 1MB request body
     pub const MAX_REQUEST_SIZE: usize = 1024 * 1024;
+    
+    // Default timeout values (from Core Agent)
+    pub const DEFAULT_API_TIMEOUT_MS: u32 = 30_000; // 30 seconds
+    pub const DEFAULT_CONTENT_TIMEOUT_MS: u32 = 60_000; // 60 seconds
     
     pub const Request = struct {
         method: []const u8, // "GET", "POST", etc.
@@ -42,52 +52,171 @@ pub const HttpClient = struct {
         // No dynamic allocation to clean up
     }
     
-    /// Send HTTPS request and receive response.
+    /// Send HTTPS request and receive response with timeout support.
+    /// timeout_ms: Optional timeout in milliseconds (default: DEFAULT_API_TIMEOUT_MS).
+    /// Returns Core Agent's HttpClientError on failure.
     pub fn request(
         self: *HttpClient,
         host: []const u8,
         port: u16,
         req: Request,
-    ) !Response {
+        timeout_ms: ?u32,
+    ) http_errors.HttpClientError!Response {
         // Assert: Request body must be within bounds
         if (req.body) |body| {
             std.debug.assert(body.len <= MAX_REQUEST_SIZE);
         }
         
-        // Connect TCP
-        var tcp_stream = try std.net.tcpConnectToHost(self.allocator, host, port);
+        const timeout = timeout_ms orelse DEFAULT_API_TIMEOUT_MS;
+        const start_time = std.time.nanoTimestamp();
+        
+        // Connect TCP (with timeout checking)
+        const tcp_stream = std.net.tcpConnectToHost(self.allocator, host, port) catch |err| {
+            return self.mapNetworkError(err);
+        };
         defer tcp_stream.close();
         
+        // Check timeout after connection
+        if (self.is_timed_out(start_time, timeout)) {
+            return http_errors.HttpClientError.timeout;
+        }
+        
         // Upgrade to TLS (HTTPS)
-        var tls_client = try TlsClient.init(self.allocator, tcp_stream, host);
+        const tls_client = TlsClient.init(self.allocator, tcp_stream, host) catch |err| {
+            return self.mapTlsError(err);
+        };
         defer tls_client.deinit();
+        
+        // Check timeout after TLS handshake
+        if (self.is_timed_out(start_time, timeout)) {
+            return http_errors.HttpClientError.timeout;
+        }
         
         // Build HTTP request
         var request_buf: [MAX_REQUEST_SIZE + 1024]u8 = undefined;
-        const request_text = try self.buildRequest(req, &request_buf);
+        const request_text = self.buildRequest(req, &request_buf) catch |err| {
+            return self.mapRequestError(err);
+        };
         
-        // Send request
-        try tls_client.writeAll(request_text);
+        // Send request (with timeout checking)
+        tls_client.writeAll(request_text) catch |err| {
+            return self.mapNetworkError(err);
+        };
         
-        // Read response
+        if (self.is_timed_out(start_time, timeout)) {
+            return http_errors.HttpClientError.timeout;
+        }
+        
+        // Read response (with timeout checking)
         var response_buf: [MAX_RESPONSE_SIZE]u8 = undefined;
         var response_len: usize = 0;
         
-        while (try tls_client.next()) |chunk| {
+        while (tls_client.next() catch |err| {
+            return self.mapNetworkError(err);
+        }) |chunk| {
+            if (self.is_timed_out(start_time, timeout)) {
+                return http_errors.HttpClientError.timeout;
+            }
+            
             if (response_len + chunk.len > MAX_RESPONSE_SIZE) {
-                return error.ResponseTooLarge;
+                return http_errors.HttpClientError.invalid_response;
             }
             std.mem.copyForwards(u8, response_buf[response_len..], chunk);
             response_len += chunk.len;
         }
         
         // Parse response
-        const response = try self.parseResponse(response_buf[0..response_len]);
+        const response = self.parseResponse(response_buf[0..response_len]) catch |err| {
+            return self.mapParseError(err);
+        };
+        
+        // Check for HTTP error status codes
+        if (response.status_code == 429) {
+            return http_errors.HttpClientError.rate_limit;
+        }
+        if (response.status_code >= 500) {
+            return http_errors.HttpClientError.server_error;
+        }
         
         // Assert: Response must be valid
         std.debug.assert(response.status_code > 0);
         
         return response;
+    }
+    
+    /// Send HTTPS request with retry logic for retryable errors.
+    /// max_retries: Maximum number of retry attempts (default: 3).
+    /// Returns Core Agent's HttpClientError on failure.
+    pub fn request_with_retry(
+        self: *HttpClient,
+        host: []const u8,
+        port: u16,
+        req: Request,
+        timeout_ms: ?u32,
+        max_retries: u32,
+    ) http_errors.HttpClientError!Response {
+        std.debug.assert(max_retries <= aurora_errors.MAX_RETRY_ATTEMPTS);
+        
+        var attempt: u32 = 0;
+        while (attempt <= max_retries) : (attempt += 1) {
+            const result = self.request(host, port, req, timeout_ms);
+            
+            if (result) |response| {
+                return response;
+            } else |err| {
+                // Check if error is retryable
+                if (!http_errors.is_http_error_retryable(err)) {
+                    return err;
+                }
+                
+                // If this was the last attempt, return the error
+                if (attempt >= max_retries) {
+                    return err;
+                }
+                
+                // Calculate exponential backoff delay
+                const delay_ms = aurora_errors.getRetryDelayMs(attempt);
+                std.time.sleep(delay_ms * 1_000_000); // Convert ms to ns
+            }
+        }
+        
+        unreachable;
+    }
+    
+    /// Check if request has timed out.
+    fn is_timed_out(self: *HttpClient, start_time: i64, timeout_ms: u32) bool {
+        _ = self;
+        const elapsed_ns = std.time.nanoTimestamp() - start_time;
+        const elapsed_ms = @divTrunc(elapsed_ns, 1_000_000); // Convert ns to ms
+        return elapsed_ms > @as(i64, timeout_ms);
+    }
+    
+    /// Map network errors to Core Agent's HttpClientError.
+    fn mapNetworkError(self: *HttpClient, err: anyerror) http_errors.HttpClientError {
+        _ = self;
+        _ = err;
+        return http_errors.HttpClientError.network_error;
+    }
+    
+    /// Map TLS errors to Core Agent's HttpClientError.
+    fn mapTlsError(self: *HttpClient, err: anyerror) http_errors.HttpClientError {
+        _ = self;
+        _ = err;
+        return http_errors.HttpClientError.network_error;
+    }
+    
+    /// Map request building errors to Core Agent's HttpClientError.
+    fn mapRequestError(self: *HttpClient, err: anyerror) http_errors.HttpClientError {
+        _ = self;
+        _ = err;
+        return http_errors.HttpClientError.invalid_response;
+    }
+    
+    /// Map response parsing errors to Core Agent's HttpClientError.
+    fn mapParseError(self: *HttpClient, err: anyerror) http_errors.HttpClientError {
+        _ = self;
+        _ = err;
+        return http_errors.HttpClientError.invalid_response;
     }
     
     /// Build HTTP request string.
@@ -196,6 +325,41 @@ test "http client builds request" {
     try std.testing.expect(std.mem.indexOf(u8, request_text, "/v1/chat/completions") != null);
     try std.testing.expect(std.mem.indexOf(u8, request_text, "Authorization") != null);
     try std.testing.expect(std.mem.indexOf(u8, request_text, "{\"test\":\"data\"}") != null);
+}
+
+test "http client timeout checking" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    
+    var client = HttpClient.init(arena.allocator());
+    defer client.deinit();
+    
+    const start_time = std.time.nanoTimestamp();
+    
+    // Assert: Timeout check works correctly
+    try std.testing.expect(!client.is_timed_out(start_time, 1000));
+    
+    // Wait a bit (but not enough to timeout)
+    std.time.sleep(10 * std.time.ns_per_ms);
+    try std.testing.expect(!client.is_timed_out(start_time, 1000));
+}
+
+test "http client error mapping" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    
+    var client = HttpClient.init(arena.allocator());
+    defer client.deinit();
+    
+    // Assert: Error mapping functions work
+    const network_err = client.mapNetworkError(error.ConnectionRefused);
+    try std.testing.expect(network_err == http_errors.HttpClientError.network_error);
+    
+    const tls_err = client.mapTlsError(error.TlsHandshakeFailed);
+    try std.testing.expect(tls_err == http_errors.HttpClientError.network_error);
+    
+    const parse_err = client.mapParseError(error.InvalidResponse);
+    try std.testing.expect(parse_err == http_errors.HttpClientError.invalid_response);
 }
 
 test "http client parses response" {

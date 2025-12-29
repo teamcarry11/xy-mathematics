@@ -954,11 +954,11 @@ All core phases complete and ready for production use:
       - Coordinate on encryption requirements
     - ⏳ **SHORT-TERM**: Review storage helper API design with Core Agent
     - ⏳ **MEDIUM-TERM**: Implement storage helpers once Core Agent begins Phase 1
-  - **Coordination decisions implementation status** (2025-12-28-223816-pst):
-    - ⏳ Timeout handling pattern — Implementation in progress
-    - ⏳ Error handling pattern — Implementation in progress
-    - ⏳ Service-to-service authentication — Implementation in progress
-    - ⏳ Async pattern — Implementation in progress
+  - **Coordination decisions implementation status** (2025-12-29-001544-pst):
+    - ✅ **HTTP/WebSocket timeout** — Implementation COMPLETE (2025-12-28-235609-pst) — **READY FOR INTEGRATION** ✅
+    - ✅ **Error handling pattern** — Implementation COMPLETE (2025-12-28-235609-pst) — **READY FOR INTEGRATION** ✅
+    - ⏳ Service-to-service authentication — Implementation in progress (2-3 days remaining)
+    - ⏳ Async pattern — Implementation in progress (1-2 days remaining)
   - ⏳ 429 status code support (add `too_many_requests` to HttpStatus enum)
 
 - ✅ **Aurora Agent**: 

@@ -1,6 +1,6 @@
 # Grain Silo Agent: Coordination Status
 
-**Last Updated**: 2025-12-29-042500-pst  
+**Last Updated**: 2025-12-29-043500-pst  
 **Agent**: Grain Silo Agent (Database)  
 **Status**: **PRODUCTION READY** ✅ — **ALL COORDINATION DECISIONS READY** ✅ — **PAYMENT/VAULT STORAGE SCHEMA COMPLETE** ✅
 
@@ -740,7 +740,10 @@ All core phases complete and ready for production use:
 
 ### Pending Dependencies
 - ⏳ **SLC Product Integration**: Coordination with Aurora, Skate, Workspace agents for production use — **Priority 4 (NOW READY)** ✅
-- ⏳ **Carry Agent**: User Storage Helper review and integration coordination — Priority 5
+- ⏳ **Carry Agent**: Database API integration details coordination (ongoing - endpoint paths need confirmation) — Ongoing
+  - ✅ Service account token integration complete (2025-12-29-043000-pst)
+  - ⏳ Flow Agent Event Bus needed for async pattern (high priority - requested by Carry Agent)
+  - ⏳ Core Agent HTTP request event publishing needed (medium priority - check in 1-2 days)
 - ⏳ **Vantage Agent**: Phase 10 (AArch64 Cloud Deployment) — Can proceed now that Priority 1 is complete
 - ⏳ **Core Agent**: Payment/Passwords/Bank storage schema approval (IMMEDIATE)
 - ⏳ **Core Agent**: Update HTTP/WebSocket clients to use error types consistently (1 day)
@@ -806,6 +809,11 @@ All core phases complete and ready for production use:
   - Payment/Vault/Bank storage schema ready for UI integration
 
 - ✅ **Carry Agent**: 
+  - ✅ Service account token integration complete (2025-12-29-043000-pst)
+  - ✅ Core-coordination document updated
+  - ✅ Coordination checkpoints document created
+  - ✅ All Core Agent features integrated and functional
+  - ✅ Database integration ready for production testing
   - User Storage Helper ready
   - Health check endpoint added
   - Integration questions answered (7/7)
@@ -814,6 +822,11 @@ All core phases complete and ready for production use:
   - Idempotency and deduplication support
   - Circuit breaker pattern documentation available
   - **All coordination decisions ready** ✅
+  - **Status**: Synchronous fallback works; async pattern pending Flow Agent Event Bus
+  - **Coordination Needs**: 
+    - Flow Agent: Event Bus initialization (check now - high priority)
+    - Core Agent: HTTP request event publishing (check in 1-2 days - medium priority)
+    - Silo Agent: Database API integration details (ongoing - endpoint paths need confirmation)
 
 - ✅ **Vantage Agent**: 
   - Phase 10 dependency check — Priority 1 complete, can proceed with Phase 10
@@ -831,6 +844,7 @@ All core phases complete and ready for production use:
 - ✅ **Flow Agent**:
   - ✅ ZON integration complete (Dashboard API integration)
   - ⏳ Ready for coordination with Court Agent on integration testing
+  - ⏳ **NEW**: Event Bus initialization needed for Carry Agent async pattern (high priority)
 
 ### No Blockers
 - All dependencies satisfied
@@ -863,14 +877,31 @@ All core phases complete and ready for production use:
    - **Action**: Core Agent should review `docs/grain_database/payment_vault_storage_schema.md`
    - **Priority**: IMMEDIATE
 
-2. **Carry Agent** (Priority 5):
-   - **Topic**: User Storage Helper integration coordination
-   - **Time**: 1-2 hours for coordination discussion
-   - **Status**: ⏳ Ready for coordination
-   - **Action**: Carry Agent should review integration documentation and coordinate on approach
-   - **Priority**: Priority 5
+2. **Carry Agent** (Ongoing):
+   - **Topic**: Database API integration details (endpoint paths need confirmation)
+   - **Time**: Ongoing coordination as needed
+   - **Status**: ✅ Service account token integration complete, ready for production testing
+   - **Action**: Continue coordinating on integration approach (can proceed with assumptions for testing)
+   - **Priority**: Ongoing (medium priority)
+   - **Note**: Carry Agent has synchronous fallback working; async pattern pending Flow Agent Event Bus
 
-3. **Aurora/Skate/Workspace Agents** (Priority 4):
+3. **Flow Agent** (High Priority - for Carry Agent):
+   - **Topic**: Event Bus initialization for async pattern
+   - **Time**: Coordination discussion needed
+   - **Status**: ⏳ Waiting on Flow Agent
+   - **Action**: Flow Agent should provide Event Bus initialization timeline
+   - **Priority**: High (needed for full async operation, but synchronous fallback works for now)
+   - **Requested By**: Carry Agent (2025-12-29-043000-pst)
+
+4. **Core Agent** (Medium Priority - for Carry Agent):
+   - **Topic**: HTTP request event publishing for async pattern
+   - **Time**: Check in 1-2 days on completion status
+   - **Status**: ⏳ Implementation in progress (1-2 days remaining per coordination plan)
+   - **Action**: Check with Core Agent on completion status in 1-2 days
+   - **Priority**: Medium (needed for full async operation, but synchronous fallback works for now)
+   - **Requested By**: Carry Agent (2025-12-29-043000-pst)
+
+5. **Aurora/Skate/Workspace Agents** (Priority 4):
    - **Topic**: SLC product integration testing coordination
    - **Time**: 1-2 hours for coordination discussion
    - **Status**: ⏳ Ready for coordination

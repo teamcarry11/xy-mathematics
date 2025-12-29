@@ -1,8 +1,8 @@
 # Grain Skate Terminal Silo Field Agent: Development Plan
 
 **Agent**: Grain Skate Terminal Silo Field Agent (3rd Agent)  
-**Status**: Phase 4 & Phase 5 In Progress (Phase 5 Visual Indicators Complete ✅, Phase 4 UI Pending)  
-**Last Updated**: 2025-12-24-035106-pst
+**Status**: Phase 4 & Phase 5 Complete ✅ (Phase 5 AI Insights Complete ✅, Phase 4 Temporal Graph Complete ✅, Ready for Feature Coordination)  
+**Last Updated**: 2025-12-29-050000-pst
 
 ---
 
@@ -559,6 +559,12 @@ Grain Skate Terminal Silo Field Agent is responsible for building Grain Skate (k
    - Implemented retry logic (exponential backoff: 1s, 2s, 4s, max 3 retries) ✅
    - Using `is_llm_error_retryable()` for retryability classification ✅
    - All AI insights operations now have timeout and error handling ✅
+
+5. **Core Agent Coordination Decisions** (2025-12-29-041147-pst):
+   - ✅ HTTP/WebSocket timeout — Ready now ✅ (Skate Agent benefits indirectly via Court Agent)
+   - ✅ Error types — Ready now ✅ (Skate Agent benefits indirectly via Court Agent)
+   - ✅ Service-to-service authentication — Ready now ✅ (available if needed in future)
+   - ✅ Async pattern — Ready now ✅ (available if needed in future)
 
 **Remaining Work** (Future Enhancements):
 - ZON format integration (Court Agent Phase 2 ~99% complete) for token-efficient communication ⏳

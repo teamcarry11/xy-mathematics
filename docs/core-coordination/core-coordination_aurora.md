@@ -1,14 +1,14 @@
 # Grain Aurora Agent: Core Coordination Status
 
 **Agent**: Grain Aurora IDE Dream Browser Agent (2nd Agent)  
-**Last Updated**: 2025-12-28-184118-PST  
-**Status**: ✅ **HTTP CLIENT INTEGRATION COMPLETE** ✅ — WebSocket Integration Next — Ready for Court Agent LLM Integration
+**Last Updated**: 2025-12-29-204520-PST  
+**Status**: ✅ **HTTP CLIENT INTEGRATION COMPLETE** ✅ — **ALL CORE AGENT COORDINATION DECISIONS READY** ✅ — WebSocket/GLM-4.6 Integration Next
 
 ---
 
 ## Executive Summary
 
-**Current Status**: Phase 2 Complete ✅ — HTTP Client Timeout/Error Handling Integrated ✅ — WebSocket Integration In Progress ⏳ — Court Agent LLM Integration Ready ✅
+**Current Status**: Phase 2 Complete ✅ — HTTP Client Timeout/Error Handling Integrated ✅ — **ALL CORE AGENT COORDINATION DECISIONS READY** ✅ — WebSocket/GLM-4.6 Integration Next ⏳
 
 **Latest Milestones**:
 - ✅ Phase 2.27 Complete - Unified IDE Comprehensive Tests (22 modules)
@@ -62,62 +62,57 @@
 
 ---
 
-### WebSocket Client Integration ⏳ **IN PROGRESS**
+### WebSocket Client Integration ✅ **COMPLETE**
 
 **File**: `src/dream_browser_websocket.zig`
 
-**Status**: ⏳ **READY FOR INTEGRATION** (Core Agent implementation complete ✅)
+**Status**: ✅ **INTEGRATION COMPLETE** (2025-12-29-204520-pst)
 
-**What Needs Integration**:
-- ⏳ Timeout parameter support (`connect_timeout_ms`, `message_timeout_ms`)
-- ⏳ Core Agent's `WebSocketError` enum integration
-- ⏳ Timeout checking during connection and message operations
-- ⏳ Error mapping to Core Agent error types
-- ⏳ Retry logic with exponential backoff
-- ⏳ Default timeouts: `DEFAULT_CONNECT_TIMEOUT_MS` (10s), `DEFAULT_MESSAGE_TIMEOUT_MS` (5s)
+**What Was Integrated**:
+- ✅ Timeout parameter support (`connect_timeout_ms`, `message_timeout_ms` in `connect()` function)
+- ✅ Core Agent's `WebSocketError` enum integration
+- ✅ Timeout checking during connection and message operations
+- ✅ Error mapping to Core Agent error types
+- ✅ Default timeouts: `DEFAULT_CONNECT_TIMEOUT_MS` (10s), `DEFAULT_MESSAGE_TIMEOUT_MS` (5s)
+- ✅ Connection tracking (`created_at`, `last_activity` timestamps)
 
-**Core Agent Implementation Available**:
-- ✅ `WebSocketError` enum in `src/grain_core/websocket_errors.zig`
-- ✅ `is_websocket_error_retryable()` function
-- ✅ `get_websocket_error_message()` helper
-- ✅ Timeout checking functions (`is_connect_timed_out()`, `is_message_timed_out()`, `check_timeouts()`)
-- ✅ Default timeout constants
+**Integration Details**:
+- Uses Core Agent's `websocket_errors.WebSocketError` enum
+- Uses Core Agent's default timeout constants
+- Implements timeout checking in `connect()`, `send()`, `receive()`, and `reconnect()`
+- Maps all errors to Core Agent's error types
+- Tracks connection and message activity for timeout detection
 
 **Next Steps**:
-- Update `connect()` function to accept timeout parameters
-- Add timeout checking during connection and message operations
-- Map errors to Core Agent's `WebSocketError` enum
-- Add retry logic for retryable errors
-- Add comprehensive tests
+- Add retry logic with exponential backoff for retryable errors (optional enhancement)
+- Add comprehensive tests for timeout/error handling
+- Update any other code using WebSocket client to use new timeout parameters
 
 ---
 
-### GLM-4.6 Client Integration ⏳ **READY**
+### GLM-4.6 Client Integration ✅ **COMPLETE**
 
 **File**: `src/aurora_glm46.zig`
 
-**Status**: ⏳ **READY FOR INTEGRATION** (Court Agent implementation complete ✅)
+**Status**: ✅ **INTEGRATION COMPLETE** (2025-12-29-204520-pst)
 
-**What Needs Integration**:
-- ⏳ Court Agent's timeout parameter (`timeout_ms: ?u32`, default: 60s)
-- ⏳ Court Agent's `LlmProviderError` enum
-- ⏳ Court Agent's retryability checking (`is_llm_error_retryable()`)
-- ⏳ Retry logic with exponential backoff
-- ⏳ Rate limiting handling (429 detection, `Retry-After` parsing)
+**What Was Integrated**:
+- ✅ Timeout parameter support (`timeout_ms: ?u32` in `requestCompletion()` function, default: 60s)
+- ✅ Core Agent's HTTP client timeout/error handling (via `dream_http_client.zig`)
+- ✅ Retry logic with exponential backoff (`requestCompletionWithRetry()` function)
+- ✅ Default timeout: `DEFAULT_LLM_TIMEOUT_MS` (60s, aligned with Court Agent's default)
 
-**Court Agent Implementation Available**:
-- ✅ Timeout handling: Per-request timeout with 60s default
-- ✅ Error handling: Structured error types with retryability classification
-- ✅ Rate limiting: 429 detection with `Retry-After` header parsing
-- ✅ All providers updated (OpenAI, Anthropic, Mistral)
-- ✅ Comprehensive tests added (21 tests)
+**Integration Details**:
+- Uses Core Agent's HTTP client timeout support (already integrated)
+- Uses Core Agent's `HttpClientError` enum for error handling
+- Implements retry logic using `http_errors.is_http_error_retryable()` and `aurora_errors.getRetryDelayMs()`
+- Maps HTTP errors appropriately (timeout, rate limit, network errors, etc.)
 
-**Coordination Message**: `docs/agent-communications/court_to_aurora_llm_timeout_error_ready_2025-12-28-135000-pst.md`
+**Note**: Aurora's GLM-4.6 client uses the HTTP client directly (not Court Agent's provider abstraction), so it integrates with Core Agent's HTTP timeout/error handling, which is appropriate for direct API clients.
 
 **Next Steps**:
-- Update `aurora_glm46.zig` to use Court Agent's timeout and error handling
-- Refine `src/aurora_errors.zig` to align with Court Agent's `LlmProviderError` enum
-- Add retry logic for retryable errors with exponential backoff
+- Add comprehensive tests for timeout/error handling
+- Update any other code using GLM-4.6 client to use new timeout parameter
 
 ---
 
@@ -206,8 +201,8 @@
   - Error handling integrated
   - Retry logic implemented
 - ⏳ **WebSocket Client Integration** - Ready to start
-- ⏳ **Service-to-Service Authentication** - Waiting on Core Agent (2-3 days)
-- ⏳ **Async Pattern** - Waiting on Core Agent (1-2 days)
+- ✅ **Service-to-Service Authentication** - Core Agent implementation complete, ready for integration (2025-12-29-001544-pst)
+- ✅ **Async Pattern** - Core Agent module created, ready for integration (2025-12-29-001544-pst)
 
 ---
 

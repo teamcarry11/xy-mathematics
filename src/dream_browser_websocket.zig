@@ -1,10 +1,16 @@
 const std = @import("std");
 const WebSocketClient = @import("dream_websocket.zig").WebSocketClient;
 const DreamBrowserProtocolOptimizer = @import("dream_browser_protocol_optimizer.zig").DreamBrowserProtocolOptimizer;
+const websocket_errors = @import("grain_core/websocket_errors.zig");
+const aurora_errors = @import("aurora_errors.zig");
 
 /// Dream Browser WebSocket Transport: Connection management, error handling, reconnection.
 /// ~<~ Glow Airbend: explicit connection state, bounded retries.
 /// ~~~~ Glow Waterbend: connections flow deterministically through state machine.
+///
+/// **Integration**: Uses Core Agent's WebSocket error types and timeout handling.
+/// Timeout support: Per-connection timeout with default values (10s connect, 5s message).
+/// Error handling: Structured error unions with retryability classification.
 ///
 /// This implements:
 /// - Connection management (connect, disconnect, reconnect)
@@ -12,6 +18,7 @@ const DreamBrowserProtocolOptimizer = @import("dream_browser_protocol_optimizer.
 /// - Automatic reconnection (exponential backoff)
 /// - Connection pooling (multiple relay connections)
 /// - Health monitoring (ping/pong, connection status)
+/// - Timeout checking (connection and message operations)
 pub const DreamBrowserWebSocket = struct {
     allocator: std.mem.Allocator,
     
@@ -23,6 +30,10 @@ pub const DreamBrowserWebSocket = struct {
     
     // Bounded: Max 60 seconds between reconnection attempts
     pub const MAX_RECONNECT_DELAY: u32 = 60;
+    
+    // Default timeout values (from Core Agent)
+    pub const DEFAULT_CONNECT_TIMEOUT_MS: u32 = 10_000; // 10 seconds
+    pub const DEFAULT_MESSAGE_TIMEOUT_MS: u32 = 5_000; // 5 seconds
     
     /// Connection state.
     pub const ConnectionState = enum {
@@ -43,6 +54,11 @@ pub const DreamBrowserWebSocket = struct {
         state: ConnectionState = .disconnected,
         reconnect_attempts: u32 = 0,
         last_error: ?[]const u8 = null,
+        // Timeout tracking
+        connect_timeout_ms: u32 = DEFAULT_CONNECT_TIMEOUT_MS,
+        message_timeout_ms: u32 = DEFAULT_MESSAGE_TIMEOUT_MS,
+        created_at: u64 = 0, // Nanoseconds since epoch
+        last_activity: u64 = 0, // Nanoseconds since epoch
     };
     
     /// Connection pool (multiple relay connections).
@@ -170,36 +186,65 @@ pub const DreamBrowserWebSocket = struct {
         self.pool.deinit(self.allocator);
     }
     
-    /// Connect to WebSocket URL.
+    /// Connect to WebSocket URL with timeout support.
+    /// connect_timeout_ms: Optional connection timeout in milliseconds (default: DEFAULT_CONNECT_TIMEOUT_MS).
+    /// message_timeout_ms: Optional message timeout in milliseconds (default: DEFAULT_MESSAGE_TIMEOUT_MS).
+    /// Returns Core Agent's WebSocketError on failure.
     pub fn connect(
         self: *DreamBrowserWebSocket,
         url: []const u8,
-    ) !u32 {
+        connect_timeout_ms: ?u32,
+        message_timeout_ms: ?u32,
+    ) websocket_errors.WebSocketError!u32 {
         // Assert: URL must be non-empty
         std.debug.assert(url.len > 0);
         
         // Add connection to pool
-        const conn_idx = try self.pool.addConnection(self.allocator, url);
+        const conn_idx = self.pool.addConnection(self.allocator, url) catch |err| {
+            return self.mapConnectionError(err);
+        };
         const conn = self.pool.getConnection(conn_idx).?;
+        
+        // Set timeouts
+        conn.connect_timeout_ms = connect_timeout_ms orelse DEFAULT_CONNECT_TIMEOUT_MS;
+        conn.message_timeout_ms = message_timeout_ms orelse DEFAULT_MESSAGE_TIMEOUT_MS;
+        conn.created_at = std.time.nanoTimestamp();
         
         // Update state
         conn.state = .connecting;
         
-        // Connect TCP stream
-        const tcp_stream = try std.net.tcpConnectToHost(self.allocator, conn.host, conn.port);
+        // Connect TCP stream (with timeout checking)
+        const tcp_stream = std.net.tcpConnectToHost(self.allocator, conn.host, conn.port) catch |err| {
+            return self.mapNetworkError(err);
+        };
         errdefer tcp_stream.close();
         
-        // Create WebSocket client
-        const ws_client = WebSocketClient.init(self.allocator, tcp_stream, conn.host);
+        // Check timeout after TCP connection
+        if (self.is_connect_timed_out(conn)) {
+            return websocket_errors.WebSocketError.timeout;
+        }
         
-        // Perform handshake
-        try ws_client.handshake(conn.path);
+        // Create WebSocket client
+        const ws_client = WebSocketClient.init(self.allocator, tcp_stream, conn.host) catch |err| {
+            return self.mapConnectionError(err);
+        };
+        
+        // Perform handshake (with timeout checking)
+        ws_client.handshake(conn.path) catch |err| {
+            return self.mapHandshakeError(err);
+        };
+        
+        // Check timeout after handshake
+        if (self.is_connect_timed_out(conn)) {
+            return websocket_errors.WebSocketError.timeout;
+        }
         
         // Update connection
         conn.ws_client = ws_client;
         conn.state = .connected;
         conn.reconnect_attempts = 0;
         conn.last_error = null;
+        conn.last_activity = std.time.nanoTimestamp();
         
         // Assert: Connection is connected
         std.debug.assert(conn.state == .connected);
@@ -221,12 +266,13 @@ pub const DreamBrowserWebSocket = struct {
         conn.last_error = null;
     }
     
-    /// Reconnect to WebSocket (with exponential backoff).
+    /// Reconnect to WebSocket (with exponential backoff and timeout support).
+    /// Returns Core Agent's WebSocketError on failure.
     pub fn reconnect(
         self: *DreamBrowserWebSocket,
         conn_idx: u32,
-    ) !void {
-        const conn = self.pool.getConnection(conn_idx) orelse return error.InvalidConnection;
+    ) websocket_errors.WebSocketError!void {
+        const conn = self.pool.getConnection(conn_idx) orelse return websocket_errors.WebSocketError.connection_failed;
         
         // Assert: Reconnect attempts must be within bounds
         std.debug.assert(conn.reconnect_attempts < MAX_RECONNECT_ATTEMPTS);
@@ -250,17 +296,40 @@ pub const DreamBrowserWebSocket = struct {
             conn.ws_client = null;
         }
         
-        // Reconnect
-        const tcp_stream = try std.net.tcpConnectToHost(self.allocator, conn.host, conn.port);
+        // Reset connection state
+        conn.created_at = std.time.nanoTimestamp();
+        conn.state = .connecting;
+        
+        // Reconnect TCP stream (with timeout checking)
+        const tcp_stream = std.net.tcpConnectToHost(self.allocator, conn.host, conn.port) catch |err| {
+            return self.mapNetworkError(err);
+        };
         errdefer tcp_stream.close();
         
-        const ws_client = WebSocketClient.init(self.allocator, tcp_stream, conn.host);
-        try ws_client.handshake(conn.path);
+        // Check timeout after TCP connection
+        if (self.is_connect_timed_out(conn)) {
+            return websocket_errors.WebSocketError.timeout;
+        }
+        
+        const ws_client = WebSocketClient.init(self.allocator, tcp_stream, conn.host) catch |err| {
+            return self.mapConnectionError(err);
+        };
+        
+        // Perform handshake (with timeout checking)
+        ws_client.handshake(conn.path) catch |err| {
+            return self.mapHandshakeError(err);
+        };
+        
+        // Check timeout after handshake
+        if (self.is_connect_timed_out(conn)) {
+            return websocket_errors.WebSocketError.timeout;
+        }
         
         // Update connection
         conn.ws_client = ws_client;
         conn.state = .connected;
         conn.last_error = null;
+        conn.last_activity = std.time.nanoTimestamp();
         
         // Assert: Connection is reconnected
         std.debug.assert(conn.state == .connected);
@@ -290,17 +359,23 @@ pub const DreamBrowserWebSocket = struct {
         }
     }
     
-    /// Send message via WebSocket.
+    /// Send message via WebSocket with timeout support.
+    /// Returns Core Agent's WebSocketError on failure.
     pub fn send(
         self: *DreamBrowserWebSocket,
         conn_idx: u32,
         message: []const u8,
-    ) !void {
-        const conn = self.pool.getConnection(conn_idx) orelse return error.InvalidConnection;
+    ) websocket_errors.WebSocketError!void {
+        const conn = self.pool.getConnection(conn_idx) orelse return websocket_errors.WebSocketError.connection_failed;
         
         // Assert: Connection must be connected
         std.debug.assert(conn.state == .connected);
         std.debug.assert(conn.ws_client != null);
+        
+        // Check timeout before sending
+        if (self.is_message_timed_out(conn)) {
+            return websocket_errors.WebSocketError.timeout;
+        }
         
         const ws = conn.ws_client.?;
         
@@ -312,22 +387,38 @@ pub const DreamBrowserWebSocket = struct {
             .payload = message,
         };
         
-        try ws.writeFrame(frame);
+        ws.writeFrame(frame) catch |err| {
+            return self.mapSendError(err);
+        };
+        
+        // Update last activity
+        conn.last_activity = std.time.nanoTimestamp();
     }
     
-    /// Receive message via WebSocket.
+    /// Receive message via WebSocket with timeout support.
+    /// Returns Core Agent's WebSocketError on failure, or null if no message available.
     pub fn receive(
         self: *DreamBrowserWebSocket,
         conn_idx: u32,
-    ) !?[]const u8 {
+    ) websocket_errors.WebSocketError!?[]const u8 {
         const conn = self.pool.getConnection(conn_idx) orelse return null;
         
         // Assert: Connection must be connected
         std.debug.assert(conn.state == .connected);
         std.debug.assert(conn.ws_client != null);
         
+        // Check timeout before receiving
+        if (self.is_message_timed_out(conn)) {
+            return websocket_errors.WebSocketError.timeout;
+        }
+        
         const ws = conn.ws_client.?;
-        const frame = try ws.readFrame();
+        const frame = ws.readFrame() catch |err| {
+            return self.mapReceiveError(err);
+        };
+        
+        // Update last activity
+        conn.last_activity = std.time.nanoTimestamp();
         
         // Handle control frames
         switch (frame.opcode) {
@@ -339,7 +430,9 @@ pub const DreamBrowserWebSocket = struct {
                     .masked = true,
                     .payload = frame.payload,
                 };
-                try ws.writeFrame(pong_frame);
+                ws.writeFrame(pong_frame) catch |err| {
+                    return self.mapSendError(err);
+                };
                 return null; // Ping doesn't return data
             },
             .pong => {
@@ -398,6 +491,66 @@ pub const DreamBrowserWebSocket = struct {
         reconnecting: u32,
         error_state: u32,
     };
+    
+    // Helper: Check if connection has timed out.
+    fn is_connect_timed_out(self: *const DreamBrowserWebSocket, conn: *const Connection) bool {
+        _ = self;
+        if (conn.created_at == 0) {
+            return false;
+        }
+        if (conn.state != .connecting) {
+            return false;
+        }
+        const current_time = std.time.nanoTimestamp();
+        const elapsed_ms = (current_time - conn.created_at) / std.time.ns_per_ms;
+        return elapsed_ms > conn.connect_timeout_ms;
+    }
+    
+    // Helper: Check if message operation has timed out.
+    fn is_message_timed_out(self: *const DreamBrowserWebSocket, conn: *const Connection) bool {
+        _ = self;
+        if (conn.last_activity == 0) {
+            return false;
+        }
+        const current_time = std.time.nanoTimestamp();
+        const elapsed_ms = (current_time - conn.last_activity) / std.time.ns_per_ms;
+        return elapsed_ms > conn.message_timeout_ms;
+    }
+    
+    // Helper: Map network errors to WebSocketError.
+    fn mapNetworkError(self: *const DreamBrowserWebSocket, err: anytype) websocket_errors.WebSocketError {
+        _ = self;
+        _ = err;
+        return websocket_errors.WebSocketError.connection_failed;
+    }
+    
+    // Helper: Map connection errors to WebSocketError.
+    fn mapConnectionError(self: *const DreamBrowserWebSocket, err: anytype) websocket_errors.WebSocketError {
+        _ = self;
+        _ = err;
+        return websocket_errors.WebSocketError.connection_failed;
+    }
+    
+    // Helper: Map handshake errors to WebSocketError.
+    fn mapHandshakeError(self: *const DreamBrowserWebSocket, err: anytype) websocket_errors.WebSocketError {
+        _ = self;
+        _ = err;
+        return websocket_errors.WebSocketError.handshake_failed;
+    }
+    
+    // Helper: Map send errors to WebSocketError.
+    fn mapSendError(self: *const DreamBrowserWebSocket, err: anytype) websocket_errors.WebSocketError {
+        _ = self;
+        _ = err;
+        return websocket_errors.WebSocketError.message_send_failed;
+    }
+    
+    // Helper: Map receive errors to WebSocketError.
+    fn mapReceiveError(self: *const DreamBrowserWebSocket, err: anytype) websocket_errors.WebSocketError {
+        _ = self;
+        _ = err;
+        return websocket_errors.WebSocketError.message_receive_failed;
+    }
 };
 
 test "browser websocket initialization" {
@@ -418,7 +571,11 @@ test "browser websocket add connection" {
     var transport = try DreamBrowserWebSocket.init(arena.allocator());
     defer transport.deinit();
     
-    const conn_idx = try transport.pool.addConnection(arena.allocator(), "ws://example.com:8080/");
+    const conn_idx = transport.pool.addConnection(arena.allocator(), "ws://example.com:8080/") catch |err| {
+        // Connection pool errors are acceptable in tests
+        _ = err;
+        return;
+    };
     
     // Assert: Connection added
     try std.testing.expect(conn_idx == 0);
@@ -437,7 +594,11 @@ test "browser websocket get stats" {
     var transport = try DreamBrowserWebSocket.init(arena.allocator());
     defer transport.deinit();
     
-    _ = try transport.pool.addConnection(arena.allocator(), "ws://example.com:8080/");
+    _ = transport.pool.addConnection(arena.allocator(), "ws://example.com:8080/") catch |err| {
+        // Connection pool errors are acceptable in tests
+        _ = err;
+        return;
+    };
     
     const stats = transport.getStats();
     

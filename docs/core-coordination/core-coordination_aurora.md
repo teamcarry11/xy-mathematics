@@ -1,8 +1,8 @@
 # Grain Aurora Agent: Core Coordination Status
 
 **Agent**: Grain Aurora IDE Dream Browser Agent (2nd Agent)  
-**Last Updated**: 2025-12-29-013741-PST  
-**Status**: ✅ **ALL CORE AGENT COORDINATION DECISIONS INTEGRATED** ✅ — Ready for Independent Work
+**Last Updated**: 2025-12-29-112345-PST  
+**Status**: ✅ **ALL CORE AGENT COORDINATION DECISIONS INTEGRATED** ✅ — **JG PROJECT RESPONSIBILITIES ASSIGNED** ✅ — Ready for Independent Work
 
 ---
 
@@ -17,6 +17,7 @@
 - ✅ Core Agent Service-to-Service Authentication Complete (2025-12-29-001544-pst)
 - ✅ Core Agent Async Pattern Module Complete (2025-12-29-001544-pst)
 - ✅ Dream Browser Component API Implemented (2025-12-28-155635-pst)
+- ✅ **JG Project Responsibilities Assigned** (2025-12-29-105655-pst)
 
 **Integration Status**:
 - ✅ **HTTP Client**: Timeout/error handling integrated
@@ -24,6 +25,53 @@
 - ✅ **GLM-4.6 Client**: Timeout/error handling integrated
 - ✅ **Component API**: Dream Browser Component API created
 - ⏳ **Error Types Module**: Ready for refinement (optional)
+
+**JG Project Status**:
+- ✅ **JG Project Design Complete** (2025-12-28-232324-pst)
+- ✅ **JG Project Responsibilities Assigned** (2025-12-29-105655-pst)
+- ⏳ **JG Project Implementation**: Ready to begin (Months 7-12)
+
+---
+
+## Grainbank MMT Job Guarantee (JG) Housing Program
+
+**Status**: ✅ **DESIGN COMPLETE** — **RESPONSIBILITIES ASSIGNED** ✅
+
+**Design Document**: `docs/zyx/grainbank_mmt_job_guarantee_housing_program_2025-12-28-232324-pst.md`
+
+**Program Vision**: Build beautiful, affordable, sustainable housing using fastest-growing renewable materials (hemp, bamboo, timber, rammed earth) through a federal Job Guarantee program that creates jobs, builds communities, and restores traditional urbanism principles.
+
+**Aurora Agent Responsibilities** (Months 7-12):
+
+### Phase 1: 3D Visualization Components (Months 7-9)
+- 3D architectural visualization components
+- Site layout visualization components
+- Material quantity visualization components
+- Energy efficiency visualization components
+
+### Phase 2: Dashboard Components (Months 10-11)
+- Project management dashboard components
+- Task tracking dashboard components
+- Inventory management dashboard components
+- Supply chain visualization components
+
+### Phase 3: Mobile UI Components (Month 12)
+- Worker mobile app UI components
+- Resident mobile app UI components
+- Cooperative mobile app UI components
+
+**Coordination Required**:
+- **Workspace Agent**: Coordinate on Component API integration
+- **Core Agent**: Coordinate on API contracts for JG modules
+- **Bubble Agent**: Coordinate on 3D visualization and dashboard component design patterns
+
+**Next Steps**:
+1. Review JG project design document (`docs/zyx/grainbank_mmt_job_guarantee_housing_program_2025-12-28-232324-pst.md`)
+2. Coordinate with Workspace Agent on Component API
+3. Design dashboard components and mobile UI components
+4. Begin component implementation (Months 7-9)
+
+**Timeline**: Months 7-12 (6 months total)
 
 ---
 
@@ -134,10 +182,12 @@
    - **Impact**: Timeout handling for file operations
    - **Aurora Agent Action**: Integrate when available
 
-3. **Kernel Refactoring Support** (in progress)
-   - Supporting Vantage Agent's kernel refactoring (build.zig updates)
-   - **Impact**: Better kernel code organization
-   - **Aurora Agent Action**: None (internal refactoring)
+3. **JG Project Foundation** (Months 1-6)
+   - **Phase 1: Grainbank MMT Integration** (Months 1-2)
+   - **Phase 2: JG Module Foundation** (Months 3-4)
+   - **Phase 3: Integration Foundation** (Months 5-6)
+   - **Impact**: JG project foundation and API contracts
+   - **Aurora Agent Action**: Coordinate on API contracts for JG project UI components (Months 7-12)
 
 ### Why This Matters for Aurora Agent
 
@@ -198,7 +248,7 @@
 
 ### For Bubble Agent
 
-**Status**: ✅ **Component API Design Approved** — Ready for Coordination
+**Status**: ✅ **Component API Design Approved** — Ready for Coordination — **JG Project Responsibilities Assigned** ✅
 
 **What Aurora Agent Needs**:
 1. **Dream Browser Component API Design Coordination**:
@@ -206,31 +256,46 @@
    - Share best practices for component state management
    - Coordinate on browser-specific component variants
 
+2. **JG Project Component Coordination** (Months 7-12):
+   - Coordinate on 3D visualization component design patterns
+   - Coordinate on dashboard component design patterns
+   - Share best practices for mobile UI components
+
 **Aurora Agent's Progress**:
 - ✅ Dream Browser Component API created (`src/dream_browser_components.zig`)
+- ✅ JG Project responsibilities assigned (Months 7-12)
 - ⏳ **NEXT**: Add comprehensive tests
 - ⏳ **NEXT**: Coordinate with Bubble Agent on component integration patterns
+- ⏳ **NEXT**: Coordinate with Bubble Agent on JG project component design
 
-**Timeline**: Can proceed now (no blocking dependencies)
+**Timeline**: Can proceed now (no blocking dependencies) — JG project coordination begins Month 7
 
 ---
 
 ### For Workspace Agent
 
-**Status**: ✅ **Component API Complete** — Ready for Integration
+**Status**: ✅ **Component API Complete** — Ready for Integration — **JG Project Responsibilities Assigned** ✅
 
 **What Workspace Agent Has Provided**:
 - ✅ Component API structure (`DesktopComponentAPI`)
 - ✅ Component variant support (state/size/theme)
 - ✅ Comprehensive tests and documentation
 - ✅ Text Editor enhancements (bracket matching, code folding)
+- ✅ JG Project desktop dashboard responsibilities (Months 3-8)
 
 **Aurora Agent's Progress**:
 - ✅ Dream Browser Component API created, following Workspace Agent's pattern
+- ✅ JG Project responsibilities assigned (Months 7-12)
 - ⏳ Add comprehensive tests
 - ⏳ Integrate into build.zig
+- ⏳ Coordinate with Workspace Agent on JG project Component API integration
 
-**Timeline**: Ready for testing and integration
+**JG Project Coordination**:
+- Workspace Agent: Desktop dashboards (Months 3-8)
+- Aurora Agent: UI components (Months 7-12)
+- **Coordination Point**: Component API integration for JG project dashboards
+
+**Timeline**: Ready for testing and integration — JG project coordination begins Month 7
 
 ---
 
@@ -386,9 +451,17 @@
 - ⏳ **Aurora Agent**: Coordinate with Bubble Agent on component integration patterns
 - ⏳ **Aurora Agent**: Update to use Core Agent's new return types when available (optional)
 
+**JG PROJECT WORK** (Months 7-12):
+- ⏳ **Aurora Agent**: Phase 1 - 3D Visualization Components (Months 7-9)
+- ⏳ **Aurora Agent**: Phase 2 - Dashboard Components (Months 10-11)
+- ⏳ **Aurora Agent**: Phase 3 - Mobile UI Components (Month 12)
+- ⏳ **Aurora Agent**: Coordinate with Workspace Agent on Component API
+- ⏳ **Aurora Agent**: Coordinate with Core Agent on API contracts
+- ⏳ **Aurora Agent**: Coordinate with Bubble Agent on component design patterns
+
 ---
 
-**Status**: All Core Agent coordination decisions integrated ✅ — Ready for independent work and optional refinements (2025-12-29-013741-pst)
+**Status**: All Core Agent coordination decisions integrated ✅ — JG Project responsibilities assigned ✅ — Ready for independent work and JG project implementation (2025-12-29-112345-pst)
 
 **Welcome to the family, Grain Court Agent!** 🌾⚒️
 

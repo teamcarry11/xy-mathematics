@@ -1,8 +1,8 @@
 # Grain Workspace Agent: Task List
 
 **Agent**: Grain Workspace Agent (8th Agent)  
-**Status**: Phase 35 Code Folding Complete ✅  
-**Last Updated**: 2025-12-23-200220-pst  
+**Status**: Phase 36 Error Handling Integration Complete ✅  
+**Last Updated**: 2025-12-29-041147-pst  
 **Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-21-204511-pst.md`
 
 ---
@@ -661,6 +661,25 @@ All planned phases for Grain Workspace Agent have been completed. See completed 
 - [x] Update documentation
 
 **Files**: Updated `src/grain_workspace/text_editor/app.zig`, `tests/115_grain_workspace_text_editor_test.zig`
+
+### Phase 36: Error Handling Integration ✅ (2025-12-29-041147-pst)
+
+**Completed Tasks**:
+- [x] Add HttpTestError enum to Network Tools
+- [x] Add error_type, error_message, and error_message_len fields to HttpTestResult
+- [x] Update test_http_endpoint() to track request creation errors
+- [x] Implement http_error_to_test_error() helper function
+- [x] Implement set_http_test_error() function
+- [x] Implement is_http_test_error_retryable() function
+- [x] Update documentation
+
+**Files**: Updated `src/grain_workspace/network_tools/app.zig`
+
+**Coordination**:
+- ✅ **Core Agent**: All coordination decisions complete (timeout ✅, error types ✅, authentication ✅, async pattern ✅)
+- ✅ **Core Agent**: Error types implementation complete and ready
+- ⏳ **Core Agent**: HTTP/WebSocket client error return types update (1 day remaining) — makes error handling fully integrated
+- ✅ **Workspace Agent**: Error handling structures and helpers ready, prepared for full integration when Core Agent updates clients
 
 ---
 

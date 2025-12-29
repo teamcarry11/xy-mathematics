@@ -5125,6 +5125,21 @@ pub fn build(b: *std.Build) void {
     const grain_bubble_workspace_integration_tests_run = b.addRunArtifact(grain_bubble_workspace_integration_tests);
     test_step.dependOn(&grain_bubble_workspace_integration_tests_run.step);
 
+    // Grain Bubble async integration tests
+    const grain_bubble_async_integration_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/142_grain_bubble_async_integration_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_bubble", .module = grain_bubble_module },
+                .{ .name = "grain_flow", .module = grain_flow_module },
+            },
+        }),
+    });
+    const grain_bubble_async_integration_tests_run = b.addRunArtifact(grain_bubble_async_integration_tests);
+    test_step.dependOn(&grain_bubble_async_integration_tests_run.step);
+
     // File system kernel verification test
     const file_system_kernel_tests = b.addTest(.{
         .root_module = b.createModule(.{

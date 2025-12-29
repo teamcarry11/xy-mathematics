@@ -1,8 +1,8 @@
 # Grain Workspace Agent: Development Plan
 
 **Agent**: Grain Workspace Agent (8th Agent)  
-**Status**: Phase 35 Code Folding Complete ✅  
-**Last Updated**: 2025-12-29-001544-pst  
+**Status**: Phase 36 Error Handling Integration Complete ✅  
+**Last Updated**: 2025-12-29-041147-pst  
 **Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-21-204511-pst.md`
 
 ---
@@ -1399,6 +1399,87 @@ All planned phases for Grain Workspace Agent have been completed:
 - ✅ **Core Agent**: Error types implementation complete (HttpClientError, WebSocketError, FileIoError)
 - ⏳ **Core Agent**: HTTP/WebSocket client error return types update (1 day remaining)
 - ✅ **Workspace Agent**: Timeout integration complete, ready for error handling integration
+
+### Phase 35: Text Editor Code Folding ✅ **COMPLETE**
+
+**Date**: 2025-12-29-001544-pst
+
+**Completed Work**:
+1. **Code Folding** (`src/grain_workspace/text_editor/app.zig`):
+   - Added `FoldRange` structure for tracking code block ranges
+   - Added `MAX_FOLD_RANGES` constant (256 fold ranges)
+   - Added `fold_ranges` array and `fold_ranges_len` to TextEditor
+   - Added `code_folding_enabled` field to TextEditor
+   - Implemented `toggle_code_folding()` function to enable/disable code folding
+   - Implemented `detect_fold_ranges()` function to detect code blocks (functions, structs, if/else)
+   - Implemented `toggle_fold()` function to toggle fold state for a given line
+   - Implemented `is_folded()` function to check if a line is currently folded
+   - Implemented `fold_all()` function to fold all detectable code blocks
+   - Implemented `unfold_all()` function to unfold all code blocks
+   - Comprehensive tests added (`tests/115_grain_workspace_text_editor_test.zig`)
+
+**Features**:
+- Code folding toggle (enable/disable)
+- Automatic detection of code blocks (curly brace blocks)
+- Multi-line code block folding
+- Nested code block support (fold levels)
+- Fold all / unfold all operations
+- Integration with Text Editor state management
+
+**Grain Style Compliance**:
+- `grain_case` function names
+- `u32`/`u64` types (no `usize`)
+- Bounded allocations (`MAX_FOLD_RANGES: 256`)
+- Assertions for preconditions
+- Max 70 lines per function
+- All compiler warnings enabled
+
+**Coordination**:
+- ✅ **Core Agent**: HTTP/WebSocket timeout implementation complete
+- ✅ **Core Agent**: Error types implementation complete
+- ⏳ **Core Agent**: HTTP/WebSocket client error return types update (1 day remaining)
+- ✅ **Workspace Agent**: Code folding complete, ready for future enhancements
+
+**Future Enhancements**:
+- Visual fold indicators in UI (fold/unfold icons)
+- Fold state persistence across sessions
+- Keyboard shortcuts for folding operations
+- Smart fold detection (function signatures, struct definitions)
+
+### Phase 36: Error Handling Integration ✅ **COMPLETE**
+
+**Date**: 2025-12-29-041147-pst
+
+**Completed Work**:
+1. **Error Handling Integration** (`src/grain_workspace/network_tools/app.zig`):
+   - Added `HttpTestError` enum for structured error types
+   - Added `error_type`, `error_message`, and `error_message_len` fields to `HttpTestResult`
+   - Updated `test_http_endpoint()` to track request creation errors
+   - Implemented `http_error_to_test_error()` helper function to convert Core Agent error types
+   - Implemented `set_http_test_error()` function to set error on test results
+   - Implemented `is_http_test_error_retryable()` function to check retryability
+   - Error tracking structures ready for full integration when Core Agent updates clients
+
+**Features**:
+- Structured error types for HTTP test results
+- Error message tracking (128-byte buffer)
+- Error type classification (timeout, network_error, dns_error, etc.)
+- Retryability checking for error types
+- Ready for full integration when Core Agent updates HTTP/WebSocket clients to return error types
+
+**Grain Style Compliance**:
+- `grain_case` function names
+- `u32`/`u64` types (no `usize`)
+- Bounded allocations (error message: 128 bytes)
+- Assertions for preconditions
+- Max 70 lines per function
+- All compiler warnings enabled
+
+**Coordination**:
+- ✅ **Core Agent**: All coordination decisions complete (timeout ✅, error types ✅, authentication ✅, async pattern ✅)
+- ✅ **Core Agent**: Error types implementation complete and ready
+- ⏳ **Core Agent**: HTTP/WebSocket client error return types update (1 day remaining) — makes error handling fully integrated
+- ✅ **Workspace Agent**: Error handling structures and helpers ready, prepared for full integration
 
 **Future Enhancements**:
 - Full error handling integration when Core Agent updates HTTP/WebSocket clients to return error types

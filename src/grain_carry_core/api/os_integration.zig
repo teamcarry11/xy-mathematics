@@ -11,6 +11,7 @@ const grain_core = @import("grain_core");
 const grain_core_api = grain_core.api_server;
 const grain_core_compositor = grain_core.compositor;
 const grain_core_auth = grain_core.auth_service;
+const grain_flow = @import("grain_flow");
 const handler_adapters = @import("handler_adapters.zig");
 const auth_integration = @import("auth_integration.zig");
 const route_registration = @import("route_registration.zig");
@@ -35,6 +36,11 @@ pub fn register_mobile_endpoints_with_compositor(
     var db_config = database_integration.DatabaseConfig.init();
     db_config.enabled = false;
     database_integration.set_database_config(db_config);
+    // Initialize Event Bus integration (if available from Flow Agent).
+    if (grain_flow.get_shared_event_bus()) |event_bus| {
+        database_integration.set_event_bus(event_bus);
+        database_integration.init_module();
+    }
     var count: u32 = 0;
     if (compositor.register_api_route(
         grain_core_api.HttpMethod.post,

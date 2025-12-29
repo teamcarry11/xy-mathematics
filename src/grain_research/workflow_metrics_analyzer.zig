@@ -21,6 +21,12 @@ pub const MAX_WORKFLOW_EXECUTIONS: u32 = 10_000;
 // Bounded: Max agent pairs to track.
 pub const MAX_AGENT_PAIRS: u32 = 1_000;
 
+// Bounded: Max error message length.
+pub const MAX_ERROR_MESSAGE_LEN: u32 = 1024;
+
+// Bounded: Max context data length.
+pub const MAX_CONTEXT_DATA_LEN: u32 = 10_240; // 10KB
+
 // Workflow execution metric.
 pub const WorkflowExecutionMetric = struct {
     workflow_id: u32,
@@ -68,6 +74,30 @@ pub const FailureType = enum(u8) {
     unknown = 3,
 };
 
+// Recovery status.
+pub const RecoveryStatus = enum(u8) {
+    not_attempted = 0, // No recovery attempted
+    in_progress = 1, // Recovery in progress
+    succeeded = 2, // Recovery succeeded
+    failed = 3, // Recovery failed
+    not_applicable = 4, // Recovery not applicable (permanent failure)
+};
+
+// Failure data entry (detailed failure information).
+pub const FailureDataEntry = struct {
+    failure_id: u32,
+    workflow_id: u32,
+    agent_id: u32,
+    failure_type: FailureType,
+    timestamp: u64,
+    recovery_status: RecoveryStatus,
+    recovery_time_ms: u64,
+    error_message: [MAX_ERROR_MESSAGE_LEN:0]u8,
+    error_message_len: u32,
+    context_data: [MAX_CONTEXT_DATA_LEN:0]u8,
+    context_data_len: u32,
+};
+
 // Performance metric.
 pub const PerformanceMetric = struct {
     queue_depth: u32,
@@ -83,6 +113,7 @@ pub const WorkflowMetricsAnalyzer = struct {
     workflow_executions: std.ArrayListUnmanaged(WorkflowExecutionMetric),
     coordination_metrics: std.ArrayListUnmanaged(AgentCoordinationMetric),
     failure_metrics: std.ArrayListUnmanaged(FailurePatternMetric),
+    failure_data_entries: std.ArrayListUnmanaged(FailureDataEntry),
     performance_metrics: std.ArrayListUnmanaged(PerformanceMetric),
     coordination_success_rate_percent: u32,
 
@@ -95,6 +126,7 @@ pub const WorkflowMetricsAnalyzer = struct {
             .workflow_executions = .{},
             .coordination_metrics = .{},
             .failure_metrics = .{},
+            .failure_data_entries = .{},
             .performance_metrics = .{},
             .coordination_success_rate_percent = 0,
         };
@@ -105,6 +137,7 @@ pub const WorkflowMetricsAnalyzer = struct {
         self.workflow_executions.deinit(self.allocator);
         self.coordination_metrics.deinit(self.allocator);
         self.failure_metrics.deinit(self.allocator);
+        self.failure_data_entries.deinit(self.allocator);
         self.performance_metrics.deinit(self.allocator);
         self.* = undefined;
     }
@@ -325,6 +358,106 @@ pub const WorkflowMetricsAnalyzer = struct {
                 }
             }
         }
+
+        // Parse detailed failure entries.
+        if (failure_obj.get("failures")) |failures_val| {
+            if (failures_val == .array) {
+                const failures_array = failures_val.array;
+                var i: u32 = 0;
+                while (i < failures_array.items.len and
+                    i < MAX_METRIC_ENTRIES) : (i += 1)
+                {
+                    const failure_entry_val = failures_array.items[i];
+                    if (failure_entry_val == .object) {
+                        const entry_obj = failure_entry_val.object;
+                        var entry = FailureDataEntry{
+                            .failure_id = 0,
+                            .workflow_id = 0,
+                            .agent_id = 0,
+                            .failure_type = .unknown,
+                            .timestamp = 0,
+                            .recovery_status = .not_attempted,
+                            .recovery_time_ms = 0,
+                            .error_message = [_]u8{0} ** MAX_ERROR_MESSAGE_LEN,
+                            .error_message_len = 0,
+                            .context_data = [_]u8{0} ** MAX_CONTEXT_DATA_LEN,
+                            .context_data_len = 0,
+                        };
+
+                        // Parse failure_id.
+                        if (entry_obj.get("failure_id")) |id_val| {
+                            if (id_val == .integer) {
+                                entry.failure_id = @intCast(id_val.integer);
+                            }
+                        }
+
+                        // Parse workflow_id.
+                        if (entry_obj.get("workflow_id")) |wf_id_val| {
+                            if (wf_id_val == .integer) {
+                                entry.workflow_id = @intCast(wf_id_val.integer);
+                            }
+                        }
+
+                        // Parse agent_id.
+                        if (entry_obj.get("agent_id")) |agent_id_val| {
+                            if (agent_id_val == .integer) {
+                                entry.agent_id = @intCast(agent_id_val.integer);
+                            }
+                        }
+
+                        // Parse failure_type.
+                        if (entry_obj.get("failure_type")) |type_val| {
+                            if (type_val == .string) {
+                                entry.failure_type = parse_failure_type(type_val.string);
+                            }
+                        }
+
+                        // Parse timestamp.
+                        if (entry_obj.get("timestamp")) |ts_val| {
+                            if (ts_val == .integer) {
+                                entry.timestamp = @intCast(ts_val.integer);
+                            }
+                        }
+
+                        // Parse recovery_status.
+                        if (entry_obj.get("recovery_status")) |status_val| {
+                            if (status_val == .string) {
+                                entry.recovery_status = parse_recovery_status(status_val.string);
+                            }
+                        }
+
+                        // Parse recovery_time_ms.
+                        if (entry_obj.get("recovery_time_ms")) |rt_val| {
+                            if (rt_val == .integer) {
+                                entry.recovery_time_ms = @intCast(rt_val.integer);
+                            }
+                        }
+
+                        // Parse error_message.
+                        if (entry_obj.get("error_message")) |err_msg_val| {
+                            if (err_msg_val == .string) {
+                                const err_msg = err_msg_val.string;
+                                const copy_len = @min(err_msg.len, MAX_ERROR_MESSAGE_LEN);
+                                @memcpy(entry.error_message[0..copy_len], err_msg[0..copy_len]);
+                                entry.error_message_len = copy_len;
+                            }
+                        }
+
+                        // Parse context_data.
+                        if (entry_obj.get("context_data")) |ctx_val| {
+                            if (ctx_val == .string) {
+                                const ctx_data = ctx_val.string;
+                                const copy_len = @min(ctx_data.len, MAX_CONTEXT_DATA_LEN);
+                                @memcpy(entry.context_data[0..copy_len], ctx_data[0..copy_len]);
+                                entry.context_data_len = copy_len;
+                            }
+                        }
+
+                        try self.failure_data_entries.append(self.allocator, entry);
+                    }
+                }
+            }
+        }
     }
 
     // Parse performance metrics from JSON value.
@@ -377,6 +510,23 @@ pub const WorkflowMetricsAnalyzer = struct {
             return .timeout;
         } else {
             return .unknown;
+        }
+    }
+
+    // Parse recovery status from string.
+    fn parse_recovery_status(status_str: []const u8) RecoveryStatus {
+        std.debug.assert(status_str.len > 0);
+
+        if (std.mem.eql(u8, status_str, "succeeded")) {
+            return .succeeded;
+        } else if (std.mem.eql(u8, status_str, "failed")) {
+            return .failed;
+        } else if (std.mem.eql(u8, status_str, "in_progress")) {
+            return .in_progress;
+        } else if (std.mem.eql(u8, status_str, "not_applicable")) {
+            return .not_applicable;
+        } else {
+            return .not_attempted;
         }
     }
 
@@ -501,6 +651,15 @@ pub const WorkflowMetricsAnalyzer = struct {
         std.debug.assert(self.failure_metrics.items.len <= MAX_METRIC_ENTRIES);
 
         return @intCast(self.failure_metrics.items.len);
+    }
+
+    // Get failure data entry count.
+    pub fn get_failure_data_entry_count(
+        self: *const WorkflowMetricsAnalyzer,
+    ) u32 {
+        std.debug.assert(self.failure_data_entries.items.len <= MAX_METRIC_ENTRIES);
+
+        return @intCast(self.failure_data_entries.items.len);
     }
 
     // Get performance metric count.

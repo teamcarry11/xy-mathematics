@@ -340,3 +340,115 @@ pub fn generate_cost_report(tracker: *const CostTracker) CostReport {
     std.debug.assert(report.total_requests <= MAX_COST_ENTRIES);
     return report;
 }
+
+// Provider cost comparison result.
+pub const ProviderCostComparison = struct {
+    provider_type: llm_provider.ProviderType,
+    cost_usd: f64,
+    is_cheapest: bool,
+};
+
+// Compare costs across all providers for given token counts.
+pub fn compare_provider_costs(
+    input_tokens: u32,
+    output_tokens: u32,
+) [4]ProviderCostComparison {
+    std.debug.assert(input_tokens <= MAX_TOKENS_PER_REQUEST);
+    std.debug.assert(output_tokens <= MAX_TOKENS_PER_REQUEST);
+    var comparisons: [4]ProviderCostComparison = undefined;
+    var min_cost: f64 = 999999.0;
+    var cheapest_provider: u32 = 0;
+    var i: u32 = 0;
+    while (i < 4) : (i += 1) {
+        const provider_type = @as(llm_provider.ProviderType, @enumFromInt(i));
+        const cost = calculate_provider_cost(provider_type, input_tokens, output_tokens);
+        comparisons[i] = ProviderCostComparison{
+            .provider_type = provider_type,
+            .cost_usd = cost,
+            .is_cheapest = false,
+        };
+        if (cost < min_cost) {
+            min_cost = cost;
+            cheapest_provider = i;
+        }
+    }
+    comparisons[cheapest_provider].is_cheapest = true;
+    std.debug.assert(min_cost >= 0.0);
+    return comparisons;
+}
+
+// Calculate token savings percentage between two token counts.
+pub fn calculate_token_savings_percent(
+    original_tokens: u32,
+    optimized_tokens: u32,
+) f64 {
+    std.debug.assert(original_tokens > 0);
+    std.debug.assert(optimized_tokens <= original_tokens);
+    if (original_tokens == 0) {
+        return 0.0;
+    }
+    const savings = @as(f64, @floatFromInt(original_tokens - optimized_tokens));
+    const percent = (savings / @as(f64, @floatFromInt(original_tokens))) * 100.0;
+    std.debug.assert(percent >= 0.0);
+    std.debug.assert(percent <= 100.0);
+    return percent;
+}
+
+// Calculate cost savings between two providers for given token counts.
+pub fn calculate_cost_savings(
+    provider_a: llm_provider.ProviderType,
+    provider_b: llm_provider.ProviderType,
+    input_tokens: u32,
+    output_tokens: u32,
+) f64 {
+    std.debug.assert(input_tokens <= MAX_TOKENS_PER_REQUEST);
+    std.debug.assert(output_tokens <= MAX_TOKENS_PER_REQUEST);
+    std.debug.assert(@intFromEnum(provider_a) < 4);
+    std.debug.assert(@intFromEnum(provider_b) < 4);
+    const cost_a = calculate_provider_cost(provider_a, input_tokens, output_tokens);
+    const cost_b = calculate_provider_cost(provider_b, input_tokens, output_tokens);
+    const savings = cost_a - cost_b;
+    std.debug.assert(savings >= -999999.0);
+    return savings;
+}
+
+// Recommendation result for provider selection.
+pub const ProviderRecommendation = struct {
+    recommended_provider: llm_provider.ProviderType,
+    estimated_cost_usd: f64,
+    estimated_input_tokens: u32,
+    estimated_output_tokens: u32,
+    savings_vs_most_expensive: f64,
+};
+
+// Recommend cheapest provider for estimated token counts.
+pub fn recommend_cheapest_provider(
+    estimated_input_tokens: u32,
+    estimated_output_tokens: u32,
+) ProviderRecommendation {
+    std.debug.assert(estimated_input_tokens <= MAX_TOKENS_PER_REQUEST);
+    std.debug.assert(estimated_output_tokens <= MAX_TOKENS_PER_REQUEST);
+    const comparisons = compare_provider_costs(estimated_input_tokens, estimated_output_tokens);
+    var cheapest: ?ProviderCostComparison = null;
+    var most_expensive: f64 = 0.0;
+    var i: u32 = 0;
+    while (i < 4) : (i += 1) {
+        if (comparisons[i].is_cheapest) {
+            cheapest = comparisons[i];
+        }
+        if (comparisons[i].cost_usd > most_expensive) {
+            most_expensive = comparisons[i].cost_usd;
+        }
+    }
+    std.debug.assert(cheapest != null);
+    const cheapest_val = cheapest.?;
+    const savings = most_expensive - cheapest_val.cost_usd;
+    std.debug.assert(savings >= 0.0);
+    return ProviderRecommendation{
+        .recommended_provider = cheapest_val.provider_type,
+        .estimated_cost_usd = cheapest_val.cost_usd,
+        .estimated_input_tokens = estimated_input_tokens,
+        .estimated_output_tokens = estimated_output_tokens,
+        .savings_vs_most_expensive = savings,
+    };
+}

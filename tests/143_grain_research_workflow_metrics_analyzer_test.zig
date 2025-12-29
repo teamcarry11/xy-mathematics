@@ -19,6 +19,7 @@ test "workflow metrics analyzer initialization" {
     try testing.expect(analyzer.workflow_executions.items.len == 0);
     try testing.expect(analyzer.coordination_metrics.items.len == 0);
     try testing.expect(analyzer.failure_metrics.items.len == 0);
+    try testing.expect(analyzer.failure_data_entries.items.len == 0);
     try testing.expect(analyzer.performance_metrics.items.len == 0);
 }
 
@@ -251,4 +252,112 @@ test "parse complete metrics json" {
     try testing.expect(analyzer.get_coordination_metric_count() == 1);
     try testing.expect(analyzer.get_failure_metric_count() == 2);
     try testing.expect(analyzer.get_performance_metric_count() == 1);
+}
+
+test "parse extended failure metrics with failures array" {
+    const allocator = testing.allocator;
+    var analyzer = WorkflowMetricsAnalyzer.init(allocator);
+    defer analyzer.deinit();
+
+    // Flow Agent's extended JSON format with failures array.
+    const json_data =
+        \\{"failure":{"total_failures":2,"recovery_success_rate_percent":80,"failure_type_distribution":{"transient":2},"failures":[
+        \\{"failure_id":1,"workflow_id":10,"agent_id":5,"failure_type":"transient","timestamp":1234567890,"recovery_status":"succeeded","recovery_time_ms":500,"error_message":"Network timeout after 30s","context_data":"{\"workflow_step\":3,\"retry_count\":2}"},
+        \\{"failure_id":2,"workflow_id":11,"agent_id":3,"failure_type":"transient","timestamp":1234567891,"recovery_status":"not_attempted","recovery_time_ms":0,"error_message":"Connection refused","context_data":"{\"endpoint\":\"/api/v1/process\"}"}
+        \\]}}
+    ;
+
+    try analyzer.parse_json_metrics(json_data);
+
+    try testing.expect(analyzer.get_failure_metric_count() == 2);
+    try testing.expect(analyzer.get_failure_data_entry_count() == 2);
+
+    // Verify first failure entry.
+    const entry1 = analyzer.failure_data_entries.items[0];
+    try testing.expect(entry1.failure_id == 1);
+    try testing.expect(entry1.workflow_id == 10);
+    try testing.expect(entry1.agent_id == 5);
+    try testing.expect(entry1.failure_type == .transient);
+    try testing.expect(entry1.timestamp == 1234567890);
+    try testing.expect(entry1.recovery_status == .succeeded);
+    try testing.expect(entry1.recovery_time_ms == 500);
+    try testing.expect(entry1.error_message_len > 0);
+    try testing.expect(entry1.context_data_len > 0);
+
+    // Verify second failure entry.
+    const entry2 = analyzer.failure_data_entries.items[1];
+    try testing.expect(entry2.failure_id == 2);
+    try testing.expect(entry2.workflow_id == 11);
+    try testing.expect(entry2.agent_id == 3);
+    try testing.expect(entry2.failure_type == .transient);
+    try testing.expect(entry2.recovery_status == .not_attempted);
+    try testing.expect(entry2.recovery_time_ms == 0);
+}
+
+test "parse extended failure metrics with all recovery statuses" {
+    const allocator = testing.allocator;
+    var analyzer = WorkflowMetricsAnalyzer.init(allocator);
+    defer analyzer.deinit();
+
+    const json_data =
+        \\{"failure":{"total_failures":5,"recovery_success_rate_percent":60,"failure_type_distribution":{"transient":5},"failures":[
+        \\{"failure_id":1,"workflow_id":1,"agent_id":1,"failure_type":"transient","timestamp":1000,"recovery_status":"succeeded","recovery_time_ms":100,"error_message":"Error 1","context_data":"{}"},
+        \\{"failure_id":2,"workflow_id":2,"agent_id":2,"failure_type":"transient","timestamp":2000,"recovery_status":"failed","recovery_time_ms":200,"error_message":"Error 2","context_data":"{}"},
+        \\{"failure_id":3,"workflow_id":3,"agent_id":3,"failure_type":"transient","timestamp":3000,"recovery_status":"in_progress","recovery_time_ms":0,"error_message":"Error 3","context_data":"{}"},
+        \\{"failure_id":4,"workflow_id":4,"agent_id":4,"failure_type":"permanent","timestamp":4000,"recovery_status":"not_applicable","recovery_time_ms":0,"error_message":"Error 4","context_data":"{}"},
+        \\{"failure_id":5,"workflow_id":5,"agent_id":5,"failure_type":"transient","timestamp":5000,"recovery_status":"not_attempted","recovery_time_ms":0,"error_message":"Error 5","context_data":"{}"}
+        \\]}}
+    ;
+
+    try analyzer.parse_json_metrics(json_data);
+
+    try testing.expect(analyzer.get_failure_data_entry_count() == 5);
+
+    const RecoveryStatus = grain_research.RecoveryStatus;
+    try testing.expect(analyzer.failure_data_entries.items[0].recovery_status == .succeeded);
+    try testing.expect(analyzer.failure_data_entries.items[1].recovery_status == .failed);
+    try testing.expect(analyzer.failure_data_entries.items[2].recovery_status == .in_progress);
+    try testing.expect(analyzer.failure_data_entries.items[3].recovery_status == .not_applicable);
+    try testing.expect(analyzer.failure_data_entries.items[4].recovery_status == .not_attempted);
+}
+
+test "parse extended failure metrics with bounds checking" {
+    const allocator = testing.allocator;
+    var analyzer = WorkflowMetricsAnalyzer.init(allocator);
+    defer analyzer.deinit();
+
+    // Test with error_message and context_data near max length.
+    // Using shorter strings to avoid JSON escaping complexity in test.
+    const json_data =
+        \\{"failure":{"total_failures":1,"recovery_success_rate_percent":0,"failure_type_distribution":{"transient":1},"failures":[
+        \\{"failure_id":1,"workflow_id":1,"agent_id":1,"failure_type":"transient","timestamp":1000,"recovery_status":"not_attempted","recovery_time_ms":0,"error_message":"This is a test error message that is reasonably long but not at max length","context_data":"{\"test\":\"data\"}"}
+        \\]}}
+    ;
+
+    try analyzer.parse_json_metrics(json_data);
+
+    try testing.expect(analyzer.get_failure_data_entry_count() == 1);
+    const entry = analyzer.failure_data_entries.items[0];
+    try testing.expect(entry.error_message_len > 0);
+    try testing.expect(entry.context_data_len > 0);
+    try testing.expect(entry.error_message_len <= 1024);
+    try testing.expect(entry.context_data_len <= 10240);
+}
+
+test "parse extended failure metrics backward compatibility" {
+    const allocator = testing.allocator;
+    var analyzer = WorkflowMetricsAnalyzer.init(allocator);
+    defer analyzer.deinit();
+
+    // Test backward compatibility: format without failures array.
+    const json_data =
+        \\{"failure":{"total_failures":2,"recovery_success_rate_percent":80,"failure_type_distribution":{"transient":2}}}
+    ;
+
+    try analyzer.parse_json_metrics(json_data);
+
+    // Should still parse failure_type_distribution.
+    try testing.expect(analyzer.get_failure_metric_count() == 2);
+    // Should have no failure_data_entries (failures array not present).
+    try testing.expect(analyzer.get_failure_data_entry_count() == 0);
 }

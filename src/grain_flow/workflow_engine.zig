@@ -482,6 +482,8 @@ pub const WorkflowEngine = struct {
                     failure_pattern_metrics.FailureType.unknown,
                     timestamp,
                     complexity,
+                    null,
+                    null,
                 );
             }
         }

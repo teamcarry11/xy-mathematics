@@ -154,18 +154,24 @@ fn get_event_bus() ?*grain_flow_event_bus.EventBus {
 }
 
 // Get service account token for Silo Agent requests.
-// TODO: Once Core Agent implements service account tokens, call:
-//   auth_service.generate_service_account_token("grain_carry", &["database:write", "database:read"])
+// Uses Core Agent's generate_service_account_token() function.
 fn get_service_account_token(token_out: []u8) u32 {
     std.debug.assert(token_out.len >= grain_core_auth.MAX_JWT_LEN);
-    // TODO: Implement once Core Agent adds generate_service_account_token() to AuthService
-    // For now, return 0 to indicate token not available
-    // Once implemented:
-    //   const auth_service = auth_service_integration.get_auth_service_public() orelse return 0;
-    //   const capabilities = [_][]const u8{ "database:write", "database:read" };
-    //   return auth_service.generate_service_account_token("grain_carry", &capabilities, token_out);
-    _ = token_out;
-    return 0;
+    const auth_service = auth_service_integration.get_auth_service_public() orelse {
+        return 0;
+    };
+    const service_id = "grain_carry";
+    const current_time: u64 = @intCast(std.time.timestamp());
+    if (current_time == 0) {
+        return 0;
+    }
+    const token_len = auth_service.generate_service_account_token(
+        service_id,
+        current_time,
+        token_out,
+    );
+    std.debug.assert(token_len == 0 or token_len <= grain_core_auth.MAX_JWT_LEN);
+    return token_len;
 }
 
 // Set timeout on HTTP request.

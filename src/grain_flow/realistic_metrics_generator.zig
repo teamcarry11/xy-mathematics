@@ -154,6 +154,8 @@ pub const RealisticMetricsGenerator = struct {
                             failure_pattern_metrics.FailureType.transient,
                             fail_time,
                             complexity,
+                            null,
+                            null,
                         );
                     }
 

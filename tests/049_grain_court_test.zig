@@ -828,6 +828,42 @@ test "token efficiency generate cost report" {
     try testing.expect(report.cost_by_provider[1] == 6.0);
 }
 
+test "token efficiency compare provider costs" {
+    const comparisons = grain_court.TokenEfficiency.compare_provider_costs(1000, 500);
+    try testing.expect(comparisons.len == 4);
+    var cheapest_found = false;
+    var i: u32 = 0;
+    while (i < 4) : (i += 1) {
+        if (comparisons[i].is_cheapest) {
+            cheapest_found = true;
+            try testing.expect(comparisons[i].cost_usd >= 0.0);
+        }
+    }
+    try testing.expect(cheapest_found == true);
+}
+
+test "token efficiency calculate token savings percent" {
+    const savings = grain_court.TokenEfficiency.calculate_token_savings_percent(1000, 500);
+    try testing.expect(savings == 50.0);
+    const savings2 = grain_court.TokenEfficiency.calculate_token_savings_percent(1000, 700);
+    try testing.expect(savings2 == 30.0);
+}
+
+test "token efficiency calculate cost savings" {
+    const savings = grain_court.TokenEfficiency.calculate_cost_savings(.openai, .anthropic, 1000, 500);
+    try testing.expect(savings != 0.0);
+    const savings2 = grain_court.TokenEfficiency.calculate_cost_savings(.openai, .openai, 1000, 500);
+    try testing.expect(savings2 == 0.0);
+}
+
+test "token efficiency recommend cheapest provider" {
+    const recommendation = grain_court.TokenEfficiency.recommend_cheapest_provider(1000, 500);
+    try testing.expect(recommendation.estimated_input_tokens == 1000);
+    try testing.expect(recommendation.estimated_output_tokens == 500);
+    try testing.expect(recommendation.estimated_cost_usd >= 0.0);
+    try testing.expect(recommendation.savings_vs_most_expensive >= 0.0);
+}
+
 test "llm provider auto encode request to zon" {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();

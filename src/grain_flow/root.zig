@@ -56,6 +56,21 @@ pub const workflow_scheduler = @import("workflow_scheduler.zig");
 // Realistic metrics generator for Step 3 validation.
 pub const realistic_metrics_generator = @import("realistic_metrics_generator.zig");
 
+// Global shared Event Bus instance (initialized during Flow Agent startup).
+var global_shared_event_bus: ?event_bus.EventBus = null;
+
+// Initialize shared Event Bus (called during Flow Agent startup).
+pub fn init_shared_event_bus() void {
+    if (global_shared_event_bus == null) {
+        global_shared_event_bus = event_bus.EventBus.init();
+    }
+}
+
+// Get shared Event Bus instance (for other agents).
+pub fn get_shared_event_bus() ?*event_bus.EventBus {
+    return if (global_shared_event_bus) |*bus| bus else null;
+}
+
 // Module exports.
 pub const EventBus = event_bus.EventBus;
 pub const EventType = event_bus.EventType;

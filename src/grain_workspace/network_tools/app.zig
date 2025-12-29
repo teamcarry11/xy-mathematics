@@ -8,6 +8,7 @@
 //! 2025-12-07-020824-pst: Phase 10.3 WebSocket integration for live statistics
 //! 2025-12-07-054458-pst: Phase 11 HTTP Client integration for API endpoint testing
 //! 2025-12-29-001544-pst: Phase 34 HTTP/WebSocket Timeout and Error Handling Integration
+//! 2025-12-29-041147-pst: Phase 36 Error Handling Integration
 
 const std = @import("std");
 const grain_core = @import("grain_core");
@@ -90,6 +91,7 @@ pub const ConnectionInfo = struct {
 
 // HTTP test result structure.
 // 2025-12-07-054458-pst: Phase 11 HTTP Client integration
+// 2025-12-29-041147-pst: Phase 36 Error Handling Integration
 pub const HttpTestResult = struct {
     test_id: u32,
     url: [grain_core.http_client.MAX_URL_LEN]u8,
@@ -99,6 +101,23 @@ pub const HttpTestResult = struct {
     response_time_ms: u32,
     success: bool,
     timestamp: u64,
+    error_type: HttpTestError, // Error type if request failed
+    error_message: [128]u8, // Error message buffer
+    error_message_len: u32, // Error message length
+};
+
+// HTTP test error type.
+// 2025-12-29-041147-pst: Phase 36 Error Handling Integration
+pub const HttpTestError = enum(u8) {
+    none, // No error
+    timeout, // Request timed out
+    network_error, // Network error occurred
+    dns_error, // DNS resolution failed
+    connection_refused, // Connection refused
+    rate_limit, // Rate limit exceeded
+    server_error, // Server error occurred
+    invalid_response, // Invalid response received
+    unknown, // Unknown error
 };
 
 // Bounded: Max HTTP test results (explicit limit)
@@ -607,13 +626,6 @@ pub const NetworkToolsApp = struct {
             return null;
         }
 
-        // Create HTTP request with timeout (use default API timeout)
-        // 2025-12-29-001544-pst: Phase 34 HTTP/WebSocket Timeout and Error Handling
-        const request = self.http_client.create_request(method, url, null);
-        if (request == null) {
-            return null;
-        }
-
         // Create test result
         const test_id = self.next_http_test_id;
         self.next_http_test_id += 1;
@@ -627,7 +639,35 @@ pub const NetworkToolsApp = struct {
             .response_time_ms = 0,
             .success = false,
             .timestamp = @as(u64, @intCast(std.time.timestamp())),
+            .error_type = .none,
+            .error_message = undefined,
+            .error_message_len = 0,
         };
+        @memset(&test_result.error_message, 0);
+
+        // Create HTTP request with timeout (use default API timeout)
+        // 2025-12-29-001544-pst: Phase 34 HTTP/WebSocket Timeout and Error Handling
+        // 2025-12-29-041147-pst: Phase 36 Error Handling Integration
+        const request = self.http_client.create_request(method, url, null);
+        if (request == null) {
+            // Track error: request creation failed
+            test_result.error_type = .unknown;
+            const error_msg = "Failed to create HTTP request";
+            const msg_len = @min(error_msg.len, 128);
+            @memcpy(test_result.error_message[0..msg_len], error_msg[0..msg_len]);
+            test_result.error_message_len = @as(u32, @intCast(msg_len));
+            
+            // Store test result with error
+            var i: u32 = 0;
+            while (i < MAX_HTTP_TEST_RESULTS) : (i += 1) {
+                if (self.http_test_results[i] == null) {
+                    self.http_test_results[i] = test_result;
+                    self.http_test_results_len += 1;
+                    break;
+                }
+            }
+            return test_id;
+        }
 
         @memset(&test_result.url, 0);
         const url_len = @min(url.len, grain_core.http_client.MAX_URL_LEN);
@@ -710,6 +750,66 @@ pub const NetworkToolsApp = struct {
         std.debug.assert(self.http_test_results_len == 0);
 
         return cleared_count;
+    }
+
+    /// Convert HTTP client error to test error type.
+    // 2025-12-29-041147-pst: Phase 36 Error Handling Integration
+    pub fn http_error_to_test_error(err: grain_core.http_errors.HttpClientError) HttpTestError {
+        return switch (err) {
+            .timeout => .timeout,
+            .network_error => .network_error,
+            .dns_error => .dns_error,
+            .connection_refused => .connection_refused,
+            .rate_limit => .rate_limit,
+            .server_error => .server_error,
+            .invalid_response => .invalid_response,
+        };
+    }
+
+    /// Set error on HTTP test result.
+    // 2025-12-29-041147-pst: Phase 36 Error Handling Integration
+    pub fn set_http_test_error(
+        self: *NetworkToolsApp,
+        test_id: u32,
+        error_type: HttpTestError,
+        error_message: []const u8,
+    ) bool {
+        // Precondition: Test ID and message must be valid
+        std.debug.assert(test_id > 0);
+        std.debug.assert(error_message.len > 0);
+
+        var i: u32 = 0;
+        while (i < self.http_test_results_len) : (i += 1) {
+            if (self.http_test_results[i]) |*result| {
+                if (result.test_id == test_id) {
+                    result.error_type = error_type;
+                    result.success = false;
+                    const msg_len = @min(error_message.len, 128);
+                    @memset(&result.error_message, 0);
+                    @memcpy(result.error_message[0..msg_len], error_message[0..msg_len]);
+                    result.error_message_len = @as(u32, @intCast(msg_len));
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /// Check if HTTP test error is retryable.
+    // 2025-12-29-041147-pst: Phase 36 Error Handling Integration
+    pub fn is_http_test_error_retryable(error_type: HttpTestError) bool {
+        return switch (error_type) {
+            .none => false,
+            .timeout => true,
+            .network_error => true,
+            .rate_limit => true,
+            .server_error => true,
+            .dns_error => false,
+            .connection_refused => false,
+            .invalid_response => false,
+            .unknown => false,
+        };
     }
 };
 

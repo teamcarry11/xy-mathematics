@@ -1,6 +1,6 @@
 # Grain OS Task List
 
-**Last Updated**: 2025-12-21-090629-pst  
+**Last Updated**: 2025-12-29-133812-pst  
 **Structure**: Hybrid approach with core overview and agent-specific tasks  
 **See**: `docs/tasks/tasks_{agent}.md` for detailed agent tasks
 
@@ -8,406 +8,355 @@
 
 ## Overall Task Status
 
-**Active Agents**: 10 agents working in parallel  
-**Current Focus**: Infrastructure for mobile/database backends, visual design tool, workflow orchestration
+**Active Agents**: 12 L1 agents + 3 L2 sub-agents = 15 total agents/sub-agents working in parallel  
+**Current Focus**: Infrastructure completion, coordination decisions integration, JG project planning, architecture evolution
 
 ---
 
 ## Agent Task Summaries
 
-### 1. Grain Vantage Agent
+### 1. Grain Core Agent (System Services)
 
-**Status**: Active  
-**Current Tasks**: Kernel features, VM integration  
+**Status**: Active — Coordination Decisions Implementation Complete ✅  
+**Current Tasks**: Update HTTP/WebSocket clients to use error types consistently (1 day), JG Project Phase 1 planning  
+**Details**: See [`docs/tasks/tasks_core.md`](tasks/tasks_core.md)
+
+**Key Tasks**:
+- [x] Phase 59: HTTP/REST API Server ✅ COMPLETE
+- [x] Phase 60: Authentication Service ✅ COMPLETE
+- [x] Phase 61: Network Stack Enhancements ✅ COMPLETE
+- [x] Phase 62: File System Enhancements ✅ COMPLETE
+- [x] HTTP/WebSocket Timeout Implementation ✅ COMPLETE
+- [x] Error Types Implementation ✅ COMPLETE
+- [x] Service-to-Service Authentication ✅ COMPLETE
+- [x] Async Pattern Integration Module ✅ COMPLETE
+- [x] Payment/Passwords/Bank Design ✅ COMPLETE
+- [x] JG Project Design ✅ COMPLETE
+- [ ] Update HTTP/WebSocket clients to use error types consistently (1 day)
+- [ ] Begin JG Project Phase 1: Grainbank MMT integration planning (2 months)
+
+**Next Phases**:
+- Update HTTP/WebSocket clients to use error types consistently (1 day)
+- JG Project Phase 1: Grainbank MMT integration (2 months)
+
+---
+
+### 2. Grain Silo Agent (Database)
+
+**Status**: Production Ready ✅ — Payment/Vault Storage Schema Complete ✅  
+**Current Tasks**: JG project storage schema design (Priority 1, HIGH, Month 1)  
+**Details**: See [`docs/tasks/tasks_silo.md`](tasks/tasks_silo.md)
+
+**Key Tasks**:
+- [x] Phase 1-9: All core database phases complete ✅
+- [x] SLC Product Integration ✅ COMPLETE
+- [x] Payment/Vault/Bank Storage Schema Design ✅ COMPLETE
+- [ ] JG Project: Design storage schemas for all JG modules (Month 1)
+- [ ] JG Project: Implement storage helpers (Months 2-3)
+
+**Next Phases**:
+- JG Project: Storage schema design (Month 1)
+- JG Project: Storage helper implementation (Months 2-3)
+
+---
+
+### 3. Grain Vantage Core Agent (VM/Kernel) — L1 Coordinator
+
+**Status**: All Kernel Features Complete ✅ — Kernel Refactoring Complete ✅ — Production Ready  
+**Current Tasks**: Architecture evolution to Vantage Core + L2 sub-agents, JG project kernel support monitoring  
 **Details**: See [`docs/tasks/tasks_vantage.md`](tasks/tasks_vantage.md)
 
 **Key Tasks**:
-- Kernel syscall implementation
-- VM integration
-- AArch64 support
+- [x] Phase 1: Kernel Statistics & Health Check ✅ COMPLETE
+- [x] Phase 2: Resource Usage Tracking ✅ COMPLETE
+- [x] Phase 3: Syscall Timeout Mechanism ✅ COMPLETE
+- [x] Phase 4: Resource Limits ✅ COMPLETE
+- [x] Phase 4: Network Syscalls ✅ COMPLETE
+- [x] Phase 5: Audio Device Management ✅ COMPLETE
+- [x] Phase 6.4: Cross-Platform Compatibility ✅ COMPLETE
+- [x] Vantage VM Adaptation Framework ✅ COMPLETE
+- [x] Kernel Refactoring (All 8 Phases) ✅ COMPLETE
+- [ ] Rename to Vantage Core (L1 coordinator)
+- [ ] Create L2 sub-agent prompts (Basin Kernel, VM Runtime, System Integration)
+- [ ] Establish L1/L2 coordination model
+- [ ] Monitor JG project implementation for kernel support needs
+
+**L2 Sub-Agent Tasks** (To Be Created):
+- **3a. Basin Kernel Agent**: RISC-V kernel development tasks
+- **3b. VM Runtime Agent**: Vantage VM development tool tasks
+- **3c. System Integration Agent**: Kernel/VM integration, RISC-V compliance tasks
 
 ---
 
-### 2. Grain Aurora IDE Dream Browser Agent
+### 4. Grain Skate Agent (Knowledge Graph)
 
 **Status**: Active  
-**Current Tasks**: Shared module refactoring (Phase 2)  
-**Details**: See [`docs/tasks/tasks_aurora.md`](tasks/tasks_aurora.md)
-
-**Key Tasks**:
-- Font renderer migration (Phase 1.2) ✅
-- Layout system comprehensive tests (Phase 2.2) ✅
-- Text buffer unification (Phase 2) — Planned
-- DAG integration (Phase 3) — Planned
-- UI rendering unification (Phase 4) — Planned
-
----
-
-### 3. Grain Skate Silo Field Agent
-
-**Status**: Active  
-**Current Tasks**: Syntax highlighting, shared module refactoring  
+**Current Tasks**: Feature coordination with Bubble, Aurora, and Core agents  
 **Details**: See [`docs/tasks/tasks_skate.md`](tasks/tasks_skate.md)
 
 **Key Tasks**:
-- Bracket matching ✅ (2025-12-03-162613-pst)
-- Language-specific syntax highlighting ✅ (2025-12-03-141818-pst)
-- Shared font renderer (Phase 1.1) ✅ (2025-12-02-183358-pst)
-- Font renderer migration (Phase 1.4) - Planned
-- Text buffer unification (Phase 2) - Planned
+- [x] Bracket matching ✅ (2025-12-03-162613-pst)
+- [x] Language-specific syntax highlighting ✅ (2025-12-03-141818-pst)
+- [x] Shared font renderer (Phase 1.1) ✅ (2025-12-02-183358-pst)
+- [x] Core editor features ✅
+- [x] Graph visualization ✅
+- [ ] JG Project: Material knowledge graph (Months 5-7)
+- [ ] JG Project: Worker skill network (Months 8-9)
+- [ ] JG Project: Project relationship mapping (Months 10-12)
 
 ---
 
-### 4. Grain Core Agent
-
-**Status**: Active — Phase 59 Starting  
-**Current Tasks**: HTTP/REST API Server (HIGHEST PRIORITY)  
-**Details**: See [`docs/tasks/tasks_core.md`](tasks/tasks_core.md)
-
-**Current Phase**: Phase 59 — HTTP/REST API Server
-
-**Key Tasks**:
-- [x] Build System Refactoring (Phase 58.5) ✅ Complete
-- [x] Create `src/grain_core/api_server.zig` module (Phase 59) ✅
-- [x] Implement REST endpoint routing (Phase 59) ✅
-- [x] Implement compositor integration (Phase 59) ✅
-- [ ] Implement HTTP/1.1 server (Phase 59) ⏳
-- [ ] Implement HTTP/1.1 server (Phase 59)
-- [ ] Implement REST endpoint routing (Phase 59)
-- [ ] Implement JSON request/response handling (Phase 59)
-- [ ] Implement middleware support (Phase 59)
-- [ ] Implement compositor integration (Phase 59)
-- [ ] Create comprehensive tests (Phase 59)
-
-**Next Phases**:
-- Phase 59: HTTP/REST API Server (HIGHEST PRIORITY) — Starting
-- Phase 60: Authentication Service ✅ (COMPLETE — 2025-12-05-134449-pst)
-- Phase 61: Network Stack Enhancements 🔄 (IN PROGRESS — TCP/UDP socket support — 2025-12-05-143449-pst)
-- Phase 61: Network Stack Enhancements (MEDIUM PRIORITY)
-- Phase 62: File System Enhancements (MEDIUM PRIORITY)
-
-**Completed Phases**: 50-58 ✅, Phase 58.5 (Build Refactoring) ✅
-
----
-
-### 5. Grain Workspace Agent
-
-**Status**: Active — Phase 10 WebSocket Integration Complete ✅  
-**Current Tasks**: All planned phases complete, ready for future enhancements  
-**Details**: See [`docs/tasks/tasks_workspace.md`](tasks/tasks_workspace.md)
-
-**Key Tasks**:
-- Phase 1-9: All desktop applications complete ✅
-- Phase 10: WebSocket Integration for Real-Time Features ✅ (2025-12-07-025947-pst)
-  - Phase 10.1: WebSocket Integration (Monitor) ✅
-  - Phase 10.2: WebSocket Integration (Terminal Plus) ✅
-  - Phase 10.3: WebSocket Integration (Network Tools) ✅
-  - Phase 10.4: WebSocket Integration (File Manager) ✅
-- Phase 11: HTTP Client Integration (Network Tools) ✅ (2025-12-07-040000-pst)
-- Phase 12: HTTP Client Integration (Package Manager UI) ✅ (2025-12-07-050000-pst)
-- Phase 13: File Storage Integration (File Manager) ✅ (2025-12-07-071409-pst)
-- Phase 14: Backup Manager Integration (File Manager) ✅ (2025-12-07-084440-pst)
-
----
-
-### 6. Grain Carry Agent
-
-**Status**: Active — WebSocket Support Available  
-**Current Tasks**: WebSocket client implementation ready, all infrastructure complete  
-**Details**: See [`docs/tasks/tasks_carry.md`](tasks/tasks_carry.md)
-
-**Key Tasks**:
-- Handler Adapters & OS Integration ✅ (2025-12-05-104028-pst)
-- Handler Adapter Tests ✅ (2025-12-05-122910-pst)
-- Authentication Service Integration ✅ (2025-12-05-140857-pst)
-- Enhanced handlers with AuthService (when database available) ⏳
-
-**Status**: Active  
-**Current Tasks**: Authentication Service Integration Complete — Ready for Enhanced Handlers  
-**Details**: See [`docs/tasks/tasks_carry.md`](tasks/tasks_carry.md)
-
-**Key Tasks**:
-- Grain Mobile Core architecture ✅
-- API Client Module Structure ✅
-- API Endpoint Definitions ✅
-- API Data Models & Response Helpers ✅
-- Handler Structures & Validation Helpers ✅
-- HTTP Request/Response Integration ✅
-- Middleware Integration with Grain OS ✅
-- Route Registration Helpers ✅
-- Handler Adapters & OS Integration ✅ (2025-12-05-104028-pst)
-- Handler Adapter Tests ✅ (2025-12-05-122910-pst)
-- Phase 1: Core Module & Validation ✅ (2025-12-03-160538-pst)
-  - Email/password validation, 32-char minimum, 1Password strategy
-- Phase 2: Crypto & Authentication ✅ (2025-12-03-163715-pst)
-  - Secure random, password hashing, OTP, TOTP 2FA
-- Phase 3: Email Auth & JWT ✅ (2025-12-03-165554-pst)
-  - Email/password authentication, JWT token creation/validation
-- Phase 4: Responsive Style System ✅ (2025-12-04-100923-pst)
-  - Color palettes (light/dark), typography scales, spacing system
-  - Responsive breakpoints, component specifications (10 types)
-  - FFI layer for style queries (breakpoints, colors, typography, spacing, components)
-- API Client Module ✅ (2025-12-04-104041-pst)
-  - Request/response models, HTTP methods/status codes
-  - Header management, URL building, default headers
-  - Ready for HTTP implementation when API Server available
-- API Endpoint Definitions ✅ (2025-12-04-150157-pst)
-  - Endpoint path definitions (authentication, users)
-  - Endpoint registry, acknowledgment of Grain Core Agent Phase 59 progress
-  - Ready for handler implementation when JSON support available
-- FFI layer ✅
-
-**Dependencies**:
-- **Needs**: API Server (Grain Core Agent — Phase 59 ✅), Authentication Service (Grain Core Agent — Phase 60 ✅)
-
----
-
-### 7. Grain Silo Agent
-
-**Status**: Active — Phase 6 Complete, Phase 7 Ready, Phase 9 In Progress  
-**Current Tasks**: Authentication Integration with Grain Core AuthService (Phase 60) — Permission helpers and tests complete. Phase 7 (Database Persistence) now unblocked by Grain Core Agent Phase 62.  
-**Details**: See [`docs/tasks/tasks_database.md`](tasks/tasks_database.md)
-
-**Completed**:
-- Phase 1: Database Foundation ✅ (2025-12-03-163155-pst)
-  - Storage engine, indexes, WAL, transactions
-- Phase 2: Relational Layer ✅ (2025-12-03-164442-pst)
-  - Table definitions, schema management, foreign keys, query parser
-- Phase 3: Graph Layer ✅ (2025-12-03-165223-pst)
-  - Graph data structure, relationship indexes, BFS/DFS traversal, reverse lookup
-- Phase 4: Full-Text Search ✅ (2025-12-03-173339-pst)
-  - Inverted index, tokenization, stemming, search interface
-- Phase 5: API and Integration ✅ (2025-12-03-175009-pst, Enhanced: 2025-12-04-102336-pst)
-  - REST API router, JSON serialization, rate limiting, CORS support
-  - WebSocket connection management, JWT authentication middleware
-  - API request/response structures, middleware support
-  - Integration with Grain Core Agent's API Server (Phase 59)
-- Phase 6: API Server Integration ✅ COMPLETE (2025-12-06-010807-pst)
-  - Handler logic complete for all 9 endpoints
-  - Middleware integration complete (rate limiting, CORS, auth, content-type)
-  - Path parameter extraction, JSON parsing, proper status codes
-  - Ready for HTTP server integration
-- Phase 7: Database Persistence ✅ COMPLETE (2025-12-08-162744-pst)
-- Phase 8: Network Integration ✅ COMPLETE (2025-12-09-000742-pst)
-- Phase 9: Authentication Integration ✅ COMPLETE (2025-12-10-083721-pst)
-- SLC Product Integration ✅ COMPLETE (2025-12-20-161207-pst)
-- **Status**: All core phases (1-9) complete, SLC integration complete — **PRODUCTION READY** (2025-12-20-161207-pst)
-  - Persistence module created (`src/grain_database/persistence.zig`)
-  - FileStorageManager integration ✅
-  - WalManager integration ✅
-  - IndexManager integration ✅
-  - BackupManager integration ✅
-  - WAL checkpoint and recovery ✅
-  - Backup scheduling and state management ✅
-  - Storage persistence integration (`src/grain_database/storage_persistence.zig`) ✅
-  - WAL logging for create/update/delete operations ✅
-  - Record serialization/deserialization (`src/grain_database/record_serialization.zig`) ✅
-  - Binary format for file page storage ✅
-  - Page I/O operations (write/read records to/from pages) ✅
-  - Database file format specification (`docs/database_file_format.md`) ✅
-  - Index entry serialization (`src/grain_database/index_entry_serialization.zig`) ✅
-  - Index file persistence (write/read index entries to/from pages) ✅
-  - Multi-page record support (records spanning multiple pages) ✅
-  - Backup restore functionality ✅
-  - End-to-end persistence testing with recovery ✅
-  - Comprehensive tests ✅
-  - Unblocked by Grain Core Agent Phase 62 (File System Enhancements) ✅ **COMPLETE**
-  - File Storage Core (2025-12-06-023413-pst) ✅
-    - File storage manager with bounded file handles available
-    - Database file header with validation available
-    - Page-based storage with SHA-256 checksums available
-    - File locking/unlocking support available
-  - Transaction Log File Management (WAL) (2025-12-06-035857-pst) ✅
-  - Index File Management (2025-12-06-045220-pst) ✅
-    - Index manager with bounded entries available
-    - B-tree and hash index types available
-    - Index creation, update, and deletion available
-    - Index lookup and recovery support available
-  - Backup/Restore Capabilities (2025-12-06-061647-pst) ✅
-    - Backup manager with bounded backup files available
-    - Full and incremental backup types available
-    - Backup metadata management with state tracking available
-    - Backup scheduling with interval-based logic available
-    - Backup state updates and checksum verification available
-  - Ready for complete database persistence implementation with ACID guarantees, efficient queries, and data protection
-- Phase 9: Authentication Integration ✅ COMPLETE (2025-12-10-083721-pst)
-  - AuthService integration module created (`src/grain_database/auth_integration.zig`)
-  - Enhanced auth middleware using AuthService
-  - JWT validation and session management helpers
-  - Permission-based access control helpers
-  - Enhanced session management (create, revoke, get session from request)
-  - Comprehensive auth integration tests
-  - Updated build.zig with grain_core import
-- Performance Optimizations ✅ COMPLETE (2025-12-20-201013-pst, Enhanced: 2025-12-21-084444-pst)
-  - Batch operations (`batch_create_records()`) for bulk loading
-  - Statistics functions (get_record_count, get_total_storage_size, get_average_record_size, get_next_record_id)
-  - Validation helpers (validate_key, validate_value, has_record, has_record_by_id)
-  - Test fixes (network integration, transaction tests)
-  - TransactionOperation exported from root.zig
-  - Comprehensive batch operation, statistics, and validation tests
-
-**Next Phases**:
-- Phase 7: Database Persistence — Ready to start (Grain Core Agent Phase 62 complete)
-- Phase 9: Authentication Integration — Continue with OAuth 2.0 support (when needed)
-- Phase 8: Network Integration — Ready (Grain Core Agent Phase 61 complete)
-
-**Dependencies**:
-- **Needs**: API Server (Grain Core Agent — Phase 59 ✅), File Storage (Grain Core Agent — Phase 62 ✅), Network Stack (Grain Core Agent — Phase 61 ✅)
-
----
-
-### 8. Grain Bubble Agent
+### 5. Grain Bubble Agent (Design Tool)
 
 **Status**: Active — Phase 2 In Progress 🔄  
 **Current Tasks**: Component System — Foundation implementation  
 **Details**: See [`docs/tasks/tasks_bubble.md`](tasks/tasks_bubble.md)
 
+**Key Tasks**:
+- [x] Phase 1: Core Canvas (SLC v1.0) ✅ COMPLETE
+- [ ] Phase 2: Component System (IN PROGRESS)
+- [ ] JG Project: 3D visualization components (Months 7-9)
+- [ ] JG Project: Dashboard components (Months 10-11)
+- [ ] JG Project: Mobile UI components (Month 12)
+
 ---
 
-### 9. Grain Flow Agent
+### 6. Grain Carry Agent (Mobile Framework)
 
-**Status**: Active — All Phases Complete ✅ (Phase 1-5 COMPLETE)  
-**Current Tasks**: All phases complete, ready for production use  
+**Status**: Production Ready ✅ (Synchronous Mode) — Event Bus Integration Complete ✅  
+**Current Tasks**: Mobile framework development, JG project mobile app planning  
+**Details**: See [`docs/tasks/tasks_carry.md`](tasks/tasks_carry.md)
+
+**Key Tasks**:
+- [x] Database integration foundation complete ✅
+- [x] Timeout handling integrated ✅
+- [x] Error handling integrated ✅
+- [x] Retry logic implementation complete ✅
+- [x] Event Bus integration complete ✅
+- [ ] Service-to-service authentication integration (ready ✅)
+- [ ] Async pattern integration (ready ✅)
+- [ ] JG Project: Worker mobile app (Months 6-8)
+- [ ] JG Project: Resident mobile app (Months 9-10)
+- [ ] JG Project: Cooperative mobile app (Months 11-12)
+
+---
+
+### 7. Grain Aurora Agent (IDE/Browser)
+
+**Status**: Active  
+**Current Tasks**: Shared module refactoring, Component API integration ready  
+**Details**: See [`docs/tasks/tasks_aurora.md`](tasks/tasks_aurora.md)
+
+**Key Tasks**:
+- [x] Font renderer migration (Phase 1.2) ✅
+- [x] Layout system comprehensive tests (Phase 2.2) ✅
+- [x] HTTP/WebSocket/GLM-4.6 timeout/error handling complete ✅
+- [x] Component API integration ready ✅
+- [ ] Component API integration
+- [ ] JG Project: 3D visualization components (Months 7-9)
+- [ ] JG Project: Dashboard components (Months 10-11)
+- [ ] JG Project: Mobile UI components (Month 12)
+
+---
+
+### 8. Grain Workspace Agent (Desktop Apps)
+
+**Status**: Phase 36 Complete ✅ — Code Folding Complete ✅  
+**Current Tasks**: Component API implementation complete, ready for Bubble/Aurora integration, JG project desktop dashboards  
+**Details**: See [`docs/tasks/tasks_workspace.md`](tasks/tasks_workspace.md)
+
+**Key Tasks**:
+- [x] Phase 1-9: All desktop applications complete ✅
+- [x] Phase 10: WebSocket Integration ✅
+- [x] Phase 11-14: HTTP Client, File Storage, Backup Manager Integration ✅
+- [x] Phase 25-35: Performance Optimizations, Text Editor features ✅
+- [x] Phase 35: Code Folding Complete ✅
+- [x] Phase 36: Error Handling Integration Complete ✅
+- [x] Component API Implementation Complete ✅
+- [ ] JG Project: Desktop dashboard design (Months 3-4)
+- [ ] JG Project: Desktop dashboard implementation (Months 5-8)
+
+---
+
+### 9. Grain Flow Agent (Workflow Orchestration)
+
+**Status**: All Phases Complete ✅ — Research Agent Coordination Complete ✅  
+**Current Tasks**: All core phases complete, ready for integration and enhancements, JG project workflow orchestration planning  
 **Details**: See [`docs/tasks/tasks_flow.md`](tasks/tasks_flow.md)
 
 **Key Tasks**:
-- [x] Phase 1: Event Bus Foundation ✅ COMPLETE (2025-12-07-054000-pst)
-  - Event type definitions ✅
-  - Event publishing/subscription APIs ✅
-  - Event routing engine ✅
-  - Comprehensive tests ✅
-- [x] Phase 2: Agent Coordinator ✅ COMPLETE (2025-12-07-071000-pst)
-  - Agent registry, health monitoring, RPC ✅
-  - Comprehensive tests ✅
-- [x] Phase 3: Workflow Engine ✅ COMPLETE (2025-12-07-072000-pst)
-  - Workflow DAG definition and execution ✅
-  - Comprehensive tests ✅
-- [x] Phase 4: Workflow Visualizer ✅ COMPLETE (2025-12-08-140000-pst)
-  - Workflow DAG rendering, HTML/SVG export ✅
-  - Comprehensive tests ✅
-- [x] Phase 5: Workflow Templates & Integration Examples ✅ COMPLETE (2025-12-20-144320-pst)
-  - Pre-built workflow templates ✅
-  - Integration examples (Silo, Carry) ✅
-  - Comprehensive tests ✅
-
-**Next Steps**:
-- Production use with other agents
-- Real-world workflow deployments
-- Performance optimizations based on usage
+- [x] Phase 1: Event Bus Foundation ✅ COMPLETE
+- [x] Phase 2: Agent Coordinator ✅ COMPLETE
+- [x] Phase 3: Workflow Engine ✅ COMPLETE
+- [x] Phase 4: Workflow Visualizer ✅ COMPLETE
+- [x] Phase 5: Workflow Templates & Integration Examples ✅ COMPLETE
+- [x] ZON Format Integration ✅ COMPLETE
+- [x] Research Agent Failure Data Collection ✅ COMPLETE
+- [x] Carry Agent Event Bus Initialization ✅ COMPLETE
+- [ ] JG Project: Task workflow orchestration (Months 4-6)
+- [ ] JG Project: Supply chain workflow orchestration (Months 7-8)
+- [ ] JG Project: Democratic process workflows (Months 9-10)
 
 ---
 
-### 10. Grain Research Agent
+### 10. Grain Research Agent (Research & Analysis)
 
-**Status**: Active  
-**Current Tasks**: Phase 1 IN PROGRESS, Phase 3 Code Analysis Complete (Early for SLC Product), Codebase Analyzer Created  
+**Status**: All Integration Phases Complete ✅ — Validation Testing In Progress ⏳  
+**Current Tasks**: Validation testing (Phase 2 Token Counting, Phase 3 Cost Tracking), JG project analysis framework planning  
 **Details**: See [`docs/tasks/tasks_research.md`](tasks/tasks_research.md)
 
 **Key Tasks**:
-- Phase 1: Research Engine Foundation (IN PROGRESS — Core Complete, Testing in Progress)
-- Phase 3: Code Analysis Module (Complete — Early for SLC Product)
-- Codebase Analyzer (Created — Medium-term enhancement)
-- SLC Product Research (Complete)
-- Open-Source Service Model (Complete)
-- Flow Agent Collaboration (Started — Priority 1 Complete)
-- ZON Format Token Efficiency Validation (Started — Token Counting Tool Implemented)
-- Coordination Documents (Complete)
+- [x] Phase 1: Research Engine Foundation — Core Implementation Complete ✅
+- [x] Phase 3: Code Analysis Module — Complete ✅
+- [x] Phase 2 LLM Integration Implementation ✅ COMPLETE
+- [x] Phase 2 Token Counting Integration Implementation ✅ COMPLETE
+- [x] Phase 3 Cost Tracking Integration Implementation ✅ COMPLETE
+- [x] Validation testing guide created ✅
+- [ ] Complete validation testing (Priority 1, HIGH)
+- [ ] JG Project: Economic analysis (Months 6-8)
+- [ ] JG Project: Housing indicators analysis (Months 9-10)
+- [ ] JG Project: Environmental & social analysis (Months 11-12)
 
-**Next Phases**:
-- Phase 1: Research Engine Foundation (IN PROGRESS)
-- Phase 3: Research Tools — Code Analysis Complete (Early for SLC Product)
+---
 
-**Current Phase**: Phase 2 — Component System 🔄 IN PROGRESS
+### 11. Grain Court Agent (LLM Infrastructure)
+
+**Status**: Phase 1 Complete ✅ — Phase 2 Complete ✅ — Phase 3 In Progress ⏳  
+**Current Tasks**: Phase 3 Token Efficiency Optimization, Payment/Passwords/Bank integration planning, JG project LLM planning  
+**Details**: See [`docs/tasks/tasks_court.md`](tasks/tasks_court.md)
 
 **Key Tasks**:
-- [x] Create `src/grain_bubble/` directory structure ✅
-- [x] Create `src/grain_bubble/root.zig` module exports ✅
-- [x] Create `src/grain_bubble/canvas.zig` canvas engine ✅
-- [x] Create `src/grain_bubble/bubble_renderer.zig` renderer ✅
-- [x] Create `src/grain_bubble/export_pdf.zig` PDF export ✅
-- [x] Update `build/modules.zig` with grain_bubble module ✅
-- [x] Create `tests/125_grain_bubble_canvas_test.zig` ✅
-- [x] Create `tests/126_grain_bubble_canvas_renderer_test.zig` ✅
-- [x] Create `tests/127_grain_bubble_canvas_input_test.zig` ✅
-- [x] Complete canvas zoom/pan implementation ✅
-- [x] Complete hit testing (point-in-shape) ✅
-- [x] Improve hit testing for rounded rectangles (corner radius support) ✅
-- [x] Implement undo/redo system (command pattern with bounded history) ✅
-- [x] Implement basic PDF export (shapes and text) ✅
-- [x] Start Phase 2: Component system foundation ✅
-- [x] Complete shape manipulation (move, resize) ✅
-- [x] Complete shape rendering (filled circles, rectangles) ✅
-- [x] Complete canvas renderer (framebuffer integration) ✅
-- [x] Complete input handling (mouse events, keyboard shortcuts, selection, pan, zoom) ✅
-- [x] Complete shape duplication and copy/paste ✅
-- [x] Complete stroke rendering (outline support) ✅
-- [ ] Complete PDF export implementation (framework ready)
-- [ ] Integration with Grain Core compositor (pending)
-- [x] Comprehensive testing ✅
+- [x] Phase 1: Multi-Provider LLM API Foundation ✅ COMPLETE
+- [x] Phase 2: ZON Format Integration ✅ COMPLETE
+- [x] Token counting utilities ✅
+- [x] Cost tracking per provider ✅
+- [x] Provider cost comparison utilities ✅
+- [x] LLM Timeout/Error Handling ✅ COMPLETE
+- [x] Flow Agent Integration ✅ COMPLETE
+- [ ] Continue Phase 3 Token Efficiency Optimization
+- [ ] Payment/Passwords/Bank integration planning
+- [ ] JG Project: Design optimization (Months 4-6)
+- [ ] JG Project: Supply chain optimization (Months 7-9)
+- [ ] JG Project: Policy analysis (Months 10-12)
 
-**Next Phases**:
-- Phase 1: Core Canvas (SLC v1.0) ⏳ In Progress
-- Phase 2: Component System (PLANNED)
-- Phase 3: Silo/Field Integration (PLANNED)
-- Phase 4: Export Pipeline (PLANNED)
-- Phase 5: Agent Flow Design (PLANNED)
+---
 
-**Dependencies**:
-- **Needs**: Grain Core compositor, framebuffer renderer, input handler, font renderer
+### 12. Grain Free Agent (Creative Playground)
+
+**Status**: 🆕 **CREATED** — Creative playground and experimental space  
+**Current Tasks**: Creative experimentation, prototypes, artistic expression, flow state work  
+**Details**: See [`docs/grain_free_agent_prompt.md`](grain_free_agent_prompt.md)
+
+**Key Tasks**:
+- [ ] Creative coding experiments
+- [ ] Rapid prototypes
+- [ ] Artistic visualizations
+- [ ] Learning projects
+- [ ] Share discoveries (optional)
+- [ ] Request feedback (optional)
+
+**Special**: No production constraints, optional coordination, creative freedom
 
 ---
 
 ## Critical Path Tasks
 
-### Immediate (Next 2-3 Weeks)
+### Immediate (This Week)
 
-1. **Grain Core Agent — Phase 59: HTTP/REST API Server** (HIGHEST PRIORITY)
-   - Blocks: Database Agent (Phase 5), Mobile Agent (backend connection)
-   - Enables: All API-based features
+1. **Core Agent**: Update HTTP/WebSocket clients to use error types consistently (1 day) — **PRIORITY 1**
+2. **Silo Agent**: Begin JG project storage schema design (Priority 1, HIGH) — **PRIORITY 1**
+3. **Vantage Core**: Plan architecture evolution (rename to Vantage Core, create L2 sub-agents) — **PRIORITY 2**
 
-### Short-Term (Next Month)
+### Short-Term (Next 2 Weeks)
 
-2. **Grain Core Agent — Phase 60: Authentication Service** ✅ (COMPLETE — 2025-12-05-134449-pst)
-   - Blocks: Mobile Agent (secure authentication)
-   - Enables: Production-ready authentication
+1. **Core Agent**: Begin JG Project Phase 1 planning (Grainbank MMT integration)
+2. **Silo Agent**: Complete JG project storage schema design
+3. **Vantage Core**: Implement architecture evolution (Vantage Core + L2 sub-agents)
+4. **All Agents**: Review JG project design document
 
-3. **Grain Database Agent — Phase 2: Relational Layer**
-   - Depends on: API Server (Grain Core Agent — Phase 59)
-   - Enables: Structured data queries
+### Medium-Term (Next Month)
 
-### Medium-Term (Next Quarter)
-
-4. **Grain Core Agent — Phase 61: Network Stack Enhancements**
-   - Enables: WebSocket for livestream coordination
-   - Enables: Secure API endpoints (TLS)
-
-5. **Grain Core Agent — Phase 62: File System Enhancements**
-   - Enables: Database persistence
-   - Enables: Backup/restore
+1. **Core Agent**: Begin JG Project Phase 1 implementation (Grainbank MMT integration)
+2. **Silo Agent**: Begin JG project storage helper implementation
+3. **Workspace Agent**: Begin JG project desktop dashboard design
+4. **Court Agent**: Plan JG project LLM integration points
+5. **Flow Agent**: Plan JG project workflow orchestration points
 
 ---
 
 ## Cross-Agent Coordination Tasks
 
-### Grain Core Agent ↔ Database Agent
+### Grain Core Agent ↔ Silo Agent
 
-- [ ] Define API server interface (routes, handlers, middleware)
-- [ ] Define authentication flow (JWT, OAuth, 2FA)
-- [ ] Define file storage interface (database files, transaction logs)
-- [ ] Test integration
+- [x] Define API server interface (routes, handlers, middleware) ✅
+- [x] Define authentication flow (JWT, OAuth, 2FA) ✅
+- [x] Define file storage interface (database files, transaction logs) ✅
+- [x] Test integration ✅
+- [ ] JG Project: Coordinate on storage schemas
 
-### Grain Core Agent ↔ Mobile Agent
+### Grain Core Agent ↔ Carry Agent
 
-- [ ] Define REST API contracts (endpoints, request/response formats)
-- [ ] Define authentication flow (OAuth, JWT, 2FA, magic email)
-- [ ] Define WebSocket protocol (for livestream coordination)
-- [ ] Test integration
+- [x] Define REST API contracts (endpoints, request/response formats) ✅
+- [x] Define authentication flow (OAuth, JWT, 2FA, magic email) ✅
+- [x] Define WebSocket protocol (for livestream coordination) ✅
+- [x] Test integration ✅
+- [ ] JG Project: Coordinate on mobile app API contracts
 
-### Grain Core Agent ↔ Vantage Agent
+### Grain Core Agent ↔ Vantage Core
 
-- [ ] Coordinate on file system integration (database files, transaction logs)
-- [ ] Coordinate on network stack (HTTP server, WebSocket)
-- [ ] Coordinate on AArch64 deployment (VM integration)
+- [x] Coordinate on file system integration (database files, transaction logs) ✅
+- [x] Coordinate on network stack (HTTP server, WebSocket) ✅
+- [x] Coordinate on RISC-V compliance ✅
+- [ ] Coordinate on architecture evolution (Vantage Core + L2 sub-agents)
+- [ ] JG Project: Coordinate on kernel support needs
+
+### Vantage Core ↔ L2 Sub-Agents (To Be Established)
+
+- [ ] Define L1/L2 coordination model (weekly/bi-weekly check-ins)
+- [ ] Define L2/L2 coordination model (minimal, as-needed)
+- [ ] Create sub-agent prompts (Basin Kernel, VM Runtime, System Integration)
+- [ ] Establish coordination protocols
+
+---
+
+## Architecture Evolution Tasks
+
+### Vantage Core Architecture Evolution
+
+**Status**: 🆕 **PLANNED** — Enable parallelization of foundational work
+
+**Tasks**:
+- [ ] Rename "Grain Vantage Agent" to "Grain Vantage Core Agent" (L1)
+- [ ] Create `docs/grain_basin_kernel_agent_prompt.md` (L2 sub-agent)
+- [ ] Create `docs/grain_vm_runtime_agent_prompt.md` (L2 sub-agent)
+- [ ] Create `docs/grain_system_integration_agent_prompt.md` (L2 sub-agent)
+- [ ] Establish L1/L2 coordination model
+- [ ] Update all documentation with new structure
+- [ ] Update coordination files
+
+**Timeline**: 1-2 weeks
+
+---
+
+## JG Project Multi-Agent Integration Tasks
+
+**Status**: 🆕 **DESIGN COMPLETE** — Multi-agent integration plan created
+
+**Design Document**: `docs/zyx/grainbank_mmt_job_guarantee_housing_program_2025-12-28-232324-pst.md`
+
+**Integration Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-29-105655-pst.md`
+
+**Agent Tasks**:
+- **Core Agent**: Grainbank MMT integration, JG module foundation (Months 1-6)
+- **Silo Agent**: Storage schemas for all JG modules (Months 1-3)
+- **Workspace Agent**: Desktop dashboards (Months 3-8)
+- **Court Agent**: LLM planning (Months 4-12)
+- **Flow Agent**: Workflow orchestration (Months 4-10)
+- **Research Agent**: Analysis & optimization (Months 6-12)
+- **Carry Agent**: Mobile apps (Months 6-12)
+- **Bubble/Aurora Agents**: UI components (Months 7-12)
+- **Skate Agent**: Knowledge graph (Months 5-12)
+- **Vantage Core**: Kernel support (as needed)
 
 ---
 
@@ -416,6 +365,9 @@
 - **Agent Tasks**: `docs/tasks/tasks_{agent}.md` — Detailed agent task lists
 - **Agent Plans**: `docs/plans/plan_{agent}.md` — Detailed agent development plans
 - **Grain Style**: `docs/grain_style.md` — Coding principles and guidelines
+- **Agent Architecture Evolution**: `docs/zyx/grain_agent_architecture_evolution_2025-12-29-130647-pst.md` — L1/L2 pattern and future agents
+- **Agent List**: `docs/zyx/grain_agent_list_with_numbers_2025-12-29-133812-pst.md` — Complete agent index with numbers
+- **JG Project Design**: `docs/zyx/grainbank_mmt_job_guarantee_housing_program_2025-12-28-232324-pst.md` — JG project comprehensive design
 - **Archived Tasks**: `archaeology/docs/plan_tasks_archive/` — Previous task versions
 
 ---

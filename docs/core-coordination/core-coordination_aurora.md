@@ -22,7 +22,8 @@
 - **Workspace Agent Component API Complete** ✅ - Component API ready for integration (2025-12-28-125036-pst)
 - **Workspace Agent Phase 33 Complete** ✅ - Text Editor bracket matching implemented (2025-12-28)
 - **Dream Browser Component API Implemented** ✅ - Component API structure created (2025-12-28-155635-pst)
-- **Core Agent Coordination Plan Updated** ✅ - Latest status from Core Agent (2025-12-28-223816-pst)
+- **Core Agent HTTP/WebSocket Timeout/Error Handling Complete** ✅ - Ready for integration (2025-12-28-235609-pst)
+- **Core Agent Coordination Plan Updated** ✅ - Latest status from Core Agent (2025-12-29-001544-pst)
 
 **Critical Findings** (RESOLVED):
 - ✅ **RESOLVED**: HTTP client timeout handling - Core Agent implementation complete (2025-12-28-235609-pst) ✅
@@ -87,12 +88,13 @@
   - **Non-Retryable**: `dns_error`, `connection_refused`, `invalid_response`
 - **Rate Limiting**: Detect 429 responses, parse `Retry-After` header, return `rate_limit` error with retry-after timestamp
 
-**Implementation**:
-- Core Agent will create `src/grain_core/http_errors.zig` with `HttpClientError` enum
-- Core Agent will update HTTP client to return `HttpClientError!HttpResponse`
-- Core Agent will add retryability checking function: `is_http_error_retryable()`
-- Aurora Agent: Refine `src/aurora_errors.zig` to align with Core Agent's `HttpClientError` enum
-- Aurora Agent: Update `dream_http_client.zig` to use Core Agent's error types
+**Implementation** (Core Agent Complete ✅):
+- ✅ Core Agent created `src/grain_core/http_errors.zig` with `HttpClientError` enum
+- ✅ Core Agent added retryability checking function: `is_http_error_retryable()`
+- ✅ Core Agent added error message helper: `get_http_error_message()`
+- ⏳ Core Agent: Updating HTTP client to return `HttpClientError!HttpResponse` (in progress)
+- ⏳ **Aurora Agent Action**: Refine `src/aurora_errors.zig` to align with Core Agent's `HttpClientError` enum (READY NOW)
+- ⏳ **Aurora Agent Action**: Update `dream_http_client.zig` to use Core Agent's error types (READY NOW)
 
 **Location**: `src/grain_core/http_errors.zig` (Core Agent), `src/aurora_errors.zig` (Aurora Agent)
 
@@ -102,7 +104,7 @@
 
 ### Decision 3: WebSocket Timeout Handling ✅
 
-**Status**: ✅ **DECISION RECEIVED** — Per-operation timeout with global defaults
+**Status**: ✅ **IMPLEMENTATION COMPLETE** (2025-12-28-235609-pst) — Ready for Integration
 
 **Decision**:
 - **Per-Operation Timeout**: WebSocket connection and message operations accept optional `timeout_ms: ?u32` parameter
@@ -112,9 +114,12 @@
 - **Timeout Error Type**: `WebSocketTimeoutError` in `WebSocketError` enum
 - **Timeout Checking**: Core Agent WebSocket checks timeout in connection and message operations
 
-**Implementation**:
-- Core Agent will add timeout checking in WebSocket connection and message operations
-- Aurora Agent: Update `dream_browser_websocket.zig` to use Core Agent WebSocket with timeout support
+**Implementation** (Core Agent Complete ✅):
+- ✅ Core Agent added `connect_timeout_ms` and `message_timeout_ms` fields to `WebSocketConnection`
+- ✅ Core Agent added default timeouts: `DEFAULT_CONNECT_TIMEOUT_MS` (10s), `DEFAULT_MESSAGE_TIMEOUT_MS` (5s)
+- ✅ Core Agent added timeout checking (`is_connect_timed_out()`, `is_message_timed_out()`, `check_timeouts()`)
+- ✅ Core Agent `add_connection()` accepts timeout parameters
+- ⏳ **Aurora Agent Action**: Update `dream_browser_websocket.zig` to use Core Agent WebSocket with timeout support (READY NOW)
 
 **Location**: `src/grain_core/websocket.zig` (Core Agent), `src/dream_browser_websocket.zig` (Aurora Agent)
 
@@ -124,7 +129,7 @@
 
 ### Decision 4: WebSocket Error Handling ✅
 
-**Status**: ✅ **DECISION RECEIVED** — Structured error unions with retryability
+**Status**: ✅ **IMPLEMENTATION COMPLETE** (2025-12-28-235609-pst) — Ready for Integration
 
 **Decision**:
 - **Error Union Type**: `WebSocketError` enum with variants:
@@ -138,12 +143,13 @@
   - **Retryable**: `timeout`, `connection_failed`
   - **Non-Retryable**: `handshake_failed`, `message_send_failed`, `message_receive_failed`
 
-**Implementation**:
-- Core Agent will create `src/grain_core/websocket_errors.zig` with `WebSocketError` enum
-- Core Agent will update WebSocket client to return `WebSocketError!void` for operations
-- Core Agent will add retryability checking function: `is_websocket_error_retryable()`
-- Aurora Agent: Refine `src/aurora_errors.zig` to align with Core Agent's `WebSocketError` enum
-- Aurora Agent: Update `dream_browser_websocket.zig` to use Core Agent's error types
+**Implementation** (Core Agent Complete ✅):
+- ✅ Core Agent created `src/grain_core/websocket_errors.zig` with `WebSocketError` enum
+- ✅ Core Agent added retryability checking function: `is_websocket_error_retryable()`
+- ✅ Core Agent added error message helper: `get_websocket_error_message()`
+- ⏳ Core Agent: Updating WebSocket client to return `WebSocketError!void` (in progress)
+- ⏳ **Aurora Agent Action**: Refine `src/aurora_errors.zig` to align with Core Agent's `WebSocketError` enum (READY NOW)
+- ⏳ **Aurora Agent Action**: Update `dream_browser_websocket.zig` to use Core Agent's error types (READY NOW)
 
 **Location**: `src/grain_core/websocket_errors.zig` (Core Agent), `src/aurora_errors.zig` (Aurora Agent)
 
@@ -412,17 +418,31 @@ After reviewing coordination documents from all active agents, we've identified 
 **HTTP Client Integration**:
 - ✅ HTTP client integration complete
 - ✅ External request creation working
-- ✅ **COORDINATION DECISION RECEIVED**: HTTP client timeout handling (per-request timeout, 30s API, 60s content)
-- ✅ **COORDINATION DECISION RECEIVED**: HTTP client error handling (structured error unions, retryability)
-- ⏳ **WAITING ON CORE AGENT**: Implementation of timeout and error handling (2-3 days)
-- **Action**: Update `dream_http_client.zig` to use Core Agent HTTP client with timeout/error support
+- ✅ **CORE AGENT IMPLEMENTATION COMPLETE**: HTTP client timeout handling (2025-12-28-235609-pst)
+  - `timeout_ms` field added to `HttpClientRequest`
+  - Default timeouts: `DEFAULT_API_TIMEOUT_MS` (30s), `DEFAULT_CONTENT_TIMEOUT_MS` (60s)
+  - `is_timed_out()`, `check_timeouts()` functions available
+  - `create_request()` accepts `timeout_ms` parameter
+- ✅ **CORE AGENT IMPLEMENTATION COMPLETE**: HTTP client error handling (2025-12-28-235609-pst)
+  - `HttpClientError` enum in `src/grain_core/http_errors.zig`
+  - `is_http_error_retryable()` function available
+  - `get_http_error_message()` helper available
+- ⏳ **CORE AGENT IN PROGRESS**: Updating HTTP client to return `HttpClientError!HttpResponse` (in progress)
+- ✅ **READY FOR INTEGRATION**: Update `dream_http_client.zig` to use Core Agent HTTP client with timeout/error support (READY NOW)
 
 **WebSocket Support**:
 - ✅ WebSocket support available
-- ✅ **COORDINATION DECISION RECEIVED**: WebSocket timeout handling (10s connections, 5s message sending)
-- ✅ **COORDINATION DECISION RECEIVED**: WebSocket error handling (structured error unions, retryability)
-- ⏳ **WAITING ON CORE AGENT**: Implementation of timeout and error handling (2-3 days)
-- **Action**: Update `dream_browser_websocket.zig` to use Core Agent WebSocket with timeout/error support
+- ✅ **CORE AGENT IMPLEMENTATION COMPLETE**: WebSocket timeout handling (2025-12-28-235609-pst)
+  - `connect_timeout_ms` and `message_timeout_ms` fields added to `WebSocketConnection`
+  - Default timeouts: `DEFAULT_CONNECT_TIMEOUT_MS` (10s), `DEFAULT_MESSAGE_TIMEOUT_MS` (5s)
+  - `is_connect_timed_out()`, `is_message_timed_out()`, `check_timeouts()` functions available
+  - `add_connection()` accepts timeout parameters
+- ✅ **CORE AGENT IMPLEMENTATION COMPLETE**: WebSocket error handling (2025-12-28-235609-pst)
+  - `WebSocketError` enum in `src/grain_core/websocket_errors.zig`
+  - `is_websocket_error_retryable()` function available
+  - `get_websocket_error_message()` helper available
+- ⏳ **CORE AGENT IN PROGRESS**: Updating WebSocket client to return `WebSocketError!void` (in progress)
+- ✅ **READY FOR INTEGRATION**: Update `dream_browser_websocket.zig` to use Core Agent WebSocket with timeout/error support (READY NOW)
 
 **Async Pattern**:
 - ✅ **COORDINATION DECISION RECEIVED**: Event-driven using Flow Agent Event Bus
@@ -525,13 +545,15 @@ After reviewing coordination documents from all active agents, we've identified 
 ## Dependencies
 
 **Blocked On**:
-1. **Core Agent**: HTTP client timeout and error handling implementation (CRITICAL)
-   - **Status**: ✅ Decision received, ⏳ Implementation in progress (2-3 days)
-   - **Action**: Update `dream_http_client.zig` once Core Agent implements
+1. ✅ **Core Agent**: HTTP client timeout and error handling implementation — **COMPLETE** (2025-12-28-235609-pst)
+   - **Status**: ✅ Implementation complete, ready for integration
+   - **Action**: Update `dream_http_client.zig` to use Core Agent HTTP client with timeout/error support (READY NOW)
+   - **Location**: `src/grain_core/http_client.zig`, `src/grain_core/http_errors.zig`
 
-2. **Core Agent**: WebSocket timeout and error handling implementation (HIGH PRIORITY)
-   - **Status**: ✅ Decision received, ⏳ Implementation in progress (2-3 days)
-   - **Action**: Update `dream_browser_websocket.zig` once Core Agent implements
+2. ✅ **Core Agent**: WebSocket timeout and error handling implementation — **COMPLETE** (2025-12-28-235609-pst)
+   - **Status**: ✅ Implementation complete, ready for integration
+   - **Action**: Update `dream_browser_websocket.zig` to use Core Agent WebSocket with timeout/error support (READY NOW)
+   - **Location**: `src/grain_core/websocket.zig`, `src/grain_core/websocket_errors.zig`
 
 3. **Court Agent**: LLM request timeout and error handling implementation (CRITICAL)
    - **Status**: ✅ **IMPLEMENTATION COMPLETE** (2025-12-28-135000-pst)
@@ -554,30 +576,30 @@ After reviewing coordination documents from all active agents, we've identified 
 ## Upcoming Work
 
 **Next Steps** (ready for implementation):
-1. **IMMEDIATE**: Refine error types module (`src/aurora_errors.zig`) based on Core Agent's coordination decisions
-   - Align `HttpError` with Core Agent's `HttpClientError` enum
-   - Align `WebSocketError` with Core Agent's `WebSocketError` enum
-   - Keep `LlmError` preliminary until Court Agent implements
+1. **IMMEDIATE**: Update `dream_http_client.zig` to use Core Agent HTTP client with timeout/error support (Core Agent implementation complete ✅)
+   - Add timeout parameter support (`timeout_ms: ?u32` in `create_request()`)
+   - Use Core Agent's `HttpClientError` enum from `src/grain_core/http_errors.zig`
+   - Use Core Agent's retryability checking function (`is_http_error_retryable()`)
+   - Implement retry logic for retryable errors with exponential backoff
+   - Use default timeouts: `DEFAULT_API_TIMEOUT_MS` (30s), `DEFAULT_CONTENT_TIMEOUT_MS` (60s)
+
+2. **IMMEDIATE**: Update `dream_browser_websocket.zig` to use Core Agent WebSocket with timeout/error support (Core Agent implementation complete ✅)
+   - Add timeout parameter support (`connect_timeout_ms`, `message_timeout_ms` in `add_connection()`)
+   - Use Core Agent's `WebSocketError` enum from `src/grain_core/websocket_errors.zig`
+   - Use Core Agent's retryability checking function (`is_websocket_error_retryable()`)
+   - Implement retry logic for retryable errors with exponential backoff
+   - Use default timeouts: `DEFAULT_CONNECT_TIMEOUT_MS` (10s), `DEFAULT_MESSAGE_TIMEOUT_MS` (5s)
+
+3. **IMMEDIATE**: Refine error types module (`src/aurora_errors.zig`) based on Core Agent's implementation
+   - Align `HttpError` with Core Agent's `HttpClientError` enum (or use Core Agent's enum directly)
+   - Align `WebSocketError` with Core Agent's `WebSocketError` enum (or use Core Agent's enum directly)
+   - Align `LlmError` with Court Agent's `LlmProviderError` enum (Court Agent implementation complete ✅)
    - Keep `DagError` preliminary until DAG Core coordination
 
-2. **IMMEDIATE**: Integrate with Workspace Agent Component API (SHORT-TERM priority per Core Agent)
-   - Create Dream Browser Component API structure (`src/dream_browser_components.zig`)
-   - Adapt Workspace Agent's `DesktopComponentAPI` pattern for Dream Browser context
-   - Define browser-specific components (browser_view, navigation_bar, tab_bar, address_bar, status_bar)
-   - Use same Component base structure with state/size/theme variants
-   - Create `DreamBrowserComponentAPI` structure similar to `DesktopComponentAPI`
-   - Coordinate with Bubble Agent on component integration patterns
+4. **IMMEDIATE**: Integrate with Workspace Agent Component API (Component API created ✅)
    - Add comprehensive tests for Dream Browser components
-
-3. **SHORT-TERM**: Update `dream_http_client.zig` to use Core Agent HTTP client with timeout/error support (once Core Agent implements)
-   - Add timeout parameter support
-   - Use Core Agent's `HttpClientError` enum
-   - Use Core Agent's retryability checking functions
-
-4. **SHORT-TERM**: Update `dream_browser_websocket.zig` to use Core Agent WebSocket with timeout/error support (once Core Agent implements)
-   - Add timeout parameter support
-   - Use Core Agent's `WebSocketError` enum
-   - Use Core Agent's retryability checking functions
+   - Integrate Component API into build.zig
+   - Coordinate with Bubble Agent on component integration patterns
 
 5. **IMMEDIATE**: Update `aurora_glm46.zig` to use Court Agent's timeout and error handling (Court Agent implementation complete ✅)
    - Add timeout parameter support (60s default)
@@ -620,9 +642,13 @@ After reviewing coordination documents from all active agents, we've identified 
 6. ✅ **Core Agent**: Component API design coordination (IMMEDIATE) — Decision received
 
 **Pending Implementation**:
-1. ⏳ **Core Agent**: HTTP client timeout and error handling implementation (2-3 days)
-2. ⏳ **Core Agent**: WebSocket timeout and error handling implementation (2-3 days)
-3. ✅ **Court Agent**: LLM request timeout and error handling implementation — **COMPLETE** (2025-12-28-135000-pst)
+1. ✅ **Core Agent**: HTTP client timeout and error handling implementation — **COMPLETE** (2025-12-28-235609-pst)
+2. ✅ **Core Agent**: WebSocket timeout and error handling implementation — **COMPLETE** (2025-12-28-235609-pst)
+3. ⏳ **Core Agent**: Updating HTTP client to return `HttpClientError!HttpResponse` (in progress)
+4. ⏳ **Core Agent**: Updating WebSocket client to return `WebSocketError!void` (in progress)
+5. ⏳ **Core Agent**: Service-to-service authentication implementation (2-3 days)
+6. ⏳ **Core Agent**: Async pattern integration (1-2 days)
+7. ✅ **Court Agent**: LLM request timeout and error handling implementation — **COMPLETE** (2025-12-28-135000-pst)
 
 **Pending Coordination**:
 1. ⏳ **DAG Core**: Error handling coordination (HIGH PRIORITY)
@@ -707,14 +733,16 @@ After reviewing coordination documents from all active agents, we've identified 
 - Without Core Agent's implementation, Aurora Agent cannot properly handle network failures, timeouts, or rate limiting
 - This unblocks 6 agents total (Aurora, Bubble, Carry, Skate, and others)
 
-**Aurora Agent's Action Once Core Agent Completes**:
-1. Update `dream_http_client.zig` to use Core Agent HTTP client with timeout/error support
-2. Update `dream_browser_websocket.zig` to use Core Agent WebSocket with timeout/error support
-3. Implement retry logic for HTTP/WebSocket operations using Core Agent's retryability functions
-4. Refine `src/aurora_errors.zig` to align with Core Agent's error types
-5. Add comprehensive error handling and retry logic tests
+**Aurora Agent's Action** (Core Agent HTTP/WebSocket Complete ✅):
+1. ✅ **READY NOW**: Update `dream_http_client.zig` to use Core Agent HTTP client with timeout/error support
+2. ✅ **READY NOW**: Update `dream_browser_websocket.zig` to use Core Agent WebSocket with timeout/error support
+3. ✅ **READY NOW**: Implement retry logic for HTTP/WebSocket operations using Core Agent's retryability functions
+4. ✅ **READY NOW**: Refine `src/aurora_errors.zig` to align with Core Agent's error types
+5. ✅ **READY NOW**: Add comprehensive error handling and retry logic tests
+6. ⏳ **WAITING**: Integrate service-to-service authentication once Core Agent completes (2-3 days)
+7. ⏳ **WAITING**: Optionally subscribe to events for async HTTP/WebSocket operations (1-2 days, or use callbacks)
 
-**Coordination Opportunity**: Aurora Agent can coordinate with other agents (Bubble, Carry, Skate) on integration patterns once Core Agent completes, sharing best practices and common patterns.
+**Coordination Opportunity**: Aurora Agent can coordinate with other agents (Bubble, Carry, Skate) on integration patterns now that Core Agent has completed HTTP/WebSocket timeout/error handling, sharing best practices and common patterns.
 
 ---
 
@@ -852,19 +880,35 @@ After reviewing coordination documents from all active agents, we've identified 
 
 **Status**: ⏳ **Coordination Decisions Implementation In Progress** (Priority 1, CRITICAL)
 
-**What Core Agent Is Working On**:
-1. **HTTP Client Timeout/Error Handling** (2-3 days remaining)
-   - Per-request timeout support (`timeout_ms: ?u32` parameter)
-   - Global defaults: 30s for API calls, 60s for content fetching
-   - Structured error unions (`HttpClientError` enum)
-   - Retryability classification (`is_http_error_retryable()`)
-   - Rate limiting detection (429 responses, `Retry-After` header parsing)
+**What Core Agent Has Completed**:
+1. ✅ **HTTP Client Timeout/Error Handling** — **COMPLETE** (2025-12-28-235609-pst)
+   - ✅ Per-request timeout support (`timeout_ms: ?u32` parameter in `create_request()`)
+   - ✅ Global defaults: `DEFAULT_API_TIMEOUT_MS` (30s), `DEFAULT_CONTENT_TIMEOUT_MS` (60s)
+   - ✅ Structured error unions (`HttpClientError` enum in `src/grain_core/http_errors.zig`)
+   - ✅ Retryability classification (`is_http_error_retryable()`)
+   - ✅ Error message helper (`get_http_error_message()`)
+   - ✅ Timeout checking functions (`is_timed_out()`, `check_timeouts()`)
+   - ⏳ Updating HTTP client to return `HttpClientError!HttpResponse` (in progress)
 
-2. **WebSocket Timeout/Error Handling** (2-3 days remaining)
-   - Per-operation timeout support (`timeout_ms: ?u32` parameter)
-   - Global defaults: 10s for connections, 5s for message sending
-   - Structured error unions (`WebSocketError` enum)
-   - Retryability classification (`is_websocket_error_retryable()`)
+2. ✅ **WebSocket Timeout/Error Handling** — **COMPLETE** (2025-12-28-235609-pst)
+   - ✅ Per-operation timeout support (`connect_timeout_ms`, `message_timeout_ms` in `add_connection()`)
+   - ✅ Global defaults: `DEFAULT_CONNECT_TIMEOUT_MS` (10s), `DEFAULT_MESSAGE_TIMEOUT_MS` (5s)
+   - ✅ Structured error unions (`WebSocketError` enum in `src/grain_core/websocket_errors.zig`)
+   - ✅ Retryability classification (`is_websocket_error_retryable()`)
+   - ✅ Error message helper (`get_websocket_error_message()`)
+   - ✅ Timeout checking functions (`is_connect_timed_out()`, `is_message_timed_out()`, `check_timeouts()`)
+   - ⏳ Updating WebSocket client to return `WebSocketError!void` (in progress)
+
+**What Core Agent Is Still Working On**:
+3. **Service-to-Service Authentication** (2-3 days remaining)
+   - Service account tokens via AuthService (userspace pattern)
+   - Token generation and validation via `AuthService`
+   - Integration with existing JWT infrastructure
+
+4. **Async Pattern Integration** (1-2 days remaining)
+   - Event-driven using Flow Agent Event Bus
+   - Event types for HTTP, WebSocket, File I/O operations
+   - Async response handling via event bus
 
 3. **Service-to-Service Authentication** (2-3 days remaining)
    - Service account tokens via AuthService (userspace pattern)
@@ -887,73 +931,84 @@ After reviewing coordination documents from all active agents, we've identified 
 - **Authentication**: Service-to-service authentication needed for secure inter-agent communication
 - **Async Pattern**: Event-driven async pattern improves performance for HTTP/WebSocket operations
 
-**Aurora Agent's Action Once Core Agent Completes**:
-1. **IMMEDIATE**: Update `dream_http_client.zig` to use Core Agent HTTP client with timeout/error support
-   - Add timeout parameter support
-   - Use Core Agent's `HttpClientError` enum
+**Aurora Agent's Action** (Core Agent HTTP/WebSocket Complete ✅):
+1. ✅ **READY NOW**: Update `dream_http_client.zig` to use Core Agent HTTP client with timeout/error support
+   - Add timeout parameter support (`timeout_ms: ?u32` in `create_request()`)
+   - Use Core Agent's `HttpClientError` enum from `src/grain_core/http_errors.zig`
+   - Use Core Agent's retryability checking function (`is_http_error_retryable()`)
+   - Use Core Agent's error message helper (`get_http_error_message()`)
+   - Implement retry logic for retryable errors with exponential backoff
+   - Use default timeouts: `DEFAULT_API_TIMEOUT_MS` (30s), `DEFAULT_CONTENT_TIMEOUT_MS` (60s)
+
+2. ✅ **READY NOW**: Update `dream_browser_websocket.zig` to use Core Agent WebSocket with timeout/error support
+   - Add timeout parameter support (`connect_timeout_ms`, `message_timeout_ms` in `add_connection()`)
+   - Use Core Agent's `WebSocketError` enum from `src/grain_core/websocket_errors.zig`
+   - Use Core Agent's retryability checking function (`is_websocket_error_retryable()`)
+   - Use Core Agent's error message helper (`get_websocket_error_message()`)
+   - Implement retry logic for retryable errors with exponential backoff
+   - Use default timeouts: `DEFAULT_CONNECT_TIMEOUT_MS` (10s), `DEFAULT_MESSAGE_TIMEOUT_MS` (5s)
+
+3. ✅ **READY NOW**: Refine `src/aurora_errors.zig` to align with Core Agent's error types
+   - Align `HttpError` with Core Agent's `HttpClientError` enum (or use Core Agent's enum directly)
+   - Align `WebSocketError` with Core Agent's `WebSocketError` enum (or use Core Agent's enum directly)
    - Use Core Agent's retryability checking functions
-   - Implement retry logic for retryable errors
 
-2. **IMMEDIATE**: Update `dream_browser_websocket.zig` to use Core Agent WebSocket with timeout/error support
-   - Add timeout parameter support
-   - Use Core Agent's `WebSocketError` enum
-   - Use Core Agent's retryability checking functions
-   - Implement retry logic for retryable errors
+4. ⏳ **WAITING**: Integrate service-to-service authentication once Core Agent completes (2-3 days)
+5. ⏳ **WAITING**: Optionally subscribe to events for async HTTP/WebSocket operations (1-2 days, or use callbacks)
 
-3. **SHORT-TERM**: Refine `src/aurora_errors.zig` to align with Core Agent's error types
-   - Align `HttpError` with Core Agent's `HttpClientError` enum
-   - Align `WebSocketError` with Core Agent's `WebSocketError` enum
-   - Use Core Agent's retryability checking functions
+**Timeline**: Core Agent HTTP/WebSocket timeout/error handling complete ✅ (2025-12-28-235609-pst). Aurora Agent can integrate immediately. Service-to-service authentication and async pattern integration still in progress (2-3 days and 1-2 days respectively).
 
-4. **SHORT-TERM**: Integrate service-to-service authentication once Core Agent completes
-5. **SHORT-TERM**: Optionally subscribe to events for async HTTP/WebSocket operations (or use callbacks)
-
-**Timeline**: Core Agent implementation expected in 2-3 days (per coordination plan 2025-12-28-223816-pst). Aurora Agent ready to integrate immediately upon completion.
-
-**Impact**: Core Agent's implementation unblocks 6 agents (including Aurora Agent). This is Priority 1, CRITICAL work.
+**Impact**: Core Agent's HTTP/WebSocket timeout/error handling implementation unblocks 6 agents (including Aurora Agent). This was Priority 1, CRITICAL work — now complete ✅. Service-to-service authentication and async pattern integration are next priorities.
 
 ---
 
 ### Summary for Other Agents
 
 **Ready Now**:
+- ✅ **Aurora Agent**: Can integrate Core Agent's HTTP/WebSocket timeout/error handling (Core Agent implementation complete ✅)
 - ✅ **Skate Agent**: Can integrate Court Agent's LLM timeout/error handling
-- ✅ **Bubble Agent**: Can coordinate on Dream Browser component API design
+- ✅ **Bubble Agent**: Can coordinate on Dream Browser component API design (Component API created ✅)
 - ✅ **Vantage Agent**: Can coordinate on SLC product integration testing schedule
+- ✅ **All Agents**: Can integrate Core Agent's HTTP/WebSocket timeout/error handling (ready now)
 
 **Waiting On**:
-- ⏳ **Core Agent**: HTTP/WebSocket timeout/error handling implementation (2-3 days)
+- ⏳ **Core Agent**: Service-to-service authentication implementation (2-3 days)
+- ⏳ **Core Agent**: Async pattern integration (1-2 days)
 - ⏳ **DAG Core**: Error handling coordination (HIGH PRIORITY)
-- ⏳ **Flow Agent**: Event types for async operations (depends on Core Agent)
+- ⏳ **Flow Agent**: Event types for async operations (depends on Core Agent async pattern integration)
 
 **Coordination Opportunities**:
 - **Skate Agent + Aurora Agent**: Can share integration patterns for Court Agent's LLM timeout/error handling
 - **Aurora Agent + Bubble Agent**: Dream Browser component API design coordination (Component API created ✅)
 - **Aurora Agent + Vantage Agent**: SLC product integration testing coordination
 - **Aurora Agent + Skate Agent + Bubble Agent**: DAG Core error handling coordination (shared module issue)
-- **Aurora Agent + Bubble Agent + Carry Agent + Skate Agent**: Core Agent timeout/error handling integration patterns (once Core Agent completes)
+- **Aurora Agent + Bubble Agent + Carry Agent + Skate Agent**: Core Agent HTTP/WebSocket timeout/error handling integration patterns (Core Agent implementation complete ✅, ready to coordinate now)
 
 ---
 
 ### Summary: Next Steps for Core Agent and All Agents
 
 **For Core Agent** (Priority 1, CRITICAL):
-- **Status**: Coordination decisions implementation in progress (2-3 days remaining)
-- **What Core Agent Needs to Complete**:
-  1. HTTP client timeout/error handling implementation
-  2. WebSocket timeout/error handling implementation
-  3. Service-to-service authentication implementation
-  4. Async pattern integration (1-2 days remaining)
-- **Why This Is Critical**: Unblocks 6 agents (Aurora, Bubble, Carry, Skate, and others)
-- **Impact**: Without Core Agent's implementation, agents cannot properly handle network failures, timeouts, or rate limiting
-- **Aurora Agent's Readiness**: ✅ Ready to integrate once Core Agent completes (error types module created, integration plan ready)
+- **Status**: HTTP/WebSocket timeout/error handling complete ✅, authentication/async in progress
+- **What Core Agent Has Completed**:
+  1. ✅ HTTP client timeout/error handling implementation — **COMPLETE** (2025-12-28-235609-pst)
+  2. ✅ WebSocket timeout/error handling implementation — **COMPLETE** (2025-12-28-235609-pst)
+- **What Core Agent Is Still Working On**:
+  3. ⏳ Service-to-service authentication implementation (2-3 days remaining)
+  4. ⏳ Async pattern integration (1-2 days remaining)
+  5. ⏳ Updating HTTP client to return `HttpClientError!HttpResponse` (in progress)
+  6. ⏳ Updating WebSocket client to return `WebSocketError!void` (in progress)
+- **Why This Is Critical**: HTTP/WebSocket timeout/error handling unblocks 6 agents (Aurora, Bubble, Carry, Skate, and others)
+- **Impact**: Core Agent's HTTP/WebSocket implementation enables proper handling of network failures, timeouts, and rate limiting
+- **Aurora Agent's Readiness**: ✅ Ready to integrate now (error types module created, integration plan ready, Core Agent implementation complete)
 
-**For All Agents Waiting on Core Agent**:
-- **Aurora Agent**: Ready to integrate HTTP/WebSocket timeout/error handling
-- **Bubble Agent**: Ready to integrate timeout/error handling
-- **Carry Agent**: Ready to integrate timeout/error handling
-- **Skate Agent**: Ready to integrate timeout/error handling
-- **Coordination Opportunity**: Agents can coordinate on integration patterns once Core Agent completes, sharing best practices and common patterns
+**For All Agents** (Core Agent HTTP/WebSocket Complete ✅):
+- **Aurora Agent**: ✅ Ready to integrate HTTP/WebSocket timeout/error handling (Core Agent implementation complete)
+- **Bubble Agent**: ✅ Ready to integrate HTTP/WebSocket timeout/error handling (Core Agent implementation complete)
+- **Carry Agent**: ✅ Ready to integrate HTTP/WebSocket timeout/error handling (Core Agent implementation complete)
+- **Skate Agent**: ✅ Ready to integrate HTTP/WebSocket timeout/error handling (Core Agent implementation complete)
+- **Coordination Opportunity**: Agents can coordinate on integration patterns now that Core Agent has completed HTTP/WebSocket timeout/error handling, sharing best practices and common patterns
+- **Next Waiting**: Service-to-service authentication (2-3 days) and async pattern integration (1-2 days)
 
 **For Workspace Agent** (Component API):
 - **Status**: ✅ Component API complete, Phase 33 (bracket matching) complete
@@ -1054,11 +1109,11 @@ After reviewing coordination documents from all active agents, we've identified 
 ## Technical Notes
 
 **Current Implementation**:
-- **HTTP Client**: `src/dream_http_client.zig` — No timeout handling ⚠️ (will update once Core Agent implements)
-- **GLM-4.6 Client**: `src/aurora_glm46.zig` — No timeout handling, limited error handling ⚠️ (will update once Court Agent implements)
-- **WebSocket Client**: `src/dream_browser_websocket.zig` — No timeout handling ⚠️ (will update once Core Agent implements)
+- **HTTP Client**: `src/dream_http_client.zig` — ⏳ Ready to integrate Core Agent timeout/error handling (Core Agent implementation complete ✅)
+- **GLM-4.6 Client**: `src/aurora_glm46.zig` — ⏳ Ready to integrate Court Agent timeout/error handling (Court Agent implementation complete ✅)
+- **WebSocket Client**: `src/dream_browser_websocket.zig` — ⏳ Ready to integrate Core Agent timeout/error handling (Core Agent implementation complete ✅)
 - **DAG Integration**: `src/aurora_dag_integration.zig` — Limited error handling ⚠️ (will update once DAG Core coordinates)
-- **Error Types**: `src/aurora_errors.zig` — Preliminary error types defined ✅ (will refine based on coordination decisions)
+- **Error Types**: `src/aurora_errors.zig` — Preliminary error types defined ✅ (ready to refine based on Core Agent's implementation)
 
 **Design Patterns from Other Agents**:
 - **Carry Agent**: HTTP timeout/error handling patterns, retry logic with exponential backoff
@@ -1081,9 +1136,13 @@ After reviewing coordination documents from all active agents, we've identified 
 - ✅ **Core Agent**: Component API design coordination (IMMEDIATE) — Decision received
 
 **PENDING IMPLEMENTATION**:
-- ⏳ **Core Agent**: HTTP client timeout and error handling implementation (2-3 days)
-- ⏳ **Core Agent**: WebSocket timeout and error handling implementation (2-3 days)
-- ⏳ **Court Agent**: LLM request timeout and error handling implementation (1-2 days for timeout, 1-2 days for error handling)
+- ✅ **Core Agent**: HTTP client timeout and error handling implementation — **COMPLETE** (2025-12-28-235609-pst)
+- ✅ **Core Agent**: WebSocket timeout and error handling implementation — **COMPLETE** (2025-12-28-235609-pst)
+- ⏳ **Core Agent**: Updating HTTP client to return `HttpClientError!HttpResponse` (in progress)
+- ⏳ **Core Agent**: Updating WebSocket client to return `WebSocketError!void` (in progress)
+- ⏳ **Core Agent**: Service-to-service authentication implementation (2-3 days)
+- ⏳ **Core Agent**: Async pattern integration (1-2 days)
+- ✅ **Court Agent**: LLM request timeout and error handling implementation — **COMPLETE** (2025-12-28-135000-pst)
 
 **PENDING COORDINATION**:
 - ⏳ **DAG Core**: Error handling coordination (HIGH PRIORITY)
@@ -1091,11 +1150,13 @@ After reviewing coordination documents from all active agents, we've identified 
   - How should we handle node/event limit exceeded?
   - How should we handle invalid event data?
 
-**READY FOR IMPLEMENTATION**:
-- ✅ Refine error types module based on Core Agent's decisions
-- ✅ Coordinate with Bubble Agent on Dream Browser component API
-- ✅ Implement retry logic for transient failures (after Core Agent error types available)
-- ✅ Implement rate limiting handling (after Core Agent error types available)
+**READY FOR IMPLEMENTATION** (Core Agent HTTP/WebSocket Complete ✅):
+- ✅ **READY NOW**: Refine error types module based on Core Agent's implementation
+- ✅ **READY NOW**: Update `dream_http_client.zig` to use Core Agent HTTP client with timeout/error support
+- ✅ **READY NOW**: Update `dream_browser_websocket.zig` to use Core Agent WebSocket with timeout/error support
+- ✅ **READY NOW**: Implement retry logic for HTTP/WebSocket operations (Core Agent error types available ✅)
+- ✅ **READY NOW**: Implement rate limiting handling (Core Agent error types available ✅)
+- ✅ **READY NOW**: Coordinate with Bubble Agent on Dream Browser component API (Component API created ✅)
 
 ---
 
@@ -1125,11 +1186,11 @@ Looking forward to integrating your LLM infrastructure for our AI provider abstr
 ## Technical Notes
 
 **Current Implementation**:
-- **HTTP Client**: `src/dream_http_client.zig` — No timeout handling ⚠️ (will update once Core Agent implements)
-- **GLM-4.6 Client**: `src/aurora_glm46.zig` — No timeout handling, limited error handling ⚠️ (will update once Court Agent implements)
-- **WebSocket Client**: `src/dream_browser_websocket.zig` — No timeout handling ⚠️ (will update once Core Agent implements)
+- **HTTP Client**: `src/dream_http_client.zig` — ⏳ Ready to integrate Core Agent timeout/error handling (Core Agent implementation complete ✅)
+- **GLM-4.6 Client**: `src/aurora_glm46.zig` — ⏳ Ready to integrate Court Agent timeout/error handling (Court Agent implementation complete ✅)
+- **WebSocket Client**: `src/dream_browser_websocket.zig` — ⏳ Ready to integrate Core Agent timeout/error handling (Core Agent implementation complete ✅)
 - **DAG Integration**: `src/aurora_dag_integration.zig` — Limited error handling ⚠️ (will update once DAG Core coordinates)
-- **Error Types**: `src/aurora_errors.zig` — Preliminary error types defined ✅ (will refine based on coordination decisions)
+- **Error Types**: `src/aurora_errors.zig` — Preliminary error types defined ✅ (ready to refine based on Core Agent's implementation)
 
 **Design Patterns from Other Agents**:
 - **Carry Agent**: HTTP timeout/error handling patterns, retry logic with exponential backoff
@@ -1152,9 +1213,13 @@ Looking forward to integrating your LLM infrastructure for our AI provider abstr
 - ✅ **Core Agent**: Component API design coordination (IMMEDIATE) — Decision received
 
 **PENDING IMPLEMENTATION**:
-- ⏳ **Core Agent**: HTTP client timeout and error handling implementation (2-3 days)
-- ⏳ **Core Agent**: WebSocket timeout and error handling implementation (2-3 days)
-- ⏳ **Court Agent**: LLM request timeout and error handling implementation (1-2 days for timeout, 1-2 days for error handling)
+- ✅ **Core Agent**: HTTP client timeout and error handling implementation — **COMPLETE** (2025-12-28-235609-pst)
+- ✅ **Core Agent**: WebSocket timeout and error handling implementation — **COMPLETE** (2025-12-28-235609-pst)
+- ⏳ **Core Agent**: Updating HTTP client to return `HttpClientError!HttpResponse` (in progress)
+- ⏳ **Core Agent**: Updating WebSocket client to return `WebSocketError!void` (in progress)
+- ⏳ **Core Agent**: Service-to-service authentication implementation (2-3 days)
+- ⏳ **Core Agent**: Async pattern integration (1-2 days)
+- ✅ **Court Agent**: LLM request timeout and error handling implementation — **COMPLETE** (2025-12-28-135000-pst)
 
 **PENDING COORDINATION**:
 - ⏳ **DAG Core**: Error handling coordination (HIGH PRIORITY)
@@ -1162,11 +1227,13 @@ Looking forward to integrating your LLM infrastructure for our AI provider abstr
   - How should we handle node/event limit exceeded?
   - How should we handle invalid event data?
 
-**READY FOR IMPLEMENTATION**:
-- ✅ Refine error types module based on Core Agent's decisions
-- ✅ Coordinate with Bubble Agent on Dream Browser component API
-- ✅ Implement retry logic for transient failures (after Core Agent error types available)
-- ✅ Implement rate limiting handling (after Core Agent error types available)
+**READY FOR IMPLEMENTATION** (Core Agent HTTP/WebSocket Complete ✅):
+- ✅ **READY NOW**: Refine error types module based on Core Agent's implementation
+- ✅ **READY NOW**: Update `dream_http_client.zig` to use Core Agent HTTP client with timeout/error support
+- ✅ **READY NOW**: Update `dream_browser_websocket.zig` to use Core Agent WebSocket with timeout/error support
+- ✅ **READY NOW**: Implement retry logic for HTTP/WebSocket operations (Core Agent error types available ✅)
+- ✅ **READY NOW**: Implement rate limiting handling (Core Agent error types available ✅)
+- ✅ **READY NOW**: Coordinate with Bubble Agent on Dream Browser component API (Component API created ✅)
 
 ---
 
@@ -1210,11 +1277,11 @@ Looking forward to integrating your LLM infrastructure for our AI provider abstr
 ## Technical Notes
 
 **Current Implementation**:
-- **HTTP Client**: `src/dream_http_client.zig` — No timeout handling ⚠️ (will update once Core Agent implements)
-- **GLM-4.6 Client**: `src/aurora_glm46.zig` — No timeout handling, limited error handling ⚠️ (will update once Court Agent implements)
-- **WebSocket Client**: `src/dream_browser_websocket.zig` — No timeout handling ⚠️ (will update once Core Agent implements)
+- **HTTP Client**: `src/dream_http_client.zig` — ⏳ Ready to integrate Core Agent timeout/error handling (Core Agent implementation complete ✅)
+- **GLM-4.6 Client**: `src/aurora_glm46.zig` — ⏳ Ready to integrate Court Agent timeout/error handling (Court Agent implementation complete ✅)
+- **WebSocket Client**: `src/dream_browser_websocket.zig` — ⏳ Ready to integrate Core Agent timeout/error handling (Core Agent implementation complete ✅)
 - **DAG Integration**: `src/aurora_dag_integration.zig` — Limited error handling ⚠️ (will update once DAG Core coordinates)
-- **Error Types**: `src/aurora_errors.zig` — Preliminary error types defined ✅ (will refine based on coordination decisions)
+- **Error Types**: `src/aurora_errors.zig` — Preliminary error types defined ✅ (ready to refine based on Core Agent's implementation)
 
 **Design Patterns from Other Agents**:
 - **Carry Agent**: HTTP timeout/error handling patterns, retry logic with exponential backoff
@@ -1237,9 +1304,13 @@ Looking forward to integrating your LLM infrastructure for our AI provider abstr
 - ✅ **Core Agent**: Component API design coordination (IMMEDIATE) — Decision received
 
 **PENDING IMPLEMENTATION**:
-- ⏳ **Core Agent**: HTTP client timeout and error handling implementation (2-3 days)
-- ⏳ **Core Agent**: WebSocket timeout and error handling implementation (2-3 days)
-- ⏳ **Court Agent**: LLM request timeout and error handling implementation (1-2 days for timeout, 1-2 days for error handling)
+- ✅ **Core Agent**: HTTP client timeout and error handling implementation — **COMPLETE** (2025-12-28-235609-pst)
+- ✅ **Core Agent**: WebSocket timeout and error handling implementation — **COMPLETE** (2025-12-28-235609-pst)
+- ⏳ **Core Agent**: Updating HTTP client to return `HttpClientError!HttpResponse` (in progress)
+- ⏳ **Core Agent**: Updating WebSocket client to return `WebSocketError!void` (in progress)
+- ⏳ **Core Agent**: Service-to-service authentication implementation (2-3 days)
+- ⏳ **Core Agent**: Async pattern integration (1-2 days)
+- ✅ **Court Agent**: LLM request timeout and error handling implementation — **COMPLETE** (2025-12-28-135000-pst)
 
 **PENDING COORDINATION**:
 - ⏳ **DAG Core**: Error handling coordination (HIGH PRIORITY)
@@ -1247,11 +1318,13 @@ Looking forward to integrating your LLM infrastructure for our AI provider abstr
   - How should we handle node/event limit exceeded?
   - How should we handle invalid event data?
 
-**READY FOR IMPLEMENTATION**:
-- ✅ Refine error types module based on Core Agent's decisions
-- ✅ Coordinate with Bubble Agent on Dream Browser component API
-- ✅ Implement retry logic for transient failures (after Core Agent error types available)
-- ✅ Implement rate limiting handling (after Core Agent error types available)
+**READY FOR IMPLEMENTATION** (Core Agent HTTP/WebSocket Complete ✅):
+- ✅ **READY NOW**: Refine error types module based on Core Agent's implementation
+- ✅ **READY NOW**: Update `dream_http_client.zig` to use Core Agent HTTP client with timeout/error support
+- ✅ **READY NOW**: Update `dream_browser_websocket.zig` to use Core Agent WebSocket with timeout/error support
+- ✅ **READY NOW**: Implement retry logic for HTTP/WebSocket operations (Core Agent error types available ✅)
+- ✅ **READY NOW**: Implement rate limiting handling (Core Agent error types available ✅)
+- ✅ **READY NOW**: Coordinate with Bubble Agent on Dream Browser component API (Component API created ✅)
 
 ---
 
@@ -1281,11 +1354,11 @@ Looking forward to integrating your LLM infrastructure for our AI provider abstr
 ## Technical Notes
 
 **Current Implementation**:
-- **HTTP Client**: `src/dream_http_client.zig` — No timeout handling ⚠️ (will update once Core Agent implements)
-- **GLM-4.6 Client**: `src/aurora_glm46.zig` — No timeout handling, limited error handling ⚠️ (will update once Court Agent implements)
-- **WebSocket Client**: `src/dream_browser_websocket.zig` — No timeout handling ⚠️ (will update once Core Agent implements)
+- **HTTP Client**: `src/dream_http_client.zig` — ⏳ Ready to integrate Core Agent timeout/error handling (Core Agent implementation complete ✅)
+- **GLM-4.6 Client**: `src/aurora_glm46.zig` — ⏳ Ready to integrate Court Agent timeout/error handling (Court Agent implementation complete ✅)
+- **WebSocket Client**: `src/dream_browser_websocket.zig` — ⏳ Ready to integrate Core Agent timeout/error handling (Core Agent implementation complete ✅)
 - **DAG Integration**: `src/aurora_dag_integration.zig` — Limited error handling ⚠️ (will update once DAG Core coordinates)
-- **Error Types**: `src/aurora_errors.zig` — Preliminary error types defined ✅ (will refine based on coordination decisions)
+- **Error Types**: `src/aurora_errors.zig` — Preliminary error types defined ✅ (ready to refine based on Core Agent's implementation)
 
 **Design Patterns from Other Agents**:
 - **Carry Agent**: HTTP timeout/error handling patterns, retry logic with exponential backoff
@@ -1308,9 +1381,13 @@ Looking forward to integrating your LLM infrastructure for our AI provider abstr
 - ✅ **Core Agent**: Component API design coordination (IMMEDIATE) — Decision received
 
 **PENDING IMPLEMENTATION**:
-- ⏳ **Core Agent**: HTTP client timeout and error handling implementation (2-3 days)
-- ⏳ **Core Agent**: WebSocket timeout and error handling implementation (2-3 days)
-- ⏳ **Court Agent**: LLM request timeout and error handling implementation (1-2 days for timeout, 1-2 days for error handling)
+- ✅ **Core Agent**: HTTP client timeout and error handling implementation — **COMPLETE** (2025-12-28-235609-pst)
+- ✅ **Core Agent**: WebSocket timeout and error handling implementation — **COMPLETE** (2025-12-28-235609-pst)
+- ⏳ **Core Agent**: Updating HTTP client to return `HttpClientError!HttpResponse` (in progress)
+- ⏳ **Core Agent**: Updating WebSocket client to return `WebSocketError!void` (in progress)
+- ⏳ **Core Agent**: Service-to-service authentication implementation (2-3 days)
+- ⏳ **Core Agent**: Async pattern integration (1-2 days)
+- ✅ **Court Agent**: LLM request timeout and error handling implementation — **COMPLETE** (2025-12-28-135000-pst)
 
 **PENDING COORDINATION**:
 - ⏳ **DAG Core**: Error handling coordination (HIGH PRIORITY)
@@ -1318,11 +1395,13 @@ Looking forward to integrating your LLM infrastructure for our AI provider abstr
   - How should we handle node/event limit exceeded?
   - How should we handle invalid event data?
 
-**READY FOR IMPLEMENTATION**:
-- ✅ Refine error types module based on Core Agent's decisions
-- ✅ Coordinate with Bubble Agent on Dream Browser component API
-- ✅ Implement retry logic for transient failures (after Core Agent error types available)
-- ✅ Implement rate limiting handling (after Core Agent error types available)
+**READY FOR IMPLEMENTATION** (Core Agent HTTP/WebSocket Complete ✅):
+- ✅ **READY NOW**: Refine error types module based on Core Agent's implementation
+- ✅ **READY NOW**: Update `dream_http_client.zig` to use Core Agent HTTP client with timeout/error support
+- ✅ **READY NOW**: Update `dream_browser_websocket.zig` to use Core Agent WebSocket with timeout/error support
+- ✅ **READY NOW**: Implement retry logic for HTTP/WebSocket operations (Core Agent error types available ✅)
+- ✅ **READY NOW**: Implement rate limiting handling (Core Agent error types available ✅)
+- ✅ **READY NOW**: Coordinate with Bubble Agent on Dream Browser component API (Component API created ✅)
 
 ---
 

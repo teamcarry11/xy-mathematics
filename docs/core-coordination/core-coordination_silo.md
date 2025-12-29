@@ -1,6 +1,6 @@
 # Grain Silo Agent: Coordination Status
 
-**Last Updated**: 2025-12-29-050000-pst  
+**Last Updated**: 2025-12-29-110000-pst  
 **Agent**: Grain Silo Agent (Database)  
 **Status**: **PRODUCTION READY** ✅ — **ALL COORDINATION DECISIONS READY** ✅ — **PAYMENT/VAULT STORAGE SCHEMA COMPLETE** ✅
 
@@ -152,6 +152,34 @@ All core phases complete and ready for production use:
 **Key Resources**:
 - Storage Schema Design: `docs/grain_database/payment_vault_storage_schema.md`
 - Payment/Vault/Bank Design: `docs/zyx/grain_payment_vault_design_2025-12-28-213448-pst.md`
+- SLC Integration Helpers (reference pattern): `src/grain_database/slc_integration.zig`
+
+### JG Project Integration (2025-12-29-105655-pst) ✅
+
+**Status**: ✅ **DESIGN COMPLETE** — Multi-agent integration plan created
+
+**JG Project Overview**:
+- ✅ JG (Job Guarantee) project design complete
+- ✅ Multi-agent integration plan created with agent-specific responsibilities
+- ✅ Storage schema responsibilities assigned to Silo Agent
+
+**Silo Agent JG Project Responsibilities** (Months 1-3):
+- ⏳ **Storage Schemas for All JG Modules**: Design and implement storage schemas for all JG project modules
+  - Coordinate with Core Agent on JG module requirements
+  - Design key-value storage patterns for JG data structures
+  - Create storage helper APIs following SLC integration helper patterns
+  - Document encryption requirements and integration patterns
+  - Provide index recommendations for JG data access patterns
+
+**Next Steps for Silo Agent**:
+- ⏳ **IMMEDIATE**: Coordinate with Core Agent on JG module requirements and data structures
+- ⏳ **SHORT-TERM**: Design storage schemas for all JG modules (Months 1-3)
+- ⏳ **SHORT-TERM**: Implement storage helpers for JG modules (following Payment/Vault/Bank pattern)
+
+**Key Resources**:
+- Core Agent Coordination Plan: `docs/agent-communications/core_agent_coordination_plan_2025-12-29-105655-pst.md`
+- Core Agent Summary: `docs/agent-communications/core_agent_coordination_summary_2025-12-29-105655-pst.md`
+- Payment/Vault/Bank Storage Schema (reference pattern): `docs/grain_database/payment_vault_storage_schema.md`
 - SLC Integration Helpers (reference pattern): `src/grain_database/slc_integration.zig`
 
 ### Design Gaps Implementation Complete (2025-12-23-213951-pst) ✅
@@ -779,15 +807,21 @@ All core phases complete and ready for production use:
 
 ### Next Priorities
 1. **IMMEDIATE**: Coordinate with Core Agent on Payment/Passwords/Bank storage schema design approval
-2. **IMMEDIATE**: Support agents integrating all coordination decisions (timeout, error, auth, async)
-3. **IMMEDIATE**: Coordinate with Carry Agent on User Storage Helper integration — Ongoing
-4. **SHORT-TERM**: **SLC product integration (database support) — Priority 4 (NOW READY)** ✅
+2. **IMMEDIATE**: Coordinate with Core Agent on JG project module requirements and data structures
+3. **IMMEDIATE**: Support agents integrating all coordination decisions (timeout, error, auth, async)
+4. **IMMEDIATE**: Coordinate with Carry Agent on User Storage Helper integration — Ongoing
+5. **SHORT-TERM**: **JG Project Storage Schemas** (Months 1-3)
+   - Design storage schemas for all JG modules
+   - Create storage helper APIs following Payment/Vault/Bank pattern
+   - Document encryption requirements and integration patterns
+6. **SHORT-TERM**: **SLC product integration (database support) — Priority 4 (NOW READY)** ✅
    - Vantage Adaptation Framework complete — SLC product integration testing can proceed
    - Batch operations added for efficient bulk loading during testing
    - Coordinate with Aurora, Skate, and Workspace agents
-5. **MEDIUM-TERM**: Implement Payment/Passwords/Bank storage helpers once Core Agent begins Phase 1
-6. **MEDIUM-TERM**: Continue performance optimizations
-7. **MEDIUM-TERM**: Phase 10 (AArch64 Cloud Deployment) — Can proceed now that Vantage Priority 1 is complete
+7. **MEDIUM-TERM**: Implement Payment/Passwords/Bank storage helpers once Core Agent begins Phase 1
+8. **MEDIUM-TERM**: Implement JG project storage helpers (Months 1-3)
+9. **MEDIUM-TERM**: Continue performance optimizations
+10. **MEDIUM-TERM**: Phase 10 (AArch64 Cloud Deployment) — Can proceed now that Vantage Priority 1 is complete
 
 ---
 
@@ -796,10 +830,12 @@ All core phases complete and ready for production use:
 ### Ready to Coordinate
 - ✅ **Core Agent**:
   - **IMMEDIATE**: Payment/Passwords/Bank storage schema design approval (4-7 hours)
+  - **IMMEDIATE**: JG project module requirements and data structures coordination (for storage schema design)
   - **SHORT-TERM**: Update HTTP/WebSocket clients to use error types consistently (1 day)
   - **MEDIUM-TERM**: 429 status code support (add `too_many_requests` to HttpStatus enum)
   - SLC product integration coordination (Priority 4 now ready)
   - **All coordination decisions ready** ✅ (timeout, error, auth, async all complete)
+  - **JG Project**: Grainbank MMT integration, JG module foundation (Months 1-6)
 
 - ✅ **Aurora Agent**: 
   - SLC product integration (Nostr Profile Builder) — **Priority 4 now ready**
@@ -885,7 +921,15 @@ All core phases complete and ready for production use:
    - **Priority**: IMMEDIATE
    - **Why**: Unblocks storage helper implementation and Core Agent Phase 1
 
-2. **Flow Agent** (High Priority - for Carry Agent):
+2. **Core Agent** (IMMEDIATE - JG Project):
+   - **Topic**: JG project module requirements and data structures coordination
+   - **Time**: 2-4 hours for requirements gathering and coordination
+   - **Status**: ⏳ Ready for coordination
+   - **Action**: Coordinate with Core Agent on JG module requirements, data structures, and storage needs
+   - **Priority**: IMMEDIATE
+   - **Why**: Unblocks JG project storage schema design (Months 1-3)
+
+3. **Flow Agent** (High Priority - for Carry Agent):
    - **Topic**: Event Bus initialization for async pattern
    - **Time**: Coordination discussion needed
    - **Status**: ⏳ Waiting on Flow Agent
@@ -893,7 +937,7 @@ All core phases complete and ready for production use:
    - **Priority**: High (needed for full async operation, but synchronous fallback works for now)
    - **Requested By**: Carry Agent (2025-12-29-043000-pst)
 
-3. **Carry Agent** (Ongoing):
+4. **Carry Agent** (Ongoing):
    - **Topic**: Database API integration details (endpoint paths confirmation document created)
    - **Time**: Ongoing coordination as needed
    - **Status**: ✅ Service account token integration complete, ready for production testing
@@ -902,7 +946,7 @@ All core phases complete and ready for production use:
    - **Note**: Carry Agent has synchronous fallback working; async pattern pending Flow Agent Event Bus
    - **Document**: `docs/agent-communications/silo_agent_endpoint_paths_confirmation_2025-12-29-044000-pst.md` (NEW)
 
-4. **Core Agent** (Medium Priority - for Carry Agent):
+5. **Core Agent** (Medium Priority - for Carry Agent):
    - **Topic**: HTTP request event publishing for async pattern
    - **Time**: Check in 1-2 days on completion status
    - **Status**: ⏳ Implementation in progress (1-2 days remaining per coordination plan)
@@ -910,7 +954,7 @@ All core phases complete and ready for production use:
    - **Priority**: Medium (needed for full async operation, but synchronous fallback works for now)
    - **Requested By**: Carry Agent (2025-12-29-043000-pst)
 
-5. **Aurora/Skate/Workspace Agents** (Priority 4):
+6. **Aurora/Skate/Workspace Agents** (Priority 4):
    - **Topic**: SLC product integration testing coordination
    - **Time**: 1-2 hours for coordination discussion
    - **Status**: ⏳ Ready for coordination
@@ -944,6 +988,8 @@ All core phases complete and ready for production use:
 - **Integration Response (Carry)**: `docs/agent-communications/silo_agent_carry_integration_response_2025-12-23-194454-pst.md`
 - **Endpoint Paths Confirmation (Carry)**: `docs/agent-communications/silo_agent_endpoint_paths_confirmation_2025-12-29-044000-pst.md` (NEW)
 - **Coordination Readiness**: `docs/agent-communications/silo_agent_coordination_readiness_2025-12-29-042000-pst.md`
+- **Core Agent Coordination Plan (JG)**: `docs/agent-communications/core_agent_coordination_plan_2025-12-29-105655-pst.md` (NEW)
+- **Core Agent Summary (JG)**: `docs/agent-communications/core_agent_coordination_summary_2025-12-29-105655-pst.md` (NEW)
 
 ### Source Code
 - **User Storage Helper**: `src/grain_database/user_storage.zig`
@@ -983,4 +1029,6 @@ All core phases complete and ready for production use:
 
 **Status**: Ready for coordination and production use. No blockers. Priority 5 (Other Agent Coordination) — can proceed in parallel with other priorities. **All coordination decisions are ready for immediate integration by all agents** ✅ — HTTP/WebSocket timeout, error types, service-to-service authentication, and async pattern are all implemented and ready. **Payment/Vault/Bank storage schema design complete, ready for Core Agent approval** ✅. 
 
-**Check-In Needed**: ⏳ **IMMEDIATE** — Core Agent should review and approve Payment/Passwords/Bank storage schema design (4-7 hours). This unblocks storage helper implementation and Core Agent Phase 1.
+**Check-In Needed**: ⏳ **IMMEDIATE** — 
+1. Core Agent should review and approve Payment/Passwords/Bank storage schema design (4-7 hours). This unblocks storage helper implementation and Core Agent Phase 1.
+2. Core Agent should coordinate on JG project module requirements and data structures (2-4 hours). This unblocks JG project storage schema design (Months 1-3).

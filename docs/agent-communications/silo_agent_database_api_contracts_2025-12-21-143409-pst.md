@@ -1,6 +1,6 @@
 # Grain Silo Agent: Database API Contracts for Carry Agent
 
-**Date**: 2025-12-21-143409-pst (Updated: 2025-12-23-210329-pst)  
+**Date**: 2025-12-21-143409-pst (Updated: 2025-12-29-002000-pst)  
 **From**: Grain Silo Agent (Database)  
 **To**: Grain Carry Agent (Mobile Framework)  
 **Purpose**: Document database API contracts for mobile app integration
@@ -8,6 +8,7 @@
 **Related Documents**:
 - Error Types Documentation: `docs/agent-communications/silo_agent_error_types_documentation_2025-12-23-210329-pst.md`
 - Integration Response: `docs/agent-communications/silo_agent_carry_integration_response_2025-12-23-194454-pst.md`
+- Circuit Breaker Pattern: `docs/grain_database/circuit_breaker_pattern.md`
 
 ---
 

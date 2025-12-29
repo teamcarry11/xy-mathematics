@@ -10,6 +10,7 @@
 //! 2025-12-23-194527-pst: Phase 30 Text Selection tests
 //! 2025-12-23-210000-pst: Phase 31 Syntax Highlighting tests
 //! 2025-12-28-223816-pst: Phase 33 Bracket Matching tests
+//! 2025-12-29-001544-pst: Phase 35 Code Folding tests
 
 const std = @import("std");
 const testing = std.testing;
@@ -1148,4 +1149,105 @@ test "find matching bracket - multi-line" {
     try testing.expect(editor.bracket_match.line == 2);
     try testing.expect(editor.bracket_match.column == 0); // Position of closing '}'
     try testing.expect(editor.bracket_match.is_opening == true);
+}
+
+test "toggle code folding" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    try testing.expect(editor.code_folding_enabled == true);
+    editor.toggle_code_folding();
+    try testing.expect(editor.code_folding_enabled == false);
+    editor.toggle_code_folding();
+    try testing.expect(editor.code_folding_enabled == true);
+}
+
+test "detect fold ranges - simple function" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.zig");
+    _ = editor.insert_text("fn test() {\n    return;\n}");
+    editor.detect_fold_ranges();
+    try testing.expect(editor.fold_ranges_len >= 1);
+    try testing.expect(editor.fold_ranges[0].start_line == 0);
+    try testing.expect(editor.fold_ranges[0].end_line == 2);
+}
+
+test "detect fold ranges - nested blocks" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.zig");
+    _ = editor.insert_text("fn test() {\n    if (true) {\n        return;\n    }\n}");
+    editor.detect_fold_ranges();
+    try testing.expect(editor.fold_ranges_len >= 1);
+}
+
+test "toggle fold" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.zig");
+    _ = editor.insert_text("fn test() {\n    return;\n}");
+    editor.detect_fold_ranges();
+    try testing.expect(editor.fold_ranges_len >= 1);
+    try testing.expect(editor.fold_ranges[0].folded == false);
+    const result = editor.toggle_fold(0);
+    try testing.expect(result == true);
+    try testing.expect(editor.fold_ranges[0].folded == true);
+}
+
+test "is folded" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.zig");
+    _ = editor.insert_text("fn test() {\n    return;\n}");
+    editor.detect_fold_ranges();
+    _ = editor.toggle_fold(0);
+    try testing.expect(editor.is_folded(1) == true);
+    try testing.expect(editor.is_folded(0) == false);
+}
+
+test "fold all" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.zig");
+    _ = editor.insert_text("fn test1() {\n    return;\n}\nfn test2() {\n    return;\n}");
+    editor.detect_fold_ranges();
+    editor.fold_all();
+    var i: u32 = 0;
+    while (i < editor.fold_ranges_len) : (i += 1) {
+        try testing.expect(editor.fold_ranges[i].folded == true);
+    }
+}
+
+test "unfold all" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.zig");
+    _ = editor.insert_text("fn test() {\n    return;\n}");
+    editor.detect_fold_ranges();
+    editor.fold_all();
+    editor.unfold_all();
+    var i: u32 = 0;
+    while (i < editor.fold_ranges_len) : (i += 1) {
+        try testing.expect(editor.fold_ranges[i].folded == false);
+    }
+}
+
+test "code folding disabled" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.zig");
+    _ = editor.insert_text("fn test() {\n    return;\n}");
+    editor.code_folding_enabled = false;
+    editor.detect_fold_ranges();
+    try testing.expect(editor.fold_ranges_len == 0);
+    try testing.expect(editor.is_folded(1) == false);
+    try testing.expect(editor.toggle_fold(0) == false);
 }

@@ -10,6 +10,7 @@
 //! 2025-12-23-194527-pst: Phase 30 Text Selection
 //! 2025-12-23-210000-pst: Phase 31 Syntax Highlighting
 //! 2025-12-28-223816-pst: Phase 33 Bracket Matching
+//! 2025-12-29-001544-pst: Phase 35 Code Folding
 
 const std = @import("std");
 const grain_core = @import("grain_core");
@@ -41,6 +42,10 @@ pub const MAX_SYNTAX_TOKENS_PER_LINE: u32 = 256;
 // Bounded: Max bracket pairs for matching (explicit limit)
 // 2025-12-28-223816-pst: Phase 33 Bracket Matching
 pub const MAX_BRACKET_PAIRS: u32 = 64;
+
+// Bounded: Max fold ranges (explicit limit)
+// 2025-12-29-001544-pst: Phase 35 Code Folding
+pub const MAX_FOLD_RANGES: u32 = 256;
 
 // Bounded: Max line length (explicit limit, in bytes)
 // 2025-12-20-161231-pst: Phase 17 SLC v1.0
@@ -252,6 +257,30 @@ pub const BracketMatch = struct {
     }
 };
 
+// Fold range structure for code folding.
+// 2025-12-29-001544-pst: Phase 35 Code Folding
+pub const FoldRange = struct {
+    start_line: u32, // Start line of foldable block (0-indexed)
+    end_line: u32, // End line of foldable block (0-indexed, inclusive)
+    folded: bool, // Whether this range is currently folded
+    fold_level: u32, // Nesting level (0 = top level)
+
+    pub fn init(start: u32, end: u32, level: u32) FoldRange {
+        std.debug.assert(start <= end);
+        return FoldRange{
+            .start_line = start,
+            .end_line = end,
+            .folded = false,
+            .fold_level = level,
+        };
+    }
+
+    pub fn toggle(self: *FoldRange) void {
+        std.debug.assert(@intFromPtr(self) != 0);
+        self.folded = !self.folded;
+    }
+};
+
 // Text Editor application state.
 // 2025-12-20-161231-pst: Phase 17 SLC v1.0
 pub const TextEditor = struct {
@@ -278,6 +307,9 @@ pub const TextEditor = struct {
     clipboard_len: u32,
     bracket_matching_enabled: bool, // Enable bracket matching
     bracket_match: BracketMatch, // Current bracket match result
+    fold_ranges: [MAX_FOLD_RANGES]FoldRange, // Fold ranges for code blocks
+    fold_ranges_len: u32, // Number of active fold ranges
+    code_folding_enabled: bool, // Enable code folding
     allocator: std.mem.Allocator,
 
     /// Initialize text editor.
@@ -310,6 +342,9 @@ pub const TextEditor = struct {
             .clipboard_len = 0,
             .bracket_matching_enabled = true,
             .bracket_match = BracketMatch.init(),
+            .fold_ranges = undefined,
+            .fold_ranges_len = 0,
+            .code_folding_enabled = true,
             .allocator = allocator,
         };
 
@@ -317,6 +352,12 @@ pub const TextEditor = struct {
         var i: u32 = 0;
         while (i < MAX_LINES) : (i += 1) {
             editor.lines[i] = TextLine.init();
+        }
+
+        // Initialize fold ranges
+        i = 0;
+        while (i < MAX_FOLD_RANGES) : (i += 1) {
+            editor.fold_ranges[i] = FoldRange.init(0, 0, 0);
         }
 
         // Initialize undo history
@@ -2176,6 +2217,136 @@ pub const TextEditor = struct {
                 line_idx -= 1;
                 col_idx = if (self.lines[line_idx].content_len > 0) self.lines[line_idx].content_len - 1 else 0;
             }
+        }
+    }
+
+    /// Toggle code folding on/off.
+    // 2025-12-29-001544-pst: Phase 35 Code Folding
+    pub fn toggle_code_folding(self: *TextEditor) void {
+        std.debug.assert(@intFromPtr(self) != 0);
+        self.code_folding_enabled = !self.code_folding_enabled;
+        if (!self.code_folding_enabled) {
+            self.fold_ranges_len = 0;
+        }
+        std.debug.assert(self.fold_ranges_len == 0 or self.code_folding_enabled);
+    }
+
+    /// Detect code blocks and create fold ranges.
+    // 2025-12-29-001544-pst: Phase 35 Code Folding
+    pub fn detect_fold_ranges(self: *TextEditor) void {
+        std.debug.assert(@intFromPtr(self) != 0);
+        std.debug.assert(self.lines_len > 0);
+
+        if (!self.code_folding_enabled) {
+            self.fold_ranges_len = 0;
+            return;
+        }
+
+        self.fold_ranges_len = 0;
+
+        var line_idx: u32 = 0;
+        var depth: u32 = 0;
+        var block_start: ?u32 = null;
+
+        while (line_idx < self.lines_len and self.fold_ranges_len < MAX_FOLD_RANGES) : (line_idx += 1) {
+            const line = &self.lines[line_idx];
+            const content = line.content[0..line.content_len];
+
+            var i: u32 = 0;
+            while (i < content.len) : (i += 1) {
+                if (content[i] == '{') {
+                    if (block_start == null) {
+                        block_start = line_idx;
+                    }
+                    depth += 1;
+                } else if (content[i] == '}') {
+                    if (depth > 0) {
+                        depth -= 1;
+                        if (depth == 0 and block_start != null) {
+                            const start = block_start.?;
+                            if (line_idx > start) {
+                                self.fold_ranges[self.fold_ranges_len] = FoldRange.init(start, line_idx, 0);
+                                self.fold_ranges_len += 1;
+                            }
+                            block_start = null;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /// Toggle fold state at a specific line.
+    // 2025-12-29-001544-pst: Phase 35 Code Folding
+    pub fn toggle_fold(self: *TextEditor, line_idx: u32) bool {
+        std.debug.assert(@intFromPtr(self) != 0);
+        std.debug.assert(self.lines_len > 0);
+        std.debug.assert(line_idx < self.lines_len);
+
+        if (!self.code_folding_enabled) {
+            return false;
+        }
+
+        var i: u32 = 0;
+        while (i < self.fold_ranges_len) : (i += 1) {
+            const range = &self.fold_ranges[i];
+            if (range.start_line == line_idx) {
+                range.toggle();
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// Check if a line is folded.
+    // 2025-12-29-001544-pst: Phase 35 Code Folding
+    pub fn is_folded(self: *const TextEditor, line_idx: u32) bool {
+        std.debug.assert(@intFromPtr(self) != 0);
+        std.debug.assert(line_idx < self.lines_len);
+
+        if (!self.code_folding_enabled) {
+            return false;
+        }
+
+        var i: u32 = 0;
+        while (i < self.fold_ranges_len) : (i += 1) {
+            const range = &self.fold_ranges[i];
+            if (range.folded and line_idx > range.start_line and line_idx <= range.end_line) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// Fold all foldable blocks.
+    // 2025-12-29-001544-pst: Phase 35 Code Folding
+    pub fn fold_all(self: *TextEditor) void {
+        std.debug.assert(@intFromPtr(self) != 0);
+
+        if (!self.code_folding_enabled) {
+            return;
+        }
+
+        var i: u32 = 0;
+        while (i < self.fold_ranges_len) : (i += 1) {
+            self.fold_ranges[i].folded = true;
+        }
+    }
+
+    /// Unfold all folded blocks.
+    // 2025-12-29-001544-pst: Phase 35 Code Folding
+    pub fn unfold_all(self: *TextEditor) void {
+        std.debug.assert(@intFromPtr(self) != 0);
+
+        if (!self.code_folding_enabled) {
+            return;
+        }
+
+        var i: u32 = 0;
+        while (i < self.fold_ranges_len) : (i += 1) {
+            self.fold_ranges[i].folded = false;
         }
     }
 };

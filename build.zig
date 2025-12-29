@@ -5319,6 +5319,20 @@ pub fn build(b: *std.Build) void {
     const get_resource_usage_tests_run = b.addRunArtifact(get_resource_usage_tests);
     test_step.dependOn(&get_resource_usage_tests_run.step);
 
+    // Set resource limit tests (Priority 1)
+    const set_resource_limit_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/118_set_resource_limit_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "basin_kernel", .module = basin_kernel_module },
+            },
+        }),
+    });
+    const set_resource_limit_tests_run = b.addRunArtifact(set_resource_limit_tests);
+    test_step.dependOn(&set_resource_limit_tests_run.step);
+
     const syscall_timeout_tests = b.addTest(.{
         .root_module = b.createModule(.{
             .root_source_file = b.path("tests/117_syscall_timeout_test.zig"),

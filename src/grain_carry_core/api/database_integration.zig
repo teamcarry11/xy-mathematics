@@ -12,6 +12,7 @@ const models = @import("models.zig");
 const grain_core_api = @import("../../grain_core/api_server.zig");
 const grain_core_json = @import("../../grain_core/json_helpers.zig");
 const grain_core_http = @import("../../grain_core/http_client.zig");
+const grain_core_http_errors = @import("../../grain_core/http_errors.zig");
 const grain_core_auth = @import("../../grain_core/auth_service.zig");
 const grain_flow_event_bus = @import("../../grain_flow/event_bus.zig");
 const auth_service_integration = @import("auth_service_integration.zig");
@@ -118,6 +119,11 @@ const CARRY_AGENT_ID: u32 = 6;
 // Default timeout for API calls (30 seconds in milliseconds).
 const DEFAULT_API_TIMEOUT_MS: u32 = 30000;
 
+// Retry configuration.
+const MAX_RETRIES: u32 = 3;
+const INITIAL_BACKOFF_MS: u32 = 1000; // 1 second
+const MAX_BACKOFF_MS: u32 = 8000; // 8 seconds
+
 // Initialize module (called during agent initialization).
 pub fn init_module() void {
     init_request_contexts();
@@ -163,14 +169,11 @@ fn get_service_account_token(token_out: []u8) u32 {
 }
 
 // Set timeout on HTTP request.
-// TODO: Once Core Agent adds timeout_ms field to HttpClientRequest, set it here
 fn set_request_timeout(request: *grain_core_http.HttpClientRequest, timeout_ms: u32) void {
     std.debug.assert(request != null);
     std.debug.assert(timeout_ms > 0);
-    // TODO: Once Core Agent implements timeout support:
-    //   request.timeout_ms = timeout_ms;
-    _ = request;
-    _ = timeout_ms;
+    request.set_timeout(timeout_ms);
+    std.debug.assert(request.timeout_ms > 0);
 }
 
 // URL encode a string for query parameters.
@@ -261,6 +264,7 @@ fn build_user_json_body(user_data: *const UserData, body_out: []u8) ?u32 {
 }
 
 // Create user in database.
+// Implements retry logic with exponential backoff for transient failures.
 pub fn create_user(user_data: *const UserData) DatabaseResult {
     std.debug.assert(user_data != null);
     std.debug.assert(user_data.user_id_len > 0);
@@ -283,38 +287,64 @@ pub fn create_user(user_data: *const UserData) DatabaseResult {
     std.mem.copyForwards(u8, path_buf[path_len..], users_path[0..users_path_len]);
     path_len += @intCast(users_path_len);
     std.debug.assert(path_len <= 1024);
-    const request = http_client_integration.create_external_request(
-        .post,
-        path_buf[0..path_len],
-    ) orelse {
-        return DatabaseResult.connection_error;
-    };
-    // Set timeout (30s default for API calls).
-    set_request_timeout(request, DEFAULT_API_TIMEOUT_MS);
-    // Add authentication header for write operations.
-    var service_token: [grain_core_auth.MAX_JWT_LEN]u8 = undefined;
-    const token_len = get_service_account_token(&service_token);
-    if (token_len > 0) {
-        const bearer_header = "Bearer ";
-        var auth_header: [grain_core_auth.MAX_JWT_LEN + 7]u8 = undefined;
-        var auth_header_len: u32 = 0;
-        const bearer_len = @min(bearer_header.len, auth_header.len - auth_header_len);
-        std.mem.copyForwards(u8, auth_header[auth_header_len..], bearer_header[0..bearer_len]);
-        auth_header_len += bearer_len;
-        const token_len_safe = @min(token_len, auth_header.len - auth_header_len);
-        std.mem.copyForwards(u8, auth_header[auth_header_len..], service_token[0..token_len_safe]);
-        auth_header_len += token_len_safe;
-        _ = http_client_integration.add_external_header(request, "Authorization", auth_header[0..auth_header_len]);
-    }
     var json_body: [MAX_USER_JSON_LEN]u8 = undefined;
     const body_len = build_user_json_body(user_data, &json_body) orelse {
         return DatabaseResult.internal_error;
-    };
-    if (!http_client_integration.set_external_body(request, json_body[0..body_len])) {
-        return DatabaseResult.internal_error;
     }
-    _ = http_client_integration.add_external_header(request, "Content-Type", "application/json");
-    return DatabaseResult.success;
+    // Retry loop for transient failures.
+    var attempt: u32 = 0;
+    while (attempt <= MAX_RETRIES) : (attempt += 1) {
+        const request = http_client_integration.create_external_request(
+            .post,
+            path_buf[0..path_len],
+            DEFAULT_API_TIMEOUT_MS,
+        ) orelse {
+            if (attempt < MAX_RETRIES) {
+                const backoff_ms = calculate_backoff_ms(attempt);
+                std.time.sleep(backoff_ms * 1_000_000);
+                continue;
+            }
+            return DatabaseResult.connection_error;
+        };
+        // Add authentication header for write operations.
+        var service_token: [grain_core_auth.MAX_JWT_LEN]u8 = undefined;
+        const token_len = get_service_account_token(&service_token);
+        if (token_len > 0) {
+            const bearer_header = "Bearer ";
+            var auth_header: [grain_core_auth.MAX_JWT_LEN + 7]u8 = undefined;
+            var auth_header_len: u32 = 0;
+            const bearer_len = @min(bearer_header.len, auth_header.len - auth_header_len);
+            std.mem.copyForwards(u8, auth_header[auth_header_len..], bearer_header[0..bearer_len]);
+            auth_header_len += bearer_len;
+            const token_len_safe = @min(token_len, auth_header.len - auth_header_len);
+            std.mem.copyForwards(u8, auth_header[auth_header_len..], service_token[0..token_len_safe]);
+            auth_header_len += token_len_safe;
+            _ = http_client_integration.add_external_header(request, "Authorization", auth_header[0..auth_header_len]);
+        }
+        if (!http_client_integration.set_external_body(request, json_body[0..body_len])) {
+            if (attempt < MAX_RETRIES) {
+                const backoff_ms = calculate_backoff_ms(attempt);
+                std.time.sleep(backoff_ms * 1_000_000);
+                continue;
+            }
+            return DatabaseResult.internal_error;
+        }
+        _ = http_client_integration.add_external_header(request, "Content-Type", "application/json");
+        // Check response for write operations.
+        var response: ?grain_core_api.HttpResponse = null;
+        const check_result = check_request_response(request, &response);
+        if (check_result == DatabaseResult.success and response) |resp| {
+            return http_status_to_db_result(resp.status);
+        }
+        // Retry on retryable errors.
+        if (is_db_result_retryable(check_result) and attempt < MAX_RETRIES) {
+            const backoff_ms = calculate_backoff_ms(attempt);
+            std.time.sleep(backoff_ms * std.time.ns_per_ms);
+            continue;
+        }
+        return check_result;
+    }
+    return DatabaseResult.connection_error;
 }
 
 // Request context for async response handling.
@@ -340,6 +370,7 @@ fn init_request_contexts() void {
 
 // Get user from database by user_id.
 // Uses event-driven async pattern: subscribes to http_request_completed event.
+// Implements retry logic with exponential backoff for transient failures.
 pub fn get_user_by_id(user_id: []const u8, user_out: *UserData) DatabaseResult {
     std.debug.assert(user_id.len > 0);
     std.debug.assert(user_id.len <= models.MAX_USER_ID_LEN);
@@ -365,34 +396,50 @@ pub fn get_user_by_id(user_id: []const u8, user_out: *UserData) DatabaseResult {
     std.mem.copyForwards(u8, path_buf[path_len..], user_id[0..user_id_len]);
     path_len += @intCast(user_id_len);
     std.debug.assert(path_len <= 1024);
-    const request = http_client_integration.create_external_request(
-        .get,
-        path_buf[0..path_len],
-    ) orelse {
-        return DatabaseResult.connection_error;
-    };
-    // Set timeout (30s default for API calls).
-    set_request_timeout(request, DEFAULT_API_TIMEOUT_MS);
-    // Subscribe to HTTP request completion events if event bus is available.
-    const event_bus = get_event_bus();
-    if (event_bus) |bus| {
-        // TODO: Once Core Agent publishes http_request_completed events with request_id in payload:
-        //   Subscribe to http_request_completed and http_request_failed events
-        //   Store request context for async handling
-        //   Return success immediately (response will be processed in event handler)
-        _ = bus;
+    // Retry loop for transient failures.
+    var attempt: u32 = 0;
+    while (attempt <= MAX_RETRIES) : (attempt += 1) {
+        const request = http_client_integration.create_external_request(
+            .get,
+            path_buf[0..path_len],
+            DEFAULT_API_TIMEOUT_MS,
+        ) orelse {
+            if (attempt < MAX_RETRIES) {
+                const backoff_ms = calculate_backoff_ms(attempt);
+                std.time.sleep(backoff_ms * 1_000_000);
+                continue;
+            }
+            return DatabaseResult.connection_error;
+        };
+        // Subscribe to HTTP request completion events if event bus is available.
+        const event_bus = get_event_bus();
+        if (event_bus) |bus| {
+            // TODO: Once Core Agent publishes http_request_completed events with request_id in payload:
+            //   Subscribe to http_request_completed and http_request_failed events
+            //   Store request context for async handling
+            //   Return success immediately (response will be processed in event handler)
+            _ = bus;
+        }
+        // For now, check request state synchronously (will be async once Core Agent implements event publishing).
+        var response: ?grain_core_api.HttpResponse = null;
+        const check_result = check_request_response(request, &response);
+        if (check_result == DatabaseResult.success and response) |resp| {
+            return process_user_response(&resp, user_out);
+        }
+        // Retry on retryable errors.
+        if (is_db_result_retryable(check_result) and attempt < MAX_RETRIES) {
+            const backoff_ms = calculate_backoff_ms(attempt);
+            std.time.sleep(backoff_ms * std.time.ns_per_ms);
+            continue;
+        }
+        return check_result;
     }
-    // For now, check request state synchronously (will be async once Core Agent implements event publishing).
-    var response: ?grain_core_api.HttpResponse = null;
-    const check_result = check_request_response(request, &response);
-    if (check_result == DatabaseResult.success and response) |resp| {
-        return process_user_response(&resp, user_out);
-    }
-    return check_result;
+    return DatabaseResult.connection_error;
 }
 
 // Get user from database by email.
 // Uses event-driven async pattern: subscribes to http_request_completed event.
+// Implements retry logic with exponential backoff for transient failures.
 pub fn get_user_by_email(email: []const u8, user_out: *UserData) DatabaseResult {
     std.debug.assert(email.len > 0);
     std.debug.assert(email.len <= models.MAX_EMAIL_LEN);
@@ -422,33 +469,49 @@ pub fn get_user_by_email(email: []const u8, user_out: *UserData) DatabaseResult 
     std.mem.copyForwards(u8, path_buf[path_len..], email_encoded[0..email_encoded_len_safe]);
     path_len += email_encoded_len_safe;
     std.debug.assert(path_len <= 1024);
-    const request = http_client_integration.create_external_request(
-        .get,
-        path_buf[0..path_len],
-    ) orelse {
-        return DatabaseResult.connection_error;
-    };
-    // Set timeout (30s default for API calls).
-    set_request_timeout(request, DEFAULT_API_TIMEOUT_MS);
-    // Subscribe to HTTP request completion events if event bus is available.
-    const event_bus = get_event_bus();
-    if (event_bus) |bus| {
-        // TODO: Once Core Agent publishes http_request_completed events with request_id in payload:
-        //   Subscribe to http_request_completed and http_request_failed events
-        //   Store request context for async handling
-        //   Return success immediately (response will be processed in event handler)
-        _ = bus;
+    // Retry loop for transient failures.
+    var attempt: u32 = 0;
+    while (attempt <= MAX_RETRIES) : (attempt += 1) {
+        const request = http_client_integration.create_external_request(
+            .get,
+            path_buf[0..path_len],
+            DEFAULT_API_TIMEOUT_MS,
+        ) orelse {
+            if (attempt < MAX_RETRIES) {
+                const backoff_ms = calculate_backoff_ms(attempt);
+                std.time.sleep(backoff_ms * 1_000_000);
+                continue;
+            }
+            return DatabaseResult.connection_error;
+        };
+        // Subscribe to HTTP request completion events if event bus is available.
+        const event_bus = get_event_bus();
+        if (event_bus) |bus| {
+            // TODO: Once Core Agent publishes http_request_completed events with request_id in payload:
+            //   Subscribe to http_request_completed and http_request_failed events
+            //   Store request context for async handling
+            //   Return success immediately (response will be processed in event handler)
+            _ = bus;
+        }
+        // For now, check request state synchronously (will be async once Core Agent implements event publishing).
+        var response: ?grain_core_api.HttpResponse = null;
+        const check_result = check_request_response(request, &response);
+        if (check_result == DatabaseResult.success and response) |resp| {
+            return process_user_response(&resp, user_out);
+        }
+        // Retry on retryable errors.
+        if (is_db_result_retryable(check_result) and attempt < MAX_RETRIES) {
+            const backoff_ms = calculate_backoff_ms(attempt);
+            std.time.sleep(backoff_ms * std.time.ns_per_ms);
+            continue;
+        }
+        return check_result;
     }
-    // For now, check request state synchronously (will be async once Core Agent implements event publishing).
-    var response: ?grain_core_api.HttpResponse = null;
-    const check_result = check_request_response(request, &response);
-    if (check_result == DatabaseResult.success and response) |resp| {
-        return process_user_response(&resp, user_out);
-    }
-    return check_result;
+    return DatabaseResult.connection_error;
 }
 
 // Update user in database.
+// Implements retry logic with exponential backoff for transient failures.
 pub fn update_user(user_id: []const u8, user_data: *const UserData) DatabaseResult {
     std.debug.assert(user_id.len > 0);
     std.debug.assert(user_id.len <= models.MAX_USER_ID_LEN);
@@ -480,38 +543,64 @@ pub fn update_user(user_id: []const u8, user_data: *const UserData) DatabaseResu
     std.mem.copyForwards(u8, path_buf[path_len..], user_id[0..user_id_len]);
     path_len += @intCast(user_id_len);
     std.debug.assert(path_len <= 1024);
-    const request = http_client_integration.create_external_request(
-        .put,
-        path_buf[0..path_len],
-    ) orelse {
-        return DatabaseResult.connection_error;
-    };
-    // Set timeout (30s default for API calls).
-    set_request_timeout(request, DEFAULT_API_TIMEOUT_MS);
-    // Add authentication header for write operations.
-    var service_token: [grain_core_auth.MAX_JWT_LEN]u8 = undefined;
-    const token_len = get_service_account_token(&service_token);
-    if (token_len > 0) {
-        const bearer_header = "Bearer ";
-        var auth_header: [grain_core_auth.MAX_JWT_LEN + 7]u8 = undefined;
-        var auth_header_len: u32 = 0;
-        const bearer_len = @min(bearer_header.len, auth_header.len - auth_header_len);
-        std.mem.copyForwards(u8, auth_header[auth_header_len..], bearer_header[0..bearer_len]);
-        auth_header_len += bearer_len;
-        const token_len_safe = @min(token_len, auth_header.len - auth_header_len);
-        std.mem.copyForwards(u8, auth_header[auth_header_len..], service_token[0..token_len_safe]);
-        auth_header_len += token_len_safe;
-        _ = http_client_integration.add_external_header(request, "Authorization", auth_header[0..auth_header_len]);
-    }
     var json_body: [MAX_USER_JSON_LEN]u8 = undefined;
     const body_len = build_user_json_body(user_data, &json_body) orelse {
         return DatabaseResult.internal_error;
-    };
-    if (!http_client_integration.set_external_body(request, json_body[0..body_len])) {
-        return DatabaseResult.internal_error;
     }
-    _ = http_client_integration.add_external_header(request, "Content-Type", "application/json");
-    return DatabaseResult.success;
+    // Retry loop for transient failures.
+    var attempt: u32 = 0;
+    while (attempt <= MAX_RETRIES) : (attempt += 1) {
+        const request = http_client_integration.create_external_request(
+            .put,
+            path_buf[0..path_len],
+            DEFAULT_API_TIMEOUT_MS,
+        ) orelse {
+            if (attempt < MAX_RETRIES) {
+                const backoff_ms = calculate_backoff_ms(attempt);
+                std.time.sleep(backoff_ms * 1_000_000);
+                continue;
+            }
+            return DatabaseResult.connection_error;
+        };
+        // Add authentication header for write operations.
+        var service_token: [grain_core_auth.MAX_JWT_LEN]u8 = undefined;
+        const token_len = get_service_account_token(&service_token);
+        if (token_len > 0) {
+            const bearer_header = "Bearer ";
+            var auth_header: [grain_core_auth.MAX_JWT_LEN + 7]u8 = undefined;
+            var auth_header_len: u32 = 0;
+            const bearer_len = @min(bearer_header.len, auth_header.len - auth_header_len);
+            std.mem.copyForwards(u8, auth_header[auth_header_len..], bearer_header[0..bearer_len]);
+            auth_header_len += bearer_len;
+            const token_len_safe = @min(token_len, auth_header.len - auth_header_len);
+            std.mem.copyForwards(u8, auth_header[auth_header_len..], service_token[0..token_len_safe]);
+            auth_header_len += token_len_safe;
+            _ = http_client_integration.add_external_header(request, "Authorization", auth_header[0..auth_header_len]);
+        }
+        if (!http_client_integration.set_external_body(request, json_body[0..body_len])) {
+            if (attempt < MAX_RETRIES) {
+                const backoff_ms = calculate_backoff_ms(attempt);
+                std.time.sleep(backoff_ms * 1_000_000);
+                continue;
+            }
+            return DatabaseResult.internal_error;
+        }
+        _ = http_client_integration.add_external_header(request, "Content-Type", "application/json");
+        // Check response for write operations.
+        var response: ?grain_core_api.HttpResponse = null;
+        const check_result = check_request_response(request, &response);
+        if (check_result == DatabaseResult.success and response) |resp| {
+            return http_status_to_db_result(resp.status);
+        }
+        // Retry on retryable errors.
+        if (is_db_result_retryable(check_result) and attempt < MAX_RETRIES) {
+            const backoff_ms = calculate_backoff_ms(attempt);
+            std.time.sleep(backoff_ms * std.time.ns_per_ms);
+            continue;
+        }
+        return check_result;
+    }
+    return DatabaseResult.connection_error;
 }
 
 // Parse user data from JSON response.
@@ -601,10 +690,15 @@ pub fn check_request_response(
     std.debug.assert(request != null);
     std.debug.assert(response_out != null);
     response_out.* = null;
-    // TODO: Once Core Agent implements timeout checking in HTTP client:
-    //   Check if request timed out using request.timeout_expired or similar field
-    //   Return DatabaseResult.timeout_error if timeout exceeded
+    // Check if request timed out using Core Agent's is_timed_out() function.
+    const current_time = std.time.nanoTimestamp();
+    if (request.is_timed_out(current_time)) {
+        return DatabaseResult.timeout_error;
+    }
     if (http_client_integration.is_request_failed(request)) {
+        if (http_client_integration.get_request_error(request)) |err| {
+            return http_error_to_db_result(err);
+        }
         return DatabaseResult.connection_error;
     }
     if (!http_client_integration.is_request_completed(request)) {
@@ -616,6 +710,48 @@ pub fn check_request_response(
         return DatabaseResult.success;
     }
     return DatabaseResult.connection_error;
+}
+
+// Convert HTTP client error to database result.
+pub fn http_error_to_db_result(err: grain_core_http_errors.HttpClientError) DatabaseResult {
+    return switch (err) {
+        .timeout => DatabaseResult.timeout_error,
+        .network_error => DatabaseResult.connection_error,
+        .dns_error => DatabaseResult.connection_error,
+        .connection_refused => DatabaseResult.connection_error,
+        .rate_limit => DatabaseResult.rate_limit_error,
+        .server_error => DatabaseResult.internal_error,
+        .invalid_response => DatabaseResult.validation_error,
+    };
+}
+
+// Check if database result indicates a retryable error.
+fn is_db_result_retryable(result: DatabaseResult) bool {
+    return switch (result) {
+        .timeout_error => true,
+        .connection_error => true,
+        .rate_limit_error => true,
+        .internal_error => true,
+        .success, .not_found, .validation_error => false,
+    };
+}
+
+// Calculate exponential backoff delay in milliseconds.
+// Returns delay for attempt number (0-indexed): 1s, 2s, 4s, 8s (capped).
+fn calculate_backoff_ms(attempt: u32) u32 {
+    std.debug.assert(attempt < MAX_RETRIES);
+    const base_delay = INITIAL_BACKOFF_MS;
+    var delay: u64 = base_delay;
+    var i: u32 = 0;
+    while (i < attempt) : (i += 1) {
+        delay *= 2;
+        if (delay > MAX_BACKOFF_MS) {
+            delay = MAX_BACKOFF_MS;
+            break;
+        }
+    }
+    std.debug.assert(delay <= MAX_BACKOFF_MS);
+    return @intCast(delay);
 }
 
 // Convert HTTP status to database result.

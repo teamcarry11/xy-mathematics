@@ -1,13 +1,13 @@
 # Grain Carry Agent: Core Coordination Status
 
 **Agent**: Grain Carry Agent (6th Agent)  
-**Last Updated**: 2025-12-28-162350-pst
+**Last Updated**: 2025-12-28-180215-pst
 
 ---
 
 ## Current Status
 
-**Phase**: Database Integration Enhanced — Implementation Complete — Core Agent Timeout/Error Handling Complete ✅ — Ready for Integration
+**Phase**: Database Integration Enhanced — Timeout/Error Handling Integrated ✅ — Core Agent Authentication/Async In Progress
 
 **Recent Completions**:
 - ✅ Database integration foundation (2025-12-20-181029-pst)
@@ -59,6 +59,12 @@
   - ⏳ Service-to-service authentication in progress (2-3 days remaining)
   - ⏳ Async pattern integration in progress (1-2 days remaining)
   - ⏳ Update HTTP/WebSocket clients to use error types (1 day remaining)
+- ✅ Retry logic implementation complete (2025-12-29-170803-pst)
+  - ✅ Exponential backoff helper function (`calculate_backoff_ms`)
+  - ✅ Retryability check function (`is_db_result_retryable`)
+  - ✅ Retry logic integrated into all database operations (`get_user_by_id`, `get_user_by_email`, `create_user`, `update_user`)
+  - ✅ Max 3 retries with exponential backoff (1s, 2s, 4s, capped at 8s)
+  - ✅ Retries only on retryable errors (timeout, connection_error, rate_limit_error, internal_error)
 
 **Current Work**:
 - Database integration module complete with JSON request/response handling
@@ -66,9 +72,9 @@
 - Code structure improved and ready for async HTTP response handling integration
 - Error handling aligned with Silo Agent's error format
 - Validation and helper functions complete
-- **Design gaps identified**: 12 gaps documented (2 Critical ✅ RESOLVED & IMPLEMENTED, 3 High Priority, 2 Medium, 5 Low)
-- **Status**: Implementation complete — Core Agent timeout/error handling complete ✅
-- **Status**: Ready to integrate HTTP/WebSocket timeout and error handling (available now)
+- **Design gaps identified**: 12 gaps documented (2 Critical ✅ RESOLVED & IMPLEMENTED, 1 High Priority ✅ IMPLEMENTED, 2 High Priority, 2 Medium, 5 Low)
+- **Status**: Timeout/error handling integrated ✅ — Core Agent features now active
+- **Status**: All database operations use timeout (30s default) and error handling
 - **Status**: Code ready with synchronous fallback — Will switch to async once Core Agent publishes events
 - **Status**: Service-to-service authentication and async pattern still in progress (2-3 days remaining)
 
@@ -96,10 +102,11 @@
 
 ### High Priority Gaps (Should Fix)
 
-3. **Retry Logic for Transient Failures** ⚠️ **HIGH PRIORITY**
+3. **Retry Logic for Transient Failures** ✅ **IMPLEMENTED**
    - **Issue**: No retry logic for transient failures (network errors, 503 Service Unavailable)
    - **Impact**: Transient network issues cause permanent failures
-   - **Status**: ⏳ **IMPLEMENTATION NEEDED** — Can implement independently after async pattern
+   - **Implementation** (2025-12-29-170803-pst): Exponential backoff retry logic (max 3 retries, 1s/2s/4s backoff)
+   - **Status**: ✅ **IMPLEMENTATION COMPLETE** — All database operations now retry on transient failures
 
 4. **Rate Limiting Handling** ⚠️ **HIGH PRIORITY**
    - **Issue**: No handling for 429 Too Many Requests responses
@@ -692,13 +699,14 @@ database_integration.init_module();
 - Production integration once all coordination complete
 
 **Immediate Next Steps for Carry Agent**:
-1. ✅ **IMMEDIATE**: Update `set_request_timeout()` to use `timeout_ms` field (field now exists)
-2. ✅ **IMMEDIATE**: Update `check_request_response()` to use `is_timed_out()` function
-3. ✅ **IMMEDIATE**: Integrate `HttpClientError` enum for error handling
-4. ✅ **IMMEDIATE**: Update error handling to use Core Agent's error types
-5. Can proceed with retry logic implementation (doesn't depend on Core Agent)
-6. Can continue coordinating with Silo Agent on database integration approach
-7. Can work on other mobile framework features
+1. ✅ **COMPLETE**: Updated `set_request_timeout()` to use `request.set_timeout()` method
+2. ✅ **COMPLETE**: Updated `check_request_response()` to use `is_timed_out()` function
+3. ✅ **COMPLETE**: Integrated `HttpClientError` enum for error handling
+4. ✅ **COMPLETE**: Added `http_error_to_db_result()` helper function
+5. ✅ **COMPLETE**: Updated all `create_external_request()` calls to pass timeout parameter
+6. **SHORT-TERM**: Can proceed with retry logic implementation (doesn't depend on Core Agent)
+7. **SHORT-TERM**: Can continue coordinating with Silo Agent on database integration approach
+8. **SHORT-TERM**: Can work on other mobile framework features
 
 ---
 
@@ -715,20 +723,25 @@ database_integration.init_module();
 **Current Implementation**:
 - **Module**: `src/grain_carry_core/api/database_integration.zig`
 - **Key Functions**:
-  - `create_user()`: Creates user with authentication headers and timeout (currently assumes `/api/v1/users` POST)
-  - `get_user_by_id()`: Gets user by ID with async event subscription and timeout (currently assumes `/api/v1/users/{id}` GET)
-  - `get_user_by_email()`: Gets user by email with async event subscription and timeout (currently assumes `/api/v1/users?email={email}` GET)
-  - `update_user()`: Updates user with authentication headers and timeout (currently assumes `/api/v1/users/{id}` PUT)
+  - `create_user()`: Creates user with authentication headers and timeout ✅ (uses Core Agent timeout)
+  - `get_user_by_id()`: Gets user by ID with async event subscription and timeout ✅ (uses Core Agent timeout)
+  - `get_user_by_email()`: Gets user by email with async event subscription and timeout ✅ (uses Core Agent timeout)
+  - `update_user()`: Updates user with authentication headers and timeout ✅ (uses Core Agent timeout)
   - `parse_user_from_json()`: Parses user data from JSON response
   - `parse_error_response()`: Parses error JSON from Silo Agent format
   - `process_user_response()`: Processes completed HTTP response and parses user data
   - `validate_user_data()`: Validates user data before database operations
-  - `check_request_response()`: Checks if HTTP request is completed and gets response (with timeout checking ready)
+  - `check_request_response()`: Checks if HTTP request is completed and gets response ✅ (uses `is_timed_out()`)
   - `http_status_to_db_result()`: Converts HTTP status to database result (includes 429 rate limit handling)
+  - `http_error_to_db_result()`: Converts `HttpClientError` to `DatabaseResult` ✅ (NEW)
   - `get_service_account_token()`: Gets service account token from AuthService (stub, waiting for Core Agent)
-  - `set_request_timeout()`: Sets timeout on HTTP request (stub, waiting for Core Agent)
+  - `set_request_timeout()`: Sets timeout on HTTP request ✅ (uses `request.set_timeout()`)
   - `set_event_bus()`: Sets event bus instance for async response handling
   - `init_module()`: Initializes module (call during agent initialization)
+- **HTTP Client Integration**:
+  - **Module**: `src/grain_carry_core/api/http_client_integration.zig`
+  - `create_external_request()`: ✅ Updated to accept and pass `timeout_ms` parameter
+  - All database operations now use 30s timeout for API calls
 
 **Handler Adapters**:
 - **Module**: `src/grain_carry_core/api/handler_adapters.zig`
@@ -765,13 +778,17 @@ pub const UserData = struct {
 **Current Limitations**:
 - Endpoint paths need to be updated based on Silo Agent confirmation
 - Request/response formats need to be adjusted based on confirmed approach
-- **Waiting for Core Agent**: Service account token generation (`generate_service_account_token()`)
-- **Waiting for Core Agent**: HTTP client timeout field (`timeout_ms` in `HttpClientRequest`)
-- **Waiting for Core Agent**: HTTP request event publishing (`http_request_completed`, `http_request_failed`)
+- **Waiting for Core Agent**: Service account token generation (`generate_service_account_token()`) — 2-3 days
+- **Waiting for Core Agent**: HTTP request event publishing (`http_request_completed`, `http_request_failed`) — 1-2 days
 - **Waiting for Flow Agent**: Event bus initialization and provision
-- **Missing**: Retry logic for transient failures (HIGH PRIORITY, can implement independently)
+- **Complete**: Retry logic for transient failures ✅ (exponential backoff, max 3 retries)
 - **Missing**: Request queuing (HIGH PRIORITY, needs coordination on where it should live)
-- **Complete**: Authentication headers structure ✅, Timeout handling structure ✅, Rate limiting handling ✅, Async event subscription structure ✅
+- **Complete**: 
+  - ✅ Authentication headers structure
+  - ✅ Timeout handling integrated (uses Core Agent's `timeout_ms` field and `is_timed_out()`)
+  - ✅ Error handling integrated (uses Core Agent's `HttpClientError` enum)
+  - ✅ Rate limiting handling
+  - ✅ Async event subscription structure
 
 **Design Gaps Document**:
 - **Location**: `docs/grain_carry_core/database_integration_design_gaps.md`
@@ -812,6 +829,13 @@ pub const UserData = struct {
   - ⏳ Service-to-service authentication (2-3 days remaining)
   - ⏳ Async pattern integration (1-2 days remaining)
   - ⏳ Update HTTP/WebSocket clients to use error types (1 day remaining)
+- ✅ Timeout/error handling integration complete (2025-12-28-170803-pst)
+  - ✅ Updated `create_external_request()` to accept and pass timeout parameter
+  - ✅ Updated `set_request_timeout()` to use `request.set_timeout()` method
+  - ✅ Updated `check_request_response()` to use `is_timed_out()` function
+  - ✅ Added `http_error_to_db_result()` helper function
+  - ✅ Integrated `HttpClientError` enum for error handling
+  - ✅ All database operations now use timeout (30s default for API calls)
 - ⏳ Awaiting Silo Agent integration approach confirmation
 
 **Core Agent Coordination Decisions** (2025-12-28-125036-pst):
@@ -927,4 +951,4 @@ pub const UserData = struct {
 
 ---
 
-**Status**: Database Integration Enhanced — Implementation Complete — Core Agent Timeout/Error Handling Complete ✅ — Ready for Integration (2025-12-28-162350-pst)
+**Status**: Database Integration Enhanced — Timeout/Error Handling Integrated ✅ — Core Agent Authentication/Async In Progress (2025-12-28-170803-pst)

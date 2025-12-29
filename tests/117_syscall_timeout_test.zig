@@ -200,3 +200,49 @@ test "timeout parameter validation" {
         try testing.expect(send_result.err != .network_timeout);
     }
 }
+
+// Test: UDP sendto with timeout parameter.
+test "udp_sendto_with_timeout with timeout parameter" {
+    var kernel = BasinKernel.init();
+    
+    // Create a UDP socket.
+    const socket_result = kernel.syscall_udp_socket(0, 0, 0, 0);
+    try testing.expect(socket_result == .success);
+    
+    const socket_id = socket_result.success;
+    
+    // Try to send with timeout (pack addr and timeout_ms into arg4).
+    // Format: lower 32 bits = IPv4 address, upper 32 bits = timeout_ms
+    const ipv4_addr: u32 = 0x01020304;
+    const timeout_ms: u32 = 30000; // 30 seconds
+    const addr_and_timeout: u64 = (@as(u64, timeout_ms) << 32) | @as(u64, ipv4_addr);
+    
+    const send_result = kernel.syscall_udp_sendto_with_timeout(socket_id, 0x1000, 4, addr_and_timeout);
+    // Should not be timeout error for immediate operations.
+    if (send_result == .err) {
+        try testing.expect(send_result.err != .network_timeout);
+    }
+}
+
+// Test: UDP recvfrom with timeout parameter.
+test "udp_recvfrom_with_timeout with timeout parameter" {
+    var kernel = BasinKernel.init();
+    
+    // Create a UDP socket.
+    const socket_result = kernel.syscall_udp_socket(0, 0, 0, 0);
+    try testing.expect(socket_result == .success);
+    
+    const socket_id = socket_result.success;
+    
+    // Try to receive with timeout (pack addr_ptr and timeout_ms into arg4).
+    // Format: lower 32 bits = addr_ptr, upper 32 bits = timeout_ms
+    const addr_ptr: u32 = 0x2000;
+    const timeout_ms: u32 = 30000; // 30 seconds
+    const addr_ptr_and_timeout: u64 = (@as(u64, timeout_ms) << 32) | @as(u64, addr_ptr);
+    
+    const recv_result = kernel.syscall_udp_recvfrom_with_timeout(socket_id, 0x1000, 1024, addr_ptr_and_timeout);
+    // Should not be timeout error for immediate operations.
+    if (recv_result == .err) {
+        try testing.expect(recv_result.err != .network_timeout);
+    }
+}

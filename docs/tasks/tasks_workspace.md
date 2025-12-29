@@ -1,7 +1,7 @@
 # Grain Workspace Agent: Task List
 
 **Agent**: Grain Workspace Agent (8th Agent)  
-**Status**: Phase 34 HTTP/WebSocket Timeout Integration Complete ✅  
+**Status**: Phase 35 Code Folding Complete ✅  
 **Last Updated**: 2025-12-23-200220-pst  
 **Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-21-204511-pst.md`
 
@@ -643,6 +643,24 @@ All planned phases for Grain Workspace Agent have been completed. See completed 
 - ✅ **Core Agent**: Error types implementation complete
 - ⏳ **Core Agent**: HTTP/WebSocket client error return types update (1 day remaining)
 - ✅ **Workspace Agent**: Timeout integration complete, ready for error handling integration
+
+### Phase 35: Text Editor Code Folding ✅ (2025-12-29-001544-pst)
+
+**Completed Tasks**:
+- [x] Add FoldRange structure
+- [x] Add MAX_FOLD_RANGES constant
+- [x] Add fold_ranges array and fold_ranges_len to TextEditor
+- [x] Add code_folding_enabled field to TextEditor
+- [x] Implement toggle_code_folding() function
+- [x] Implement detect_fold_ranges() function
+- [x] Implement toggle_fold() function
+- [x] Implement is_folded() function
+- [x] Implement fold_all() function
+- [x] Implement unfold_all() function
+- [x] Create comprehensive tests
+- [x] Update documentation
+
+**Files**: Updated `src/grain_workspace/text_editor/app.zig`, `tests/115_grain_workspace_text_editor_test.zig`
 
 ---
 

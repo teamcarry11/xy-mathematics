@@ -62,6 +62,7 @@ fn convert_status(status: grain_core_api.HttpStatus) client.HttpStatus {
 pub fn create_external_request(
     method: client.HttpMethod,
     url: []const u8,
+    timeout_ms: ?u32,
 ) ?*grain_core_http.HttpClientRequest {
     std.debug.assert(url.len > 0);
     std.debug.assert(url.len <= client.MAX_URL_LEN);
@@ -69,7 +70,7 @@ pub fn create_external_request(
         return null;
     };
     const core_method = convert_method(method);
-    const request = http_client.create_request(core_method, url) orelse {
+    const request = http_client.create_request(core_method, url, timeout_ms) orelse {
         return null;
     };
     std.debug.assert(request.url_len > 0);

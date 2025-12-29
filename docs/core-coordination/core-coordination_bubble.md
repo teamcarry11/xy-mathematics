@@ -1,13 +1,13 @@
 # Grain Bubble Agent: Core Coordination Status
 
 **Agent**: Grain Bubble Agent (5th Agent)  
-**Last Updated**: 2025-12-28-164554-pst
+**Last Updated**: 2025-12-28-184256-pst
 
 ---
 
 ## Current Status
 
-**Phase**: Foundation Complete — Coordination Decisions Received — Ready for Implementation
+**Phase**: Foundation Complete — Timeout/Error Handling Complete ✅ — Workspace Agent Integration Complete ✅ — Ready for Async Pattern Integration
 
 **Recent Completions**:
 - ✅ Phase 1: Core Canvas (SLC v1.0) COMPLETE
@@ -21,27 +21,13 @@
   - Component library with add/get/count operations
   - Design patterns (color, spacing, typography schemes)
   - Animation support (fade, slide, scale with easing)
-  - Preset design patterns (Profile Form, Profile Viewer, Website Editor, Workspace App)
-  - Preset animations (quick/smooth fade, slide, scale animations)
-  - Component variant support (get/create variants for profile, website, workspace components) ✅
-  - Variant count functions for all component types ✅
-  - Component lookup by name (get components by name for all types) ✅
-  - Component validation helpers (validate components exist and have variants) ✅
-  - Design pattern application utilities (apply patterns to components with design tokens) ✅
-  - Animation utilities (generate CSS animations and keyframes from Animation structs) ✅
-  - Export helper functions (export SLC components to SLC bundles) ✅
-  - Comprehensive test coverage (39 test cases including variants, utilities, pattern application, and animation utilities)
+  - Preset design patterns and animations
+  - Component variant support, lookup, validation, pattern application, animation utilities
+  - Export helper functions for SLC bundles
+  - Comprehensive test coverage (39 test cases)
 - ✅ Design gaps analysis complete (2025-12-23-180000-pst)
-  - Comprehensive review of Court and DAG integration design
   - 16 design gaps identified and documented
   - Prioritized by criticality (Critical, High, Medium, Low)
-  - Recommendations and questions prepared for Court Agent and DAG Core
-
-**Current Work**:
-- All core phases complete ✅
-- SLC UI components foundation complete ✅
-- Component variants, utilities, export helpers, pattern application, animation utilities complete ✅
-- **Design gaps identified**: 16 gaps documented (3 Critical, 4 High Priority, 5 Medium, 4 Low)
 - ✅ **Coordination decisions received** (2025-12-28-125036-pst):
   - Timeout handling: Per-request timeout with global defaults (30s API operations, 60s content operations)
   - Error handling: Structured error unions with retryability classification
@@ -52,101 +38,30 @@
   - Error handling implemented with structured error unions
   - All functions updated with timeout and error handling
   - Tests updated and passing
-- ✅ **Core Agent HTTP/WebSocket Ready** (2025-12-29-001544-pst):
+- ✅ **Core Agent HTTP/WebSocket Ready** (2025-12-28-223816-pst):
   - Core Agent HTTP/WebSocket timeout/error handling implementation complete
   - Available for integration if Bubble Agent needs HTTP/WebSocket operations
   - Bubble Agent has independent timeout/error handling for Court compute operations
-- ✅ **Workspace Agent Ready** (2025-12-28-152833-pst):
-  - Workspace Agent Phase 33 (Text Editor Bracket Matching) complete
-  - Workspace Agent ready for Component API integration
 - ✅ **Workspace Agent Integration Complete** (2025-12-28-164554-pst):
   - Integration module created (`workspace_integration.zig`)
   - Design pattern application to Workspace components implemented
   - Theme synchronization between Bubble and Workspace components implemented
   - Comprehensive test coverage (5 test cases)
   - Build system updated
+
+**Current Work**:
 - **Status**: Ready to integrate async pattern with Flow Agent Event Bus
-- **Status**: Waiting for Aurora Agent component API design coordination
+- **Status**: Ready to implement retry logic for transient failures
+- **Status**: Waiting for Aurora Agent component API design coordination (IMMEDIATE)
+- **Status**: Waiting for DAG Core error handling coordination (HIGH PRIORITY)
 
 ---
 
-## Design Gaps Analysis
-
-**Document**: `docs/grain_bubble/integration_design_gaps.md`
-
-### Critical Gaps (Must Fix)
-
-1. **Operation Timeout Handling for Court Compute** ⚠️ **CRITICAL** ✅ **DECISION RECEIVED**
-   - **Issue**: No timeout handling for Court compute operations. Operations could hang indefinitely if Court compute is slow or unresponsive
-   - **Impact**: Design operations could hang indefinitely, causing UI to freeze and resource exhaustion
-   - **Decision** (2025-12-28-125036-pst): Per-request timeout with global defaults
-     - API operations: 30 seconds default timeout
-     - Content operations (LLM inference): 60 seconds default timeout
-     - Per-request timeout override supported
-   - **Status**: ✅ **READY TO IMPLEMENT** — Decision received, can proceed with implementation
-
-2. **Error Handling for Court Compute Operations** ⚠️ **CRITICAL** ✅ **DECISION RECEIVED**
-   - **Issue**: Limited error handling for Court compute operations. Operations fail silently or return empty results without error information
-   - **Impact**: Design operations fail without clear error messages, making debugging difficult
-   - **Decision** (2025-12-28-125036-pst): Structured error unions with retryability classification
-     - Use structured error unions (e.g., `CourtComputeError`) with distinct error types
-     - Classify errors as retryable vs. non-retryable
-     - Return error information to callers for proper error handling
-     - Add error logging for debugging
-   - **Status**: ✅ **READY TO IMPLEMENT** — Decision received, can proceed with implementation
-
-3. **DAG Operation Error Handling** ⚠️ **HIGH PRIORITY**
-   - **Issue**: Limited error handling for DAG operations. Operations fail silently or return false without error information
-   - **Impact**: Design events might not be recorded without clear error messages, causing data loss
-   - **Questions for DAG Core**:
-     - What error types does DAG Core return?
-     - How should we handle node/event limit exceeded?
-     - How should we handle invalid event data?
-   - **Status**: ⏳ **COORDINATION NEEDED** — Waiting for DAG Core response
-
-### High Priority Gaps (Should Fix)
-
-4. **Retry Logic for Transient Court Compute Failures** ⚠️ **HIGH PRIORITY**
-   - **Issue**: No retry logic for transient failures in Court compute operations (SRAM allocation failures, operation failures)
-   - **Impact**: Transient Court compute issues cause permanent design operation failures
-   - **Status**: ⏳ **IMPLEMENTATION NEEDED** — Can implement independently after error types coordinated
-
-5. **DAG Operation Retry Logic** ⚠️ **HIGH PRIORITY**
-   - **Issue**: No retry logic for transient failures in DAG operations (node creation, event recording)
-   - **Impact**: Transient DAG issues cause permanent design event loss
-   - **Status**: ⏳ **IMPLEMENTATION NEEDED** — Can implement independently after error types coordinated
-
-6. **Operation Queuing for Court Compute** ⚠️ **HIGH PRIORITY**
-   - **Issue**: If Court compute is busy, operations fail immediately. No queuing mechanism for pending operations
-   - **Impact**: Under high load, design operations fail instead of being queued
-   - **Questions**: Should queuing be in Bubble Agent or Court Agent?
-   - **Status**: ⏳ **COORDINATION NEEDED** — Need to decide where queuing should live
-
-7. **Circuit Breaker Pattern for Court Compute** ⚠️ **HIGH PRIORITY**
-   - **Issue**: No circuit breaker to prevent cascading failures if Court compute is down
-   - **Impact**: If Court compute is down, all design operations fail repeatedly, wasting resources
-   - **Status**: ⏳ **IMPLEMENTATION NEEDED** — Can implement after critical gaps fixed
-
-### Medium Priority Gaps (Nice to Have)
-
-8. **Operation Deduplication** — Future enhancement
-9. **Health Checks for Court Compute** — Future enhancement (question for Court Agent: health endpoint?)
-10. **Operation/Result Logging** — Future enhancement
-11. **Metrics/Monitoring** — Future enhancement
-12. **SRAM Allocation Management** — Question for Court Agent: Does Court compute automatically free SRAM?
-
-### Low Priority Gaps (Future Enhancements)
-
-13. **Operation Batching** — Future enhancement
-14. **Operation Prioritization** — Future enhancement
-15. **Operation Caching** — Future enhancement
-16. **DAG Event Compression** — Future enhancement
-
----
-
-## Integration Points
+## Integration Status
 
 ### With Grain Court Agent
+
+**Status**: ✅ **INTEGRATION COMPLETE** — Timeout/Error Handling Complete
 
 **Court Compute Integration**:
 - ✅ Court compute integration complete
@@ -154,26 +69,30 @@
 - ✅ LLM inference integration working (`get_design_suggestions`)
 - ✅ Component embedding generation working (`generate_component_embedding`)
 - ✅ SRAM allocation and operation execution working
-- ✅ **DECISION RECEIVED** (2025-12-28-125036-pst): Operation timeout handling
+- ✅ **Timeout handling implemented** (2025-12-28-152833-pst):
   - Per-request timeout with global defaults (30s API, 60s content)
   - Per-request timeout override supported
-- ✅ **DECISION RECEIVED** (2025-12-28-125036-pst): Error handling
-  - Structured error unions with retryability classification
+  - Timeout logic using polling with `get_max_polls_for_timeout()`
+- ✅ **Error handling implemented** (2025-12-28-152833-pst):
+  - Structured error unions (`CourtComputeError`) with retryability classification
   - Error information returned to callers
   - Error logging for debugging
+  - `is_retryable_error()` function implemented
+- ⏳ **PENDING**: Retry logic for transient failures (can implement independently)
 - ⏳ **WAITING**: SRAM allocation management coordination (MEDIUM)
   - Does Court compute automatically free SRAM after operations?
   - Should we explicitly free SRAM?
 - ⏳ **WAITING**: Health check coordination (MEDIUM)
   - Is there a health check endpoint or function?
 
-**Future Integration Opportunities**:
-- AI-powered design features (design suggestions, component recommendations)
-- Design pattern generation via LLM
-- Component variant suggestions
-- Design token optimization
+**Integration Points**:
+- `src/grain_bubble/court_integration.zig` — Court compute integration module
+- Functions: `search_similar_components()`, `get_design_suggestions()`, `generate_component_embedding()`
+- Error types: `ComputeNotSet`, `SramAllocationFailed`, `OperationFailed`, `OperationTimeout`, `InvalidInput`, `OperationNotCompleted`
 
 ### With DAG Core
+
+**Status**: ⏳ **WAITING FOR ERROR HANDLING COORDINATION** (HIGH PRIORITY)
 
 **DAG Integration**:
 - ✅ DAG integration complete
@@ -186,7 +105,13 @@
   - How should we handle node/event limit exceeded?
   - How should we handle invalid event data?
 
+**Integration Points**:
+- `src/grain_bubble/dag_integration.zig` — DAG integration module
+- Functions: `record_event()`, `get_event_history()`, `create_version()`, etc.
+
 ### With Grain Aurora Agent
+
+**Status**: ⏳ **WAITING FOR COMPONENT API DESIGN COORDINATION** (IMMEDIATE)
 
 **Dream Browser Component Integration**:
 - ✅ SLC UI components ready for integration
@@ -208,10 +133,14 @@
   - What rendering approach should we use (DOM, Canvas, WebGL)?
 
 **Integration Points**:
-- Nostr Profile Builder (SLC v1.0) — Profile rendering in Dream Browser
-- DAG Website Builder (SLC v1.0) — Website rendering in Dream Browser
+- `src/grain_bubble/slc_ui_components.zig` — SLC UI components module
+- Profile components: form, editor, viewer (for Nostr profile rendering)
+- Website components: DAG editor, content editor (for DAG website rendering)
+- Component variants, design patterns, animations for browser UI
 
 ### With Grain Workspace Agent
+
+**Status**: ✅ **INTEGRATION COMPLETE** (2025-12-28-164554-pst)
 
 **Desktop App Component Integration**:
 - ✅ SLC UI components ready for integration
@@ -222,19 +151,45 @@
 - ✅ Design pattern application utilities ready
 - ✅ Animation utilities (CSS generation) ready
 - ✅ Export helpers (SLC bundles) ready
-- ✅ **DECISION RECEIVED** (2025-12-28-125036-pst): Component API design approved
+- ✅ **Component API design approved** (2025-12-28-125036-pst):
   - Workspace Agent's `DesktopComponentAPI` structure approved
   - Integration approach defined for File Manager, Text Editor, Terminal UI
-  - Ready to implement component API integration
-- ✅ **WORKSPACE AGENT READY** (2025-12-28-152833-pst): Workspace Agent Phase 33 complete
-  - Text Editor Bracket Matching complete
-  - Workspace Agent ready for Component API integration
-  - Bubble Agent can proceed with Component API integration
+- ✅ **Integration complete** (2025-12-28-164554-pst):
+  - Integration module created (`workspace_integration.zig`)
+  - Design pattern application to Workspace components implemented
+  - Theme synchronization between Bubble and Workspace components implemented
+  - Comprehensive test coverage (5 test cases)
+  - Build system updated
 
 **Integration Points**:
-- Workspace App Suite (SLC v1.0) — File Manager, Text Editor, Terminal UI components
+- `src/grain_bubble/workspace_integration.zig` — Workspace integration module
+- `src/grain_bubble/slc_ui_components.zig` — SLC UI components module
+- Workspace components: File Manager, Text Editor, Terminal UI
+- Component variants (state/size/theme) for desktop context
+- Design patterns and animations for desktop UI
+
+### With Grain Flow Agent
+
+**Status**: ✅ **READY FOR INTEGRATION** — Async Pattern Decision Received
+
+**Event Bus Integration**:
+- ✅ Async pattern decision received (2025-12-28-125036-pst):
+  - Event-driven pattern using Flow Agent Event Bus
+  - Event types available: `http_request_completed`, `http_request_failed`, `websocket_connected`, `websocket_message_received`, `file_io_completed`, `file_io_failed`
+- ✅ Flow Agent Event Bus ready with async event types
+- ⏳ **PENDING**: Integrate async pattern with Flow Agent Event Bus
+  - Subscribe to design operation events
+  - Publish events for async design operations
+  - Implement event handlers for design operation completion
+
+**Integration Points**:
+- Flow Agent Event Bus integration for async design operations
+- Event types for design operations (component creation, design pattern application, etc.)
+- Event publishing/subscribing for design workflow
 
 ### With Grain Core Agent
+
+**Status**: ✅ **COORDINATION DECISIONS RECEIVED** — HTTP/WebSocket Ready
 
 **Compositor Integration**:
 - ⏳ **COORDINATION NEEDED** (if needed): Compositor integration and rendering infrastructure
@@ -242,6 +197,13 @@
   - What rendering infrastructure is available?
   - Are there any infrastructure needs for SLC products?
   - How should Bubble components integrate with compositor?
+
+**HTTP/WebSocket Integration**:
+- ✅ **Core Agent HTTP/WebSocket timeout/error handling ready** (2025-12-28-223816-pst):
+  - Core Agent HTTP/WebSocket timeout/error handling implementation complete
+  - Available for integration if Bubble Agent needs HTTP/WebSocket operations
+  - Bubble Agent has independent timeout/error handling for Court compute operations
+- ⏳ **PENDING**: Integrate with Core Agent's HTTP/WebSocket infrastructure if needed
 
 **What We're Providing**:
 - Component rendering system
@@ -256,20 +218,20 @@
 **Blocked On**:
 1. ✅ **RESOLVED** (2025-12-28-125036-pst): **Court Agent** — Operation timeout handling
    - Decision: Per-request timeout with global defaults (30s API, 60s content)
-   - Status: Ready to implement
+   - Status: ✅ Implementation complete (2025-12-28-152833-pst)
 
 2. ✅ **RESOLVED** (2025-12-28-125036-pst): **Court Agent** — Error handling
    - Decision: Structured error unions with retryability classification
-   - Status: Ready to implement
+   - Status: ✅ Implementation complete (2025-12-28-152833-pst)
 
-3. **DAG Core**: Error handling coordination (HIGH PRIORITY)
+3. ⏳ **WAITING**: **DAG Core** — Error handling coordination (HIGH PRIORITY)
    - What error types does DAG Core return?
    - How should we handle node/event limit exceeded?
    - How should we handle invalid event data?
    - Impact: Design events might not be recorded, causing data loss
    - Status: ⏳ Still waiting for DAG Core coordination
 
-4. **Aurora Agent**: Component API design coordination (IMMEDIATE)
+4. ⏳ **WAITING**: **Aurora Agent** — Component API design coordination (IMMEDIATE)
    - Component API structure for Dream Browser integration
    - Integration approach for Nostr profile and DAG website rendering
    - Design pattern and animation preferences
@@ -277,7 +239,7 @@
 
 5. ✅ **RESOLVED** (2025-12-28-125036-pst): **Workspace Agent** — Component API design
    - Decision: Workspace Agent's `DesktopComponentAPI` structure approved
-   - Status: Ready to implement
+   - Status: ✅ Integration complete (2025-12-28-164554-pst)
 
 **Provides To**:
 - Design tool for Grain OS (canvas, components, export)
@@ -308,18 +270,21 @@
    - Workspace Agent Phase 33 complete
    - Status: ✅ Complete — Integration module created, tests passing
 
-4. **IMMEDIATE**: Wait for DAG Core error handling coordination (HIGH PRIORITY)
+4. **SHORT-TERM**: Integrate async pattern with Flow Agent Event Bus
+   - Event-driven pattern decision received (2025-12-28-125036-pst)
+   - Flow Agent Event Bus ready with async event types
+   - Status: Ready to implement (independent work)
+
+5. **SHORT-TERM**: Implement retry logic for transient failures
+   - Can implement once error handling is in place
+   - Uses existing error retryability classification
+   - Status: Ready to implement (independent work)
+
+6. **IMMEDIATE**: Wait for DAG Core error handling coordination (HIGH PRIORITY)
    - Still waiting for DAG Core coordination on error types
 
-5. **IMMEDIATE**: Wait for Aurora Agent component API design coordination
+7. **IMMEDIATE**: Wait for Aurora Agent component API design coordination
    - Still waiting for Aurora Agent coordination on Dream Browser component API
-
-6. **SHORT-TERM**: Implement retry logic for transient failures
-   - Can implement once error handling is in place
-
-7. **SHORT-TERM**: Integrate async pattern with Flow Agent Event Bus
-   - Event-driven pattern decision received (2025-12-28-125036-pst)
-   - Status: Ready to implement
 
 8. **SHORT-TERM**: Integrate component APIs with Aurora Agent (once coordinated)
 
@@ -340,195 +305,72 @@
 
 ---
 
-## Coordination Needs
-
-**Coordination Status**:
-1. ✅ **RESOLVED** (2025-12-28-125036-pst): **Court Agent** — Operation timeout handling
-   - Decision: Per-request timeout with global defaults (30s API, 60s content)
-   - Status: Ready to implement
-
-2. ✅ **RESOLVED** (2025-12-28-125036-pst): **Court Agent** — Error handling
-   - Decision: Structured error unions with retryability classification
-   - Status: Ready to implement
-
-3. ⏳ **WAITING**: **DAG Core** — Error handling coordination (HIGH PRIORITY)
-   - What error types does DAG Core return?
-   - How should we handle node/event limit exceeded?
-   - How should we handle invalid event data?
-   - Impact: Design events might not be recorded, causing data loss
-
-4. ⏳ **WAITING**: **Aurora Agent** — Component API design coordination (IMMEDIATE)
-   - Component API structure for Dream Browser integration
-   - Integration approach for Nostr profile and DAG website rendering
-   - Design pattern and animation preferences
-
-5. ✅ **RESOLVED** (2025-12-28-125036-pst): **Workspace Agent** — Component API design
-   - Decision: Workspace Agent's `DesktopComponentAPI` structure approved
-   - Status: Ready to implement
-
-**Ready For**:
-- ✅ Implement timeout handling (decision received)
-- ✅ Implement error handling (decision received)
-- ✅ Integrate with Workspace Agent's approved component API (decision received)
-- ✅ Integrate async pattern with Flow Agent Event Bus (decision received)
-- ⏳ Wait for DAG Core error handling coordination (HIGH PRIORITY)
-- ⏳ Wait for Aurora Agent component API design coordination (IMMEDIATE)
-- ⏳ End-to-end testing once DAG Core error handling is coordinated
-- ⏳ Production integration once all coordination complete
-
----
-
-## Technical Notes
-
-**Court Integration Architecture**:
-- Uses `grain_court.Compute.CourtCompute` for vector search, LLM inference, and data transform
-- SRAM allocation for operation data
-- Parallel operation execution via `execute_parallel()`
-- Operation status polling via `get_op_status()`
-- All operations follow Grain Style guidelines
-
-**Current Implementation**:
-- **Module**: `src/grain_bubble/court_integration.zig`
-- **Key Functions**:
-  - `search_similar_components()`: Vector search for similar components
-  - `get_design_suggestions()`: LLM inference for design suggestions
-  - `generate_component_embedding()`: Generate component embedding vectors
-  - `component_to_description()`: Convert component to text description
-  - `canvas_to_context()`: Convert canvas state to context text for LLM
-
-**DAG Integration Architecture**:
-- Uses `dag_core.DagCore` for event recording and history retrieval
-- Event serialization/deserialization for storage
-- Version management for design snapshots
-- All operations follow Grain Style guidelines
-
-**Current Implementation**:
-- **Module**: `src/grain_bubble/dag_integration.zig`
-- **Key Functions**:
-  - `record_event()`: Record design event in DAG
-  - `get_event_history()`: Get event history for canvas
-  - `create_version()`: Create design version snapshot
-  - `get_version()`: Get design version by ID
-  - `create_version_snapshot()`: Create version snapshot from event ID
-  - `load_version_snapshot()`: Load version snapshot (returns event ID to replay to)
-  - `serialize_event()`: Serialize design event to buffer
-  - `deserialize_event()`: Deserialize design event from buffer
-
-**SLC UI Components**:
-- **Module**: `src/grain_bubble/slc_ui_components.zig`
-- **Key Structures**:
-  - `ProfileComponent`, `WebsiteComponent`, `WorkspaceComponent`: SLC-specific component types
-  - `SlcComponentLibrary`: Component library with add/get/count operations
-  - `DesignPattern`: Reusable design values (color, spacing, typography schemes)
-  - `Animation`: Configurable animations (fade, slide, scale with easing)
-  - `PresetPatterns`, `PresetAnimations`: Preset design patterns and animations
-  - `AnimationUtils`: CSS generation utilities for animations
-
-**Current Limitations**:
-- ✅ **RESOLVED**: Operation timeout handling (decision received 2025-12-28-125036-pst)
-- ✅ **RESOLVED**: Error handling for Court compute operations (decision received 2025-12-28-125036-pst)
-- **Missing**: Error handling for DAG operations (HIGH PRIORITY) — waiting for DAG Core coordination
-- **Missing**: Retry logic for transient failures (HIGH PRIORITY) — can implement after error handling
-- **Missing**: Operation queuing (HIGH PRIORITY) — waiting for coordination decision
-- **Missing**: Circuit breaker pattern (HIGH PRIORITY) — can implement after error handling
-- ✅ **RESOLVED**: Component API design for Workspace Agent (decision received 2025-12-28-125036-pst)
-- ⏳ Waiting on component API design coordination from Aurora Agent
-
-**Design Gaps Document**:
-- **Location**: `docs/grain_bubble/integration_design_gaps.md`
-- **Summary**: 16 design gaps identified (3 Critical, 4 High Priority, 5 Medium, 4 Low)
-- **Status**: Documented with recommendations and questions for Court Agent and DAG Core
-
----
-
-## Coordination Plan Acknowledgment
-
-**Latest Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-28-223816-pst.md` ✅
-
-**Status Acknowledged**:
-- ✅ All core phases complete (Phase 1-5)
-- ✅ SLC Product Integration Foundation complete
-- ✅ Component variants, utilities, export helpers, pattern application, animation utilities complete
-- ✅ Design gaps analysis complete (2025-12-23-180000-pst)
-- ✅ Core Agent coordination plan received and reviewed (2025-12-28-125036-pst)
-- ✅ **Coordination decisions received** (2025-12-28-125036-pst):
-  - Timeout handling: Per-request timeout with global defaults (30s API, 60s content)
-  - Error handling: Structured error unions with retryability classification
-  - Component API design: Workspace Agent's `DesktopComponentAPI` structure approved
-  - Async pattern: Event-driven using Flow Agent Event Bus
-- ✅ Vantage Agent Priority 1 Complete (Vantage Adaptation Framework) — enables SLC product testing
-- ✅ Spiritual/Philosophical Foundation integrated (bhakti devotion, Berdyaev creative freedom)
-- ✅ Core Agent: Spiritual Style Integration complete (2025-12-22-010624-pst)
-- ✅ Core Agent: 103×80 graincard templates created (2025-12-22-020323-pst)
-- ⏳ Awaiting DAG Core error handling coordination (HIGH PRIORITY)
-- ⏳ Awaiting Aurora Agent component API design coordination (IMMEDIATE)
-
-**Prioritized Action Plan**:
-- **Priority 1 (CRITICAL)**: Vantage Agent — Vantage Adaptation Framework ✅ **COMPLETE**
-- **Priority 2 (HIGH)**: Core Agent — Coordination Decisions (in progress, unblocks 4 agents)
-- **Priority 3 (HIGH)**: Court Agent — ZON Module Phase 1 (~85% complete, remaining 1-2 days)
-- **Priority 4 (MEDIUM)**: SLC Product Integration Testing (ready, Vantage adaptation complete)
-- **Priority 5 (MEDIUM)**: Other Agent Coordination (can proceed in parallel)
-
-**Bubble Agent Status in Plan**:
-- **Status**: Foundation Complete ✅, Design Gaps Identified ✅, Coordination Decisions Received ✅, Ready for Implementation ✅
-- **Current Work**: 
-  - ✅ Court Agent timeout/error handling coordination received (2025-12-28-125036-pst)
-  - ✅ Workspace Agent component API design coordination received (2025-12-28-125036-pst)
-  - ⏳ Waiting on DAG Core error handling coordination (HIGH PRIORITY)
-  - ⏳ Waiting on Aurora Agent component API design coordination (IMMEDIATE)
-- **Coordination Status**: 
-  - ✅ Court Agent: Timeout handling (RESOLVED - decision received)
-  - ✅ Court Agent: Error handling (RESOLVED - decision received)
-  - ⏳ DAG Core: Error handling (HIGH PRIORITY - still waiting)
-  - ⏳ Aurora Agent: Component API design (IMMEDIATE - still waiting)
-  - ✅ Workspace Agent: Component API design (RESOLVED - decision received)
-- **Next Steps**: 
-  - ✅ Implement timeout handling (decision received, ready to implement)
-  - ✅ Implement error handling (decision received, ready to implement)
-  - ✅ Integrate with Workspace Agent's approved component API (decision received, ready to implement)
-  - ✅ Integrate async pattern with Flow Agent Event Bus (decision received, ready to implement)
-  - ⏳ Wait for DAG Core error handling coordination (HIGH PRIORITY)
-  - ⏳ Wait for Aurora Agent component API design coordination (IMMEDIATE)
-
----
-
-## Decision: Ready for Implementation
-
-**Rationale**:
-1. **Coordination Decisions Received** (2025-12-28-125036-pst):
-   - ✅ Timeout handling: Per-request timeout with global defaults (30s API, 60s content)
-   - ✅ Error handling: Structured error unions with retryability classification
-   - ✅ Component API design: Workspace Agent's `DesktopComponentAPI` structure approved
-   - ✅ Async pattern: Event-driven using Flow Agent Event Bus
-
-2. **Ready to Implement**:
-   - Timeout handling implementation (decision received)
-   - Error handling implementation (decision received)
-   - Workspace Agent component API integration (decision received)
-   - Async pattern integration with Flow Agent Event Bus (decision received)
-
-3. **Remaining Coordination**:
-   - ⏳ DAG Core error handling coordination (HIGH PRIORITY)
-   - ⏳ Aurora Agent component API design coordination (IMMEDIATE)
-   - These can proceed in parallel with implementation work
-
-4. **Implementation Priority**:
-   - **IMMEDIATE**: Implement timeout handling (unblocks production readiness)
-   - **IMMEDIATE**: Implement error handling (unblocks production readiness)
-   - **IMMEDIATE**: Integrate with Workspace Agent's approved component API (unblocks SLC product integration)
-   - **SHORT-TERM**: Integrate async pattern with Flow Agent Event Bus
-   - **SHORT-TERM**: Implement retry logic for transient failures (after error handling)
-
-**Status**: Ready for implementation — coordination decisions received for timeout handling, error handling, Workspace Agent component API, and async pattern. Can proceed with implementation while waiting for remaining DAG Core and Aurora Agent coordination.
-
----
-
 ## Next Steps for Other Agents
+
+### For Grain Core Agent
+
+**Status**: ✅ Coordination decisions received — HTTP/WebSocket timeout/error handling ready
+
+**What Bubble Agent is Doing**:
+- ✅ **COMPLETE**: Timeout handling implementation (per-request with global defaults: 30s API, 60s content)
+- ✅ **COMPLETE**: Error handling implementation (structured error unions with retryability classification)
+- ✅ **COMPLETE**: Workspace Agent component API integration (2025-12-28-164554-pst)
+- ⏳ **PENDING**: Async pattern integration with Flow Agent Event Bus (ready to implement)
+- ⏳ **PENDING**: Retry logic for transient failures (ready to implement)
+- ⏳ **WAITING**: DAG Core error handling coordination (HIGH PRIORITY)
+- ⏳ **WAITING**: Aurora Agent component API design coordination (IMMEDIATE)
+
+**What Core Agent Needs to Know**:
+- ✅ **Bubble Agent has completed timeout/error handling implementation** (2025-12-28-152833-pst)
+  - All Court compute operations now have timeout handling
+  - All Court compute operations now return structured error unions
+  - Error retryability classification implemented
+  - Tests updated and passing
+- ✅ **Core Agent HTTP/WebSocket timeout/error handling ready** (2025-12-28-223816-pst)
+  - Bubble Agent acknowledges Core Agent's completion of HTTP/WebSocket timeout/error handling
+  - Bubble Agent can integrate with Core Agent's HTTP/WebSocket infrastructure if needed
+  - Bubble Agent has implemented timeout/error handling for Court compute operations (independent implementation)
+- ✅ **Workspace Agent integration complete** (2025-12-28-164554-pst)
+  - Bubble Agent has completed integration with Workspace Agent's `DesktopComponentAPI`
+  - Integration module created, tests passing
+  - Ready for Workspace Agent testing
+- **Core Agent should facilitate remaining coordination** for:
+  - **DAG Core error handling coordination (HIGH PRIORITY)** — Bubble Agent needs error types and error handling patterns for DAG operations
+  - **Aurora Agent component API design coordination (IMMEDIATE)** — Bubble Agent needs component API structure for Dream Browser integration
+- **Core Agent should track Bubble Agent's progress**:
+  - Timeout/error handling (Court compute): ✅ COMPLETE
+  - HTTP/WebSocket timeout/error handling: ✅ Available from Core Agent (ready for integration if needed)
+  - Workspace Agent component API integration: ✅ COMPLETE
+  - Async pattern integration: ⏳ PENDING (ready to implement)
+  - Retry logic: ⏳ PENDING (ready to implement)
+- **Core Agent should coordinate SLC Product Integration testing** once Component API integration is complete
+- **No blocking issues** — Bubble Agent can proceed with async pattern integration and retry logic independently
+
+**Integration Points**:
+- Compositor integration (if needed) — Bubble Agent may need compositor integration for rendering
+- Rendering infrastructure — Bubble Agent may need rendering infrastructure for SLC products
+- Service-to-service authentication — Bubble Agent will use service account tokens via AuthService (per coordination decision)
+- Timeout/error handling patterns — Bubble Agent has implemented patterns per coordination decisions
+- HTTP/WebSocket timeout/error handling — Core Agent implementation ready (2025-12-28-223816-pst)
+  - Bubble Agent can integrate with Core Agent's HTTP/WebSocket infrastructure if needed
+  - Bubble Agent has independent timeout/error handling for Court compute operations
+
+**Timeline**:
+- ✅ **COMPLETE** (2025-12-28-152833-pst): Timeout handling implementation (Court compute)
+- ✅ **COMPLETE** (2025-12-28-152833-pst): Error handling implementation (Court compute)
+- ✅ **AVAILABLE** (2025-12-28-223816-pst): Core Agent HTTP/WebSocket timeout/error handling ready
+- ✅ **COMPLETE** (2025-12-28-164554-pst): Workspace Agent component API integration
+- **SHORT-TERM**: Bubble Agent implementing async pattern integration (independent work)
+- **SHORT-TERM**: Bubble Agent implementing retry logic (independent work)
+- **SHORT-TERM**: Core Agent should facilitate DAG Core and Aurora Agent coordination
+- **SHORT-TERM**: Bubble Agent can integrate with Core Agent's HTTP/WebSocket infrastructure if needed
+- **MEDIUM-TERM**: Bubble Agent ready for SLC Product Integration testing once Component API integration complete
+
+---
 
 ### For Grain Court Agent
 
-**Status**: ✅ Coordination decisions received (2025-12-28-125036-pst) — ✅ Implementation Complete (2025-12-28-152833-pst)
+**Status**: ✅ Coordination decisions received — ✅ Implementation Complete
 
 **What Bubble Agent is Doing**:
 - ✅ **COMPLETE**: Per-request timeout handling with global defaults (30s API operations, 60s content operations)
@@ -563,49 +405,55 @@
 
 ### For Grain Workspace Agent
 
-**Status**: ✅ Component API design approved (2025-12-28-125036-pst)
+**Status**: ✅ Component API design approved — ✅ Integration Complete
 
 **What Bubble Agent is Doing**:
-- Integrating with Workspace Agent's approved `DesktopComponentAPI` structure
-- Adapting SLC UI components to match Workspace Agent's component API requirements
-- Implementing component integration for File Manager, Text Editor, and Terminal UI
-- Ensuring design patterns and animations work with desktop app rendering approach
+- ✅ **COMPLETE**: Integration with Workspace Agent's approved `DesktopComponentAPI` structure
+- ✅ **COMPLETE**: Design pattern application to Workspace components implemented
+- ✅ **COMPLETE**: Theme synchronization between Bubble and Workspace components implemented
+- ✅ **COMPLETE**: Comprehensive test coverage (5 test cases)
 
 **What Workspace Agent Needs to Know**:
+- ✅ **Bubble Agent has completed Workspace Agent integration** (2025-12-28-164554-pst)
+  - Integration module created (`workspace_integration.zig`)
+  - Design pattern application to Workspace components implemented
+  - Theme synchronization between Bubble and Workspace components implemented
+  - Comprehensive test coverage (5 test cases)
+  - Build system updated
 - Bubble Agent has received approval for Workspace Agent's `DesktopComponentAPI` structure
 - Bubble Agent has completed timeout/error handling implementation
-- Bubble Agent is ready to implement component API integration
-- Bubble Agent will adapt SLC UI components to match Workspace Agent's API requirements
-- **Workspace Agent Phase 33 complete** — Bubble Agent acknowledges readiness for integration
-- **Workspace Agent should coordinate on testing schedule** — Bubble Agent will notify when integration is ready
+- **Workspace Agent Phase 33 complete** — Bubble Agent acknowledges and integration complete
+- **Workspace Agent can test integration** — Bubble Agent integration ready for testing
 
 **Integration Points**:
+- `src/grain_bubble/workspace_integration.zig` — Workspace integration module
 - `src/grain_bubble/slc_ui_components.zig` — SLC UI components module
 - Workspace components: File Manager, Text Editor, Terminal UI
 - Component variants (state/size/theme) for desktop context
 - Design patterns and animations for desktop UI
 
 **Timeline**:
-- **IMMEDIATE**: Bubble Agent implementing component API integration (unblocks SLC product integration)
-- **SHORT-TERM**: Bubble Agent ready for Workspace Agent testing coordination
+- ✅ **COMPLETE** (2025-12-28-164554-pst): Bubble Agent component API integration
+- **SHORT-TERM**: Workspace Agent can test integration — Bubble Agent integration ready
 
 ---
 
 ### For Grain Flow Agent
 
-**Status**: ✅ Async pattern decision received (2025-12-28-125036-pst)
+**Status**: ✅ Async pattern decision received — Event Bus ready
 
 **What Bubble Agent is Doing**:
-- Integrating async pattern using Flow Agent Event Bus (event-driven pattern)
-- Adapting design operations to use event-driven architecture
-- Implementing event publishing/subscribing for design operations
+- ⏳ **PENDING**: Integrating async pattern using Flow Agent Event Bus (event-driven pattern)
+- ⏳ **PENDING**: Adapting design operations to use event-driven architecture
+- ⏳ **PENDING**: Implementing event publishing/subscribing for design operations
 
 **What Flow Agent Needs to Know**:
 - Bubble Agent will integrate with Flow Agent Event Bus for async operations
 - Bubble Agent will use event-driven pattern for design operations
-- **Flow Agent should ensure Event Bus is ready** for Bubble Agent integration
+- **Flow Agent Event Bus is ready** — Async event types available (`http_request_completed`, `http_request_failed`, `websocket_connected`, `websocket_message_received`, `file_io_completed`, `file_io_failed`)
+- **Bubble Agent will define custom event types** for design operations (component creation, design pattern application, etc.)
 - **Flow Agent should coordinate on Event Bus API** — Bubble Agent will need to publish/subscribe to events
-- **Flow Agent should coordinate on event types** — Bubble Agent will need to define event types for design operations
+- **Flow Agent should coordinate on custom event types** — Bubble Agent will need to define event types for design operations
 
 **Integration Points**:
 - Flow Agent Event Bus integration for async design operations
@@ -614,7 +462,7 @@
 
 **Timeline**:
 - **SHORT-TERM**: Bubble Agent implementing async pattern integration with Flow Agent Event Bus
-- **SHORT-TERM**: Flow Agent should coordinate on Event Bus API and event types
+- **SHORT-TERM**: Flow Agent should coordinate on Event Bus API and custom event types
 
 ---
 
@@ -677,68 +525,15 @@
 
 ---
 
-### For Grain Core Agent
-
-**Status**: ✅ Coordination decisions received (2025-12-28-125036-pst) — ✅ Timeout/Error Handling Complete (2025-12-28-152833-pst) — ✅ HTTP/WebSocket Timeout/Error Handling Ready (2025-12-29-001544-pst)
-
-**What Bubble Agent is Doing**:
-- ✅ **COMPLETE**: Timeout handling implementation (per-request with global defaults: 30s API, 60s content)
-- ✅ **COMPLETE**: Error handling implementation (structured error unions with retryability classification)
-- **IN PROGRESS**: Component API integration with Workspace Agent (Workspace Agent Phase 33 complete, ready for integration)
-- **PENDING**: Async pattern integration with Flow Agent Event Bus
-- **WAITING**: DAG Core error handling coordination (HIGH PRIORITY)
-- **WAITING**: Aurora Agent component API design coordination (IMMEDIATE)
-
-**What Core Agent Needs to Know**:
-- ✅ **Bubble Agent has completed timeout/error handling implementation** (2025-12-28-152833-pst)
-  - All Court compute operations now have timeout handling
-  - All Court compute operations now return structured error unions
-  - Error retryability classification implemented
-  - Tests updated and passing
-- ✅ **Core Agent HTTP/WebSocket timeout/error handling ready** (2025-12-29-001544-pst)
-  - Bubble Agent acknowledges Core Agent's completion of HTTP/WebSocket timeout/error handling
-  - Bubble Agent can integrate with Core Agent's HTTP/WebSocket infrastructure if needed
-  - Bubble Agent has implemented timeout/error handling for Court compute operations (independent implementation)
-- ✅ **Workspace Agent Phase 33 complete** — Bubble Agent acknowledges readiness for Component API integration
-- **Core Agent should facilitate remaining coordination** for:
-  - DAG Core error handling coordination (HIGH PRIORITY) — Bubble Agent needs error types and error handling patterns
-  - Aurora Agent component API design coordination (IMMEDIATE) — Bubble Agent needs component API structure for Dream Browser
-- **Core Agent should track Bubble Agent's progress**:
-  - Timeout/error handling (Court compute): ✅ COMPLETE
-  - HTTP/WebSocket timeout/error handling: ✅ Available from Core Agent (ready for integration if needed)
-  - Component API integration: ⏳ IN PROGRESS (Workspace Agent ready)
-  - Async pattern integration: ⏳ PENDING
-- **Core Agent should coordinate SLC Product Integration testing** once Component API integration is complete
-- **No blocking issues** — Bubble Agent can proceed with Component API integration independently
-
-**Integration Points**:
-- Compositor integration (if needed) — Bubble Agent may need compositor integration for rendering
-- Rendering infrastructure — Bubble Agent may need rendering infrastructure for SLC products
-- Service-to-service authentication — Bubble Agent will use service account tokens via AuthService (per coordination decision)
-- Timeout/error handling patterns — Bubble Agent has implemented patterns per coordination decisions
-- HTTP/WebSocket timeout/error handling — Core Agent implementation ready (2025-12-29-001544-pst)
-  - Bubble Agent can integrate with Core Agent's HTTP/WebSocket infrastructure if needed
-  - Bubble Agent has independent timeout/error handling for Court compute operations
-
-**Timeline**:
-- ✅ **COMPLETE** (2025-12-28-152833-pst): Timeout handling implementation (Court compute)
-- ✅ **COMPLETE** (2025-12-28-152833-pst): Error handling implementation (Court compute)
-- ✅ **AVAILABLE** (2025-12-29-001544-pst): Core Agent HTTP/WebSocket timeout/error handling ready
-- **IMMEDIATE**: Bubble Agent implementing Component API integration (Workspace Agent ready)
-- **SHORT-TERM**: Core Agent should facilitate DAG Core and Aurora Agent coordination
-- **SHORT-TERM**: Bubble Agent implementing async pattern integration
-- **SHORT-TERM**: Bubble Agent can integrate with Core Agent's HTTP/WebSocket infrastructure if needed
-- **MEDIUM-TERM**: Bubble Agent ready for SLC Product Integration testing once Component API integration complete
-
----
-
 ### For Other Agents (Silo, Vantage, Research, Skate, Carry)
 
 **Status**: No immediate coordination needed
 
 **What Other Agents Need to Know**:
 - ✅ **Bubble Agent has completed timeout/error handling implementation** (2025-12-28-152833-pst)
-- Bubble Agent is proceeding with Component API integration (Workspace Agent ready)
+- ✅ **Bubble Agent has completed Workspace Agent integration** (2025-12-28-164554-pst)
+- Bubble Agent is proceeding with async pattern integration (independent work)
+- Bubble Agent is proceeding with retry logic implementation (independent work)
 - Bubble Agent has received coordination decisions and is implementing them
 - Bubble Agent is ready for integration once Component API integration is complete
 - **No action needed from other agents** — Bubble Agent will coordinate if needed
@@ -746,7 +541,8 @@
 **Recent Progress**:
 - ✅ Timeout handling complete — All Court compute operations have timeout support
 - ✅ Error handling complete — Structured error unions with retryability classification
-- ⏳ Component API integration in progress — Workspace Agent Phase 33 complete, ready for integration
+- ✅ Workspace Agent integration complete — Component API integration ready for testing
+- ⏳ Async pattern integration in progress — Flow Agent Event Bus ready
 
 **Future Integration Opportunities**:
 - **Silo Agent**: Design data storage integration (if needed)
@@ -757,4 +553,4 @@
 
 ---
 
-**Status**: Foundation Complete — Timeout/Error Handling Complete ✅ — Workspace Agent Integration Complete ✅ — Ready for Aurora Agent Integration (2025-12-28-164554-pst)
+**Status**: Foundation Complete — Timeout/Error Handling Complete ✅ — Workspace Agent Integration Complete ✅ — Ready for Async Pattern Integration (2025-12-28-184256-pst)

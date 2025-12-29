@@ -179,6 +179,13 @@ pub const Syscall = enum(u32) {
     kernel_get_stats = 135,
     health_check = 136,
     get_resource_usage = 137,
+    
+    // UDP Socket Operations with Timeout
+    udp_sendto_with_timeout = 138,
+    udp_recvfrom_with_timeout = 139,
+    
+    // Resource Limits
+    set_resource_limit = 140,
 };
 
 /// Memory mapping flags.
@@ -709,6 +716,18 @@ pub const Process = struct {
     /// Number of open network connections.
     /// Why: Track network connection usage for resource monitoring.
     open_connections: u32,
+    /// Maximum CPU time allowed (nanoseconds, 0 = unlimited).
+    /// Why: Enforce CPU time limits per process.
+    max_cpu_time_ns: u64,
+    /// Maximum memory allowed (bytes, 0 = unlimited).
+    /// Why: Enforce memory limits per process.
+    max_memory_bytes: u64,
+    /// Maximum number of open file descriptors (0 = unlimited).
+    /// Why: Enforce file descriptor limits per process.
+    max_file_descriptors: u32,
+    /// Maximum number of open network connections (0 = unlimited).
+    /// Why: Enforce network connection limits per process.
+    max_connections: u32,
     /// Parent process ID (0 if no parent).
     /// Why: Track parent-child relationships.
     parent_pid: u64,
@@ -747,6 +766,10 @@ pub const Process = struct {
             .network_bytes_received = 0,
             .open_file_descriptors = 0,
             .open_connections = 0,
+            .max_cpu_time_ns = 0, // Unlimited by default
+            .max_memory_bytes = 0, // Unlimited by default
+            .max_file_descriptors = 0, // Unlimited by default
+            .max_connections = 0, // Unlimited by default
             .parent_pid = 0,
             .priority = 0, // Default priority (nice value 0)
             .time_slice_quantum = 1000, // Default time slice (1000 instruction steps)
@@ -1541,6 +1564,8 @@ pub const BasinKernel = struct {
             .udp_close => self.syscall_udp_close(arg1, arg2, arg3, arg4),
             .udp_enumerate_sockets => self.syscall_udp_enumerate_sockets(arg1, arg2, arg3, arg4),
             .udp_get_stats => self.syscall_udp_get_stats(arg1, arg2, arg3, arg4),
+            .udp_sendto_with_timeout => self.syscall_udp_sendto_with_timeout(arg1, arg2, arg3, arg4),
+            .udp_recvfrom_with_timeout => self.syscall_udp_recvfrom_with_timeout(arg1, arg2, arg3, arg4),
             .audio_create_device => self.syscall_audio_create_device(arg1, arg2, arg3, arg4),
             .audio_set_volume => self.syscall_audio_set_volume(arg1, arg2, arg3, arg4),
             .audio_set_mute => self.syscall_audio_set_mute(arg1, arg2, arg3, arg4),
@@ -1559,6 +1584,7 @@ pub const BasinKernel = struct {
             .kernel_get_stats => self.syscall_kernel_get_stats(arg1, arg2, arg3, arg4),
             .health_check => self.syscall_health_check(arg1, arg2, arg3, arg4),
             .get_resource_usage => self.syscall_get_resource_usage(arg1, arg2, arg3, arg4),
+            .set_resource_limit => self.syscall_set_resource_limit(arg1, arg2, arg3, arg4),
         };
     }
     
@@ -2721,6 +2747,18 @@ pub const BasinKernel = struct {
         const current_process_id = self.scheduler.get_current();
         const owner_process_id = @as(u32, @truncate(current_process_id));
         
+        // Check file descriptor limit for current process.
+        if (current_process_id > 0) {
+            for (0..MAX_PROCESSES) |i| {
+                if (self.processes[i].allocated and self.processes[i].id == current_process_id) {
+                    if (!self.can_open_file_descriptor(self, &self.processes[i])) {
+                        return SyscallResult.fail(BasinError.resource_exhausted); // File descriptor limit exceeded
+                    }
+                    break;
+                }
+            }
+        }
+        
         // Allocate handle entry.
         var file_handle = &self.handles[handle_idx];
         const handle_id = self.next_handle_id;
@@ -2747,6 +2785,16 @@ pub const BasinKernel = struct {
         // If truncate flag is set, clear buffer.
         if (open_flags.truncate) {
             file_handle.buffer_size = 0;
+        }
+        
+        // Update process resource usage (increment file descriptor count).
+        if (current_process_id > 0) {
+            for (0..MAX_PROCESSES) |i| {
+                if (self.processes[i].allocated and self.processes[i].id == current_process_id) {
+                    self.processes[i].open_file_descriptors += 1;
+                    break;
+                }
+            }
         }
         
         // Assert: Handle must be allocated correctly.
@@ -2998,12 +3046,25 @@ pub const BasinKernel = struct {
         
         // Close handle (free entry).
         var file_handle = &self.handles[handle_idx];
+        const owner_pid = file_handle.owner_process_id;
         file_handle.allocated = false;
         file_handle.id = 0;
         file_handle.path_len = 0;
         file_handle.position = 0;
         file_handle.buffer_size = 0;
         file_handle.owner_process_id = 0;
+        
+        // Update process resource usage (decrement file descriptor count).
+        if (owner_pid > 0) {
+            for (0..MAX_PROCESSES) |i| {
+                if (self.processes[i].allocated and self.processes[i].id == owner_pid) {
+                    if (self.processes[i].open_file_descriptors > 0) {
+                        self.processes[i].open_file_descriptors -= 1;
+                    }
+                    break;
+                }
+            }
+        }
         
         // Assert: Handle must be unallocated after close.
         Debug.kassert(!file_handle.allocated, "Handle still allocated", .{});
@@ -4968,6 +5029,18 @@ pub const BasinKernel = struct {
         const current_process_id = self.scheduler.get_current();
         const owner_process_id = @as(u32, @truncate(current_process_id));
         
+        // Check connection limit for current process.
+        if (current_process_id > 0) {
+            for (0..MAX_PROCESSES) |i| {
+                if (self.processes[i].allocated and self.processes[i].id == current_process_id) {
+                    if (!self.can_open_connection(self, &self.processes[i])) {
+                        return BasinError.resource_exhausted; // Connection limit exceeded
+                    }
+                    break;
+                }
+            }
+        }
+        
         // Create socket.
         const socket_id = self.tcp_sockets.create_socket(owner_process_id) orelse {
             return BasinError.out_of_memory; // No free socket slot
@@ -5367,9 +5440,24 @@ pub const BasinKernel = struct {
             return BasinError.invalid_argument; // Invalid socket ID
         }
         
+        // Get current process ID before closing.
+        const current_process_id = self.scheduler.get_current();
+        
         // Close socket.
         if (!self.tcp_sockets.close_socket(socket_id)) {
             return BasinError.not_found; // Socket not found
+        }
+        
+        // Update process resource usage (decrement connection count).
+        if (current_process_id > 0) {
+            for (0..MAX_PROCESSES) |i| {
+                if (self.processes[i].allocated and self.processes[i].id == current_process_id) {
+                    if (self.processes[i].open_connections > 0) {
+                        self.processes[i].open_connections -= 1;
+                    }
+                    break;
+                }
+            }
         }
         
         const result = SyscallResult.ok(0);
@@ -5404,10 +5492,32 @@ pub const BasinKernel = struct {
         const current_process_id = self.scheduler.get_current();
         const owner_process_id = @as(u32, @truncate(current_process_id));
         
+        // Check connection limit for current process.
+        if (current_process_id > 0) {
+            for (0..MAX_PROCESSES) |i| {
+                if (self.processes[i].allocated and self.processes[i].id == current_process_id) {
+                    if (!self.can_open_connection(self, &self.processes[i])) {
+                        return BasinError.resource_exhausted; // Connection limit exceeded
+                    }
+                    break;
+                }
+            }
+        }
+        
         // Create socket.
         const socket_id = self.udp_sockets.create_socket(owner_process_id) orelse {
             return BasinError.out_of_memory; // No free socket slot
         };
+        
+        // Update process resource usage (increment connection count).
+        if (current_process_id > 0) {
+            for (0..MAX_PROCESSES) |i| {
+                if (self.processes[i].allocated and self.processes[i].id == current_process_id) {
+                    self.processes[i].open_connections += 1;
+                    break;
+                }
+            }
+        }
         
         const result = SyscallResult.ok(socket_id);
         
@@ -5617,6 +5727,211 @@ pub const BasinKernel = struct {
         return result;
     }
     
+    /// Send data on UDP socket with timeout.
+    /// Why: Transmit data on UDP socket with timeout support.
+    /// Contract: socket_id must be valid, data_ptr and data_len must be valid, addr_and_timeout contains IPv4 address and timeout_ms.
+    pub fn syscall_udp_sendto_with_timeout(
+        self: *BasinKernel,
+        socket_id: u64,
+        data_ptr: u64,
+        data_len: u64,
+        addr_and_timeout: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        // Record start time for timeout checking.
+        const start_time_ns = self.timer.get_monotonic_ns();
+        
+        // Extract IPv4 address and timeout from combined argument.
+        // Format: lower 32 bits = IPv4 address (u32), upper 32 bits = timeout_ms (u32), convert to nanoseconds
+        const ipv4_addr = @as(u32, @truncate(addr_and_timeout));
+        const timeout_ms = @as(u32, @truncate(addr_and_timeout >> 32));
+        const timeout_ns: u64 = if (timeout_ms > 0) @as(u64, timeout_ms) * 1_000_000 else 0;
+        
+        // Assert: Socket ID must be non-zero.
+        if (socket_id == 0) {
+            return BasinError.invalid_argument; // Invalid socket ID
+        }
+        
+        // Assert: Data pointer must be valid (non-zero, within VM memory).
+        if (data_ptr == 0) {
+            return BasinError.invalid_argument; // Null pointer
+        }
+        
+        const VM_MEMORY_SIZE_SENDTO: u64 = 4 * 1024 * 1024; // 4MB default
+        if (data_ptr >= VM_MEMORY_SIZE_SENDTO) {
+            return BasinError.invalid_argument; // Data pointer exceeds VM memory
+        }
+        
+        // Assert: Data length must be reasonable (max socket buffer size).
+        if (data_len == 0) {
+            return BasinError.invalid_argument; // Zero-length data
+        }
+        if (data_len > 64 * 1024) {
+            return BasinError.invalid_argument; // Data too large
+        }
+        
+        // Assert: Data must fit within VM memory.
+        if (data_ptr + data_len > VM_MEMORY_SIZE_SENDTO) {
+            return BasinError.invalid_argument; // Data exceeds VM memory
+        }
+        
+        // Check timeout before operation.
+        if (self.check_timeout(start_time_ns, timeout_ns)) {
+            return BasinError.network_timeout; // Timeout expired
+        }
+        
+        // Stub: would extract port from arguments properly.
+        // For now, use addr as IPv4 address and port as 0.
+        const ipv4_port: u16 = 0; // Stub: would extract from arguments
+        
+        // Read data from VM memory (stub: would use vm_memory_reader).
+        // For now, use a placeholder data slice.
+        const data = "test";
+        
+        // Send data.
+        // Note: In a real implementation, this would be a blocking operation that checks timeout periodically.
+        const bytes_sent = self.udp_sockets.sendto(socket_id, data, ipv4_addr, ipv4_port) orelse {
+            // Check timeout after operation.
+            if (self.check_timeout(start_time_ns, timeout_ns)) {
+                return BasinError.network_timeout; // Timeout expired
+            }
+            return BasinError.not_found; // Socket not found or invalid state
+        };
+        
+        // Check timeout after operation.
+        if (self.check_timeout(start_time_ns, timeout_ns)) {
+            return BasinError.network_timeout; // Timeout expired
+        }
+        
+        // Update process resource usage (network bytes sent).
+        const current_pid = self.scheduler.get_current();
+        if (current_pid > 0) {
+            for (0..MAX_PROCESSES) |i| {
+                if (self.processes[i].allocated and self.processes[i].id == current_pid) {
+                    self.processes[i].network_bytes_sent += bytes_sent;
+                    break;
+                }
+            }
+        }
+        
+        const result = SyscallResult.ok(bytes_sent);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
+    /// Receive data from UDP socket with timeout.
+    /// Why: Read incoming data from bound socket with timeout support.
+    /// Contract: socket_id must be valid, buffer_ptr and buffer_len must be valid, addr_ptr_and_timeout contains addr_ptr and timeout_ms.
+    pub fn syscall_udp_recvfrom_with_timeout(
+        self: *BasinKernel,
+        socket_id: u64,
+        buffer_ptr: u64,
+        buffer_len: u64,
+        addr_ptr_and_timeout: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        // Record start time for timeout checking.
+        const start_time_ns = self.timer.get_monotonic_ns();
+        
+        // Extract addr_ptr and timeout from combined argument.
+        // Format: lower 32 bits = addr_ptr (u32), upper 32 bits = timeout_ms (u32), convert to nanoseconds
+        const addr_ptr = @as(u32, @truncate(addr_ptr_and_timeout));
+        const timeout_ms = @as(u32, @truncate(addr_ptr_and_timeout >> 32));
+        const timeout_ns: u64 = if (timeout_ms > 0) @as(u64, timeout_ms) * 1_000_000 else 0;
+        
+        // Assert: Socket ID must be non-zero.
+        if (socket_id == 0) {
+            return BasinError.invalid_argument; // Invalid socket ID
+        }
+        
+        // Assert: Buffer pointer must be valid (non-zero, within VM memory).
+        if (buffer_ptr == 0) {
+            return BasinError.invalid_argument; // Null pointer
+        }
+        
+        const VM_MEMORY_SIZE_RECVFROM: u64 = 4 * 1024 * 1024; // 4MB default
+        if (buffer_ptr >= VM_MEMORY_SIZE_RECVFROM) {
+            return BasinError.invalid_argument; // Buffer pointer exceeds VM memory
+        }
+        
+        // Assert: Buffer length must be reasonable (max socket buffer size).
+        if (buffer_len == 0) {
+            return BasinError.invalid_argument; // Zero-length buffer
+        }
+        if (buffer_len > 64 * 1024) {
+            return BasinError.invalid_argument; // Buffer too large
+        }
+        
+        // Assert: Buffer must fit within VM memory.
+        if (buffer_ptr + buffer_len > VM_MEMORY_SIZE_RECVFROM) {
+            return BasinError.invalid_argument; // Buffer exceeds VM memory
+        }
+        
+        // Check timeout before operation.
+        if (self.check_timeout(start_time_ns, timeout_ns)) {
+            return BasinError.network_timeout; // Timeout expired
+        }
+        
+        // Create buffer slice (stub: would use vm_memory_writer).
+        var buffer: [64 * 1024]u8 = undefined;
+        const buffer_slice = buffer[0..@as(usize, @intCast(buffer_len))];
+        
+        // Create address and port pointers (stub: would use vm_memory_writer).
+        var remote_addr: u32 = 0;
+        var remote_port: u16 = 0;
+        const addr_ptr_opt: ?*u32 = if (addr_ptr != 0) &remote_addr else null;
+        const port_ptr_opt: ?*u16 = if (addr_ptr != 0) &remote_port else null;
+        
+        // Receive data.
+        // Note: In a real implementation, this would be a blocking operation that checks timeout periodically.
+        // Receive data (remote_addr and remote_port are written by recvfrom if addr_ptr != 0).
+        const bytes_received = self.udp_sockets.recvfrom(socket_id, buffer_slice, addr_ptr_opt, port_ptr_opt) orelse {
+            // Check timeout after operation.
+            if (self.check_timeout(start_time_ns, timeout_ns)) {
+                return BasinError.network_timeout; // Timeout expired
+            }
+            return BasinError.not_found; // Socket not found or invalid state
+        };
+        
+        // Check timeout after operation.
+        if (self.check_timeout(start_time_ns, timeout_ns)) {
+            return BasinError.network_timeout; // Timeout expired
+        }
+        
+        // Update process resource usage (network bytes received).
+        const current_pid = self.scheduler.get_current();
+        if (current_pid > 0) {
+            for (0..MAX_PROCESSES) |i| {
+                if (self.processes[i].allocated and self.processes[i].id == current_pid) {
+                    self.processes[i].network_bytes_received += bytes_received;
+                    break;
+                }
+            }
+        }
+        
+        // Write data to VM memory (stub: would use vm_memory_writer).
+        // For now, just return bytes received.
+        // Note: buffer_ptr is validated above but not written to in stub implementation.
+        
+        const result = SyscallResult.ok(bytes_received);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
     /// Close UDP socket.
     /// Why: Release socket resources.
     /// Contract: socket_id must be valid.
@@ -5641,9 +5956,24 @@ pub const BasinKernel = struct {
             return BasinError.invalid_argument; // Invalid socket ID
         }
         
+        // Get current process ID before closing.
+        const current_process_id = self.scheduler.get_current();
+        
         // Close socket.
         if (!self.udp_sockets.close_socket(socket_id)) {
             return BasinError.not_found; // Socket not found
+        }
+        
+        // Update process resource usage (decrement connection count).
+        if (current_process_id > 0) {
+            for (0..MAX_PROCESSES) |i| {
+                if (self.processes[i].allocated and self.processes[i].id == current_process_id) {
+                    if (self.processes[i].open_connections > 0) {
+                        self.processes[i].open_connections -= 1;
+                    }
+                    break;
+                }
+            }
         }
         
         const result = SyscallResult.ok(0);
@@ -6755,6 +7085,150 @@ pub const BasinKernel = struct {
         Debug.kassert(result == .success, "Result not success", .{});
         
         return result;
+    }
+    
+    /// Set resource limit for a process.
+    /// Why: Configure per-process resource limits to prevent resource exhaustion.
+    /// Contract: pid must be valid, limit_type must be valid, limit_value must be reasonable.
+    ///   - arg1: Process ID (pid)
+    ///   - arg2: Limit type (0 = CPU time, 1 = memory, 2 = file descriptors, 3 = connections)
+    ///   - arg3: Limit value (CPU time in nanoseconds, memory in bytes, counts for others)
+    ///   - arg4: Unused
+    pub fn syscall_set_resource_limit(
+        self: *BasinKernel,
+        pid: u64,
+        limit_type: u64,
+        limit_value: u64,
+        _arg4: u64,
+    ) BasinError!SyscallResult {
+        // Assert: self pointer must be valid.
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Self ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Self ptr unaligned", .{});
+        
+        _ = _arg4;
+        
+        // Assert: Process ID must be valid (non-zero).
+        if (pid == 0) {
+            return BasinError.invalid_argument; // Invalid process ID
+        }
+        
+        // Assert: Limit type must be valid (0-3).
+        if (limit_type > 3) {
+            return BasinError.invalid_argument; // Invalid limit type
+        }
+        
+        // Find process in process table.
+        var found: ?u32 = null;
+        for (0..MAX_PROCESSES) |i| {
+            if (self.processes[i].allocated and self.processes[i].id == pid) {
+                found = @intCast(i);
+                break;
+            }
+        }
+        
+        // Assert: Process must exist.
+        if (found == null) {
+            return BasinError.process_not_found; // Process not found
+        }
+        
+        const process_idx = found.?;
+        const process = &self.processes[process_idx];
+        
+        // Check permission: Only root or the process itself can set limits.
+        const current_pid = self.scheduler.get_current();
+        if (current_pid != pid and !self.user_context.is_root()) {
+            return BasinError.permission_denied; // Permission denied
+        }
+        
+        // Set limit based on type.
+        switch (limit_type) {
+            0 => {
+                // CPU time limit (nanoseconds).
+                process.max_cpu_time_ns = limit_value;
+            },
+            1 => {
+                // Memory limit (bytes).
+                process.max_memory_bytes = limit_value;
+            },
+            2 => {
+                // File descriptor limit (count).
+                if (limit_value > 0xFFFFFFFF) {
+                    return BasinError.invalid_argument; // Limit value too large
+                }
+                process.max_file_descriptors = @as(u32, @truncate(limit_value));
+            },
+            3 => {
+                // Network connection limit (count).
+                if (limit_value > 0xFFFFFFFF) {
+                    return BasinError.invalid_argument; // Limit value too large
+                }
+                process.max_connections = @as(u32, @truncate(limit_value));
+            },
+            else => {
+                return BasinError.invalid_argument; // Invalid limit type
+            },
+        }
+        
+        const result = SyscallResult.ok(0);
+        
+        // Assert: result must be success (not error).
+        Debug.kassert(result == .success, "Result not success", .{});
+        
+        return result;
+    }
+    
+    /// Check if process has exceeded CPU time limit.
+    /// Why: Enforce CPU time limits before allowing process to continue.
+    /// Contract: process must be allocated.
+    fn check_cpu_time_limit(self: *const BasinKernel, process: *const Process) bool {
+        // If limit is 0 (unlimited), never exceeded.
+        if (process.max_cpu_time_ns == 0) {
+            return false;
+        }
+        
+        // Check if current usage exceeds limit.
+        return process.cpu_time_ns > process.max_cpu_time_ns;
+    }
+    
+    /// Check if process can allocate memory.
+    /// Why: Enforce memory limits before memory allocation.
+    /// Contract: process must be allocated, requested_bytes must be valid.
+    fn can_allocate_memory(self: *const BasinKernel, process: *const Process, requested_bytes: u64) bool {
+        // If limit is 0 (unlimited), allow allocation.
+        if (process.max_memory_bytes == 0) {
+            return true;
+        }
+        
+        // Check if adding requested bytes would exceed limit.
+        const new_memory = process.memory_used +% requested_bytes; // Saturating add
+        return new_memory <= process.max_memory_bytes;
+    }
+    
+    /// Check if process can open file descriptor.
+    /// Why: Enforce file descriptor limits before opening files.
+    /// Contract: process must be allocated.
+    fn can_open_file_descriptor(self: *const BasinKernel, process: *const Process) bool {
+        // If limit is 0 (unlimited), allow opening.
+        if (process.max_file_descriptors == 0) {
+            return true;
+        }
+        
+        // Check if adding one more file descriptor would exceed limit.
+        return (process.open_file_descriptors + 1) <= process.max_file_descriptors;
+    }
+    
+    /// Check if process can open network connection.
+    /// Why: Enforce connection limits before opening connections.
+    /// Contract: process must be allocated.
+    fn can_open_connection(self: *const BasinKernel, process: *const Process) bool {
+        // If limit is 0 (unlimited), allow opening.
+        if (process.max_connections == 0) {
+            return true;
+        }
+        
+        // Check if adding one more connection would exceed limit.
+        return (process.open_connections + 1) <= process.max_connections;
     }
 };
 

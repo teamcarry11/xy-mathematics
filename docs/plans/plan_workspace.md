@@ -1,9 +1,9 @@
 # Grain Workspace Agent: Development Plan
 
 **Agent**: Grain Workspace Agent (8th Agent)  
-**Status**: Phase 36 Error Handling Integration Complete ✅  
-**Last Updated**: 2025-12-29-041147-pst  
-**Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-21-204511-pst.md`
+**Status**: Phase 36 Error Handling Integration Complete ✅ — JG Project Assigned ✅  
+**Last Updated**: 2025-12-29-105655-pst  
+**Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-29-105655-pst.md`
 
 ---
 
@@ -1486,6 +1486,100 @@ All planned phases for Grain Workspace Agent have been completed:
 - Retry logic for retryable errors (timeout, network_error, rate_limit, server_error)
 - Error message display in Network Tools UI
 - Timeout configuration UI for custom timeout values
+
+---
+
+## JG Project (JG Housing Program) — **NEW PROJECT ASSIGNMENT**
+
+**Date**: 2025-12-29-105655-pst  
+**Status**: Project assigned  
+**Workspace Agent Responsibility**: **Desktop Dashboards (Months 3-8)**
+
+### Project Overview
+
+**JG Project** is a multi-agent integration project for JG housing program management. This is a long-term project that runs alongside existing SLC product work.
+
+### Workspace Agent Responsibilities
+
+**Desktop Dashboards (Months 3-8)**:
+- Design and implement desktop dashboard applications for JG housing program
+- Integrate with Core Agent's Grainbank MMT integration (Months 1-6)
+- Integrate with Silo Agent's storage schemas (Months 1-3)
+- Coordinate with Flow Agent on workflow orchestration (Months 4-10)
+- Coordinate with Court Agent on LLM planning features (Months 4-12)
+- Coordinate with Research Agent on analysis & optimization features (Months 6-12)
+- Use Component API for consistent UI components
+- Use existing Text Editor, File Manager, and Terminal Plus as foundation
+
+### Timeline
+
+- **Months 1-2**: Planning and design (wait for Core Agent and Silo Agent foundation)
+- **Months 3-8**: Desktop dashboard implementation
+- **Months 4-10**: Integration with Flow Agent workflow orchestration
+- **Months 6-12**: Integration with Research Agent analytics and Court Agent LLM features
+- **Months 7-12**: UI component coordination with Bubble/Aurora agents
+
+### Coordination Points
+
+**Dependencies**:
+- **Core Agent**: Grainbank MMT integration foundation (Months 1-6) — Must be ready before dashboard work begins
+- **Silo Agent**: Storage schemas for JG modules (Months 1-3) — Must be ready before dashboard data integration
+- **Flow Agent**: Workflow orchestration (Months 4-10) — Coordinate on dashboard workflow features
+- **Court Agent**: LLM planning features (Months 4-12) — Coordinate on dashboard LLM integration
+- **Research Agent**: Analysis & optimization (Months 6-12) — Coordinate on dashboard analytics features
+- **Bubble/Aurora Agents**: UI components (Months 7-12) — Coordinate on dashboard UI design
+
+### Implementation Plan
+
+**Phase 1: Planning and Design** (Months 1-2):
+- Review Core Agent's Grainbank MMT integration design
+- Review Silo Agent's storage schema designs for JG modules
+- Design dashboard architecture and component structure
+- Plan integration points with Flow, Court, and Research agents
+- Design dashboard UI/UX using Component API patterns
+
+**Phase 2: Core Dashboard Implementation** (Months 3-4):
+- Begin desktop dashboard implementation
+- Integrate with Silo Agent storage schemas
+- Implement basic dashboard components using Component API
+- Coordinate with Flow Agent on workflow features
+- Coordinate with Court Agent on LLM planning features
+
+**Phase 3: Advanced Features** (Months 5-6):
+- Complete desktop dashboard implementation
+- Integrate with Research Agent analytics features
+- Enhance dashboard with advanced visualization components
+- Implement dashboard data export/import functionality
+
+**Phase 4: UI Refinement and Testing** (Months 7-8):
+- Coordinate with Bubble/Aurora agents on UI components
+- Complete dashboard testing and refinement
+- Performance optimization
+- User acceptance testing
+
+### Technical Approach
+
+**Component API Integration**:
+- Use existing `DesktopComponentAPI` structure
+- Extend with JG-specific dashboard components
+- Maintain consistency with existing desktop applications
+
+**Data Integration**:
+- Integrate with Silo Agent storage schemas
+- Use Core Agent's Grainbank MMT integration for financial data
+- Coordinate with Flow Agent for workflow data
+- Coordinate with Court Agent for LLM-generated insights
+- Coordinate with Research Agent for analytics data
+
+**UI/UX**:
+- Follow existing desktop application patterns
+- Use Component API for consistent styling
+- Coordinate with Bubble/Aurora agents for advanced UI components
+- Ensure accessibility and usability
+
+**Status**: Project assigned. Planning phase begins. Waiting for Core Agent and Silo Agent foundation work (Months 1-3) before beginning dashboard implementation.
+
+---
 
 **Creative Future Ideas** (Conceptual):
 - **System Auditor**: Security auditing and compliance checking

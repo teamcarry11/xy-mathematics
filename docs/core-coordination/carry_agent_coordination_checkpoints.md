@@ -1,6 +1,6 @@
 # Carry Agent: Coordination Checkpoints
 
-**Last Updated**: 2025-12-29-003407-pst
+**Last Updated**: 2025-12-29-112345-pst
 
 ---
 
@@ -98,6 +98,33 @@ All Core Agent coordination features are now integrated and functional:
 
 ---
 
+### Checkpoint 4: JG Project — Mobile Apps Development (PLANNING PHASE)
+
+**When to Check**: **Planning Phase** — Months 6-12 timeline
+
+**What's Needed**:
+1. Review JG project design and requirements
+2. Coordinate with Core Agent on JG module integration points (Months 1-6)
+3. Coordinate with Silo Agent on storage schema requirements for mobile apps (Months 1-3)
+4. Begin mobile app architecture design (Month 6)
+5. Start mobile app development once dependencies are ready
+
+**JG Project Responsibilities**:
+- **Primary Role**: Mobile Apps Development (Months 6-12)
+- **Integration Points**: Core Agent (JG modules), Silo Agent (storage), Workspace Agent (dashboards), Flow Agent (workflows), Court Agent (LLM), Research Agent (analysis), Bubble/Aurora Agents (UI components), Skate Agent (knowledge graph)
+
+**Impact**:
+- Mobile apps will integrate with JG project modules and services
+- Dependencies: Core Agent JG modules (Months 1-6), Silo Agent storage schemas (Months 1-3), UI components (Months 7-12)
+
+**Status**: ⏳ **PLANNING PHASE** — Responsibilities assigned, awaiting project kickoff
+
+**Action**: Review JG project design, coordinate with other agents on integration points
+
+**Reference**: `docs/agent-communications/core_agent_coordination_plan_2025-12-29-105655-pst.md`
+
+---
+
 ## 📋 Summary: When to Check In
 
 ### Immediate (Check Now)
@@ -118,26 +145,38 @@ All Core Agent coordination features are now integrated and functional:
   - **Status**: Coordination in progress
   - **Action**: Continue coordinating on integration approach
 
+### Planning Phase (Months 6-12)
+- **JG Project**: Mobile apps development
+  - **Priority**: MEDIUM
+  - **Status**: Planning phase — Responsibilities assigned
+  - **Action**: Review JG project design, coordinate with other agents
+
 ---
 
 ## ✅ Independent Work Available
 
 While waiting for coordination, Carry Agent can work on:
 
-1. **Other Mobile Framework Features**
+1. **JG Project Planning** (Months 6-12)
+   - Review JG project design and requirements
+   - Coordinate with Core Agent on JG module integration points
+   - Coordinate with Silo Agent on storage schema requirements
+   - Begin mobile app architecture design (Month 6)
+
+2. **Other Mobile Framework Features**
    - Android App Development (Phase 5)
    - iOS App Development (Phase 6)
    - OAuth token refresh support
    - User profile synchronization enhancements
 
-2. **Future Enhancements** (Low Priority)
+3. **Future Enhancements** (Low Priority)
    - Circuit breaker pattern
    - Request deduplication
    - Health checks (once Silo confirms endpoint)
    - Request/response logging
    - Metrics/monitoring
 
-3. **Testing and Documentation**
+4. **Testing and Documentation**
    - End-to-end testing preparation
    - Integration testing with mock Silo Agent
    - Documentation updates
@@ -150,13 +189,14 @@ While waiting for coordination, Carry Agent can work on:
 
 **Ready For**:
 - ✅ Production testing (with synchronous fallback)
-- ⏳ Async pattern integration (waiting for Flow Agent Event Bus)
-- ⏳ Full async operation (waiting for Core Agent event publishing)
+- ✅ Async pattern integration (Event Bus ready, waiting for Core Agent event publishing)
+- ⏳ Full async operation (waiting for Core Agent event publishing — 1-2 days)
+- ⏳ JG project mobile apps development (Months 6-12) — Planning phase
 
 **Blockers**:
 - None for basic functionality (synchronous fallback works)
-- Flow Agent Event Bus needed for async pattern
-- Core Agent event publishing needed for full async operation
+- ✅ Event Bus ready (Flow Agent complete, Carry Agent integrated)
+- Core Agent event publishing needed for full async operation (1-2 days)
 
 ---
 

@@ -1,7 +1,7 @@
 # Grain Carry Agent: Core Coordination Status
 
 **Agent**: Grain Carry Agent (6th Agent)  
-**Last Updated**: 2025-12-29-012222-pst
+**Last Updated**: 2025-12-29-112345-pst
 
 ---
 
@@ -20,6 +20,8 @@
 **Blockers**: None for basic functionality — Synchronous fallback works perfectly
 
 **Next Critical Milestone**: Core Agent HTTP event publishing (1-2 days) → Full async pattern integration
+
+**JG Project Integration**: Mobile apps development (Months 6-12) — Planning phase
 
 ---
 
@@ -87,6 +89,67 @@
 - ⏳ Better performance under high load (async pattern)
 
 **Note**: Synchronous fallback works perfectly. Async is an optimization that will improve performance under high load.
+
+---
+
+## JG Project Integration
+
+**Status**: ⏳ **PLANNING PHASE** — Responsibilities assigned, awaiting project kickoff  
+**Timeline**: Months 6-12  
+**Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-29-105655-pst.md`
+
+### Carry Agent Responsibilities
+
+**Primary Role**: Mobile Apps Development (Months 6-12)
+
+Carry Agent is responsible for developing mobile applications for the JG housing program. This includes:
+
+1. **Mobile App Development**:
+   - Android and iOS mobile applications
+   - Integration with JG project APIs and services
+   - User authentication and authorization
+   - Offline capabilities and data synchronization
+   - Push notifications
+
+2. **Integration Points**:
+   - **Core Agent**: Grainbank MMT integration, JG module foundation (Months 1-6) — Carry Agent will integrate with Core Agent's JG modules
+   - **Silo Agent**: Storage schemas for all JG modules (Months 1-3) — Carry Agent will use Silo Agent's storage for mobile app data
+   - **Workspace Agent**: Desktop dashboards (Months 3-8) — Mobile apps may complement desktop dashboards
+   - **Flow Agent**: Workflow orchestration (Months 4-10) — Mobile apps may trigger workflows
+   - **Court Agent**: LLM planning features (Months 4-12) — Mobile apps may integrate LLM features
+   - **Research Agent**: Analysis & optimization (Months 6-12) — Mobile apps may display research insights
+   - **Bubble/Aurora Agents**: UI components (Months 7-12) — Mobile apps will use UI components
+   - **Skate Agent**: Knowledge graph (Months 5-12) — Mobile apps may query knowledge graph
+
+3. **Timeline**:
+   - **Months 6-12**: Mobile app development and integration
+   - **Dependencies**: Core Agent JG modules (Months 1-6), Silo Agent storage schemas (Months 1-3), UI components (Months 7-12)
+
+### Current Status
+
+- ✅ **JG Project Responsibilities Assigned**: Mobile apps development (Months 6-12)
+- ⏳ **Planning Phase**: Awaiting project kickoff and detailed requirements
+- ⏳ **Dependencies**: Waiting for Core Agent JG modules (Months 1-6) and Silo Agent storage schemas (Months 1-3)
+
+### Next Steps
+
+1. **SHORT-TERM**: Review JG project design and requirements
+2. **SHORT-TERM**: Coordinate with Core Agent on JG module integration points
+3. **SHORT-TERM**: Coordinate with Silo Agent on storage schema requirements for mobile apps
+4. **MEDIUM-TERM**: Begin mobile app architecture design (Month 6)
+5. **MEDIUM-TERM**: Start mobile app development once dependencies are ready
+
+### Coordination Notes
+
+- **Core Agent**: JG module foundation and Grainbank MMT integration (Months 1-6) — Carry Agent will integrate with these modules
+- **Silo Agent**: Storage schemas (Months 1-3) — Carry Agent needs to understand storage schema for mobile app data
+- **Bubble/Aurora Agents**: UI components (Months 7-12) — Carry Agent will use these components in mobile apps
+- **Flow Agent**: Workflow orchestration (Months 4-10) — Mobile apps may trigger workflows
+- **Court Agent**: LLM planning features (Months 4-12) — Mobile apps may integrate LLM features
+- **Research Agent**: Analysis & optimization (Months 6-12) — Mobile apps may display research insights
+- **Skate Agent**: Knowledge graph (Months 5-12) — Mobile apps may query knowledge graph
+
+**Reference**: See `docs/agent-communications/core_agent_coordination_plan_2025-12-29-105655-pst.md` for full JG project integration plan.
 
 ---
 
@@ -540,8 +603,9 @@ Carry Agent needs to confirm the exact API contract details to finalize the data
 - ✅ **COMPLETE**: Event Bus integration (Flow Agent complete, Carry Agent integrated)
 - ⏳ **WAITING**: HTTP request event publishing (Core Agent, 1-2 days)
 - ⏳ **ONGOING**: Continue coordinating with Silo Agent on database integration approach
+- ⏳ **PLANNING**: JG project mobile apps development (Months 6-12) — Review requirements and coordinate with other agents
 - ⏳ **AVAILABLE**: Can work on other mobile framework features while waiting
 
 ---
 
-**Status**: Database Integration Complete ✅ — All Core Agent Features Integrated ✅ — Event Bus Integration Complete ✅ — Ready for Core Agent HTTP Event Publishing (2025-12-29-012222-pst)
+**Status**: Database Integration Complete ✅ — All Core Agent Features Integrated ✅ — Event Bus Integration Complete ✅ — Ready for Core Agent HTTP Event Publishing — JG Project Integration Assigned (2025-12-29-112345-pst)

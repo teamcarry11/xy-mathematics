@@ -1,7 +1,7 @@
 # Carry Agent: Status Summary & Coordination Checkpoints
 
-**Last Updated**: 2025-12-29-003407-pst  
-**Status**: ✅ **All Core Agent Features Integrated** ✅ **Event Bus Integration Complete** — Ready for Core Agent HTTP Event Publishing
+**Last Updated**: 2025-12-29-112345-pst  
+**Status**: ✅ **All Core Agent Features Integrated** ✅ **Event Bus Integration Complete** — Ready for Core Agent HTTP Event Publishing — **JG Project Integration Assigned**
 
 ---
 
@@ -139,13 +139,19 @@
 
 While waiting for coordination, Carry Agent can work on:
 
-1. **Other Mobile Framework Features**
+1. **JG Project Planning** (Months 6-12)
+   - Review JG project design and requirements
+   - Coordinate with Core Agent on JG module integration points
+   - Coordinate with Silo Agent on storage schema requirements
+   - Begin mobile app architecture design (Month 6)
+
+2. **Other Mobile Framework Features**
    - Android App Development (Phase 5)
    - iOS App Development (Phase 6)
    - OAuth token refresh support
    - User profile synchronization enhancements
 
-2. **Future Enhancements** (Low Priority)
+3. **Future Enhancements** (Low Priority)
    - Circuit breaker pattern
    - Request deduplication
    - Health checks (once Silo confirms endpoint)
@@ -153,7 +159,7 @@ While waiting for coordination, Carry Agent can work on:
    - Metrics/monitoring
    - Request queuing (needs coordination on where it should live)
 
-3. **Testing and Documentation**
+4. **Testing and Documentation**
    - End-to-end testing preparation
    - Integration testing with mock Silo Agent
    - Documentation updates
@@ -180,8 +186,9 @@ While waiting for coordination, Carry Agent can work on:
 1. ✅ **COMPLETE**: Event Bus integration (Flow Agent ready, Carry Agent integrated)
 2. **SHORT-TERM**: Check with Core Agent in 1-2 days on event publishing
 3. **ONGOING**: Continue coordinating with Silo Agent on API details
+4. **PLANNING**: JG project mobile apps development (Months 6-12) — Review requirements and coordinate
 
-**Ready For**: Production testing, independent mobile framework work, future enhancements, Core Agent HTTP event publishing (1-2 days)
+**Ready For**: Production testing, independent mobile framework work, JG project planning, future enhancements, Core Agent HTTP event publishing (1-2 days)
 
 ---
 

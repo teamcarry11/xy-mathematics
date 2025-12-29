@@ -1,8 +1,8 @@
 # Grain Flow Agent: Development Plan
 
 **Agent**: Grain Flow Agent (9th Agent)  
-**Status**: All Phases Complete ✅ (Phase 1-5 COMPLETE), Phase 2 Instrumentation Complete ✅ (All 4 Phases: Basic Metrics, Agent Coordination, Failure Patterns, Performance), SLC Product Workflow Templates Ready ✅, Research Agent Collaboration Complete ✅, ZON Format Integration Proposal Created ✅, Phase 3 Observatory Foundation Complete ✅, Phase 3 Dashboard API Complete ✅, Phase 3 Visualization Complete ✅, Workflow Scheduler Enhancement Complete ✅, Phase 63 API Contracts Documented ✅, Phase 64 Integration Tests Created ✅, Phase 3 Validation COMPLETE ✅, ZON Format Integration Coordinating with Court Agent ⏳ (Priority 3, HIGH, ~70% Complete, COORDINATION IN PROGRESS), Phase 3 Completion Reported to Core Agent ✅, TigerBeetle Enhancement Coordination Responded ⏳ (Medium Priority, Timeline Needed, COORDINATION NEEDED), Core Agent Coordination Plan Acknowledged ✅, Workflow Scheduler Cron Parser Enhanced ✅, Workflow Scheduler Cron Parser Step Value Support Enhanced ✅, Workflow Visualizer Hierarchical Layout Enhanced ✅, Event Bus Source Filtering Enhanced ✅, Build Configuration Coordination Requested ⏳ (Priority 2, HIGH, COORDINATION NEEDED), Core Coordination Document Rewritten ✅, Core Agent Coordination Plan 2025-12-21-204511-pst Acknowledged ✅  
-**Last Updated**: 2025-12-29-004237-pst
+**Status**: All Phases Complete ✅ (Phase 1-5 COMPLETE), Phase 2 Instrumentation Complete ✅ (All 4 Phases: Basic Metrics, Agent Coordination, Failure Patterns, Performance), SLC Product Workflow Templates Ready ✅, Research Agent Collaboration Complete ✅, ZON Format Integration Complete ✅, Phase 3 Observatory Foundation Complete ✅, Phase 3 Dashboard API Complete ✅, Phase 3 Visualization Complete ✅, Workflow Scheduler Enhancement Complete ✅, Phase 63 API Contracts Documented ✅, Phase 64 Integration Tests Created ✅, Phase 3 Validation COMPLETE ✅, ZON Format Integration Complete ✅, Phase 3 Completion Reported to Core Agent ✅, TigerBeetle Enhancement Coordination Responded ⏳ (Medium Priority, Timeline Needed, COORDINATION NEEDED), Core Agent Coordination Plan Acknowledged ✅, Workflow Scheduler Cron Parser Enhanced ✅, Workflow Scheduler Cron Parser Step Value Support Enhanced ✅, Workflow Visualizer Hierarchical Layout Enhanced ✅, Event Bus Source Filtering Enhanced ✅, Event Bus Async Pattern Event Types Added ✅, Event Bus Async Pattern Documentation Created ✅, Build Configuration Resolved ✅, Core Coordination Document Rewritten ✅, Code Quality Improvement Complete ✅, **NEW: JG Project Responsibilities Assigned** ✅ (workflow orchestration, Months 4-10), Planning Workflow Orchestration Points ⏳  
+**Last Updated**: 2025-12-29-112229-pst (Core Agent new coordination plan acknowledged ✅ - JG project design complete ✅, JG project multi-agent integration plan created ✅, Flow Agent JG project responsibilities assigned ✅, workflow orchestration planning in progress ⏳)
 
 ---
 
@@ -446,12 +446,122 @@ docs/
 
 ---
 
+## JG Project: Workflow Orchestration Responsibilities
+
+**Status**: ✅ **RESPONSIBILITIES ASSIGNED** (2025-12-29-105655-pst) — Planning workflow orchestration points ⏳
+
+**Priority**: MEDIUM (JG project foundation work by Core Agent and Silo Agent must complete first)
+
+**Timeline**: Months 4-10 (Phase 1: Months 4-6, Phase 2: Months 7-8, Phase 3: Months 9-10)
+
+**Design Document**: `docs/zyx/grainbank_mmt_job_guarantee_housing_program_2025-12-28-232324-pst.md`
+
+**Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-29-105655-pst.md`
+
+### Overview
+
+Flow Agent is responsible for workflow orchestration for the Grainbank MMT Job Guarantee (JG) Housing Program. This includes task workflows, supply chain workflows, and democratic process workflows.
+
+### Phase 1: Task Workflow Orchestration (Months 4-6)
+
+**Goal**: Implement workflow orchestration for task management, worker assignment, quality assurance, and time logging.
+
+**Workflow Types**:
+1. **Task Dependency Workflows**: Task sequencing, dependency management, critical path analysis, blocked task detection
+2. **Worker Assignment Workflows**: Worker skill matching, workload balancing, team formation, assignment conflict resolution
+3. **Quality Assurance Workflows**: Inspection scheduling, quality check dependencies, rework task creation, approval workflows
+4. **Time Logging Workflows**: Time entry validation, wage calculation triggers, overtime detection, benefits eligibility tracking
+
+**Integration Points**:
+- Core Agent: JG Project Manager (`grain_jg_project`), JG Task Tracker (`grain_jg_task`)
+- Silo Agent: Task data storage (`jg_task:*` keys)
+- Grainbank: Time logging triggers wage payments
+
+**Estimated Time**: 2-3 months
+
+### Phase 2: Supply Chain Workflow Orchestration (Months 7-8)
+
+**Goal**: Implement workflow orchestration for transportation, material delivery, processing facilities, and carbon tracking.
+
+**Workflow Types**:
+1. **Transportation Workflows**: Route planning, vehicle assignment, delivery scheduling, carbon footprint tracking
+2. **Material Delivery Workflows**: Material request processing, delivery confirmation, quality inspection, inventory updates
+3. **Processing Facility Workflows**: Processing task assignment, capacity management, quality control, output tracking
+4. **Carbon Tracking Workflows**: Carbon calculation triggers, sequestration tracking, carbon credit workflows, environmental reporting
+
+**Integration Points**:
+- Core Agent: JG Supply Chain (`grain_jg_supply_chain`), JG Inventory Manager (`grain_jg_inventory`)
+- Silo Agent: Supply chain data storage (`jg_supply_chain:*` keys)
+- Court Agent: LLM-assisted route optimization (Months 7-9)
+
+**Estimated Time**: 2 months
+
+### Phase 3: Democratic Process Workflows (Months 9-10)
+
+**Goal**: Implement workflow orchestration for worker elections, town halls, grievance mediation, and career progression.
+
+**Workflow Types**:
+1. **Worker Election Workflows**: Election scheduling, candidate nomination, voting coordination, results tabulation
+2. **Town Hall Coordination Workflows**: Meeting scheduling, agenda management, discussion tracking, decision recording
+3. **Grievance and Mediation Workflows**: Grievance submission, mediation scheduling, resolution tracking, appeal processes
+4. **Career Ladder Workflows**: Skill certification tracking, promotion eligibility, training coordination, career progression
+
+**Integration Points**:
+- Core Agent: JG Project Manager (`grain_jg_project`)
+- Silo Agent: Worker profile data storage (`jg_worker:*` keys)
+- Workspace Agent: Desktop dashboards for democratic processes (Months 3-8)
+
+**Estimated Time**: 2 months
+
+### Dependencies
+
+**Required from Other Agents**:
+- **Core Agent**: JG Project modules and API contracts (Months 1-6)
+- **Silo Agent**: Storage schemas for JG project data (Months 1-3)
+- **Workspace Agent**: Desktop dashboards for workflow visualization (Months 3-8)
+- **Court Agent**: LLM-assisted optimization (Months 7-9)
+
+**Flow Agent Provides**:
+- Workflow orchestration for all JG project processes
+- Task dependency management
+- Worker assignment coordination
+- Quality assurance workflows
+- Time logging workflows
+- Supply chain workflow orchestration
+- Democratic process workflows
+
+### Next Steps
+
+1. ⏳ **Review JG Project Design Document** (in progress):
+   - Review `docs/zyx/grainbank_mmt_job_guarantee_housing_program_2025-12-28-232324-pst.md`
+   - Understand workflow requirements and integration points
+   - Identify workflow orchestration patterns
+
+2. ⏳ **Plan Workflow Orchestration Points** (in progress):
+   - Map workflow types to Flow Agent workflow engine capabilities
+   - Design workflow templates for each workflow type
+   - Plan event bus integration for workflow triggers
+
+3. ⏳ **Coordinate with Core Agent** (Months 3-4):
+   - Coordinate on event bus integration for JG project workflows
+   - Review API contracts for JG modules
+   - Plan workflow trigger points
+
+4. ⏳ **Begin Task Workflow Orchestration Implementation** (Months 4-6):
+   - Implement task dependency workflows
+   - Implement worker assignment workflows
+   - Implement quality assurance workflows
+   - Implement time logging workflows
+
+---
+
 ## References
 
 - **Grain Style**: [`docs/grain_style.md`](../grain_style.md) — Coding principles and guidelines
 - **Core Plan**: [`docs/plan.md`](../plan.md) — Core overview
 - **Grain Flow Agent Prompt**: [`docs/grain_flow_agent_prompt.md`](../grain_flow_agent_prompt.md) — Agent prompt and architecture
-- **Core Coordination Plan**: [`docs/agent-communications/core_agent_coordination_plan_2025-12-06-061647-pst.md`](../agent-communications/core_agent_coordination_plan_2025-12-06-061647-pst.md) — Agent coordination strategy
+- **Core Coordination Plan**: [`docs/agent-communications/core_agent_coordination_plan_2025-12-29-105655-pst.md`](../agent-communications/core_agent_coordination_plan_2025-12-29-105655-pst.md) — Latest coordination plan with JG project integration
+- **JG Project Design**: [`docs/zyx/grainbank_mmt_job_guarantee_housing_program_2025-12-28-232324-pst.md`](../zyx/grainbank_mmt_job_guarantee_housing_program_2025-12-28-232324-pst.md) — JG project design document
 
 ---
 

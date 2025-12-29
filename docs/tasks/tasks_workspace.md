@@ -1,15 +1,17 @@
 # Grain Workspace Agent: Task List
 
 **Agent**: Grain Workspace Agent (8th Agent)  
-**Status**: Phase 36 Error Handling Integration Complete ✅  
-**Last Updated**: 2025-12-29-041147-pst  
-**Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-21-204511-pst.md`
+**Status**: Phase 36 Error Handling Integration Complete ✅ — JG Project Assigned ✅  
+**Last Updated**: 2025-12-29-105655-pst  
+**Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-29-105655-pst.md`
 
 ---
 
 ## All Phases Complete ✅
 
-All planned phases for Grain Workspace Agent have been completed. See completed phases below for details.
+All planned phases for Grain Workspace Agent have been completed (Phases 1-36). See completed phases below for details.
+
+**New Project**: JG Project (JG Housing Program) assigned — Desktop Dashboards (Months 3-8). Planning phase begins.
 
 ### Grain Style Requirements
 
@@ -680,6 +682,67 @@ All planned phases for Grain Workspace Agent have been completed. See completed 
 - ✅ **Core Agent**: Error types implementation complete and ready
 - ⏳ **Core Agent**: HTTP/WebSocket client error return types update (1 day remaining) — makes error handling fully integrated
 - ✅ **Workspace Agent**: Error handling structures and helpers ready, prepared for full integration when Core Agent updates clients
+
+---
+
+## JG Project (JG Housing Program) — **NEW PROJECT ASSIGNMENT**
+
+**Status**: Project assigned (2025-12-29-105655-pst)  
+**Workspace Agent Responsibility**: **Desktop Dashboards (Months 3-8)**
+
+### Project Overview
+
+**JG Project** is a multi-agent integration project for JG housing program management. This is a long-term project that runs alongside existing SLC product work.
+
+### Workspace Agent Responsibilities
+
+**Desktop Dashboards (Months 3-8)**:
+- Design and implement desktop dashboard applications for JG housing program
+- Integrate with Core Agent's Grainbank MMT integration (Months 1-6)
+- Integrate with Silo Agent's storage schemas (Months 1-3)
+- Coordinate with Flow Agent on workflow orchestration (Months 4-10)
+- Coordinate with Court Agent on LLM planning features (Months 4-12)
+- Coordinate with Research Agent on analysis & optimization features (Months 6-12)
+- Use Component API for consistent UI components
+- Use existing Text Editor, File Manager, and Terminal Plus as foundation
+
+### Timeline
+
+- **Months 1-2**: Planning and design (wait for Core Agent and Silo Agent foundation)
+- **Months 3-8**: Desktop dashboard implementation
+- **Months 4-10**: Integration with Flow Agent workflow orchestration
+- **Months 6-12**: Integration with Research Agent analytics and Court Agent LLM features
+- **Months 7-12**: UI component coordination with Bubble/Aurora agents
+
+### Next Steps
+
+**Immediate** (Months 1-2):
+- [ ] Review Core Agent's Grainbank MMT integration design
+- [ ] Review Silo Agent's storage schema designs for JG modules
+- [ ] Design dashboard architecture and component structure
+- [ ] Plan integration points with Flow, Court, and Research agents
+
+**Short-term** (Months 3-4):
+- [ ] Begin desktop dashboard implementation
+- [ ] Integrate with Silo Agent storage schemas
+- [ ] Coordinate with Flow Agent on workflow features
+- [ ] Coordinate with Court Agent on LLM planning features
+
+**Long-term** (Months 5-8):
+- [ ] Complete desktop dashboard implementation
+- [ ] Integrate with Research Agent analytics features
+- [ ] Coordinate with Bubble/Aurora agents on UI components
+- [ ] Complete dashboard testing and refinement
+
+**Status**: Project assigned. Planning phase begins. Waiting for Core Agent and Silo Agent foundation work (Months 1-3) before beginning dashboard implementation.
+
+**Coordination**:
+- ✅ **Core Agent**: JG Project design complete, Grainbank MMT integration (Months 1-6)
+- ✅ **Silo Agent**: Storage schemas for JG modules (Months 1-3)
+- ⏳ **Flow Agent**: Workflow orchestration coordination (Months 4-10)
+- ⏳ **Court Agent**: LLM planning features coordination (Months 4-12)
+- ⏳ **Research Agent**: Analysis & optimization coordination (Months 6-12)
+- ⏳ **Bubble/Aurora Agents**: UI components coordination (Months 7-12)
 
 ---
 

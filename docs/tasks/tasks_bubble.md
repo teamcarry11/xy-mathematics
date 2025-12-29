@@ -1,8 +1,8 @@
 # Grain Bubble Agent: Task List
 
 **Agent**: Grain Bubble Agent (5th Agent)  
-**Status**: All Phases Complete ✅ — SLC Product Integration Foundation Complete, Workspace Agent Integration Complete ✅, Async Pattern Integration Complete ✅  
-**Last Updated**: 2025-12-29-050000-pst  
+**Status**: All Phases Complete ✅ — SLC Product Integration Foundation Complete, Workspace Agent Integration Complete ✅, Async Pattern Integration Complete ✅, JG Project UI Components Assigned (Months 7-12)  
+**Last Updated**: 2025-12-29-110000-pst  
 **Coordination File**: `docs/core-coordination/core-coordination_bubble.md`
 
 ---
@@ -390,6 +390,54 @@
 
 ---
 
+## JG Project: Just Grain Housing Program
+
+**Priority**: **HIGH** — Multi-Agent Integration Project  
+**Status**: **ASSIGNED** (2025-12-29-105655-pst)  
+**Timeline**: Months 7-12
+
+### Preparation Tasks (Months 1-6)
+
+**Coordination Tasks**:
+- [ ] Coordinate with Core Agent on JG module foundation structure (Months 1-6)
+- [ ] Coordinate with Aurora Agent on component API design (IMMEDIATE)
+- [ ] Coordinate with Workspace Agent on desktop dashboard component requirements (Months 3-8)
+- [ ] Coordinate with Carry Agent on mobile app component requirements (Months 6-12)
+- [ ] Review JG project requirements and UI component needs
+- [ ] Plan JG-specific UI component architecture
+
+### Development Tasks (Months 7-12)
+
+**UI Components Development**:
+- [ ] Create JG-specific UI components module (`jg_ui_components.zig`)
+- [ ] Implement JG dashboard UI components (desktop)
+- [ ] Implement JG mobile app UI components
+- [ ] Implement JG browser interface UI components
+- [ ] Apply design patterns to JG project UI components
+- [ ] Apply animations to JG project UI components
+- [ ] Create component variants for JG project context (state/size/theme)
+
+**Integration Tasks**:
+- [ ] Integrate with Workspace Agent desktop dashboards (Months 7-12)
+- [ ] Integrate with Carry Agent mobile apps (Months 7-12)
+- [ ] Integrate with Aurora Agent browser interfaces (Months 7-12)
+- [ ] Test JG project UI component integration
+- [ ] Verify design patterns and animations work across all JG project interfaces
+
+**Testing Tasks**:
+- [ ] Create comprehensive tests for JG UI components
+- [ ] Test JG UI components with Workspace Agent dashboards
+- [ ] Test JG UI components with Carry Agent mobile apps
+- [ ] Test JG UI components with Aurora Agent browser interfaces
+- [ ] Verify component variants work correctly in JG project context
+
+**Documentation Tasks**:
+- [ ] Document JG UI component architecture
+- [ ] Document JG UI component integration points
+- [ ] Update coordination documentation with JG project status
+
+---
+
 ## Coordination Tasks
 
 ### With Grain Core Agent
@@ -399,6 +447,8 @@
 - [ ] Share GUI component patterns
 - [ ] Coordinate on window management APIs
 - [ ] Test integration points
+- [ ] **JG Project**: Coordinate on JG module foundation structure (Months 1-6)
+- [ ] **JG Project**: Understand JG module structure for UI component design
 
 **Shared Components**:
 - Compositor for window management
@@ -420,6 +470,8 @@
 - [ ] Coordinate on export formats (mobile-responsive HTML)
 - [ ] Share design token systems
 - [ ] Test integration points
+- [ ] **JG Project**: Coordinate on mobile app component requirements (Months 6-12)
+- [ ] **JG Project**: Integrate JG UI components with Carry Agent mobile apps (Months 7-12)
 
 ### With Skate Agent
 

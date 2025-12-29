@@ -1,9 +1,9 @@
 # Grain Workspace Agent: Core Coordination Status
 
-**Last Updated**: 2025-12-29-041147-pst  
+**Last Updated**: 2025-12-29-105655-pst  
 **Agent**: Grain Workspace Agent (8th Agent)  
-**Status**: Phase 36 Complete ✅ — Error Handling Integration Complete ✅ — All Coordination Decisions Ready ✅  
-**Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-29-041147-pst.md`
+**Status**: Phase 36 Complete ✅ — Error Handling Integration Complete ✅ — All Coordination Decisions Ready ✅ — JG Project Assigned ✅  
+**Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-29-105655-pst.md`
 
 ---
 
@@ -23,6 +23,8 @@
 - ✅ **File I/O Error Handling**: Decision made — Structured error unions (`FileIoError` enum) — Ready for integration
 
 **Strategic Recommendation**: **ALL COORDINATION DECISIONS ARE READY NOW!** ✅ Core Agent has completed ALL coordination decisions implementation (HTTP/WebSocket timeout ✅, error types ✅, service-to-service authentication ✅, async pattern ✅). Workspace Agent has integrated timeout patterns and prepared error handling structures. Component API implementation complete. Ready for coordination with Bubble and Aurora agents on component integration. This unblocks SLC product integration.
+
+**New Project Assignment**: **JG Project (JG Housing Program)** — Multi-agent integration project assigned. Workspace Agent responsible for **Desktop Dashboards (Months 3-8)**. This is a new long-term project alongside existing SLC product work.
 
 ---
 
@@ -599,6 +601,68 @@ api.terminal.terminal_view.set_theme(.high_contrast);
 
 ---
 
+## JG Project (JG Housing Program) — **NEW PROJECT ASSIGNMENT**
+
+**Status**: Project assigned (2025-12-29-105655-pst)  
+**Workspace Agent Responsibility**: **Desktop Dashboards (Months 3-8)**
+
+### Project Overview
+
+**JG Project** is a multi-agent integration project for JG housing program management. This is a long-term project that runs alongside existing SLC product work.
+
+### Workspace Agent Responsibilities
+
+**Desktop Dashboards (Months 3-8)**:
+- Design and implement desktop dashboard applications for JG housing program
+- Integrate with Core Agent's Grainbank MMT integration (Months 1-6)
+- Integrate with Silo Agent's storage schemas (Months 1-3)
+- Coordinate with Flow Agent on workflow orchestration (Months 4-10)
+- Coordinate with Court Agent on LLM planning features (Months 4-12)
+- Coordinate with Research Agent on analysis & optimization features (Months 6-12)
+- Use Component API for consistent UI components
+- Use existing Text Editor, File Manager, and Terminal Plus as foundation
+
+### Coordination Points
+
+**Dependencies**:
+- **Core Agent**: Grainbank MMT integration foundation (Months 1-6) — Must be ready before dashboard work begins
+- **Silo Agent**: Storage schemas for JG modules (Months 1-3) — Must be ready before dashboard data integration
+- **Flow Agent**: Workflow orchestration (Months 4-10) — Coordinate on dashboard workflow features
+- **Court Agent**: LLM planning features (Months 4-12) — Coordinate on dashboard LLM integration
+- **Research Agent**: Analysis & optimization (Months 6-12) — Coordinate on dashboard analytics features
+- **Bubble/Aurora Agents**: UI components (Months 7-12) — Coordinate on dashboard UI design
+
+**Timeline**:
+- **Months 1-2**: Planning and design (wait for Core Agent and Silo Agent foundation)
+- **Months 3-8**: Desktop dashboard implementation
+- **Months 4-10**: Integration with Flow Agent workflow orchestration
+- **Months 6-12**: Integration with Research Agent analytics and Court Agent LLM features
+- **Months 7-12**: UI component coordination with Bubble/Aurora agents
+
+### Next Steps
+
+**Immediate** (Months 1-2):
+- Review Core Agent's Grainbank MMT integration design
+- Review Silo Agent's storage schema designs for JG modules
+- Design dashboard architecture and component structure
+- Plan integration points with Flow, Court, and Research agents
+
+**Short-term** (Months 3-4):
+- Begin desktop dashboard implementation
+- Integrate with Silo Agent storage schemas
+- Coordinate with Flow Agent on workflow features
+- Coordinate with Court Agent on LLM planning features
+
+**Long-term** (Months 5-8):
+- Complete desktop dashboard implementation
+- Integrate with Research Agent analytics features
+- Coordinate with Bubble/Aurora agents on UI components
+- Complete dashboard testing and refinement
+
+**Status**: Project assigned. Planning phase begins. Waiting for Core Agent and Silo Agent foundation work (Months 1-3) before beginning dashboard implementation.
+
+---
+
 ## Ready for Implementation
 
 **What We're Ready For**:
@@ -613,6 +677,7 @@ api.terminal.terminal_view.set_theme(.high_contrast);
 - ✅ **Service-to-service authentication ready for integration** ✅ (Core Agent implementation complete)
 - ✅ **Async pattern ready for integration** ✅ (Core Agent implementation complete)
 - ✅ File I/O timeout/error handling decisions made (ready for implementation when kernel integration ready)
+- ✅ **JG Project assigned** — Desktop Dashboards (Months 3-8)
 - ✅ No blockers, can proceed with implementation
 
 **What We Need**:
@@ -620,6 +685,7 @@ api.terminal.terminal_view.set_theme(.high_contrast);
 - **IMMEDIATE**: Coordinate with Aurora Agent on Component API integration
 - **SHORT-TERM**: Integrate full HTTP/WebSocket error handling when Core Agent updates clients (1 day remaining)
 - **SHORT-TERM**: Integrate service-to-service authentication and async patterns
+- **LONG-TERM**: JG Project desktop dashboards (Months 3-8) — Planning phase begins now
 - **FUTURE**: Implement file I/O timeout/error handling (when kernel integration ready)
 
 ---
@@ -659,9 +725,11 @@ api.terminal.terminal_view.set_theme(.high_contrast);
 - ✅ HTTP/WebSocket timeout integration complete (Phase 34)
 - ✅ Error handling structures ready (Phase 36)
 - ✅ Text Editor enhancements complete (Phases 33, 35)
+- ✅ JG Project assigned — Desktop Dashboards (Months 3-8)
 - Ready for coordination with Bubble and Aurora agents
 - Ready for full error handling integration (when Core Agent updates clients, 1 day)
 - Ready for authentication/async pattern integration (ready now ✅)
+- Ready for JG Project planning phase (waiting for Core Agent and Silo Agent foundation, Months 1-3)
 
 ---
 
@@ -678,6 +746,6 @@ api.terminal.terminal_view.set_theme(.high_contrast);
 
 ---
 
-**Status**: Phase 36 complete. Error handling structures ready. Code folding implementation complete. HTTP/WebSocket timeout integration complete. Component API implementation complete. All coordination decisions ready. **Component API structure ready for integration.** Coordinate with Bubble and Aurora agents on component integration. This unblocks SLC product integration. **ALL COORDINATION DECISIONS ARE READY NOW!** ✅
+**Status**: Phase 36 complete. Error handling structures ready. Code folding implementation complete. HTTP/WebSocket timeout integration complete. Component API implementation complete. All coordination decisions ready. **Component API structure ready for integration.** Coordinate with Bubble and Aurora agents on component integration. This unblocks SLC product integration. **ALL COORDINATION DECISIONS ARE READY NOW!** ✅ **JG Project assigned** — Desktop Dashboards (Months 3-8). Planning phase begins. Waiting for Core Agent and Silo Agent foundation work (Months 1-3) before beginning dashboard implementation.
 
 ---

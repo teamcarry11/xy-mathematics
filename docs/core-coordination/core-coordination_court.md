@@ -1,11 +1,12 @@
 # Core Coordination: Grain Court Agent
 
-**Last Updated**: 2025-12-29-045000-pst  
+**Last Updated**: 2025-12-29-110000-pst  
 **Agent**: Grain Court Agent (11th Agent)
 
 **Coordination Plans Acknowledged**: 
 - 2025-12-29-001544-pst (previous coordination plan)
-- 2025-12-29-041147-pst (latest coordination plan — ZON Format Integration Complete ✅, Coordination Decisions Complete ✅)
+- 2025-12-29-041147-pst (ZON Format Integration Complete ✅, Coordination Decisions Complete ✅)
+- 2025-12-29-105655-pst (latest coordination plan — Kernel Refactoring Complete ✅, JG Project Design Complete ✅, JG Project Multi-Agent Integration)
 
 ---
 
@@ -20,6 +21,11 @@
 - ✅ LLM Timeout/Error Handling (ready for all agents)
 - ✅ Flow Agent Integration Complete
 - ✅ Research Agent Integration Support (all phases complete, validation testing in progress)
+
+**New Responsibilities**: 🆕 **JG Project LLM Planning** (Months 4-12)
+- Phase 1: Design Optimization (Months 4-6)
+- Phase 2: Supply Chain Optimization (Months 7-9)
+- Phase 3: Policy Analysis (Months 10-12)
 
 **Current Blockers**:
 - ⏳ **Silo Agent**: Waiting on `PasswordStorage` helper API design (Payment Integration Phase 1)
@@ -138,6 +144,91 @@
 
 ---
 
+## JG Project: LLM Planning Responsibilities
+
+**Status**: 🆕 **PLANNING PHASE** (Months 4-12)
+
+**Design Document**: `docs/zyx/grainbank_mmt_job_guarantee_housing_program_2025-12-28-232324-pst.md`
+
+**Program Overview**: MMT Job Guarantee housing program using sustainable renewable materials (hemp, bamboo, timber, rammed earth) to build beautiful, affordable housing through federal Job Guarantee employment.
+
+**Court Agent Responsibilities** (per Core Agent coordination plan 2025-12-29-105655-pst):
+
+### Phase 1: Design Optimization (Months 4-6)
+
+**LLM Integration Points**:
+- ✅ LLM-assisted design optimization suggestions
+- ✅ Material quantity takeoff assistance
+- ✅ Energy efficiency analysis recommendations
+- ✅ Traditional urbanism design guidance
+
+**Integration Requirements**:
+- Coordinate with Core Agent on API contracts for `grain_jg_architect` module
+- Coordinate with Workspace Agent on desktop dashboard integration
+- Use Court Agent's multi-provider LLM API for design analysis
+- Use ZON format for efficient data transfer (35-70% token reduction)
+
+### Phase 2: Supply Chain Optimization (Months 7-9)
+
+**LLM Integration Points**:
+- ✅ Supply chain route optimization
+- ✅ Transportation scheduling recommendations
+- ✅ Processing facility capacity optimization
+- ✅ Carbon footprint calculation assistance
+
+**Integration Requirements**:
+- Coordinate with Core Agent on API contracts for `grain_jg_supply_chain` module
+- Coordinate with Flow Agent on workflow orchestration integration
+- Use Court Agent's cost tracking for supply chain cost analysis
+- Use provider recommendation for cost-optimized LLM provider selection
+
+### Phase 3: Policy Analysis (Months 10-12)
+
+**LLM Integration Points**:
+- ✅ Inflation analysis and recommendations
+- ✅ Policy analysis and recommendations
+- ✅ Regional wage adjustment analysis
+- ✅ Benefits administration optimization
+
+**Integration Requirements**:
+- Coordinate with Core Agent on API contracts for `grainbank` MMT integration
+- Coordinate with Research Agent on analysis and optimization
+- Use Court Agent's token efficiency tools for cost-effective policy analysis
+- Use cost reporting for policy impact analysis
+
+### Next Steps for JG Project
+
+**1. Review JG Project Design Document** (IMMEDIATE)
+- Review: `docs/zyx/grainbank_mmt_job_guarantee_housing_program_2025-12-28-232324-pst.md`
+- Understand program architecture and integration points
+- Identify LLM use cases for each phase
+
+**2. Plan LLM Integration Points** (Month 1-2 of JG Project)
+- Design LLM API contracts for design optimization
+- Design LLM API contracts for supply chain optimization
+- Design LLM API contracts for policy analysis
+- Coordinate with Core Agent on API contract design
+
+**3. Begin Design Optimization Implementation** (Months 4-6)
+- Implement LLM-assisted design optimization module
+- Integrate with `grain_jg_architect` module
+- Test with real design scenarios
+- Coordinate with Workspace Agent on dashboard integration
+
+**Timeline**: Months 4-12 (9 months total)
+- Months 1-3: Planning and API contract design (parallel with other work)
+- Months 4-6: Design Optimization implementation
+- Months 7-9: Supply Chain Optimization implementation
+- Months 10-12: Policy Analysis implementation
+
+**Coordination Required**:
+- **Core Agent**: API contracts for JG modules (`grain_jg_architect`, `grain_jg_supply_chain`, `grainbank`)
+- **Workspace Agent**: Desktop dashboard integration (Months 4-6)
+- **Flow Agent**: Workflow orchestration integration (Months 7-9)
+- **Research Agent**: Analysis and optimization collaboration (Months 10-12)
+
+---
+
 ## Next Steps for Core Agent
 
 **Status**: Court Agent ready ✅ — Payment Integration Phase 1 dependencies identified
@@ -161,6 +252,11 @@
 - Structured error handling with retryability classification
 - Timeout handling (60s default, configurable)
 - Rate limiting detection and retry-after parsing
+
+**Court Agent JG Project Responsibilities** (Months 4-12):
+- ⏳ **Phase 1: Design Optimization** (Months 4-6): LLM-assisted design optimization, material quantity takeoff, energy efficiency analysis, traditional urbanism design guidance
+- ⏳ **Phase 2: Supply Chain Optimization** (Months 7-9): Route optimization, transportation scheduling, processing facility capacity, carbon footprint calculation
+- ⏳ **Phase 3: Policy Analysis** (Months 10-12): Inflation analysis, policy analysis, regional wage adjustment, benefits administration optimization
 
 **Integration Support Status**:
 - ✅ **Flow Agent**: ZON format integration complete — can test independently
@@ -215,13 +311,36 @@
 
 **Timeline**: 2-3 days for Court Agent implementation (once dependencies available)
 
+### What Core Agent Needs to Do for JG Project
+
+**1. Coordinate on API Contracts** (Months 1-3 of JG Project Timeline)
+
+**Status**: ⏳ Planning phase (Court Agent will coordinate when ready)
+
+**What's Needed**:
+- Coordinate on API contracts for `grain_jg_architect` module (Months 4-6)
+- Coordinate on API contracts for `grain_jg_supply_chain` module (Months 7-9)
+- Coordinate on API contracts for `grainbank` MMT integration (Months 10-12)
+- Coordinate on integration timeline
+
+**Court Agent Responsibilities**:
+- Phase 1: Design Optimization (Months 4-6) — LLM-assisted design optimization, material quantity takeoff, energy efficiency analysis, traditional urbanism design guidance
+- Phase 2: Supply Chain Optimization (Months 7-9) — Route optimization, transportation scheduling, processing facility capacity, carbon footprint calculation
+- Phase 3: Policy Analysis (Months 10-12) — Inflation analysis, policy analysis, regional wage adjustment, benefits administration optimization
+
+**Timeline**: Court Agent will begin planning phase now, coordinate on API contracts during Months 1-3 of JG project timeline
+
+**Design Document**: `docs/zyx/grainbank_mmt_job_guarantee_housing_program_2025-12-28-232324-pst.md`
+
 ### No Immediate Action Required
 
 **Court Agent is ready and actively supporting all agent integrations**. Court Agent will proceed with Payment Integration Phase 1 once:
 1. ✅ Silo Agent provides `PasswordStorage` helper API design (1-2 days expected)
 2. ⏳ Core Agent implements Grain Passwords module (2-3 days, depends on Core Agent priorities)
 
-**Court Agent can continue independent work** (Phase 3 enhancements, Phase 4 foundation) while waiting on dependencies.
+**Court Agent will begin JG project planning** and coordinate on API contracts when ready (Months 1-3 of JG project timeline).
+
+**Court Agent can continue independent work** (Phase 3 enhancements, Phase 4 foundation, JG project planning) while waiting on dependencies.
 
 ---
 
@@ -576,6 +695,12 @@
 - Support Phase 3 cost tracking integration
 - Assist with any integration issues
 
+**3. JG Project Planning** (NEW)
+- Review JG project design document
+- Plan LLM integration points for all three phases
+- Coordinate with Core Agent on API contracts
+- Begin API contract design for design optimization phase
+
 ---
 
 ## Overall Status Summary
@@ -629,10 +754,10 @@
 
 ---
 
-**Date**: 2025-12-29-045000-pst  
+**Date**: 2025-12-29-110000-pst  
 **Agent**: Grain Court Agent (11th Agent)  
-**Status**: Phase 1 COMPLETE ✅ — Phase 2 COMPLETE ✅ — Phase 3 IN PROGRESS (Optimization Utilities Complete) — Phase 4 FOUNDATION STARTED — Research Agent Validation Testing In Progress — Payment Integration Phase 1 Coordination Sent to Silo Agent
+**Status**: Phase 1 COMPLETE ✅ — Phase 2 COMPLETE ✅ — Phase 3 IN PROGRESS (Optimization Utilities Complete) — Phase 4 FOUNDATION STARTED — Research Agent Validation Testing In Progress — Payment Integration Phase 1 Coordination Sent to Silo Agent — 🆕 JG Project LLM Planning Responsibilities Assigned (Months 4-12)
 
 ---
 
-**Summary**: Court Agent is currently **blocked on Silo Agent** (PasswordStorage helper API design) and **Core Agent** (Grain Passwords module implementation) for Payment Integration Phase 1. All other integrations are either complete or non-blocking. Court Agent can continue Phase 3 enhancements and Phase 4 foundation work independently while waiting.
+**Summary**: Court Agent is currently **blocked on Silo Agent** (PasswordStorage helper API design) and **Core Agent** (Grain Passwords module implementation) for Payment Integration Phase 1. All other integrations are either complete or non-blocking. Court Agent can continue Phase 3 enhancements, Phase 4 foundation work, and JG project planning independently while waiting. **New JG project responsibilities** (LLM planning for design optimization, supply chain optimization, and policy analysis) assigned for Months 4-12, with planning phase beginning now.

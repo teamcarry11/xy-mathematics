@@ -1,8 +1,8 @@
 # Grain Court Agent: Tasks
 
 **Agent**: Grain Court Agent (11th Agent)  
-**Status**: Phase 1 IN PROGRESS — Multi-Provider LLM API Foundation  
-**Last Updated**: 2025-12-21
+**Status**: Phase 1 COMPLETE ✅ — Phase 2 COMPLETE ✅ — Phase 3 IN PROGRESS — Phase 4 FOUNDATION STARTED  
+**Last Updated**: 2025-12-29-110000-pst
 
 ---
 
@@ -100,7 +100,9 @@
 
 ---
 
-## Phase 2: ZON Format Integration (PLANNED)
+## Phase 2: ZON Format Integration — COMPLETE ✅
+
+**Completion Date**: 2025-12-29-003500-pst
 
 ### ZON Format Module
 
@@ -116,20 +118,20 @@
 
 ### LLM Provider Integration
 
-- [ ] Integrate ZON encoding into provider abstraction
-- [ ] Add automatic ZON encoding for LLM input
-- [ ] Add provider-specific output handling (ZON/JSON)
-- [ ] Add fallback to JSON if provider doesn't support ZON
-- [ ] Add comprehensive tests
-- [ ] Add Grain Style compliance
+- [x] Integrate ZON encoding into provider abstraction
+- [x] Add automatic ZON encoding for LLM input
+- [x] Add provider-specific output handling (ZON/JSON)
+- [x] Add fallback to JSON if provider doesn't support ZON
+- [x] Add comprehensive tests
+- [x] Add Grain Style compliance
 
 ### Coordination
 
-- [ ] Coordinate with Flow Agent on ZON format proposal
-- [ ] Coordinate with Research Agent on token efficiency validation
+- [x] Coordinate with Flow Agent on ZON format proposal
+- [x] Coordinate with Research Agent on token efficiency validation
 - [ ] Coordinate with Grainscript Agent on serialization (when available)
-- [ ] Review integration plan
-- [ ] Update documentation
+- [x] Review integration plan
+- [x] Update documentation
 
 ### Testing
 
@@ -143,14 +145,16 @@
 
 ### Documentation
 
-- [ ] Update `docs/plans/plan_court.md` with Phase 2 completion
-- [ ] Update `docs/tasks/tasks_court.md` with completed tasks
-- [ ] Update `docs/core-coordination/core-coordination_court.md`
-- [ ] Create ZON format integration guide
+- [x] Update `docs/plans/plan_court.md` with Phase 2 completion
+- [x] Update `docs/tasks/tasks_court.md` with completed tasks
+- [x] Update `docs/core-coordination/core-coordination_court.md`
+- [x] Create ZON format integration guide (via coordination messages)
 
 ---
 
-## Phase 3: Token Efficiency Optimization (PLANNED)
+## Phase 3: Token Efficiency Optimization — IN PROGRESS ⏳
+
+**Status**: Optimization utilities complete, Research Agent validation testing in progress
 
 ### Token Counting
 
@@ -164,12 +168,12 @@
 
 ### Cost Tracking
 
-- [ ] Add cost tracking per provider
-- [ ] Add cost tracking per request
-- [ ] Add cost aggregation
-- [ ] Add cost reporting
-- [ ] Add comprehensive tests
-- [ ] Add Grain Style compliance
+- [x] Add cost tracking per provider
+- [x] Add cost tracking per request
+- [x] Add cost aggregation
+- [x] Add cost reporting
+- [x] Add comprehensive tests
+- [x] Add Grain Style compliance
 
 ### Optimization
 
@@ -181,12 +185,12 @@
 
 ### Testing
 
-- [ ] Create test file (`tests/141_grain_court_token_efficiency_test.zig`)
-- [ ] Add token counting tests
-- [ ] Add cost tracking tests
-- [ ] Add optimization tests
-- [ ] Verify all tests pass
-- [ ] Verify Grain Style compliance
+- [x] Create test file (`tests/049_grain_court_test.zig` — token efficiency tests integrated)
+- [x] Add token counting tests
+- [x] Add cost tracking tests
+- [x] Add optimization tests
+- [x] Verify all tests pass
+- [x] Verify Grain Style compliance
 
 ### Documentation
 
@@ -224,6 +228,113 @@
 
 ---
 
-**Date**: 2025-12-21  
+---
+
+## Phase 4: Self-Hosted Provider (Cerebras GLM-4.6) — FOUNDATION STARTED ⏳
+
+### Provider Skeleton
+
+- [x] Create provider skeleton (`src/grain_court/provider_self_hosted.zig`)
+- [x] Implement OpenAI-compatible API structure
+- [x] Add ZON format support
+- [x] Add token parsing
+- [x] Add timeout and error handling
+- [x] Add basic tests
+- [ ] Full API integration (pending API access/funding)
+- [ ] Add comprehensive tests
+- [x] Add Grain Style compliance
+
+---
+
+## Payment Integration: Grain Passwords (Phase 1) — COORDINATION IN PROGRESS ⏳
+
+### Planning
+
+- [x] Review design documents
+- [x] Review storage schema
+- [x] Send response to Core Agent
+- [x] Create integration plan
+- [x] Send coordination message to Silo Agent
+- [ ] Wait for Silo Agent response (PasswordStorage helper API design)
+- [ ] Wait for Core Agent Grain Passwords module implementation
+
+### Implementation (Pending Dependencies)
+
+- [ ] Create `ApiKeyManager` module (`src/grain_court/api_key_manager.zig`)
+- [ ] Integrate with `PasswordStorage` helper API
+- [ ] Migrate provider initialization to use encrypted API keys
+- [ ] Add key rotation support
+- [ ] Add environment separation (dev, staging, prod)
+- [ ] Integrate with Security Manager for access control
+- [ ] Add comprehensive tests
+- [ ] Add Grain Style compliance
+
+### Testing
+
+- [ ] Create test file (`tests/050_grain_court_api_key_manager_test.zig`)
+- [ ] Add encryption/decryption tests
+- [ ] Add key rotation tests
+- [ ] Add environment separation tests
+- [ ] Add access control tests
+- [ ] Verify all tests pass
+- [ ] Verify Grain Style compliance
+
+### Documentation
+
+- [ ] Update `docs/plans/plan_court.md` with Payment Integration Phase 1 completion
+- [ ] Update `docs/tasks/tasks_court.md` with completed tasks
+- [ ] Update `docs/core-coordination/core-coordination_court.md`
+- [ ] Create Payment Integration guide
+
+---
+
+## JG Project: LLM Planning Responsibilities — PLANNING PHASE 🆕
+
+**Timeline**: Months 4-12 (9 months total)
+
+### Phase 1: Design Optimization (Months 4-6)
+
+- [ ] Review JG project design document
+- [ ] Plan LLM integration points for design optimization
+- [ ] Coordinate with Core Agent on API contracts for `grain_jg_architect`
+- [ ] Design LLM API contracts for design optimization
+- [ ] Implement design optimization module (`src/grain_court/jg_design_optimization.zig`)
+- [ ] Integrate with `grain_jg_architect` module
+- [ ] Coordinate with Workspace Agent on desktop dashboard integration
+- [ ] Add comprehensive tests
+- [ ] Add Grain Style compliance
+
+### Phase 2: Supply Chain Optimization (Months 7-9)
+
+- [ ] Plan LLM integration points for supply chain optimization
+- [ ] Coordinate with Core Agent on API contracts for `grain_jg_supply_chain`
+- [ ] Design LLM API contracts for supply chain optimization
+- [ ] Implement supply chain optimization module (`src/grain_court/jg_supply_chain_optimization.zig`)
+- [ ] Integrate with `grain_jg_supply_chain` module
+- [ ] Coordinate with Flow Agent on workflow orchestration integration
+- [ ] Add comprehensive tests
+- [ ] Add Grain Style compliance
+
+### Phase 3: Policy Analysis (Months 10-12)
+
+- [ ] Plan LLM integration points for policy analysis
+- [ ] Coordinate with Core Agent on API contracts for `grainbank` MMT integration
+- [ ] Design LLM API contracts for policy analysis
+- [ ] Implement policy analysis module (`src/grain_court/jg_policy_analysis.zig`)
+- [ ] Integrate with `grainbank` MMT integration
+- [ ] Coordinate with Research Agent on analysis collaboration
+- [ ] Add comprehensive tests
+- [ ] Add Grain Style compliance
+
+### Documentation
+
+- [ ] Update `docs/plans/plan_court.md` with JG project progress
+- [ ] Update `docs/tasks/tasks_court.md` with completed tasks
+- [ ] Update `docs/core-coordination/core-coordination_court.md`
+- [ ] Create JG project LLM planning guide
+
+---
+
+**Date**: 2025-12-29-110000-pst  
 **Agent**: Grain Court Agent (11th Agent)  
-**Status**: Phase 1 IN PROGRESS
+**Status**: Phase 1 COMPLETE ✅ — Phase 2 COMPLETE ✅ — Phase 3 IN PROGRESS — Phase 4 FOUNDATION STARTED — Payment Integration Phase 1 Coordination In Progress — JG Project LLM Planning Responsibilities Assigned (Months 4-12)

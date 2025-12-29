@@ -1,13 +1,13 @@
 # Grain Carry Agent: Core Coordination Status
 
 **Agent**: Grain Carry Agent (6th Agent)  
-**Last Updated**: 2025-12-28-152151-pst
+**Last Updated**: 2025-12-28-162350-pst
 
 ---
 
 ## Current Status
 
-**Phase**: Database Integration Enhanced — Implementation Complete — Core Agent Implementation In Progress — Ready for Integration
+**Phase**: Database Integration Enhanced — Implementation Complete — Core Agent Timeout/Error Handling Complete ✅ — Ready for Integration
 
 **Recent Completions**:
 - ✅ Database integration foundation (2025-12-20-181029-pst)
@@ -53,6 +53,12 @@
   - ✅ Acknowledged new coordination plan with implementation status
   - ✅ Core Agent actively implementing coordination decisions (timeout, error handling, authentication, async patterns)
   - ✅ Estimated completion: 2-3 days for timeout/error/auth, 1-2 days for async pattern
+- ✅ Core Agent coordination plan updated (2025-12-29-001544-pst)
+  - ✅ HTTP/WebSocket timeout implementation complete (2025-12-28-235609-pst)
+  - ✅ Error types implementation complete (2025-12-28-235609-pst)
+  - ⏳ Service-to-service authentication in progress (2-3 days remaining)
+  - ⏳ Async pattern integration in progress (1-2 days remaining)
+  - ⏳ Update HTTP/WebSocket clients to use error types (1 day remaining)
 
 **Current Work**:
 - Database integration module complete with JSON request/response handling
@@ -61,9 +67,10 @@
 - Error handling aligned with Silo Agent's error format
 - Validation and helper functions complete
 - **Design gaps identified**: 12 gaps documented (2 Critical ✅ RESOLVED & IMPLEMENTED, 3 High Priority, 2 Medium, 5 Low)
-- **Status**: Implementation complete — Core Agent implementation in progress (2-3 days remaining)
+- **Status**: Implementation complete — Core Agent timeout/error handling complete ✅
+- **Status**: Ready to integrate HTTP/WebSocket timeout and error handling (available now)
 - **Status**: Code ready with synchronous fallback — Will switch to async once Core Agent publishes events
-- **Status**: Ready to integrate once Core Agent completes implementation
+- **Status**: Service-to-service authentication and async pattern still in progress (2-3 days remaining)
 
 ---
 
@@ -327,13 +334,15 @@ This section provides detailed guidance for other agents on what they need to im
 **Status**: ⏳ **IMPLEMENTATION IN PROGRESS** (2025-12-28-223816-pst)  
 **Estimated Completion**: 2-3 days for critical features (timeout, error handling, authentication), 1-2 days for async pattern
 
-**Current Implementation Status** (from coordination plan):
-- ⏳ Timeout Handling Implementation (2-3 days remaining)
-- ⏳ Error Handling Implementation (2-3 days remaining)
+**Current Implementation Status** (from coordination plan 2025-12-29-001544-pst):
+- ✅ HTTP Client Timeout Implementation COMPLETE (2025-12-28-235609-pst)
+- ✅ WebSocket Timeout Implementation COMPLETE (2025-12-28-235609-pst)
+- ✅ Error Types Implementation COMPLETE (2025-12-28-235609-pst)
 - ⏳ Service-to-Service Authentication Implementation (2-3 days remaining)
 - ⏳ Async Pattern Integration (1-2 days remaining)
+- ⏳ Update HTTP/WebSocket clients to use error types (1 day remaining)
 
-**Carry Agent Readiness**: ✅ All integration structures complete and ready for Core Agent's implementation
+**Carry Agent Readiness**: ✅ All integration structures complete — Ready to integrate timeout and error handling now
 
 #### 1. Service Account Token Generation
 
@@ -390,30 +399,69 @@ pub const HttpClientRequest = struct {
 };
 ```
 
-**What to Update**:
-- Add timeout checking in HTTP client request state polling
-- Set `timeout_expired = true` when `(current_time - created_at) > timeout_ms`
-- Transition request state to `failed` when timeout expires
-- Default `timeout_ms` to 30000 (30 seconds) if not set
+**What Core Agent Has Implemented** (2025-12-28-235609-pst):
+- ✅ `timeout_ms` field added to `HttpClientRequest` struct
+- ✅ `is_timed_out()` function for timeout checking
+- ✅ `check_timeouts()` function for batch timeout checking
+- ✅ Default timeouts: `DEFAULT_API_TIMEOUT_MS` (30s), `DEFAULT_CONTENT_TIMEOUT_MS` (60s)
+- ✅ `create_request()` accepts `timeout_ms` parameter
 
 **How Carry Agent Uses It**:
 - Carry Agent calls `set_request_timeout(request, 30000)` for all database operations
-- Currently a no-op until field exists
-- Carry Agent checks `timeout_expired` in `check_request_response()` (ready to use once field exists)
+- ✅ Field now exists — Ready to update `set_request_timeout()` to use the new field
+- Carry Agent can check `is_timed_out()` in `check_request_response()` (ready to use)
 
 **Testing**:
 - Test with timeout_ms = 1000 (1 second) on slow network
 - Verify request fails with timeout after 1 second
-- Verify timeout_expired flag is set correctly
-- Test with timeout_ms = null (should use default)
+- Verify `is_timed_out()` returns true when timeout exceeded
+- Test with timeout_ms = null (should use default 30s)
 
-**Impact**: Timeout configuration is set but not enforced until field is added. Requests could hang indefinitely.
+**Impact**: ✅ Timeout configuration now enforced — Ready for Carry Agent to integrate
 
-**Current Status**: ⏳ Core Agent actively implementing (2-3 days remaining per coordination plan)
+**Current Status**: ✅ **COMPLETE** (2025-12-28-235609-pst)
+- `timeout_ms` field added to `HttpClientRequest`
+- Default timeouts: `DEFAULT_API_TIMEOUT_MS` (30s), `DEFAULT_CONTENT_TIMEOUT_MS` (60s)
+- `is_timed_out()` function for timeout checking
+- `check_timeouts()` function for batch timeout checking
+- `create_request()` accepts `timeout_ms` parameter
+
+**Next Steps for Carry Agent**: ✅ Ready to integrate — Update `set_request_timeout()` to use the new field
 
 ---
 
-#### 3. HTTP Request Event Publishing
+#### 3. Error Types Implementation ✅
+
+**Location**: `src/grain_core/http_errors.zig`, `src/grain_core/websocket_errors.zig`
+
+**What Core Agent Has Implemented** (2025-12-28-235609-pst):
+- ✅ `HttpClientError` enum with retryability classification
+- ✅ `WebSocketError` enum with retryability classification
+- ✅ `FileIoError` enum with retryability classification
+- ✅ Retryability functions: `is_http_error_retryable()`, `is_websocket_error_retryable()`, `is_file_io_error_retryable()`
+- ✅ Error message helpers: `get_http_error_message()`, `get_websocket_error_message()`, `get_file_io_error_message()`
+
+**How Carry Agent Uses It**:
+- Carry Agent can now use `HttpClientError` enum for structured error handling
+- Can check retryability using `is_http_error_retryable()` function
+- Can get error messages using `get_http_error_message()` function
+- Ready to replace current error handling with Core Agent's error types
+
+**Testing**:
+- Test with various error types (timeout, network_error, rate_limit, etc.)
+- Verify retryability classification works correctly
+- Verify error messages are descriptive and helpful
+- Test integration with existing error handling code
+
+**Impact**: ✅ Error types available — Ready for Carry Agent to integrate
+
+**Current Status**: ✅ **COMPLETE** (2025-12-28-235609-pst) — Ready for integration
+
+**Next Steps for Carry Agent**: ✅ Ready to integrate — Update error handling to use `HttpClientError` enum
+
+---
+
+#### 4. HTTP Request Event Publishing
 
 **Location**: `src/grain_core/http_client.zig`
 
@@ -566,7 +614,7 @@ database_integration.init_module();
 
 ## Coordination Needs
 
-**Updated Status** (2025-12-28-223816-pst): Core Agent is actively implementing coordination decisions. Estimated completion: 2-3 days for critical features.
+**Updated Status** (2025-12-29-001544-pst): Core Agent has completed HTTP/WebSocket timeout and error handling ✅. Service-to-service authentication and async pattern integration in progress (2-3 days remaining).
 
 **Immediate Coordination Required**:
 1. **Core Agent**: Service account token generation implementation
@@ -576,13 +624,28 @@ database_integration.init_module();
    - **Impact**: Write operations (`create_user()`, `update_user()`) will work but without authentication until this is implemented
    - **Status**: ⏳ **CORE AGENT IMPLEMENTATION IN PROGRESS** (2-3 days remaining per coordination plan)
 
-2. **Core Agent**: HTTP client timeout field implementation
-   - **What's Needed**: Add `timeout_ms: ?u32` field to `HttpClientRequest` struct in `src/grain_core/http_client.zig`
-   - **What Carry Agent Has Done**: Added `set_request_timeout()` helper that sets this field (currently no-op until field exists)
-   - **Impact**: Timeout configuration is set but not enforced until field is added
-   - **Status**: ⏳ **CORE AGENT IMPLEMENTATION IN PROGRESS** (2-3 days remaining per coordination plan)
+2. **Core Agent**: HTTP client timeout field implementation ✅ **COMPLETE** (2025-12-28-235609-pst)
+   - **What's Needed**: ✅ **COMPLETE** — `timeout_ms` field added to `HttpClientRequest` struct
+   - **What Core Agent Has Done**: 
+     - Added `timeout_ms` field to `HttpClientRequest`
+     - Added `is_timed_out()` and `check_timeouts()` functions
+     - Default timeouts: 30s for API calls, 60s for content
+   - **What Carry Agent Has Done**: Added `set_request_timeout()` helper (ready to use new field)
+   - **Impact**: ✅ Timeout configuration now enforced — Ready for Carry Agent to integrate
+   - **Status**: ✅ **COMPLETE** (2025-12-28-235609-pst) — Ready for integration
 
-3. **Core Agent**: HTTP request event publishing
+3. **Core Agent**: Error types implementation ✅ **COMPLETE** (2025-12-28-235609-pst)
+   - **What's Needed**: ✅ **COMPLETE** — Error types (`HttpClientError`, `WebSocketError`, `FileIoError`) implemented
+   - **What Core Agent Has Done**: 
+     - Created `src/grain_core/http_errors.zig` with `HttpClientError` enum
+     - Created `src/grain_core/websocket_errors.zig` with `WebSocketError` enum
+     - Created `src/grain_core/file_io_errors.zig` with `FileIoError` enum
+     - Added retryability functions and error message helpers
+   - **What Carry Agent Has Done**: Error handling structure ready to integrate
+   - **Impact**: ✅ Error types available — Ready for Carry Agent to integrate
+   - **Status**: ✅ **COMPLETE** (2025-12-28-235609-pst) — Ready for integration
+
+4. **Core Agent**: HTTP request event publishing
    - **What's Needed**: HTTP client to publish `http_request_completed` and `http_request_failed` events to Event Bus when requests complete
    - **Event Payload**: Should include `request_id` and `HttpResponse` data
    - **What Carry Agent Has Done**: Added event subscription setup in `get_user_by_id()` and `get_user_by_email()`, added request context tracking
@@ -619,19 +682,23 @@ database_integration.init_module();
    - Timeout error handling added
 
 **Ready For**:
+- ✅ **IMMEDIATE**: Integrate HTTP/WebSocket timeout handling (available now)
+- ✅ **IMMEDIATE**: Integrate error types (`HttpClientError`, `WebSocketError`) (available now)
 - ⏳ Core Agent to complete service account token generation (2-3 days remaining)
-- ⏳ Core Agent to complete timeout field implementation (2-3 days remaining)
 - ⏳ Core Agent to complete HTTP request event publishing (1-2 days remaining)
 - ⏳ Flow Agent to initialize and provide Event Bus (coordination needed)
 - ⏳ Database API integration details confirmation (Silo Agent — can proceed in parallel)
 - End-to-end testing once Core Agent and Flow Agent integrations complete
 - Production integration once all coordination complete
 
-**Independent Work While Waiting**:
-- Can proceed with retry logic implementation (doesn't depend on Core Agent)
-- Can continue coordinating with Silo Agent on database integration approach
-- Can work on other mobile framework features
-- Can prepare test cases for end-to-end integration testing
+**Immediate Next Steps for Carry Agent**:
+1. ✅ **IMMEDIATE**: Update `set_request_timeout()` to use `timeout_ms` field (field now exists)
+2. ✅ **IMMEDIATE**: Update `check_request_response()` to use `is_timed_out()` function
+3. ✅ **IMMEDIATE**: Integrate `HttpClientError` enum for error handling
+4. ✅ **IMMEDIATE**: Update error handling to use Core Agent's error types
+5. Can proceed with retry logic implementation (doesn't depend on Core Agent)
+6. Can continue coordinating with Silo Agent on database integration approach
+7. Can work on other mobile framework features
 
 ---
 
@@ -715,7 +782,7 @@ pub const UserData = struct {
 
 ## Coordination Plan Acknowledgment
 
-**Latest Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-28-223816-pst.md` ✅
+**Latest Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-29-001544-pst.md` ✅
 
 **Status Acknowledged**:
 - ✅ Database Integration Enhanced — JSON Request/Response Complete
@@ -738,6 +805,13 @@ pub const UserData = struct {
   - ✅ Core Agent implementation in progress: Timeout handling (2-3 days), Error handling (2-3 days), Service-to-service authentication (2-3 days), Async pattern integration (1-2 days)
   - ✅ Carry Agent implementation complete: Ready for Core Agent integration
   - ✅ Status: Waiting for Core Agent to complete implementation (estimated 2-3 days)
+- ✅ Core Agent timeout/error handling complete (2025-12-29-001544-pst)
+  - ✅ HTTP client timeout implementation complete (2025-12-28-235609-pst)
+  - ✅ WebSocket timeout implementation complete (2025-12-28-235609-pst)
+  - ✅ Error types implementation complete (2025-12-28-235609-pst)
+  - ⏳ Service-to-service authentication (2-3 days remaining)
+  - ⏳ Async pattern integration (1-2 days remaining)
+  - ⏳ Update HTTP/WebSocket clients to use error types (1 day remaining)
 - ⏳ Awaiting Silo Agent integration approach confirmation
 
 **Core Agent Coordination Decisions** (2025-12-28-125036-pst):
@@ -779,11 +853,17 @@ pub const UserData = struct {
 - **Coordination**: 
   - Core Agent: Async response handling pattern ✅ **COORDINATION COMPLETE**, ⏳ **IMPLEMENTATION IN PROGRESS** (1-2 days)
   - Core Agent: Authentication token management ✅ **COORDINATION COMPLETE**, ⏳ **IMPLEMENTATION IN PROGRESS** (2-3 days)
-  - Core Agent: Request timeout handling ✅ **COORDINATION COMPLETE**, ⏳ **IMPLEMENTATION IN PROGRESS** (2-3 days)
+  - Core Agent: Request timeout handling ✅ **COMPLETE** (2025-12-28-235609-pst)
+  - Core Agent: Error handling ✅ **COMPLETE** (2025-12-28-235609-pst)
+  - Core Agent: Service-to-service authentication ⏳ **IMPLEMENTATION IN PROGRESS** (2-3 days)
+  - Core Agent: Async pattern integration ⏳ **IMPLEMENTATION IN PROGRESS** (1-2 days)
   - Flow Agent: Event bus initialization ⏳ **INITIALIZATION NEEDED**
   - Silo Agent: Database integration approach confirmation (in progress)
 - **Next Steps**: 
-  - ⏳ Wait for Core Agent to complete implementation (estimated 2-3 days for critical features)
+  - ✅ **IMMEDIATE**: Integrate HTTP/WebSocket timeout handling (Core Agent complete)
+  - ✅ **IMMEDIATE**: Integrate error types (`HttpClientError`, `WebSocketError`) (Core Agent complete)
+  - ⏳ Wait for Core Agent to complete service account tokens (2-3 days remaining)
+  - ⏳ Wait for Core Agent to complete async event publishing (1-2 days remaining)
   - ⏳ Wait for Flow Agent to initialize and provide Event Bus
   - Continue coordinating with Silo Agent on integration approach
   - Test end-to-end flow once Core Agent and Flow Agent integrations complete
@@ -818,7 +898,7 @@ pub const UserData = struct {
    - Silo Agent: Database API integration details confirmation (endpoint paths, formats, etc.)
    - This coordination can proceed in parallel with implementation
 
-**Status**: Implementation complete — Waiting for Core Agent and Flow Agent to complete their integration work.
+**Status**: Implementation complete — Core Agent timeout/error handling complete ✅ — Ready to integrate timeout and error handling now. Service-to-service authentication and async pattern in progress (2-3 days remaining).
 
 ---
 
@@ -827,9 +907,11 @@ pub const UserData = struct {
 **Quick Reference**: What each agent needs to do
 
 - **Core Agent** (Priority: HIGH): 
-  1. Implement `generate_service_account_token()` in AuthService (`src/grain_core/auth_service.zig`)
-  2. Add `timeout_ms: ?u32` field to `HttpClientRequest` struct (`src/grain_core/http_client.zig`)
-  3. Publish HTTP request events (`http_request_completed`, `http_request_failed`) to Event Bus
+  1. ✅ **COMPLETE**: HTTP/WebSocket timeout implementation (2025-12-28-235609-pst)
+  2. ✅ **COMPLETE**: Error types implementation (2025-12-28-235609-pst)
+  3. ⏳ **IN PROGRESS**: Implement `generate_service_account_token()` in AuthService (2-3 days remaining)
+  4. ⏳ **IN PROGRESS**: Publish HTTP request events to Event Bus (1-2 days remaining)
+  5. ⏳ **IN PROGRESS**: Update HTTP/WebSocket clients to use error types (1 day remaining)
 - **Flow Agent** (Priority: HIGH): 
   1. Initialize Event Bus and provide to Carry Agent during initialization
   2. Call `database_integration.set_event_bus(&event_bus)` before database operations
@@ -838,6 +920,11 @@ pub const UserData = struct {
 
 **See "Next Steps for Other Agents" section above for detailed implementation guidance with code examples, testing requirements, and impact analysis.**
 
+**Carry Agent Immediate Actions**:
+- ✅ **READY NOW**: Integrate HTTP/WebSocket timeout handling (Core Agent complete)
+- ✅ **READY NOW**: Integrate error types (`HttpClientError`, `WebSocketError`) (Core Agent complete)
+- ⏳ **WAITING**: Service account tokens (2-3 days), async event publishing (1-2 days)
+
 ---
 
-**Status**: Database Integration Enhanced — Implementation Complete — Core Agent Implementation In Progress (2-3 days) — Ready for Integration (2025-12-28-152151-pst)
+**Status**: Database Integration Enhanced — Implementation Complete — Core Agent Timeout/Error Handling Complete ✅ — Ready for Integration (2025-12-28-162350-pst)

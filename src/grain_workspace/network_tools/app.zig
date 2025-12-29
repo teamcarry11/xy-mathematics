@@ -7,6 +7,7 @@
 //! 2025-12-04-102946-pst: Active implementation
 //! 2025-12-07-020824-pst: Phase 10.3 WebSocket integration for live statistics
 //! 2025-12-07-054458-pst: Phase 11 HTTP Client integration for API endpoint testing
+//! 2025-12-29-001544-pst: Phase 34 HTTP/WebSocket Timeout and Error Handling Integration
 
 const std = @import("std");
 const grain_core = @import("grain_core");
@@ -606,8 +607,9 @@ pub const NetworkToolsApp = struct {
             return null;
         }
 
-        // Create HTTP request
-        const request = self.http_client.create_request(method, url);
+        // Create HTTP request with timeout (use default API timeout)
+        // 2025-12-29-001544-pst: Phase 34 HTTP/WebSocket Timeout and Error Handling
+        const request = self.http_client.create_request(method, url, null);
         if (request == null) {
             return null;
         }

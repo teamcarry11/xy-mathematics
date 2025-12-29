@@ -274,5 +274,37 @@ pub const HttpClient = struct {
         std.debug.assert(self.requests_len <= MAX_CONCURRENT_REQUESTS);
         return self.requests_len;
     }
+
+    // Get response from completed request, returning structured errors.
+    pub fn get_response(
+        self: *HttpClient,
+        request_id: u32,
+        current_time: u64,
+    ) http_errors.HttpClientError!api_server.HttpResponse {
+        std.debug.assert(request_id > 0);
+        const req = self.find_request(request_id) orelse {
+            return http_errors.HttpClientError.invalid_response;
+        };
+        if (req.is_timed_out(current_time)) {
+            req.state = RequestState.failed;
+            return http_errors.HttpClientError.timeout;
+        }
+        if (req.state == RequestState.failed) {
+            return http_errors.HttpClientError.network_error;
+        }
+        if (req.state != RequestState.completed) {
+            return http_errors.HttpClientError.invalid_response;
+        }
+        const response = req.response orelse {
+            return http_errors.HttpClientError.invalid_response;
+        };
+        if (response.status == api_server.HttpStatus.too_many_requests) {
+            return http_errors.HttpClientError.rate_limit;
+        }
+        if (response.status.code >= 500) {
+            return http_errors.HttpClientError.server_error;
+        }
+        return response;
+    }
 };
 

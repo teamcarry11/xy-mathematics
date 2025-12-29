@@ -329,6 +329,7 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
         .imports = &.{
             .{ .name = "grain_core", .module = grain_core_module },
+            .{ .name = "grain_workspace", .module = grain_workspace_module },
         },
     });
 
@@ -5077,6 +5078,20 @@ pub fn build(b: *std.Build) void {
     const grain_research_token_counting_adapter_tests_run = b.addRunArtifact(grain_research_token_counting_adapter_tests);
     test_step.dependOn(&grain_research_token_counting_adapter_tests_run.step);
 
+    const grain_research_cost_tracking_integration_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/162_grain_research_cost_tracking_integration_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_research", .module = grain_research_module },
+                .{ .name = "grain_court", .module = grain_court_module },
+            },
+        }),
+    });
+    const grain_research_cost_tracking_integration_tests_run = b.addRunArtifact(grain_research_cost_tracking_integration_tests);
+    test_step.dependOn(&grain_research_cost_tracking_integration_tests_run.step);
+
     // Grain Bubble component tests
     const grain_bubble_component_tests = b.addTest(.{
         .root_module = b.createModule(.{
@@ -5090,6 +5105,21 @@ pub fn build(b: *std.Build) void {
     });
     const grain_bubble_component_tests_run = b.addRunArtifact(grain_bubble_component_tests);
     test_step.dependOn(&grain_bubble_component_tests_run.step);
+
+    // Grain Bubble workspace integration tests
+    const grain_bubble_workspace_integration_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/141_grain_bubble_workspace_integration_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "grain_bubble", .module = grain_bubble_module },
+                .{ .name = "grain_workspace", .module = grain_workspace_module },
+            },
+        }),
+    });
+    const grain_bubble_workspace_integration_tests_run = b.addRunArtifact(grain_bubble_workspace_integration_tests);
+    test_step.dependOn(&grain_bubble_workspace_integration_tests_run.step);
 
     // File system kernel verification test
     const file_system_kernel_tests = b.addTest(.{

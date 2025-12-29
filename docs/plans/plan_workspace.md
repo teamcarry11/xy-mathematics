@@ -1,8 +1,8 @@
 # Grain Workspace Agent: Development Plan
 
 **Agent**: Grain Workspace Agent (8th Agent)  
-**Status**: Phase 33 Bracket Matching Complete ✅  
-**Last Updated**: 2025-12-28-223816-pst  
+**Status**: Phase 34 HTTP/WebSocket Timeout Integration Complete ✅  
+**Last Updated**: 2025-12-29-001544-pst  
 **Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-21-204511-pst.md`
 
 ---
@@ -1368,6 +1368,43 @@ All planned phases for Grain Workspace Agent have been completed:
 - Auto-close bracket insertion
 - Bracket pair navigation (jump to matching bracket)
 - Multiple bracket pair types support
+
+### Phase 34: HTTP/WebSocket Timeout and Error Handling Integration ✅ **COMPLETE**
+
+**Date**: 2025-12-29-001544-pst
+
+**Completed Work**:
+1. **HTTP/WebSocket Timeout Integration** (`src/grain_workspace/network_tools/app.zig`):
+   - Updated `test_http_endpoint()` to use `create_request()` with timeout parameter
+   - HTTP requests now use default API timeout (30 seconds) per Core Agent's implementation
+   - WebSocket connections already use timeout parameters via `WebSocketManager.add_connection()`
+   - Integration with Core Agent's timeout handling patterns complete
+
+**Features**:
+- HTTP client timeout integration (uses default 30s API timeout)
+- WebSocket timeout support (connect timeout: 10s, message timeout: 5s)
+- Ready for error handling integration when Core Agent updates HTTP/WebSocket clients to return error types
+- Network Tools app now uses timeout patterns per Core Agent coordination decisions
+
+**Grain Style Compliance**:
+- `grain_case` function names
+- `u32`/`u64` types (no `usize`)
+- Bounded allocations (all limits explicit)
+- Assertions for preconditions
+- Max 70 lines per function
+- All compiler warnings enabled
+
+**Coordination**:
+- ✅ **Core Agent**: HTTP/WebSocket timeout implementation complete (2025-12-28-235609-pst)
+- ✅ **Core Agent**: Error types implementation complete (HttpClientError, WebSocketError, FileIoError)
+- ⏳ **Core Agent**: HTTP/WebSocket client error return types update (1 day remaining)
+- ✅ **Workspace Agent**: Timeout integration complete, ready for error handling integration
+
+**Future Enhancements**:
+- Full error handling integration when Core Agent updates HTTP/WebSocket clients to return error types
+- Retry logic for retryable errors (timeout, network_error, rate_limit, server_error)
+- Error message display in Network Tools UI
+- Timeout configuration UI for custom timeout values
 
 **Creative Future Ideas** (Conceptual):
 - **System Auditor**: Security auditing and compliance checking

@@ -1,15 +1,15 @@
 # Core Coordination: Grain Vantage Agent
 
-**Last Updated**: 2025-12-28-230000-pst  
+**Last Updated**: 2025-12-29-002000-pst  
 **Agent**: Grain Vantage Agent (1st Agent)  
-**Status**: Phase 1, 2 & 3 COMPLETE ✅ — Timeout Mechanism COMPLETE ✅ — Ready for Other Agents
+**Status**: Phase 1, 2 & 3 COMPLETE ✅ — Core Agent Userspace Implementation COMPLETE ✅ — Ready for All Agents
 
 ---
 
 ## Current Status
 
-**Phase**: Phase 3: Syscall Timeout Mechanism COMPLETE ✅  
-**Focus**: **READY FOR OTHER AGENTS** — Timeout mechanism implemented. Service-to-service authentication and async patterns are userspace (no kernel changes needed). Carry and Bubble agents can now proceed with timeout-based operations.
+**Phase**: Phase 3: Syscall Timeout Mechanism COMPLETE ✅ — Core Agent Userspace Implementation COMPLETE ✅  
+**Focus**: **READY FOR ALL AGENTS** — Kernel timeout mechanism complete. Core Agent HTTP/WebSocket timeout and error handling implementation complete. All agents can now integrate timeout and error handling patterns.
 
 ---
 
@@ -503,10 +503,10 @@ switch (result) {
 
 ## Next Steps for Core Agent
 
-### ✅ Kernel Timeout Mechanism Complete — Core Agent Can Proceed
+### ✅ Kernel Timeout Mechanism Complete — Core Agent Implementation Complete ✅
 
 **Status**: ✅ **KERNEL IMPLEMENTATION COMPLETE** (2025-12-28-150000-pst)  
-**Core Agent Status**: ⏳ **USESPACE IMPLEMENTATION IN PROGRESS**
+**Core Agent Status**: ✅ **HTTP/WEBSOCKET TIMEOUT & ERROR HANDLING COMPLETE** (2025-12-29-001544-pst)
 
 **What Vantage Agent Has Completed**:
 - ✅ Kernel-level timeout mechanism implemented
@@ -515,9 +515,9 @@ switch (result) {
 - ✅ IPC syscalls support timeout (`channel_send`, `channel_recv`)
 - ✅ Timeout error types available (`network_timeout`, `file_io_timeout`, `ipc_timeout`)
 
-**What Core Agent Should Do Next**:
+**What Core Agent Has Completed**:
 
-1. **Complete HTTP Client Timeout Implementation** (2-3 days remaining)
+1. ✅ **HTTP Client Timeout Implementation** (COMPLETE — 2025-12-29-001544-pst)
    - Use `syscall_tcp_connect` with `timeout_ns` parameter for HTTP connections
    - Use `syscall_tcp_send` with `timeout_ns` parameter for HTTP request sending
    - Use `syscall_tcp_recv` with `timeout_ns` parameter for HTTP response receiving
@@ -526,7 +526,7 @@ switch (result) {
    - Handle `network_timeout` error from syscalls
    - **Kernel Support**: ✅ Ready — All required syscalls support timeout
 
-2. **Complete WebSocket Timeout Implementation** (2-3 days remaining)
+2. ✅ **WebSocket Timeout Implementation** (COMPLETE — 2025-12-29-001544-pst)
    - Use `syscall_tcp_connect` with 10s timeout (10000000000 ns) for WebSocket connections
    - Use `syscall_tcp_send` with 5s timeout (5000000000 ns) for WebSocket message sending
    - Use `syscall_tcp_recv` with 5s timeout for WebSocket message receiving
@@ -540,7 +540,7 @@ switch (result) {
    - Handle `file_io_timeout` error from syscalls
    - **Kernel Support**: ✅ Ready — All required syscalls support timeout
 
-4. **Complete Error Handling Implementation** (2-3 days remaining)
+4. ✅ **Error Handling Implementation** (COMPLETE — 2025-12-29-001544-pst)
    - Use enhanced `BasinError` enum with specific error types
    - Map kernel errors to userspace error types
    - Implement retryability classification
@@ -559,13 +559,32 @@ switch (result) {
    - Implement async response handling via event bus
    - **Kernel Support**: ✅ Confirmed userspace pattern — No kernel changes needed
 
+**What Core Agent Should Do Next**:
+
+1. ⏳ **Complete Service-to-Service Authentication Implementation** (2-3 days remaining)
+   - Implement service account token generation via AuthService
+   - Implement service account token validation via AuthService
+   - Integrate with existing JWT infrastructure
+   - **Kernel Support**: ✅ Confirmed userspace pattern — No kernel changes needed
+
+2. ⏳ **Complete Async Pattern Integration** (1-2 days remaining)
+   - Integrate with Flow Agent Event Bus
+   - Add event types for HTTP, WebSocket, File I/O operations
+   - Implement async response handling via event bus
+   - **Kernel Support**: ✅ Confirmed userspace pattern — No kernel changes needed
+
+3. ⏳ **Update HTTP/WebSocket Clients to Use Error Types** (1 day remaining)
+   - Update HTTP client to use new error types
+   - Update WebSocket client to use new error types
+   - Ensure consistent error handling across all clients
+
 **Coordination Notes for Core Agent**:
 - **Kernel Timeout Support**: ✅ Complete — All network, file I/O, and IPC syscalls support timeout
 - **Error Types**: ✅ Complete — Enhanced `BasinError` enum with 20+ specific error types
-- **No Kernel Blockers**: ✅ All kernel-level features ready for Core Agent to use
-- **Userspace Implementation**: Core Agent can proceed with userspace timeout/error handling implementation
-
-**Expected Timeline**: Core Agent should complete userspace implementation in 2-3 days (timeout), 2-3 days (error handling), 2-3 days (authentication), 1-2 days (async pattern) — Total: 7-11 days
+- **HTTP/WebSocket Timeout**: ✅ Complete — Userspace implementation complete
+- **Error Handling**: ✅ Complete — Error types implementation complete
+- **No Kernel Blockers**: ✅ All kernel-level features ready
+- **Remaining Work**: Service-to-service authentication (2-3 days), async pattern integration (1-2 days), error type integration (1 day)
 
 ---
 

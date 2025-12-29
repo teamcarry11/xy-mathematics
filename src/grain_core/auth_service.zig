@@ -20,6 +20,7 @@ pub const HASH_LEN: u32 = 32; // SHA-256
 pub const HASH_OUTPUT_LEN: u32 = SALT_LEN + HASH_LEN;
 pub const ACCESS_TOKEN_EXPIRY: u64 = 3600; // 1 hour
 pub const REFRESH_TOKEN_EXPIRY: u64 = 604800; // 7 days
+pub const SERVICE_ACCOUNT_TOKEN_EXPIRY: u64 = 86400; // 24 hours
 pub const OTP_EXPIRY: u64 = 600; // 10 minutes
 pub const SESSION_EXPIRY: u64 = 86400; // 24 hours
 
@@ -36,6 +37,7 @@ pub const JwtClaims = struct {
 pub const TokenType = enum(u8) {
     access,
     refresh,
+    service_account,
 };
 
 // Session structure
@@ -149,6 +151,35 @@ pub const AuthService = struct {
             .token_type = TokenType.refresh,
         };
         std.mem.copyForwards(u8, &claims.user_id, user_id);
+        const token_len = generate_jwt_token(
+            &claims,
+            self.secret[0..self.secret_len],
+            token_out,
+        );
+        std.debug.assert(token_len > 0);
+        std.debug.assert(token_len <= MAX_JWT_LEN);
+        return token_len;
+    }
+
+    // Generate service account token for service-to-service auth.
+    pub fn generate_service_account_token(
+        self: *AuthService,
+        service_id: []const u8,
+        current_time: u64,
+        token_out: []u8,
+    ) u32 {
+        std.debug.assert(service_id.len > 0);
+        std.debug.assert(service_id.len <= MAX_USER_ID_LEN);
+        std.debug.assert(current_time > 0);
+        std.debug.assert(token_out.len >= MAX_JWT_LEN);
+        var claims = JwtClaims{
+            .user_id = undefined,
+            .user_id_len = @intCast(service_id.len),
+            .exp = current_time + SERVICE_ACCOUNT_TOKEN_EXPIRY,
+            .iat = current_time,
+            .token_type = TokenType.service_account,
+        };
+        std.mem.copyForwards(u8, &claims.user_id, service_id);
         const token_len = generate_jwt_token(
             &claims,
             self.secret[0..self.secret_len],

@@ -76,4 +76,8 @@ pub const file_storage = @import("file_storage.zig");
 pub const wal_manager = @import("wal_manager.zig");
 pub const index_manager = @import("index_manager.zig");
 pub const http_client = @import("http_client.zig");
+pub const http_errors = @import("http_errors.zig");
+pub const websocket_errors = @import("websocket_errors.zig");
+pub const file_io_errors = @import("file_io_errors.zig");
+pub const async_pattern = @import("async_pattern.zig");
 

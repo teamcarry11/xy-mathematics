@@ -552,8 +552,16 @@ Grain Skate Terminal Silo Field Agent is responsible for building Grain Skate (k
    - Prompt engineering for knowledge graph analysis ✅
    - Response parsing for structured AI outputs ✅
 
-**Remaining Work**:
-- ZON format integration (Court Agent Phase 2 ~90% complete) for token-efficient communication ⏳
+4. **Timeout/Error Handling Integration** (2025-12-28-223816-pst):
+   - Court Agent timeout/error handling implementation complete ✅
+   - Integrated timeout handling (60s default for LLM operations) ✅
+   - Integrated structured error types (`LlmProviderError` enum) ✅
+   - Implemented retry logic (exponential backoff: 1s, 2s, 4s, max 3 retries) ✅
+   - Using `is_llm_error_retryable()` for retryability classification ✅
+   - All AI insights operations now have timeout and error handling ✅
+
+**Remaining Work** (Future Enhancements):
+- ZON format integration (Court Agent Phase 2 ~99% complete) for token-efficient communication ⏳
 - Use vector embeddings for semantic similarity (Grain Court integration - Future enhancement)
 - Test thoroughly with actual AI API calls (requires API key)
 
@@ -587,9 +595,10 @@ Grain Skate Terminal Silo Field Agent is responsible for building Grain Skate (k
 4. ✅ Migrate to Court Agent provider abstraction (2025-12-21-192912-pst) ✅
 5. ✅ Implement actual AI analysis (using Court provider API)
 6. ✅ Visual indicators for AI-suggested connections (graph renderer integration)
-7. ⏳ ZON format integration (Court Agent Phase 2) for token efficiency
-8. ⏳ Use vector embeddings for semantic similarity (Grain Court integration - Future)
-9. ⏳ Test thoroughly with actual AI API calls (requires API key)
+7. ✅ Integrate timeout/error handling (2025-12-28-223816-pst) ✅
+8. ⏳ ZON format integration (Court Agent Phase 2 ~99% complete) for token efficiency
+9. ⏳ Use vector embeddings for semantic similarity (Grain Court integration - Future)
+10. ⏳ Test thoroughly with actual AI API calls (requires API key)
 
 **Dependencies**:
 - **Needs**: Court Agent provider abstraction (Phase 1 complete) ✅

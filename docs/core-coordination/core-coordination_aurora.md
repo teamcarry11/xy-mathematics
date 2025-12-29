@@ -1,8 +1,8 @@
 # Grain Aurora Agent: Core Coordination Status
 
 **Agent**: Grain Aurora IDE Dream Browser Agent (2nd Agent)  
-**Last Updated**: 2025-12-28-144557-PST  
-**Status**: ✅ **COORDINATION DECISIONS RECEIVED** - Court Agent LLM Implementation Complete ✅ - Workspace Agent Component API Complete ✅ - Ready for Component API Integration
+**Last Updated**: 2025-12-29-162326-PST  
+**Status**: ✅ **CORE AGENT HTTP/WEBSOCKET TIMEOUT/ERROR HANDLING COMPLETE** ✅ - Ready for Immediate Integration
 
 ---
 
@@ -25,11 +25,11 @@
 - **Core Agent Coordination Plan Updated** ✅ - Latest status from Core Agent (2025-12-28-223816-pst)
 
 **Critical Findings** (RESOLVED):
-- ✅ **RESOLVED**: HTTP client timeout handling - Per-request timeout with 30s API, 60s content defaults
-- ✅ **RESOLVED**: HTTP client error handling - Structured error unions (`HttpClientError` enum)
-- ✅ **RESOLVED**: WebSocket timeout handling - 10s connections, 5s message sending
-- ✅ **RESOLVED**: WebSocket error handling - Structured error unions (`WebSocketError` enum)
-- ✅ **RESOLVED**: LLM request timeout/error handling - Court Agent implementation complete (2025-12-28-135000-pst)
+- ✅ **RESOLVED**: HTTP client timeout handling - Core Agent implementation complete (2025-12-28-235609-pst) ✅
+- ✅ **RESOLVED**: HTTP client error handling - Core Agent error types complete (`HttpClientError` enum) ✅
+- ✅ **RESOLVED**: WebSocket timeout handling - Core Agent implementation complete (2025-12-28-235609-pst) ✅
+- ✅ **RESOLVED**: WebSocket error handling - Core Agent error types complete (`WebSocketError` enum) ✅
+- ✅ **RESOLVED**: LLM request timeout/error handling - Court Agent implementation complete (2025-12-28-135000-pst) ✅
 - ⏳ **PENDING**: DAG operation error handling - Coordinate with DAG Core
 
 **Full Design Gaps Document**: `docs/grain_aurora/integration_design_gaps.md`
@@ -43,7 +43,7 @@
 
 ### Decision 1: HTTP Client Timeout Handling ✅
 
-**Status**: ✅ **DECISION RECEIVED** — Per-request timeout with global defaults
+**Status**: ✅ **IMPLEMENTATION COMPLETE** (2025-12-28-235609-pst) — Ready for Integration
 
 **Decision**:
 - **Per-Request Timeout**: Each HTTP request accepts optional `timeout_ms: ?u32` parameter
@@ -54,11 +54,13 @@
 - **Timeout Checking**: Core Agent HTTP client checks timeout in request state polling
 - **Long-Running Operations**: Streaming responses use per-chunk timeout (30s per chunk)
 
-**Implementation**:
-- Core Agent will add `timeout_ms: ?u32` field to `HttpClientRequest` struct
-- Core Agent will add timeout checking in HTTP client request state polling
-- Aurora Agent: Update `dream_http_client.zig` to use Core Agent HTTP client with timeout support
-- Aurora Agent: Update `aurora_glm46.zig` to use timeout parameter (60s default for LLM operations)
+**Implementation** (Core Agent Complete ✅):
+- ✅ Core Agent added `timeout_ms` field to `HttpClientRequest` struct
+- ✅ Core Agent added timeout checking (`is_timed_out()`, `check_timeouts()` functions)
+- ✅ Core Agent added default timeouts: `DEFAULT_API_TIMEOUT_MS` (30s), `DEFAULT_CONTENT_TIMEOUT_MS` (60s)
+- ✅ Core Agent `create_request()` accepts `timeout_ms` parameter
+- ⏳ **Aurora Agent Action**: Update `dream_http_client.zig` to use Core Agent HTTP client with timeout support (READY NOW)
+- ⏳ **Aurora Agent Action**: Update `aurora_glm46.zig` to use timeout parameter (60s default for LLM operations)
 
 **Location**: `src/grain_core/http_client.zig` (Core Agent), `src/dream_http_client.zig` (Aurora Agent)
 
@@ -68,7 +70,7 @@
 
 ### Decision 2: HTTP Client Error Handling ✅
 
-**Status**: ✅ **DECISION RECEIVED** — Structured error unions with retryability
+**Status**: ✅ **IMPLEMENTATION COMPLETE** (2025-12-28-235609-pst) — Ready for Integration
 
 **Decision**:
 - **Error Union Type**: `HttpClientError` enum with variants:

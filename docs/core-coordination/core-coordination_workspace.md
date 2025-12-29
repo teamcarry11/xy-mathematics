@@ -1,31 +1,34 @@
 # Grain Workspace Agent: Core Coordination Status
 
-**Last Updated**: 2025-12-28-223816-pst  
+**Last Updated**: 2025-12-29-001544-pst  
 **Agent**: Grain Workspace Agent (8th Agent)  
-**Status**: Phase 33 Complete ✅ — Bracket Matching Complete ✅  
-**Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-28-223816-pst.md`
+**Status**: Phase 34 Complete ✅ — HTTP/WebSocket Timeout Integration Complete ✅  
+**Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-29-001544-pst.md`
 
 ---
 
 ## Executive Summary
 
-**Current State**: Phase 33 (Bracket Matching) complete. Text Editor now supports bracket matching for improved code editing. Component API structure implemented per approved design. Text Editor is feature-complete for SLC v1.0. Grain Style CLI tool is production-ready. **Component API implementation complete!** ✅
+**Current State**: Phase 34 (HTTP/WebSocket Timeout Integration) complete. Network Tools now uses HTTP/WebSocket timeout patterns per Core Agent's implementation. Text Editor supports bracket matching for improved code editing. Component API structure implemented per approved design. Text Editor is feature-complete for SLC v1.0. Grain Style CLI tool is production-ready. **Component API implementation complete!** ✅
 
-**Key Achievement**: 9 phases completed (25-33) in rapid succession, delivering production-ready desktop applications with comprehensive feature sets. Component API structure implemented and ready for integration with Bubble and Aurora agents.
+**Key Achievement**: 10 phases completed (25-34) in rapid succession, delivering production-ready desktop applications with comprehensive feature sets. Component API structure implemented and ready for integration with Bubble and Aurora agents. HTTP/WebSocket timeout integration complete, ready for error handling integration.
 
-**Critical Coordination Decisions Made** (by Core Agent, 2025-12-28-223816-pst):
-- ✅ **Component API Design**: **APPROVED** — Begin implementation per approved design
-- ✅ **File I/O Timeout Handling**: Decision made — 30s default for file I/O operations
-- ✅ **File I/O Error Handling**: Decision made — Structured error unions (`FileIoError` enum)
-- ✅ **All Coordination Patterns**: Timeout, error handling, authentication, async patterns decided
+**Critical Coordination Decisions Made** (by Core Agent, 2025-12-29-001544-pst):
+- ✅ **Component API Design**: **APPROVED** — Implementation complete ✅
+- ✅ **HTTP/WebSocket Timeout Handling**: **IMPLEMENTATION COMPLETE** ✅ — Ready for integration
+- ✅ **Error Handling Pattern**: **IMPLEMENTATION COMPLETE** ✅ — Ready for integration
+- ✅ **File I/O Timeout Handling**: Decision made — 30s default (pending kernel integration)
+- ✅ **File I/O Error Handling**: Decision made — Structured error unions (`FileIoError` enum) — Ready for integration
+- ⏳ **Service-to-Service Authentication**: Implementation in progress (2-3 days remaining)
+- ⏳ **Async Pattern Integration**: Implementation in progress (1-2 days remaining)
 
-**Strategic Recommendation**: **Component API implementation complete!** Ready for coordination with Bubble and Aurora agents on component integration. This unblocks SLC product integration.
+**Strategic Recommendation**: **HTTP/WebSocket timeout and error handling are ready for integration!** ✅ Core Agent has completed HTTP/WebSocket timeout and error types implementation. Workspace Agent can now integrate these patterns. Component API implementation complete. Ready for coordination with Bubble and Aurora agents on component integration. This unblocks SLC product integration.
 
 ---
 
 ## Current Status
 
-### Recent Completions (Phases 25-33)
+### Recent Completions (Phases 25-34)
 
 **Grain Style CLI Tool** (Phases 21-27):
 - ✅ Production-ready standalone CLI tool
@@ -67,7 +70,13 @@
 - ✅ Find matching bracket at cursor position
 - ✅ Comprehensive tests (`tests/115_grain_workspace_text_editor_test.zig`)
 
-**Status**: Phase 33 complete. Component API implementation complete. Ready for coordination with Bubble and Aurora agents.
+**HTTP/WebSocket Timeout Integration** (Phase 34):
+- ✅ Network Tools HTTP client timeout integration (uses default 30s API timeout)
+- ✅ WebSocket timeout support (connect timeout: 10s, message timeout: 5s)
+- ✅ Integration with Core Agent's timeout handling patterns complete
+- ✅ Ready for error handling integration when Core Agent updates clients
+
+**Status**: Phase 34 complete. HTTP/WebSocket timeout integration complete. Component API implementation complete. Ready for coordination with Bubble and Aurora agents.
 
 ---
 
@@ -498,20 +507,21 @@
 
 **What We're Ready For**:
 - ✅ Grain Style CLI tool is production-ready and can be shared with other agents
-- ✅ Text Editor is feature-complete for SLC v1.0 (with syntax highlighting, text selection, copy/cut/paste)
+- ✅ Text Editor is feature-complete for SLC v1.0 (with syntax highlighting, text selection, copy/cut/paste, bracket matching)
 - ✅ File Manager is feature-complete for SLC v1.0
 - ✅ Terminal Plus is feature-complete for SLC v1.0
-- ✅ Component API design approved by Core Agent
-- ✅ Ready to implement component API per approved design
+- ✅ Component API design approved by Core Agent and implementation complete
 - ✅ Ready to coordinate with Bubble Agent on component integration
 - ✅ Ready to coordinate with Aurora Agent on Dream Browser component API
+- ✅ **HTTP/WebSocket timeout and error handling ready for integration** ✅ (Core Agent implementation complete)
 - ✅ File I/O timeout/error handling decisions made (ready for implementation when kernel integration ready)
 - ✅ No blockers, can proceed with implementation
 
 **What We Need**:
-- **IMMEDIATE**: Begin implementing component API per approved design
-- **IMMEDIATE**: Coordinate with Bubble Agent on `DesktopComponentAPI` structure implementation
-- **SHORT-TERM**: Continue independent enhancements after component API implementation
+- **IMMEDIATE**: Integrate HTTP/WebSocket timeout and error handling patterns (Core Agent implementation complete ✅)
+- **IMMEDIATE**: Coordinate with Bubble Agent on Component API integration
+- **IMMEDIATE**: Coordinate with Aurora Agent on Component API integration
+- **SHORT-TERM**: Continue independent Text Editor enhancements
 - **FUTURE**: Implement file I/O timeout/error handling (when kernel integration ready)
 
 ---
@@ -691,35 +701,55 @@ api.terminal.terminal_view.set_theme(.high_contrast);
 
 ---
 
-### For Core Agent — **PRIORITY 1, CRITICAL**
+### For Core Agent — **PROGRESS UPDATE: HTTP/WebSocket Complete ✅**
 
 **What Was Completed by Workspace Agent**:
 - ✅ Component API structure implemented in `src/grain_workspace/components.zig`
 - ✅ Text Editor bracket matching implemented (Phase 33)
 - ✅ All independent work complete and ready for integration
 
-**What Core Agent Needs to Do** (Per Latest Coordination Plan, 2025-12-28-223816-pst):
-1. **Complete Coordination Decisions Implementation** (Priority 1, CRITICAL, unblocks 6 agents):
-   - **Timeout Handling Implementation** (2-3 days remaining):
-     - Complete HTTP client timeout implementation
-     - Complete WebSocket timeout implementation
-     - Complete file I/O timeout implementation
-     - All agents waiting on Core Agent implementation
-   - **Error Handling Implementation** (2-3 days remaining):
-     - Complete error types implementation (`HttpClientError`, `WebSocketError`, `FileIoError`)
-     - Complete retryability classification
-     - Complete rate limiting detection
-     - All agents waiting on Core Agent implementation
-   - **Service-to-Service Authentication Implementation** (2-3 days remaining):
-     - Complete service account token implementation
-     - Complete token generation and validation via `AuthService`
-     - Complete integration with existing JWT infrastructure
-     - All agents waiting on Core Agent implementation
-   - **Async Pattern Integration** (1-2 days remaining):
-     - Complete async pattern integration with Flow Agent Event Bus
-     - Complete event types for HTTP, WebSocket, File I/O operations
-     - Complete async response handling via event bus
-     - All agents waiting on Core Agent implementation
+**What Core Agent Has Completed** (Per Latest Coordination Plan, 2025-12-29-001544-pst):
+1. ✅ **HTTP Client Timeout Implementation COMPLETE** (2025-12-28-235609-pst):
+   - `timeout_ms` field added to `HttpClientRequest`
+   - Default timeouts: `DEFAULT_API_TIMEOUT_MS` (30s), `DEFAULT_CONTENT_TIMEOUT_MS` (60s)
+   - `is_timed_out()` function for timeout checking
+   - `check_timeouts()` function for batch timeout checking
+   - `create_request()` accepts `timeout_ms` parameter
+   - **READY FOR ALL AGENTS TO INTEGRATE** ✅
+
+2. ✅ **WebSocket Timeout Implementation COMPLETE** (2025-12-28-235609-pst):
+   - `connect_timeout_ms` and `message_timeout_ms` fields added to `WebSocketConnection`
+   - Default timeouts: `DEFAULT_CONNECT_TIMEOUT_MS` (10s), `DEFAULT_MESSAGE_TIMEOUT_MS` (5s)
+   - `is_connect_timed_out()` and `is_message_timed_out()` functions
+   - `check_timeouts()` function in `WebSocketManager`
+   - `add_connection()` accepts timeout parameters
+   - **READY FOR ALL AGENTS TO INTEGRATE** ✅
+
+3. ✅ **Error Types Implementation COMPLETE** (2025-12-28-235609-pst):
+   - `src/grain_core/http_errors.zig`: `HttpClientError` enum with retryability
+   - `src/grain_core/websocket_errors.zig`: `WebSocketError` enum with retryability
+   - `src/grain_core/file_io_errors.zig`: `FileIoError` enum with retryability
+   - Retryability functions: `is_http_error_retryable()`, `is_websocket_error_retryable()`, `is_file_io_error_retryable()`
+   - Error message helpers: `get_http_error_message()`, `get_websocket_error_message()`, `get_file_io_error_message()`
+   - **READY FOR ALL AGENTS TO INTEGRATE** ✅
+
+**What Core Agent Still Needs to Do**:
+1. ⏳ **Service-to-Service Authentication Implementation** (2-3 days remaining):
+   - Complete service account token implementation
+   - Complete token generation and validation via `AuthService`
+   - Complete integration with existing JWT infrastructure
+   - All agents waiting on Core Agent implementation
+
+2. ⏳ **Async Pattern Integration** (1-2 days remaining):
+   - Complete async pattern integration with Flow Agent Event Bus
+   - Complete event types for HTTP, WebSocket, File I/O operations
+   - Complete async response handling via event bus
+   - All agents waiting on Core Agent implementation
+
+3. ⏳ **Update HTTP/WebSocket Clients** (1 day remaining):
+   - Update HTTP client to return `HttpClientError!HttpResponse`
+   - Update WebSocket client to return `WebSocketError!void`
+   - This will make error handling fully integrated
 
 2. **Component API Integration** (When Ready):
    - Component API structure is complete and ready for compositor integration
@@ -733,11 +763,16 @@ api.terminal.terminal_view.set_theme(.high_contrast);
    - Document error handling pattern
    - Workspace Agent ready to integrate when available
 
-**Impact**: Core Agent's coordination decisions implementation **unblocks 6 agents** (Carry, Bubble, Aurora, Skate, Workspace, and others waiting on timeout/error handling patterns).
+**Impact**: Core Agent's HTTP/WebSocket timeout and error handling implementation **unblocks all agents** who need HTTP/WebSocket functionality. Workspace Agent can now integrate these patterns immediately.
 
-**Timeline**: 2-3 days for timeout handling, 2-3 days for error handling, 2-3 days for authentication, 1-2 days for async pattern integration (total: ~7-11 days for all coordination decisions implementation).
+**Timeline**: 
+- ✅ HTTP/WebSocket timeout: **COMPLETE** (ready now)
+- ✅ Error types: **COMPLETE** (ready now)
+- ⏳ Service-to-service authentication: 2-3 days remaining
+- ⏳ Async pattern integration: 1-2 days remaining
+- ⏳ HTTP/WebSocket client error return types: 1 day remaining
 
-**Coordination**: Core Agent is implementing coordination decisions. Workspace Agent is ready to integrate timeout/error handling patterns once Core Agent completes. No blockers from Workspace Agent side.
+**Coordination**: Core Agent has completed HTTP/WebSocket timeout and error handling. **Workspace Agent can now integrate these patterns immediately.** No blockers from Workspace Agent side. Ready to integrate HTTP/WebSocket timeout and error handling patterns.
 
 ---
 

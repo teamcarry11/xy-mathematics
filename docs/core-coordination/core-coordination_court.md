@@ -1,7 +1,9 @@
 # Core Coordination: Grain Court Agent
 
-**Last Updated**: 2025-12-28-230000-pst  
+**Last Updated**: 2025-12-29-003000-pst  
 **Agent**: Grain Court Agent (11th Agent)
+
+**Coordination Plan Acknowledged**: 2025-12-29-001544-pst
 
 ---
 
@@ -10,7 +12,9 @@
 **Phase**: Phase 1 COMPLETE ✅ — Phase 2 ~99% COMPLETE (Priority 3: ZON Module Phase 1)  
 **Focus**: ZON format integration for token-efficient LLM communication
 
-**Coordination Plan Acknowledged**: 2025-12-28-125036-pst  
+**Coordination Plans Acknowledged**: 
+- 2025-12-28-125036-pst (previous coordination plan)
+- 2025-12-29-001544-pst (latest coordination plan — Payment/Passwords/Bank integration, ZON ~99% complete)  
 **Priority**: Priority 3 (HIGH) — Unblocks Flow Agent and Research Agent ZON format integration  
 **Remaining Time**: ~0.01 day (of 4-6 day total)
 
@@ -37,7 +41,7 @@
 ## Phase 2: ZON Format Integration — ~99% COMPLETE ⏳
 
 **Status**: Priority 3 (HIGH) — Core implementation complete, Research Agent Phase 4 integration active, Flow Agent integration complete ✅  
-**Estimated Time**: 4-6 days total (remaining: ~0.01 day)  
+**Estimated Time**: 4-6 days total (remaining: ~0.01 day — final documentation/polish)  
 **Blocks**: Flow Agent ZON format integration ✅, Research Agent Phase 4 validation ✅  
 **Started**: 2025-12-21-184000-pst
 
@@ -247,7 +251,58 @@
 
 ---
 
+## Payment/Passwords/Bank Integration Planning
+
+**Status**: ⏳ **COORDINATION RECEIVED** (2025-12-28-230000-pst)
+
+**Coordination Message**: `docs/agent-communications/core_to_court_payment_passwords_bank_integration_2025-12-28-230000-pst.md`
+
+**New Modules to Integrate**:
+1. **Grain Passwords** (`grain_passwords`): Secure encryption and secret management for LLM API keys
+2. **Grain Pay** (`grain_pay`): Payment processing for LLM API cost management and usage-based billing
+3. **Grainbank** (`grainbank`): Currency-based billing and reward systems for LLM usage
+
+**Integration Recommendations** (from Core Agent):
+- **Phase 1: Grain Passwords** (IMMEDIATE, HIGH priority, 2-3 days)
+  - Replace plaintext API keys with encrypted storage
+  - Support key rotation for LLM provider API keys
+  - Integrate with Security Manager for access control
+- **Phase 2: Grain Pay** (SHORT-TERM, MEDIUM priority, 1-2 weeks)
+  - Integrate cost tracking with payment processing
+  - Enable usage-based billing for LLM requests
+  - Payment reconciliation with cost tracking
+- **Phase 3: Grainbank** (MEDIUM-TERM, LOW priority, 2-3 weeks)
+  - LLM credit system using Grainbank currencies
+  - Token-based billing with currency support
+  - Reward points for high-quality LLM interactions
+
+**Design Documents**:
+- Design Document: `docs/zyx/grain_payment_vault_design_2025-12-28-213448-pst.md`
+- Storage Schema: `docs/grain_database/payment_vault_storage_schema.md` (Silo Agent, COMPLETE ✅)
+
+**Next Steps**:
+1. ✅ Integration coordination message reviewed — DONE
+2. ✅ Response message sent to Core Agent — DONE (2025-12-29-002000-pst)
+3. ✅ Phase 1 (Grain Passwords) integration plan created — DONE
+4. ⏳ Coordinate with Silo Agent on storage helper API design
+5. ⏳ Begin Phase 1 implementation once Grain Passwords module is available (2-3 days)
+6. ⏳ Plan Phase 2 (Grain Pay) and Phase 3 (Grainbank) integration (SHORT-TERM/MEDIUM-TERM)
+
+---
+
 ## Next Steps
+
+### IMMEDIATE: Core Agent Coordination Plan Priorities (Priority 1, HIGH)
+
+**1. Complete ZON Module Phase 2** (~0.01 day remaining) ⚠️ **CRITICAL**
+- Final integration testing
+- Research Agent Phase 2 LLM integration support
+- Complete final polish and documentation
+
+**2. Review Payment/Passwords/Bank Integration** (IMMEDIATE, HIGH)
+- Review coordination message and design documents
+- Plan Phase 1 (Grain Passwords) integration approach
+- Coordinate with Silo Agent on storage schema
 
 ### IMMEDIATE: Implement Coordination Decisions (Priority 3, HIGH)
 
@@ -271,12 +326,23 @@
 - ✅ Phase 2 LLM integration approach provided
 - ✅ Token counting integration approach provided
 - ✅ Cost tracking integration approach provided
-- ✅ Research Agent test infrastructure created (2025-12-28-224000-pst):
+- ✅ Research Agent test infrastructure created (2025-12-28-224000-pst, updated 2025-12-29-002500-pst):
   - `tests/159_grain_research_llm_integration_test.zig` — LLM integration tests
   - `tests/160_grain_research_retrieval_llm_integration_test.zig` — Retrieval LLM integration tests
   - `tests/161_grain_research_token_counting_adapter_test.zig` — Token counting adapter tests
+  - `tests/162_grain_research_cost_tracking_integration_test.zig` — Cost tracking integration tests ✅ (NEW)
 - ⏳ Supporting Research Agent implementation work as needed
 - ⏳ Ready to assist with any integration issues or questions
+
+**3. Payment/Passwords/Bank Integration Planning** ⏳ — COORDINATION REVIEWED, PHASE 1 PLANNING IN PROGRESS
+- ✅ Coordination message received (2025-12-28-230000-pst)
+- ✅ Design documents reviewed: `docs/zyx/grain_payment_vault_design_2025-12-28-213448-pst.md`
+- ✅ Storage schema reviewed: `docs/grain_database/payment_vault_storage_schema.md` (Silo Agent, COMPLETE ✅)
+- ✅ Response message sent to Core Agent (2025-12-29-002000-pst)
+- ✅ Answers provided to Core Agent's questions (API key storage, priorities, requirements)
+- ✅ Phase 1 (Grain Passwords) integration plan created (HIGH priority, 2-3 days)
+- ⏳ Coordinating with Silo Agent on storage helper API design
+- ⏳ Planning Phase 2 (Grain Pay) and Phase 3 (Grainbank) integration (SHORT-TERM/MEDIUM-TERM)
 
 **3. Flow Agent Coordination** ✅ — INTEGRATION COMPLETE
 - ✅ Coordination request sent (2025-12-21-190500-pst)
@@ -382,8 +448,9 @@
      - Use Court Agent's token counting for LLM requests (input/output tokens)
      - Use Research Agent's token counter for format comparison (JSON vs ZON)
 
-**4. Cost Tracking Integration** (Priority: MEDIUM, 2-3 days)
-   - **Next**: Create cost tracking integration
+**4. Cost Tracking Integration** (Priority: MEDIUM, 1-2 days remaining)
+   - ✅ **Test infrastructure created** (`tests/162_grain_research_cost_tracking_integration_test.zig`) ✅ (NEW)
+   - **Next**: Complete cost tracking integration implementation
      - Create `src/grain_research/cost_tracking_integration.zig`
      - Integrate Court Agent's `CostTracker` with Research Agent's cost savings calculator
      - Track costs for JSON vs ZON format requests
@@ -403,7 +470,7 @@
 - Phase 3 Token Efficiency: `docs/agent-communications/court_to_research_phase3_token_efficiency_ready_2025-12-28-142000-pst.md`
 - Integration Response: `docs/agent-communications/court_to_research_integration_response_2025-12-28-214000-pst.md`
 
-**Timeline**: 6-10 days remaining for all integration points (test infrastructure complete, implementation in progress)
+**Timeline**: 5-9 days remaining for all integration points (all test infrastructure complete ✅, implementation in progress)
 
 ---
 
@@ -548,7 +615,7 @@
 | **Research Agent** | Phase 2 LLM Integration | ⏳ **IN PROGRESS** | 2-3 days | Complete LLM integration helper implementation |
 | **Research Agent** | Retrieval LLM Integration | ⏳ **IN PROGRESS** | 1-2 days | Complete retrieval LLM integration implementation |
 | **Research Agent** | Token Counting Integration | ⏳ **TEST INFRA CREATED** | 1-2 days | Complete token counting adapter implementation |
-| **Research Agent** | Cost Tracking Integration | ⏳ **PENDING** | 2-3 days | Create cost tracking integration |
+| **Research Agent** | Cost Tracking Integration | ⏳ **TEST INFRA CREATED** | 1-2 days | Complete cost tracking integration implementation |
 | **Aurora Agent** | LLM Timeout/Error Handling | ✅ **READY** | 4-5 days | Update `aurora_glm46.zig` when ready |
 | **Bubble Agent** | LLM Timeout/Error Handling | ✅ **READY** | 3-4 days | Update LLM client integration when ready |
 | **Skate Agent** | LLM Timeout/Error Handling | ✅ **READY** | 3-4 days | Update AI insights module when ready |
@@ -556,7 +623,7 @@
 
 **Integration Status**:
 - ✅ **Flow Agent**: Integration complete — can test independently
-- ⏳ **Research Agent**: Test infrastructure created (3 test files), implementation in progress — Court Agent actively supporting
+- ⏳ **Research Agent**: Test infrastructure created (4 test files), implementation in progress — Court Agent actively supporting
 - ✅ **Aurora/Bubble/Skate Agents**: All APIs ready — can integrate when ready
 - ✅ **Core Agent**: No dependencies — Court Agent ready and supporting all integrations
 
@@ -657,6 +724,8 @@
 - `docs/agent-communications/court_to_aurora_llm_timeout_error_ready_2025-12-28-135000-pst.md` — Aurora Agent LLM timeout/error handling ready notification
 - `docs/agent-communications/court_to_research_phase3_token_efficiency_ready_2025-12-28-142000-pst.md` — Research Agent Phase 3 token efficiency ready notification
 - `docs/agent-communications/court_to_research_integration_response_2025-12-28-214000-pst.md` — Research Agent integration coordination response (Phase 2 LLM, Token Counting, Cost Tracking)
+- `docs/agent-communications/core_to_court_payment_passwords_bank_integration_2025-12-28-230000-pst.md` — Core Agent payment integration coordination
+- `docs/agent-communications/court_to_core_payment_integration_response_2025-12-29-002000-pst.md` — Court Agent payment integration response (Phase 1 planning complete)
 
 ---
 
@@ -700,6 +769,6 @@
 
 ---
 
-**Date**: 2025-12-28-230000-pst  
+**Date**: 2025-12-29-003000-pst  
 **Agent**: Grain Court Agent (11th Agent)  
-**Status**: Phase 1 COMPLETE ✅ — Phase 2 ~99% COMPLETE — Phase 3 IN PROGRESS — Phase 4 FOUNDATION STARTED — Research Agent Integration In Progress (Test Infrastructure Created)
+**Status**: Phase 1 COMPLETE ✅ — Phase 2 ~99% COMPLETE — Phase 3 IN PROGRESS — Phase 4 FOUNDATION STARTED — Research Agent Test Infrastructure Complete (4 tests) — Payment Integration Planning Complete (Phase 1 HIGH Priority)

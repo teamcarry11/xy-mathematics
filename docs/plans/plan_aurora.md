@@ -1,8 +1,8 @@
 # Aurora IDE Dream Browser Agent: Development Plan
 
 **Agent**: Grain Aurora IDE Dream Browser Agent (2nd Agent)  
-**Status**: Active — Foundation components, shared modules, Dream Browser Spec v0 integration  
-**Last Updated**: 2025-12-23-205405-PST
+**Status**: Active — All Core Agent coordination decisions integrated ✅ — JG Project responsibilities assigned ✅  
+**Last Updated**: 2025-12-29-112345-PST
 
 ---
 
@@ -16,6 +16,7 @@ Grain Aurora IDE Dream Browser Agent is responsible for building the unified IDE
 - AI provider abstraction for code completion and refactoring
 - Shared module refactoring (font renderer, text buffer, DAG, UI rendering)
 - DAG integration for event ordering and consensus
+- **JG Project UI Components** (Months 7-12): 3D visualization, dashboard components, mobile UI components
 
 ---
 
@@ -517,6 +518,43 @@ Grain Aurora IDE Dream Browser Agent is responsible for building the unified IDE
 - **Status**: Research complete, integration planned
 - **Date**: 2025-12-20-172643-PST
 
+#### 2.28: Core Agent Coordination Decisions Integration ✅ **COMPLETE**
+- ✅ HTTP Client Timeout/Error Handling Integration (2025-12-28-184118-pst)
+  - Timeout parameter support (`timeout_ms: ?u32`, defaults: 30s API, 60s content)
+  - Core Agent's `HttpClientError` enum integration
+  - Timeout checking during request lifecycle
+  - Error mapping to Core Agent error types
+  - Retry logic with exponential backoff
+  - **Files**: `src/dream_http_client.zig`
+- ✅ WebSocket Client Timeout/Error Handling Integration (2025-12-29-204520-pst)
+  - Timeout parameter support (`connect_timeout_ms`, `message_timeout_ms`, defaults: 10s connect, 5s message)
+  - Core Agent's `WebSocketError` enum integration
+  - Timeout checking in connect/send/receive/reconnect
+  - Error mapping to Core Agent error types
+  - Connection activity tracking
+  - **Files**: `src/dream_browser_websocket.zig`
+- ✅ GLM-4.6 Client Timeout/Error Handling Integration (2025-12-29-204520-pst)
+  - Timeout parameter support (`timeout_ms: ?u32`, default: 60s for LLM operations)
+  - Core Agent's HTTP client timeout/error handling integration
+  - Retry logic with exponential backoff (`requestCompletionWithRetry()`)
+  - Error handling using Core Agent's `HttpClientError` enum
+  - **Files**: `src/aurora_glm46.zig`
+- ✅ Dream Browser Component API Implementation (2025-12-28-155635-pst)
+  - Dream Browser Component API structure (`DreamBrowserComponentAPI`)
+  - Browser-specific components (Navigation, AddressBar, Tab, BrowserView)
+  - Uses Workspace Agent's Component base types for consistency
+  - Component state/size/theme variant support
+  - **Files**: `src/dream_browser_components.zig`
+- **Date**: 2025-12-29-204520-pst
+
+#### 2.29: JG Project Responsibilities Assigned ✅ **COMPLETE**
+- ✅ JG Project Design Complete (2025-12-28-232324-pst)
+- ✅ JG Project Responsibilities Assigned (2025-12-29-105655-pst)
+- **Design Document**: `docs/zyx/grainbank_mmt_job_guarantee_housing_program_2025-12-28-232324-pst.md`
+- **Timeline**: Months 7-12 (6 months total)
+- **Status**: Ready to begin implementation
+- **Date**: 2025-12-29-105655-pst
+
 ---
 
 ## Current Work: Phase 2 - Shared Module Refactoring (Continued)
@@ -553,7 +591,48 @@ Shared module refactoring eliminates code duplication and enables shared mainten
 
 ## Planned Phases
 
-### Phase 3: Text Buffer Unification (Planned)
+### Phase 3: JG Project UI Components (Months 7-12)
+
+**Objective**: Implement UI components for Grainbank MMT Job Guarantee (JG) Housing Program.
+
+**Program Vision**: Build beautiful, affordable, sustainable housing using fastest-growing renewable materials (hemp, bamboo, timber, rammed earth) through a federal Job Guarantee program that creates jobs, builds communities, and restores traditional urbanism principles.
+
+**Phase 3.1: 3D Visualization Components** (Months 7-9):
+- 3D architectural visualization components
+- Site layout visualization components
+- Material quantity visualization components
+- Energy efficiency visualization components
+
+**Phase 3.2: Dashboard Components** (Months 10-11):
+- Project management dashboard components
+- Task tracking dashboard components
+- Inventory management dashboard components
+- Supply chain visualization components
+
+**Phase 3.3: Mobile UI Components** (Month 12):
+- Worker mobile app UI components
+- Resident mobile app UI components
+- Cooperative mobile app UI components
+
+**Coordination Required**:
+- **Workspace Agent**: Coordinate on Component API integration
+- **Core Agent**: Coordinate on API contracts for JG modules
+- **Bubble Agent**: Coordinate on 3D visualization and dashboard component design patterns
+
+**Dependencies**:
+- **Needs**: Workspace Agent Component API ✅ Complete
+- **Needs**: Core Agent JG module API contracts (Months 1-6)
+- **Coordinates with**: Workspace Agent (desktop dashboards), Bubble Agent (component design patterns)
+
+**Grain Style Compliance**:
+- All functions use `grain_case` naming
+- Bounded allocations for all components
+- Explicit types (`u32`/`u64`, no `usize`)
+- Max 70 lines per function
+- Max 73 characters per line
+- All compiler warnings enabled
+
+### Phase 4: Text Buffer Unification (Planned)
 
 **Objective**: Migrate Grain Skate editor to use `GrainBuffer` from `src/grain_buffer.zig`.
 
@@ -575,7 +654,7 @@ Shared module refactoring eliminates code duplication and enables shared mainten
 - All tests updated to use `u32`
 - **Unblocks**: Phase 2 Text Buffer Unification (no adapter layer needed)
 
-### Phase 4: DAG Integration (Planned)
+### Phase 5: DAG Integration (Planned)
 
 **Objective**: Integrate DAG for event ordering and consensus, unified with Bubble Agent.
 
@@ -601,7 +680,7 @@ See [`docs/agent-communications/bubble_aurora_dag_sharing_analysis.md`](../agent
 3. **Streaming Updates**: Hyperfiddle-style deterministic updates (see `docs/dag_ui_synthesis.md`)
 4. **HashDAG Consensus**: Event ordering for UI state (enables collaboration)
 
-### Phase 5: UI Rendering Unification (Planned)
+### Phase 6: UI Rendering Unification (Planned)
 
 **Objective**: Evaluate `GrainAurora` component-first rendering for Grain Skate.
 

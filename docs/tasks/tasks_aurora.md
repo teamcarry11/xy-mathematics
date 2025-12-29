@@ -1,8 +1,8 @@
 # Aurora IDE Dream Browser Agent: Task List
 
 **Agent**: Grain Aurora IDE Dream Browser Agent (2nd Agent)  
-**Status**: Active — Foundation components, shared modules  
-**Last Updated**: 2025-12-23-205405-PST
+**Status**: Active — All Core Agent coordination decisions integrated ✅ — JG Project responsibilities assigned ✅  
+**Last Updated**: 2025-12-29-112345-PST
 
 ---
 
@@ -370,6 +370,45 @@
 
 #### Phase 2.26: Cross Integration Comprehensive Tests ✅ **COMPLETE**
 
+#### Phase 2.28: Core Agent Coordination Decisions Integration ✅ **COMPLETE**
+
+- [x] HTTP Client Timeout/Error Handling Integration (2025-12-28-184118-pst)
+  - [x] Add timeout parameter support (`timeout_ms: ?u32`)
+  - [x] Integrate Core Agent's `HttpClientError` enum
+  - [x] Add timeout checking during request lifecycle
+  - [x] Map errors to Core Agent error types
+  - [x] Add retry logic with exponential backoff
+  - [x] Update `src/dream_http_client.zig`
+- [x] WebSocket Client Timeout/Error Handling Integration (2025-12-29-204520-pst)
+  - [x] Add timeout parameter support (`connect_timeout_ms`, `message_timeout_ms`)
+  - [x] Integrate Core Agent's `WebSocketError` enum
+  - [x] Add timeout checking in connect/send/receive/reconnect
+  - [x] Map errors to Core Agent error types
+  - [x] Add connection activity tracking
+  - [x] Update `src/dream_browser_websocket.zig`
+- [x] GLM-4.6 Client Timeout/Error Handling Integration (2025-12-29-204520-pst)
+  - [x] Add timeout parameter support (`timeout_ms: ?u32`, default: 60s)
+  - [x] Integrate Core Agent's HTTP client timeout/error handling
+  - [x] Add retry logic with exponential backoff
+  - [x] Update `src/aurora_glm46.zig`
+- [x] Dream Browser Component API Implementation (2025-12-28-155635-pst)
+  - [x] Create Dream Browser Component API structure
+  - [x] Define browser-specific components (Navigation, AddressBar, Tab, BrowserView)
+  - [x] Use Workspace Agent's Component base types
+  - [x] Add component state/size/theme variant support
+  - [x] Update `src/dream_browser_components.zig`
+- [x] Update coordination document with integration status
+- [x] Update plan and tasks documents
+- **Date**: 2025-12-29-204520-pst
+
+#### Phase 2.29: JG Project Responsibilities Assigned ✅ **COMPLETE**
+
+- [x] JG Project Design Review (2025-12-28-232324-pst)
+- [x] JG Project Responsibilities Assigned (2025-12-29-105655-pst)
+- [x] Update coordination document with JG project responsibilities
+- [x] Update plan and tasks documents with JG project phases
+- **Date**: 2025-12-29-105655-pst
+
 - [x] Create comprehensive test suite (`tests/133_aurora_cross_integration_test.zig`)
 - [x] Tests for constants (MAX_CLIPBOARD_SIZE, MAX_URL_LENGTH, MAX_FILE_PATH_LENGTH, MAX_SEARCH_RESULTS)
 - [x] Tests for enum types (ClipboardSource, ComponentType, NavigationType)
@@ -411,7 +450,67 @@
 
 ---
 
-## Planned: Phase 2 - Text Buffer Unification
+## Planned: Phase 3 - JG Project UI Components (Months 7-12)
+
+**Priority**: **HIGH** — JG Project UI Components  
+**Status**: **READY** (JG Project responsibilities assigned)  
+**Estimated Time**: 6 months (Months 7-12)
+
+### Tasks
+
+#### Phase 3.1: 3D Visualization Components (Months 7-9)
+
+- [ ] Review JG project design document (`docs/zyx/grainbank_mmt_job_guarantee_housing_program_2025-12-28-232324-pst.md`)
+- [ ] Coordinate with Workspace Agent on Component API
+- [ ] Coordinate with Bubble Agent on 3D visualization component design patterns
+- [ ] Design 3D architectural visualization components
+- [ ] Design site layout visualization components
+- [ ] Design material quantity visualization components
+- [ ] Design energy efficiency visualization components
+- [ ] Implement 3D visualization components
+- [ ] Add comprehensive tests
+- [ ] Update documentation
+
+#### Phase 3.2: Dashboard Components (Months 10-11)
+
+- [ ] Coordinate with Core Agent on API contracts for JG modules
+- [ ] Design project management dashboard components
+- [ ] Design task tracking dashboard components
+- [ ] Design inventory management dashboard components
+- [ ] Design supply chain visualization components
+- [ ] Implement dashboard components
+- [ ] Integrate with Workspace Agent desktop dashboards
+- [ ] Add comprehensive tests
+- [ ] Update documentation
+
+#### Phase 3.3: Mobile UI Components (Month 12)
+
+- [ ] Coordinate with Carry Agent on mobile app API contracts
+- [ ] Design worker mobile app UI components
+- [ ] Design resident mobile app UI components
+- [ ] Design cooperative mobile app UI components
+- [ ] Implement mobile UI components
+- [ ] Add comprehensive tests
+- [ ] Update documentation
+
+### Dependencies
+
+- **Needs**: Workspace Agent Component API ✅ Complete
+- **Needs**: Core Agent JG module API contracts (Months 1-6)
+- **Coordinates with**: Workspace Agent (desktop dashboards), Core Agent (API contracts), Bubble Agent (component design patterns), Carry Agent (mobile app API contracts)
+
+### Grain Style Compliance
+
+- All functions use `grain_case` naming
+- Bounded allocations for all components
+- Explicit types (`u32`/`u64`, no `usize`)
+- Max 70 lines per function
+- Max 73 characters per line
+- All compiler warnings enabled
+
+---
+
+## Planned: Phase 4 - Text Buffer Unification
 
 **Priority**: **MEDIUM** — Code deduplication  
 **Status**: **READY** (GrainBuffer u32/u64 compliant)  
@@ -449,7 +548,7 @@
 
 ---
 
-## Planned: Phase 3 - DAG Integration
+## Planned: Phase 5 - DAG Integration
 
 **Priority**: **MEDIUM** — Event ordering and consensus  
 **Status**: **PLANNED**  
@@ -489,7 +588,7 @@ See [`docs/agent-communications/bubble_aurora_dag_sharing_analysis.md`](../agent
 
 ---
 
-## Planned: Phase 4 - UI Rendering Unification
+## Planned: Phase 6 - UI Rendering Unification
 
 **Priority**: **LOW** — Component-based UI  
 **Status**: **PLANNED**  

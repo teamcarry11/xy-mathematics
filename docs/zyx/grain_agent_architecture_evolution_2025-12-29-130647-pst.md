@@ -36,7 +36,9 @@ This document proposes an evolution of the Grain OS agent architecture to:
 10. **Grain Research Agent** (Research & Analysis)
 11. **Grain Court Agent** (LLM Infrastructure)
 
-**Current Bottleneck**: Vantage Agent handles both VM (ARM64 macOS) and Kernel (RISC-V Basin) coordination, which creates a single point of coordination for foundational work.
+**Current Bottleneck**: Vantage Agent handles both VM (RISC-V emulator on ARM64 macOS) and Kernel (RISC-V Basin) coordination, which creates a single point of coordination for foundational work.
+
+**Critical Architecture Principle**: All Grain OS software is **RISC-V-only**. Vantage is a development tool (RISC-V emulator/VM) that runs on ARM64 (macOS) to enable development and testing, but Grain OS itself has no ARM64-specific code. When Vantage works, all Grain OS software can run on ARM64 machines via emulation, but the software itself is exclusively RISC-V.
 
 ---
 
@@ -76,21 +78,25 @@ This document proposes an evolution of the Grain OS agent architecture to:
 
 **Grain VM Runtime Agent** (L2 Sub-Agent):
 - **Responsibilities**:
-  - ARM64 VM development (Vantage)
-  - macOS Tahoe adaptation
-  - JIT compilation optimization
+  - Vantage VM development (RISC-V emulator that runs on ARM64 macOS)
+  - RISC-V instruction emulation and optimization
+  - macOS Tahoe adaptation (host platform support)
+  - JIT compilation optimization (RISC-V → ARM64 translation)
   - VM performance tuning
   - VM testing and validation
+- **Critical Note**: This agent works on the **Vantage VM development tool**, NOT on ARM64-specific Grain OS code. All Grain OS software remains RISC-V-only.
 - **Isolation**: Can work independently on VM features
 - **Coordination**: Weekly check-ins with Vantage Core, as-needed for architecture decisions
 
 **Grain System Integration Agent** (L2 Sub-Agent):
 - **Responsibilities**:
-  - Integration between Basin kernel and VM runtime
-  - Cross-platform compatibility
-  - System-level testing
+  - Integration between Basin kernel (RISC-V) and Vantage VM (RISC-V emulator)
+  - Development/testing workflow optimization
+  - System-level testing (RISC-V kernel on Vantage VM)
   - Performance profiling across kernel/VM boundary
   - Documentation of kernel/VM interface
+  - Ensuring RISC-V-only compliance (no ARM64-specific Grain OS code)
+- **Critical Note**: This agent ensures that Basin kernel (RISC-V) works correctly with Vantage VM (RISC-V emulator) for development/testing. All Grain OS software remains RISC-V-only.
 - **Isolation**: Can work independently on integration features
 - **Coordination**: Weekly check-ins with Vantage Core, as-needed for architecture decisions
 
@@ -125,10 +131,10 @@ This document proposes an evolution of the Grain OS agent architecture to:
 **Grain Carry Agent** (Mobile Framework):
 - **L1**: Carry Core Agent
 - **L2 Sub-Agents**:
-  - **Grain iOS Agent**: iOS platform support
-  - **Grain Android Agent**: Android platform support
-  - **Grain Mobile UI Agent**: Cross-platform mobile UI components
-  - **Grain Mobile Runtime Agent**: Mobile runtime and performance
+  - **Grain Mobile Platform Agent**: Mobile platform integration (iOS/Android hosts for RISC-V apps)
+  - **Grain Mobile UI Agent**: Cross-platform mobile UI components (RISC-V)
+  - **Grain Mobile Runtime Agent**: Mobile runtime and performance (RISC-V)
+- **Critical Note**: Mobile apps are RISC-V-only. Platform agents handle integration with iOS/Android hosts (similar to how Vantage handles macOS host integration).
 
 **Grain Workspace Agent** (Desktop Apps):
 - **L1**: Workspace Core Agent
@@ -216,14 +222,16 @@ This document proposes an evolution of the Grain OS agent architecture to:
 **Priority**: HIGH — Foundation layer
 
 #### 2. Grain Runtime Agent
-**Purpose**: VM runtime and JIT compilation optimization
-**Focus**: ARM64 VM, macOS adaptation, JIT performance, cross-platform runtime
-**Priority**: HIGH — Foundation layer
+**Purpose**: Vantage VM runtime and JIT compilation optimization
+**Focus**: RISC-V emulator (Vantage), macOS host adaptation, JIT performance (RISC-V → ARM64 translation), development tool optimization
+**Priority**: HIGH — Foundation layer (development tool)
+**Critical Note**: This agent works on the Vantage VM development tool, NOT on ARM64-specific Grain OS code. All Grain OS software remains RISC-V-only.
 
 #### 3. Grain System Agent
 **Purpose**: System-level integration and coordination
-**Focus**: Kernel/VM integration, system services, platform abstraction, system testing
+**Focus**: Kernel/VM integration (RISC-V kernel on Vantage VM), system services, RISC-V-only compliance, system testing
 **Priority**: HIGH — Foundation layer
+**Critical Note**: Ensures all Grain OS software is RISC-V-only. Handles integration between RISC-V kernel and Vantage VM (development tool).
 
 #### 4. Grain Security Agent
 **Purpose**: Security hardening and vulnerability management
@@ -461,7 +469,12 @@ This document proposes an evolution of the Grain OS agent architecture to:
 **Risk**: Free Agent work doesn't integrate with production
 **Mitigation**: Optional integration path, share interesting discoveries, refactor valuable work
 
-### Risk 4: Foundation Agent Overhead
+### Risk 4: Architecture Violation (ARM64 Code in Grain OS)
+
+**Risk**: Accidental introduction of ARM64-specific code in Grain OS
+**Mitigation**: System Integration Agent monitors RISC-V-only compliance, clear documentation of Vantage as development tool only, code reviews focus on RISC-V compliance
+
+### Risk 5: Foundation Agent Overhead
 
 **Risk**: Too many foundation agents create overhead
 **Mitigation**: Prioritize critical foundation agents, add others incrementally
@@ -501,6 +514,7 @@ This document proposes an evolution of the Grain OS agent architecture to:
 4. **Foundation Agent Priority**: Which foundation agents should be added first?
 5. **L1/L2 Pattern**: Which other agents should use L1/L2 pattern?
 6. **Coordination Frequency**: What coordination frequency works best for L1/L2?
+7. **RISC-V Compliance**: How do we ensure all Grain OS code remains RISC-V-only? Should System Integration Agent have explicit RISC-V compliance checking responsibilities?
 
 ---
 

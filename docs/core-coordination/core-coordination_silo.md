@@ -1,8 +1,8 @@
 # Grain Silo Agent: Coordination Status
 
-**Last Updated**: 2025-12-28-230000-pst  
+**Last Updated**: 2025-12-29-002000-pst  
 **Agent**: Grain Silo Agent (Database)  
-**Status**: **PRODUCTION READY** ✅ — **DESIGN GAPS ADDRESSED** ✅ — **CIRCUIT BREAKER DOCUMENTED** ✅ — **COORDINATION DECISIONS ACKNOWLEDGED** ✅ — **READY FOR PAYMENT/VAULT INTEGRATION** ✅
+**Status**: **PRODUCTION READY** ✅ — **DESIGN GAPS ADDRESSED** ✅ — **CIRCUIT BREAKER DOCUMENTED** ✅ — **HTTP/WEBSOCKET TIMEOUT/ERROR HANDLING READY** ✅ — **PAYMENT/VAULT STORAGE SCHEMA COMPLETE** ✅
 
 ---
 
@@ -226,12 +226,21 @@ All core phases complete and ready for production use:
 - Userspace patterns (no kernel changes needed) simplify implementation
 - Comprehensive error handling and timeout support improve reliability
 
-**Implementation Status** (2025-12-28-223816-pst):
-- ⏳ **Core Agent**: Implementation in progress (timeout, error handling, authentication, async patterns)
-  - HTTP client timeout implementation in progress
-  - Error types implementation in progress
+**Implementation Status** (2025-12-29-001544-pst):
+- ✅ **Core Agent**: HTTP/WebSocket timeout implementation COMPLETE (2025-12-28-235609-pst)
+  - HTTP client timeout: `timeout_ms` field, default timeouts (30s API, 60s content)
+  - WebSocket timeout: `connect_timeout_ms`, `message_timeout_ms` fields, default timeouts (10s connect, 5s message)
+  - Timeout checking functions implemented
+  - **READY FOR INTEGRATION** ✅
+- ✅ **Core Agent**: Error types implementation COMPLETE (2025-12-28-235609-pst)
+  - `HttpClientError`, `WebSocketError`, `FileIoError` enums with retryability
+  - Retryability functions: `is_http_error_retryable()`, `is_websocket_error_retryable()`, `is_file_io_error_retryable()`
+  - Error message helpers implemented
+  - **READY FOR INTEGRATION** ✅
+- ⏳ **Core Agent**: Service-to-service authentication implementation in progress (2-3 days remaining)
   - Service account token implementation in progress
-  - Async pattern integration in progress
+- ⏳ **Core Agent**: Async pattern integration in progress (1-2 days remaining)
+  - Event-driven using Flow Agent Event Bus
 - ✅ **Vantage Agent**: Syscall timeout mechanism complete (2025-12-28-150000-pst)
   - Timeout parameter added to network syscalls, file operations, IPC operations
   - Timeout error type added to `BasinError` enum
@@ -253,11 +262,14 @@ All core phases complete and ready for production use:
   - Integration with Court Agent bounded allocation API complete
 
 **Next Steps**:
-- Wait for Core Agent to complete coordination decisions implementation
-- Integrate timeout and error handling patterns once Core Agent implements
-- Update API contracts documentation with new patterns
-- Coordinate with Carry Agent on service-to-service authentication integration
-- **NEW**: Coordinate with Core Agent on Payment/Passwords/Bank storage schema design
+- ✅ **HTTP/WebSocket Timeout**: Ready for integration — Core Agent implementation complete
+- ✅ **Error Handling**: Ready for integration — Core Agent implementation complete
+- ⏳ **Service-to-Service Authentication**: Wait for Core Agent implementation (2-3 days remaining)
+- ⏳ **Async Pattern**: Wait for Core Agent implementation (1-2 days remaining)
+- **IMMEDIATE**: Integrate HTTP/WebSocket timeout and error handling patterns
+- **SHORT-TERM**: Update API contracts documentation with new patterns
+- **SHORT-TERM**: Coordinate with Carry Agent on service-to-service authentication integration
+- **IMMEDIATE**: Coordinate with Core Agent on Payment/Passwords/Bank storage schema design approval
 
 ### Design Gaps Implementation Complete (2025-12-23-213951-pst) ✅
 

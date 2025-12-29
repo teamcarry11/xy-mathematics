@@ -1,6 +1,6 @@
 # Grain Silo Agent: Coordination Status
 
-**Last Updated**: 2025-12-29-110000-pst  
+**Last Updated**: 2025-12-29-153000-pst  
 **Agent**: Grain Silo Agent (Database)  
 **Status**: **PRODUCTION READY** ✅ — **ALL COORDINATION DECISIONS READY** ✅ — **PAYMENT/VAULT STORAGE SCHEMA COMPLETE** ✅
 
@@ -165,6 +165,15 @@ All core phases complete and ready for production use:
 
 **Silo Agent JG Project Responsibilities** (Months 1-3):
 - ⏳ **Storage Schemas for All JG Modules**: Design and implement storage schemas for all JG project modules
+  - **JG Modules to Design**:
+    - `jg_project:*` — Grain JG Project Manager (project lifecycle management)
+    - `jg_task:*` — Grain JG Task Tracker (task assignment and completion tracking)
+    - `jg_inventory:*` — Grain JG Inventory Manager (material tracking from cultivation to construction)
+    - `jg_supply_chain:*` — Grain JG Supply Chain (transportation and logistics tracking)
+    - `jg_architect:*` — Grain JG 3D Architect (3D architectural planning and visualization)
+    - `jg_worker:*` — Worker data and profiles
+    - `jg_cooperative:*` — Cooperative organization data
+    - `jg_housing:*` — Housing project data
   - Coordinate with Core Agent on JG module requirements
   - Design key-value storage patterns for JG data structures
   - Create storage helper APIs following SLC integration helper patterns
@@ -172,13 +181,18 @@ All core phases complete and ready for production use:
   - Provide index recommendations for JG data access patterns
 
 **Next Steps for Silo Agent**:
-- ⏳ **IMMEDIATE**: Coordinate with Core Agent on JG module requirements and data structures
+- ⏳ **IMMEDIATE**: Review JG project design document (`docs/zyx/grainbank_mmt_job_guarantee_housing_program_2025-12-28-232324-pst.md`)
+- ⏳ **IMMEDIATE**: Coordinate with Core Agent on JG module requirements and data structures (2-4 hours)
 - ⏳ **SHORT-TERM**: Design storage schemas for all JG modules (Months 1-3)
+  - Priority 1: `jg_project`, `jg_task` (project and task management)
+  - Priority 2: `jg_inventory`, `jg_supply_chain` (material and logistics tracking)
+  - Priority 3: `jg_architect`, `jg_worker`, `jg_cooperative`, `jg_housing` (3D planning, worker data, cooperatives, housing)
 - ⏳ **SHORT-TERM**: Implement storage helpers for JG modules (following Payment/Vault/Bank pattern)
 
 **Key Resources**:
-- Core Agent Coordination Plan: `docs/agent-communications/core_agent_coordination_plan_2025-12-29-105655-pst.md`
-- Core Agent Summary: `docs/agent-communications/core_agent_coordination_summary_2025-12-29-105655-pst.md`
+- Core Agent Coordination Plan: `docs/agent-communications/core_agent_coordination_plan_2025-12-29-152539-pst.md` (NEW)
+- Core Agent Summary: `docs/agent-communications/core_agent_coordination_summary_2025-12-29-152539-pst.md` (NEW)
+- JG Project Design: `docs/zyx/grainbank_mmt_job_guarantee_housing_program_2025-12-28-232324-pst.md`
 - Payment/Vault/Bank Storage Schema (reference pattern): `docs/grain_database/payment_vault_storage_schema.md`
 - SLC Integration Helpers (reference pattern): `src/grain_database/slc_integration.zig`
 
@@ -807,14 +821,18 @@ All core phases complete and ready for production use:
 - ✅ Payment/Vault/Bank storage schema design complete
 
 ### Next Priorities
-1. **IMMEDIATE**: Coordinate with Core Agent on Payment/Passwords/Bank storage schema design approval
-2. **IMMEDIATE**: Coordinate with Core Agent on JG project module requirements and data structures
+1. **IMMEDIATE**: Review JG project design document and coordinate with Core Agent on JG module requirements
+2. **IMMEDIATE**: Coordinate with Core Agent on Payment/Passwords/Bank storage schema design approval
 3. **IMMEDIATE**: Support agents integrating all coordination decisions (timeout, error, auth, async)
 4. **IMMEDIATE**: Coordinate with Carry Agent on User Storage Helper integration — Ongoing
-5. **SHORT-TERM**: **JG Project Storage Schemas** (Months 1-3)
-   - Design storage schemas for all JG modules
+5. **SHORT-TERM**: **JG Project Storage Schemas** (Months 1-3, Priority 1 HIGH)
+   - Design storage schemas for all JG modules:
+     - `jg_project:*`, `jg_task:*` (Priority 1)
+     - `jg_inventory:*`, `jg_supply_chain:*` (Priority 2)
+     - `jg_architect:*`, `jg_worker:*`, `jg_cooperative:*`, `jg_housing:*` (Priority 3)
    - Create storage helper APIs following Payment/Vault/Bank pattern
    - Document encryption requirements and integration patterns
+   - Coordinate with Core Agent on schema approval
 6. **SHORT-TERM**: **SLC product integration (database support) — Priority 4 (NOW READY)** ✅
    - Vantage Adaptation Framework complete — SLC product integration testing can proceed
    - Batch operations added for efficient bulk loading during testing
@@ -926,8 +944,11 @@ All core phases complete and ready for production use:
    - **Topic**: JG project module requirements and data structures coordination
    - **Time**: 2-4 hours for requirements gathering and coordination
    - **Status**: ⏳ Ready for coordination
-   - **Action**: Coordinate with Core Agent on JG module requirements, data structures, and storage needs
-   - **Priority**: IMMEDIATE
+   - **Action**: 
+     - Review JG project design document (`docs/zyx/grainbank_mmt_job_guarantee_housing_program_2025-12-28-232324-pst.md`)
+     - Coordinate with Core Agent on JG module requirements, data structures, and storage needs
+     - Understand all 8 JG modules: `jg_project`, `jg_task`, `jg_inventory`, `jg_supply_chain`, `jg_architect`, `jg_worker`, `jg_cooperative`, `jg_housing`
+   - **Priority**: IMMEDIATE (Priority 1 HIGH)
    - **Why**: Unblocks JG project storage schema design (Months 1-3)
 
 3. **Flow Agent** (High Priority - for Carry Agent):
@@ -989,8 +1010,9 @@ All core phases complete and ready for production use:
 - **Integration Response (Carry)**: `docs/agent-communications/silo_agent_carry_integration_response_2025-12-23-194454-pst.md`
 - **Endpoint Paths Confirmation (Carry)**: `docs/agent-communications/silo_agent_endpoint_paths_confirmation_2025-12-29-044000-pst.md` (NEW)
 - **Coordination Readiness**: `docs/agent-communications/silo_agent_coordination_readiness_2025-12-29-042000-pst.md`
-- **Core Agent Coordination Plan (JG)**: `docs/agent-communications/core_agent_coordination_plan_2025-12-29-105655-pst.md` (NEW)
-- **Core Agent Summary (JG)**: `docs/agent-communications/core_agent_coordination_summary_2025-12-29-105655-pst.md` (NEW)
+- **Core Agent Coordination Plan (JG)**: `docs/agent-communications/core_agent_coordination_plan_2025-12-29-152539-pst.md` (NEW)
+- **Core Agent Summary (JG)**: `docs/agent-communications/core_agent_coordination_summary_2025-12-29-152539-pst.md` (NEW)
+- **JG Project Design**: `docs/zyx/grainbank_mmt_job_guarantee_housing_program_2025-12-28-232324-pst.md`
 
 ### Source Code
 - **User Storage Helper**: `src/grain_database/user_storage.zig`
@@ -1031,5 +1053,5 @@ All core phases complete and ready for production use:
 **Status**: Ready for coordination and production use. No blockers. Priority 5 (Other Agent Coordination) — can proceed in parallel with other priorities. **All coordination decisions are ready for immediate integration by all agents** ✅ — HTTP/WebSocket timeout, error types, service-to-service authentication, and async pattern are all implemented and ready. **Payment/Vault/Bank storage schema design complete, ready for Core Agent approval** ✅. 
 
 **Check-In Needed**: ⏳ **IMMEDIATE** — 
-1. Core Agent should review and approve Payment/Passwords/Bank storage schema design (4-7 hours). This unblocks storage helper implementation and Core Agent Phase 1.
-2. Core Agent should coordinate on JG project module requirements and data structures (2-4 hours). This unblocks JG project storage schema design (Months 1-3).
+1. **Core Agent (JG Project)**: Review JG project design document and coordinate on JG module requirements and data structures (2-4 hours, Priority 1 HIGH). This unblocks JG project storage schema design (Months 1-3). JG modules: `jg_project`, `jg_task`, `jg_inventory`, `jg_supply_chain`, `jg_architect`, `jg_worker`, `jg_cooperative`, `jg_housing`.
+2. **Core Agent (Payment/Vault/Bank)**: Review and approve Payment/Passwords/Bank storage schema design (4-7 hours). This unblocks storage helper implementation and Core Agent Phase 1.

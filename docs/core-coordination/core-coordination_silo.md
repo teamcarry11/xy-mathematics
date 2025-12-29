@@ -1,6 +1,6 @@
 # Grain Silo Agent: Coordination Status
 
-**Last Updated**: 2025-12-29-044000-pst  
+**Last Updated**: 2025-12-29-050000-pst  
 **Agent**: Grain Silo Agent (Database)  
 **Status**: **PRODUCTION READY** ✅ — **ALL COORDINATION DECISIONS READY** ✅ — **PAYMENT/VAULT STORAGE SCHEMA COMPLETE** ✅
 
@@ -529,6 +529,31 @@ All core phases complete and ready for production use:
 
 ---
 
+### For Flow Agent (Workflow Orchestration) - Event Bus for Async Pattern
+
+**Current Status**: ZON integration complete ✅, Event Bus needed for Carry Agent async pattern ⏳
+
+**Immediate Next Steps**:
+
+1. **Event Bus Initialization for Carry Agent** (HIGH PRIORITY):
+   - **Status**: Carry Agent needs Event Bus for async pattern (2025-12-29-043000-pst)
+   - **Action**: Provide Event Bus initialization timeline
+   - **Impact**: Needed for full async operation (synchronous fallback works for now)
+   - **Priority**: High (requested by Carry Agent)
+
+2. **Continue ZON Integration Support**:
+   - Continue supporting Court Agent and Research Agent ZON integration
+   - Monitor for any integration issues or questions
+
+**Check-In Status**: ⏳ **HIGH PRIORITY** — Flow Agent should provide Event Bus initialization timeline for Carry Agent
+
+**Key Resources**:
+- Event Bus: `src/grain_flow/event_bus.zig`
+- Async Pattern Documentation: Flow Agent async pattern documentation
+- Core Agent Async Pattern: `src/grain_core/async_pattern.zig`
+
+---
+
 ### For Court Agent (LLM Infrastructure) - Payment/Passwords/Bank Integration
 
 **Current Status**: Storage schema design complete ✅, ready for LLM API key storage coordination
@@ -563,47 +588,6 @@ All core phases complete and ready for production use:
 - Storage Schema Design: `docs/grain_database/payment_vault_storage_schema.md`
 - Payment/Vault/Bank Design: `docs/zyx/grain_payment_vault_design_2025-12-28-213448-pst.md`
 - PasswordStorage Helper API: See storage schema design document
-
----
-
-### For Bubble Agent (Design Tool)
-
-**Current Status**: Can use database for design data storage (if needed), all coordination decisions ready ✅
-
-**Next Steps** (if database integration needed):
-
-1. **Review Database API**:
-   - Review API contracts (`docs/agent-communications/silo_agent_database_api_contracts_2025-12-21-143409-pst.md`)
-   - Review error types documentation
-   - Review circuit breaker pattern guide
-
-2. **Integrate All Coordination Decisions** (READY NOW ✅):
-   - **HTTP/WebSocket Timeout**: Use per-request timeout (30s default for API calls)
-     - Set `timeout_ms: 30000` for database API requests (or use `DEFAULT_API_TIMEOUT_MS`)
-     - Use `is_timed_out()` function to check for timeouts
-   - **Error Handling**: Use structured error unions from Core Agent
-     - Handle `HttpClientError` enum (timeout, network_error, rate_limit, etc.)
-     - Use retryability classification (`is_http_error_retryable()`) for retry logic
-     - Use error message helpers: `get_http_error_message()`
-   - **Service-to-Service Authentication**: Use service account tokens
-     - Use `AuthService.generate_service_account_token()` for database write operations
-     - Include `Authorization: Bearer {service_account_token}` header
-   - **Async Pattern**: Use Flow Agent Event Bus
-     - Subscribe to `http_request_completed` and `http_request_failed` events
-     - Use Core Agent's async pattern helpers
-
-3. **Implement Circuit Breaker Pattern**:
-   - Use health check endpoint for circuit breaker logic
-   - Reference: `docs/grain_database/circuit_breaker_pattern.md`
-
-**Check-In Status**: ⏳ **OPTIONAL** — Bubble Agent should coordinate if database integration is needed
-
-**Key Resources**:
-- API Contracts: `docs/agent-communications/silo_agent_database_api_contracts_2025-12-21-143409-pst.md`
-- Circuit Breaker: `docs/grain_database/circuit_breaker_pattern.md`
-- Error Types: `docs/agent-communications/silo_agent_error_types_documentation_2025-12-23-210329-pst.md`
-- Auth Service: `src/grain_core/auth_service.zig`
-- Async Pattern: `src/grain_core/async_pattern.zig`
 
 ---
 
@@ -699,6 +683,7 @@ All core phases complete and ready for production use:
   - ✅ Idempotency and deduplication support
   - ✅ Circuit breaker pattern documentation
   - ✅ All coordination decisions ready ✅
+  - ✅ Endpoint paths confirmation document created
 
 - **Aurora Agent**: Database storage for IDE features and SLC products (Nostr Profile Builder)
   - ✅ SLC helpers ready (pagination, search, batch operations)
@@ -737,7 +722,13 @@ All core phases complete and ready for production use:
   - ✅ Priority 4 now ready
 
 - **Carry Agent**: User Storage Helper review and integration coordination
-  - ✅ Priority 5 (health check endpoint added, integration questions answered, circuit breaker documentation available)
+  - ✅ Service account token integration complete (2025-12-29-043000-pst)
+  - ✅ Endpoint paths confirmation document created (2025-12-29-044000-pst)
+  - ⏳ Flow Agent Event Bus needed for async pattern (high priority - requested by Carry Agent)
+  - ⏳ Core Agent HTTP request event publishing needed (medium priority - check in 1-2 days)
+
+- **Flow Agent**: Event Bus initialization for Carry Agent async pattern
+  - ⏳ Event Bus initialization needed (high priority - requested by Carry Agent)
 
 - **Court Agent**: Future AI-powered features
   - ✅ No immediate dependency, but potential future integration
@@ -764,6 +755,7 @@ All core phases complete and ready for production use:
   - ✅ Endpoint paths confirmation document created (2025-12-29-044000-pst)
   - ⏳ Flow Agent Event Bus needed for async pattern (high priority - requested by Carry Agent)
   - ⏳ Core Agent HTTP request event publishing needed (medium priority - check in 1-2 days)
+- ⏳ **Flow Agent**: Event Bus initialization for Carry Agent async pattern (high priority)
 - ⏳ **Vantage Agent**: Phase 10 (AArch64 Cloud Deployment) — Can proceed now that Priority 1 is complete
 - ⏳ **Core Agent**: Payment/Passwords/Bank storage schema approval (IMMEDIATE)
 - ⏳ **Core Agent**: Update HTTP/WebSocket clients to use error types consistently (1 day)
@@ -788,7 +780,7 @@ All core phases complete and ready for production use:
 ### Next Priorities
 1. **IMMEDIATE**: Coordinate with Core Agent on Payment/Passwords/Bank storage schema design approval
 2. **IMMEDIATE**: Support agents integrating all coordination decisions (timeout, error, auth, async)
-3. **IMMEDIATE**: Coordinate with Carry Agent on User Storage Helper integration — Priority 5
+3. **IMMEDIATE**: Coordinate with Carry Agent on User Storage Helper integration — Ongoing
 4. **SHORT-TERM**: **SLC product integration (database support) — Priority 4 (NOW READY)** ✅
    - Vantage Adaptation Framework complete — SLC product integration testing can proceed
    - Batch operations added for efficient bulk loading during testing
@@ -848,6 +840,10 @@ All core phases complete and ready for production use:
     - Core Agent: HTTP request event publishing (check in 1-2 days - medium priority)
     - Silo Agent: Database API integration details (ongoing - endpoint paths confirmation document created)
 
+- ✅ **Flow Agent**:
+  - ✅ ZON integration complete (Dashboard API integration)
+  - ⏳ **NEW**: Event Bus initialization needed for Carry Agent async pattern (high priority)
+
 - ✅ **Vantage Agent**: 
   - Phase 10 dependency check — Priority 1 complete, can proceed with Phase 10
 
@@ -856,15 +852,6 @@ All core phases complete and ready for production use:
   - ✅ LLM timeout/error handling complete (2025-12-28-135000-pst)
   - ⏳ ZON Module Phase 2 ~99% complete (~0.01 day remaining)
   - Payment/Vault/Bank storage schema ready for LLM API key storage
-
-- ✅ **Research Agent**:
-  - ✅ Phase 4 implementation complete (2025-12-28-213411-pst)
-  - ⏳ Ready for validation tests (when build issues resolved)
-
-- ✅ **Flow Agent**:
-  - ✅ ZON integration complete (Dashboard API integration)
-  - ⏳ Ready for coordination with Court Agent on integration testing
-  - ⏳ **NEW**: Event Bus initialization needed for Carry Agent async pattern (high priority)
 
 ### No Blockers
 - All dependencies satisfied
@@ -896,8 +883,17 @@ All core phases complete and ready for production use:
    - **Status**: ⏳ Waiting on Core Agent
    - **Action**: Core Agent should review `docs/grain_database/payment_vault_storage_schema.md`
    - **Priority**: IMMEDIATE
+   - **Why**: Unblocks storage helper implementation and Core Agent Phase 1
 
-2. **Carry Agent** (Ongoing):
+2. **Flow Agent** (High Priority - for Carry Agent):
+   - **Topic**: Event Bus initialization for async pattern
+   - **Time**: Coordination discussion needed
+   - **Status**: ⏳ Waiting on Flow Agent
+   - **Action**: Flow Agent should provide Event Bus initialization timeline
+   - **Priority**: High (needed for full async operation, but synchronous fallback works for now)
+   - **Requested By**: Carry Agent (2025-12-29-043000-pst)
+
+3. **Carry Agent** (Ongoing):
    - **Topic**: Database API integration details (endpoint paths confirmation document created)
    - **Time**: Ongoing coordination as needed
    - **Status**: ✅ Service account token integration complete, ready for production testing
@@ -905,14 +901,6 @@ All core phases complete and ready for production use:
    - **Priority**: Ongoing (medium priority)
    - **Note**: Carry Agent has synchronous fallback working; async pattern pending Flow Agent Event Bus
    - **Document**: `docs/agent-communications/silo_agent_endpoint_paths_confirmation_2025-12-29-044000-pst.md` (NEW)
-
-3. **Flow Agent** (High Priority - for Carry Agent):
-   - **Topic**: Event Bus initialization for async pattern
-   - **Time**: Coordination discussion needed
-   - **Status**: ⏳ Waiting on Flow Agent
-   - **Action**: Flow Agent should provide Event Bus initialization timeline
-   - **Priority**: High (needed for full async operation, but synchronous fallback works for now)
-   - **Requested By**: Carry Agent (2025-12-29-043000-pst)
 
 4. **Core Agent** (Medium Priority - for Carry Agent):
    - **Topic**: HTTP request event publishing for async pattern
@@ -954,6 +942,7 @@ All core phases complete and ready for production use:
 - **Payment/Vault/Bank Storage Schema**: `docs/grain_database/payment_vault_storage_schema.md`
 - **Payment/Vault/Bank Design**: `docs/zyx/grain_payment_vault_design_2025-12-28-213448-pst.md`
 - **Integration Response (Carry)**: `docs/agent-communications/silo_agent_carry_integration_response_2025-12-23-194454-pst.md`
+- **Endpoint Paths Confirmation (Carry)**: `docs/agent-communications/silo_agent_endpoint_paths_confirmation_2025-12-29-044000-pst.md` (NEW)
 - **Coordination Readiness**: `docs/agent-communications/silo_agent_coordination_readiness_2025-12-29-042000-pst.md`
 
 ### Source Code

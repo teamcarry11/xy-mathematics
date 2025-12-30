@@ -169,9 +169,16 @@ pub fn handle_syscall(
     // Assert: syscall must be kernel syscall (not SBI).
     Debug.kassert(@intFromEnum(syscall) >= 10, "Syscall enum < 10", .{});
     
+    // Profile syscall execution time (if profiling enabled).
+    // Why: Track performance metrics for optimization.
+    const start_time_ns = if (self.syscall_profiler.enabled)
+        self.timer.get_monotonic_ns()
+    else
+        0;
+    
     // Route to appropriate syscall handler.
     // Why: Explicit routing, type-safe syscall handling.
-        return switch (syscall) {
+    const result = switch (syscall) {
             .spawn => ProcessSyscalls.syscall_spawn(self, arg1, arg2, arg3, arg4),
             .exit => ProcessSyscalls.syscall_exit(self, arg1, arg2, arg3, arg4),
             .yield => ProcessSyscalls.syscall_yield(self, arg1, arg2, arg3, arg4),
@@ -258,6 +265,23 @@ pub fn handle_syscall(
             .get_resource_usage => StatsSyscalls.syscall_get_resource_usage(self, arg1, arg2, arg3, arg4),
             .set_resource_limit => StatsSyscalls.syscall_set_resource_limit(self, arg1, arg2, arg3, arg4),
         };
+    
+    // Record syscall execution time (if profiling enabled).
+    // Why: Track performance metrics for optimization.
+    if (self.syscall_profiler.enabled and start_time_ns > 0) {
+        const end_time_ns = self.timer.get_monotonic_ns();
+        const execution_time_ns = if (end_time_ns >= start_time_ns)
+            end_time_ns - start_time_ns
+        else
+            1; // Handle clock rollback (shouldn't happen, but safe)
+        
+        // Assert: Execution time must be valid.
+        Debug.kassert(execution_time_ns > 0, "Execution time is zero", .{});
+        
+        self.syscall_profiler.record_syscall(syscall_num, execution_time_ns);
+    }
+    
+    return result;
     }
     
     // Syscall handlers (stubs for future implementation).

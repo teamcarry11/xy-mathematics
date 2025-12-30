@@ -37,6 +37,8 @@ const audio = @import("audio.zig");
 const AudioDeviceManager = audio.AudioDeviceManager;
 const kernel_stats_aggregator = @import("kernel_stats_aggregator.zig");
 const KernelStatsSnapshot = kernel_stats_aggregator.KernelStatsSnapshot;
+const syscall_performance_profiler = @import("syscall_performance_profiler.zig");
+const SyscallPerformanceProfiler = syscall_performance_profiler.SyscallPerformanceProfiler;
 
 // Import types
 const types = @import("basin_kernel_types.zig");
@@ -216,6 +218,11 @@ pub const BasinKernel = struct {
     /// Grain Style: Static allocation, initialized at kernel boot.
     cow_table: CowTable,
     
+    /// Syscall performance profiler.
+    /// Why: Track syscall execution times for performance optimization.
+    /// Grain Style: Static allocation, initialized at kernel boot.
+    syscall_profiler: SyscallPerformanceProfiler,
+    
     /// VM memory read callback (optional).
     /// Why: Allow kernel to read VM memory for ELF parsing and process setup.
     /// Note: Type-erased to avoid requiring VM import at module level.
@@ -261,6 +268,7 @@ pub const BasinKernel = struct {
             .page_fault_stats = PageFaultStats.init(),
             .memory_stats = MemoryStats.init(),
             .cow_table = CowTable.init(),
+            .syscall_profiler = SyscallPerformanceProfiler.init(),
         };
         
         // Initialize log buffer with timer reference (after timer is created).
@@ -414,6 +422,27 @@ pub const BasinKernel = struct {
             memory_stats,
             page_fault_stats,
         );
+    }
+    
+    /// Get syscall profiler summary statistics.
+    /// Why: Provide profiling summary for performance analysis.
+    /// Returns: Total syscall count and total execution time (nanoseconds).
+    /// Grain Style: Explicit types, bounded operations.
+    pub fn get_profiler_summary(self: *const BasinKernel) struct {
+        total_syscall_count: u64,
+        total_execution_time_ns: u64,
+        enabled: bool,
+    } {
+        // Assert: Kernel must be initialized (precondition).
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Kernel ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Kernel ptr unaligned", .{});
+        
+        return .{
+            .total_syscall_count = self.syscall_profiler.get_total_syscall_count(),
+            .total_execution_time_ns = self.syscall_profiler.get_total_execution_time_ns(),
+            .enabled = self.syscall_profiler.enabled,
+        };
     }
     
     /// Calculate memory usage for a process by summing its memory mappings.

@@ -2,16 +2,16 @@
 
 **Agent**: Grain Basin Kernel Agent (3a)  
 **Parent Agent**: Grain Vantage Core Agent (3rd Agent, L1)  
-**Status**: ⏳ **REQUESTING PRIORITY GUIDANCE** — Ready to coordinate with Vantage Core and begin work  
-**Last Updated**: 2025-12-29-160000-pst
+**Status**: ✅ **PROFILER INFRASTRUCTURE COMPLETE** — Ready for Vantage Core review  
+**Last Updated**: 2025-12-29-223000-pst
 
 ---
 
-## Current Work: Initialization Complete, Awaiting Priorities
+## Current Work: Kernel Performance Optimization
 
-**Status**: ⏳ **REQUESTING PRIORITY GUIDANCE** — Initialization complete, ready for priority coordination  
-**Date**: 2025-12-29-160000-pst  
-**Priority**: HIGH — Coordinate with Vantage Core on kernel development priorities
+**Status**: ✅ **PROFILER INFRASTRUCTURE COMPLETE** — Ready for Vantage Core review  
+**Date**: 2025-12-29-223000-pst  
+**Priority**: HIGH — Kernel Performance Optimization (recommended by Vantage Core)
 
 ---
 
@@ -35,28 +35,57 @@
 
 ---
 
-## Pending Tasks (Awaiting Priority Guidance)
+## Current Tasks: Kernel Performance Optimization
 
-**Status**: ⏳ **AWAITING PRIORITY GUIDANCE FROM VANTAGE CORE**
+**Status**: ⏳ **IN PROGRESS** — Priority guidance received from Vantage Core (2025-12-29-214643-pst)
 
-### Coordination Tasks
+### Priority Guidance Received
 
-- [ ] Coordinate with Vantage Core on kernel development priorities
-- [ ] Receive priority guidance from Vantage Core
-- [ ] Update plan and tasks files based on priorities
-- [ ] Begin kernel development work following Grain Style
+**From Vantage Core** (2025-12-29-214643-pst):
+- ✅ **Kernel Performance Optimization** (HIGH priority, RECOMMENDED) — **SELECTED**
+- Kernel Security Hardening (MEDIUM priority)
+- Kernel Maintenance and Code Quality (ONGOING priority)
+- JG Project Kernel Support (AS NEEDED)
 
-### Potential Work Tasks (Subject to Vantage Core Priorities)
+### Current Work Tasks (Kernel Performance Optimization)
 
-**Note**: These tasks will be prioritized based on Vantage Core guidance.
+#### Phase 1: Syscall Performance Profiling (INFRASTRUCTURE COMPLETE ✅)
+- [x] Created syscall performance profiler module (`syscall_performance_profiler.zig`)
+- [x] Integrated profiler into BasinKernel struct (`basin_kernel_core.zig`)
+- [x] Integrated profiler into syscall router (`basin_kernel.zig` handle_syscall)
+- [x] Created comprehensive test suite (`tests/143_syscall_performance_profiler_test.zig`)
+- [x] Added helper functions for profiling summary statistics (`get_profiler_summary`)
+- [x] Created usage documentation (`docs/kernel/syscall_performance_profiler_usage.md`)
+- [x] Profiler infrastructure complete and ready for use
+- [ ] **NEXT**: Run tests to validate profiler functionality
+- [ ] **NEXT**: Enable profiling and collect initial performance data
+- [ ] Analyze existing statistics infrastructure (`kernel_stats_aggregator.zig`)
+- [ ] Review timer implementation (nanosecond precision available)
+- [ ] Identify hot paths in syscall handlers from profiling data
+- [ ] Profile common syscalls (read, write, spawn, yield, map, unmap, etc.)
+- [ ] Document profiling findings
 
-#### Kernel Performance Optimization
-- [ ] Profile syscall performance
-- [ ] Identify hot paths for optimization
-- [ ] Optimize syscall handlers
-- [ ] Improve scheduler efficiency
-- [ ] Reduce syscall overhead
-- [ ] Performance benchmarking
+#### Phase 2: Syscall Handler Optimization (NEXT)
+- [ ] Optimize hot paths identified in profiling
+- [ ] Reduce syscall overhead (argument validation, routing in `basin_kernel.zig`)
+- [ ] Optimize common file I/O operations (`basin_kernel_syscalls_file.zig`)
+- [ ] Optimize process management operations (`basin_kernel_syscalls_process.zig`)
+- [ ] Optimize network operations (`basin_kernel_syscalls_network.zig`)
+- [ ] Optimize memory operations (map, unmap, protect)
+
+#### Phase 3: Scheduler Efficiency Improvements (NEXT)
+- [ ] Review scheduler implementation (`scheduler.zig`)
+- [ ] Analyze scheduler statistics for bottlenecks
+- [ ] Optimize context switching overhead
+- [ ] Improve time slice management
+- [ ] Optimize process scheduling algorithm
+
+#### Phase 4: Performance Benchmarking (ONGOING)
+- [ ] Create performance benchmarks for key syscalls
+- [ ] Measure before/after optimization improvements
+- [ ] Validate performance improvements with tests
+- [ ] Document performance characteristics
+- [ ] Update documentation with performance findings
 
 #### Kernel Security Hardening
 - [ ] Additional input validation review
@@ -205,28 +234,33 @@ Once priorities are set, task dependencies will be:
 
 ## Summary
 
-**Status**: ⏳ **REQUESTING PRIORITY GUIDANCE** — Ready to coordinate with Vantage Core and begin work
+**Status**: ✅ **PROFILER INFRASTRUCTURE COMPLETE** — Ready for Vantage Core review
 
 **Completed**:
 - ✅ All initialization tasks complete
 - ✅ Kernel codebase reviewed and understood
 - ✅ Coordination documents reviewed
 - ✅ Plan and tasks files prepared
+- ✅ Priority guidance received from Vantage Core (2025-12-29-214643-pst)
+- ✅ **Profiler infrastructure complete** — Ready for use
 
-**Pending**:
-- ⏳ Priority guidance from Vantage Core
-- ⏳ Coordination on kernel development priorities
-- ⏳ Begin kernel development work
+**Current Work**:
+- ✅ **Phase 1: Syscall Performance Profiling** (INFRASTRUCTURE COMPLETE):
+  - Profiler module created and integrated
+  - Test suite created
+  - Documentation created
+  - Ready for data collection
+- ⏳ **NEXT**: Run tests, enable profiling, collect data, analyze hot paths, optimize
 
-**Blockers**: **NONE** — Ready to coordinate with Vantage Core on priorities and begin work.
+**Blockers**: **NONE** — Profiler infrastructure complete, ready to proceed with data collection and optimization work.
 
-**Next Action**: Coordinate with Vantage Core on priorities, then begin kernel development following Grain Style.
+**Next Action**: Awaiting Vantage Core review and guidance on next steps. Ready to proceed with data collection and optimization work.
 
 ---
 
 **Note**: This is a detailed task list for the Grain Basin Kernel Agent. For high-level overview and cross-agent coordination, see `docs/tasks.md`.
 
-**Date**: 2025-12-29-160000-pst  
+**Date**: 2025-12-29-220000-pst  
 **Agent**: Grain Basin Kernel Agent (3a)  
 **Parent Agent**: Grain Vantage Core Agent (3rd Agent, L1)  
-**Status**: ⏳ **REQUESTING PRIORITY GUIDANCE** — Ready to coordinate with Vantage Core and begin work
+**Status**: ⏳ **BEGINNING KERNEL PERFORMANCE OPTIMIZATION** — Priority guidance received, beginning work

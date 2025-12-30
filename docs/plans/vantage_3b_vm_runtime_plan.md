@@ -1,11 +1,11 @@
 # Grain VM Runtime Agent: Implementation Plan
 
 **Agent**: Grain VM Runtime Agent (3b)  
-**Parent Agent**: Grain Vantage Core Agent (3rd Agent, L1)  
+**Parent Agent**: Grain Vantage 3 Subcore Agent (3rd Agent, L1 Subcore)  
 **Last Updated**: 2025-12-30-020001-pst  
 **Status**: ⏳ **PHASE 1 IN PROGRESS** — Codebase Review ~85-90% Complete — Ready for V3-Core Check-In  
-**Coordination Plan**: `docs/agent-communications/vantage_3_core_coordination_plan_2025-12-29-223949-pst.md`  
-**Coordination Summary**: `docs/agent-communications/vantage_3_core_coordination_summary_2025-12-29-223949-pst.md`
+**Coordination Plan**: `docs/agent-communications/vantage_3_subcore_coordination_plan_2025-12-29-223949-pst.md`  
+**Coordination Summary**: `docs/agent-communications/vantage_3_subcore_coordination_summary_2025-12-29-223949-pst.md`
 
 ---
 
@@ -30,7 +30,7 @@ Grain VM Runtime Agent is responsible for developing and maintaining the **Vanta
 **Phase**: ⏳ **PHASE 1 IN PROGRESS** — VM Codebase Review and Assessment  
 **VM Status**: ✅ **PRODUCTION READY** — All critical features implemented, tested, and documented
 
-**Completed Features** (from Vantage Core):
+**Completed Features** (from Vantage 3 Subcore):
 - ✅ RISC-V64 instruction emulation
 - ✅ JIT compilation (RISC-V → ARM64)
 - ✅ Framebuffer support
@@ -90,13 +90,13 @@ Grain VM Runtime Agent is responsible for developing and maintaining the **Vanta
 
 ## Coordination Model: L1/L2 Sub-Agent Pattern
 
-**Parent Agent**: Grain Vantage Core Agent (L1) coordinates overall Basin/Vantage architecture
+**Parent Agent**: Grain Vantage 3 Subcore Agent (L1) coordinates overall Basin/Vantage architecture
 
 **My Coordination**:
-- Coordinate with Vantage Core (L1) weekly/bi-weekly
+- Coordinate with Vantage 3 Subcore (L1) weekly/bi-weekly
 - Coordinate minimally with Basin Kernel Agent (3a) and System Integration Agent (3c) as needed
 - **DO NOT** coordinate directly with Core Agent or other full agents
-- All external coordination goes through Vantage Core
+- All external coordination goes through Vantage 3 Subcore
 
 **Documentation**:
 - Coordination: `docs/core-coordination/vantage_3b_vm_runtime_coordination.md`
@@ -121,7 +121,7 @@ Grain VM Runtime Agent is responsible for developing and maintaining the **Vanta
 - Understand current architecture and design patterns
 - Identify areas for improvement or optimization
 - Document current state and capabilities
-- Coordinate with Vantage Core on priorities
+- Coordinate with Vantage 3 Subcore on priorities
 
 **Tasks**:
 - ✅ Review `vm.zig` core emulator implementation (3,817 lines) — **COMPLETE**
@@ -133,13 +133,13 @@ Grain VM Runtime Agent is responsible for developing and maintaining the **Vanta
 - ✅ Review utilities and test modules — **COMPLETE**
 - ⏳ Analyze test coverage and identify gaps — **IN PROGRESS**
 - ⏳ Document VM architecture and module dependencies — **IN PROGRESS**
-- ⏳ Coordinate with Vantage Core on findings — **READY** (can proceed now or after documentation)
+- ⏳ Coordinate with Vantage 3 Subcore on findings — **READY** (can proceed now or after documentation)
 
 **Deliverables**:
 - ⏳ Codebase review notes — **IN PROGRESS** (~85-90% complete, finalizing)
 - ⏳ Architecture documentation — **IN PROGRESS** (finalizing)
 - ⏳ Priority list for improvements — **IN PROGRESS** (finalizing)
-- ✅ Coordination with Vantage Core on next steps — **COMPLETE** (priorities confirmed 2025-12-29-223949-pst)
+- ✅ Coordination with Vantage 3 Subcore on next steps — **COMPLETE** (priorities confirmed 2025-12-29-223949-pst)
 
 **Initial Findings**:
 - ✅ VM is production-ready with all critical features complete
@@ -152,12 +152,12 @@ Grain VM Runtime Agent is responsible for developing and maintaining the **Vanta
 - ⏳ Some functions may exceed 70 lines (needs Phase 2 review)
 - ⏳ Some lines may exceed 100 characters (needs Phase 2 review)
 
-**Next Steps** (confirmed from Vantage Core):
+**Next Steps** (confirmed from Vantage 3 Subcore):
 1. **Complete Phase 1 documentation** (finish remaining ~10-15%, target: within 1-2 days)
    - Finalize architecture documentation (module dependencies, patterns)
    - Complete findings summary (improvement opportunities, Grain Style compliance)
    - Document JIT architecture details
-   - Coordinate with Vantage Core on findings (ready now or after documentation)
+   - Coordinate with Vantage 3 Subcore on findings (ready now or after documentation)
 2. **Begin Phase 2: VM Maintenance and Stability** (HIGH priority, after Phase 1)
    - Monitor test failures and fix issues
    - Ensure Grain Style compliance (grainwrap-100, grain validate-70)
@@ -174,7 +174,7 @@ Grain VM Runtime Agent is responsible for developing and maintaining the **Vanta
    - Integration testing with Basin kernel
    - RISC-V instruction validation
 
-**For Vantage Core**: Update `docs/plan.md` and `docs/tasks.md` when Phase 1 complete, then when Phase 2 complete, etc.
+**For Vantage 3 Subcore**: Update `docs/plan.md` and `docs/tasks.md` when Phase 1 complete, then when Phase 2 complete, etc.
 
 ---
 
@@ -223,7 +223,7 @@ Grain VM Runtime Agent is responsible for developing and maintaining the **Vanta
 - Improve code generation for common instruction patterns
 - Add JIT-specific benchmarks
 - Measure performance improvements
-- Coordinate with Vantage Core on performance goals
+- Coordinate with Vantage 3 Subcore on performance goals
 
 **Dependencies**: Phase 1 (Codebase Review)
 
@@ -314,7 +314,7 @@ Grain VM Runtime Agent is responsible for developing and maintaining the **Vanta
 - VM snapshot/restore improvements
 - Performance profiling tools
 
-**Note**: Future enhancements will be prioritized based on coordination with Vantage Core and actual needs from kernel development.
+**Note**: Future enhancements will be prioritized based on coordination with Vantage 3 Subcore and actual needs from kernel development.
 
 ---
 
@@ -351,11 +351,11 @@ Grain VM Runtime Agent is responsible for developing and maintaining the **Vanta
 
 - **Basin Kernel**: For integration testing (developed by Basin Kernel Agent 3a)
 - **System Integration**: For kernel/VM integration validation (System Integration Agent 3c)
-- **Vantage Core**: For coordination and architecture decisions
+- **Vantage 3 Subcore**: For coordination and architecture decisions
 
 ### Coordination
 
-- **Vantage Core (L1)**: Weekly/bi-weekly coordination on priorities and architecture
+- **Vantage 3 Subcore (L1)**: Weekly/bi-weekly coordination on priorities and architecture
 - **Basin Kernel Agent (3a)**: Coordinate on syscall interface changes as needed
 - **System Integration Agent (3c)**: Coordinate on integration testing as needed
 
@@ -376,7 +376,7 @@ Grain VM Runtime Agent is responsible for developing and maintaining the **Vanta
 
 **Next Steps**:
 1. ⏳ Complete Phase 1 documentation (remaining ~10-15%: architecture docs, findings summary, JIT details)
-2. ⏳ Coordinate with Vantage Core on findings (ready now or after documentation)
+2. ⏳ Coordinate with Vantage 3 Subcore on findings (ready now or after documentation)
 3. ⏳ Begin Phase 2: VM Maintenance and Stability (after Phase 1 complete)
 4. ⏳ Begin Phase 3: JIT Compilation Optimization (after Phase 2 complete)
 5. ⏳ Continue Phase 6: VM Testing and Validation (ongoing)
@@ -387,5 +387,5 @@ Grain VM Runtime Agent is responsible for developing and maintaining the **Vanta
 
 **Date**: 2025-12-30-020001-pst  
 **Agent**: Grain VM Runtime Agent (3b)  
-**Parent Agent**: Grain Vantage Core Agent (3rd Agent, L1)  
+**Parent Agent**: Grain Vantage 3 Subcore Agent (3rd Agent, L1 Subcore)  
 **Status**: ⏳ **PHASE 1 IN PROGRESS** — Codebase Review ~85-90% Complete — Ready for V3-Core Check-In

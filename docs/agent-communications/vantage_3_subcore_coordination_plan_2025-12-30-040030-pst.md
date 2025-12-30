@@ -1,7 +1,7 @@
-# Vantage 3 Core Agent: Coordination Plan for L2 Sub-Agents
+# Vantage 3 Subcore Agent: Coordination Plan for L2 Sub-Agents
 
 **Date**: 2025-12-30-040030-pst  
-**From**: Grain Vantage Core Agent (3rd Agent, L1)  
+**From**: Grain Vantage 3 Subcore Agent (3rd Agent, L1)  
 **To**: All Vantage L2 Sub-Agents (3a, 3b, 3c)  
 **Purpose**: Coordination plan for L2 sub-agents with priorities and next steps
 
@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-**Vantage Core Status**: ✅ **READY TO COORDINATE** — All kernel/VM/integration features complete, production-ready, L2 sub-agents making excellent progress
+**Vantage 3 Subcore Status**: ✅ **READY TO COORDINATE** — All kernel/VM/integration features complete, production-ready, L2 sub-agents making excellent progress
 
 **Previous Next Steps** (from 2025-12-29-223949-pst coordination plan):
 - ✅ **COMPLETE**: 3a profiler infrastructure complete, ready for performance data collection
@@ -45,7 +45,7 @@
 - ⏳ **NEXT**: Collect performance data, identify hot paths, optimize syscall handlers
 
 **3b. VM Runtime Agent**:
-- ✅ **COMPLETE**: Priorities confirmed from Vantage Core
+- ✅ **COMPLETE**: Priorities confirmed from Vantage 3 Subcore
 - ⏳ **IN PROGRESS**: Phase 1 codebase review (~85-90% complete, ~10-15% remaining for documentation)
   - ✅ Reviewed: All 37 VM modules (core, JIT, integration, host, statistics, debugging, advanced, utilities)
   - ✅ Architecture understanding: Module dependencies, patterns, design decisions
@@ -106,9 +106,9 @@
    - Memory protection improvements
 
 **Coordination**:
-- Coordinate with Vantage Core on optimization priorities
+- Coordinate with Vantage 3 Subcore on optimization priorities
 - Coordinate with System Integration Agent (3c) on integration testing needs
-- Report findings and optimization results to Vantage Core
+- Report findings and optimization results to Vantage 3 Subcore
 
 **Grain Style Requirements**:
 - Follow Grain Style strictly (`~/xy-mathematics/docs/grain_style.md`)
@@ -131,7 +131,7 @@
    - Complete findings summary (improvement opportunities, Grain Style compliance details)
    - Document JIT architecture details (hot path tracking, block chaining, optimization strategies)
    - Document integration interface details
-   - Coordinate with Vantage Core on findings (can proceed now or after documentation)
+   - Coordinate with Vantage 3 Subcore on findings (can proceed now or after documentation)
 
 2. **Phase 2: VM Maintenance and Stability** (HIGH priority, after Phase 1)
    - Review and fix any identified issues from Phase 1
@@ -149,9 +149,9 @@
    - Benchmark JIT performance improvements
 
 **Coordination**:
-- Coordinate with Vantage Core on Phase 1 findings
+- Coordinate with Vantage 3 Subcore on Phase 1 findings
 - Coordinate with System Integration Agent (3c) on integration testing needs
-- Report progress and findings to Vantage Core
+- Report progress and findings to Vantage 3 Subcore
 
 **Grain Style Requirements**:
 - Follow Grain Style strictly (`~/xy-mathematics/docs/grain_style.md`)
@@ -198,8 +198,8 @@
 
 **Coordination**:
 - Coordinate with Basin Kernel Agent (3a) on AArch64 removal completion
-- Coordinate with Vantage Core on compliance validation results
-- Report findings and compliance status to Vantage Core
+- Coordinate with Vantage 3 Subcore on compliance validation results
+- Report findings and compliance status to Vantage 3 Subcore
 
 **Grain Style Requirements**:
 - Follow Grain Style strictly (`~/xy-mathematics/docs/grain_style.md`)
@@ -216,41 +216,41 @@
 ## Coordination Model
 
 **L1/L2 Coordination**:
-- **L2 → L1 (Vantage Core)**: Weekly/bi-weekly coordination, as-needed for blockers
+- **L2 → L1 (Vantage 3 Subcore)**: Weekly/bi-weekly coordination, as-needed for blockers
 - **L1 → L1 (Core Agent)**: As-needed (new syscalls, RISC-V compliance, architecture decisions, JG project kernel support)
-- **L2 → L2 (Other Full Agents)**: Prohibited — must coordinate through Vantage Core
-- **L2 → L1 (Core Agent)**: Prohibited — must coordinate through Vantage Core
+- **L2 → L2 (Other Full Agents)**: Prohibited — must coordinate through Vantage 3 Subcore
+- **L2 → L1 (Core Agent)**: Prohibited — must coordinate through Vantage 3 Subcore
 
 **Communication Channels**:
 - Coordination documents: `docs/core-coordination/vantage_3a_*`, `vantage_3b_*`, `vantage_3c_*`
 - Plan documents: `docs/plans/vantage_3a_*`, `vantage_3b_*`, `vantage_3c_*`
 - Task documents: `docs/tasks/vantage_3a_*`, `vantage_3b_*`, `vantage_3c_*`
-- Agent communications: `docs/agent-communications/vantage_3_core_*`
+- Agent communications: `docs/agent-communications/vantage_3_subcore_*`
 
 ---
 
 ## General Grain OS Plan and Tasks Updates
 
-**Vantage Core Responsibility**:
+**Vantage 3 Subcore Responsibility**:
 - Update `docs/plan.md` and `docs/tasks.md` based on sub-agent progress
 - Aggregate sub-agent accomplishments into general Grain OS summary
 - Coordinate with Core Agent on high-level architecture decisions
 
 **Sub-Agent Responsibility**:
 - Update coordination, plan, and tasks documents with progress
-- Inform Vantage Core how to update general Grain OS summary (`docs/plan.md`, `docs/tasks.md`)
-- Report blockers and coordination needs to Vantage Core
+- Inform Vantage 3 Subcore how to update general Grain OS summary (`docs/plan.md`, `docs/tasks.md`)
+- Report blockers and coordination needs to Vantage 3 Subcore
 
 ---
 
 ## Integration Coordination
 
 **Sub-Agent Responsibility**:
-- Inform Vantage Core when integration steps are needed
-- Coordinate through Vantage Core for cross-agent integration
+- Inform Vantage 3 Subcore when integration steps are needed
+- Coordinate through Vantage 3 Subcore for cross-agent integration
 - Prevent accidental conflicts with other agents
 
-**Vantage Core Responsibility**:
+**Vantage 3 Subcore Responsibility**:
 - Coordinate integration steps with Core Agent
 - Prevent conflicts between sub-agents and other agents
 - Facilitate cross-agent communication
@@ -264,9 +264,9 @@
 - Ensure all integration tests pass
 - Ensure all existing tests pass
 - Implement API contracts correctly
-- Report test failures to Vantage Core
+- Report test failures to Vantage 3 Subcore
 
-**Vantage Core Responsibility**:
+**Vantage 3 Subcore Responsibility**:
 - Monitor test status across all sub-agents
 - Coordinate test fixes if needed
 - Ensure overall system test coverage
@@ -279,11 +279,11 @@
 
 **Next Check-In**: When sub-agents complete current priorities or encounter blockers
 
-**Vantage Core Availability**: Available for coordination as-needed
+**Vantage 3 Subcore Availability**: Available for coordination as-needed
 
 ---
 
 **Date**: 2025-12-30-040030-pst  
-**From**: Grain Vantage Core Agent (3rd Agent, L1)  
+**From**: Grain Vantage 3 Subcore Agent (3rd Agent, L1)  
 **To**: All Vantage L2 Sub-Agents (3a, 3b, 3c)  
 **Status**: Coordination plan created, ready for sub-agent execution

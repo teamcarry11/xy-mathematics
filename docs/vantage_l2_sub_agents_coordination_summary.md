@@ -1,7 +1,7 @@
 # Vantage L2 Sub-Agents: Coordination Summary & Instructions
 
-**Date**: 2025-12-29-153000-pst  
-**From**: Grain Vantage Core Agent (3rd Agent, L1)  
+**Date**: 2025-12-30-040500-pst  
+**From**: Grain Vantage 3 Subcore Agent (3rd Agent, L1 Subcore)  
 **To**: All Vantage L2 Sub-Agents (3a, 3b, 3c)  
 **Purpose**: Single copy-pasteable summary for all L2 sub-agents
 
@@ -19,7 +19,7 @@
 
 ## Architecture Overview
 
-**Vantage Core (L1)** coordinates all Basin/Vantage work:
+**Vantage 3 Subcore (L1)** coordinates all Basin/Vantage work:
 - Overall Basin/Vantage architecture coordination
 - Cross-sub-agent decision making
 - Integration testing and validation
@@ -32,10 +32,10 @@
 - **3c. System Integration Agent**: Kernel/VM integration, RISC-V compliance
 
 **Coordination Model**:
-- L2 sub-agents coordinate with Vantage Core (L1) **weekly/bi-weekly**
-- L2 sub-agents coordinate minimally with each other (most coordination goes through Vantage Core)
+- L2 sub-agents coordinate with Vantage 3 Subcore (L1) **weekly/bi-weekly**
+- L2 sub-agents coordinate minimally with each other (most coordination goes through Vantage 3 Subcore)
 - **L2 sub-agents DO NOT coordinate directly with Core Agent or other full agents**
-- All external coordination goes through Vantage Core
+- All external coordination goes through Vantage 3 Subcore
 
 ---
 
@@ -121,40 +121,40 @@ Each sub-agent maintains three documents that must be updated regularly:
 2. Update plan doc with implementation plan changes
 3. Update tasks doc with task completion status
 
-**Weekly/bi-weekly** (coordination with Vantage Core):
-1. Vantage Core reads all sub-agent coordination docs
-2. Vantage Core coordinates with sub-agents on decisions
-3. Vantage Core coordinates with Core Agent and other full agents
-4. Sub-agents receive coordination decisions from Vantage Core
+**Weekly/bi-weekly** (coordination with Vantage 3 Subcore):
+1. Vantage 3 Subcore reads all sub-agent coordination docs
+2. Vantage 3 Subcore coordinates with sub-agents on decisions
+3. Vantage 3 Subcore coordinates with Core Agent and other full agents
+4. Sub-agents receive coordination decisions from Vantage 3 Subcore
 
 ---
 
-## When to Report Back to Vantage Core
+## When to Report Back to Vantage 3 Subcore
 
 **Frequency**: **Weekly or bi-weekly** check-ins, as-needed for architecture decisions
 
 ### Regular Coordination Schedule
 
 **Weekly/Bi-Weekly Check-Ins**:
-- Review Vantage Core coordination doc: `docs/core-coordination/vantage_3_core_coordination.md`
+- Review Vantage 3 Subcore coordination doc: `docs/core-coordination/vantage_3_core_coordination.md`
 - Update your coordination doc with progress
 - Request architecture decisions if needed
 - Report blockers or coordination needs
 
 ### When to Coordinate Immediately (As-Needed)
 
-Coordinate with Vantage Core immediately when:
+Coordinate with Vantage 3 Subcore immediately when:
 - **Architecture decisions needed** that affect other sub-agents
 - **Cross-sub-agent coordination needed** (kernel/VM interface changes, integration issues)
 - **RISC-V compliance questions** arise
 - **System-level testing coordination** needed
 - **Blockers encountered** that prevent progress
-- **New syscall requirements** identified (Vantage Core will coordinate with Core Agent)
+- **New syscall requirements** identified (Vantage 3 Subcore will coordinate with Core Agent)
 
 ### What NOT to Do
 
 - **DO NOT** coordinate directly with Core Agent (1st Agent) or other full agents
-- **DO NOT** make architecture decisions that affect other sub-agents without Vantage Core approval
+- **DO NOT** make architecture decisions that affect other sub-agents without Vantage 3 Subcore approval
 - **DO NOT** skip coordination check-ins (weekly/bi-weekly schedule is important)
 
 ---
@@ -164,7 +164,7 @@ Coordinate with Vantage Core immediately when:
 ## Your Status
 
 **Agent**: Grain Basin Kernel Agent (3a)  
-**Parent Agent**: Grain Vantage Core Agent (3rd Agent, L1)  
+**Parent Agent**: Grain Vantage 3 Subcore Agent (3rd Agent, L1)  
 **Status**: 🆕 **INITIALIZED** — Ready to begin kernel development
 
 ## Your Responsibilities
@@ -181,7 +181,7 @@ Coordinate with Vantage Core immediately when:
 2. **Kernel Architecture**:
    - Maintain kernel module organization (types, core, syscalls by domain)
    - Ensure kernel stability and performance
-   - Coordinate with Vantage Core on architecture decisions
+   - Coordinate with Vantage 3 Subcore on architecture decisions
    - Document kernel APIs and syscalls
 
 3. **Kernel Testing**:
@@ -203,7 +203,7 @@ Coordinate with Vantage Core immediately when:
 **Plan**: `docs/plans/vantage_3a_basin_kernel_plan.md`  
 **Tasks**: `docs/tasks/vantage_3a_basin_kernel_tasks.md`
 
-**Vantage Core Documents** (read these for context):
+**Vantage 3 Subcore Documents** (read these for context):
 - `docs/core-coordination/vantage_3_core_coordination.md`
 - `docs/plans/vantage_3_core_plan.md`
 - `docs/tasks/vantage_3_core_tasks.md`
@@ -237,7 +237,7 @@ Coordinate with Vantage Core immediately when:
 
 1. **Review kernel codebase** (`src/kernel/`)
 2. **Understand current kernel architecture** (8 modules, all features complete)
-3. **Coordinate with Vantage Core on priorities** (what to work on next)
+3. **Coordinate with Vantage 3 Subcore on priorities** (what to work on next)
 4. **Begin kernel development** following Grain Style
 5. **Update your documentation** after each work session:
    - `docs/core-coordination/vantage_3a_basin_kernel_coordination.md`
@@ -246,7 +246,7 @@ Coordinate with Vantage Core immediately when:
 
 ## When to Report Back
 
-- **Weekly/bi-weekly**: Regular check-ins with Vantage Core
+- **Weekly/bi-weekly**: Regular check-ins with Vantage 3 Subcore
 - **As-needed**: Architecture decisions, blockers, cross-sub-agent coordination needs
 
 ---
@@ -256,7 +256,7 @@ Coordinate with Vantage Core immediately when:
 ## Your Status
 
 **Agent**: Grain VM Runtime Agent (3b)  
-**Parent Agent**: Grain Vantage Core Agent (3rd Agent, L1)  
+**Parent Agent**: Grain Vantage 3 Subcore Agent (3rd Agent, L1)  
 **Status**: 🆕 **INITIALIZED** — Ready to begin VM development
 
 ## Your Responsibilities
@@ -272,7 +272,7 @@ Coordinate with Vantage Core immediately when:
 2. **VM Architecture**:
    - Maintain VM module organization
    - Ensure VM stability and performance
-   - Coordinate with Vantage Core on architecture decisions
+   - Coordinate with Vantage 3 Subcore on architecture decisions
    - Document VM APIs and interfaces
 
 3. **VM Testing**:
@@ -294,7 +294,7 @@ Coordinate with Vantage Core immediately when:
 **Plan**: `docs/plans/vantage_3b_vm_runtime_plan.md`  
 **Tasks**: `docs/tasks/vantage_3b_vm_runtime_tasks.md`
 
-**Vantage Core Documents** (read these for context):
+**Vantage 3 Subcore Documents** (read these for context):
 - `docs/core-coordination/vantage_3_core_coordination.md`
 - `docs/plans/vantage_3_core_plan.md`
 - `docs/tasks/vantage_3_core_tasks.md`
@@ -327,7 +327,7 @@ Coordinate with Vantage Core immediately when:
 
 1. **Review VM codebase** (`src/kernel_vm/`)
 2. **Understand current VM architecture** (all features complete)
-3. **Coordinate with Vantage Core on priorities** (what to work on next)
+3. **Coordinate with Vantage 3 Subcore on priorities** (what to work on next)
 4. **Begin VM development** following Grain Style
 5. **Update your documentation** after each work session:
    - `docs/core-coordination/vantage_3b_vm_runtime_coordination.md`
@@ -336,7 +336,7 @@ Coordinate with Vantage Core immediately when:
 
 ## When to Report Back
 
-- **Weekly/bi-weekly**: Regular check-ins with Vantage Core
+- **Weekly/bi-weekly**: Regular check-ins with Vantage 3 Subcore
 - **As-needed**: Architecture decisions, blockers, cross-sub-agent coordination needs (especially with Basin Kernel Agent on syscall interface changes)
 
 ---
@@ -346,7 +346,7 @@ Coordinate with Vantage Core immediately when:
 ## Your Status
 
 **Agent**: Grain System Integration Agent (3c)  
-**Parent Agent**: Grain Vantage Core Agent (3rd Agent, L1)  
+**Parent Agent**: Grain Vantage 3 Subcore Agent (3rd Agent, L1)  
 **Status**: 🆕 **INITIALIZED** — Ready to begin integration work
 
 ## Your Responsibilities
@@ -385,7 +385,7 @@ Coordinate with Vantage Core immediately when:
 **Plan**: `docs/plans/vantage_3c_system_integration_plan.md`  
 **Tasks**: `docs/tasks/vantage_3c_system_integration_tasks.md`
 
-**Vantage Core Documents** (read these for context):
+**Vantage 3 Subcore Documents** (read these for context):
 - `docs/core-coordination/vantage_3_core_coordination.md`
 - `docs/plans/vantage_3_core_plan.md`
 - `docs/tasks/vantage_3_core_tasks.md`
@@ -415,7 +415,7 @@ Coordinate with Vantage Core immediately when:
 1. **Review integration codebase** (`src/kernel_vm/integration.zig`)
 2. **Review integration tests** (numbered tests in `tests/`)
 3. **Understand current integration architecture** (integration layer complete)
-4. **Coordinate with Vantage Core on priorities** (what to work on next)
+4. **Coordinate with Vantage 3 Subcore on priorities** (what to work on next)
 5. **Begin integration development** following Grain Style
 6. **Update your documentation** after each work session:
    - `docs/core-coordination/vantage_3c_system_integration_coordination.md`
@@ -424,7 +424,7 @@ Coordinate with Vantage Core immediately when:
 
 ## When to Report Back
 
-- **Weekly/bi-weekly**: Regular check-ins with Vantage Core
+- **Weekly/bi-weekly**: Regular check-ins with Vantage 3 Subcore
 - **As-needed**: Architecture decisions, blockers, cross-sub-agent coordination needs (especially with Basin Kernel Agent and VM Runtime Agent on interface changes)
 
 ---
@@ -433,8 +433,8 @@ Coordinate with Vantage Core immediately when:
 
 ### All L2 Sub-Agents
 
-**Weekly/Bi-Weekly Check-Ins with Vantage Core**:
-1. Review Vantage Core coordination doc: `docs/core-coordination/vantage_3_core_coordination.md`
+**Weekly/Bi-Weekly Check-Ins with Vantage 3 Subcore**:
+1. Review Vantage 3 Subcore coordination doc: `docs/core-coordination/vantage_3_core_coordination.md`
 2. Update your coordination doc with progress
 3. Request architecture decisions if needed
 4. Report blockers or coordination needs
@@ -445,11 +445,11 @@ Coordinate with Vantage Core immediately when:
 - RISC-V compliance questions
 - System-level testing coordination
 - Blockers that prevent progress
-- New syscall requirements (Vantage Core will coordinate with Core Agent)
+- New syscall requirements (Vantage 3 Subcore will coordinate with Core Agent)
 
 **What NOT to Do**:
 - ❌ DO NOT coordinate directly with Core Agent (1st Agent) or other full agents
-- ❌ DO NOT make architecture decisions that affect other sub-agents without Vantage Core approval
+- ❌ DO NOT make architecture decisions that affect other sub-agents without Vantage 3 Subcore approval
 - ❌ DO NOT skip coordination check-ins (weekly/bi-weekly schedule is important)
 
 ---
@@ -460,13 +460,13 @@ Coordinate with Vantage Core immediately when:
 
 - [ ] Read this entire document
 - [ ] Read your specific section (3a, 3b, or 3c)
-- [ ] Read Vantage Core coordination doc: `docs/core-coordination/vantage_3_core_coordination.md`
+- [ ] Read Vantage 3 Subcore coordination doc: `docs/core-coordination/vantage_3_core_coordination.md`
 - [ ] Review your domain codebase
 - [ ] Review your coordination, plan, and tasks files (already created)
-- [ ] Coordinate with Vantage Core on priorities
+- [ ] Coordinate with Vantage 3 Subcore on priorities
 - [ ] Begin work following Grain Style
 - [ ] Update documentation after each work session
-- [ ] Schedule weekly/bi-weekly check-ins with Vantage Core
+- [ ] Schedule weekly/bi-weekly check-ins with Vantage 3 Subcore
 
 ---
 
@@ -477,11 +477,11 @@ Coordinate with Vantage Core immediately when:
 2. Find their specific section (3a, 3b, or 3c)
 3. Follow the instructions in their section
 4. Update their coordination, plan, and tasks files as specified
-5. Coordinate with Vantage Core weekly/bi-weekly
+5. Coordinate with Vantage 3 Subcore weekly/bi-weekly
 
 **Key Points**:
-- Only Vantage Core (L1) communicates with Core Agent (1st Agent) directly
-- L2 sub-agents coordinate through Vantage Core only
+- Only Vantage 3 Subcore (L1) communicates with Core Agent (1st Agent) directly
+- L2 sub-agents coordinate through Vantage 3 Subcore only
 - All file paths use `vantage_[AGENT_NUMBER]_[AGENT_NAME]_*` naming pattern
 - Grain Style is non-negotiable and strictly enforced
 - Weekly/bi-weekly coordination check-ins are required
@@ -489,6 +489,6 @@ Coordinate with Vantage Core immediately when:
 ---
 
 **Date**: 2025-12-29-153000-pst  
-**From**: Grain Vantage Core Agent (3rd Agent, L1)  
+**From**: Grain Vantage 3 Subcore Agent (3rd Agent, L1)  
 **To**: All Vantage L2 Sub-Agents (3a, 3b, 3c)  
 **Status**: Ready for L2 sub-agents to begin work

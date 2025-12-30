@@ -1,11 +1,11 @@
 # Grain VM Runtime Agent: Task List
 
 **Agent**: Grain VM Runtime Agent (3b)  
-**Parent Agent**: Grain Vantage Core Agent (3rd Agent, L1)  
+**Parent Agent**: Grain Vantage 3 Subcore Agent (3rd Agent, L1 Subcore)  
 **Status**: ⏳ **PHASE 1 IN PROGRESS** — Codebase Review ~85-90% Complete — Ready for V3-Core Check-In  
 **Last Updated**: 2025-12-30-020001-pst  
-**Coordination Plan**: `docs/agent-communications/vantage_3_core_coordination_plan_2025-12-29-223949-pst.md`  
-**Coordination Summary**: `docs/agent-communications/vantage_3_core_coordination_summary_2025-12-29-223949-pst.md`
+**Coordination Plan**: `docs/agent-communications/vantage_3_subcore_coordination_plan_2025-12-29-223949-pst.md`  
+**Coordination Summary**: `docs/agent-communications/vantage_3_subcore_coordination_summary_2025-12-29-223949-pst.md`
 
 ---
 
@@ -87,7 +87,7 @@
   - [⏳] Check line length (max 100 characters) — **IN PROGRESS** (mostly compliant)
   - [⏳] Document code quality issues — **IN PROGRESS**
 
-- [✅] Coordinate with Vantage Core — **COMPLETE** (2025-12-29-223949-pst)
+- [✅] Coordinate with Vantage 3 Subcore — **COMPLETE** (2025-12-29-223949-pst)
   - [✅] Schedule weekly/bi-weekly coordination — **COMPLETE** (understood)
   - [⏳] Discuss codebase review findings — **READY** (codebase review complete, ready to coordinate)
   - [✅] Prioritize improvements and enhancements — **COMPLETE** (priorities confirmed):
@@ -171,7 +171,7 @@
   - [ ] Track performance improvements
   - [ ] Document benchmark results
 
-- [ ] Coordinate with Vantage Core on performance goals
+- [ ] Coordinate with Vantage 3 Subcore on performance goals
   - [ ] Discuss performance targets
   - [ ] Review optimization priorities
   - [ ] Get feedback on improvements
@@ -345,12 +345,12 @@
 
 **What You Should Do**:
 - ⏳ Complete Phase 1 documentation (remaining ~10-15%: architecture docs, findings summary, JIT details)
-- ⏳ Coordinate with Vantage Core on findings (ready now or after documentation)
+- ⏳ Coordinate with Vantage 3 Subcore on findings (ready now or after documentation)
 - ⏳ Begin Phase 2 (VM Maintenance) after Phase 1 complete
 - ⏳ Begin Phase 3 (JIT Optimization) after Phase 2 complete
 - ⏳ Continue Phase 6 (Testing) ongoing
 
-**For Vantage Core**: 
+**For Vantage 3 Subcore**: 
 - Update `docs/plan.md` VM Runtime section when Phase 1 complete
 - Update `docs/tasks.md` VM Runtime section when Phase 1 complete
 - Monitor this coordination document for progress updates
@@ -364,5 +364,5 @@
 
 **Date**: 2025-12-30-020001-pst  
 **Agent**: Grain VM Runtime Agent (3b)  
-**Parent Agent**: Grain Vantage Core Agent (3rd Agent, L1)  
+**Parent Agent**: Grain Vantage 3 Subcore Agent (3rd Agent, L1 Subcore)  
 **Status**: ⏳ **PHASE 1 IN PROGRESS** — Codebase Review ~85-90% Complete — Ready for V3-Core Check-In

@@ -1,7 +1,7 @@
 # Grain Basin Kernel Agent: Implementation Plan
 
 **Agent**: Grain Basin Kernel Agent (3a)  
-**Parent Agent**: Grain Vantage Core Agent (3rd Agent, L1)  
+**Parent Agent**: Grain Vantage 3 Subcore Agent (3rd Agent, L1 Subcore)  
 **Last Updated**: 2025-12-29-231000-pst  
 **Status**: ⏳ **PERFORMANCE DATA COLLECTION** — Profiler infrastructure complete, code review done, ready for data collection
 
@@ -23,7 +23,7 @@
 
 1. ✅ **Coordination Documents Reviewed**:
    - Core Agent coordination plan (2025-12-29-152539-pst)
-   - Vantage Core coordination summary (2025-12-29-153000-pst)
+   - Vantage 3 Subcore coordination summary (2025-12-29-153000-pst)
    - Understanding of L1/L2 coordination model confirmed
 
 2. ✅ **Kernel Codebase Reviewed**:
@@ -125,7 +125,7 @@
 
 ### Priority Guidance Received (2025-12-29-214643-pst)
 
-**From Vantage Core Coordination Plan**:
+**From Vantage 3 Subcore Coordination Plan**:
 - ✅ **Kernel Performance Optimization** (HIGH priority, RECOMMENDED) — **SELECTED**
 - Kernel Security Hardening (MEDIUM priority)
 - Kernel Maintenance and Code Quality (ONGOING priority)
@@ -135,7 +135,7 @@
 
 **Status**: ⏳ **IN PROGRESS** — Beginning work on recommended high-priority task
 
-**Work Plan** (from Vantage Core, 2025-12-29-223949-pst):
+**Work Plan** (from Vantage 3 Subcore, 2025-12-29-223949-pst):
 1. **Performance Data Collection** (HIGH priority, CURRENT):
    - ✅ Profiler infrastructure complete
    - ✅ Benchmark test created (`tests/144_syscall_performance_benchmark_test.zig`)
@@ -192,7 +192,7 @@
 - New syscalls for JG project or other features
 - Enhanced monitoring syscalls
 - Additional resource management syscalls
-- Coordinate with Vantage Core on requirements
+- Coordinate with Vantage 3 Subcore on requirements
 
 ### 4. Test Coverage Enhancement
 - Additional edge case testing
@@ -246,7 +246,7 @@
 
 ## Coordination Model
 
-### With Vantage Core (L1)
+### With Vantage 3 Subcore (L1)
 
 - **Frequency**: Weekly/bi-weekly check-ins, as-needed for architecture decisions
 - **What I Provide**: Domain-specific implementation progress, technical decisions, testing results, documentation updates
@@ -255,13 +255,13 @@
 ### With Other L2 Sub-Agents
 
 - **Frequency**: Minimal, as-needed only
-- **Coordination**: Most coordination goes through Vantage Core
+- **Coordination**: Most coordination goes through Vantage 3 Subcore
 - **Direct Coordination**: Only when work intersects (e.g., syscall interface changes with VM Runtime Agent)
 
 ### With Other Full Agents
 
-- **Coordination**: Through Vantage Core only
-- **No Direct Coordination**: All external coordination goes through Vantage Core
+- **Coordination**: Through Vantage 3 Subcore only
+- **No Direct Coordination**: All external coordination goes through Vantage 3 Subcore
 
 ---
 
@@ -275,7 +275,7 @@
 - ✅ Zero technical debt (no TODOs/FIXMEs, comprehensive assertions)
 - ✅ Comprehensive test coverage exists
 - ✅ Performance monitoring infrastructure exists (stats aggregator, timer, scheduler stats)
-- ✅ Priority guidance received from Vantage Core (2025-12-29-214643-pst)
+- ✅ Priority guidance received from Vantage 3 Subcore (2025-12-29-214643-pst)
 - ✅ **Profiler infrastructure complete** — Ready for use
 - ✅ **Benchmark test created** — Ready for execution
 - ✅ **Code review complete** — Hot path candidates reviewed
@@ -292,7 +292,7 @@
   - Code review completed (hot path candidates reviewed)
   - Zero technical debt, Grain Style compliant
 
-**What I'll Do Next** (from Vantage Core guidance, 2025-12-29-223949-pst):
+**What I'll Do Next** (from Vantage 3 Subcore guidance, 2025-12-29-223949-pst):
 - ⏳ Run tests to validate profiler functionality
 - ⏳ Enable profiling and collect initial performance data
 - ⏳ Use helper functions to identify hot paths and slow paths
@@ -300,7 +300,7 @@
 - ⏳ Optimize syscall handlers based on findings
 - ⏳ Benchmark performance improvements
 - ⏳ Update documentation after each work session
-- ⏳ Coordinate with Vantage Core weekly/bi-weekly on progress
+- ⏳ Coordinate with Vantage 3 Subcore weekly/bi-weekly on progress
 
 **Blockers**: **MINOR** — Compilation errors in other parts of codebase (not kernel-related) prevent full test suite execution. Profiler infrastructure is complete and ready; tests can be run once compilation issues are resolved.
 
@@ -308,5 +308,5 @@
 
 **Date**: 2025-12-29-231000-pst  
 **Agent**: Grain Basin Kernel Agent (3a)  
-**Parent Agent**: Grain Vantage Core Agent (3rd Agent, L1)  
+**Parent Agent**: Grain Vantage 3 Subcore Agent (3rd Agent, L1 Subcore)  
 **Status**: ⏳ **PERFORMANCE DATA COLLECTION** — Profiler infrastructure complete, code review done, ready for data collection

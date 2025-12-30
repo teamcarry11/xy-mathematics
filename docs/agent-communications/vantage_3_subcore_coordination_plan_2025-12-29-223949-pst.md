@@ -1,7 +1,7 @@
-# Vantage 3 Core Agent: Coordination Plan for L2 Sub-Agents
+# Vantage 3 Subcore Agent: Coordination Plan for L2 Sub-Agents
 
 **Date**: 2025-12-29-223949-pst  
-**From**: Grain Vantage Core Agent (3rd Agent, L1)  
+**From**: Grain Vantage 3 Subcore Agent (3rd Agent, L1)  
 **To**: All Vantage L2 Sub-Agents (3a, 3b, 3c)  
 **Purpose**: Coordination plan for L2 sub-agents with priorities and next steps
 
@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-**Vantage Core Status**: ✅ **READY TO COORDINATE** — All kernel/VM/integration features complete, production-ready, L2 sub-agents making progress
+**Vantage 3 Subcore Status**: ✅ **READY TO COORDINATE** — All kernel/VM/integration features complete, production-ready, L2 sub-agents making progress
 
 **Previous Next Steps** (from 2025-12-29-214643-pst coordination plan):
 - ✅ **COMPLETE**: 3a began kernel development work (profiler infrastructure complete)
@@ -24,7 +24,7 @@
 **New Next Steps** (this coordination plan):
 - **3a**: Continue kernel performance optimization (collect performance data, identify hot paths, optimize)
 - **3b**: Continue Phase 1 codebase review, complete remaining ~70%, then proceed to Phase 2 (VM Maintenance)
-- **3c**: **IMMEDIATE**: Coordinate with Vantage Core on AArch64 code finding, then continue RISC-V compliance validation
+- **3c**: **IMMEDIATE**: Coordinate with Vantage 3 Subcore on AArch64 code finding, then continue RISC-V compliance validation
 
 ---
 
@@ -44,7 +44,7 @@
 - ⏳ **NEXT**: Collect performance data, identify hot paths, optimize syscall handlers
 
 **3b. VM Runtime Agent**:
-- ✅ **COMPLETE**: Priorities confirmed from Vantage Core
+- ✅ **COMPLETE**: Priorities confirmed from Vantage 3 Subcore
 - ⏳ **IN PROGRESS**: Phase 1 codebase review (~30% complete, ~70% remaining)
   - Reviewed: `vm.zig` core (in progress), `jit.zig` JIT compiler (in progress), `integration.zig` (in progress)
   - Remaining: Complete review of all 37 VM modules, document architecture, identify improvements
@@ -102,8 +102,8 @@
 
 **Coordination Notes**:
 - Profiler infrastructure complete and ready for use
-- Coordinate with Vantage Core weekly/bi-weekly on progress
-- Coordinate immediately if new syscall requirements identified (Vantage Core will coordinate with Core Agent)
+- Coordinate with Vantage 3 Subcore weekly/bi-weekly on progress
+- Coordinate immediately if new syscall requirements identified (Vantage 3 Subcore will coordinate with Core Agent)
 - Coordinate with System Integration Agent (3c) on integration testing needs
 
 **Next Steps**:
@@ -129,7 +129,7 @@
    - Document architecture and module dependencies
    - Identify improvement opportunities
    - Complete codebase review notes
-   - Coordinate with Vantage Core on findings
+   - Coordinate with Vantage 3 Subcore on findings
 
 2. **Phase 2: VM Maintenance and Stability** (HIGH priority, after Phase 1)
    - Monitor test failures and fix issues
@@ -143,7 +143,7 @@
    - Optimize hot path detection
    - Improve code generation quality
    - Benchmark JIT vs interpreter performance
-   - Coordinate with Vantage Core on performance goals
+   - Coordinate with Vantage 3 Subcore on performance goals
 
 4. **Phase 6: VM Testing and Validation** (ONGOING priority)
    - Maintain comprehensive test coverage
@@ -155,13 +155,13 @@
 **Coordination Notes**:
 - Phase 1 codebase review in progress (~30% complete, ~70% remaining)
 - Continue review systematically through all 37 VM modules
-- Coordinate with Vantage Core weekly/bi-weekly on progress
+- Coordinate with Vantage 3 Subcore weekly/bi-weekly on progress
 - Coordinate with Basin Kernel Agent (3a) on syscall interface changes (if any)
 - Coordinate with System Integration Agent (3c) on integration testing needs
 
 **Next Steps**:
 1. Continue Phase 1 codebase review (complete remaining ~70%)
-2. Document findings and coordinate with Vantage Core
+2. Document findings and coordinate with Vantage 3 Subcore
 3. Begin Phase 2 (VM Maintenance) after Phase 1 complete
 4. Update coordination, plan, and tasks files after each work session
 
@@ -173,7 +173,7 @@
 
 **Immediate Priorities**:
 
-1. **IMMEDIATE: Coordinate with Vantage Core on AArch64 Finding** (CRITICAL priority, BLOCKING)
+1. **IMMEDIATE: Coordinate with Vantage 3 Subcore on AArch64 Finding** (CRITICAL priority, BLOCKING)
    - **Question**: Should AArch64 code be removed per "RISC-V only" requirement?
    - **Files Found**: `src/kernel/platform_aarch64.zig`, `src/kernel/main_aarch64.zig`, `src/kernel/entry_aarch64.S`
    - **Build Target**: `build.zig` has `kernel-aarch64` build target
@@ -181,7 +181,7 @@
    - **Options**:
      - Option A: Remove AArch64 code (enforce "RISC-V only" requirement)
      - Option B: Keep AArch64 code (requirement has changed, AArch64 support is allowed)
-   - **Action**: Wait for Vantage Core guidance before proceeding with "Validate kernel targets RISC-V only" task
+   - **Action**: Wait for Vantage 3 Subcore guidance before proceeding with "Validate kernel targets RISC-V only" task
 
 2. **Continue RISC-V Compliance Validation** (HIGH priority, after AArch64 guidance)
    - Run RISC-V compliance test suite to validate VM emulation
@@ -204,14 +204,14 @@
    - Document performance characteristics
 
 **Coordination Notes**:
-- **IMMEDIATE COORDINATION NEEDED**: AArch64 code finding requires Vantage Core guidance
+- **IMMEDIATE COORDINATION NEEDED**: AArch64 code finding requires Vantage 3 Subcore guidance
 - RISC-V compliance test suite created and ready for use
-- Coordinate with Vantage Core immediately on AArch64 guidance
+- Coordinate with Vantage 3 Subcore immediately on AArch64 guidance
 - Coordinate with Basin Kernel Agent (3a) on kernel interface changes
 - Coordinate with VM Runtime Agent (3b) on VM interface changes
 
 **Next Steps**:
-1. **IMMEDIATE**: Coordinate with Vantage Core on AArch64 code finding (waiting for guidance)
+1. **IMMEDIATE**: Coordinate with Vantage 3 Subcore on AArch64 code finding (waiting for guidance)
 2. After AArch64 guidance, continue RISC-V compliance validation
 3. Expand integration test coverage
 4. Update coordination, plan, and tasks files after each work session
@@ -261,18 +261,18 @@
 **Frequency**: Weekly or bi-weekly (as scheduled)
 
 **What Sub-Agents Should Do**:
-1. Review Vantage Core coordination doc: `docs/core-coordination/vantage_3_core_coordination.md`
+1. Review Vantage 3 Subcore coordination doc: `docs/core-coordination/vantage_3_subcore_coordination.md`
 2. Update your coordination doc with progress, status, blockers
 3. Request architecture decisions if needed
 4. Report blockers or coordination needs
 5. Present findings and request priority guidance
 
-**What Vantage Core Will Do**:
+**What Vantage 3 Subcore Will Do**:
 1. Review all sub-agent coordination docs
 2. Coordinate on architecture decisions
 3. Provide priority guidance
 4. Coordinate with Core Agent and other full agents as needed
-5. Update Vantage Core coordination doc with status
+5. Update Vantage 3 Subcore coordination doc with status
 
 ### As-Needed Coordination
 
@@ -282,7 +282,7 @@
 - RISC-V compliance questions arise
 - System-level testing coordination needed
 - Blockers encountered that prevent progress
-- New syscall requirements identified (Vantage Core will coordinate with Core Agent)
+- New syscall requirements identified (Vantage 3 Subcore will coordinate with Core Agent)
 - **Critical findings that contradict stated requirements** (e.g., AArch64 code finding)
 
 ---
@@ -303,20 +303,20 @@ Each sub-agent maintains three documents that must be updated regularly:
 1. Update coordination doc with status, progress, blockers
 2. Update plan doc with implementation plan changes
 3. Update tasks doc with task completion status
-4. Coordinate with Vantage Core if blockers or architecture decisions needed
+4. Coordinate with Vantage 3 Subcore if blockers or architecture decisions needed
 
 ### General Summary Updates
 
-**Sub-Agents Should Inform Vantage Core**:
+**Sub-Agents Should Inform Vantage 3 Subcore**:
 - When significant milestones are reached
 - When new features are complete
 - When architecture decisions are made
 - When coordination with other agents is needed
 
-**Vantage Core Will Update**:
+**Vantage 3 Subcore Will Update**:
 - `docs/plan.md` — General project plan summary
 - `docs/tasks.md` — General project tasks summary
-- `docs/core-coordination/vantage_3_core_coordination.md` — Vantage Core coordination status
+- `docs/core-coordination/vantage_3_subcore_coordination.md` — Vantage 3 Subcore coordination status
 
 ---
 
@@ -344,7 +344,7 @@ Each sub-agent maintains three documents that must be updated regularly:
 
 ## Summary
 
-**Vantage Core Status**: ✅ **READY TO COORDINATE** — All kernel/VM/integration features complete, production-ready
+**Vantage 3 Subcore Status**: ✅ **READY TO COORDINATE** — All kernel/VM/integration features complete, production-ready
 
 **Previous Next Steps**: ✅ **PROGRESS MADE** — 3a profiler complete, 3b Phase 1 in progress, 3c test suite created (coordination needed)
 
@@ -360,6 +360,6 @@ Each sub-agent maintains three documents that must be updated regularly:
 ---
 
 **Date**: 2025-12-29-223949-pst  
-**From**: Grain Vantage Core Agent (3rd Agent, L1)  
+**From**: Grain Vantage 3 Subcore Agent (3rd Agent, L1)  
 **To**: All Vantage L2 Sub-Agents (3a, 3b, 3c)  
 **Status**: Ready for L2 sub-agents to continue work on priorities

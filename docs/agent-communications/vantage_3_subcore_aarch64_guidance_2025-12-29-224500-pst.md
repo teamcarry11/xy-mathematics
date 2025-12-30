@@ -1,7 +1,7 @@
-# Vantage 3 Core Agent: AArch64 Code Guidance for System Integration Agent (3c)
+# Vantage 3 Subcore Agent: AArch64 Code Guidance for System Integration Agent (3c)
 
 **Date**: 2025-12-29-224500-pst  
-**From**: Grain Vantage Core Agent (3rd Agent, L1)  
+**From**: Grain Vantage 3 Subcore Agent (3rd Agent, L1)  
 **To**: Grain System Integration Agent (3c)  
 **Purpose**: Guidance on AArch64 code finding and RISC-V-only compliance requirement
 
@@ -155,6 +155,6 @@ After removal:
 ---
 
 **Date**: 2025-12-29-224500-pst  
-**From**: Grain Vantage Core Agent (3rd Agent, L1)  
+**From**: Grain Vantage 3 Subcore Agent (3rd Agent, L1)  
 **To**: Grain System Integration Agent (3c)  
 **Status**: Guidance provided, ready for 3c to proceed with AArch64 code removal

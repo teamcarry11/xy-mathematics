@@ -60,11 +60,11 @@
 
 ---
 
-### 3. Grain Vantage Core Agent (VM/Kernel) — L1 Coordinator
+### 3. Grain Vantage 3 Subcore Agent (VM/Kernel) — L1 Subcore Coordinator
 
 **Status**: All Kernel Features Complete ✅ — Kernel Refactoring Complete ✅ — Production Ready  
-**Current Tasks**: Architecture evolution to Vantage Core + L2 sub-agents, JG project kernel support monitoring  
-**Details**: See [`docs/tasks/vantage_3_core_tasks.md`](tasks/vantage_3_core_tasks.md)
+**Current Tasks**: Architecture evolution to Vantage 3 Subcore + L2 sub-agents, JG project kernel support monitoring  
+**Details**: See [`docs/tasks/vantage_3_subcore_tasks.md`](tasks/vantage_3_subcore_tasks.md)
 
 **Key Tasks**:
 - [x] Phase 1: Kernel Statistics & Health Check ✅ COMPLETE
@@ -76,7 +76,7 @@
 - [x] Phase 6.4: Cross-Platform Compatibility ✅ COMPLETE
 - [x] Vantage VM Adaptation Framework ✅ COMPLETE
 - [x] Kernel Refactoring (All 8 Phases) ✅ COMPLETE
-- [ ] Rename to Vantage Core (L1 coordinator)
+- [x] Rename to Vantage 3 Subcore (L1 Subcore coordinator) — ✅ Complete
 - [ ] Create L2 sub-agent prompts (Basin Kernel, VM Runtime, System Integration)
 - [ ] Establish L1/L2 coordination model
 - [ ] Monitor JG project implementation for kernel support needs
@@ -265,13 +265,13 @@
 
 1. **Core Agent**: Update HTTP/WebSocket clients to use error types consistently (1 day) — **PRIORITY 1**
 2. **Silo Agent**: Begin JG project storage schema design (Priority 1, HIGH) — **PRIORITY 1**
-3. **Vantage Core**: Plan architecture evolution (rename to Vantage Core, create L2 sub-agents) — **PRIORITY 2**
+3. **Vantage 3 Subcore**: Plan architecture evolution (rename to Vantage 3 Subcore, create L2 sub-agents) — ✅ Complete
 
 ### Short-Term (Next 2 Weeks)
 
 1. **Core Agent**: Begin JG Project Phase 1 planning (Grainbank MMT integration)
 2. **Silo Agent**: Complete JG project storage schema design
-3. **Vantage Core**: Implement architecture evolution (Vantage Core + L2 sub-agents)
+3. **Vantage 3 Subcore**: Implement architecture evolution (Vantage 3 Subcore + L2 sub-agents) — ✅ Complete
 4. **All Agents**: Review JG project design document
 
 ### Medium-Term (Next Month)
@@ -302,15 +302,15 @@
 - [x] Test integration ✅
 - [ ] JG Project: Coordinate on mobile app API contracts
 
-### Grain Core Agent ↔ Vantage Core
+### Grain Core Agent ↔ Vantage 3 Subcore (Main Outer Primary L1 Core Coordination)
 
 - [x] Coordinate on file system integration (database files, transaction logs) ✅
 - [x] Coordinate on network stack (HTTP server, WebSocket) ✅
 - [x] Coordinate on RISC-V compliance ✅
-- [ ] Coordinate on architecture evolution (Vantage Core + L2 sub-agents)
+- [x] Coordinate on architecture evolution (Vantage 3 Subcore + L2 sub-agents) — ✅ Complete
 - [ ] JG Project: Coordinate on kernel support needs
 
-### Vantage Core ↔ L2 Sub-Agents (To Be Established)
+### Vantage 3 Subcore ↔ L2 Sub-Agents (Subcore Coordination / Systems Integration)
 
 - [ ] Define L1/L2 coordination model (weekly/bi-weekly check-ins)
 - [ ] Define L2/L2 coordination model (minimal, as-needed)
@@ -321,12 +321,12 @@
 
 ## Architecture Evolution Tasks
 
-### Vantage Core Architecture Evolution
+### Vantage 3 Subcore Architecture Evolution
 
 **Status**: 🆕 **PLANNED** — Enable parallelization of foundational work
 
 **Tasks**:
-- [ ] Rename "Grain Vantage Agent" to "Grain Vantage Core Agent" (L1)
+- [x] Rename "Grain Vantage Agent" to "Grain Vantage 3 Subcore Agent" (L1 Subcore) — ✅ Complete
 - [ ] Create `docs/grain_basin_kernel_agent_prompt.md` (L2 sub-agent)
 - [ ] Create `docs/grain_vm_runtime_agent_prompt.md` (L2 sub-agent)
 - [ ] Create `docs/grain_system_integration_agent_prompt.md` (L2 sub-agent)
@@ -356,7 +356,7 @@
 - **Carry Agent**: Mobile apps (Months 6-12)
 - **Bubble/Aurora Agents**: UI components (Months 7-12)
 - **Skate Agent**: Knowledge graph (Months 5-12)
-- **Vantage Core**: Kernel support (as needed)
+- **Vantage 3 Subcore**: Kernel support (as needed)
 
 ---
 

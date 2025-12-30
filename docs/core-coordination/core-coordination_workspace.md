@@ -26,7 +26,7 @@
 
 **New Project Assignment**: **JG Project (JG Housing Program)** — Multi-agent integration project assigned. Workspace Agent responsible for **Desktop Dashboards (Months 3-8)**. This is a new long-term project alongside existing SLC product work.
 
-**Architecture Evolution**: **Vantage Agent Structure Updated** — Vantage Agent is now **Vantage Core (L1)** coordinating 3 L2 sub-agents: **Basin Kernel Agent (3a)**, **VM Runtime Agent (3b)**, and **System Integration Agent (3c)**. This architecture evolution is complete and does not affect Workspace Agent's current work, but we acknowledge the new structure for future coordination.
+**Architecture Evolution**: **Vantage Agent Structure Updated** — Vantage Agent is now **Vantage 3 Subcore (L1)** coordinating 3 L2 sub-agents: **Basin Kernel Agent (3a)**, **VM Runtime Agent (3b)**, and **System Integration Agent (3c)**. This architecture evolution is complete and does not affect Workspace Agent's current work, but we acknowledge the new structure for future coordination.
 
 ---
 
@@ -266,7 +266,7 @@ if (response) |resp| {
 
 **Timeline**: When kernel file I/O integration ready (Vantage Agent coordination)
 
-**Coordination**: Coordinate with Vantage Core Agent (L1) and Basin Kernel Agent (L2) on kernel file I/O timeout support. Once kernel support is ready, Core Agent can implement userspace timeout handling.
+**Coordination**: Coordinate with Vantage 3 Subcore Agent (L1) and Basin Kernel Agent (L2) on kernel file I/O timeout support. Once kernel support is ready, Core Agent can implement userspace timeout handling.
 
 ### Timeline Summary
 
@@ -592,20 +592,20 @@ if (editor.is_fold_start_line(line_idx)) {
 
 ---
 
-### For Vantage Core Agent (L1 Coordinator) — **READY TO INTEGRATE**
+### For Vantage 3 Subcore Agent (L1 Coordinator) — **READY TO INTEGRATE**
 
 **What Workspace Agent Has Completed**:
-- ✅ Component API structure implemented (no direct integration needed for Vantage Core)
+- ✅ Component API structure implemented (no direct integration needed for Vantage 3 Subcore)
 - ✅ HTTP/WebSocket timeout integration complete
 
 **Architecture Evolution**:
-- ✅ Vantage Agent is now **Vantage Core (L1)** coordinating 3 L2 sub-agents:
+- ✅ Vantage Agent is now **Vantage 3 Subcore (L1)** coordinating 3 L2 sub-agents:
   - **3a. Basin Kernel Agent (L2)**: RISC-V kernel development, syscall implementation
   - **3b. VM Runtime Agent (L2)**: Vantage VM development (RISC-V emulator on ARM64 macOS)
   - **3c. System Integration Agent (L2)**: Kernel/VM integration, RISC-V compliance
 - ✅ Architecture evolution complete (2025-12-29-140000-pst)
 
-**What Vantage Core Agent Needs to Do**:
+**What Vantage 3 Subcore Agent Needs to Do**:
 
 **1. Coordinate L2 Sub-Agents**:
 - Coordinate with L2 sub-agents (Basin Kernel, VM Runtime, System Integration) weekly/bi-weekly
@@ -867,6 +867,6 @@ if (editor.is_fold_start_line(line_idx)) {
 
 ---
 
-**Status**: Phase 37 complete. Visual fold indicators ready. Error handling structures ready. Code folding implementation complete. HTTP/WebSocket timeout integration complete. Component API implementation complete. All coordination decisions ready. **Component API structure ready for integration.** **Visual fold indicators ready for rendering.** Coordinate with Bubble and Aurora agents on component integration. This unblocks SLC product integration. **ALL COORDINATION DECISIONS ARE READY NOW!** ✅ **JG Project assigned** — Desktop Dashboards (Months 3-8). Planning phase begins. Waiting for Core Agent and Silo Agent foundation work (Months 1-3) before beginning dashboard implementation. **Silo Agent storage schema design is HIGH PRIORITY** (Months 1-3) as it's a dependency for dashboard data integration. **Architecture evolution acknowledged** — Vantage Core (L1) + 3 L2 sub-agents structure complete.
+**Status**: Phase 37 complete. Visual fold indicators ready. Error handling structures ready. Code folding implementation complete. HTTP/WebSocket timeout integration complete. Component API implementation complete. All coordination decisions ready. **Component API structure ready for integration.** **Visual fold indicators ready for rendering.** Coordinate with Bubble and Aurora agents on component integration. This unblocks SLC product integration. **ALL COORDINATION DECISIONS ARE READY NOW!** ✅ **JG Project assigned** — Desktop Dashboards (Months 3-8). Planning phase begins. Waiting for Core Agent and Silo Agent foundation work (Months 1-3) before beginning dashboard implementation. **Silo Agent storage schema design is HIGH PRIORITY** (Months 1-3) as it's a dependency for dashboard data integration. **Architecture evolution acknowledged** — Vantage 3 Subcore (L1) + 3 L2 sub-agents structure complete.
 
 ---

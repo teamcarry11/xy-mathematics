@@ -1,6 +1,6 @@
-# Grain Vantage Agent: Implementation Plan
+# Grain Vantage 3 Subcore Agent: Implementation Plan
 
-**Agent**: Grain Vantage Core Agent (3rd Agent, L1)  
+**Agent**: Grain Vantage 3 Subcore Agent (3rd Agent, L1 Subcore)  
 **Last Updated**: 2025-12-29-153000-pst  
 **Status**: All Kernel Features Complete ✅ — Kernel Refactoring Complete ✅ — Production Ready — Architecture Evolution Complete ✅ — L2 Sub-Agents Ready ✅
 
@@ -204,7 +204,7 @@
    - UDP syscalls with timeout support (new variants)
    - File I/O syscalls with timeout support
    - IPC syscalls with timeout support
-   - Comprehensive documentation in `docs/core-coordination/vantage_3_core_coordination.md`
+   - Comprehensive documentation in `docs/core-coordination/vantage_3_subcore_coordination.md`
 
 2. **Kernel Statistics & Health** — Available for all agents
    - `kernel_get_stats` syscall for system monitoring
@@ -312,15 +312,15 @@
 
 ---
 
-## Agent Architecture Evolution: Vantage Core + L2 Sub-Agents
+## Agent Architecture Evolution: Vantage 3 Subcore + L2 Sub-Agents
 
 **Status**: 🆕 **PLANNED** — Architecture evolution to enable parallelization
 
-### Renaming to Vantage Core
+### Renaming to Vantage 3 Subcore
 
-**Action Required**: Rename "Grain Vantage Agent" to "Grain Vantage Core Agent" (L1)
+**Action Required**: Rename "Grain Vantage Agent" to "Grain Vantage 3 Subcore Agent" (L1)
 
-**Responsibilities as Vantage Core (L1)**:
+**Responsibilities as Vantage 3 Subcore (L1)**:
 - Overall Basin/Vantage architecture coordination
 - Cross-sub-agent decision making
 - Integration testing and validation
@@ -343,7 +343,7 @@
      - Kernel security hardening
      - Kernel testing and validation
    - **Isolation**: Can work independently on kernel features
-   - **Coordination**: Weekly check-ins with Vantage Core, as-needed for architecture decisions
+   - **Coordination**: Weekly check-ins with Vantage 3 Subcore, as-needed for architecture decisions
    - **Prompt Location**: `docs/grain_basin_kernel_agent_prompt.md` (to be created)
 
 2. **Grain VM Runtime Agent** (L2 Sub-Agent):
@@ -356,7 +356,7 @@
      - VM testing and validation
    - **Critical Note**: This agent works on the **Vantage VM development tool**, NOT on ARM64-specific Grain OS code. All Grain OS software remains RISC-V-only.
    - **Isolation**: Can work independently on VM features
-   - **Coordination**: Weekly check-ins with Vantage Core, as-needed for architecture decisions
+   - **Coordination**: Weekly check-ins with Vantage 3 Subcore, as-needed for architecture decisions
    - **Prompt Location**: `docs/grain_vm_runtime_agent_prompt.md` (to be created)
 
 3. **Grain System Integration Agent** (L2 Sub-Agent):
@@ -369,15 +369,15 @@
      - Ensuring RISC-V-only compliance (no ARM64-specific Grain OS code)
    - **Critical Note**: This agent ensures that Basin kernel (RISC-V) works correctly with Vantage VM (RISC-V emulator) for development/testing. All Grain OS software remains RISC-V-only.
    - **Isolation**: Can work independently on integration features
-   - **Coordination**: Weekly check-ins with Vantage Core, as-needed for architecture decisions
+   - **Coordination**: Weekly check-ins with Vantage 3 Subcore, as-needed for architecture decisions
    - **Prompt Location**: `docs/grain_system_integration_agent_prompt.md` (to be created)
 
 ### Implementation Steps
 
-1. **Rename Vantage Agent to Vantage Core**:
+1. **Rename Vantage Agent to Vantage 3 Subcore**:
    - Update all documentation references
    - Update coordination files
-   - Update agent numbering (Vantage Core remains 3rd Agent, L1)
+   - Update agent numbering (Vantage 3 Subcore remains 3rd Agent, L1)
 
 2. **Create Sub-Agent Prompts**:
    - Create `docs/grain_basin_kernel_agent_prompt.md`
@@ -391,7 +391,7 @@
    - L1 ↔ Other Agents: Standard coordination patterns
 
 4. **Update Documentation**:
-   - Update `docs/core-coordination/vantage_3_core_coordination.md`
+   - Update `docs/core-coordination/vantage_3_subcore_coordination.md`
    - Update agent architecture evolution document
    - Update coordination plans
 
@@ -411,14 +411,14 @@
 
 **Prompt Location**: `docs/grain_free_agent_prompt.md`
 
-**Relationship with Vantage Core**:
+**Relationship with Vantage 3 Subcore**:
 - Free Agent can experiment with kernel/VM ideas
-- Free Agent can share discoveries with Vantage Core
-- Free Agent work can inspire Vantage Core sub-agents
+- Free Agent can share discoveries with Vantage 3 Subcore
+- Free Agent work can inspire Vantage 3 Subcore sub-agents
 - Coordination is optional and creative
 
 ---
 
 **Date**: 2025-12-29-133812-pst  
-**Agent**: Grain Vantage Core Agent (3rd Agent, L1)  
+**Agent**: Grain Vantage 3 Subcore Agent (3rd Agent, L1)  
 **Status**: All Kernel Features Complete ✅ — Kernel Refactoring Complete ✅ — Production Ready — Architecture Evolution Planned 🆕

@@ -1,7 +1,7 @@
 # Grain Basin Kernel Agent: Task List
 
 **Agent**: Grain Basin Kernel Agent (3a)  
-**Parent Agent**: Grain Vantage Core Agent (3rd Agent, L1)  
+**Parent Agent**: Grain Vantage 3 Subcore Agent (3rd Agent, L1 Subcore)  
 **Status**: ⏳ **PERFORMANCE DATA COLLECTION** — Profiler infrastructure complete, benchmark test created, ready for data collection  
 **Last Updated**: 2025-12-29-225000-pst
 
@@ -11,7 +11,7 @@
 
 **Status**: ⏳ **PERFORMANCE DATA COLLECTION** — Profiler infrastructure complete, code review done, ready for data collection  
 **Date**: 2025-12-29-231000-pst  
-**Priority**: HIGH — Kernel Performance Optimization (from Vantage Core, 2025-12-29-223949-pst)
+**Priority**: HIGH — Kernel Performance Optimization (from Vantage 3 Subcore, 2025-12-29-223949-pst)
 
 ---
 
@@ -26,7 +26,7 @@
 - [x] Review kernel module organization (8 modules)
 - [x] Review kernel code quality (zero technical debt verified)
 - [x] Review test coverage (comprehensive test suite exists)
-- [x] Review coordination documents (Core Agent and Vantage Core)
+- [x] Review coordination documents (Core Agent and Vantage 3 Subcore)
 - [x] Understand coordination model (L1/L2 pattern)
 - [x] Update coordination document with status
 - [x] Prepare plan and tasks files for updates
@@ -37,11 +37,11 @@
 
 ## Current Tasks: Kernel Performance Optimization
 
-**Status**: ⏳ **IN PROGRESS** — Priority guidance received from Vantage Core (2025-12-29-214643-pst)
+**Status**: ⏳ **IN PROGRESS** — Priority guidance received from Vantage 3 Subcore (2025-12-29-214643-pst)
 
 ### Priority Guidance Received
 
-**From Vantage Core** (2025-12-29-214643-pst):
+**From Vantage 3 Subcore** (2025-12-29-214643-pst):
 - ✅ **Kernel Performance Optimization** (HIGH priority, RECOMMENDED) — **SELECTED**
 - Kernel Security Hardening (MEDIUM priority)
 - Kernel Maintenance and Code Quality (ONGOING priority)
@@ -57,7 +57,7 @@
 - [x] Added helper functions for profiling summary statistics (`get_profiler_summary`)
 - [x] Created usage documentation (`docs/kernel/syscall_performance_profiler_usage.md`)
 - [x] Profiler infrastructure complete and ready for use
-- [x] Acknowledged Vantage Core coordination (2025-12-29-223949-pst)
+- [x] Acknowledged Vantage 3 Subcore coordination (2025-12-29-223949-pst)
 
 #### Phase 2: Performance Data Collection (CURRENT ⏳)
 - [x] Created performance benchmark test (`tests/144_syscall_performance_benchmark_test.zig`)
@@ -130,7 +130,7 @@
 
 #### JG Project Kernel Support (As Needed)
 - [ ] Monitor JG project implementation for kernel support needs
-- [ ] Coordinate with Vantage Core on new syscall requirements
+- [ ] Coordinate with Vantage 3 Subcore on new syscall requirements
 - [ ] Optimize kernel performance for JG project workloads
 - [ ] Configure resource limits for JG project processes (if needed)
 
@@ -142,7 +142,7 @@
 
 **Status**: ⏳ **AWAITING PRIORITY GUIDANCE**
 
-Tasks will be categorized based on Vantage Core priorities:
+Tasks will be categorized based on Vantage 3 Subcore priorities:
 - Critical kernel features
 - Performance optimizations
 - Security hardening
@@ -152,7 +152,7 @@ Tasks will be categorized based on Vantage Core priorities:
 
 **Status**: ⏳ **AWAITING PRIORITY GUIDANCE**
 
-Tasks will be categorized based on Vantage Core priorities:
+Tasks will be categorized based on Vantage 3 Subcore priorities:
 - Additional test coverage
 - Documentation improvements
 - Code quality improvements
@@ -161,7 +161,7 @@ Tasks will be categorized based on Vantage Core priorities:
 
 **Status**: ⏳ **AWAITING PRIORITY GUIDANCE**
 
-Tasks will be categorized based on Vantage Core priorities:
+Tasks will be categorized based on Vantage 3 Subcore priorities:
 - Nice-to-have features
 - Code organization improvements
 - Maintenance tasks
@@ -173,13 +173,13 @@ Tasks will be categorized based on Vantage Core priorities:
 ### Current Dependencies
 
 **All tasks depend on**:
-- ⏳ Priority guidance from Vantage Core
+- ⏳ Priority guidance from Vantage 3 Subcore
 - ⏳ Coordination on kernel development priorities
 
 ### Future Dependencies
 
 Once priorities are set, task dependencies will be:
-- Architecture decisions from Vantage Core
+- Architecture decisions from Vantage 3 Subcore
 - Cross-sub-agent coordination (if needed)
 - Integration testing coordination (with System Integration Agent)
 
@@ -204,13 +204,13 @@ Once priorities are set, task dependencies will be:
 - ✅ Update coordination document with status, progress, blockers
 - ✅ Update plan document with implementation plan changes
 - ✅ Update tasks document with task completion status
-- ✅ Coordinate with Vantage Core if needed
+- ✅ Coordinate with Vantage 3 Subcore if needed
 
 ---
 
 ## Coordination Schedule
 
-### Weekly/Bi-Weekly Check-Ins with Vantage Core
+### Weekly/Bi-Weekly Check-Ins with Vantage 3 Subcore
 
 **Frequency**: Weekly or bi-weekly
 
@@ -248,7 +248,7 @@ Once priorities are set, task dependencies will be:
 - ✅ Kernel codebase reviewed and understood
 - ✅ Coordination documents reviewed
 - ✅ Plan and tasks files prepared
-- ✅ Priority guidance received from Vantage Core (2025-12-29-214643-pst)
+- ✅ Priority guidance received from Vantage 3 Subcore (2025-12-29-214643-pst)
 - ✅ **Profiler infrastructure complete** — Ready for use
 
 **Current Work**:
@@ -269,7 +269,7 @@ Once priorities are set, task dependencies will be:
 
 **Blockers**: **MINOR** — Compilation errors in other parts of codebase (not kernel-related) prevent full test suite execution. Profiler infrastructure is complete and ready; tests can be run once compilation issues are resolved.
 
-**Next Action**: Vantage Core guidance received (2025-12-29-223949-pst). Profiler infrastructure complete, code review done, ready to proceed with performance data collection. Will report findings and optimization recommendations after data collection.
+**Next Action**: Vantage 3 Subcore guidance received (2025-12-29-223949-pst). Profiler infrastructure complete, code review done, ready to proceed with performance data collection. Will report findings and optimization recommendations after data collection.
 
 ---
 
@@ -277,5 +277,5 @@ Once priorities are set, task dependencies will be:
 
 **Date**: 2025-12-29-231000-pst  
 **Agent**: Grain Basin Kernel Agent (3a)  
-**Parent Agent**: Grain Vantage Core Agent (3rd Agent, L1)  
+**Parent Agent**: Grain Vantage 3 Subcore Agent (3rd Agent, L1 Subcore)  
 **Status**: ⏳ **PERFORMANCE DATA COLLECTION** — Profiler infrastructure complete, code review done, ready for data collection

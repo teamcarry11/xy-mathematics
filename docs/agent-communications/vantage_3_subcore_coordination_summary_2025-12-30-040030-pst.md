@@ -1,7 +1,7 @@
-# Vantage 3 Core Agent: Comprehensive Coordination Summary for L2 Sub-Agents
+# Vantage 3 Subcore Agent: Comprehensive Coordination Summary for L2 Sub-Agents
 
 **Date**: 2025-12-30-040030-pst  
-**From**: Grain Vantage Core Agent (3rd Agent, L1)  
+**From**: Grain Vantage 3 Subcore Agent (3rd Agent, L1)  
 **To**: All Vantage L2 Sub-Agents (3a, 3b, 3c)  
 **Purpose**: Comprehensive summary for copy-paste to each sub-agent with maximal context and thorough intentions
 
@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-**Vantage Core Status**: ✅ **READY TO COORDINATE** — All kernel/VM/integration features complete, production-ready, L2 sub-agents making excellent progress
+**Vantage 3 Subcore Status**: ✅ **READY TO COORDINATE** — All kernel/VM/integration features complete, production-ready, L2 sub-agents making excellent progress
 
 **Previous Next Steps Verification** (from 2025-12-29-223949-pst coordination plan):
 - ✅ **VERIFIED COMPLETE**: 3a profiler infrastructure complete, code review done, ready for performance data collection
@@ -66,18 +66,18 @@
 
 ## Coordination Model (L1/L2 Architecture)
 
-**Your Role**: L2 Sub-Agent (under Vantage Core L1)
+**Your Role**: L2 Sub-Agent (under Vantage 3 Subcore L1)
 
 **Communication Rules**:
-- **L2 → L1 (Vantage Core)**: Weekly/bi-weekly coordination, as-needed for blockers
-- **L1 → L1 (Core Agent)**: Vantage Core coordinates (new syscalls, RISC-V compliance, architecture decisions, JG project kernel support)
-- **L2 → L2 (Other Full Agents)**: ❌ **PROHIBITED** — must coordinate through Vantage Core
-- **L2 → L1 (Core Agent)**: ❌ **PROHIBITED** — must coordinate through Vantage Core
+- **L2 → L1 (Vantage 3 Subcore)**: Weekly/bi-weekly coordination, as-needed for blockers
+- **L1 → L1 (Core Agent)**: Vantage 3 Subcore coordinates (new syscalls, RISC-V compliance, architecture decisions, JG project kernel support)
+- **L2 → L2 (Other Full Agents)**: ❌ **PROHIBITED** — must coordinate through Vantage 3 Subcore
+- **L2 → L1 (Core Agent)**: ❌ **PROHIBITED** — must coordinate through Vantage 3 Subcore
 
 **Coordination Schedule**:
 - **Frequency**: Weekly/bi-weekly check-ins, or as-needed for blockers
 - **What You Should Do**: Update coordination, plan, and tasks documents with progress, status, blockers
-- **What Vantage Core Will Do**: Review all sub-agent coordination docs, coordinate on architecture decisions, provide priority guidance
+- **What Vantage 3 Subcore Will Do**: Review all sub-agent coordination docs, coordinate on architecture decisions, provide priority guidance
 
 **Coordinate Immediately When**:
 - Architecture decisions needed that affect other sub-agents
@@ -85,7 +85,7 @@
 - RISC-V compliance questions arise
 - System-level testing coordination needed
 - Blockers encountered that prevent progress
-- New syscall requirements identified (Vantage Core will coordinate with Core Agent)
+- New syscall requirements identified (Vantage 3 Subcore will coordinate with Core Agent)
 - Critical findings that contradict stated requirements
 
 ---
@@ -106,21 +106,21 @@ Each sub-agent maintains three documents that must be updated regularly:
 1. Update coordination doc with status, progress, blockers
 2. Update plan doc with implementation plan changes
 3. Update tasks doc with task completion status
-4. Coordinate with Vantage Core if blockers or architecture decisions needed
+4. Coordinate with Vantage 3 Subcore if blockers or architecture decisions needed
 
 ### General Summary Updates
 
-**You Should Inform Vantage Core**:
+**You Should Inform Vantage 3 Subcore**:
 - When significant milestones are reached
 - When new features are complete
 - When architecture decisions are made
 - When coordination with other agents is needed
-- **How to update general Grain OS summary** (`docs/plan.md`, `docs/tasks.md`) — tell Vantage Core what to add/update
+- **How to update general Grain OS summary** (`docs/plan.md`, `docs/tasks.md`) — tell Vantage 3 Subcore what to add/update
 
-**Vantage Core Will Update**:
+**Vantage 3 Subcore Will Update**:
 - `docs/plan.md` — General project plan summary
 - `docs/tasks.md` — General project tasks summary
-- `docs/core-coordination/vantage_3_core_coordination.md` — Vantage Core coordination status
+- `docs/core-coordination/vantage_3_subcore_coordination.md` — Vantage 3 Subcore coordination status
 
 ---
 
@@ -145,19 +145,19 @@ Each sub-agent maintains three documents that must be updated regularly:
 **Before Completing Work**:
 - Run all tests: `zig build test`
 - Verify all tests pass
-- Report test failures to Vantage Core immediately
+- Report test failures to Vantage 3 Subcore immediately
 
 ---
 
 ## Integration Coordination
 
 **Your Responsibility**:
-- Inform Vantage Core when integration steps are needed
-- Coordinate through Vantage Core for cross-agent integration
+- Inform Vantage 3 Subcore when integration steps are needed
+- Coordinate through Vantage 3 Subcore for cross-agent integration
 - Prevent accidental conflicts with other agents
-- **Let Vantage Core know when you need to check in about upcoming integration steps** via Vantage Core and core-coordination generally with the other agents
+- **Let Vantage 3 Subcore know when you need to check in about upcoming integration steps** via Vantage 3 Subcore and core-coordination generally with the other agents
 
-**Vantage Core Responsibility**:
+**Vantage 3 Subcore Responsibility**:
 - Coordinate integration steps with Core Agent
 - Prevent conflicts between sub-agents and other agents
 - Facilitate cross-agent communication
@@ -178,7 +178,7 @@ Each sub-agent maintains three documents that must be updated regularly:
 - ✅ Documentation complete (`docs/kernel/syscall_performance_profiler_usage.md`, `docs/kernel/performance_optimization_analysis.md`)
 - ✅ Code review complete (hot path review done, optimization opportunities identified)
 
-**What You Will Do Next** (continue as you and Vantage Core best recommend, given the context):
+**What You Will Do Next** (continue as you and Vantage 3 Subcore best recommend, given the context):
 
 1. **Performance Data Collection** (HIGH priority, NEXT STEP):
    - Enable profiler in test scenarios
@@ -212,8 +212,8 @@ Each sub-agent maintains three documents that must be updated regularly:
 - Update your coordination doc (`docs/core-coordination/vantage_3a_basin_kernel_coordination.md`)
 - Update your plan doc (`docs/plans/vantage_3a_basin_kernel_plan.md`)
 - Update your tasks doc (`docs/tasks/vantage_3a_basin_kernel_tasks.md`)
-- Inform Vantage Core how to update general Grain OS summary (`docs/plan.md`, `docs/tasks.md`) in thinking
-- Let Vantage Core know when you need to check in about upcoming integration steps via Vantage Core and core-coordination generally with the other agents
+- Inform Vantage 3 Subcore how to update general Grain OS summary (`docs/plan.md`, `docs/tasks.md`) in thinking
+- Let Vantage 3 Subcore know when you need to check in about upcoming integration steps via Vantage 3 Subcore and core-coordination generally with the other agents
 - Ensure all your agent-specific and integration new tests as well as existing tests pass that implement your API contracts
 
 **Grain Style Requirements** (remember to follow strictly):
@@ -221,7 +221,7 @@ Each sub-agent maintains three documents that must be updated regularly:
 - Specifically enforce `grainwrap-100` and `grain validate-70`
 - Use explicitly bound `u32`/`u64` not `usize`/`isize`, so our code is consistent across all compile target platforms
 
-**Continue**: Continue the next phase of implementation and when you're done update your subagent systems-integration docs and plans and tasks informing Vantage Core Agent how to update the general Grain OS summary `~/xy-mathematics/docs/plan.md` and `~/xy-mathematics/docs/tasks.md` in thinking.
+**Continue**: Continue the next phase of implementation and when you're done update your subagent systems-integration docs and plans and tasks informing Vantage 3 Subcore Agent how to update the general Grain OS summary `~/xy-mathematics/docs/plan.md` and `~/xy-mathematics/docs/tasks.md` in thinking.
 
 ---
 
@@ -234,14 +234,14 @@ Each sub-agent maintains three documents that must be updated regularly:
 - ✅ Architecture understanding complete (module dependencies, patterns, design decisions)
 - ✅ Codebase review sufficient for coordination (ready for V3-Core check-in)
 
-**What You Will Do Next** (continue as you and Vantage Core best recommend, given the context):
+**What You Will Do Next** (continue as you and Vantage 3 Subcore best recommend, given the context):
 
 1. **Complete Phase 1 Documentation** (HIGH priority, ~10-15% remaining):
    - Finalize architecture documentation (module dependencies, patterns)
    - Complete findings summary (improvement opportunities, Grain Style compliance details)
    - Document JIT architecture details (hot path tracking, block chaining, optimization strategies)
    - Document integration interface details
-   - Coordinate with Vantage Core on findings (can proceed now or after documentation)
+   - Coordinate with Vantage 3 Subcore on findings (can proceed now or after documentation)
 
 2. **Phase 2: VM Maintenance and Stability** (HIGH priority, after Phase 1):
    - Review and fix any identified issues from Phase 1
@@ -262,8 +262,8 @@ Each sub-agent maintains three documents that must be updated regularly:
 - Update your coordination doc (`docs/core-coordination/vantage_3b_vm_runtime_coordination.md`)
 - Update your plan doc (`docs/plans/vantage_3b_vm_runtime_plan.md`)
 - Update your tasks doc (`docs/tasks/vantage_3b_vm_runtime_tasks.md`)
-- Inform Vantage Core how to update general Grain OS summary (`docs/plan.md`, `docs/tasks.md`) in thinking
-- Let Vantage Core know when you need to check in about upcoming integration steps via Vantage Core and core-coordination generally with the other agents
+- Inform Vantage 3 Subcore how to update general Grain OS summary (`docs/plan.md`, `docs/tasks.md`) in thinking
+- Let Vantage 3 Subcore know when you need to check in about upcoming integration steps via Vantage 3 Subcore and core-coordination generally with the other agents
 - Ensure all your agent-specific and integration new tests as well as existing tests pass that implement your API contracts
 
 **Grain Style Requirements** (remember to follow strictly):
@@ -271,7 +271,7 @@ Each sub-agent maintains three documents that must be updated regularly:
 - Specifically enforce `grainwrap-100` and `grain validate-70`
 - Use explicitly bound `u32`/`u64` not `usize`/`isize`, so our code is consistent across all compile target platforms
 
-**Continue**: Continue the next phase of implementation and when you're done update your subagent systems-integration docs and plans and tasks informing Vantage Core Agent how to update the general Grain OS summary `~/xy-mathematics/docs/plan.md` and `~/xy-mathematics/docs/tasks.md` in thinking.
+**Continue**: Continue the next phase of implementation and when you're done update your subagent systems-integration docs and plans and tasks informing Vantage 3 Subcore Agent how to update the general Grain OS summary `~/xy-mathematics/docs/plan.md` and `~/xy-mathematics/docs/tasks.md` in thinking.
 
 ---
 
@@ -287,7 +287,7 @@ Each sub-agent maintains three documents that must be updated regularly:
   - Verification: No AArch64 files or build target references found in codebase
   - Impact: RISC-V-only compliance enforced, all tasks unblocked
 
-**What You Will Do Next** (continue as you and Vantage Core best recommend, given the context):
+**What You Will Do Next** (continue as you and Vantage 3 Subcore best recommend, given the context):
 
 1. **Run RISC-V Compliance Test Suite** (HIGH priority, NEXT STEP):
    - Execute `tests/riscv_compliance_validation_test.zig`
@@ -320,8 +320,8 @@ Each sub-agent maintains three documents that must be updated regularly:
 - Update your coordination doc (`docs/core-coordination/vantage_3c_system_integration_coordination.md`)
 - Update your plan doc (`docs/plans/vantage_3c_system_integration_plan.md`)
 - Update your tasks doc (`docs/tasks/vantage_3c_system_integration_tasks.md`)
-- Inform Vantage Core how to update general Grain OS summary (`docs/plan.md`, `docs/tasks.md`) in thinking
-- Let Vantage Core know when you need to check in about upcoming integration steps via Vantage Core and core-coordination generally with the other agents
+- Inform Vantage 3 Subcore how to update general Grain OS summary (`docs/plan.md`, `docs/tasks.md`) in thinking
+- Let Vantage 3 Subcore know when you need to check in about upcoming integration steps via Vantage 3 Subcore and core-coordination generally with the other agents
 - Ensure all your agent-specific and integration new tests as well as existing tests pass that implement your API contracts
 
 **Grain Style Requirements** (remember to follow strictly):
@@ -329,7 +329,7 @@ Each sub-agent maintains three documents that must be updated regularly:
 - Specifically enforce `grainwrap-100` and `grain validate-70`
 - Use explicitly bound `u32`/`u64` not `usize`/`isize`, so our code is consistent across all compile target platforms
 
-**Continue**: Continue the next phase of implementation and when you're done update your subagent systems-integration docs and plans and tasks informing Vantage Core Agent how to update the general Grain OS summary `~/xy-mathematics/docs/plan.md` and `~/xy-mathematics/docs/tasks.md` in thinking.
+**Continue**: Continue the next phase of implementation and when you're done update your subagent systems-integration docs and plans and tasks informing Vantage 3 Subcore Agent how to update the general Grain OS summary `~/xy-mathematics/docs/plan.md` and `~/xy-mathematics/docs/tasks.md` in thinking.
 
 ---
 
@@ -354,10 +354,10 @@ Each sub-agent maintains three documents that must be updated regularly:
 - **Plan**: `docs/plan.md`
 - **Tasks**: `docs/tasks.md`
 
-### Vantage Core Documents
-- **Coordination Plan**: `docs/agent-communications/vantage_3_core_coordination_plan_2025-12-30-040030-pst.md`
-- **Coordination Summary**: `docs/agent-communications/vantage_3_core_coordination_summary_2025-12-30-040030-pst.md` (this document)
-- **Vantage Core Coordination**: `docs/core-coordination/vantage_3_core_coordination.md`
+### Vantage 3 Subcore Documents
+- **Coordination Plan**: `docs/agent-communications/vantage_3_subcore_coordination_plan_2025-12-30-040030-pst.md`
+- **Coordination Summary**: `docs/agent-communications/vantage_3_subcore_coordination_summary_2025-12-30-040030-pst.md` (this document)
+- **Vantage 3 Subcore Coordination**: `docs/core-coordination/vantage_3_subcore_coordination.md`
 
 ### Grain Style Reference
 - **Grain Style Guide**: `~/xy-mathematics/docs/grain_style.md`
@@ -366,7 +366,7 @@ Each sub-agent maintains three documents that must be updated regularly:
 
 ## Summary
 
-**Vantage Core Status**: ✅ **READY TO COORDINATE** — All kernel/VM/integration features complete, production-ready
+**Vantage 3 Subcore Status**: ✅ **READY TO COORDINATE** — All kernel/VM/integration features complete, production-ready
 
 **Previous Next Steps**: ✅ **VERIFIED COMPLETE** — 3a profiler complete, 3b Phase 1 ~85-90% complete, 3c AArch64 code removed
 
@@ -383,11 +383,11 @@ Each sub-agent maintains three documents that must be updated regularly:
 
 **Documentation**: Update coordination, plan, and tasks documents after each work session
 
-**Integration**: Coordinate through Vantage Core for cross-agent integration, prevent conflicts
+**Integration**: Coordinate through Vantage 3 Subcore for cross-agent integration, prevent conflicts
 
 ---
 
 **Date**: 2025-12-30-040030-pst  
-**From**: Grain Vantage Core Agent (3rd Agent, L1)  
+**From**: Grain Vantage 3 Subcore Agent (3rd Agent, L1)  
 **To**: All Vantage L2 Sub-Agents (3a, 3b, 3c)  
 **Status**: Comprehensive summary created, ready for copy-paste to each sub-agent

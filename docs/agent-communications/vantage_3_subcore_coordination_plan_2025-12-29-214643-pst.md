@@ -1,7 +1,7 @@
-# Vantage 3 Core Agent: Coordination Plan for L2 Sub-Agents
+# Vantage 3 Subcore Agent: Coordination Plan for L2 Sub-Agents
 
 **Date**: 2025-12-29-214643-pst  
-**From**: Grain Vantage Core Agent (3rd Agent, L1)  
+**From**: Grain Vantage 3 Subcore Agent (3rd Agent, L1)  
 **To**: All Vantage L2 Sub-Agents (3a, 3b, 3c)  
 **Purpose**: Coordination plan for L2 sub-agents with priorities and next steps
 
@@ -9,13 +9,13 @@
 
 ## Executive Summary
 
-**Vantage Core Status**: ✅ **READY TO COORDINATE** — All kernel/VM/integration features complete, production-ready, L2 sub-agents initialized
+**Vantage 3 Subcore Status**: ✅ **READY TO COORDINATE** — All kernel/VM/integration features complete, production-ready, L2 sub-agents initialized
 
 **Previous Next Steps** (from 2025-12-29-153000-pst coordination summary):
 - ✅ **COMPLETE**: L2 sub-agents received coordination summary and instructions
 - ✅ **COMPLETE**: All sub-agent coordination, plan, and tasks files created
 - ✅ **COMPLETE**: Sub-agents reviewed codebases and updated documentation
-- ⏳ **IN PROGRESS**: Sub-agents coordinating with Vantage Core on priorities
+- ⏳ **IN PROGRESS**: Sub-agents coordinating with Vantage 3 Subcore on priorities
 
 **Current Status**:
 - **3a. Basin Kernel Agent**: ✅ Codebase reviewed, requesting priority guidance
@@ -45,7 +45,7 @@
 - ✅ Updated coordination, plan, and tasks files
 - ✅ Verified zero technical debt (no TODOs/FIXMEs)
 - ✅ Confirmed comprehensive test coverage exists
-- ⏳ **READY**: Requesting priority guidance from Vantage Core
+- ⏳ **READY**: Requesting priority guidance from Vantage 3 Subcore
 
 **3b. VM Runtime Agent**:
 - ✅ Received coordination summary and instructions
@@ -93,13 +93,13 @@
 
 4. **JG Project Kernel Support** (AS NEEDED)
    - Monitor JG project implementation for kernel support needs
-   - Coordinate with Vantage Core on new syscall requirements
+   - Coordinate with Vantage 3 Subcore on new syscall requirements
    - Optimize kernel performance for JG project workloads
    - Configure resource limits for JG project processes (if needed)
 
 **Coordination Notes**:
-- Coordinate with Vantage Core weekly/bi-weekly on progress and priorities
-- Coordinate immediately if new syscall requirements identified (Vantage Core will coordinate with Core Agent)
+- Coordinate with Vantage 3 Subcore weekly/bi-weekly on progress and priorities
+- Coordinate immediately if new syscall requirements identified (Vantage 3 Subcore will coordinate with Core Agent)
 - Coordinate with System Integration Agent (3c) on integration testing needs
 - Coordinate with VM Runtime Agent (3b) on syscall interface changes (if any)
 
@@ -107,7 +107,7 @@
 1. Choose priority area (performance optimization recommended)
 2. Begin implementation following Grain Style
 3. Update coordination, plan, and tasks files after each work session
-4. Coordinate with Vantage Core weekly/bi-weekly
+4. Coordinate with Vantage 3 Subcore weekly/bi-weekly
 
 ---
 
@@ -122,7 +122,7 @@
    - Document architecture and module dependencies
    - Identify improvement opportunities
    - Complete codebase review notes
-   - Coordinate with Vantage Core on findings
+   - Coordinate with Vantage 3 Subcore on findings
 
 2. **Phase 2: VM Maintenance and Stability** (HIGH priority, after Phase 1)
    - Monitor test failures and fix issues
@@ -136,7 +136,7 @@
    - Optimize hot path detection
    - Improve code generation quality
    - Benchmark JIT vs interpreter performance
-   - Coordinate with Vantage Core on performance goals
+   - Coordinate with Vantage 3 Subcore on performance goals
 
 4. **Phase 6: VM Testing and Validation** (ONGOING priority)
    - Maintain comprehensive test coverage
@@ -147,13 +147,13 @@
 
 **Coordination Notes**:
 - Continue Phase 1 codebase review (target: complete within 1 week)
-- Coordinate with Vantage Core weekly/bi-weekly on progress and priorities
+- Coordinate with Vantage 3 Subcore weekly/bi-weekly on progress and priorities
 - Coordinate with Basin Kernel Agent (3a) on syscall interface changes (if any)
 - Coordinate with System Integration Agent (3c) on integration testing needs
 
 **Next Steps**:
 1. Continue Phase 1 codebase review (complete remaining ~70%)
-2. Document findings and coordinate with Vantage Core on priorities
+2. Document findings and coordinate with Vantage 3 Subcore on priorities
 3. Begin Phase 2 (VM Maintenance) after Phase 1 complete
 4. Update coordination, plan, and tasks files after each work session
 
@@ -194,7 +194,7 @@
    - Create integration development guidelines
 
 **Coordination Notes**:
-- Coordinate with Vantage Core weekly/bi-weekly on progress and priorities
+- Coordinate with Vantage 3 Subcore weekly/bi-weekly on progress and priorities
 - Coordinate with Basin Kernel Agent (3a) on kernel interface changes
 - Coordinate with VM Runtime Agent (3b) on VM interface changes
 - Coordinate immediately if RISC-V compliance issues discovered
@@ -203,7 +203,7 @@
 1. Begin RISC-V compliance validation test suite (recommended first priority)
 2. Expand integration test coverage
 3. Update coordination, plan, and tasks files after each work session
-4. Coordinate with Vantage Core weekly/bi-weekly
+4. Coordinate with Vantage 3 Subcore weekly/bi-weekly
 
 ---
 
@@ -250,18 +250,18 @@
 **Frequency**: Weekly or bi-weekly (as scheduled)
 
 **What Sub-Agents Should Do**:
-1. Review Vantage Core coordination doc: `docs/core-coordination/vantage_3_core_coordination.md`
+1. Review Vantage 3 Subcore coordination doc: `docs/core-coordination/vantage_3_subcore_coordination.md`
 2. Update your coordination doc with progress, status, blockers
 3. Request architecture decisions if needed
 4. Report blockers or coordination needs
 5. Present findings and request priority guidance
 
-**What Vantage Core Will Do**:
+**What Vantage 3 Subcore Will Do**:
 1. Review all sub-agent coordination docs
 2. Coordinate on architecture decisions
 3. Provide priority guidance
 4. Coordinate with Core Agent and other full agents as needed
-5. Update Vantage Core coordination doc with status
+5. Update Vantage 3 Subcore coordination doc with status
 
 ### As-Needed Coordination
 
@@ -271,11 +271,11 @@
 - RISC-V compliance questions arise
 - System-level testing coordination needed
 - Blockers encountered that prevent progress
-- New syscall requirements identified (Vantage Core will coordinate with Core Agent)
+- New syscall requirements identified (Vantage 3 Subcore will coordinate with Core Agent)
 
 **What NOT to Do**:
 - ❌ DO NOT coordinate directly with Core Agent (1st Agent) or other full agents
-- ❌ DO NOT make architecture decisions that affect other sub-agents without Vantage Core approval
+- ❌ DO NOT make architecture decisions that affect other sub-agents without Vantage 3 Subcore approval
 - ❌ DO NOT skip coordination check-ins (weekly/bi-weekly schedule is important)
 
 ---
@@ -304,20 +304,20 @@ Each sub-agent maintains three documents that must be updated regularly:
 1. Update coordination doc with status, progress, blockers
 2. Update plan doc with implementation plan changes
 3. Update tasks doc with task completion status
-4. Coordinate with Vantage Core if blockers or architecture decisions needed
+4. Coordinate with Vantage 3 Subcore if blockers or architecture decisions needed
 
 ### General Summary Updates
 
-**Sub-Agents Should Inform Vantage Core**:
+**Sub-Agents Should Inform Vantage 3 Subcore**:
 - When significant milestones are reached
 - When new features are complete
 - When architecture decisions are made
 - When coordination with other agents is needed
 
-**Vantage Core Will Update**:
+**Vantage 3 Subcore Will Update**:
 - `docs/plan.md` — General project plan summary
 - `docs/tasks.md` — General project tasks summary
-- `docs/core-coordination/vantage_3_core_coordination.md` — Vantage Core coordination status
+- `docs/core-coordination/vantage_3_subcore_coordination.md` — Vantage 3 Subcore coordination status
 
 ---
 
@@ -345,7 +345,7 @@ Each sub-agent maintains three documents that must be updated regularly:
 - Run all tests before committing
 - Fix any failing tests immediately
 - Document test coverage
-- Coordinate with Vantage Core if test failures indicate architecture issues
+- Coordinate with Vantage 3 Subcore if test failures indicate architecture issues
 
 ---
 
@@ -356,21 +356,21 @@ Each sub-agent maintains three documents that must be updated regularly:
 **3a (Basin Kernel) ↔ 3b (VM Runtime)**:
 - Coordinate on syscall interface changes
 - Coordinate on VM/kernel boundary optimizations
-- Most coordination goes through Vantage Core
+- Most coordination goes through Vantage 3 Subcore
 
 **3a (Basin Kernel) ↔ 3c (System Integration)**:
 - Coordinate on integration testing needs
 - Coordinate on RISC-V compliance validation
-- Most coordination goes through Vantage Core
+- Most coordination goes through Vantage 3 Subcore
 
 **3b (VM Runtime) ↔ 3c (System Integration)**:
 - Coordinate on VM/kernel integration testing
 - Coordinate on RISC-V compliance validation
-- Most coordination goes through Vantage Core
+- Most coordination goes through Vantage 3 Subcore
 
 ### External Coordination
 
-**All external coordination goes through Vantage Core**:
+**All external coordination goes through Vantage 3 Subcore**:
 - Core Agent (1st Agent) coordination
 - Other full agents coordination
 - New syscall requirements
@@ -380,7 +380,7 @@ Each sub-agent maintains three documents that must be updated regularly:
 
 ## Summary
 
-**Vantage Core Status**: ✅ **READY TO COORDINATE** — All kernel/VM/integration features complete, production-ready
+**Vantage 3 Subcore Status**: ✅ **READY TO COORDINATE** — All kernel/VM/integration features complete, production-ready
 
 **Previous Next Steps**: ✅ **COMPLETE** — All sub-agents initialized, codebases reviewed, documentation updated
 
@@ -400,6 +400,6 @@ Each sub-agent maintains three documents that must be updated regularly:
 ---
 
 **Date**: 2025-12-29-214643-pst  
-**From**: Grain Vantage Core Agent (3rd Agent, L1)  
+**From**: Grain Vantage 3 Subcore Agent (3rd Agent, L1)  
 **To**: All Vantage L2 Sub-Agents (3a, 3b, 3c)  
 **Status**: Ready for L2 sub-agents to begin work on priorities

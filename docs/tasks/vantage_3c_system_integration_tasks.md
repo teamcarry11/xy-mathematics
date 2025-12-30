@@ -1,7 +1,7 @@
 # Grain System Integration Agent: Task List
 
 **Agent**: Grain System Integration Agent (3c)  
-**Parent Agent**: Grain Vantage Core Agent (3rd Agent, L1)  
+**Parent Agent**: Grain Vantage 3 Subcore Agent (3rd Agent, L1 Subcore)  
 **Status**: ✅ **AArch64 CODE REMOVED** — AArch64 code files and build target removed, proceeding with RISC-V compliance validation  
 **Last Updated**: 2025-12-30-035655-pst
 
@@ -25,7 +25,7 @@
 - [x] Complete codebase assessment — ✅ Complete (2025-12-29-154000-pst)
 - [x] Document findings and potential improvements — ✅ Complete
 - [x] Receive Core Agent coordination plan — ✅ Complete (2025-12-29-152539-pst)
-- [x] Receive Vantage Core coordination summary — ✅ Complete (2025-12-29-153000-pst)
+- [x] Receive Vantage 3 Subcore coordination summary — ✅ Complete (2025-12-29-153000-pst)
 - [x] Create plan file (`docs/plans/vantage_3c_system_integration_plan.md`) — ✅ Complete
 - [x] Create tasks file (`docs/tasks/vantage_3c_system_integration_tasks.md`) — ✅ Complete
 - [x] Update coordination document — ✅ Complete
@@ -33,7 +33,7 @@
 - [x] Update tasks document with assessment — ✅ Complete
 - [x] Confirm Grain Style requirements (all 10 core principles) — ✅ Complete
 - [x] Confirm coordination schedule (weekly/bi-weekly) — ✅ Complete
-- [x] Receive Vantage Core coordination plan with priorities — ✅ Complete (2025-12-29-214643-pst)
+- [x] Receive Vantage 3 Subcore coordination plan with priorities — ✅ Complete (2025-12-29-214643-pst)
 - [x] Acknowledge priorities and update documentation — ✅ Complete
 
 ### RISC-V Compliance Test Suite
@@ -45,15 +45,15 @@
   - ✅ Follows Grain Style (explicit u32/u64 types, comprehensive assertions, bounded operations)
 
 ### AArch64 Code Finding and Removal
-- [x] **Report AArch64 code finding to Vantage Core** — ✅ Complete (2025-12-29-220000-pst)
+- [x] **Report AArch64 code finding to Vantage 3 Subcore** — ✅ Complete (2025-12-29-220000-pst)
   - ✅ **FINDING REPORTED**: AArch64 code exists in kernel (platform_aarch64.zig, main_aarch64.zig, entry_aarch64.S)
   - ✅ **FINDING REPORTED**: build.zig has kernel-aarch64 build target
   - ✅ **QUESTION ASKED**: Should AArch64 code be removed per "RISC-V only" requirement, or has requirement changed?
-- [x] **AArch64 finding acknowledged by Vantage Core** — ✅ Complete (2025-12-29-223949-pst)
-  - ✅ Vantage Core coordination summary received
+- [x] **AArch64 finding acknowledged by Vantage 3 Subcore** — ✅ Complete (2025-12-29-223949-pst)
+  - ✅ Vantage 3 Subcore coordination summary received
   - ✅ Finding acknowledged and marked as requiring guidance
-- [x] **Receive AArch64 code removal guidance from Vantage Core** — ✅ Complete (2025-12-29-224500-pst)
-  - ✅ Guidance document received: `docs/agent-communications/vantage_3_core_aarch64_guidance_2025-12-29-224500-pst.md`
+- [x] **Receive AArch64 code removal guidance from Vantage 3 Subcore** — ✅ Complete (2025-12-29-224500-pst)
+  - ✅ Guidance document received: `docs/agent-communications/vantage_3_subcore_aarch64_guidance_2025-12-29-224500-pst.md`
   - ✅ Decision: Remove AArch64 code to enforce "RISC-V Only" requirement
 - [x] **Remove AArch64 code files** — ✅ Complete (2025-12-29-225000-pst)
   - ✅ Deleted `src/kernel/platform_aarch64.zig`
@@ -133,7 +133,7 @@
   - Document ELF loading process
   - Create integration development guidelines
 
-- [ ] **Schedule regular weekly/bi-weekly check-ins with Vantage Core**
+- [ ] **Schedule regular weekly/bi-weekly check-ins with Vantage 3 Subcore**
 
 ---
 
@@ -148,10 +148,10 @@
 - ✅ Performance profiling tools exist (benchmarking framework, performance monitoring)
 - ✅ Codebase assessment complete (findings documented)
 - ✅ Core Agent coordination plan received and understood
-- ✅ Vantage Core coordination summary received and understood
-- ✅ Vantage Core coordination plan with priorities received (2025-12-29-214643-pst)
-- ✅ Vantage Core coordination summary received (2025-12-29-223949-pst) — AArch64 finding acknowledged
-- ✅ Vantage Core AArch64 guidance received (2025-12-29-224500-pst) — Remove AArch64 code
+- ✅ Vantage 3 Subcore coordination summary received and understood
+- ✅ Vantage 3 Subcore coordination plan with priorities received (2025-12-29-214643-pst)
+- ✅ Vantage 3 Subcore coordination summary received (2025-12-29-223949-pst) — AArch64 finding acknowledged
+- ✅ Vantage 3 Subcore AArch64 guidance received (2025-12-29-224500-pst) — Remove AArch64 code
 - ✅ Plan and tasks files created and updated
 - ✅ **RISC-V compliance test suite created** (`tests/riscv_compliance_validation_test.zig`)
 - ✅ **AArch64 code removed** (platform_aarch64.zig, main_aarch64.zig, entry_aarch64.S, linker_aarch64.ld, kernel-aarch64 build target)
@@ -169,8 +169,8 @@
   - Add stress testing
   - Improve integration test suite
 - ⏳ **PRIORITY 3-4, MEDIUM**: Kernel/VM boundary performance profiling and documentation (after priorities 1-2)
-- ⏳ Coordinate with Vantage Core weekly/bi-weekly on progress
-  - Review Vantage Core coordination doc: `docs/core-coordination/vantage_3_core_coordination.md`
+- ⏳ Coordinate with Vantage 3 Subcore weekly/bi-weekly on progress
+  - Review Vantage 3 Subcore coordination doc: `docs/core-coordination/vantage_3_subcore_coordination.md`
   - Update coordination doc with progress after each work session
   - Request architecture decisions when needed
   - Report blockers or coordination needs

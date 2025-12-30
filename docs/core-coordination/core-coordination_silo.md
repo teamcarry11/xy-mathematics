@@ -903,10 +903,14 @@ All core phases complete and ready for production use:
   - Phase 10 dependency check — Priority 1 complete, can proceed with Phase 10
 
 - ✅ **Court Agent**: 
-  - Welcome and future integration opportunities (no immediate coordination needed)
   - ✅ LLM timeout/error handling complete (2025-12-28-135000-pst)
   - ⏳ ZON Module Phase 2 ~99% complete (~0.01 day remaining)
-  - Payment/Vault/Bank storage schema ready for LLM API key storage
+  - ✅ JG project planning substantially complete (2025-12-29-160000-pst)
+  - ⏳ **NEW**: Payment Integration Phase 1 blocked — waiting on PasswordStorage API
+  - **Status**: Court Agent needs PasswordStorage API for Payment Integration Phase 1
+  - **Blocking Chain**: Court Agent → Silo Agent → Core Agent (storage schema approval needed)
+  - **Action**: Once Core Agent approves Payment/Vault/Bank storage schema, Silo Agent can implement PasswordStorage helper
+  - **Timeline**: Court Agent waiting on Silo Agent (after Core Agent approval, ~1 day implementation)
 
 ### No Blockers
 - All dependencies satisfied
@@ -937,8 +941,9 @@ All core phases complete and ready for production use:
    - **Time**: 4-7 hours for review and coordination
    - **Status**: ⏳ Waiting on Core Agent
    - **Action**: Core Agent should review `docs/grain_database/payment_vault_storage_schema.md`
-   - **Priority**: IMMEDIATE
-   - **Why**: Unblocks storage helper implementation and Core Agent Phase 1
+   - **Priority**: IMMEDIATE (HIGH)
+   - **Why**: Unblocks storage helper implementation, Core Agent Phase 1, and Court Agent Payment Integration Phase 1
+   - **Blocking**: Court Agent Payment Integration Phase 1 (needs PasswordStorage API)
 
 2. **Core Agent** (IMMEDIATE - JG Project):
    - **Topic**: JG project module requirements and data structures coordination

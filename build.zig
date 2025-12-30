@@ -143,29 +143,6 @@ pub fn build(b: *std.Build) void {
     const kernel_step = b.step("kernel-rv64", "Build Grain RISC-V kernel image");
     kernel_step.dependOn(&kernel_install.step);
 
-    // AArch64 kernel target
-    const kernel_aarch64_target = std.Target.Query{
-        .cpu_arch = .aarch64,
-        .os_tag = .freestanding,
-        .abi = .none,
-    };
-    const kernel_aarch64_resolved = b.resolveTargetQuery(kernel_aarch64_target);
-
-    const kernel_aarch64_exe = b.addExecutable(.{
-        .name = "grain-aarch64",
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("src/kernel/main_aarch64.zig"),
-            .target = kernel_aarch64_resolved,
-            .optimize = optimize,
-            .code_model = .small,
-        }),
-    });
-    kernel_aarch64_exe.setLinkerScript(b.path("src/kernel/linker_aarch64.ld"));
-    kernel_aarch64_exe.addAssemblyFile(b.path("src/kernel/entry_aarch64.S"));
-    const kernel_aarch64_install = b.addInstallArtifact(kernel_aarch64_exe, .{});
-    const kernel_aarch64_step = b.step("kernel-aarch64", "Build Grain AArch64 kernel image");
-    kernel_aarch64_step.dependOn(&kernel_aarch64_install.step);
-
     // ELF Parser module (for tests that need direct access).
     // ELF Parser module (for kernel and tests).
     const elf_parser_module = b.addModule("elf_parser", .{
@@ -724,6 +701,16 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/dream_browser_dag_integration.zig"),
         .target = target,
         .optimize = optimize,
+    });
+
+    // Dream Browser Components module (for test imports)
+    const dream_browser_components_module = b.addModule("dream_browser_components", .{
+        .root_source_file = b.path("src/dream_browser_components.zig"),
+        .target = target,
+        .optimize = optimize,
+        .imports = &.{
+            .{ .name = "grain_workspace", .module = grain_workspace_module },
+        },
     });
 
     // Grain Aurora module (for test imports)
@@ -3680,6 +3667,20 @@ pub fn build(b: *std.Build) void {
     });
     const grain_workspace_components_tests_run = b.addRunArtifact(grain_workspace_components_tests);
     test_step.dependOn(&grain_workspace_components_tests_run.step);
+
+    // Dream Browser Components tests
+    const dream_browser_components_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/136_dream_browser_components_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "dream_browser_components", .module = dream_browser_components_module },
+            },
+        }),
+    });
+    const dream_browser_components_tests_run = b.addRunArtifact(dream_browser_components_tests);
+    test_step.dependOn(&dream_browser_components_tests_run.step);
 
     // Grain Database tests
     const grain_database_storage_engine_tests = b.addTest(.{

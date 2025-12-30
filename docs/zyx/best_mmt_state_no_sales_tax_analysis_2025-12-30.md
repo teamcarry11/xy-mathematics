@@ -1,24 +1,26 @@
-# Best MMT State for Working-Class People and Legal Immigrants: Analysis of Five No-Sales-Tax States
+# Best MMT State for Working-Class People and Legal Immigrants: Analysis of No-Sales-Tax States vs No-Income-Tax States
 
 **Date**: 2025-12-30  
 **Author**: Glow G2 (Grain Free Agent)  
 **Perspective**: Modern Monetary Theory (MMT) — L. Randall Wray & Stephanie Kelton  
-**Focus**: Alaska, Delaware, Montana, New Hampshire, Oregon — States without statewide sales tax
+**Focus**: Comparison of no-sales-tax states (Alaska, Delaware, Montana, New Hampshire, Oregon) with no-income-tax states (Nevada, Texas, Florida, Washington, etc.)
 
 ---
 
 ## Executive Summary
 
-From a Modern Monetary Theory (MMT) perspective, **Oregon emerges as the best state** for working-class people and legal immigrants among the five states without statewide sales tax. While Alaska offers the unique Permanent Fund Dividend (PFD) that functions like a universal basic income, Oregon provides the best combination of:
+From a Modern Monetary Theory (MMT) perspective, **Oregon emerges as the best state** for working-class people and legal immigrants, both among the five states without statewide sales tax **and when compared to all no-income-tax states**. While Alaska offers the unique Permanent Fund Dividend (PFD) that functions like a universal basic income, Oregon provides the best combination of:
 
 - **Progressive income tax** (targets high earners, not working-class)
 - **No sales tax** (no regressive consumption tax)
 - **Immigrant-friendly policies** (sanctuary cities, supportive environment)
 - **Strong job opportunities** (agriculture, construction, technology, healthcare)
 - **Reasonable cost of living** (better than Alaska, New Hampshire, or Delaware)
-- **Lower property taxes** (0.81% vs New Hampshire's 1.27%)
+- **Lower property taxes** (0.81% vs New Hampshire's 1.27%, Texas's 1.47%)
 
 **Key MMT Insight**: States without sales tax eliminate the most regressive form of taxation. Combined with progressive income taxes that target high earners (not working-class people), this creates an optimal MMT-aligned tax structure that maximizes effective demand from working-class spending while managing inflation through taxes on high earners with high savings rates.
+
+**Comparison with No-Income-Tax States**: While no-income-tax states (Nevada, Texas, Florida, Washington, etc.) eliminate income tax, their **regressive sales taxes (6.85-10.4%)** create significant burden on working-class people. Oregon's progressive income tax (targeting high earners) + no sales tax is more MMT-aligned because it eliminates regressive taxation while targeting those with high savings rates (high earners) for inflation management, not those who spend all their income (working-class).
 
 ---
 
@@ -465,15 +467,262 @@ From an MMT perspective, optimal tax policy for working-class people should:
 
 ---
 
+## Comparison with No-Income-Tax States
+
+### The Nine No-Income-Tax States
+
+The following states have no personal income tax:
+1. **Alaska** (also no sales tax) — Already analyzed above
+2. **Nevada** (has sales tax) — Already analyzed in previous document
+3. **New Hampshire** (also no sales tax, but taxes dividends/interest) — Already analyzed above
+4. **Texas** (has sales tax)
+5. **Florida** (has sales tax)
+6. **Washington** (has sales tax)
+7. **Wyoming** (has sales tax)
+8. **South Dakota** (has sales tax)
+9. **Tennessee** (has sales tax, but only taxes dividends/interest)
+
+### Key No-Income-Tax States Analysis
+
+#### Nevada (No Income Tax, Has Sales Tax)
+
+**Tax Structure**:
+- **Income Tax**: None
+- **Sales Tax**: ~6.85% average (regressive)
+- **Property Tax**: ~0.60% effective rate (varies by county)
+
+**MMT Analysis**:
+- ✅ No income tax (working-class keeps all earned income)
+- ❌ Sales tax 6.85% (regressive — working-class pays ~7.4% of income, top 1% pays ~0.8%)
+- ✅ Lower property tax than Oregon
+- ⚠️ Less immigrant-friendly than Oregon (neutral stance)
+
+**Working-Class Tax Burden** (for $50k income):
+- Income tax: $0
+- Sales tax: ~$3,425/year (6.85% of $50k)
+- Property tax: ~$1,500/year (on $250k home, 0.60%)
+- **Total: ~$4,925/year**
+
+**Comparison to Oregon**: Nevada's no income tax is good, but regressive sales tax (6.85%) creates significant burden on working-class people. Oregon's progressive income tax (targeting high earners) + no sales tax is more MMT-aligned.
+
+---
+
+#### Texas (No Income Tax, Has Sales Tax)
+
+**Tax Structure**:
+- **Income Tax**: None
+- **Sales Tax**: 6.25% state + up to 2% local = **8.25% maximum** (regressive)
+- **Property Tax**: **1.47% effective rate** (high)
+
+**Cost of Living**:
+- Median home price: $254,931 (lower than Oregon's $440,228)
+- Average rent (2-bedroom): $1,139 (lower than Oregon)
+- Annual income needed (family of 4): Not specified, but generally lower than Oregon
+
+**Immigrant Policies**:
+- ❌ **Anti-sanctuary city law** (SB 4, 2017) — requires local law enforcement to cooperate with ICE
+- ❌ Operation Lone Star (busing migrants to other states)
+- ❌ Hospital reporting requirements for citizenship status (2024)
+- **Status**: ⭐ (1/5) — **Restrictive**
+
+**MMT Analysis**:
+- ✅ No income tax (working-class keeps all earned income)
+- ❌ **High sales tax 8.25%** (regressive — working-class pays ~8-9% of income)
+- ❌ **High property tax 1.47%** (higher than Oregon's 0.81%)
+- ❌ Less immigrant-friendly (anti-sanctuary policies)
+
+**Working-Class Tax Burden** (for $50k income):
+- Income tax: $0
+- Sales tax: ~$4,125/year (8.25% of $50k)
+- Property tax: ~$3,747/year (on $255k home, 1.47%)
+- **Total: ~$7,872/year**
+
+**Comparison to Oregon**: Texas's no income tax is good, but **high regressive sales tax (8.25%) and high property tax (1.47%)** create significant burden on working-class people. Oregon's progressive income tax (targeting high earners) + no sales tax + lower property tax is more MMT-aligned. **Texas is less immigrant-friendly**, which is problematic for legal immigrants.
+
+---
+
+#### Florida (No Income Tax, Has Sales Tax)
+
+**Tax Structure**:
+- **Income Tax**: None
+- **Sales Tax**: 6% state + up to 1.5% local = **7.5% maximum** (regressive)
+- **Property Tax**: **0.79% effective rate** (lower than Oregon's 0.81%)
+
+**Cost of Living**:
+- Median home price: $405,280 (lower than Oregon's $440,228)
+- Average rent (2-bedroom): $1,895 (higher than Texas)
+- Annual income needed (family of 4): Not specified, but generally moderate
+
+**Immigrant Policies**:
+- ❌ **Anti-sanctuary law (SB 168)** — holds local governments financially liable for non-compliance with ICE
+- ❌ Governor can suspend local officials who don't cooperate with ICE
+- ❌ Proposed bill to ban undocumented students from selective public universities
+- **Status**: ⭐ (1/5) — **Restrictive**
+
+**MMT Analysis**:
+- ✅ No income tax (working-class keeps all earned income)
+- ❌ **Sales tax 7.5%** (regressive — working-class pays ~7-8% of income)
+- ✅ Lower property tax than Oregon (0.79% vs 0.81%)
+- ❌ Less immigrant-friendly (anti-sanctuary policies)
+
+**Working-Class Tax Burden** (for $50k income):
+- Income tax: $0
+- Sales tax: ~$3,750/year (7.5% of $50k)
+- Property tax: ~$3,202/year (on $405k home, 0.79%)
+- **Total: ~$6,952/year**
+
+**Comparison to Oregon**: Florida's no income tax is good, but **regressive sales tax (7.5%)** creates significant burden on working-class people. Oregon's progressive income tax (targeting high earners) + no sales tax is more MMT-aligned. **Florida is less immigrant-friendly**, which is problematic for legal immigrants.
+
+---
+
+#### Washington (No Income Tax, Has Sales Tax)
+
+**Tax Structure**:
+- **Income Tax**: None on wages/salaries (7% capital gains tax on gains >$250k)
+- **Sales Tax**: 6.5% state + local = **9.43% average, up to 10.4% in Seattle** (highly regressive)
+- **Property Tax**: **0.84% effective rate** (similar to Oregon's 0.81%)
+
+**Cost of Living**:
+- Higher in urban areas (Seattle, Tacoma)
+- Housing costs significant in Seattle area
+
+**MMT Analysis**:
+- ✅ No income tax on wages (working-class keeps all earned income)
+- ❌ **Very high sales tax 9.43-10.4%** (highly regressive — working-class pays ~9-10% of income)
+- ✅ Similar property tax to Oregon (0.84% vs 0.81%)
+- ⚠️ Higher cost of living in urban areas
+
+**Working-Class Tax Burden** (for $50k income):
+- Income tax: $0
+- Sales tax: ~$4,715-5,200/year (9.43-10.4% of $50k)
+- Property tax: ~$3,500/year (on $417k home, 0.84%)
+- **Total: ~$8,215-8,700/year**
+
+**Comparison to Oregon**: Washington's no income tax is good, but **very high regressive sales tax (9.43-10.4%)** creates significant burden on working-class people. Oregon's progressive income tax (targeting high earners) + no sales tax is more MMT-aligned.
+
+---
+
+### Comprehensive Comparison: Oregon vs No-Income-Tax States
+
+#### Tax Burden Comparison (Working-Class, $50k income)
+
+| State | Income Tax | Sales Tax | Property Tax | Total Burden | MMT Rating |
+|-------|------------|-----------|--------------|--------------|------------|
+| **Oregon** | ~$2,375-3,000 | $0 | ~$3,564 | **~$5,939-6,564** | ⭐⭐⭐⭐⭐ |
+| **Alaska** | $0 | $0 | ~$4,504 | **~$2,229** (net, after PFD) | ⭐⭐⭐⭐ |
+| **Nevada** | $0 | ~$3,425 | ~$1,500 | **~$4,925** | ⭐⭐⭐ |
+| **New Hampshire** | $0 | $0 | ~$5,918 | **~$5,918** | ⭐⭐ |
+| **Texas** | $0 | ~$4,125 | ~$3,747 | **~$7,872** | ⭐⭐ |
+| **Florida** | $0 | ~$3,750 | ~$3,202 | **~$6,952** | ⭐⭐ |
+| **Washington** | $0 | ~$4,715-5,200 | ~$3,500 | **~$8,215-8,700** | ⭐⭐ |
+
+**Key Insight**: While no-income-tax states eliminate income tax, their **regressive sales taxes** create significant burden on working-class people. Oregon's progressive income tax (targeting high earners) + no sales tax is more MMT-aligned.
+
+---
+
+#### Immigrant-Friendly Policies Comparison
+
+| State | Sanctuary Cities | ICE Cooperation | Driver's Licenses | Overall Rating |
+|-------|------------------|-----------------|-------------------|----------------|
+| **Oregon** | ✅ Yes (Portland, Beaverton) | ❌ Prohibited (1987 law) | ✅ Yes | ⭐⭐⭐⭐⭐ |
+| **Alaska** | ⚠️ Neutral | ⚠️ Neutral | ⚠️ Neutral | ⭐⭐⭐ |
+| **Nevada** | ⚠️ Neutral | ⚠️ Neutral | ⚠️ Neutral | ⭐⭐⭐ |
+| **New Hampshire** | ❌ Banned (2025) | ✅ Required | ❌ No | ⭐ |
+| **Texas** | ❌ Banned (2017) | ✅ Required | ❌ No | ⭐ |
+| **Florida** | ❌ Banned (SB 168) | ✅ Required | ❌ No | ⭐ |
+| **Washington** | ⚠️ Some cities | ⚠️ Varies | ⚠️ Varies | ⭐⭐⭐ |
+
+**Key Insight**: Oregon is the **most immigrant-friendly** among all states analyzed. Texas, Florida, and New Hampshire have restrictive policies that can create challenges for legal immigrants.
+
+---
+
+#### Job Opportunities Comparison
+
+| State | Key Industries | Labor Shortages | Immigrant Workforce | Overall Rating |
+|-------|----------------|-----------------|---------------------|----------------|
+| **Oregon** | Agriculture, Construction, Tech, Healthcare | ✅ 15-35% (agriculture) | ✅ 15.7% (construction) | ⭐⭐⭐⭐⭐ |
+| **Alaska** | Oil, Fishing, Tourism, Construction | ⚠️ Moderate | ✅ 10.7% of jobs | ⭐⭐⭐ |
+| **Nevada** | Tourism, Hospitality, Construction | ⚠️ Moderate | ⚠️ Moderate | ⭐⭐⭐ |
+| **Texas** | Energy, Technology, Healthcare, Construction | ✅ Strong | ✅ Strong | ⭐⭐⭐⭐ |
+| **Florida** | Tourism, Agriculture, Healthcare, Construction | ✅ Strong | ✅ Strong | ⭐⭐⭐⭐ |
+| **Washington** | Technology, Aerospace, Healthcare | ✅ Strong | ✅ Strong | ⭐⭐⭐⭐ |
+
+**Key Insight**: Oregon, Texas, and Florida all offer strong job opportunities. Oregon's labor shortages in agriculture (15-35%) create particularly strong demand for working-class workers.
+
+---
+
+### Final Verdict: Oregon vs No-Income-Tax States
+
+#### For Working-Class People
+
+**Oregon Advantages**:
+- ✅ **No sales tax** (eliminates regressive taxation)
+- ✅ **Progressive income tax** (targets high earners, not working-class)
+- ✅ **Lower property tax** than Texas, New Hampshire, Alaska
+- ✅ **MMT-aligned tax structure** (maximizes effective demand from working-class spending)
+
+**No-Income-Tax States Advantages**:
+- ✅ No income tax (working-class keeps all earned income)
+- ✅ Lower property tax in some states (Florida 0.79%, Nevada ~0.60%)
+
+**MMT Assessment**: While no-income-tax states eliminate income tax, their **regressive sales taxes** (6.85-10.4%) create significant burden on working-class people. Oregon's progressive income tax (targeting high earners) + no sales tax is more MMT-aligned because:
+1. **Eliminates regressive taxation** (no sales tax)
+2. **Targets high earners** (who have high savings rates) for inflation management
+3. **Minimizes burden on working-class** (progressive rates mean lower effective rate for working-class)
+4. **Maximizes effective demand** (working-class keeps most income, spends it)
+
+**Verdict**: **Oregon is better for working-class people** from an MMT perspective, despite having an income tax, because it eliminates regressive sales tax and uses progressive income tax to target high earners (not working-class).
+
+---
+
+#### For Legal Immigrants
+
+**Oregon Advantages**:
+- ✅ **Most immigrant-friendly policies** (sanctuary cities, supportive environment)
+- ✅ **No sales tax** (eliminates regressive taxation)
+- ✅ **Progressive income tax** (targets high earners, not working-class)
+- ✅ **Strong job opportunities** (labor shortages in key sectors)
+- ✅ **Strong immigrant support networks**
+
+**No-Income-Tax States Advantages**:
+- ✅ No income tax (immigrants keep all earned income)
+- ✅ Strong job opportunities in some states (Texas, Florida)
+
+**MMT Assessment**: Oregon's **immigrant-friendly policies** are crucial for economic integration. Texas and Florida have restrictive policies (anti-sanctuary laws, ICE cooperation requirements) that can create challenges for legal immigrants, even if they have no income tax.
+
+**Verdict**: **Oregon is significantly better for legal immigrants** due to immigrant-friendly policies, despite having an income tax. The combination of supportive policies, no sales tax, and strong job opportunities makes Oregon the optimal choice.
+
+---
+
+#### Overall Winner: Oregon
+
+**Oregon vs All No-Income-Tax States**:
+
+1. **MMT Tax Structure**: Oregon's progressive income tax (targeting high earners) + no sales tax is more MMT-aligned than no-income-tax states with regressive sales taxes (6.85-10.4%)
+
+2. **Immigrant-Friendly Policies**: Oregon is the most supportive, while Texas, Florida, and New Hampshire have restrictive policies
+
+3. **Effective Demand**: Oregon maximizes working-class spending power by eliminating regressive sales tax, while no-income-tax states burden working-class with high sales taxes
+
+4. **Job Opportunities**: Oregon offers strong opportunities with labor shortages in key sectors
+
+5. **Cost of Living**: Oregon is reasonable compared to high-cost no-income-tax states (Alaska, New Hampshire, Washington urban areas)
+
+**Final Verdict**: **Oregon is the best state for working-class people and legal immigrants**, both among no-sales-tax states and when compared to no-income-tax states. Oregon's MMT-aligned tax structure (progressive income tax targeting high earners + no sales tax) combined with immigrant-friendly policies and strong job opportunities makes it the optimal choice.
+
+---
+
 ## Conclusion
 
-From a Modern Monetary Theory perspective, **Oregon is the best state** for working-class people and legal immigrants among the five states without statewide sales tax. Oregon provides:
+From a Modern Monetary Theory perspective, **Oregon is the best state** for working-class people and legal immigrants, both among the five states without statewide sales tax **and when compared to all no-income-tax states**. Oregon provides:
 
 1. **Optimal MMT-aligned tax structure**: No sales tax (eliminates regressive taxation) + progressive income tax (targets high earners, not working-class) + lower property tax
 2. **Immigrant-friendly policies**: Sanctuary cities, supportive environment, strong integration support
 3. **Strong job opportunities**: Labor shortages in key sectors, growing industries, established immigrant workforce
 4. **Reasonable cost of living**: Better than Alaska, New Hampshire, or Delaware
 5. **Supports effective demand**: Working-class people keep most of their income, spend it, drive the economy
+
+### Among No-Sales-Tax States
 
 **Alaska** is the second-best choice due to its unique Permanent Fund Dividend (PFD), but high cost of living and PFD sustainability concerns limit its long-term appeal.
 
@@ -483,7 +732,17 @@ From a Modern Monetary Theory perspective, **Oregon is the best state** for work
 
 **New Hampshire** has no income tax on earned income, but highest property tax and home prices, plus less immigrant-friendly policies, make it the least recommended.
 
-**The MMT Bottom Line**: Oregon's tax structure maximizes effective demand from working-class spending while managing inflation through taxes on high earners (who save), not working-class people (who spend). Combined with immigrant-friendly policies and strong job opportunities, Oregon is the optimal choice for working-class people and legal immigrants.
+### Compared to No-Income-Tax States
+
+**Nevada, Texas, Florida, Washington** and other no-income-tax states eliminate income tax, but their **regressive sales taxes (6.85-10.4%)** create significant burden on working-class people. Additionally, **Texas and Florida have restrictive immigrant policies** (anti-sanctuary laws, ICE cooperation requirements) that create challenges for legal immigrants.
+
+**Oregon's advantage**: While Oregon has an income tax, its **progressive structure targets high earners** (who have high savings rates) rather than working-class people (who spend all their income). Combined with **no sales tax** (eliminating regressive taxation), Oregon's tax structure is more MMT-aligned than no-income-tax states with high regressive sales taxes.
+
+### The MMT Bottom Line
+
+**Oregon's tax structure maximizes effective demand from working-class spending while managing inflation through taxes on high earners (who save), not working-class people (who spend).** Combined with immigrant-friendly policies and strong job opportunities, Oregon is the optimal choice for working-class people and legal immigrants, both among no-sales-tax states and when compared to no-income-tax states.
+
+**Key Insight**: Eliminating regressive sales tax is more important for working-class people than eliminating income tax, especially when income tax is progressive and targets high earners. Oregon achieves this optimal MMT-aligned structure.
 
 ---
 

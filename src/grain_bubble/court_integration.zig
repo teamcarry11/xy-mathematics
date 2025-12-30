@@ -25,6 +25,10 @@ pub const MAX_SUGGESTION_LEN: u32 = 512;
 pub const DEFAULT_TIMEOUT_API_MS: u32 = 30000; // 30 seconds for API operations
 pub const DEFAULT_TIMEOUT_CONTENT_MS: u32 = 60000; // 60 seconds for content operations
 
+// Retry defaults (per coordination decision 2025-12-29-152539-pst).
+pub const DEFAULT_MAX_RETRIES: u32 = 3; // Max retry attempts for transient failures
+pub const DEFAULT_RETRY_DELAY_MS: u32 = 100; // Initial delay between retries (100ms)
+
 // Court compute error: structured error union with retryability.
 pub const CourtComputeError = error{
     ComputeNotSet, // Court compute instance not set

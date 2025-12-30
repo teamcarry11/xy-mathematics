@@ -120,7 +120,7 @@
 
 **Status**: All Kernel Features Complete ✅ — Kernel Refactoring Complete ✅ — Production Ready  
 **Current Work**: Architecture evolution to Vantage Core + L2 sub-agents, JG project kernel support monitoring  
-**Details**: See [`docs/plans/plan_vantage.md`](plans/plan_vantage.md)
+**Details**: See [`docs/plans/vantage_3_core_plan.md`](plans/vantage_3_core_plan.md)
 
 **Recent Progress**:
 - Phase 1: Kernel Statistics & Health Check ✅ (COMPLETE)

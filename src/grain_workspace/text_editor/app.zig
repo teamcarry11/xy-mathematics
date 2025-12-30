@@ -2335,6 +2335,47 @@ pub const TextEditor = struct {
         }
     }
 
+    /// Get fold indicator information for a line (for visual rendering).
+    // 2025-12-29-152539-pst: Phase 37 Visual Fold Indicators
+    pub fn get_fold_indicator(self: *const TextEditor, line_idx: u32) struct { has_indicator: bool, is_folded: bool, fold_level: u32 } {
+        std.debug.assert(@intFromPtr(self) != 0);
+        std.debug.assert(line_idx < self.lines_len);
+
+        if (!self.code_folding_enabled) {
+            return .{ .has_indicator = false, .is_folded = false, .fold_level = 0 };
+        }
+
+        var i: u32 = 0;
+        while (i < self.fold_ranges_len) : (i += 1) {
+            const range = &self.fold_ranges[i];
+            if (range.start_line == line_idx) {
+                return .{ .has_indicator = true, .is_folded = range.folded, .fold_level = range.fold_level };
+            }
+        }
+
+        return .{ .has_indicator = false, .is_folded = false, .fold_level = 0 };
+    }
+
+    /// Check if a line is a fold start line (has a foldable block starting at it).
+    // 2025-12-29-152539-pst: Phase 37 Visual Fold Indicators
+    pub fn is_fold_start_line(self: *const TextEditor, line_idx: u32) bool {
+        std.debug.assert(@intFromPtr(self) != 0);
+        std.debug.assert(line_idx < self.lines_len);
+
+        if (!self.code_folding_enabled) {
+            return false;
+        }
+
+        var i: u32 = 0;
+        while (i < self.fold_ranges_len) : (i += 1) {
+            if (self.fold_ranges[i].start_line == line_idx) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /// Unfold all folded blocks.
     // 2025-12-29-001544-pst: Phase 35 Code Folding
     pub fn unfold_all(self: *TextEditor) void {

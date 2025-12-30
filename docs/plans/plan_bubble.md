@@ -1,8 +1,8 @@
 # Grain Bubble Agent: Development Plan
 
 **Agent**: Grain Bubble Agent (5th Agent)  
-**Status**: All Phases Complete ✅ — SLC Product Integration Foundation Complete, Workspace Agent Integration Complete ✅, Async Pattern Integration Complete ✅, JG Project UI Components Assigned (Months 7-12)  
-**Last Updated**: 2025-12-29-110000-pst (JG project responsibilities assigned)  
+**Status**: All Phases Complete ✅ — SLC Product Integration Foundation Complete, Workspace Agent Integration Complete ✅, Async Pattern Integration Complete ✅, JG Project UI Components Assigned (Months 7-12, Phases 1-3)  
+**Last Updated**: 2025-12-29-152539-pst (JG project phases refined)  
 **Coordination File**: `docs/core-coordination/core-coordination_bubble.md`
 
 ---
@@ -104,6 +104,23 @@ src/grain_bubble/
 - Integration with Carry Agent for mobile JG project apps
 - Create JG-specific UI components as needed
 
+**Phase 1: 3D Visualization Components** (Months 7-9):
+- 3D architectural visualization components
+- Site layout visualization components
+- Material quantity visualization components
+- Energy efficiency visualization components
+
+**Phase 2: Dashboard Components** (Months 10-11):
+- Project management dashboard components
+- Task tracking dashboard components
+- Inventory management dashboard components
+- Supply chain visualization components
+
+**Phase 3: Mobile UI Components** (Month 12):
+- Worker mobile app UI components
+- Resident mobile app UI components
+- Cooperative mobile app UI components
+
 **What Bubble Agent Will Provide**:
 - UI components for JG project applications
 - Design patterns and animations for JG project UI
@@ -126,12 +143,20 @@ src/grain_bubble/
 
 **Timeline**:
 - **Months 1-6**: Wait for Core Agent foundation, Silo Agent storage schemas, Workspace Agent dashboards, Court Agent LLM planning, Flow Agent workflow orchestration
-- **Months 7-12**: Develop UI components for JG project applications
-  - Coordinate with Aurora Agent on browser-based JG project interfaces
-  - Coordinate with Workspace Agent on desktop JG project dashboards
-  - Coordinate with Carry Agent on mobile JG project apps
-  - Create JG-specific UI components as needed
-  - Integrate design patterns and animations for JG project UI
+- **Months 7-9**: Phase 1 — Develop 3D visualization components
+  - 3D architectural visualization components
+  - Site layout visualization components
+  - Material quantity visualization components
+  - Energy efficiency visualization components
+- **Months 10-11**: Phase 2 — Develop dashboard components
+  - Project management dashboard components
+  - Task tracking dashboard components
+  - Inventory management dashboard components
+  - Supply chain visualization components
+- **Month 12**: Phase 3 — Develop mobile UI components
+  - Worker mobile app UI components
+  - Resident mobile app UI components
+  - Cooperative mobile app UI components
 
 **Dependencies**:
 - **Needs**: Core Agent JG module foundation (Months 1-6), Aurora Agent component API design (IMMEDIATE), Workspace Agent desktop dashboards (Months 3-8), Carry Agent mobile apps (Months 6-12)

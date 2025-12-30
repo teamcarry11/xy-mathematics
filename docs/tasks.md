@@ -64,7 +64,7 @@
 
 **Status**: All Kernel Features Complete ✅ — Kernel Refactoring Complete ✅ — Production Ready  
 **Current Tasks**: Architecture evolution to Vantage Core + L2 sub-agents, JG project kernel support monitoring  
-**Details**: See [`docs/tasks/tasks_vantage.md`](tasks/tasks_vantage.md)
+**Details**: See [`docs/tasks/vantage_3_core_tasks.md`](tasks/vantage_3_core_tasks.md)
 
 **Key Tasks**:
 - [x] Phase 1: Kernel Statistics & Health Check ✅ COMPLETE

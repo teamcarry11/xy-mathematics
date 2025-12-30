@@ -1,7 +1,7 @@
 # Grain Carry Agent: Core Coordination Status
 
 **Agent**: Grain Carry Agent (6th Agent)  
-**Last Updated**: 2025-12-29-112345-pst
+**Last Updated**: 2025-12-29-153841-pst
 
 ---
 
@@ -21,7 +21,7 @@
 
 **Next Critical Milestone**: Core Agent HTTP event publishing (1-2 days) → Full async pattern integration
 
-**JG Project Integration**: Mobile apps development (Months 6-12) — Planning phase
+**JG Project Integration**: Mobile apps development (Months 6-12) — Planning phase — Detailed phases assigned
 
 ---
 
@@ -102,28 +102,44 @@
 
 **Primary Role**: Mobile Apps Development (Months 6-12)
 
-Carry Agent is responsible for developing mobile applications for the JG housing program. This includes:
+Carry Agent is responsible for developing mobile applications for the JG housing program. This includes three distinct mobile apps with specific features and timelines.
 
-1. **Mobile App Development**:
-   - Android and iOS mobile applications
-   - Integration with JG project APIs and services
-   - User authentication and authorization
-   - Offline capabilities and data synchronization
-   - Push notifications
+**JG Project Mobile Apps** (from coordination plan 2025-12-29-152539-pst):
 
-2. **Integration Points**:
-   - **Core Agent**: Grainbank MMT integration, JG module foundation (Months 1-6) — Carry Agent will integrate with Core Agent's JG modules
-   - **Silo Agent**: Storage schemas for all JG modules (Months 1-3) — Carry Agent will use Silo Agent's storage for mobile app data
-   - **Workspace Agent**: Desktop dashboards (Months 3-8) — Mobile apps may complement desktop dashboards
-   - **Flow Agent**: Workflow orchestration (Months 4-10) — Mobile apps may trigger workflows
-   - **Court Agent**: LLM planning features (Months 4-12) — Mobile apps may integrate LLM features
-   - **Research Agent**: Analysis & optimization (Months 6-12) — Mobile apps may display research insights
-   - **Bubble/Aurora Agents**: UI components (Months 7-12) — Mobile apps will use UI components
-   - **Skate Agent**: Knowledge graph (Months 5-12) — Mobile apps may query knowledge graph
+1. **Phase 1: Worker Mobile App** (Months 6-8):
+   - Task assignment interface
+   - Time logging interface
+   - Wage payment tracking
+   - Training and certification tracking
+   - Community engagement features
 
-3. **Timeline**:
-   - **Months 6-12**: Mobile app development and integration
-   - **Dependencies**: Core Agent JG modules (Months 1-6), Silo Agent storage schemas (Months 1-3), UI components (Months 7-12)
+2. **Phase 2: Resident Mobile App** (Months 9-10):
+   - Housing information interface
+   - Rent-to-own equity tracking
+   - Community engagement features
+   - Maintenance request interface
+
+3. **Phase 3: Cooperative Mobile App** (Months 11-12):
+   - Material sales interface
+   - Payment tracking
+   - Quality certification interface
+   - Cooperative governance features
+
+**Integration Points**:
+- **Core Agent**: Grainbank MMT integration, JG module foundation (Months 1-6) — Carry Agent will integrate with Core Agent's JG modules and API contracts
+- **Silo Agent**: Storage schemas for all JG modules (Months 1-3) — Carry Agent will use Silo Agent's storage for mobile app data
+- **Workspace Agent**: Desktop dashboards (Months 3-8) — Mobile apps may complement desktop dashboards
+- **Flow Agent**: Workflow orchestration (Months 4-10) — Mobile apps may trigger workflows
+- **Court Agent**: LLM planning features (Months 4-12) — Mobile apps may integrate LLM features
+- **Research Agent**: Analysis & optimization (Months 6-12) — Mobile apps may display research insights
+- **Bubble/Aurora Agents**: UI components (Months 7-12) — Mobile apps will use UI components
+- **Skate Agent**: Knowledge graph (Months 5-12) — Mobile apps may query knowledge graph
+
+**Timeline**:
+- **Months 6-8**: Worker Mobile App development
+- **Months 9-10**: Resident Mobile App development
+- **Months 11-12**: Cooperative Mobile App development
+- **Dependencies**: Core Agent JG modules (Months 1-6), Silo Agent storage schemas (Months 1-3), UI components (Months 7-12)
 
 ### Current Status
 
@@ -133,11 +149,12 @@ Carry Agent is responsible for developing mobile applications for the JG housing
 
 ### Next Steps
 
-1. **SHORT-TERM**: Review JG project design and requirements
-2. **SHORT-TERM**: Coordinate with Core Agent on JG module integration points
+1. **IMMEDIATE**: Review JG project design document and design mobile app interfaces (Worker Mobile App, Resident Mobile App, Cooperative Mobile App)
+2. **IMMEDIATE**: Coordinate with Core Agent on API contracts for JG modules
 3. **SHORT-TERM**: Coordinate with Silo Agent on storage schema requirements for mobile apps
-4. **MEDIUM-TERM**: Begin mobile app architecture design (Month 6)
-5. **MEDIUM-TERM**: Start mobile app development once dependencies are ready
+4. **SHORT-TERM**: Coordinate with Bubble/Aurora Agents on UI component requirements (Months 7-12)
+5. **MEDIUM-TERM**: Begin Worker Mobile App implementation (Month 6)
+6. **MEDIUM-TERM**: Continue with Resident Mobile App (Month 9) and Cooperative Mobile App (Month 11)
 
 ### Coordination Notes
 
@@ -608,4 +625,4 @@ Carry Agent needs to confirm the exact API contract details to finalize the data
 
 ---
 
-**Status**: Database Integration Complete ✅ — All Core Agent Features Integrated ✅ — Event Bus Integration Complete ✅ — Ready for Core Agent HTTP Event Publishing — JG Project Integration Assigned (2025-12-29-112345-pst)
+**Status**: Database Integration Complete ✅ — All Core Agent Features Integrated ✅ — Event Bus Integration Complete ✅ — Ready for Core Agent HTTP Event Publishing — JG Project Integration Assigned with Detailed Phases (2025-12-29-153841-pst)

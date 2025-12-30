@@ -312,7 +312,7 @@
 - [x] Implement UDP timeout syscalls (sendto_with_timeout, recvfrom_with_timeout) — Phase 4.3
 - [x] Create comprehensive tests (`tests/086_network_interface_test.zig`, `tests/087_tcp_socket_test.zig`, `tests/088_udp_socket_test.zig`) — Phase 4.4
 - [x] Update `build.zig` with new tests — Phase 4.4
-- [x] Update `docs/plans/plan_vantage.md` and `docs/tasks/tasks_vantage.md` with completion
+- [x] Update `docs/plans/vantage_3_core_plan.md` and `docs/tasks/vantage_3_core_tasks.md` with completion
 - [x] IPv6 configuration enhancement — Phase 4.5
   - [x] Add `set_ipv6_address` function to `network.zig`
   - [x] Add `network_set_ipv6` syscall (#94)
@@ -356,7 +356,7 @@
 - [x] Create comprehensive tests (`tests/089_audio_device_test.zig`) — Phase 5.4
 - [x] Implement audio I/O syscalls (read, write) — Phase 5.3
 - [x] Implement audio format support (sample rate, channels, bit depth) — Phase 5.3
-- [x] Update `docs/plans/plan_vantage.md` and `docs/tasks/tasks_vantage.md` with completion
+- [x] Update `docs/plans/vantage_3_core_plan.md` and `docs/tasks/vantage_3_core_tasks.md` with completion
 
 ### Dependencies
 
@@ -392,7 +392,7 @@
 - [x] Remove POSIX dependencies from kernel for freestanding target — Phase 6.3
 - [x] Complete AArch64 kernel build (resolve POSIX dependency issues) — Phase 6.3
 - [x] Fix AArch64 linker relocation error (use `adrp` + `add`) — Phase 6.3
-- [x] Update `docs/plans/plan_vantage.md` and `docs/tasks/tasks_vantage.md` with completion — Phase 6.3
+- [x] Update `docs/plans/vantage_3_core_plan.md` and `docs/tasks/vantage_3_core_tasks.md` with completion — Phase 6.3
 
 ### Remaining Tasks
 
@@ -415,7 +415,7 @@
 
 ### Phase 2: VM Integration & JIT ✅ **COMPLETE**
 
-All Phase 2 sub-phases complete (2.1.1 through 2.1.25). See `docs/plans/plan_vantage.md` for detailed phase descriptions.
+All Phase 2 sub-phases complete (2.1.1 through 2.1.25). See `docs/plans/vantage_3_core_plan.md` for detailed phase descriptions.
 
 **Key Modules**:
 - VM Core (`src/kernel_vm/vm.zig`)
@@ -430,7 +430,7 @@ All Phase 2 sub-phases complete (2.1.1 through 2.1.25). See `docs/plans/plan_van
 
 ### Phase 3: Kernel Features ✅ **COMPLETE**
 
-All Phase 3 sub-phases complete (3.1 through 3.14). See `docs/plans/plan_vantage.md` for detailed phase descriptions.
+All Phase 3 sub-phases complete (3.1 through 3.14). See `docs/plans/vantage_3_core_plan.md` for detailed phase descriptions.
 
 **Key Modules**:
 - Process Management (`src/kernel/basin_kernel.zig`)
@@ -499,11 +499,11 @@ All Phase 3 sub-phases complete (3.1 through 3.14). See `docs/plans/plan_vantage
 - **Grain Style**: [`docs/grain_style.md`](../grain_style.md)
 - **Core Plan**: [`docs/plan.md`](../plan.md)
 - **Core Tasks**: [`docs/tasks.md`](../tasks.md)
-- **Vantage Agent Plan**: [`docs/plans/plan_vantage.md`](plan_vantage.md)
+- **Vantage Core Plan**: [`docs/plans/vantage_3_core_plan.md`](vantage_3_core_plan.md)
 - **Grain Core Agent Plan**: [`docs/plans/plan_core.md`](plan_core.md)
 - **Vantage Agent Response**: [`docs/kernel_agent_response_to_grain_os.md`](../kernel_agent_response_to_grain_os.md)
 - **Grain OS Integration Response**: [`docs/grain_os_kernel_integration_response.md`](../grain_os_kernel_integration_response.md)
-- **Core Coordination**: [`docs/core-coordination/core-coordination_vantage.md`](../core-coordination/core-coordination_vantage.md)
+- **Core Coordination**: [`docs/core-coordination/vantage_3_core_coordination.md`](../core-coordination/vantage_3_core_coordination.md)
 - **JG Project Design**: [`docs/zyx/grainbank_mmt_job_guarantee_housing_program_2025-12-28-232324-pst.md`](../zyx/grainbank_mmt_job_guarantee_housing_program_2025-12-28-232324-pst.md)
 
 ---

@@ -394,8 +394,8 @@
 ### Priority 3 (MEDIUM) — JG Project Planning
 
 - [x] JG project responsibilities assigned (2025-12-29-105655-pst) ✅
-- [ ] Review JG project design document (`docs/zyx/grainbank_mmt_job_guarantee_housing_program_2025-12-28-232324-pst.md`)
-- [ ] Plan analysis framework for economic, housing, environmental, and social indicators
+- [x] Review JG project design document (`docs/zyx/grainbank_mmt_job_guarantee_housing_program_2025-12-28-232324-pst.md`) — Document reviewed, data structures and metrics identified (2025-12-29-160113-pst)
+- [x] Plan analysis framework for economic, housing, environmental, and social indicators — Framework plan document created: `docs/research/jg_project_analysis_framework_plan_2025-12-29-160113-pst.md` (2025-12-29-160113-pst)
 - [ ] Coordinate with Core Agent on data access requirements
 - [ ] Prepare for Phase 1: Economic Analysis (Months 6-8)
 

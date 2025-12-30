@@ -1251,3 +1251,84 @@ test "code folding disabled" {
     try testing.expect(editor.is_folded(1) == false);
     try testing.expect(editor.toggle_fold(0) == false);
 }
+
+test "get fold indicator - no indicator" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.zig");
+    _ = editor.insert_text("fn test() {\n    return;\n}");
+    editor.detect_fold_ranges();
+
+    const indicator = editor.get_fold_indicator(1);
+    try testing.expect(indicator.has_indicator == false);
+    try testing.expect(indicator.is_folded == false);
+    try testing.expect(indicator.fold_level == 0);
+}
+
+test "get fold indicator - has indicator unfolded" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.zig");
+    _ = editor.insert_text("fn test() {\n    return;\n}");
+    editor.detect_fold_ranges();
+
+    const indicator = editor.get_fold_indicator(0);
+    try testing.expect(indicator.has_indicator == true);
+    try testing.expect(indicator.is_folded == false);
+    try testing.expect(indicator.fold_level == 0);
+}
+
+test "get fold indicator - has indicator folded" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.zig");
+    _ = editor.insert_text("fn test() {\n    return;\n}");
+    editor.detect_fold_ranges();
+    _ = editor.toggle_fold(0);
+
+    const indicator = editor.get_fold_indicator(0);
+    try testing.expect(indicator.has_indicator == true);
+    try testing.expect(indicator.is_folded == true);
+    try testing.expect(indicator.fold_level == 0);
+}
+
+test "get fold indicator - disabled" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.zig");
+    _ = editor.insert_text("fn test() {\n    return;\n}");
+    editor.code_folding_enabled = false;
+
+    const indicator = editor.get_fold_indicator(0);
+    try testing.expect(indicator.has_indicator == false);
+    try testing.expect(indicator.is_folded == false);
+    try testing.expect(indicator.fold_level == 0);
+}
+
+test "is fold start line - true" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.zig");
+    _ = editor.insert_text("fn test() {\n    return;\n}");
+    editor.detect_fold_ranges();
+
+    try testing.expect(editor.is_fold_start_line(0) == true);
+    try testing.expect(editor.is_fold_start_line(1) == false);
+    try testing.expect(editor.is_fold_start_line(2) == false);
+}
+
+test "is fold start line - disabled" {
+    const allocator = testing.allocator;
+    var editor = TextEditor.init(allocator);
+
+    _ = editor.open_file("/test/file.zig");
+    _ = editor.insert_text("fn test() {\n    return;\n}");
+    editor.code_folding_enabled = false;
+
+    try testing.expect(editor.is_fold_start_line(0) == false);
+}

@@ -211,6 +211,67 @@ pub const SyscallPerformanceProfiler = struct {
         
         return total;
     }
+    
+    /// Find syscall with highest call count (hot path).
+    /// Why: Identify most frequently called syscall for optimization.
+    /// Returns: Syscall number and call count, or null if no syscalls recorded.
+    pub fn find_hot_path(self: *const SyscallPerformanceProfiler) ?struct {
+        syscall_num: u32,
+        call_count: u64,
+    } {
+        var max_calls: u64 = 0;
+        var hot_syscall: ?u32 = null;
+        
+        var i: u32 = 0;
+        while (i < MAX_SYSCALLS) : (i += 1) {
+            if (self.metrics[i].call_count > max_calls) {
+                max_calls = self.metrics[i].call_count;
+                hot_syscall = i;
+            }
+        }
+        
+        if (hot_syscall) |syscall| {
+            // Assert: Hot path must have calls (postcondition).
+            Debug.kassert(max_calls > 0, "Hot path has no calls", .{});
+            return .{
+                .syscall_num = syscall,
+                .call_count = max_calls,
+            };
+        }
+        
+        return null;
+    }
+    
+    /// Find syscall with highest average execution time (slow path).
+    /// Why: Identify slowest syscall for optimization.
+    /// Returns: Syscall number and average time, or null if no syscalls recorded.
+    pub fn find_slow_path(self: *const SyscallPerformanceProfiler) ?struct {
+        syscall_num: u32,
+        avg_time_ns: u64,
+    } {
+        var max_avg: u64 = 0;
+        var slow_syscall: ?u32 = null;
+        
+        var i: u32 = 0;
+        while (i < MAX_SYSCALLS) : (i += 1) {
+            const avg = self.metrics[i].get_average_time_ns();
+            if (avg > max_avg) {
+                max_avg = avg;
+                slow_syscall = i;
+            }
+        }
+        
+        if (slow_syscall) |syscall| {
+            // Assert: Slow path must have execution time (postcondition).
+            Debug.kassert(max_avg > 0, "Slow path has no time", .{});
+            return .{
+                .syscall_num = syscall,
+                .avg_time_ns = max_avg,
+            };
+        }
+        
+        return null;
+    }
 };
 
 // Test: Profiler initialization.

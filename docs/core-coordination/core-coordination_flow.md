@@ -1,6 +1,6 @@
 # Grain Flow Agent: Coordination Status
 
-**Last Updated**: 2025-12-29-153938-pst (New Core Agent coordination plan acknowledged ✅ - Architecture evolution complete ✅ (Vantage Core + L2 sub-agents), JG project responsibilities remain unchanged ✅, workflow orchestration planning in progress ⏳)  
+**Last Updated**: 2025-12-30-020103-pst (Comprehensive coordination document rewrite with next steps for Core and all other agents)  
 **Agent**: Grain Flow Agent (9th Agent)  
 **Core Agent Coordination Plan**: 2025-12-28-125036-pst (acknowledged), 2025-12-28-223816-pst (acknowledged, ZON format integration complete ✅), 2025-12-29-001544-pst (acknowledged, HTTP/WebSocket timeout and error types ready ✅), 2025-12-29-041147-pst (acknowledged, all coordination decisions ready ✅, build issues resolved ✅), 2025-12-29-105655-pst (acknowledged, kernel refactoring complete ✅, JG project design complete ✅, JG project multi-agent integration plan created ✅), 2025-12-29-152539-pst (acknowledged, architecture evolution complete ✅ (Vantage Core + L2 sub-agents), coordination model established ✅)
 
@@ -8,27 +8,23 @@
 
 ## Executive Summary
 
-**Status**: All Phases Complete ✅, Independent Enhancements Complete ✅, **ZON FORMAT INTEGRATION COMPLETE** ✅, **ALL COORDINATION COMPLETE** ✅, **CODE QUALITY IMPROVEMENT COMPLETE** ✅
+**Status**: All Phases Complete ✅, Independent Enhancements Complete ✅, **ZON FORMAT INTEGRATION COMPLETE** ✅, **ALL COORDINATION COMPLETE** ✅, **CODE QUALITY IMPROVEMENT COMPLETE** ✅, **JG PROJECT PLANNING COMPLETE** ✅
 
-**Active Work**:
-- ✅ Event Bus Source Filtering: **COMPLETE** (subscribers can filter events by source agent ID)
-- ✅ Event Bus Async Pattern Event Types: **COMPLETE** (HTTP, WebSocket, File I/O event types added)
-- ✅ Workflow Scheduler Cron Parser: **COMPLETE** (step value support `*/N` patterns)
-- ✅ Workflow Visualizer Hierarchical Layout: **COMPLETE** (improved DAG visualization)
-- ✅ ZON Format Integration: **COMPLETE** (implementation ✅, tests ✅, Dashboard API ✅, documentation ✅)
-- ✅ Research Agent Failure Data Collection Request: **IMPLEMENTATION COMPLETE** ✅ (Research Agent confirmed approach ✅, 2025-12-29-041147-pst), all 5 phases complete ✅ (2025-12-29-041500-pst), Research Agent acknowledged completion ✅ (2025-12-29-041700-pst)
-- ✅ Carry Agent Event Bus Initialization Request: **IMPLEMENTATION COMPLETE** ✅ (2025-12-29-041800-pst), coordination response sent ✅, shared Event Bus instance implemented ✅, tests added ✅
-- ✅ Code Quality Improvement: **COMPLETE** ✅ (2025-12-29-042000-pst) — `write_failure_json` refactored from 262 lines to 50 lines (meets 70-line Grain Style limit)
-- ⏳ TigerBeetle Enhancement: Waiting on Core Agent implementation timeline (Medium Priority)
-- ✅ Core Agent Coordination Plan Acknowledged: HTTP/WebSocket timeout and error types ready for integration ✅
+**Current Focus**: **ALL WORK COMPLETE** ✅ — All coordination items complete ✅, all implementation complete ✅, code quality improvement complete ✅, JG project workflow orchestration planning complete ✅. Flow Agent is in excellent state with no blocking dependencies. Ready for JG project implementation (Months 4-10) or optional improvements.
 
-**Current Focus**: **ALL WORK COMPLETE** ✅ — All coordination items complete ✅, all implementation complete ✅, code quality improvement complete ✅. **NEW: JG Project Responsibilities Assigned** ✅ (2025-12-29-105655-pst) — Flow Agent assigned workflow orchestration responsibilities for JG project (Months 4-10). Planning workflow orchestration points ⏳. Flow Agent is in excellent state with no blocking dependencies. Ready for JG project workflow orchestration planning and implementation.
+**Key Achievements**:
+- ✅ ZON Format Integration: Complete (implementation ✅, tests ✅, Dashboard API ✅, documentation ✅)
+- ✅ Research Agent Failure Data Collection: Complete (all 5 phases ✅, Research Agent acknowledged ✅)
+- ✅ Carry Agent Event Bus Initialization: Complete (shared instance implemented ✅, Carry Agent integrated ✅)
+- ✅ Code Quality Improvement: Complete (`write_failure_json` refactored to meet 70-line limit ✅)
+- ✅ JG Project Workflow Orchestration Planning: Complete (comprehensive planning document created ✅, all 12 workflow types designed ✅)
 
 ---
 
 ## Recent Completions
 
 **Recent Completions**:
+- ✅ **JG Project Workflow Orchestration Plan Created** (2025-12-30-015221-pst): Comprehensive workflow orchestration plan document created at `docs/grain_flow/jg_project_workflow_orchestration_plan_2025-12-30-015221-pst.md`. All 12 workflow types designed (4 task workflows, 4 supply chain workflows, 4 democratic process workflows), workflow templates designed, event bus integration patterns planned, API contracts and data flow patterns documented. Ready for Core Agent API contract review (Months 1-6) and implementation (Months 4-10).
 - ✅ **Core Agent Coordination Plan Acknowledged** (2025-12-29-152539-pst): New coordination plan acknowledged, architecture evolution complete ✅ (Vantage Core + L2 sub-agents), coordination model established ✅. Flow Agent JG project responsibilities remain unchanged ✅ (workflow orchestration, Months 4-10).
 - ✅ **Code Quality Improvement: write_failure_json Refactoring** (2025-12-29-042000-pst): Refactored `write_failure_json` function from 262 lines to 50 lines to meet 70-line Grain Style limit. Split into 6 helper functions: `write_json_field_u32()`, `write_json_field_u64()`, `write_json_field_failure_type()`, `write_json_field_string_literal()`, `write_json_field_string_escaped()`, `write_json_escape_string()`. All tests pass ✅, no linter errors ✅.
 - ✅ **Research Agent Failure Data Collection Request Response Drafted** (2025-12-28-224800-pst): Coordination response created at `docs/agent-communications/flow_to_research_failure_data_collection_response_2025-12-28-224800-pst.md`. Initial assessment complete ✅ — Most required fields already tracked, implementation feasible, 1-2 week timeline confirmed. Answers provided to Research Agent's questions, implementation approach outlined, ready for coordination confirmation.
@@ -52,15 +48,17 @@
 
 ### Core Agent (1st Agent)
 
-**Status**: ✅ **ALL COORDINATION DECISIONS READY** ✅ — HTTP/WebSocket timeout ✅, error types ✅, service-to-service auth ✅, async pattern ✅, build issues resolved ✅, **Kernel Refactoring Complete** ✅ (2025-12-29-070000-pst), **JG Project Design Complete** ✅ (2025-12-28-232324-pst), **JG Project Multi-Agent Integration Plan Created** ✅ (2025-12-29-105655-pst)
+**Status**: ✅ **ALL COORDINATION DECISIONS READY** ✅ — HTTP/WebSocket timeout ✅, error types ✅, service-to-service auth ✅, async pattern ✅, build issues resolved ✅, **Kernel Refactoring Complete** ✅ (2025-12-29-070000-pst), **JG Project Design Complete** ✅ (2025-12-28-232324-pst), **JG Project Multi-Agent Integration Plan Created** ✅ (2025-12-29-105655-pst), **Architecture Evolution Complete** ✅ (2025-12-29-152539-pst)
 
 **What Core Agent Needs to Know**:
 
-1. ✅ **New Core Agent Coordination Plan Acknowledged** ✅ (2025-12-29-105655-pst):
-   - Flow Agent acknowledges new coordination plan with kernel refactoring complete ✅, JG project design complete ✅, JG project multi-agent integration plan created ✅
-   - Flow Agent JG project responsibilities assigned ✅ (workflow orchestration, Months 4-10)
-   - Flow Agent planning workflow orchestration points ⏳
-   - Flow Agent will coordinate with Core Agent on event bus integration (Months 3-4)
+1. ✅ **Flow Agent JG Project Planning Complete** ✅ (2025-12-30-015221-pst):
+   - Flow Agent has completed comprehensive workflow orchestration planning for JG project
+   - Planning document created: `docs/grain_flow/jg_project_workflow_orchestration_plan_2025-12-30-015221-pst.md`
+   - All 12 workflow types designed (4 task workflows, 4 supply chain workflows, 4 democratic process workflows)
+   - Workflow templates designed, event bus integration patterns planned, API contracts documented
+   - **Ready for Core Agent API Contract Review** (Months 1-6): Flow Agent will coordinate with Core Agent on JG module API contracts when available
+   - **Implementation Timeline**: Flow Agent ready to begin implementation (Months 4-10)
 
 2. ✅ **Flow Agent ZON Format Integration Complete** ✅:
    - All implementation, tests, Dashboard API, and documentation complete ✅
@@ -68,29 +66,30 @@
    - Integration testing is optional and can proceed independently when desired
    - Completion report sent to Core Agent (2025-12-28-224500-pst)
 
-2. ✅ **Research Agent Failure Data Collection Complete** ✅:
+3. ✅ **Research Agent Failure Data Collection Complete** ✅:
    - Flow Agent received Research Agent's failure data collection request (2025-12-28-224000-pst)
    - Flow Agent implementation complete ✅ (all 5 phases complete ✅, 2025-12-29-041500-pst)
    - Research Agent acknowledged completion ✅ (2025-12-29-041700-pst)
    - Extended failure metrics export ready for Research Agent Phase 1 analysis ✅
 
-3. ✅ **Carry Agent Event Bus Initialization Complete** ✅:
+4. ✅ **Carry Agent Event Bus Initialization Complete** ✅:
    - Flow Agent shared Event Bus instance implemented ✅ (2025-12-29-041800-pst)
    - `init_shared_event_bus()` and `get_shared_event_bus()` functions available ✅
    - Carry Agent Event Bus integration complete ✅ (2025-12-29-003407-pst)
    - Carry Agent ready for async pattern integration (waiting for Core Agent HTTP event publishing)
 
-4. ✅ **Code Quality Improvement Complete** ✅:
+5. ✅ **Code Quality Improvement Complete** ✅:
    - Flow Agent refactored `write_failure_json` function to meet 70-line Grain Style limit ✅
    - Function reduced from 262 lines to 50 lines ✅
    - All tests pass ✅, no linter errors ✅
 
-5. ⏳ **Event Bus Access for HTTP Request Event Publishing** (optional, 1-2 days):
+6. ⏳ **Event Bus Access for HTTP Request Event Publishing** (optional, 1-2 days):
    - Flow Agent shared Event Bus instance ready ✅
    - Core Agent can access Event Bus via `grain_flow.get_shared_event_bus()` for publishing HTTP request events
    - Coordination needed on Event Bus access pattern and agent ID assignment (optional, not blocking)
+   - **Implementation Details**: See Carry Agent coordination document (`docs/core-coordination/core-coordination_carry.md`) for detailed implementation steps
 
-6. ⏳ **Research Agent Validation Testing Blocked** (Priority 1, HIGH):
+7. ⏳ **Research Agent Validation Testing Blocked** (Priority 1, HIGH):
    - Research Agent has completed all integration phases ✅
    - Research Agent has 17 validation tests ready ✅
    - **Blocker**: Codebase compilation errors (unused parameters, syntax errors in various files)
@@ -99,38 +98,53 @@
 
 **What Core Agent Should Do**:
 
-1. ✅ **JG Project Multi-Agent Integration Plan Created** ✅ (2025-12-29-105655-pst):
-   - Flow Agent acknowledges JG project responsibilities assigned ✅
-   - Flow Agent will review JG project design document and plan workflow orchestration points
-   - Flow Agent will coordinate with Core Agent on event bus integration (Months 3-4)
-   - Flow Agent ready to begin task workflow orchestration implementation (Months 4-6)
-
-2. **Resolve Codebase Compilation Errors** (Priority 1, HIGH):
+1. **Resolve Codebase Compilation Errors** (Priority 1, HIGH):
    - **Issue**: Codebase has compilation errors (unused parameters, syntax errors in various files) that prevent test execution
    - **Impact**: Research Agent validation testing blocked (Priority 1, HIGH per Core Agent coordination plan)
    - **Tests Ready**: 17 tests ready (9 Phase 2 Token Counting, 8 Phase 3 Cost Tracking)
-   - **Action**: Fix codebase compilation errors to unblock Research Agent validation testing
+   - **Action**: Fix codebase compilation errors to unblock validation testing
    - **Timeline**: Research Agent will proceed immediately once errors are resolved (1-2 hours estimated for test execution)
 
-2. **Event Bus Access for HTTP Request Event Publishing** (optional, 1-2 days):
+2. **JG Project API Contract Development** (Priority 2, MEDIUM, Months 1-6):
+   - **Status**: Flow Agent has completed comprehensive workflow orchestration planning ✅
+   - **Planning Document**: `docs/grain_flow/jg_project_workflow_orchestration_plan_2025-12-30-015221-pst.md`
+   - **Action**: Develop API contracts for JG modules (JG Project Manager, JG Task Tracker, JG Supply Chain, JG Inventory Manager) as outlined in JG project design document
+   - **Coordination**: Flow Agent will coordinate with Core Agent on API contracts when available (Months 3-4)
+   - **Timeline**: API contracts needed before Flow Agent implementation begins (Months 4-6)
+
+3. **Event Bus Access for HTTP Request Event Publishing** (optional, 1-2 days):
    - **Status**: Flow Agent shared Event Bus instance ready ✅, Carry Agent integration complete ✅
    - **Action**: Coordinate with Flow Agent on Event Bus access pattern for publishing HTTP request events (`http_request_completed`, `http_request_failed`)
    - **Access**: Core Agent can access via `grain_flow.get_shared_event_bus()`
    - **Coordination**: Coordinate on agent ID assignment for event source/destination
    - **Priority**: Optional (not blocking), enables async pattern integration for Carry Agent
+   - **Implementation Details**: See Carry Agent coordination document for detailed steps
 
-3. **Acknowledge Flow Agent ZON Integration Completion** (if not already done):
+4. **Acknowledge Flow Agent ZON Integration Completion** (if not already done):
    - Review completion report at `docs/agent-communications/flow_to_core_zon_integration_completion_2025-12-28-224500-pst.md`
    - **Status**: All implementation work documented, success criteria met
 
-4. **Provide TigerBeetle Implementation Timeline** (Medium Priority):
+5. **Provide TigerBeetle Implementation Timeline** (Medium Priority):
    - When ready, provide implementation timeline for TigerBeetle enhancement
    - Research Agent can coordinate accordingly
 
-5. **Continue Core Agent Work**:
+6. **Continue Core Agent Work**:
    - Update HTTP/WebSocket clients to use error types consistently (1 day)
    - Continue with other Core Agent priorities
    - **No Immediate Action Required for Flow Agent**: Flow Agent work is independent and non-blocking
+
+**Summary for Core Agent**:
+- ✅ **Flow Agent JG Project Planning Complete** — Comprehensive workflow orchestration planning document created, all 12 workflow types designed, ready for API contract review (Months 1-6) and implementation (Months 4-10)
+- ✅ **Flow Agent All Work Complete** — ZON format integration ✅, Research Agent failure data collection ✅, Carry Agent Event Bus ✅, code quality improvement ✅
+- ⏳ **Research Agent Validation Testing Blocked** — **PRIORITY 1, HIGH** — Codebase compilation errors need to be resolved
+- ⏳ **JG Project API Contracts** — **PRIORITY 2, MEDIUM** — API contracts needed for JG modules (Months 1-6)
+- ⏳ **Event Bus HTTP Event Publishing** — **OPTIONAL** — Enables Carry Agent async pattern integration (1-2 days)
+
+**Next Steps for Core Agent**:
+1. **IMMEDIATE** (Priority 1, HIGH): Resolve codebase compilation errors to unblock Research Agent validation testing
+2. **MEDIUM** (Months 1-6): Develop JG project API contracts for JG modules (JG Project Manager, JG Task Tracker, JG Supply Chain, JG Inventory Manager)
+3. **OPTIONAL** (1-2 days): Implement HTTP event publishing for async pattern integration (enables Carry Agent async mode)
+4. **LOW**: Provide TigerBeetle implementation timeline when ready
 
 ---
 
@@ -179,6 +193,12 @@
    - WorkflowMetricsAnalyzer extended ✅
 
 **Timeline**: Research Agent can proceed with Phase 1 analysis independently. Validation testing will proceed once Core Agent resolves compilation errors.
+
+**Summary for Research Agent**:
+- ✅ **Flow Agent Implementation Complete** — All 5 phases complete, extended failure metrics export ready
+- ✅ **Research Agent Extension Complete** — WorkflowMetricsAnalyzer extended, ready for Phase 1 analysis
+- ⏳ **Validation Testing Blocked** — **PRIORITY 1, HIGH** — Waiting for Core Agent to resolve codebase compilation errors
+- ✅ **No Action Needed from Flow Agent** — Flow Agent work complete, Research Agent can proceed independently
 
 ---
 
@@ -231,6 +251,12 @@
 
 **Timeline**: ✅ Flow Agent implementation complete → ✅ Carry Agent integration complete → ⏳ Core Agent HTTP event publishing (1-2 days) → Async pattern integration complete
 
+**Summary for Carry Agent**:
+- ✅ **Flow Agent Implementation Complete** — Shared Event Bus instance ready
+- ✅ **Carry Agent Integration Complete** — Event Bus integrated, async response handling ready
+- ⏳ **Waiting for Core Agent** — HTTP event publishing needed for full async pattern integration (1-2 days)
+- ✅ **Synchronous Fallback Works** — Current implementation works perfectly, async is an optimization
+
 ---
 
 ### Court Agent (11th Agent)
@@ -250,15 +276,27 @@
    - Research Agent validation testing ready ✅ (build issues resolved ✅, 2025-12-29-041147-pst)
    - Research Agent validation testing blocked by codebase compilation errors (Priority 1, HIGH)
 
+3. ✅ **JG Project LLM Integration** (Months 7-9):
+   - Flow Agent workflow orchestration planning complete ✅
+   - Court Agent LLM-assisted route optimization needed for supply chain workflows (Months 7-9)
+   - Flow Agent will coordinate with Court Agent when implementation begins (Months 7-8)
+
 **What Court Agent Should Do**:
 - Continue with remaining ZON module work if any
 - Respond to Flow Agent's integration testing coordination message (optional)
 - Continue with other agent integrations as needed
+- Prepare for JG project LLM integration (Months 7-9) — Route optimization for supply chain workflows
 - No immediate action required for Flow Agent or Research Agent
+
+**Summary for Court Agent**:
+- ✅ **Flow Agent ZON Integration Complete** — Integration successful, optional integration testing available
+- ✅ **Research Agent Status** — All integration phases complete, validation testing blocked by compilation errors
+- ⏳ **JG Project LLM Integration** — Route optimization needed for supply chain workflows (Months 7-9)
+- ✅ **No Immediate Action Required** — Flow Agent work complete, Court Agent can proceed independently
 
 ---
 
-### Other Agents (Bubble, Skate, Workspace, Aurora, Silo, Vantage)
+### Other Agents (Bubble, Skate, Workspace, Aurora, Silo, Vantage, Vantage L2 Sub-Agents)
 
 **Status**: No immediate coordination needed with Flow Agent
 
@@ -267,9 +305,15 @@
 - Flow Agent failure data collection implementation complete ✅ (Research Agent request, all 5 phases complete)
 - Flow Agent Event Bus initialization complete ✅ (Carry Agent request, shared instance implemented ✅, 2025-12-29-041800-pst)
 - Flow Agent code quality improvement complete ✅ (`write_failure_json` refactored to meet 70-line limit)
+- Flow Agent JG project workflow orchestration planning complete ✅ (comprehensive planning document created, all 12 workflow types designed)
 - Flow Agent work is independent and non-blocking
 - Flow Agent Dashboard API available for workflow observability (`/api/workflow-observatory/summary`, `/api/workflow-observatory/metrics`)
 - Flow Agent Event Bus available for async pattern integration (if needed)
+
+**JG Project Integration** (Months 4-10):
+- **Workspace Agent**: Desktop dashboards for democratic processes (Months 3-8) — Flow Agent will coordinate when implementation begins (Months 9-10)
+- **Silo Agent**: Task data storage (`jg_task:*`), supply chain data storage (`jg_supply_chain:*`), worker profile data storage (`jg_worker:*`) — Flow Agent will coordinate when implementation begins (Months 4-6)
+- **Vantage Agent**: Kernel support monitoring for JG project — Flow Agent will coordinate if kernel support is needed
 
 **No Action Needed**:
 - No immediate action needed from other agents
@@ -280,7 +324,7 @@
 
 ## JG Project: Workflow Orchestration Responsibilities
 
-**Status**: ✅ **RESPONSIBILITIES ASSIGNED** (2025-12-29-105655-pst) — Planning workflow orchestration points ⏳
+**Status**: ✅ **RESPONSIBILITIES ASSIGNED** (2025-12-29-105655-pst) — ✅ **PLANNING COMPLETE** (2025-12-30-015221-pst) — Workflow orchestration plan document created ✅, all 12 workflow types designed ✅, ready for Core Agent API contract review (Months 1-6) and implementation (Months 4-10)
 
 **JG Project Design Document**: `docs/zyx/grainbank_mmt_job_guarantee_housing_program_2025-12-28-232324-pst.md`
 
@@ -384,21 +428,23 @@
 
 ### Next Steps for Flow Agent
 
-1. ⏳ **Review JG Project Design Document** (in progress):
-   - Review `docs/zyx/grainbank_mmt_job_guarantee_housing_program_2025-12-28-232324-pst.md`
-   - Understand workflow requirements and integration points
-   - Identify workflow orchestration patterns
+1. ✅ **Review JG Project Design Document** (complete, 2025-12-30-015221-pst):
+   - ✅ Document reviewed: `docs/zyx/grainbank_mmt_job_guarantee_housing_program_2025-12-28-232324-pst.md`
+   - ✅ Workflow requirements and integration points identified
+   - ✅ Workflow orchestration patterns mapped to Flow Agent capabilities
 
-2. ⏳ **Plan Workflow Orchestration Points** (in progress):
-   - Map workflow types to Flow Agent workflow engine capabilities
-   - Design workflow templates for each workflow type
-   - Plan event bus integration for workflow triggers
-   - Coordinate with Core Agent on event bus integration
+2. ✅ **Plan Workflow Orchestration Points** (complete, 2025-12-30-015221-pst):
+   - ✅ Workflow orchestration plan document created: `docs/grain_flow/jg_project_workflow_orchestration_plan_2025-12-30-015221-pst.md`
+   - ✅ All 12 workflow types designed (4 task workflows, 4 supply chain workflows, 4 democratic process workflows)
+   - ✅ Workflow templates designed for each workflow type
+   - ✅ Event bus integration patterns planned
+   - ✅ API contracts and data flow patterns documented
 
 3. ⏳ **Coordinate with Core Agent** (pending, Months 3-4):
    - Coordinate on event bus integration for JG project workflows
-   - Review API contracts for JG modules
+   - Review API contracts for JG modules (when available, Months 1-6)
    - Plan workflow trigger points
+   - Refine workflow template designs based on API contracts
 
 4. ⏳ **Begin Task Workflow Orchestration Implementation** (Months 4-6):
    - Implement task dependency workflows
@@ -424,11 +470,17 @@
 - ✅ **Core Agent: All Coordination Decisions Ready** (2025-12-29-041147-pst) — **READY FOR INTEGRATION** ✅ — Core Agent coordination plan acknowledged, all coordination decisions ready ✅ (HTTP/WebSocket timeout ✅, error types ✅, service-to-service auth ✅, async pattern ✅), build issues resolved ✅. Flow Agent will integrate when updating HTTP Client usage.
 - ⏳ **Core Agent: TigerBeetle implementation timeline** (Medium Priority, **WAITING**)
 - ⏳ **Core Agent: Codebase compilation errors** (Priority 1, HIGH, **BLOCKING RESEARCH AGENT VALIDATION TESTING**)
+- ⏳ **Core Agent: JG Project API contracts** (Priority 2, MEDIUM, Months 1-6, **NEEDED FOR FLOW AGENT IMPLEMENTATION**)
+- ⏳ **Core Agent: HTTP event publishing** (Optional, 1-2 days, **ENABLES CARRY AGENT ASYNC PATTERN**)
 
 **Future Coordination**:
 - Research Agent: Continue workflow observability collaboration (Phase 3 complete ✅)
 - Court Agent: Integration testing results and validation (optional, decoder available)
 - Core Agent: Event Bus access pattern coordination (optional, 1-2 days)
+- Core Agent: JG project API contract review (Months 3-4)
+- Court Agent: JG project LLM route optimization (Months 7-9)
+- Workspace Agent: JG project desktop dashboard integration (Months 9-10)
+- Silo Agent: JG project storage schema coordination (Months 4-6)
 
 **No Conflicts Detected**:
 - All dependencies are clear and documented
@@ -447,6 +499,7 @@
 - ✅ **Research Agent: Failure Data Collection Request** — **IMPLEMENTATION COMPLETE** ✅ (2025-12-29-041500-pst) — All 5 phases complete ✅, comprehensive tests added ✅, Research Agent acknowledged completion ✅ (2025-12-29-041700-pst), ready for Phase 1 analysis ✅
 - ✅ **Carry Agent: Event Bus Initialization Request** — **IMPLEMENTATION COMPLETE** ✅ (2025-12-29-041800-pst) — Shared Event Bus instance implemented ✅, tests added ✅, Carry Agent integration complete ✅ (2025-12-29-003407-pst)
 - ✅ **Code Quality Improvement** — **COMPLETE** ✅ (2025-12-29-042000-pst) — `write_failure_json` refactored from 262 lines to 50 lines (meets 70-line Grain Style limit) ✅
+- ✅ **JG Project Workflow Orchestration Planning** — **COMPLETE** ✅ (2025-12-30-015221-pst) — Comprehensive planning document created, all 12 workflow types designed, ready for implementation (Months 4-10)
 - ✅ ZON Format Integration Tests: **COMPLETE** — Comprehensive test coverage added ✅
 - ✅ ZON Format Dashboard API Integration: **COMPLETE** — Format query parameter support added ✅
 - ✅ Async Pattern Event Types: **ADDED** — Event types ready for Core Agent implementation
@@ -456,7 +509,7 @@
 - **ZON format integration is COMPLETE** ✅ — All implementation work done (implementation ✅, tests ✅, Dashboard API ✅, documentation ✅), Court Agent integration complete, Core Agent completion report sent
 - **Research Agent failure data collection request acknowledged** ✅ — Assessment complete ✅, coordination response drafted ✅, implementation approach outlined, ready for coordination confirmation
 - TigerBeetle enhancement requires Core Agent implementation timeline (Medium Priority, waiting)
-- **All independent work complete** ✅ — Research Agent failure data collection implementation complete ✅, Carry Agent Event Bus initialization complete ✅, code quality improvement complete ✅, all coordination items complete ✅, ready for optional improvements or waiting for other agents
+- **All independent work complete** ✅ — Research Agent failure data collection implementation complete ✅, Carry Agent Event Bus initialization complete ✅, code quality improvement complete ✅, all coordination items complete ✅, JG project planning complete ✅, ready for optional improvements or waiting for other agents
 
 **Key Files**:
 - Event Bus: `src/grain_flow/event_bus.zig` (source filtering complete, async pattern event types added ✅)
@@ -475,13 +528,14 @@
 - Flow Agent Failure Data Collection Response: `docs/agent-communications/flow_to_research_failure_data_collection_response_2025-12-28-224800-pst.md`
 - Flow Agent Event Bus Initialization Response: `docs/agent-communications/flow_to_carry_event_bus_initialization_2025-12-29-041700-pst.md`
 - Dashboard API Documentation: `docs/grain_flow/dashboard_api.md`
+- JG Project Workflow Orchestration Plan: `docs/grain_flow/jg_project_workflow_orchestration_plan_2025-12-30-015221-pst.md`
 - Core Coordination Plan: `docs/agent-communications/core_agent_coordination_plan_2025-12-28-125036-pst.md`, `docs/agent-communications/core_agent_coordination_plan_2025-12-28-223816-pst.md`, `docs/agent-communications/core_agent_coordination_plan_2025-12-29-001544-pst.md`, `docs/agent-communications/core_agent_coordination_plan_2025-12-29-041147-pst.md`, `docs/agent-communications/core_agent_coordination_plan_2025-12-29-105655-pst.md`, `docs/agent-communications/core_agent_coordination_plan_2025-12-29-152539-pst.md`
 - JG Project Design: `docs/zyx/grainbank_mmt_job_guarantee_housing_program_2025-12-28-232324-pst.md`
 
 ---
 
-**Date**: 2025-12-29-153938-pst  
+**Date**: 2025-12-30-020103-pst  
 **Agent**: Grain Flow Agent (9th Agent)  
-**Status**: All Coordination Items Complete ✅, All Work Complete ✅, Code Quality Improvement Complete ✅, Research Agent Already Acknowledged ✅, Carry Agent Event Bus Ready ✅, **JG Project Responsibilities Assigned** ✅ (workflow orchestration, Months 4-10), Planning Workflow Orchestration Points ⏳, **Architecture Evolution Acknowledged** ✅ (Vantage Core + L2 sub-agents)
+**Status**: All Coordination Items Complete ✅, All Work Complete ✅, Code Quality Improvement Complete ✅, Research Agent Already Acknowledged ✅, Carry Agent Event Bus Ready ✅, **JG Project Planning Complete** ✅ (workflow orchestration planning document created, ready for implementation Months 4-10), **Architecture Evolution Acknowledged** ✅ (Vantage Core + L2 sub-agents)
 
-Flow Agent has completed all core phases (Phase 1-5) and recent independent enhancements (Event Bus source filtering, Cron parser step value support, Hierarchical layout). **Async pattern event types added** ✅ (2025-12-28-173000-pst): `http_request_completed`, `http_request_failed`, `websocket_connected`, `websocket_message_received`, `file_io_completed`, `file_io_failed`. **Async pattern documentation created** ✅ (2025-12-28-173000-pst): comprehensive usage documentation (`docs/grain_flow/async_pattern.md`) with examples, event payload formats, best practices, and integration guidelines. **Build configuration resolved** ✅ (Core Agent fixed `grain_core_module` definition order). **ZON format integration implementation complete** ✅ (2025-12-28-173500-pst): `export_all_metrics_zon()` and `get_aggregated_summary_zon()` implemented using Court Agent's bounded allocation API (`encode_zon_bounded()`, `encode_tabular_array_zon_bounded()`). **Court Agent bounded allocation API acknowledged** ✅ (2025-12-28-173500-pst): All three encoding functions implemented, integration complete. **ZON format integration tests complete** ✅ (2025-12-28-174500-pst): Comprehensive test coverage added for both ZON export functions. **ZON format Dashboard API integration complete** ✅ (2025-12-28-175000-pst): Format query parameter support added to both `/api/workflow-observatory/summary?format=zon` and `/api/workflow-observatory/metrics?format=zon` endpoints, query parameter parsing implemented, Content-Type headers set appropriately, backward compatible (defaults to JSON). **Comprehensive ZON integration preparation document created** (2025-12-23-173000-pst) with data structure mapping, conversion approach, implementation plan, testing strategy, and token efficiency estimation. **Research Agent Phase 4 implementation complete** ✅ (2025-12-23-122000-pst). **ZON format integration is COMPLETE** ✅ (Court Agent ZON module Phase 2 complete ✅, bounded allocation API implemented ✅, Flow Agent integration complete ✅, tests complete ✅, Dashboard API integration complete ✅, documentation complete ✅). **ALL COORDINATION COMPLETE** ✅ — Court Agent integration complete, Core Agent completion report sent, integration testing coordination message sent. Court Agent decoder available for optional integration testing. **Research Agent failure data collection request acknowledged** ✅ (2025-12-28-224800-pst): Assessment complete ✅, coordination response drafted ✅, implementation approach outlined (5 phases, 1-2 weeks), ready to begin implementation upon Research Agent coordination confirmation. Research Agent all integration phases complete ✅ (Phase 4 ✅, Phase 2 LLM ✅, Phase 2 Token Counting ✅, Phase 3 Cost Tracking ✅), validation testing ready ✅ (build issues resolved ✅, 2025-12-29-041147-pst), Failure Pattern Analysis methodology documented. **Core Agent Coordination Plan 2025-12-29-041147-pst acknowledged** ✅: All coordination decisions ready ✅ (HTTP/WebSocket timeout ✅, error types ✅, service-to-service auth ✅, async pattern ✅), build issues resolved ✅. TigerBeetle enhancement coordination is pending Core Agent implementation timeline (Medium Priority). **ASYNC PATTERN COMPLETE** — Event types added ✅, documentation created ✅, Event Bus ready for Core Agent async pattern implementation. **ZON FORMAT INTEGRATION COMPLETE** — Implementation complete ✅, tests complete ✅, Dashboard API integration complete ✅, documentation complete ✅. **ALL COORDINATION DECISIONS READY** ✅ — HTTP/WebSocket timeout ✅, error types ✅, service-to-service auth ✅, async pattern ✅. **CODE QUALITY IMPROVEMENT COMPLETE** ✅ — `write_failure_json` refactored from 262 lines to 50 lines (meets 70-line Grain Style limit) ✅. **STATUS**: Flow Agent is in excellent state with all required work complete ✅. Research Agent failure data collection implementation complete ✅ (all 5 phases complete ✅, comprehensive tests added ✅), Research Agent acknowledged completion ✅ (2025-12-29-041700-pst). Carry Agent Event Bus initialization complete ✅ (shared instance implemented ✅, tests added ✅), Carry Agent integration complete ✅ (2025-12-29-003407-pst). Code quality improvement complete ✅. All coordination items complete ✅. **NEW: JG Project Responsibilities Assigned** ✅ (2025-12-29-105655-pst) — Flow Agent assigned workflow orchestration responsibilities for JG project (Months 4-10). Planning workflow orchestration points ⏳. Ready for JG project workflow orchestration planning and implementation, or optional improvements (HTTP/WebSocket timeout/error types integration, Core Agent Event Bus coordination).
+Flow Agent has completed all core phases (Phase 1-5) and recent independent enhancements (Event Bus source filtering, Cron parser step value support, Hierarchical layout). **Async pattern event types added** ✅ (2025-12-28-173000-pst): `http_request_completed`, `http_request_failed`, `websocket_connected`, `websocket_message_received`, `file_io_completed`, `file_io_failed`. **Async pattern documentation created** ✅ (2025-12-28-173000-pst): comprehensive usage documentation (`docs/grain_flow/async_pattern.md`) with examples, event payload formats, best practices, and integration guidelines. **Build configuration resolved** ✅ (Core Agent fixed `grain_core_module` definition order). **ZON format integration implementation complete** ✅ (2025-12-28-173500-pst): `export_all_metrics_zon()` and `get_aggregated_summary_zon()` implemented using Court Agent's bounded allocation API (`encode_zon_bounded()`, `encode_tabular_array_zon_bounded()`). **Court Agent bounded allocation API acknowledged** ✅ (2025-12-28-173500-pst): All three encoding functions implemented, integration complete. **ZON format integration tests complete** ✅ (2025-12-28-174500-pst): Comprehensive test coverage added for both ZON export functions. **ZON format Dashboard API integration complete** ✅ (2025-12-28-175000-pst): Format query parameter support added to both `/api/workflow-observatory/summary?format=zon` and `/api/workflow-observatory/metrics?format=zon` endpoints, query parameter parsing implemented, Content-Type headers set appropriately, backward compatible (defaults to JSON). **Comprehensive ZON integration preparation document created** (2025-12-23-173000-pst) with data structure mapping, conversion approach, implementation plan, testing strategy, and token efficiency estimation. **Research Agent Phase 4 implementation complete** ✅ (2025-12-23-122000-pst). **ZON format integration is COMPLETE** ✅ (Court Agent ZON module Phase 2 complete ✅, bounded allocation API implemented ✅, Flow Agent integration complete ✅, tests complete ✅, Dashboard API integration complete ✅, documentation complete ✅). **ALL COORDINATION COMPLETE** ✅ — Court Agent integration complete, Core Agent completion report sent, integration testing coordination message sent. Court Agent decoder available for optional integration testing. **Research Agent failure data collection request acknowledged** ✅ (2025-12-28-224800-pst): Assessment complete ✅, coordination response drafted ✅, implementation approach outlined (5 phases, 1-2 weeks), ready to begin implementation upon Research Agent coordination confirmation. Research Agent all integration phases complete ✅ (Phase 4 ✅, Phase 2 LLM ✅, Phase 2 Token Counting ✅, Phase 3 Cost Tracking ✅), validation testing ready ✅ (build issues resolved ✅, 2025-12-29-041147-pst), Failure Pattern Analysis methodology documented. **Core Agent Coordination Plan 2025-12-29-041147-pst acknowledged** ✅: All coordination decisions ready ✅ (HTTP/WebSocket timeout ✅, error types ✅, service-to-service auth ✅, async pattern ✅), build issues resolved ✅. TigerBeetle enhancement coordination is pending Core Agent implementation timeline (Medium Priority). **ASYNC PATTERN COMPLETE** — Event types added ✅, documentation created ✅, Event Bus ready for Core Agent async pattern implementation. **ZON FORMAT INTEGRATION COMPLETE** — Implementation complete ✅, tests complete ✅, Dashboard API integration complete ✅, documentation complete ✅. **ALL COORDINATION DECISIONS READY** ✅ — HTTP/WebSocket timeout ✅, error types ✅, service-to-service auth ✅, async pattern ✅. **CODE QUALITY IMPROVEMENT COMPLETE** ✅ — `write_failure_json` refactored from 262 lines to 50 lines (meets 70-line Grain Style limit) ✅. **JG PROJECT PLANNING COMPLETE** ✅ — Comprehensive workflow orchestration planning document created (2025-12-30-015221-pst), all 12 workflow types designed, ready for Core Agent API contract review (Months 1-6) and implementation (Months 4-10). **STATUS**: Flow Agent is in excellent state with all required work complete ✅. Research Agent failure data collection implementation complete ✅ (all 5 phases complete ✅, comprehensive tests added ✅), Research Agent acknowledged completion ✅ (2025-12-29-041700-pst). Carry Agent Event Bus initialization complete ✅ (shared instance implemented ✅, tests added ✅), Carry Agent integration complete ✅ (2025-12-29-003407-pst). Code quality improvement complete ✅. All coordination items complete ✅. **JG Project Responsibilities Assigned** ✅ (2025-12-29-105655-pst) — Flow Agent assigned workflow orchestration responsibilities for JG project (Months 4-10). **JG Project Planning Complete** ✅ (2025-12-30-015221-pst) — Comprehensive workflow orchestration planning document created, all 12 workflow types designed, ready for implementation. Ready for JG project workflow orchestration implementation (Months 4-10), or optional improvements (HTTP/WebSocket timeout/error types integration, Core Agent Event Bus coordination).

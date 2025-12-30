@@ -694,7 +694,89 @@ Grain Skate Terminal Silo Field Agent is responsible for building Grain Skate (k
 
 ---
 
-### Phase 8: UI Rendering Unification (Priority: Low)
+### Phase 8: Job Guarantee (JG) Project Knowledge Graph (Priority: High)
+
+**Status**: **PLANNED** (Implementation: Months 5-7)  
+**Estimated Time**: 8-12 weeks (across 3 months)
+
+**Objective**: Build knowledge graphs for JG housing program: material properties, construction techniques, worker skill networks, and project relationship mapping.
+
+**Context**: Assigned by Core Agent as part of Grainbank MMT Job Guarantee Housing Program. Skate Agent responsible for knowledge graph infrastructure to support JG project management, material tracking, worker skill matching, and project coordination.
+
+**Knowledge Graph Domains**:
+
+1. **Material Knowledge Graph** (Months 5-6):
+   - Material properties (hemp, bamboo, timber, rammed earth, stone, clay)
+   - Processing techniques (hempcrete blocks, LBL, CEB, bricks)
+   - Quality certifications (organic, fair trade, structural grade, fire rated)
+   - Material relationships (raw → processed → construction use)
+   - Regional sourcing patterns
+   - Cost and availability tracking
+
+2. **Worker Skill Network** (Months 6-7):
+   - Worker profiles and certifications
+   - Skill relationships (prerequisites, related skills)
+   - Skill-to-project matching (which workers can work on which projects)
+   - Training pathways (skill development graphs)
+   - Team composition recommendations
+
+3. **Project Relationship Mapping** (Months 6-7):
+   - Project-to-project dependencies (site prep → foundation → framing)
+   - Project-to-material relationships (which materials used in which projects)
+   - Project-to-worker assignments (who works on what)
+   - Project-to-task relationships (project phases, task breakdowns)
+   - Regional project coordination (multiple sites, shared resources)
+
+**Implementation Steps**:
+
+**Month 5: Material Knowledge Graph Foundation**:
+1. Design material knowledge graph schema (nodes: materials, properties, certifications; edges: processing, sourcing, usage)
+2. Create `src/grain_skate/jg_material_graph.zig` module
+3. Integrate with Silo Agent for material data storage (`jg_material:*` keys)
+4. Build material property query API (find materials by property, find processing techniques)
+5. Test with sample material data (hemp, bamboo, timber)
+
+**Month 6: Worker Skill Network & Project Relationships**:
+1. Design worker skill network schema (nodes: workers, skills, certifications; edges: has_skill, requires_skill, trained_in)
+2. Create `src/grain_skate/jg_worker_skill_graph.zig` module
+3. Design project relationship schema (nodes: projects, tasks, materials, workers; edges: uses, assigned_to, depends_on)
+4. Create `src/grain_skate/jg_project_graph.zig` module
+5. Integrate with Grain JG Project Manager, Task Tracker, Inventory Manager
+6. Build skill matching API (find workers for project, find projects for worker)
+7. Build project coordination API (find dependencies, find resource conflicts)
+
+**Month 7: AI-Powered Insights & Integration**:
+1. Extend AI insights (`ai_insights.zig`) for JG-specific queries:
+   - Material recommendations (AI suggests materials for project requirements)
+   - Skill gap analysis (AI identifies missing skills for project)
+   - Project optimization (AI suggests project sequencing, resource allocation)
+2. Integrate with Court Agent for LLM-powered insights (material selection, skill matching)
+3. Build visualization components for JG knowledge graphs (material flow, skill networks, project dependencies)
+4. Integrate with Flow Agent for workflow orchestration (project dependencies → workflow)
+5. Test end-to-end (material selection → worker assignment → project execution)
+
+**Integration Points**:
+- **Silo Agent**: Material data storage (`jg_material:*`), worker data (`jg_worker:*`), project data (`jg_project:*`)
+- **Grainbank**: Material cost tracking, worker wage calculations
+- **Grain JG Project Manager**: Project lifecycle tracking
+- **Grain JG Task Tracker**: Task-to-project relationships
+- **Grain JG Inventory Manager**: Material inventory tracking
+- **Court Agent**: LLM-powered material recommendations, skill matching
+- **Flow Agent**: Workflow orchestration for project dependencies
+
+**Dependencies**:
+- **Needs**: Silo Agent data access (material, worker, project data)
+- **Needs**: Core Agent coordination on data access patterns
+- **Needs**: Court Agent LLM integration (already integrated for AI insights)
+- **Coordinates with**: Grain JG modules (Project Manager, Task Tracker, Inventory Manager), Flow Agent (workflow), Court Agent (LLM insights)
+
+**Reference**: 
+- See [`docs/zyx/grainbank_mmt_job_guarantee_housing_program_2025-12-29-041147-pst.md`](../zyx/grainbank_mmt_job_guarantee_housing_program_2025-12-29-041147-pst.md) for full JG project design
+- See [`docs/core-coordination/core-coordination_skate.md`](../core-coordination/core-coordination_skate.md) for JG project coordination details
+
+---
+
+### Phase 9: UI Rendering Unification (Priority: Low)
 
 **Status**: **PLANNED**  
 **Estimated Time**: 2-4 weeks (evaluation dependent)

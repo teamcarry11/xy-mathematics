@@ -445,6 +445,36 @@ pub const BasinKernel = struct {
         };
     }
     
+    /// Find hot path (most frequently called syscall).
+    /// Why: Identify syscall with highest call count for optimization.
+    /// Returns: Syscall number and call count, or null if no syscalls recorded.
+    pub fn find_profiler_hot_path(self: *const BasinKernel) ?struct {
+        syscall_num: u32,
+        call_count: u64,
+    } {
+        // Assert: Kernel must be initialized (precondition).
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Kernel ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Kernel ptr unaligned", .{});
+        
+        return self.syscall_profiler.find_hot_path();
+    }
+    
+    /// Find slow path (syscall with highest average execution time).
+    /// Why: Identify slowest syscall for optimization.
+    /// Returns: Syscall number and average time, or null if no syscalls recorded.
+    pub fn find_profiler_slow_path(self: *const BasinKernel) ?struct {
+        syscall_num: u32,
+        avg_time_ns: u64,
+    } {
+        // Assert: Kernel must be initialized (precondition).
+        const self_ptr = @intFromPtr(self);
+        Debug.kassert(self_ptr != 0, "Kernel ptr is null", .{});
+        Debug.kassert(self_ptr % @alignOf(BasinKernel) == 0, "Kernel ptr unaligned", .{});
+        
+        return self.syscall_profiler.find_slow_path();
+    }
+    
     /// Calculate memory usage for a process by summing its memory mappings.
     /// Why: Track total memory used by a process for resource monitoring.
     /// Contract: process_id must be valid (non-zero).

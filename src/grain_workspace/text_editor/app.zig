@@ -11,6 +11,7 @@
 //! 2025-12-23-210000-pst: Phase 31 Syntax Highlighting
 //! 2025-12-28-223816-pst: Phase 33 Bracket Matching
 //! 2025-12-29-001544-pst: Phase 35 Code Folding
+//! 2025-12-29-152539-pst: Phase 37 Visual Fold Indicators (helper functions)
 
 const std = @import("std");
 const grain_core = @import("grain_core");

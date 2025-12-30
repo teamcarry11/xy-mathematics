@@ -65,6 +65,28 @@ if (metrics) |m| {
 }
 ```
 
+### Find Hot Path (Most Frequently Called Syscall)
+
+```zig
+const hot_path = kernel.find_profiler_hot_path();
+if (hot_path) |hp| {
+    // hp.syscall_num - Syscall number with highest call count
+    // hp.call_count - Number of times this syscall was called
+    std.debug.print("Hot path: syscall {}, called {} times\n", .{hp.syscall_num, hp.call_count});
+}
+```
+
+### Find Slow Path (Syscall with Highest Average Execution Time)
+
+```zig
+const slow_path = kernel.find_profiler_slow_path();
+if (slow_path) |sp| {
+    // sp.syscall_num - Syscall number with highest average execution time
+    // sp.avg_time_ns - Average execution time (nanoseconds)
+    std.debug.print("Slow path: syscall {}, avg time {} ns\n", .{sp.syscall_num, sp.avg_time_ns});
+}
+```
+
 ### Reset Metrics
 
 ```zig
@@ -119,39 +141,22 @@ kernel.syscall_profiler.enable();
 ### Step 2: Identify Hot Paths
 
 ```zig
-// Find syscalls with highest call counts
-var max_calls: u64 = 0;
-var hot_syscall: u32 = 0;
-
-var i: u32 = 0;
-while (i < MAX_SYSCALLS) : (i += 1) {
-    const metrics = kernel.syscall_profiler.get_metrics(i);
-    if (metrics) |m| {
-        if (m.call_count > max_calls) {
-            max_calls = m.call_count;
-            hot_syscall = i;
-        }
-    }
+// Find syscall with highest call count (hot path).
+const hot_path = kernel.find_profiler_hot_path();
+if (hot_path) |hp| {
+    std.debug.print("Hot path: syscall {}, called {} times\n", .{hp.syscall_num, hp.call_count});
+    // Focus optimization efforts on this syscall.
 }
 ```
 
 ### Step 3: Identify Slow Syscalls
 
 ```zig
-// Find syscalls with highest average execution time
-var max_avg: u64 = 0;
-var slow_syscall: u32 = 0;
-
-var i: u32 = 0;
-while (i < MAX_SYSCALLS) : (i += 1) {
-    const metrics = kernel.syscall_profiler.get_metrics(i);
-    if (metrics) |m| {
-        const avg = m.get_average_time_ns();
-        if (avg > max_avg) {
-            max_avg = avg;
-            slow_syscall = i;
-        }
-    }
+// Find syscall with highest average execution time (slow path).
+const slow_path = kernel.find_profiler_slow_path();
+if (slow_path) |sp| {
+    std.debug.print("Slow path: syscall {}, avg time {} ns\n", .{sp.syscall_num, sp.avg_time_ns});
+    // Focus optimization efforts on this syscall.
 }
 ```
 

@@ -698,6 +698,69 @@
 
 ---
 
+### Phase 8: Job Guarantee (JG) Project Knowledge Graph (Priority: High)
+
+**Status**: **PLANNED** (Implementation: Months 5-7)  
+**Date**: 2025-12-29-160000-pst
+
+**Context**: Assigned by Core Agent as part of Grainbank MMT Job Guarantee Housing Program. Skate Agent responsible for knowledge graph infrastructure.
+
+**Month 5: Material Knowledge Graph Foundation** (Planned):
+- [ ] Design material knowledge graph schema (nodes: materials, properties, certifications; edges: processing, sourcing, usage)
+- [ ] Create `src/grain_skate/jg_material_graph.zig` module
+- [ ] Integrate with Silo Agent for material data storage (`jg_material:*` keys)
+- [ ] Build material property query API (find materials by property, find processing techniques)
+- [ ] Test with sample material data (hemp, bamboo, timber)
+- [ ] Coordinate with Core Agent on data access patterns
+- [ ] Coordinate with Grain JG Inventory Manager on material data structure
+
+**Month 6: Worker Skill Network & Project Relationships** (Planned):
+- [ ] Design worker skill network schema (nodes: workers, skills, certifications; edges: has_skill, requires_skill, trained_in)
+- [ ] Create `src/grain_skate/jg_worker_skill_graph.zig` module
+- [ ] Design project relationship schema (nodes: projects, tasks, materials, workers; edges: uses, assigned_to, depends_on)
+- [ ] Create `src/grain_skate/jg_project_graph.zig` module
+- [ ] Integrate with Grain JG Project Manager, Task Tracker, Inventory Manager
+- [ ] Build skill matching API (find workers for project, find projects for worker)
+- [ ] Build project coordination API (find dependencies, find resource conflicts)
+- [ ] Coordinate with Grain JG modules on data structures
+
+**Month 7: AI-Powered Insights & Integration** (Planned):
+- [ ] Extend AI insights (`ai_insights.zig`) for JG-specific queries:
+  - Material recommendations (AI suggests materials for project requirements)
+  - Skill gap analysis (AI identifies missing skills for project)
+  - Project optimization (AI suggests project sequencing, resource allocation)
+- [ ] Integrate with Court Agent for LLM-powered insights (material selection, skill matching)
+- [ ] Build visualization components for JG knowledge graphs (material flow, skill networks, project dependencies)
+- [ ] Integrate with Flow Agent for workflow orchestration (project dependencies → workflow)
+- [ ] Test end-to-end (material selection → worker assignment → project execution)
+- [ ] Coordinate with Flow Agent on workflow integration
+
+**Key Modules** (To Be Created):
+- `src/grain_skate/jg_material_graph.zig` - Material knowledge graph
+- `src/grain_skate/jg_worker_skill_graph.zig` - Worker skill network
+- `src/grain_skate/jg_project_graph.zig` - Project relationship mapping
+
+**Integration Points**:
+- **Silo Agent**: Material data storage (`jg_material:*`), worker data (`jg_worker:*`), project data (`jg_project:*`)
+- **Grainbank**: Material cost tracking, worker wage calculations
+- **Grain JG Project Manager**: Project lifecycle tracking
+- **Grain JG Task Tracker**: Task-to-project relationships
+- **Grain JG Inventory Manager**: Material inventory tracking
+- **Court Agent**: LLM-powered material recommendations, skill matching
+- **Flow Agent**: Workflow orchestration for project dependencies
+
+**Dependencies**:
+- **Needs**: Silo Agent data access (material, worker, project data)
+- **Needs**: Core Agent coordination on data access patterns
+- **Needs**: Court Agent LLM integration (already integrated for AI insights)
+- **Coordinates with**: Grain JG modules (Project Manager, Task Tracker, Inventory Manager), Flow Agent (workflow), Court Agent (LLM insights)
+
+**Reference**: 
+- See [`docs/zyx/grainbank_mmt_job_guarantee_housing_program_2025-12-29-041147-pst.md`](../zyx/grainbank_mmt_job_guarantee_housing_program_2025-12-29-041147-pst.md) for full JG project design
+- See [`docs/core-coordination/core-coordination_skate.md`](../core-coordination/core-coordination_skate.md) for JG project coordination details
+
+---
+
 ## References
 
 - **Core Tasks**: [`docs/tasks.md`](../tasks.md)

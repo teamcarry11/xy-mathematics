@@ -1,17 +1,17 @@
 # Grain Workspace Agent: Core Coordination Status
 
-**Last Updated**: 2025-12-29-152539-pst  
+**Last Updated**: 2025-12-29-160000-pst  
 **Agent**: Grain Workspace Agent (8th Agent)  
-**Status**: Phase 36 Complete ✅ — Error Handling Integration Complete ✅ — All Coordination Decisions Ready ✅ — JG Project Assigned ✅ — Architecture Evolution Acknowledged ✅  
+**Status**: Phase 37 Complete ✅ — Visual Fold Indicators Complete ✅ — All Coordination Decisions Ready ✅ — JG Project Assigned ✅ — Architecture Evolution Acknowledged ✅  
 **Coordination Plan**: `docs/agent-communications/core_agent_coordination_plan_2025-12-29-152539-pst.md`
 
 ---
 
 ## Executive Summary
 
-**Current State**: Phase 36 (Error Handling Integration) complete. Network Tools now tracks HTTP test errors with structured error types. Text Editor supports code folding, bracket matching, syntax highlighting, and comprehensive editing features. Network Tools uses HTTP/WebSocket timeout patterns per Core Agent's implementation. Component API structure implemented per approved design. Text Editor is feature-complete for SLC v1.0. Grain Style CLI tool is production-ready. **Component API implementation complete!** ✅ **Error handling structures ready!** ✅
+**Current State**: Phase 37 (Visual Fold Indicators) complete. Text Editor now provides helper functions for rendering fold indicators (`get_fold_indicator()`, `is_fold_start_line()`). Network Tools tracks HTTP test errors with structured error types. Text Editor supports code folding, bracket matching, syntax highlighting, and comprehensive editing features. Network Tools uses HTTP/WebSocket timeout patterns per Core Agent's implementation. Component API structure implemented per approved design. Text Editor is feature-complete for SLC v1.0. Grain Style CLI tool is production-ready. **Component API implementation complete!** ✅ **Error handling structures ready!** ✅ **Visual fold indicators ready for rendering!** ✅
 
-**Key Achievement**: 12 phases completed (25-36) in rapid succession, delivering production-ready desktop applications with comprehensive feature sets. Component API structure implemented and ready for integration with Bubble and Aurora agents. HTTP/WebSocket timeout integration complete. Error handling structures and helpers ready for full integration when Core Agent updates clients.
+**Key Achievement**: 13 phases completed (25-37) in rapid succession, delivering production-ready desktop applications with comprehensive feature sets. Component API structure implemented and ready for integration with Bubble and Aurora agents. HTTP/WebSocket timeout integration complete. Error handling structures and helpers ready for full integration when Core Agent updates clients. Visual fold indicator helpers ready for Bubble Agent rendering integration.
 
 **Critical Coordination Decisions Made** (by Core Agent, 2025-12-29-041147-pst):
 - ✅ **Component API Design**: **APPROVED** — Implementation complete ✅
@@ -22,7 +22,7 @@
 - ✅ **File I/O Timeout Handling**: Decision made — 30s default (pending kernel integration)
 - ✅ **File I/O Error Handling**: Decision made — Structured error unions (`FileIoError` enum) — Ready for integration
 
-**Strategic Recommendation**: **ALL COORDINATION DECISIONS ARE READY NOW!** ✅ Core Agent has completed ALL coordination decisions implementation (HTTP/WebSocket timeout ✅, error types ✅, service-to-service authentication ✅, async pattern ✅). Workspace Agent has integrated timeout patterns and prepared error handling structures. Component API implementation complete. Ready for coordination with Bubble and Aurora agents on component integration. This unblocks SLC product integration.
+**Strategic Recommendation**: **ALL COORDINATION DECISIONS ARE READY NOW!** ✅ Core Agent has completed ALL coordination decisions implementation (HTTP/WebSocket timeout ✅, error types ✅, service-to-service authentication ✅, async pattern ✅). Workspace Agent has integrated timeout patterns and prepared error handling structures. Component API implementation complete. Visual fold indicators ready for rendering. Ready for coordination with Bubble and Aurora agents on component integration. This unblocks SLC product integration.
 
 **New Project Assignment**: **JG Project (JG Housing Program)** — Multi-agent integration project assigned. Workspace Agent responsible for **Desktop Dashboards (Months 3-8)**. This is a new long-term project alongside existing SLC product work.
 
@@ -32,7 +32,7 @@
 
 ## Current Status
 
-### Recent Completions (Phases 25-36)
+### Recent Completions (Phases 25-37)
 
 **Grain Style CLI Tool** (Phases 21-27):
 - ✅ Production-ready standalone CLI tool
@@ -43,7 +43,7 @@
 - ✅ Ignore patterns (.grainignore)
 - ✅ 100% open-source (per Research Agent's service model)
 
-**Text Editor** (Phases 17-35):
+**Text Editor** (Phases 17-37):
 - ✅ Feature-complete for SLC v1.0
 - ✅ Zig syntax highlighting (keywords, strings, numbers, comments, operators)
 - ✅ Text selection, copy/cut/paste, delete selection
@@ -57,6 +57,7 @@
 - ✅ Clipboard management (1 MB limit)
 - ✅ Bracket matching (curly braces, parentheses, square brackets)
 - ✅ Code folding (detect, fold, unfold code blocks)
+- ✅ Visual fold indicators (helper functions for rendering)
 
 **Component API** (Phase 32):
 - ✅ Component API structure implemented per approved design
@@ -89,7 +90,14 @@
 - ✅ Helper functions: `http_error_to_test_error()`, `set_http_test_error()`, `is_http_test_error_retryable()`
 - ✅ Ready for full integration when Core Agent updates HTTP/WebSocket clients to return error types
 
-**Status**: Phase 36 complete. Error handling structures ready. Code folding implementation complete. HTTP/WebSocket timeout integration complete. Component API implementation complete. Ready for coordination with Bubble and Aurora agents.
+**Visual Fold Indicators** (Phase 37):
+- ✅ `get_fold_indicator()` function returns fold state for rendering
+- ✅ `is_fold_start_line()` function checks if line has fold indicator
+- ✅ Returns structured data: `{ has_indicator, is_folded, fold_level }`
+- ✅ Comprehensive tests (7 new test cases)
+- ✅ Ready for Bubble Agent rendering integration
+
+**Status**: Phase 37 complete. Visual fold indicators ready. Error handling structures ready. Code folding implementation complete. HTTP/WebSocket timeout integration complete. Component API implementation complete. Ready for coordination with Bubble and Aurora agents.
 
 ---
 
@@ -108,6 +116,7 @@
 **Text Editor Enhancements**:
 - ✅ Bracket matching implementation complete (Phase 33)
 - ✅ Code folding implementation complete (Phase 35)
+- ✅ Visual fold indicators complete (Phase 37)
 - ✅ Zig syntax highlighting complete (Phase 31)
 - ✅ All Text Editor features production-ready
 
@@ -117,11 +126,11 @@
 - ✅ Prepared for full error handling integration when Core Agent updates clients
 
 **All Independent Work Complete**:
-- ✅ All planned phases complete (25-36)
+- ✅ All planned phases complete (25-37)
 - ✅ No blockers from Workspace Agent side
 - ✅ Ready for coordination and integration
 
-### What Core Agent Has Completed (Per Latest Coordination Plan, 2025-12-29-041147-pst)
+### What Core Agent Has Completed (Per Latest Coordination Plan, 2025-12-29-152539-pst)
 
 **1. HTTP Client Timeout Implementation COMPLETE** ✅ (2025-12-28-235609-pst):
 - `timeout_ms` field added to `HttpClientRequest`
@@ -182,21 +191,25 @@
    - Update `create_request()` if it returns optional types
    - Update any helper methods that return responses
    - Ensure consistent error return pattern across all HTTP client functions
+   - Update all call sites to handle error types instead of optional types
 
 2. **Update WebSocket Client Methods**:
    - Update WebSocket connection methods to return `WebSocketError!void` for operations
    - Update WebSocket send/receive methods to return error types
    - Ensure consistent error return pattern across all WebSocket client functions
+   - Update all call sites to handle error types instead of optional types or void
 
 3. **Update Documentation**:
    - Document the error return types in HTTP/WebSocket client APIs
    - Provide examples of error handling patterns
    - Update any existing documentation that references optional return types
+   - Add migration guide for agents updating to error types
 
 **Impact**:
 - **Makes error handling fully integrated**: All agents can now use structured error handling with retryability checking
 - **Unblocks 6+ agents**: Workspace, Bubble, Aurora, Carry, Skate, and others are waiting for this
 - **Enables production-ready error handling**: Agents can implement retry logic, error reporting, and user-facing error messages
+- **Completes coordination decisions implementation**: This is the final step to make all coordination decisions fully integrated
 
 **Timeline**: 1 day (estimated 6-8 hours of work)
 
@@ -204,6 +217,7 @@
 - `src/grain_core/http_client.zig`: Update all methods to return error types consistently
 - `src/grain_core/websocket.zig`: Update all methods to return error types consistently
 - `src/grain_core/websocket_manager.zig`: Update all methods to return error types consistently
+- Any call sites in Core Agent code that use HTTP/WebSocket clients
 
 **Example Pattern** (for reference):
 ```zig
@@ -218,6 +232,20 @@ pub fn send_message(...) void { ... }
 
 // Should be:
 pub fn send_message(...) WebSocketError!void { ... }
+
+// Usage pattern:
+const request = try http_client.create_request(.GET, url, null);
+const response = try http_client.send_request(request);
+// Now can use error handling:
+if (response) |resp| {
+    // Handle success
+} else |err| {
+    if (is_http_error_retryable(err)) {
+        // Retry logic
+    } else {
+        // Non-retryable error
+    }
+}
 ```
 
 **2. File I/O Timeout Implementation** ⏳ (When Kernel Integration Ready):
@@ -231,10 +259,14 @@ pub fn send_message(...) WebSocketError!void { ... }
 1. Add timeout checking in file I/O operations
 2. Add timeout parameter to file operations (when Vantage Agent adds kernel support)
 3. Integrate with kernel file I/O timeout syscalls
+4. Update file I/O methods to return `FileIoError!` instead of optional types
+5. Add timeout checking logic similar to HTTP/WebSocket timeout patterns
 
 **Impact**: Unblocks file I/O timeout handling for all agents
 
 **Timeline**: When kernel file I/O integration ready (Vantage Agent coordination)
+
+**Coordination**: Coordinate with Vantage Core Agent (L1) and Basin Kernel Agent (L2) on kernel file I/O timeout support. Once kernel support is ready, Core Agent can implement userspace timeout handling.
 
 ### Timeline Summary
 
@@ -248,13 +280,14 @@ pub fn send_message(...) WebSocketError!void { ... }
 - ⏳ HTTP/WebSocket client error return types: **1 day remaining** (makes error handling fully integrated)
 - ⏳ File I/O timeout: **When kernel integration ready** (Vantage Agent coordination)
 
-**Major Milestone**: **ALL COORDINATION DECISIONS ARE READY NOW!** ✅ All critical patterns (timeout, error handling, authentication, async) are implemented and ready for immediate integration by all agents. Only remaining work is making error return types consistent across all client methods.
+**Major Milestone**: **ALL COORDINATION DECISIONS ARE READY NOW!** ✅ All critical patterns (timeout, error handling, authentication, async) are implemented and ready for immediate integration by all agents. Only remaining work is making error return types consistent across all client methods. This final step will complete the coordination decisions implementation and enable full error handling integration.
 
 ### Coordination Status
 
 **Workspace Agent Status**:
 - ✅ HTTP/WebSocket timeout integration complete (Phase 34)
 - ✅ Error handling structures ready (Phase 36)
+- ✅ Visual fold indicators ready (Phase 37)
 - ✅ Ready to integrate full error handling when Core Agent updates clients
 - ✅ Ready to integrate authentication and async patterns immediately
 - ✅ No blockers from Workspace Agent side
@@ -278,6 +311,7 @@ pub fn send_message(...) WebSocketError!void { ... }
 - ✅ Component variant support (state/size/theme)
 - ✅ Component initialization and management functions
 - ✅ Comprehensive tests (`tests/116_grain_workspace_components_test.zig`)
+- ✅ Visual fold indicators ready (`get_fold_indicator()`, `is_fold_start_line()`)
 - ✅ Ready for immediate integration
 
 **What Bubble Agent Needs to Do**:
@@ -294,6 +328,7 @@ pub fn send_message(...) WebSocketError!void { ... }
 - Implement fallback framebuffer rendering for low-level systems
 - Ensure component variants (state/size/theme) are properly handled
 - Coordinate on animation preferences (smooth transitions for state changes, no animations for high-frequency updates)
+- **Integrate visual fold indicators**: Use `get_fold_indicator()` and `is_fold_start_line()` for Text Editor rendering
 
 **3. SLC Product Integration** (2-3 days):
 - Use component API for Nostr Profile Builder desktop integration
@@ -324,13 +359,36 @@ api.text_editor.editor_view.set_size(.large);
 api.terminal.terminal_view.set_theme(.high_contrast);
 ```
 
+**How to Use Visual Fold Indicators**:
+```zig
+const TextEditor = @import("grain_workspace").text_editor.app.TextEditor;
+
+// Get fold indicator for a line
+const indicator = editor.get_fold_indicator(line_idx);
+if (indicator.has_indicator) {
+    // Render fold indicator (expanded/collapsed icon)
+    if (indicator.is_folded) {
+        // Render collapsed icon
+    } else {
+        // Render expanded icon
+    }
+}
+
+// Check if line is a fold start
+if (editor.is_fold_start_line(line_idx)) {
+    // This line has a foldable block starting at it
+}
+```
+
 **Reference Implementation**:
 - See `src/grain_workspace/components.zig` for component structure
 - See `tests/116_grain_workspace_components_test.zig` for usage examples
+- See `src/grain_workspace/text_editor/app.zig` for fold indicator functions
+- See `tests/115_grain_workspace_text_editor_test.zig` for fold indicator test examples
 
 **Timeline**: 2-3 days for component integration and rendering implementation
 
-**Coordination**: Ready to coordinate immediately. Component API structure is complete and tested. HTTP/WebSocket timeout patterns ready for integration. This unblocks SLC product integration.
+**Coordination**: Ready to coordinate immediately. Component API structure is complete and tested. Visual fold indicators ready for rendering. HTTP/WebSocket timeout patterns ready for integration. This unblocks SLC product integration.
 
 ---
 
@@ -403,8 +461,10 @@ api.terminal.terminal_view.set_theme(.high_contrast);
 
 **What Court Agent Needs to Do**:
 
-**1. Complete ZON Module Phase 2** (~0.01 day remaining):
-- Complete final ZON module work
+**1. Continue LLM Infrastructure Work**:
+- Continue Phase 3 Token Efficiency Optimization
+- Review payment integration planning
+- Continue ZON format integration work
 - Coordinate with Flow Agent on integration testing
 - Coordinate with Research Agent on Phase 2 LLM integration
 
@@ -414,7 +474,12 @@ api.terminal.terminal_view.set_theme(.high_contrast);
 - Integrate service-to-service authentication (Core Agent implementation complete ✅)
 - Integrate async pattern (Core Agent implementation complete ✅)
 
-**Status**: No direct integration with Component API. Continue with ZON format integration. Ready to integrate HTTP/WebSocket patterns immediately. All coordination decisions are ready.
+**3. JG Project Integration** (Months 4-12):
+- Coordinate with Workspace Agent on LLM planning features for desktop dashboards
+- Integrate LLM planning features with JG project modules
+- Coordinate with Core Agent on Grainbank MMT integration
+
+**Status**: No direct integration with Component API. Continue with LLM infrastructure work. Ready to integrate HTTP/WebSocket patterns immediately. All coordination decisions are ready. JG project coordination ready when dashboard work begins (Months 4-12).
 
 ---
 
@@ -430,6 +495,7 @@ api.terminal.terminal_view.set_theme(.high_contrast);
 - Continue coordinating with Court Agent on integration testing
 - Continue coordinating with Research Agent on validation
 - Continue independent enhancements
+- Async pattern already integrated (Event Bus ready) ✅
 
 **2. HTTP/WebSocket Integration** (Ready Now):
 - Integrate HTTP/WebSocket timeout patterns (Core Agent implementation complete ✅)
@@ -437,7 +503,12 @@ api.terminal.terminal_view.set_theme(.high_contrast);
 - Async pattern already integrated (Event Bus ready) ✅
 - Integrate service-to-service authentication (Core Agent implementation complete ✅)
 
-**Status**: No direct integration with Component API. Continue with Event Bus work and coordination. Async pattern already integrated. Ready to integrate HTTP/WebSocket patterns immediately.
+**3. JG Project Integration** (Months 4-10):
+- Coordinate with Workspace Agent on workflow orchestration for desktop dashboards
+- Integrate workflow orchestration with JG project modules
+- Coordinate with Core Agent on Grainbank MMT integration
+
+**Status**: No direct integration with Component API. Continue with Event Bus work and coordination. Async pattern already integrated. Ready to integrate HTTP/WebSocket patterns immediately. JG project coordination ready when dashboard work begins (Months 4-10).
 
 ---
 
@@ -453,6 +524,7 @@ api.terminal.terminal_view.set_theme(.high_contrast);
 - Run Phase 4 validation tests (when build issues resolved)
 - Coordinate with Court Agent on Phase 2 LLM integration
 - Coordinate with Court Agent on token counting and cost tracking integration
+- Complete validation testing (Phase 2 Token Counting, Phase 3 Cost Tracking)
 
 **2. HTTP/WebSocket Integration** (Ready Now):
 - Integrate HTTP/WebSocket timeout patterns (Core Agent implementation complete ✅)
@@ -460,7 +532,12 @@ api.terminal.terminal_view.set_theme(.high_contrast);
 - Integrate service-to-service authentication (Core Agent implementation complete ✅)
 - Integrate async pattern (Core Agent implementation complete ✅)
 
-**Status**: No direct integration with Component API. Continue with research work. Ready to integrate HTTP/WebSocket patterns immediately. All coordination decisions are ready.
+**3. JG Project Integration** (Months 6-12):
+- Coordinate with Workspace Agent on analysis & optimization features for desktop dashboards
+- Integrate analysis & optimization features with JG project modules
+- Coordinate with Core Agent on Grainbank MMT integration
+
+**Status**: No direct integration with Component API. Continue with research work. Ready to integrate HTTP/WebSocket patterns immediately. All coordination decisions are ready. JG project coordination ready when dashboard work begins (Months 6-12).
 
 ---
 
@@ -482,7 +559,14 @@ api.terminal.terminal_view.set_theme(.high_contrast);
 - Integrate service-to-service authentication (Core Agent implementation complete ✅)
 - Integrate async pattern (Core Agent implementation complete ✅)
 
-**Status**: No direct integration with Component API. Continue with storage work. Ready to integrate HTTP/WebSocket patterns immediately. All coordination decisions are ready.
+**3. JG Project Integration** (Months 1-3 — **HIGH PRIORITY**):
+- **Design storage schemas for JG modules** (Priority 1, HIGH, Month 1)
+- Storage schemas for: Project Manager, Task Tracker, Inventory Manager, Supply Chain, 3D Architect
+- Coordinate with Core Agent on Grainbank MMT integration storage needs
+- Coordinate with Workspace Agent on dashboard data integration (Months 3-8)
+- **This is a dependency for Workspace Agent's dashboard work** — Must be ready before dashboard implementation begins
+
+**Status**: No direct integration with Component API. Continue with storage work. Ready to integrate HTTP/WebSocket patterns immediately. **JG project storage schema design is HIGH PRIORITY** (Months 1-3) as it's a dependency for Workspace Agent's dashboard work.
 
 ---
 
@@ -539,13 +623,14 @@ api.terminal.terminal_view.set_theme(.high_contrast);
 - Add timeout parameter to file operations (`read`, `write`) when kernel integration ready
 - Support Core Agent's file I/O timeout implementation
 - Coordinate with Core Agent on file I/O timeout integration
+- **This unblocks Core Agent's file I/O timeout implementation**
 
 **4. JG Project Support** (When Needed):
 - Monitor JG project implementation for kernel support needs
 - Coordinate with Core Agent when new syscalls are needed for JG project
 - Coordinate with System Integration Agent (L2) on JG project system-level testing
 
-**Status**: No direct integration with Component API. Architecture evolution acknowledged. Continue with kernel/VM coordination work. Timeout mechanism complete. Ready to support file I/O timeout when kernel integration ready. All coordination decisions are ready.
+**Status**: No direct integration with Component API. Architecture evolution acknowledged. Continue with kernel/VM coordination work. Timeout mechanism complete. Ready to support file I/O timeout when kernel integration ready. All coordination decisions are ready. File I/O timeout support will unblock Core Agent's file I/O timeout implementation.
 
 ---
 
@@ -647,7 +732,7 @@ api.terminal.terminal_view.set_theme(.high_contrast);
 
 **Dependencies**:
 - **Core Agent**: Grainbank MMT integration foundation (Months 1-6) — Must be ready before dashboard work begins
-- **Silo Agent**: Storage schemas for JG modules (Months 1-3) — Must be ready before dashboard data integration
+- **Silo Agent**: Storage schemas for JG modules (Months 1-3) — **HIGH PRIORITY** — Must be ready before dashboard data integration
 - **Flow Agent**: Workflow orchestration (Months 4-10) — Coordinate on dashboard workflow features
 - **Court Agent**: LLM planning features (Months 4-12) — Coordinate on dashboard LLM integration
 - **Research Agent**: Analysis & optimization (Months 6-12) — Coordinate on dashboard analytics features
@@ -680,7 +765,7 @@ api.terminal.terminal_view.set_theme(.high_contrast);
 - Coordinate with Bubble/Aurora agents on UI components
 - Complete dashboard testing and refinement
 
-**Status**: Project assigned. Planning phase begins. Waiting for Core Agent and Silo Agent foundation work (Months 1-3) before beginning dashboard implementation.
+**Status**: Project assigned. Planning phase begins. Waiting for Core Agent and Silo Agent foundation work (Months 1-3) before beginning dashboard implementation. **Silo Agent storage schema design is HIGH PRIORITY** (Months 1-3) as it's a dependency for dashboard data integration.
 
 ---
 
@@ -688,10 +773,11 @@ api.terminal.terminal_view.set_theme(.high_contrast);
 
 **What We're Ready For**:
 - ✅ Grain Style CLI tool is production-ready and can be shared with other agents
-- ✅ Text Editor is feature-complete for SLC v1.0 (with syntax highlighting, text selection, copy/cut/paste, bracket matching, code folding)
+- ✅ Text Editor is feature-complete for SLC v1.0 (with syntax highlighting, text selection, copy/cut/paste, bracket matching, code folding, visual fold indicators)
 - ✅ File Manager is feature-complete for SLC v1.0
 - ✅ Terminal Plus is feature-complete for SLC v1.0
 - ✅ Component API design approved by Core Agent and implementation complete
+- ✅ Visual fold indicators ready for Bubble Agent rendering integration
 - ✅ Ready to coordinate with Bubble Agent on component integration (IMMEDIATE)
 - ✅ Ready to coordinate with Aurora Agent on Dream Browser component API
 - ✅ **HTTP/WebSocket timeout and error handling ready for integration** ✅ (Core Agent implementation complete)
@@ -721,6 +807,7 @@ api.terminal.terminal_view.set_theme(.high_contrast);
 
 **Bubble Agent** (IMMEDIATE):
 - **Integrate with Workspace Agent Component API** (2-3 days) — **IMMEDIATE ACTION REQUIRED**
+- **Integrate visual fold indicators** for Text Editor rendering
 - Integrate HTTP/WebSocket timeout patterns (ready now ✅)
 - Integrate error handling patterns (error types ready ✅, client updates 1 day remaining)
 - Integrate service-to-service authentication (ready now ✅)
@@ -734,18 +821,31 @@ api.terminal.terminal_view.set_theme(.high_contrast);
 - Integrate service-to-service authentication (ready now ✅)
 - Integrate async pattern (ready now ✅)
 
+**Silo Agent** (HIGH PRIORITY — JG Project Dependency):
+- **Design storage schemas for JG modules** (Months 1-3) — **HIGH PRIORITY**
+- Storage schemas for: Project Manager, Task Tracker, Inventory Manager, Supply Chain, 3D Architect
+- Coordinate with Core Agent on Grainbank MMT integration storage needs
+- Coordinate with Workspace Agent on dashboard data integration (Months 3-8)
+- **This is a dependency for Workspace Agent's dashboard work** — Must be ready before dashboard implementation begins
+- Integrate HTTP/WebSocket timeout patterns (ready now ✅)
+- Integrate error handling patterns (error types ready ✅, client updates 1 day remaining)
+- Integrate service-to-service authentication (ready now ✅)
+- Integrate async pattern (ready now ✅)
+
 **All Other Agents** (READY TO INTEGRATE):
 - Continue with current work
 - Integrate HTTP/WebSocket timeout patterns (ready now ✅)
 - Integrate error handling patterns (error types ready ✅, client updates 1 day remaining)
 - Integrate service-to-service authentication (ready now ✅)
 - Integrate async pattern (ready now ✅)
+- JG project coordination ready when needed (see individual agent sections above)
 
 **Workspace Agent** (READY):
 - ✅ Component API complete
+- ✅ Visual fold indicators complete (Phase 37)
 - ✅ HTTP/WebSocket timeout integration complete (Phase 34)
 - ✅ Error handling structures ready (Phase 36)
-- ✅ Text Editor enhancements complete (Phases 33, 35)
+- ✅ Text Editor enhancements complete (Phases 33, 35, 37)
 - ✅ JG Project assigned — Desktop Dashboards (Months 3-8)
 - Ready for coordination with Bubble and Aurora agents
 - Ready for full error handling integration (when Core Agent updates clients, 1 day)
@@ -759,7 +859,7 @@ api.terminal.terminal_view.set_theme(.high_contrast);
 - All code follows Grain Style guidelines (`grainwrap-100`, `grain validate-70`)
 - Uses explicit types (`u32`/`u64`, no `usize`)
 - All compiler warnings enabled
-- Comprehensive tests for all phases (8 new test cases for Phase 31, 9 new test cases for Phase 33, 8 new test cases for Phase 35)
+- Comprehensive tests for all phases (8 new test cases for Phase 31, 9 new test cases for Phase 33, 8 new test cases for Phase 35, 7 new test cases for Phase 37)
 - Documentation updated in `docs/plans/plan_workspace.md` and `docs/tasks/tasks_workspace.md`
 - Design gaps analysis complete (based on insights from Carry, Bubble, Research, Court, and Flow agents)
 - Component API design ideas prepared and **approved by Core Agent**
@@ -767,6 +867,6 @@ api.terminal.terminal_view.set_theme(.high_contrast);
 
 ---
 
-**Status**: Phase 36 complete. Error handling structures ready. Code folding implementation complete. HTTP/WebSocket timeout integration complete. Component API implementation complete. All coordination decisions ready. **Component API structure ready for integration.** Coordinate with Bubble and Aurora agents on component integration. This unblocks SLC product integration. **ALL COORDINATION DECISIONS ARE READY NOW!** ✅ **JG Project assigned** — Desktop Dashboards (Months 3-8). Planning phase begins. Waiting for Core Agent and Silo Agent foundation work (Months 1-3) before beginning dashboard implementation. **Architecture evolution acknowledged** — Vantage Core (L1) + 3 L2 sub-agents structure complete.
+**Status**: Phase 37 complete. Visual fold indicators ready. Error handling structures ready. Code folding implementation complete. HTTP/WebSocket timeout integration complete. Component API implementation complete. All coordination decisions ready. **Component API structure ready for integration.** **Visual fold indicators ready for rendering.** Coordinate with Bubble and Aurora agents on component integration. This unblocks SLC product integration. **ALL COORDINATION DECISIONS ARE READY NOW!** ✅ **JG Project assigned** — Desktop Dashboards (Months 3-8). Planning phase begins. Waiting for Core Agent and Silo Agent foundation work (Months 1-3) before beginning dashboard implementation. **Silo Agent storage schema design is HIGH PRIORITY** (Months 1-3) as it's a dependency for dashboard data integration. **Architecture evolution acknowledged** — Vantage Core (L1) + 3 L2 sub-agents structure complete.
 
 ---

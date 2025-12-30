@@ -19,6 +19,8 @@ test "court integration init" {
     std.debug.assert(integration.next_suggestion_id == 1);
     std.debug.assert(integration.timeout_api_ms == court_integration.DEFAULT_TIMEOUT_API_MS);
     std.debug.assert(integration.timeout_content_ms == court_integration.DEFAULT_TIMEOUT_CONTENT_MS);
+    std.debug.assert(integration.max_retries == court_integration.DEFAULT_MAX_RETRIES);
+    std.debug.assert(integration.retry_delay_ms == court_integration.DEFAULT_RETRY_DELAY_MS);
 }
 
 test "court integration set compute" {
@@ -138,6 +140,16 @@ test "court integration timeout configuration" {
     std.debug.assert(integration.timeout_api_ms == 15000);
     integration.set_timeout_content(90000);
     std.debug.assert(integration.timeout_content_ms == 90000);
+}
+
+test "court integration retry configuration" {
+    var integration = court_integration.CourtIntegration.init();
+    std.debug.assert(integration.max_retries == court_integration.DEFAULT_MAX_RETRIES);
+    std.debug.assert(integration.retry_delay_ms == court_integration.DEFAULT_RETRY_DELAY_MS);
+    integration.set_max_retries(5);
+    std.debug.assert(integration.max_retries == 5);
+    integration.set_retry_delay(200);
+    std.debug.assert(integration.retry_delay_ms == 200);
 }
 
 test "court integration error retryability" {

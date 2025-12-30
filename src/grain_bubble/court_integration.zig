@@ -111,6 +111,8 @@ pub const CourtIntegration = struct {
     next_suggestion_id: u32,
     timeout_api_ms: u32, // Timeout for API operations (default: 30s)
     timeout_content_ms: u32, // Timeout for content operations (default: 60s)
+    max_retries: u32, // Max retry attempts for transient failures (default: 3)
+    retry_delay_ms: u32, // Initial delay between retries (default: 100ms)
 
     pub fn init() CourtIntegration {
         const integration = CourtIntegration{
@@ -118,10 +120,14 @@ pub const CourtIntegration = struct {
             .next_suggestion_id = 1,
             .timeout_api_ms = DEFAULT_TIMEOUT_API_MS,
             .timeout_content_ms = DEFAULT_TIMEOUT_CONTENT_MS,
+            .max_retries = DEFAULT_MAX_RETRIES,
+            .retry_delay_ms = DEFAULT_RETRY_DELAY_MS,
         };
         std.debug.assert(integration.next_suggestion_id == 1);
         std.debug.assert(integration.timeout_api_ms == DEFAULT_TIMEOUT_API_MS);
         std.debug.assert(integration.timeout_content_ms == DEFAULT_TIMEOUT_CONTENT_MS);
+        std.debug.assert(integration.max_retries == DEFAULT_MAX_RETRIES);
+        std.debug.assert(integration.retry_delay_ms == DEFAULT_RETRY_DELAY_MS);
         return integration;
     }
 
@@ -139,6 +145,22 @@ pub const CourtIntegration = struct {
         std.debug.assert(timeout_ms > 0);
         self.timeout_content_ms = timeout_ms;
         std.debug.assert(self.timeout_content_ms == timeout_ms);
+    }
+
+    // Set max retry attempts for transient failures (per-request override).
+    pub fn set_max_retries(self: *CourtIntegration, max_retries: u32) void {
+        std.debug.assert(@intFromPtr(self) != 0);
+        std.debug.assert(max_retries > 0);
+        self.max_retries = max_retries;
+        std.debug.assert(self.max_retries == max_retries);
+    }
+
+    // Set retry delay between attempts (per-request override).
+    pub fn set_retry_delay(self: *CourtIntegration, delay_ms: u32) void {
+        std.debug.assert(@intFromPtr(self) != 0);
+        std.debug.assert(delay_ms > 0);
+        self.retry_delay_ms = delay_ms;
+        std.debug.assert(self.retry_delay_ms == delay_ms);
     }
 
     // Set Court compute instance.
@@ -173,26 +195,63 @@ pub const CourtIntegration = struct {
             return CourtComputeError.InvalidInput;
         }
         const compute = self.compute.?;
-        // Allocate SRAM for query vector (use core 0).
+        // Allocate SRAM for query vector (use core 0) with retry logic.
         const core_id: u32 = 0;
         const vector_size: u64 = @as(u64, @intCast(query_vector.len)) * @sizeOf(f32);
-        const data_offset = compute.allocate_sram(core_id, vector_size) catch {
-            return CourtComputeError.SramAllocationFailed;
-        };
+        var data_offset: u64 = undefined;
+        var sram_attempt: u32 = 0;
+        while (sram_attempt <= self.max_retries) : (sram_attempt += 1) {
+            data_offset = compute.allocate_sram(core_id, vector_size) catch |err| {
+                const compute_err: CourtComputeError = switch (err) {
+                    error.OutOfMemory => CourtComputeError.SramAllocationFailed,
+                    else => CourtComputeError.OperationFailed,
+                };
+                if (!is_retryable_error(compute_err)) {
+                    return compute_err;
+                }
+                if (sram_attempt < self.max_retries) {
+                    const delay_ms = self.retry_delay_ms * (@as(u32, 1) << @intCast(sram_attempt));
+                    std.time.sleep(@as(u64, delay_ms) * 1_000_000);
+                }
+                continue;
+            };
+            break; // Success
+        } else {
+            return CourtComputeError.SramAllocationFailed; // All retries exhausted
+        }
         // Copy query vector to SRAM.
         const sram_slice = compute.sram_data[data_offset..data_offset + vector_size];
         @memcpy(sram_slice[0..vector_size], std.mem.asBytes(query_vector.ptr)[0..vector_size]);
-        // Execute vector search operation.
+        // Execute vector search operation with retry logic.
         const core_ids = [_]u32{0}; // Use first core for search.
-        const op_id = compute.execute_parallel(
-            grain_court.Compute.CourtCompute.OpType.vector_search,
-            &core_ids,
-            data_offset,
-            vector_size,
-        ) catch {
-            return CourtComputeError.OperationFailed;
-        };
+        var op_id: u32 = undefined;
+        var exec_attempt: u32 = 0;
+        while (exec_attempt <= self.max_retries) : (exec_attempt += 1) {
+            op_id = compute.execute_parallel(
+                grain_court.Compute.CourtCompute.OpType.vector_search,
+                &core_ids,
+                data_offset,
+                vector_size,
+            ) catch |err| {
+                const compute_err: CourtComputeError = switch (err) {
+                    error.OperationFailed => CourtComputeError.OperationFailed,
+                    else => CourtComputeError.OperationFailed,
+                };
+                if (!is_retryable_error(compute_err)) {
+                    return compute_err;
+                }
+                if (exec_attempt < self.max_retries) {
+                    const delay_ms = self.retry_delay_ms * (@as(u32, 1) << @intCast(exec_attempt));
+                    std.time.sleep(@as(u64, delay_ms) * 1_000_000);
+                }
+                continue;
+            };
+            break; // Success
+        } else {
+            return CourtComputeError.OperationFailed; // All retries exhausted
+        }
         // Wait for operation to complete with timeout checking.
+        // Note: Timeout retries are handled at operation level, not polling level.
         const max_polls = self.get_max_polls_for_timeout(self.timeout_api_ms);
         var poll_count: u32 = 0;
         while (poll_count < max_polls) : (poll_count += 1) {
@@ -233,25 +292,61 @@ pub const CourtIntegration = struct {
             return CourtComputeError.InvalidInput;
         }
         const compute = self.compute.?;
-        // Allocate SRAM for context data (use core 0).
+        // Allocate SRAM for context data (use core 0) with retry logic.
         const core_id: u32 = 0;
         const context_size: u64 = @as(u64, @intCast(context.len));
-        const data_offset = compute.allocate_sram(core_id, context_size) catch {
-            return CourtComputeError.SramAllocationFailed;
-        };
+        var data_offset: u64 = undefined;
+        var sram_attempt: u32 = 0;
+        while (sram_attempt <= self.max_retries) : (sram_attempt += 1) {
+            data_offset = compute.allocate_sram(core_id, context_size) catch |err| {
+                const compute_err: CourtComputeError = switch (err) {
+                    error.OutOfMemory => CourtComputeError.SramAllocationFailed,
+                    else => CourtComputeError.OperationFailed,
+                };
+                if (!is_retryable_error(compute_err)) {
+                    return compute_err;
+                }
+                if (sram_attempt < self.max_retries) {
+                    const delay_ms = self.retry_delay_ms * (@as(u32, 1) << @intCast(sram_attempt));
+                    std.time.sleep(@as(u64, delay_ms) * 1_000_000);
+                }
+                continue;
+            };
+            break; // Success
+        } else {
+            return CourtComputeError.SramAllocationFailed; // All retries exhausted
+        }
         // Copy context to SRAM.
         const sram_slice = compute.sram_data[data_offset..data_offset + context_size];
         @memcpy(sram_slice[0..context_size], context);
-        // Execute LLM inference operation (content operation - use 60s timeout).
+        // Execute LLM inference operation (content operation - use 60s timeout) with retry logic.
         const core_ids = [_]u32{0}; // Use first core for inference.
-        const op_id = compute.execute_parallel(
-            grain_court.Compute.CourtCompute.OpType.llm_inference,
-            &core_ids,
-            data_offset,
-            context_size,
-        ) catch {
-            return CourtComputeError.OperationFailed;
-        };
+        var op_id: u32 = undefined;
+        var exec_attempt: u32 = 0;
+        while (exec_attempt <= self.max_retries) : (exec_attempt += 1) {
+            op_id = compute.execute_parallel(
+                grain_court.Compute.CourtCompute.OpType.llm_inference,
+                &core_ids,
+                data_offset,
+                context_size,
+            ) catch |err| {
+                const compute_err: CourtComputeError = switch (err) {
+                    error.OperationFailed => CourtComputeError.OperationFailed,
+                    else => CourtComputeError.OperationFailed,
+                };
+                if (!is_retryable_error(compute_err)) {
+                    return compute_err;
+                }
+                if (exec_attempt < self.max_retries) {
+                    const delay_ms = self.retry_delay_ms * (@as(u32, 1) << @intCast(exec_attempt));
+                    std.time.sleep(@as(u64, delay_ms) * 1_000_000);
+                }
+                continue;
+            };
+            break; // Success
+        } else {
+            return CourtComputeError.OperationFailed; // All retries exhausted
+        }
         // Wait for operation to complete with timeout checking.
         const max_polls = self.get_max_polls_for_timeout(self.timeout_content_ms);
         var poll_count: u32 = 0;
@@ -303,25 +398,61 @@ pub const CourtIntegration = struct {
         if (desc_len == 0) {
             return CourtComputeError.InvalidInput;
         }
-        // Allocate SRAM for description data (use core 0).
+        // Allocate SRAM for description data (use core 0) with retry logic.
         const core_id: u32 = 0;
         const desc_size: u64 = @as(u64, @intCast(desc_len));
-        const data_offset = compute.allocate_sram(core_id, desc_size) catch {
-            return CourtComputeError.SramAllocationFailed;
-        };
+        var data_offset: u64 = undefined;
+        var sram_attempt: u32 = 0;
+        while (sram_attempt <= self.max_retries) : (sram_attempt += 1) {
+            data_offset = compute.allocate_sram(core_id, desc_size) catch |err| {
+                const compute_err: CourtComputeError = switch (err) {
+                    error.OutOfMemory => CourtComputeError.SramAllocationFailed,
+                    else => CourtComputeError.OperationFailed,
+                };
+                if (!is_retryable_error(compute_err)) {
+                    return compute_err;
+                }
+                if (sram_attempt < self.max_retries) {
+                    const delay_ms = self.retry_delay_ms * (@as(u32, 1) << @intCast(sram_attempt));
+                    std.time.sleep(@as(u64, delay_ms) * 1_000_000);
+                }
+                continue;
+            };
+            break; // Success
+        } else {
+            return CourtComputeError.SramAllocationFailed; // All retries exhausted
+        }
         // Copy description to SRAM.
         const sram_slice = compute.sram_data[data_offset..data_offset + desc_size];
         @memcpy(sram_slice[0..desc_size], desc_buffer[0..desc_len]);
-        // Execute data transform operation for embedding.
+        // Execute data transform operation for embedding with retry logic.
         const core_ids = [_]u32{0}; // Use first core for transform.
-        const op_id = compute.execute_parallel(
-            grain_court.Compute.CourtCompute.OpType.data_transform,
-            &core_ids,
-            data_offset,
-            desc_size,
-        ) catch {
-            return CourtComputeError.OperationFailed;
-        };
+        var op_id: u32 = undefined;
+        var exec_attempt: u32 = 0;
+        while (exec_attempt <= self.max_retries) : (exec_attempt += 1) {
+            op_id = compute.execute_parallel(
+                grain_court.Compute.CourtCompute.OpType.data_transform,
+                &core_ids,
+                data_offset,
+                desc_size,
+            ) catch |err| {
+                const compute_err: CourtComputeError = switch (err) {
+                    error.OperationFailed => CourtComputeError.OperationFailed,
+                    else => CourtComputeError.OperationFailed,
+                };
+                if (!is_retryable_error(compute_err)) {
+                    return compute_err;
+                }
+                if (exec_attempt < self.max_retries) {
+                    const delay_ms = self.retry_delay_ms * (@as(u32, 1) << @intCast(exec_attempt));
+                    std.time.sleep(@as(u64, delay_ms) * 1_000_000);
+                }
+                continue;
+            };
+            break; // Success
+        } else {
+            return CourtComputeError.OperationFailed; // All retries exhausted
+        }
         // Wait for operation to complete with timeout checking.
         const max_polls = self.get_max_polls_for_timeout(self.timeout_api_ms);
         var poll_count: u32 = 0;

@@ -1,6 +1,6 @@
 # Grain Silo Agent: Coordination Status
 
-**Last Updated**: 2025-12-29-153000-pst  
+**Last Updated**: 2025-12-29-161000-pst  
 **Agent**: Grain Silo Agent (Database)  
 **Status**: **PRODUCTION READY** ✅ — **ALL COORDINATION DECISIONS READY** ✅ — **PAYMENT/VAULT STORAGE SCHEMA COMPLETE** ✅
 
@@ -598,33 +598,46 @@ All core phases complete and ready for production use:
 
 ### For Court Agent (LLM Infrastructure) - Payment/Passwords/Bank Integration
 
-**Current Status**: Storage schema design complete ✅, ready for LLM API key storage coordination
+**Current Status**: 
+- ✅ JG project planning substantially complete (2025-12-29-160000-pst)
+- ✅ LLM timeout/error handling complete (2025-12-28-135000-pst)
+- ⏳ ZON Module Phase 2 ~99% complete (~0.01 day remaining)
+- ⏳ **BLOCKED**: Payment Integration Phase 1 — waiting on PasswordStorage API
 
 **Immediate Next Steps**:
 
-1. **Review Storage Schema Design**:
+1. **Payment Integration Phase 1 (BLOCKED)**:
+   - **Status**: ⏳ Waiting on PasswordStorage API from Silo Agent
+   - **Blocking Chain**: Court Agent → Silo Agent → Core Agent (storage schema approval needed)
+   - **Action**: 
+     - Once Core Agent approves Payment/Vault/Bank storage schema, Silo Agent will implement PasswordStorage helper (~1 day)
+     - Court Agent can then proceed with Payment Integration Phase 1 implementation
+   - **Timeline**: Court Agent waiting on Silo Agent (after Core Agent approval, ~1 day implementation)
+   - **Priority**: IMMEDIATE (blocking Payment Integration Phase 1)
+
+2. **Review Storage Schema Design** (READY NOW ✅):
    - Review Grain Passwords storage schema for LLM API key storage
    - Review encryption requirements (Grain Passwords encrypts before storage)
    - Review key derivation parameters storage
    - Understand integration pattern with Grain Passwords module
 
-2. **Coordinate on LLM API Key Storage**:
+3. **Coordinate on LLM API Key Storage** (After PasswordStorage Available):
    - Coordinate with Core Agent on Grain Passwords integration
    - Plan LLM API key storage using PasswordStorage helper
    - Plan token refresh and key rotation strategies
    - Ensure secure key management for multiple LLM providers
 
-3. **Prepare for Core Agent Phase 1**:
-   - Review Grain Passwords module design (when Core Agent begins Phase 1)
-   - Plan integration with PasswordStorage helper
-   - Plan secure key retrieval for LLM provider authentication
+4. **JG Project Integration** (READY NOW ✅):
+   - ✅ JG project planning substantially complete
+   - Ready for Core Agent coordination when JG modules are implemented
+   - Can continue with minor refinements independently
 
-4. **Future Integration Opportunities**:
+5. **Future Integration Opportunities**:
    - AI-powered currency recommendations (Grainbank integration)
    - Market analysis using knowledge graph (Skate Agent integration)
    - Currency relationship insights
 
-**Check-In Status**: ⏳ **FUTURE** — Court Agent should coordinate when ready for LLM API key storage integration
+**Check-In Status**: ⏳ **IMMEDIATE** — Court Agent blocked on PasswordStorage API (waiting on Core Agent storage schema approval)
 
 **Key Resources**:
 - Storage Schema Design: `docs/grain_database/payment_vault_storage_schema.md`
@@ -1058,5 +1071,24 @@ All core phases complete and ready for production use:
 **Status**: Ready for coordination and production use. No blockers. Priority 5 (Other Agent Coordination) — can proceed in parallel with other priorities. **All coordination decisions are ready for immediate integration by all agents** ✅ — HTTP/WebSocket timeout, error types, service-to-service authentication, and async pattern are all implemented and ready. **Payment/Vault/Bank storage schema design complete, ready for Core Agent approval** ✅. 
 
 **Check-In Needed**: ⏳ **IMMEDIATE** — 
-1. **Core Agent (JG Project)**: Review JG project design document and coordinate on JG module requirements and data structures (2-4 hours, Priority 1 HIGH). This unblocks JG project storage schema design (Months 1-3). JG modules: `jg_project`, `jg_task`, `jg_inventory`, `jg_supply_chain`, `jg_architect`, `jg_worker`, `jg_cooperative`, `jg_housing`.
-2. **Core Agent (Payment/Vault/Bank)**: Review and approve Payment/Passwords/Bank storage schema design (4-7 hours). This unblocks storage helper implementation and Core Agent Phase 1.
+
+1. **Core Agent (Payment/Vault/Bank)**: Review and approve Payment/Passwords/Bank storage schema design (4-7 hours, HIGH PRIORITY). 
+   - **Why**: Unblocks storage helper implementation, Core Agent Phase 1, and **Court Agent Payment Integration Phase 1**
+   - **Blocking Chain**: Court Agent → Silo Agent → Core Agent (storage schema approval needed)
+   - **Impact**: Once approved, Silo Agent can implement PasswordStorage helper (~1 day), then Court Agent can proceed with Payment Integration Phase 1
+
+2. **Core Agent (JG Project)**: Review JG project design document and coordinate on JG module requirements and data structures (2-4 hours, Priority 1 HIGH). 
+   - **Why**: Unblocks JG project storage schema design (Months 1-3)
+   - **JG Modules**: `jg_project`, `jg_task`, `jg_inventory`, `jg_supply_chain`, `jg_architect`, `jg_worker`, `jg_cooperative`, `jg_housing`
+   - **Timeline**: Storage schema design (Months 1-3), implementation (Months 1-3)
+
+**Independent Work Available**:
+- Continue Carry Agent coordination (ongoing)
+- Support other agents with database API questions
+- Monitor for integration feedback
+- Documentation maintenance
+
+**Limited Independent Work**:
+- After Payment/Vault/Bank storage schema approval (can implement PasswordStorage helper)
+- After JG project coordination (can design storage schemas)
+- When dependencies are resolved (can proceed with implementation)
